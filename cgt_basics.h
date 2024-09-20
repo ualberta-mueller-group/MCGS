@@ -1,6 +1,8 @@
 #ifndef cgt_basics_H
 #define cgt_basics_H
 
+#include <cassert>
+
 const int BLACK = 0;
 const int WHITE = 1;
 const int EMPTY = 2;
