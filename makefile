@@ -1,11 +1,13 @@
 CC = c++
 FLAGS = -Wall --std=c++17 -O3
+INC = -I/Users/mmueller/Projects/ualberta-mueller-group/MCGS
 
-MCGS:
-	$(CC) $(FLAGS) *cpp main/main.cpp -o MCGS
+MCGS: *.cpp *.h main/*.cpp
+	$(CC) $(FLAGS) $(INC) *cpp main/main.cpp -o MCGS
 
-test:
-	$(CC) $(FLAGS) *cpp test/*cpp -o MCGS_test
+test: *.cpp *.h test/*.cpp test/*.h
+	$(CC) $(FLAGS) $(INC) *cpp test/*cpp -o MCGS_test
+	./MCGS_test
 
 clean:
-	-rm *.o test/*.o MCGS
+	-rm *.o main/*.o test/*.o MCGS

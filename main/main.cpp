@@ -3,9 +3,9 @@
 */
 
 #include <iostream>
-#include "../cgt_basics.h"
-#include "../game.h"
-#include "../nim.h"
+#include "cgt_basics.h"
+#include "game.h"
+#include "nim.h"
 
 using std::cout;
 
