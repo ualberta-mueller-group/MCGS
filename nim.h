@@ -5,7 +5,6 @@
 #include "cgt_basics.h"
 #include "game.h"
 
-using std::pair;
 using std::vector;
 
 const int MAX_SIZE = (1 << 16);
