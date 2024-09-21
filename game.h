@@ -44,7 +44,8 @@ std::ostream& operator<<(std::ostream& out, const game& g);
 class move_generator
 {
 public:
-//     move_generator(const game& g, int color) = 0;
+//     move_generator(const game& g) = 0;
+    virtual ~move_generator() { }
     virtual void operator++() = 0;
     virtual operator bool() const = 0;
     virtual move gen_move() const = 0;
