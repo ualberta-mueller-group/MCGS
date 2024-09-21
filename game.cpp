@@ -1,6 +1,8 @@
 #include "game.h"
 
+#include "solve.h"
+
 bool game::solve()
 {
-    return false;
+    return ::solve(*this);
 }
