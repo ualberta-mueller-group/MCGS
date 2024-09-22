@@ -40,6 +40,17 @@ inline int opponent(int c)
     return BLACK + WHITE - c;
 }
 
+inline bool is_empty_black_white(int c)
+{
+    return c == BLACK || c == WHITE || c == EMPTY;
+}
+
+inline void assert_empty_black_white(int color)
+{
+    assert(is_empty_black_white(color));
+}
+
+
 //---------------------------------------------------------------------------
 // Mapping from colors to char, X for BORDER
 const char color_code[] = {'B', 'W', '.', 'X'};
@@ -54,4 +65,13 @@ inline bool is_black_white_char(char c)
     return c == 'B' || c == 'W';
 }
 
+//---------------------------------------------------------------------------
+// range excludes high, as for array indices
+inline void assert_range(int value, int low, int high)
+{
+    assert(value >= low);
+    assert(value < high);
+}
+
+//---------------------------------------------------------------------------
 #endif // cgt_basics_H
