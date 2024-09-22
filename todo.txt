@@ -1,8 +1,17 @@
+DONE
 in game:
 add to move stack
 change toplay
 everyone must call game::play()
 
+
+TODO
+move_generator* clobber_1xn
+
+clobber board conversion char x,o,. vs board as EMPTY, BLACK, WHITE
+write clobber board
+
+use a proper unit test framework, maybe https://github.com/siu/minunit
 add nim formula
 add random testing for nim, in general? size parameter for random games?
 game.generate_random(size)?
