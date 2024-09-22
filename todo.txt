@@ -1,0 +1,8 @@
+in game:
+add to move stack
+change toplay
+everyone must call game::play()
+
+add nim formula
+add random testing for nim, in general? size parameter for random games?
+game.generate_random(size)?
