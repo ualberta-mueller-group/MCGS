@@ -17,6 +17,9 @@ public:
     strip(const std::string& game_as_string);
     int size() const;
     int at(int p) const;
+    
+    // is p on board, and of given color?
+    bool checked_is_color(int p, int color) const;
     void play_stone(int p, int color);
     void remove_stone(int p);
     // replaces whatever is there. 
@@ -36,6 +39,12 @@ inline int strip::at(int p) const
 {
     assert_range(p, 0, size());
     return _board[p];
+}
+
+inline bool strip::checked_is_color(int p, int color) const
+{
+    return in_range(p, 0, size())
+        && _board[p] == color;
 }
 
 inline void strip::play_stone(int p, int color)

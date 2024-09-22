@@ -64,9 +64,16 @@ inline bool is_black_white_char(char c)
 {
     return c == 'B' || c == 'W';
 }
-
 //---------------------------------------------------------------------------
-// range excludes high, as for array indices
+
+// range includes low but excludes high
+inline bool in_range(int value, int low, int high)
+{
+    return value >= low
+        && value < high;
+}
+
+// range includes low but excludes high
 inline void assert_range(int value, int low, int high)
 {
     assert(value >= low);
