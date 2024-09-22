@@ -5,13 +5,20 @@
 #include <iostream>
 #include "cgt_basics.h"
 #include "game.h"
+#include "clobber_1xn.h"
 #include "nim.h"
 
 using std::cout;
 
 int main()
 {
+    {
     nim g("1 2 3");
     bool result = g.solve();
-    cout << g << result << std::endl;
+    cout << "Solve nim " << g << ", result " << result << std::endl;
+    }
+
+    clobber_1xn g("xoxoxo");
+    bool result = g.solve();
+    cout << "Solve clobber_1xn " << g << ", result " << result << std::endl;
 }
