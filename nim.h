@@ -1,3 +1,9 @@
+//---------------------------------------------------------------------------
+// Implementation of the game of nim
+// Move representation, state representation, play and undo move
+// Nim move generator
+//---------------------------------------------------------------------------
+
 #ifndef nim_H
 #define nim_H
 
@@ -7,60 +13,73 @@
 
 using std::vector;
 
-const int MAX_SIZE = (1 << 16);
+//---------------------------------------------------------------------------
+// encode/decode nim move as int
+
+const int NIM_MAX_SIZE = (1 << 16);
 
 inline move nim_move(int heap, int number)
 {
-    assert(sizeof(int) >= 4);
-    assert(heap < MAX_SIZE);
-    assert(number < MAX_SIZE);
-    return heap * MAX_SIZE + number;
+    static_assert(sizeof(int) >= 4);
+    assert(heap < NIM_MAX_SIZE);
+    assert(number < NIM_MAX_SIZE);
+    return heap * NIM_MAX_SIZE + number;
 }
 
 inline int nim_heap(move m)
 {
-    return m / MAX_SIZE;
+    return m / NIM_MAX_SIZE;
 }
 
 inline int nim_number(move m)
 {
-    return m % MAX_SIZE;
+    return m % NIM_MAX_SIZE;
 }
+//---------------------------------------------------------------------------
 
+// Nim class
+// Implementation:
+//      heaps with 0 pebbles are stripped out at construction time,
+//      but can occur later during play
 class nim : public game
 {
 public:
     nim(std::string game_as_string);
-    const vector<int>& heaps() const;
-    // number of pebbles in _heaps[i]
-    int heap(int i) const;
-    bool find_static_winner(bool& success) const;
+    
+    // virtual functions
     void play(const move& m);
     void undo_move();
     move_generator* create_mg() const;
+    
+    // accessor/helper functions
+    const vector<int>& heaps() const;
+    
+    int num_heaps() const;
+    int heap_size(int i) const;
 private:
     vector<int> _heaps;
     vector<move> _move_stack;
 }; // nim
+//---------------------------------------------------------------------------
 
 inline const vector<int>& nim::heaps() const
 {
     return _heaps;
 }
 
-inline int nim::heap(int i) const
+inline int nim::num_heaps() const
+{
+    return _heaps.size();
+}
+
+inline int nim::heap_size(int i) const
 {
     return _heaps[i];
 }
 
-inline bool nim::find_static_winner(bool& success) const
-{
-    return false;
-}
-
+//---------------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& out, const nim& g);
-
 //---------------------------------------------------------------------------
 class nim_move_generator : public move_generator
 {
