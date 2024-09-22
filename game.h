@@ -3,6 +3,7 @@
 
 #include <string>
 #include <ostream>
+#include "cgt_basics.h"
 
 typedef int move;
 
@@ -14,8 +15,11 @@ public:
     game(int color);
     bool solve();
     int to_play() const;
+    int opponent() const;
     void set_to_play(int color);
-    virtual bool find_static_winner(bool& success) const = 0;
+    
+    // Default just returns false, a specific game may override
+    virtual bool find_static_winner(bool& success) const;
     virtual void play(const move& m) = 0;
     virtual void undo_move() = 0;
     virtual move_generator* create_mg() const = 0;
@@ -26,16 +30,29 @@ private:
 
 inline game::game(int color) :
     _to_play(color)
-{ }
+{
+    assert_black_white(color);
+}
 
 inline int game::to_play() const
 {
     return _to_play;
 }
 
+inline int game::opponent() const
+{
+    return ::opponent(_to_play);
+}
+
 inline void game::set_to_play(int color)
 {
+    assert_black_white(color);
     _to_play = color;
+}
+
+inline bool game::find_static_winner(bool& success) const
+{
+    return false;
 }
 
 std::ostream& operator<<(std::ostream& out, const game& g);
