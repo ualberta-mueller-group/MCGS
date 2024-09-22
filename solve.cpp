@@ -1,5 +1,4 @@
 #include "game.h"
-#include "nim.h"
 
 // solve by negamax boolean search
 bool solve(game& g)
