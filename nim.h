@@ -58,7 +58,6 @@ public:
     int heap_size(int i) const;
 private:
     vector<int> _heaps;
-    vector<move> _move_stack;
 }; // nim
 //---------------------------------------------------------------------------
 

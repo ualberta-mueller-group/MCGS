@@ -1,13 +1,19 @@
 #ifndef game_H
 #define game_H
 
-#include <string>
 #include <ostream>
+#include <string>
+#include <vector>
 #include "cgt_basics.h"
+//---------------------------------------------------------------------------
+
+using std::vector;
+//---------------------------------------------------------------------------
 
 typedef int move;
 
 class move_generator;
+//---------------------------------------------------------------------------
 
 class game
 {
@@ -17,21 +23,41 @@ public:
     int to_play() const;
     int opponent() const;
     void set_to_play(int color);
+    const vector<move>& move_stack() const;
     
     // Default just returns false, a specific game may override
     virtual bool find_static_winner(bool& success) const;
-    virtual void play(const move& m) = 0;
-    virtual void undo_move() = 0;
+    virtual void play(const move& m);
+    virtual void undo_move();
     virtual move_generator* create_mg() const = 0;
 
 private:
     int _to_play;
+    vector<move> _move_stack;
 }; // game
 
 inline game::game(int color) :
-    _to_play(color)
+    _to_play(color),
+    _move_stack()
 {
     assert_black_white(color);
+}
+
+inline const vector<move>& game::move_stack() const
+{
+    return _move_stack;
+}
+
+inline void game::play(const move& m)
+{
+    _move_stack.push_back(m);
+    _to_play = ::opponent(_to_play);
+}
+
+inline void game::undo_move()
+{
+    _move_stack.pop_back();
+    _to_play = ::opponent(_to_play);
 }
 
 inline int game::to_play() const

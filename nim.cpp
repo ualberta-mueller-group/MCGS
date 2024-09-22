@@ -23,12 +23,12 @@ vector<int> string_to_heaps(std::string game_as_string)
 
 nim::nim(std::string game_as_string) :
     game(LEFT),
-    _heaps(string_to_heaps(game_as_string)),
-    _move_stack()
+    _heaps(string_to_heaps(game_as_string))
 { }
 
 void nim::play(const move& m)
 {
+    game::play(m);
     const int heap = nim_heap(m);
     const int number = nim_number(m);
     assert(heap >= 0);
@@ -36,17 +36,16 @@ void nim::play(const move& m)
     assert(number > 0);
     assert(number <= _heaps[heap]);
     _heaps[heap] -= number;
-    _move_stack.push_back(m);
 }
 
  
 void nim::undo_move()
 {
-    const move m = _move_stack.back();
-    _move_stack.pop_back();
+    const move m = move_stack().back();
     const int heap = nim_heap(m);
     const int number = nim_number(m);
     _heaps[heap] += number;
+    game::undo_move();
 }
 
 move_generator* nim::create_mg() const
