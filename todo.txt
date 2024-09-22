@@ -15,3 +15,20 @@ use a proper unit test framework, maybe https://github.com/siu/minunit
 add nim formula
 add random testing for nim, in general? size parameter for random games?
 game.generate_random(size)?
+
+nim move generator could go into cpp. Only needed by nim_test - it could just use the generic movegenerator interface?
+
+TALK
+cgt solver talk
+check old talk from BIRS
+intro - math cgt vs cs cgt:
+    math: prove theorems about class of games
+    cs: efficiently compute result for a specific game
+    cs for math: explore, try to find patterns, verify conjectures
+    math for cs: improve efficiency of computation, simplify, shortcuts
+goals of solver:
+    general, efficient
+    avoid canonical form
+    use sum game structure
+    get more from cgt-search writeup
+
