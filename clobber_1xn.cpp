@@ -63,9 +63,9 @@ private:
 inline clobber_1xn_move_generator::clobber_1xn_move_generator(const clobber_1xn& game) :
     _game(game), _current(0), _dir(1)
 {
-    find_next_move();
+    if (! is_move(_current, _dir))
+        find_next_move();
 }
-
 
 
 void clobber_1xn_move_generator::operator++()
@@ -75,7 +75,8 @@ void clobber_1xn_move_generator::operator++()
 
 inline bool clobber_1xn_move_generator::is_move(int p, int dir) const
 {
-    return at(p + dir) == opponent();
+    return at(p) == to_play()
+        && _game.checked_is_color(p + dir, opponent());
 }
 
 bool clobber_1xn_move_generator::has_move(int p) const
@@ -88,16 +89,17 @@ void clobber_1xn_move_generator::find_next_move()
 {
     const int num = _game.size();
     
-    // try other dir first.
-    if (   _current < num
-           && _dir == 1
-           &&  at(_current) == to_play()
+    // try same from, other dir first.
+    if (      _dir == 1
+           && _current < num
+           && at(_current) == to_play()
            && is_move(_current, -1)
        )
        _dir = -1;
     
     else // advance
     {
+        ++_current;
         while (   _current < num
                && (  at(_current) != to_play()
                   || ! has_move(_current)
