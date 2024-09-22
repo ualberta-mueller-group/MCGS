@@ -14,7 +14,7 @@
 class strip : public game
 {
 public:
-    strip(std::string game_as_string);
+    strip(const std::string& game_as_string);
     int size() const;
     int at(int p) const;
     void play_stone(int p, int color);
@@ -24,13 +24,8 @@ public:
     void replace(int p, int color);
     std::string board_as_string() const;
 private:
-    std::string _board;
+    vector<int> _board; // todo try char as well.
 };
-
-inline strip::strip(std::string game_as_string) :
-    game(BLACK),
-    _board(game_as_string)
-{ }
 
 inline int strip::size() const
 {

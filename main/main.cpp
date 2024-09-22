@@ -18,7 +18,7 @@ int main()
     cout << "Solve nim " << g << ", result " << result << std::endl;
     }
 
-    clobber_1xn g("xoxoxo");
+    clobber_1xn g("XOXOXO");
     bool result = g.solve();
     cout << "Solve clobber_1xn " << g << ", result " << result << std::endl;
 }
