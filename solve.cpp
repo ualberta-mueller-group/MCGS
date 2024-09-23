@@ -3,8 +3,7 @@
 // solve by negamax boolean search
 bool solve(game& g)
 {
-    // todo use std::unique_ptr, std::make_unique
-    move_generator* mgp = g.create_mg();
+    std::unique_ptr<move_generator>mgp(g.create_mg());
     move_generator& mg = *mgp;
     
     // to_play
@@ -17,7 +16,7 @@ bool solve(game& g)
             success = not solve(g);
         g.undo_move();
         if (success)
-            {delete mgp; return true;}
+            {return true;}
     }
-    delete mgp; return false;
+    return false;
 }

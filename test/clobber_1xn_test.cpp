@@ -1,8 +1,12 @@
+//---------------------------------------------------------------------------
+// Unit tests for the game of clobber
+//---------------------------------------------------------------------------
 #include "clobber_1xn.h"
 
 #include <cassert>
 #include <iostream>
 #include "cgt_move.h"
+#include "test_utilities.h"
 
 using std::cout;
 using std::endl;
@@ -101,18 +105,11 @@ void clobber_1xn_test_sum_6()
     assert(result == false);
 }
 
-void assert_move(move_generator& mg, int from, int to)
-{ 
-    move m = mg.gen_move();
-    assert(from == cgt_move::from(m));
-    assert(to == cgt_move::to(m));
-}
-
 void clobber_1xn_move_generator_test_1()
 {
     clobber_1xn g("XXX.OOO");
     
-    move_generator* mgp(g.create_mg());
+    std::unique_ptr<move_generator>mgp(g.create_mg());
     move_generator& mg(*mgp);
     
     assert(!mg);
@@ -122,7 +119,7 @@ void clobber_1xn_move_generator_test_2()
 {
     clobber_1xn g("XO");
     
-    move_generator* mgp(g.create_mg());
+    std::unique_ptr<move_generator>mgp(g.create_mg());
     move_generator& mg(*mgp);
     assert(mg);
     assert_move(mg, 0, 1);
@@ -134,7 +131,7 @@ void clobber_1xn_move_generator_test_3()
 {
     clobber_1xn g("OXOX");
     
-    move_generator* mgp(g.create_mg());
+    std::unique_ptr<move_generator>mgp(g.create_mg());
     move_generator& mg(*mgp);
     assert(mg);
     assert_move(mg, 1, 2);
