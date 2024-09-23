@@ -20,7 +20,8 @@ use a proper unit test framework, maybe https://github.com/siu/minunit
 add random testing for nim, in general? size parameter for random games?
 game.generate_random(size)?
 
-search stats
+search stats: node count, leaf count, time, depth
+    later: transposition hits, simplifications, zero removal, inverse removal
 scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
 
 simple file format for tests:
