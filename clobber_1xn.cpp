@@ -63,7 +63,9 @@ private:
 inline clobber_1xn_move_generator::clobber_1xn_move_generator(const clobber_1xn& game) :
     _game(game), _current(0), _dir(1)
 {
-    if (! is_move(_current, _dir))
+    if (  _game.size() > 0
+     && ! is_move(_current, _dir)
+       )
         find_next_move();
 }
 
