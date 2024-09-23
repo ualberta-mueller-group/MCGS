@@ -3,7 +3,7 @@
 // solve by negamax boolean search
 bool solve(game& g)
 {
-    std::unique_ptr<move_generator>mgp(g.create_mg());
+    std::unique_ptr<move_generator>mgp(g.create_move_generator());
     move_generator& mg = *mgp;
     
     // to_play

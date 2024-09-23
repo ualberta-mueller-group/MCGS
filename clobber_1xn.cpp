@@ -130,7 +130,7 @@ move clobber_1xn_move_generator::gen_move() const
 }
 //---------------------------------------------------------------------------
 
-move_generator* clobber_1xn::create_mg() const
+move_generator* clobber_1xn::create_move_generator() const
 {
     return new clobber_1xn_move_generator(*this);
 }

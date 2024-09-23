@@ -14,7 +14,7 @@ public:
     clobber_1xn(std::string game_as_string);
     void play(const move& m);
     void undo_move();
-    move_generator* create_mg() const;
+    move_generator* create_move_generator() const;
 private:
 };
 

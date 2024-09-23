@@ -45,7 +45,7 @@ public:
     // virtual functions
     void play(const move& m);
     void undo_move();
-    move_generator* create_mg() const;
+    move_generator* create_move_generator() const;
     
     // accessor/helper functions
     const vector<int>& heaps() const;

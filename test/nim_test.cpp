@@ -104,7 +104,7 @@ void nim_move_generator_test_1()
     nim g("2 0 1");
     assert(g.heaps().size() == 2); // removed 0 heap so heaps = [2,1]
     
-    std::unique_ptr<move_generator>mgp(g.create_mg());
+    std::unique_ptr<move_generator>mgp(g.create_move_generator());
     move_generator& mg(*mgp);
     assert(mg);
     assert_move(mg, 0, 1);

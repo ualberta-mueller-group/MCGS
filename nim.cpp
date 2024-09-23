@@ -122,7 +122,7 @@ move nim_move_generator::gen_move() const
 }
 //---------------------------------------------------------------------------
 
-move_generator* nim::create_mg() const
+move_generator* nim::create_move_generator() const
 {
     return new nim_move_generator(*this);
 }

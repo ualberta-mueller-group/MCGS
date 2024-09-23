@@ -28,7 +28,7 @@ public:
     virtual bool find_static_winner(bool& success) const;
     virtual void play(const move& m);
     virtual void undo_move();
-    virtual move_generator* create_mg() const = 0;
+    virtual move_generator* create_move_generator() const = 0;
 
 private:
     int _to_play;

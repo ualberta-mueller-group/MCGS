@@ -109,7 +109,7 @@ void clobber_1xn_move_generator_test_1()
 {
     clobber_1xn g("XXX.OOO");
     
-    std::unique_ptr<move_generator>mgp(g.create_mg());
+    std::unique_ptr<move_generator>mgp(g.create_move_generator());
     move_generator& mg(*mgp);
     
     assert(!mg);
@@ -119,7 +119,7 @@ void clobber_1xn_move_generator_test_2()
 {
     clobber_1xn g("XO");
     
-    std::unique_ptr<move_generator>mgp(g.create_mg());
+    std::unique_ptr<move_generator>mgp(g.create_move_generator());
     move_generator& mg(*mgp);
     assert(mg);
     assert_move(mg, 0, 1);
@@ -131,7 +131,7 @@ void clobber_1xn_move_generator_test_3()
 {
     clobber_1xn g("OXOX");
     
-    std::unique_ptr<move_generator>mgp(g.create_mg());
+    std::unique_ptr<move_generator>mgp(g.create_move_generator());
     move_generator& mg(*mgp);
     assert(mg);
     assert_move(mg, 1, 2);
