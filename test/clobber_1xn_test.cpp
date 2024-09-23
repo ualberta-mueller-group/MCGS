@@ -148,6 +148,30 @@ void clobber_1xn_move_generator_test_3()
     assert(!mg);
 }
 
+void clobber_1xn_test_string_1()
+{
+    std::string board("OXOX");
+    clobber_1xn g(board);
+    std::string output = g.board_as_string();
+    assert(board == output);
+}
+
+void clobber_1xn_test_string_2()
+{
+    std::string board("OXOX.XXX.OOO");
+    clobber_1xn g(board);
+    std::string output = g.board_as_string();
+    assert(board == output);
+}
+
+void clobber_1xn_test_string_3()
+{
+    std::string board("");
+    clobber_1xn g(board);
+    std::string output = g.board_as_string();
+    assert(board == output);
+}
+
 void clobber_1xn_test_all()
 {
     clobber_1xn_test_zero();
@@ -164,4 +188,7 @@ void clobber_1xn_test_all()
     clobber_1xn_test_sum_4();
     clobber_1xn_test_sum_5();
     clobber_1xn_test_sum_6();
+    clobber_1xn_test_string_1();
+    clobber_1xn_test_string_2();
+    clobber_1xn_test_string_3();
 }

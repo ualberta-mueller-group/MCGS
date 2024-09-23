@@ -5,12 +5,12 @@ change toplay
 everyone must call game::play()
 clobber board conversion char x,o,. vs board as EMPTY, BLACK, WHITE
 move_generator clobber_1xn
-
-
-TODO
 clobber unit tests
     move generator, solve, convert from/to string
 test write clobber board
+
+
+TODO
 
 use a proper unit test framework, maybe https://github.com/siu/minunit
 add nim formula
