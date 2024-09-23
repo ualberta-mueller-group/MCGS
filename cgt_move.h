@@ -10,6 +10,10 @@
 #include <vector>
 #include "cgt_basics.h"
 
+// Currently all moves must be encoded as int, and decoded from int
+// There is no abstract move class here.
+typedef int move;
+
 namespace cgt_move {
 
 const int MOVE_MAX_SIZE = (1 << 16);
