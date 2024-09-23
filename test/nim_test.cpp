@@ -1,6 +1,7 @@
+#include "nim.h"
+
 #include <cassert>
 #include <iostream>
-#include "nim.h"
 
 using std::cout;
 using std::endl;
