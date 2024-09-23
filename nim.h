@@ -76,24 +76,5 @@ inline int nim::heap_size(int i) const
 
 std::ostream& operator<<(std::ostream& out, const nim& g);
 //---------------------------------------------------------------------------
-class nim_move_generator : public move_generator
-{
-public:
-    nim_move_generator(const nim& game);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
-private:
-    void skip_zeroes();
-    const nim& _game;
-    int _current_heap;
-    int _current_number;
-};
-
-inline nim_move_generator::nim_move_generator(const nim& game) :
-    _game(game), _current_heap(0), _current_number(1)
-{
-    skip_zeroes();
-}
 
 #endif // nim_H

@@ -1,7 +1,11 @@
+//---------------------------------------------------------------------------
+// Unit tests for the game of nim
+//---------------------------------------------------------------------------
 #include "nim.h"
 
 #include <cassert>
 #include <iostream>
+#include "test_utilities.h"
 
 using std::cout;
 using std::endl;
@@ -83,19 +87,14 @@ void nim_test_sum_6()
     assert(result == false);
 }
 
-void assert_move(nim_move_generator& mg, int heap, int number)
-{ 
-    move m = mg.gen_move();
-    assert(heap == nim_heap(m));
-    assert(number == nim_number(m));
-}
 
 void nim_move_generator_test_1()
 {
     nim g("2 0 1");
     assert(g.heaps().size() == 2); // removed 0 heap so heaps = [2,1]
     
-    nim_move_generator mg(g);
+    std::unique_ptr<move_generator>mgp(g.create_mg());
+    move_generator& mg(*mgp);
     assert(mg);
     assert_move(mg, 0, 1);
     ++mg;

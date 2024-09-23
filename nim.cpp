@@ -48,11 +48,6 @@ void nim::undo_move()
     game::undo_move();
 }
 
-move_generator* nim::create_mg() const
-{
-    return new nim_move_generator(*this);
-}
-
 std::ostream& operator<<(std::ostream& out, const nim& g)
 {
     for(auto n: g.heaps())
@@ -61,6 +56,26 @@ std::ostream& operator<<(std::ostream& out, const nim& g)
 }
 
 //---------------------------------------------------------------------------
+class nim_move_generator : public move_generator
+{
+public:
+    nim_move_generator(const nim& game);
+    void operator++();
+    operator bool() const;
+    move gen_move() const;
+private:
+    void skip_zeroes();
+    const nim& _game;
+    int _current_heap;
+    int _current_number;
+};
+
+nim_move_generator::nim_move_generator(const nim& game) :
+    _game(game), _current_heap(0), _current_number(1)
+{
+    skip_zeroes();
+}
+
 void nim_move_generator::operator++()
 {
     const int size = _game.heap_size(_current_heap);
@@ -93,3 +108,10 @@ move nim_move_generator::gen_move() const
 {
     return nim_move(_current_heap, _current_number);
 }
+//---------------------------------------------------------------------------
+
+move_generator* nim::create_mg() const
+{
+    return new nim_move_generator(*this);
+}
+//---------------------------------------------------------------------------
