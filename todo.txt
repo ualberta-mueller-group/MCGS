@@ -8,18 +8,20 @@ move_generator clobber_1xn
 clobber unit tests
     move generator, solve, convert from/to string
 test write clobber board
+move generators are memory leaks - use std::unique_ptr
+add nim formula
+nim move generator could go into cpp. Only needed by nim_test - it could just use the generic movegenerator interface?
 
 
 TODO
 
 use a proper unit test framework, maybe https://github.com/siu/minunit
-add nim formula
+
 add random testing for nim, in general? size parameter for random games?
 game.generate_random(size)?
 
-nim move generator could go into cpp. Only needed by nim_test - it could just use the generic movegenerator interface?
-
 search stats
+scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
 
 simple file format for tests:
     line 1: game name, file format version?

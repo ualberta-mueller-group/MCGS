@@ -52,6 +52,8 @@ public:
     
     int num_heaps() const;
     int heap_size(int i) const;
+    
+    bool static_solve() const; // use Nim formula
 private:
     vector<int> _heaps;
 }; // nim

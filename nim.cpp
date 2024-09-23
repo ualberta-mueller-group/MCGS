@@ -48,14 +48,26 @@ void nim::undo_move()
     game::undo_move();
 }
 
+// use Nim formula
+bool nim::static_solve() const
+{
+    int sum = 0;
+    for (int heap: _heaps)
+    {
+        sum ^= heap;
+    }
+    return sum != 0;
+}
+//---------------------------------------------------------------------------
+
 std::ostream& operator<<(std::ostream& out, const nim& g)
 {
     for(auto n: g.heaps())
         out << n << ' ';
     return out;
 }
-
 //---------------------------------------------------------------------------
+
 class nim_move_generator : public move_generator
 {
 public:

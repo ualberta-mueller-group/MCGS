@@ -14,6 +14,7 @@ void nim_test_zero()
 {
     nim g("");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == false);
 }
 
@@ -21,6 +22,7 @@ void nim_test_zero2()
 {
     nim g("0");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == false);
 }
 
@@ -28,6 +30,7 @@ void nim_test_1()
 {
     nim g("1");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == true);
 }
 
@@ -35,6 +38,7 @@ void nim_test_2()
 {
     nim g("2");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == true);
 }
 
@@ -42,6 +46,7 @@ void nim_test_3()
 {
     nim g("10");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == true);
 }
 
@@ -49,6 +54,7 @@ void nim_test_sum_1()
 {
     nim g("1 0");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == true);
 }
 
@@ -56,6 +62,7 @@ void nim_test_sum_2()
 {
     nim g("1 1");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == false);
 }
 
@@ -63,6 +70,7 @@ void nim_test_sum_3()
 {
     nim g("4 5");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == true);
 }
 
@@ -70,6 +78,7 @@ void nim_test_sum_4()
 {
     nim g("1 2 3");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == false);
 }
 
@@ -77,6 +86,7 @@ void nim_test_sum_5()
 {
     nim g("3 4 5 6");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == true);
 }
 
@@ -84,6 +94,7 @@ void nim_test_sum_6()
 {
     nim g("3 4 5 2");
     bool result = g.solve();
+    assert(result == g.static_solve());
     assert(result == false);
 }
 
