@@ -1,10 +1,24 @@
 # MCGS
 
-A Minimax Search-based Solver for Combinatorial Games
+A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
-## Documentation
-See the document "The Design of MCGS:
-A Minimax Search-based Solver for Combinatorial Games"
+Martin Müller, 2024
+
+## Design Documentation
+For the overall approach and future plans, see the document "The Design of MCGS:
+A Minimax-based Combinatorial Game Solver".
+
+## How to build, run and test MCGS
+- Download the code and go to the directory
+- There is a basic makefile. It supports:
+    - `make` builds the program `.\MCGS`. Any tasks you want to run should be called in the main function.
+    - `make test` builds and runs all unit tests, in program `./MCGS_test`. No output means that the tests succeeded.
+
+## How the MCGS code is organised
+- Currently it uses a "flat" organisation. The only subdirectories are:
+    - `main` contains the main program
+    - `test` contains all unit tests, and the `main_test.cpp` program
+- There are two text/markdown files: this `README.md`, and a `todo.txt`
 
 ## How to implement a new game
 - Also see `nim` and `clobber_1xn` as examples
@@ -39,7 +53,3 @@ A Minimax Search-based Solver for Combinatorial Games"
     - This is very ugly but could not solve it in a better way. I would love to have move generators just in local variables.
     - A workaround to prevent memory leaks is to always wrap a move generator in a `std::unique_ptr` - see examples in `nim_test.cpp`, function `nim_move_generator_test_1`, and in `solve.cpp`
 
-## TODO - test cases
-From class in `~/Projects/ualberta-mueller-group/combinatorial_game_solver/PriorWork`
-
-From Taylor's solver 

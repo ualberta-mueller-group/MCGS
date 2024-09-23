@@ -1,0 +1,51 @@
+# DONE
+- in game:
+add to move stack
+- change toplay
+- everyone must call game::play()
+- clobber board conversion char `x,o,.` vs board as `EMPTY, BLACK, WHITE`
+- `move_generator clobber_1xn`
+- clobber unit tests
+    - move generator, solve, convert from/to string
+- test write clobber board
+- move generators are memory leaks - use `std::unique_ptr`
+- add nim formula
+- nim move generator could go into cpp. Only needed by `nim_test` - it could - just use the generic movegenerator interface?
+
+# TODO
+
+- use a proper unit test framework, maybe https://github.com/siu/minunit
+
+- add random testing for nim, in general? size parameter for random games?
+game.generate_random(size)?
+
+- search stats: node count, leaf count, time, depth
+    - later: transposition hits, simplifications, zero removal, inverse removal
+- scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
+
+## TEST CASES
+- simple file format for tests:
+    - line 1: game name, file format version?
+    - line 2..n:
+    - one test per line
+    - format: game toPlay win/loss result
+    - get, convert existing small clobber and NoGo tests
+
+- From class in `~/Projects/ualberta-mueller-group/combinatorial_game_solver/PriorWork`
+
+- From Taylor's solver 
+
+## TALK
+- cgt solver talk
+- check old talk from BIRS
+- intro - math cgt vs cs cgt:
+    - math: prove theorems about class of games
+    - cs: efficiently compute result for a specific game
+    - cs for math: explore, try to find patterns, verify conjectures
+    - math for cs: improve efficiency of computation, simplify, shortcuts
+- goals of solver:
+    - general, efficient
+    - avoid canonical form
+    - use sum game structure
+    - get more from cgt-search writeup
+
