@@ -9,31 +9,27 @@
 
 #include <vector>
 #include "cgt_basics.h"
+#include "cgt_move.h"
 #include "game.h"
 
 using std::vector;
 
 //---------------------------------------------------------------------------
-// encode/decode nim move as int
-
-const int NIM_MAX_SIZE = (1 << 16);
+// encode/decode nim_move as move
 
 inline move nim_move(int heap, int number)
 {
-    static_assert(sizeof(int) >= 4);
-    assert(heap < NIM_MAX_SIZE);
-    assert(number < NIM_MAX_SIZE);
-    return heap * NIM_MAX_SIZE + number;
+    return cgt_move::two_part_move(heap, number);
 }
 
 inline int nim_heap(move m)
 {
-    return m / NIM_MAX_SIZE;
+    return cgt_move::first(m);
 }
 
 inline int nim_number(move m)
 {
-    return m % NIM_MAX_SIZE;
+    return cgt_move::second(m);
 }
 //---------------------------------------------------------------------------
 
