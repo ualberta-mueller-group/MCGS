@@ -32,6 +32,26 @@ A Minimax-based Combinatorial Game Solver".
     - Add the declaration in `x_test.h` 
     - Call `x_test_all` from `test/test_main.cpp`
 
+## File Format for Test Cases
+- simple file format for tests:
+- line 1: game name, file format version, currently 0
+- line 2..n:
+    - one test per line
+    - format of test: game toPlay result
+        - game: a single string representing the game
+        - toPlay: B or W
+        - result: win or loss
+- Example:
+<pre>
+clobber_1xn 0
+XO B win
+XO W win
+OXOXOX B loss
+OXOXOX W loss
+XXO  B win
+XXO W loss
+</pre>
+
 ## Versions
 ### Version 0
 - Now working on version 0
@@ -44,12 +64,12 @@ A Minimax-based Combinatorial Game Solver".
     - Nogo: `nogo_1xn` class
     - Basic test cases in files, run automatically
 
-#### Version 0 Design Choices and Remaining Uglynesses
+#### Version 0 Design Choices and Remaining Uglinesses
 - A `move` must be an `int`. 
     - I tried to make a generic abstract move class, but could not implement it in a "nice" and efficient way.
     - There are some utilities in `cgt_move.h` which help pack and unpack moves from/to int
     - Plan: probably keep it this way unless I find an elegant general solution
 - `move_generator` objects are dynamically allocated.
-    - This is very ugly but could not solve it in a better way. I would love to have move generators just in local variables.
+    - This is very ugly but could not solve it in a better way. I would love to have move generators just as local variables.
     - A workaround to prevent memory leaks is to always wrap a move generator in a `std::unique_ptr` - see examples in `nim_test.cpp`, function `nim_move_generator_test_1`, and in `solve.cpp`
 

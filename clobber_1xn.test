@@ -1,0 +1,7 @@
+clobber_1xn 0
+XO B win
+XO W win
+OXOXOX B loss
+OXOXOX W loss
+XXO  B win
+XXO W loss

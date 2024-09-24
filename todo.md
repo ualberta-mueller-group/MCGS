@@ -24,12 +24,8 @@ game.generate_random(size)?
 - scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
 
 ## TEST CASES
-- simple file format for tests:
-    - line 1: game name, file format version?
-    - line 2..n:
-    - one test per line
-    - format: game toPlay win/loss result
-    - get, convert existing small clobber and NoGo tests
+- get, convert existing small clobber and NoGo tests
+- should just read one by one, no need for vector. write an iterator???
 
 - From class in `~/Projects/ualberta-mueller-group/combinatorial_game_solver/PriorWork`
 

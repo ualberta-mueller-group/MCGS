@@ -6,11 +6,13 @@
 #include <cassert>
 #include <iostream>
 #include "cgt_move.h"
+#include "test_case.h"
 #include "test_utilities.h"
 
 using std::cout;
 using std::endl;
 
+namespace {
 void clobber_1xn_test_zero()
 {
     clobber_1xn g("");
@@ -169,6 +171,30 @@ void clobber_1xn_test_string_3()
     assert(board == output);
 }
 
+void test(const test_case &c)
+{
+    clobber_1xn g(c._game);
+    g.set_to_play(c._black_first ? BLACK : WHITE);
+    assert(g.solve() == c._is_win);
+}
+
+void clobber_test_file()
+{
+    std::vector<test_case> cases;
+    std::string game_name;
+    int version;
+    if (! read_test_cases("clobber_1xn.test", game_name, version, cases))
+        return;
+    assert(game_name == "clobber_1xn");
+    assert(version == 0);
+    for (const test_case& c: cases)
+    {
+        test(c);
+    }
+}
+
+} // namespace
+
 void clobber_1xn_test_all()
 {
     clobber_1xn_test_zero();
@@ -179,6 +205,8 @@ void clobber_1xn_test_all()
     clobber_1xn_test_1();
     clobber_1xn_test_2();
     clobber_1xn_test_3();
+    clobber_1xn_test_4();
+    clobber_1xn_test_5();
     clobber_1xn_test_sum_1();
     clobber_1xn_test_sum_2();
     clobber_1xn_test_sum_3();
@@ -188,4 +216,5 @@ void clobber_1xn_test_all()
     clobber_1xn_test_string_1();
     clobber_1xn_test_string_2();
     clobber_1xn_test_string_3();
+    clobber_test_file();
 }

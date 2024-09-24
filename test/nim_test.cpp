@@ -5,11 +5,13 @@
 
 #include <cassert>
 #include <iostream>
+#include "test_case.h"
 #include "test_utilities.h"
 
 using std::cout;
 using std::endl;
 
+namespace {
 void nim_test_zero()
 {
     nim g("");
@@ -118,6 +120,31 @@ void nim_move_generator_test_1()
     assert(!mg);
 }
 
+void test(const test_case &c)
+{
+    nim g(c._game);
+    g.set_to_play(c._black_first ? BLACK : WHITE);
+    assert(g.solve() == c._is_win);
+}
+
+
+void nim_test_file()
+{
+    std::vector<test_case> cases;
+    std::string game_name;
+    int version;
+    if (! read_test_cases("nim.test", game_name, version, cases))
+        return;
+    assert(game_name == "nim");
+    assert(version == 0);
+    for (const test_case& c: cases)
+    {
+        test(c);
+    }
+}
+
+} // namespace
+
 void nim_test_all()
 {
     nim_test_zero();
@@ -132,4 +159,5 @@ void nim_test_all()
     nim_test_sum_4();
     nim_test_sum_5();
     nim_test_sum_6();
+    nim_test_file();
 }
