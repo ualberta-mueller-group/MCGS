@@ -48,7 +48,7 @@ XO B win
 XO W win
 OXOXOX B loss
 OXOXOX W loss
-XXO  B win
+XXO B win
 XXO W loss
 </pre>
 
@@ -60,9 +60,11 @@ XXO W loss
     - Utility class `strip` for 1xn boards
     - Clobber: `clobber_1xn` implementation done
     - Basic minimax implementation in `solve.cpp` done
+    - Basic test cases in files, run automatically
 - Version 0 still to do:
     - Nogo: `nogo_1xn` class
-    - Basic test cases in files, run automatically
+    - review, finish in-file comments, headers
+    - Tag version 0
 
 #### Version 0 Design Choices and Remaining Uglinesses
 - A `move` must be an `int`. 

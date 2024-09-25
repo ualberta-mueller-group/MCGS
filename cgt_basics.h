@@ -1,3 +1,8 @@
+//---------------------------------------------------------------------------
+// Basic cgt and game constants and utilities
+// Players, colors, ranges, outcome_class, 
+// conversion color to char and back
+//---------------------------------------------------------------------------
 #ifndef cgt_basics_H
 #define cgt_basics_H
 
@@ -16,7 +21,7 @@ const int RIGHT = WHITE;
  P = previous player win = 2nd player win = 0
  N = next player win = first player win
  L = left wins = black wins = X wins, no matter who goes first
- R = right wins = white wins = o wins, no matter who goes first
+ R = right wins = white wins = O wins, no matter who goes first
  U = unknown - used when outcome is not computed (yet)
  */
 enum outcome_class { P, N, L, R, U };

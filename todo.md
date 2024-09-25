@@ -11,16 +11,23 @@ add to move stack
 - move generators are memory leaks - use `std::unique_ptr`
 - add nim formula
 - nim move generator could go into cpp. Only needed by `nim_test` - it could - just use the generic movegenerator interface?
+- add random testing for nim
 
 # TODO
-
-- use a proper unit test framework, maybe https://github.com/siu/minunit
-
-- add random testing for nim, in general? size parameter for random games?
-game.generate_random(size)?
-
+- simplify hook for game
+    - simplify nim - remove equal pairs
+- move ordering hook for game
+    - move ordering in nim? match other game value?
 - search stats: node count, leaf count, time, depth
     - later: transposition hits, simplifications, zero removal, inverse removal
+- use a proper unit test framework, maybe https://github.com/siu/minunit
+
+- random testing for nim 
+    - increase size limit as program becomes better
+    - generate 2nd player win game by adding nim sum
+- add random in general? how to check results? size parameter for random games?
+game.generate_random(size)?
+
 - scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
 
 ## TEST CASES
