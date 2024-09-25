@@ -175,7 +175,12 @@ void test(const test_case &c)
 {
     clobber_1xn g(c._game);
     g.set_to_play(c._black_first ? BLACK : WHITE);
-    assert(g.solve() == c._is_win);
+    if (g.solve() != c._is_win)
+    {
+        cout << "Test failed game " << g << ' ' 
+             << c._black_first << " expected " << c._is_win << endl;
+        assert(false);
+    }
 }
 
 void clobber_test_file()
