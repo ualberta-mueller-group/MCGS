@@ -26,6 +26,12 @@ nim::nim(std::string game_as_string) :
     _heaps(string_to_heaps(game_as_string))
 { }
 
+
+void nim::add_heap(int heap)
+{
+    _heaps.push_back(heap);
+}
+
 void nim::play(const move& m)
 {
     game::play(m);
