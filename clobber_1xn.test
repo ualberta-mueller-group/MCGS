@@ -1,7 +1,15 @@
 clobber_1xn 0
 XO B win
 XO W win
+XOX B win
+XOX W win
+XOXO B win
+XOXO W win
+XOXOX B loss
+XOXOX W win
 OXOXOX B loss
 OXOXOX W loss
-XXO  B win
+XOXOXOX B loss
+XOXOXOX W win
+XXO B win
 XXO W loss
