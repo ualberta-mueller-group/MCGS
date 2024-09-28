@@ -16,6 +16,10 @@ const int BORDER = 3; // outside of board
 const int LEFT = BLACK;
 const int RIGHT = WHITE;
 
+typedef int bw; // black or white
+typedef int ebw; // empty, black or white
+
+
 /**
  The four outcome classes of a combinatorial game, plus unknown:
  P = previous player win = 2nd player win = 0
@@ -34,12 +38,12 @@ inline bool is_black_white(int c)
     return c == BLACK || c == WHITE;
 }
 
-inline void assert_black_white(int color)
+inline void assert_black_white(bw color)
 {
     assert(is_black_white(color));
 }
 
-inline int opponent(int c)
+inline int opponent(bw c)
 {
     assert_black_white(c);
     return BLACK + WHITE - c;
@@ -50,7 +54,7 @@ inline bool is_empty_black_white(int c)
     return c == BLACK || c == WHITE || c == EMPTY;
 }
 
-inline void assert_empty_black_white(int color)
+inline void assert_empty_black_white(ebw color)
 {
     assert(is_empty_black_white(color));
 }
