@@ -55,15 +55,19 @@ void nim::undo_move()
     game::undo_move();
 }
 
-// use Nim formula
-bool nim::static_solve() const
+int nim::nim_value() const
 {
     int sum = 0;
     for (int heap: _heaps)
     {
         sum ^= heap;
     }
-    return sum != 0;
+    return sum;
+}
+
+bool nim::static_solve() const
+{
+    return nim_value() != 0;
 }
 //---------------------------------------------------------------------------
 

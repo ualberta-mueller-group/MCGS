@@ -54,7 +54,8 @@ public:
     int heap_size(int i) const;
     
     void add_heap(int heap);
-    bool static_solve() const; // use Nim formula
+    bool static_solve() const; // uses Nim formula
+    int nim_value() const; // uses Nim formula
 private:
     vector<int> _heaps;
 }; // nim
