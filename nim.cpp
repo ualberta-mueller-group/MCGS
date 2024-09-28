@@ -22,7 +22,7 @@ vector<int> string_to_heaps(std::string game_as_string)
 } // namespace
 
 nim::nim(std::string game_as_string) :
-    game(LEFT),
+    game(),
     _heaps(string_to_heaps(game_as_string))
 { }
 
@@ -32,9 +32,9 @@ void nim::add_heap(int heap)
     _heaps.push_back(heap);
 }
 
-void nim::play(const move& m)
+void nim::play(const move& m, bw to_play)
 {
-    game::play(m);
+    game::play(m, to_play);
     const int heap = nim_heap(m);
     const int number = nim_number(m);
     assert(heap >= 0);
@@ -47,7 +47,8 @@ void nim::play(const move& m)
  
 void nim::undo_move()
 {
-    const move m = move_stack().back();
+    // ignore to_play color
+    const move m = cgt_move::decode(move_stack().back());
     const int heap = nim_heap(m);
     const int number = nim_number(m);
     _heaps[heap] += number;
@@ -89,7 +90,10 @@ private:
 };
 
 nim_move_generator::nim_move_generator(const nim& game) :
-    _game(game), _current_heap(0), _current_number(1)
+    move_generator(BLACK),
+    _game(game),
+    _current_heap(0),
+    _current_number(1)
 {
     skip_zeroes();
 }
@@ -128,7 +132,7 @@ move nim_move_generator::gen_move() const
 }
 //---------------------------------------------------------------------------
 
-move_generator* nim::create_move_generator() const
+move_generator* nim::create_move_generator(bw ignore_to_play) const
 {
     return new nim_move_generator(*this);
 }

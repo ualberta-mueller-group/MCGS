@@ -43,9 +43,9 @@ public:
     nim(std::string game_as_string);
     
     // virtual functions
-    void play(const move& m);
+    void play(const move& m, bw to_play);
     void undo_move();
-    move_generator* create_move_generator() const;
+    move_generator* create_move_generator(bw to_play) const;
     
     // accessor/helper functions
     const vector<int>& heaps() const;

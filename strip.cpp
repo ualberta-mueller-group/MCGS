@@ -53,7 +53,7 @@ std::string board_to_string(const vector<int>& board)
 //---------------------------------------------------------------------------
 
 strip::strip(const std::string& game_as_string) :
-    game(BLACK),
+    game(),
     _board(string_to_board(game_as_string))
 { }
 

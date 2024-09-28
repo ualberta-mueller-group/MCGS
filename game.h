@@ -17,80 +17,119 @@ class move_generator;
 class game
 {
 public:
-    game(int color);
-    bool solve();
-    int to_play() const;
-    int opponent() const;
-    void set_to_play(int color);
+    game();
     const vector<move>& move_stack() const;
     
-    // Default just returns false, a specific game may override
-    virtual bool find_static_winner(bool& success) const;
-    virtual void play(const move& m);
+    virtual void play(const move& m, bw to_play);
     virtual void undo_move();
-    virtual move_generator* create_move_generator() const = 0;
+    virtual move_generator* create_move_generator(bw to_play) const = 0;
 
 private:
-    int _to_play;
     vector<move> _move_stack;
 }; // game
 
-inline game::game(int color) :
-    _to_play(color),
+inline game::game() :
     _move_stack()
-{
-    assert_black_white(color);
-}
+{ }
 
 inline const vector<move>& game::move_stack() const
 {
     return _move_stack;
 }
 
-inline void game::play(const move& m)
+inline void game::play(const move& m, int to_play)
 {
-    _move_stack.push_back(m);
-    _to_play = ::opponent(_to_play);
+    _move_stack.push_back(cgt_move::encode(m, to_play));
 }
 
 inline void game::undo_move()
 {
     _move_stack.pop_back();
-    _to_play = ::opponent(_to_play);
 }
 
-inline int game::to_play() const
+
+
+std::ostream& operator<<(std::ostream& out, const game& g);
+
+//---------------------------------------------------------------------------
+// a alternating_move_game contains a game, and a player to play first
+// 
+class alternating_move_game
+{
+public:
+    alternating_move_game(game& game, int color);
+    bw to_play() const;
+    bw opponent() const;
+    void set_to_play(int color);
+    bool solve();
+    game& game_pos() {return _game;}
+
+    // Default just returns false, a specific game may override
+    virtual bool find_static_winner(bool& success) const;
+    virtual void play(const move& m);
+    virtual void undo_move();
+private:
+    game& _game;
+    bw _to_play;
+}; // alternating_move_game
+
+inline alternating_move_game::alternating_move_game(game& game, bw to_play) :
+    _game(game),
+    _to_play(to_play)
+{
+    assert_black_white(to_play);
+}
+
+inline bw alternating_move_game::to_play() const
 {
     return _to_play;
 }
 
-inline int game::opponent() const
+inline bw alternating_move_game::opponent() const
 {
     return ::opponent(_to_play);
 }
 
-inline void game::set_to_play(int color)
+inline void alternating_move_game::set_to_play(bw to_play)
 {
-    assert_black_white(color);
-    _to_play = color;
+    assert_black_white(to_play);
+    _to_play = to_play;
 }
 
-inline bool game::find_static_winner(bool& success) const
+inline void alternating_move_game::play(const move& m)
+{
+    _game.play(m, _to_play);
+    _to_play = ::opponent(_to_play);
+}
+
+inline void alternating_move_game::undo_move()
+{
+    _game.undo_move();
+    _to_play = ::opponent(_to_play);
+}
+
+inline bool alternating_move_game::find_static_winner(bool& success) const
 {
     return false;
 }
-
-std::ostream& operator<<(std::ostream& out, const game& g);
 
 //---------------------------------------------------------------------------
 class move_generator
 {
 public:
-//     move_generator(const game& g) = 0;
+    move_generator(bw to_play);
     virtual ~move_generator() { }
+    int to_play() const {return _to_play; }
+    int opponent() const {return ::opponent(_to_play); }
+
     virtual void operator++() = 0;
     virtual operator bool() const = 0;
     virtual move gen_move() const = 0;
+private:
+    bw _to_play;
 }; // move_generator
 
+inline move_generator::move_generator(bw to_play) :
+    _to_play(to_play)
+{ }
 #endif // game_H

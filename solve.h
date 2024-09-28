@@ -2,7 +2,8 @@
 #define solve_H
 
 #include "cgt_basics.h"
+#include "game.h"
 
-bool solve(game& g);
+bool solve(alternating_move_game& g);
 
 #endif // solve_H

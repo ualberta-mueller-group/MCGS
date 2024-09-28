@@ -13,20 +13,23 @@ using std::cout;
 int main()
 {
     {
-        nim g("1 2 3");
+        nim pos("1 2 3");
+        alternating_move_game g(pos, BLACK);
         bool result = g.solve();
-        cout << "Solve nim " << g << ", result " << result << std::endl;
+        cout << "Solve nim " << pos << ", result " << result << std::endl;
     }
 
     {
-        clobber_1xn g("XOXOXO");
+        clobber_1xn pos("XOXOXO");
+        alternating_move_game g(pos, BLACK);
         bool result = g.solve();
-        cout << "Solve clobber_1xn " << g << ", result " << result << std::endl;
+        cout << "Solve clobber_1xn " << pos << ", result " << result << std::endl;
     }
 
     {
-        clobber_1xn g("XXOXOXOOX");
+        clobber_1xn pos("XXOXOXOOX");
+        alternating_move_game g(pos, BLACK);
         bool result = g.solve();
-        cout << "Solve clobber_1xn " << g << ", result " << result << std::endl;
+        cout << "Solve clobber_1xn " << pos << ", result " << result << std::endl;
     }
 }

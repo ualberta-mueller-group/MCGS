@@ -1,12 +1,14 @@
+#include "solve.h"
+
 #include "game.h"
 
 // solve by negamax boolean search
-bool solve(game& g)
+bool solve(alternating_move_game& g)
 {
-    std::unique_ptr<move_generator>mgp(g.create_move_generator());
+    game& pos = g.game_pos();
+    std::unique_ptr<move_generator>mgp(pos.create_move_generator(g.to_play()));
     move_generator& mg = *mgp;
     
-    // to_play
     for (; mg; ++mg)
     {
         g.play(mg.gen_move());
@@ -16,7 +18,7 @@ bool solve(game& g)
             success = not solve(g);
         g.undo_move();
         if (success)
-            {return true;}
+            return true;
     }
     return false;
 }

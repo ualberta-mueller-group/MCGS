@@ -7,29 +7,29 @@ clobber_1xn::clobber_1xn(std::string game_as_string) :
     strip(game_as_string)
 { }
 
-void clobber_1xn::play(const move& m)
+void clobber_1xn::play(const move& m, bw to_play)
 {
-    const int player = to_play();
     const int from = cgt_move::from(m);
     const int to = cgt_move::to(m);
-    assert(at(from) == player);
-    assert(at(to) == opponent());
-    game::play(m); // changes to_play
+    assert(at(from) == to_play);
+    assert(at(to) == opponent(to_play));
+    game::play(m, to_play);
     replace(from, EMPTY);
-    replace(to, player);
+    replace(to, to_play);
 }
 
 void clobber_1xn::undo_move()
 {
-    const move m = move_stack().back();
+    const move mc = move_stack().back();
+    const move m = cgt_move::decode(mc);
     const int from = cgt_move::from(m);
     const int to = cgt_move::to(m);
-    game::undo_move(); // changes to_play back
-    const int player = to_play();
+    game::undo_move();
+    const bw player = cgt_move::get_color(mc);
     assert(at(from) == EMPTY);
     assert(at(to) == player);
     replace(from, player);
-    replace(to, opponent());
+    replace(to, opponent(player));
 }
 
 
@@ -43,14 +43,12 @@ std::ostream& operator<<(std::ostream& out, const clobber_1xn& g)
 class clobber_1xn_move_generator : public move_generator
 {
 public:
-    clobber_1xn_move_generator(const clobber_1xn& game);
+    clobber_1xn_move_generator(const clobber_1xn& game, bw to_play);
     void operator++();
     operator bool() const;
     move gen_move() const;
 private:
     int at(int p) const {return _game.at(p); }
-    int to_play() const {return _game.to_play(); }
-    int opponent() const {return _game.opponent(); }
     bool is_move(int p, int dir) const;
     bool has_move(int p) const;
 
@@ -60,15 +58,17 @@ private:
     int _dir; // +-1
 };
 
-inline clobber_1xn_move_generator::clobber_1xn_move_generator(const clobber_1xn& game) :
-    _game(game), _current(0), _dir(1)
+inline clobber_1xn_move_generator::clobber_1xn_move_generator(const clobber_1xn& game, bw to_play) :
+    move_generator(to_play),
+    _game(game),
+    _current(0),
+    _dir(1)
 {
     if (  _game.size() > 0
      && ! is_move(_current, _dir)
        )
         find_next_move();
 }
-
 
 void clobber_1xn_move_generator::operator++()
 {
@@ -130,8 +130,8 @@ move clobber_1xn_move_generator::gen_move() const
 }
 //---------------------------------------------------------------------------
 
-move_generator* clobber_1xn::create_move_generator() const
+move_generator* clobber_1xn::create_move_generator(bw to_play) const
 {
-    return new clobber_1xn_move_generator(*this);
+    return new clobber_1xn_move_generator(*this, to_play);
 }
 //---------------------------------------------------------------------------

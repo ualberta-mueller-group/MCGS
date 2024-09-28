@@ -2,7 +2,7 @@
 
 #include "solve.h"
 
-bool game::solve()
+bool alternating_move_game::solve()
 {
     return ::solve(*this);
 }
