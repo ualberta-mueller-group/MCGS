@@ -1,5 +1,6 @@
 //---------------------------------------------------------------------------
 // Move utilities
+// encode/decode move + color bit
 // Two part move representation
 // Print move coordinate(s)
 //---------------------------------------------------------------------------
@@ -16,13 +17,35 @@ typedef int move;
 
 namespace cgt_move {
 
-const int MOVE_MAX_SIZE = (1 << 16);
+const int BITS_PER_MOVE_PART = 15;
+const int COLOR_BIT = 2 * BITS_PER_MOVE_PART;
+const int WHITE_MASK = (1 << COLOR_BIT); // bit 30 is set
+const int MOVE_MASK = WHITE_MASK - 1; // bits 0..29 are set
+const int UNUSED_BIT = (1 << 31);
+const int MOVE_MAX_SIZE = (1 << BITS_PER_MOVE_PART);
 static_assert(sizeof(int) >= 4);
+
+inline int get_color(move m) // BLACK = 0, WHITE = 1
+{
+    return m >> (COLOR_BIT);
+}
+
+inline move decode(move m) // remove color bit
+{
+    return m & MOVE_MASK;
+}
+
+inline move encode(move m, int color) // add color bit
+{
+    assert(m < WHITE_MASK);
+    assert_black_white(color);
+    return m + color*WHITE_MASK;
+}
 
 inline move two_part_move(int first, int second)
 {
-    assert(first < MOVE_MAX_SIZE);
-    assert(second < MOVE_MAX_SIZE);
+    assert_range(first, 0, MOVE_MAX_SIZE);
+    assert_range(second, 0, MOVE_MAX_SIZE);
     return first * MOVE_MAX_SIZE + second;
 }
 
@@ -48,4 +71,4 @@ inline int to(move m)
 
 } // namespace cgt_move
 
-#endif // cgt_two_part_move_H
+#endif // cgt_move_H
