@@ -1,4 +1,5 @@
 #include "nim.h"
+#include "nim_test.h"
 
 #include <iostream>
 #include <random>
@@ -36,9 +37,7 @@ void nim_random_test()
         }
         if (heap_sum(game) < max_pebbles) // it's a bit slow...
         {
-            bool result = game.solve();
-            //std::cout << "solve " << game << " result " << result << '\n';
-            assert(result == game.static_solve());
+            assert_solve(game);
         }
     }
     std::cout << "Ran " << num_tests << " random nim sums\n";
