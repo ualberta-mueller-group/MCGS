@@ -12,9 +12,10 @@ add to move stack
 - add nim formula
 - nim move generator could go into cpp. Only needed by `nim_test` - it could - just use the generic movegenerator interface?
 - add random testing for nim
+- nim static solver tests
 
 # TODO
-- simplify hook for game
+- simplify() hook for game
     - simplify nim - remove equal pairs
 - move ordering hook for game
     - move ordering in nim? match other game value?
@@ -29,6 +30,8 @@ add to move stack
 game.generate_random(size)?
 
 - scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
+- make board implementations (char, int, bitset, list?) separate from game classes, with common interface - allow composition of different board implementations with game mechanics
+- `rule_set` class as in CGSuite?_
 
 ## TEST CASES
 - get, convert existing small clobber and NoGo tests

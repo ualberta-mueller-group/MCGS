@@ -19,6 +19,65 @@ void assert_solve(nim& pos)
 }
 
 namespace {
+
+void assert_static_solve(nim& pos, bool result)
+{
+    alternating_move_game g(pos, BLACK);
+    assert(result == pos.static_solve());
+}
+
+void nim_test_static_solver()
+{
+    {
+        nim g("");
+        assert_static_solve(g, false);
+    }
+    {
+        nim g("0");
+        assert_static_solve(g, false);
+    }
+    {
+        nim g("1");
+        assert_static_solve(g, true);
+    }
+    {
+        nim g("2");
+        assert_static_solve(g, true);
+    }
+    {
+        nim g("10");
+        assert_static_solve(g, true);
+    }
+    {
+        nim g("1 0");
+        assert_static_solve(g, true);
+    }
+    {
+        nim g("1 1");
+        assert_static_solve(g, false);
+    }
+    {
+        nim g("4 5");
+        assert_static_solve(g, true);
+    }
+    {
+        nim g("1 2 3");
+        assert_static_solve(g, false);
+    }
+    {
+        nim g("3 4 5 6");
+        assert_static_solve(g, true);
+    }
+    {
+        nim g("3 4 5 2");
+        assert_static_solve(g, false);
+    }
+    {
+        nim g("12 11 3 11 12 1 2");
+        assert_static_solve(g, false);
+    }
+}
+
 void nim_test_zero()
 {
     nim g("");
@@ -139,6 +198,7 @@ void nim_test_file()
 
 void nim_test_all()
 {
+    nim_test_static_solver();
     nim_test_zero();
     nim_test_zero2();
     nim_move_generator_test_1();
