@@ -171,13 +171,13 @@ void nim_move_generator_test_1()
     std::unique_ptr<move_generator>mgp(g.create_move_generator(BLACK));
     move_generator& mg(*mgp);
     assert(mg);
-    assert_move(mg, 0, 1);
+    assert_two_part_move(mg, 0, 1);
     ++mg;
     assert(mg);
-    assert_move(mg, 0, 2);
+    assert_two_part_move(mg, 0, 2);
     ++mg;
     assert(mg);
-    assert_move(mg, 1, 1);
+    assert_two_part_move(mg, 1, 1);
     ++mg;
     assert(!mg);
 }
