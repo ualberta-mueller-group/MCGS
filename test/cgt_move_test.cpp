@@ -55,6 +55,17 @@ void test_encode_decode2()
     assert(decode(m3) == m);
     assert(get_color(m3) == WHITE);
 }
+
+void test_encode_decode3()
+{
+    const move m = two_part_move(-5, 8);
+    const move m2 = encode(m, BLACK);
+    assert(decode(m2) == m);
+    assert(get_color(m2) == BLACK);
+    const move m3 = encode(m, WHITE);
+    assert(decode(m3) == m);
+    assert(get_color(m3) == WHITE);
+}
 } // namespace
 
 void cgt_move_test_all()
@@ -62,4 +73,5 @@ void cgt_move_test_all()
     cgt_move::test_two_part_move();
     cgt_move::test_encode_decode();
     cgt_move::test_encode_decode2();
+    cgt_move::test_encode_decode3();
 }
