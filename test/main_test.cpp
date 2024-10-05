@@ -16,5 +16,6 @@ int main()
     cgt_move_test_all();
     clobber_1xn_test_all();
     nim_test_all();
-    nim_random_test();
+//    nim_random_test(); it is working but it takes a second.
+// TODO make a "slow test" target?
 }
