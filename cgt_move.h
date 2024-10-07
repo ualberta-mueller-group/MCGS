@@ -8,6 +8,7 @@
 #ifndef cgt_move_H
 #define cgt_move_H
 
+#include <string>
 #include <vector>
 #include "cgt_basics.h"
 
@@ -95,6 +96,7 @@ inline move encode3(int first, int second, bw color)
     return encode(two_part_move(first, second), color);
 }
 
+std::string print(const move& m);
 } // namespace cgt_move
 
 #endif // cgt_move_H
