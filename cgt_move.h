@@ -13,7 +13,6 @@
 #include "cgt_basics.h"
 
 
-
 // Currently all moves must be encoded as int, and decoded from int
 // There is no abstract move class here.
 typedef int move;
@@ -23,7 +22,8 @@ namespace cgt_move {
 const int BITS_PER_MOVE_PART = 15;
 const int COLOR_BIT = 31;
 const int SIGN_BIT = 30;
-const unsigned int WHITE_MASK = (1 << COLOR_BIT); // bit 31 is set
+const unsigned int WHITE_MASK = (1 << COLOR_BIT); // color bit 31 is set
+const unsigned int SIGN_MASK = (1 << SIGN_BIT); // sign bit 30 is set
 const int MOVE_MASK = WHITE_MASK - 1; // bits 0..30 are set
 const int MOVE_MAX_SIZE = (1 << BITS_PER_MOVE_PART);
 const int MOVE_BITS = MOVE_MAX_SIZE - 1;
@@ -36,7 +36,7 @@ inline bw get_color(move m) // BLACK = 0, WHITE = 1
 
 inline int get_sign(move m)
 {
-    return (m >> SIGN_BIT) ? -1 : 1;
+    return (m & SIGN_MASK) ? -1 : 1;
 }
 
 inline move decode(move m) // remove color bit
