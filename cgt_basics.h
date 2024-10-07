@@ -59,20 +59,6 @@ inline void assert_empty_black_white(ebw color)
     assert(is_empty_black_white(color));
 }
 
-
-//---------------------------------------------------------------------------
-// Mapping from colors to char, X for BORDER
-const char color_code[] = {'B', 'W', '.', 'X'};
-
-inline int char_to_color(char c)
-{
-    return c == 'B' ? BLACK : WHITE;
-}
-
-inline bool is_black_white_char(char c)
-{
-    return c == 'B' || c == 'W';
-}
 //---------------------------------------------------------------------------
 
 // range includes low but excludes high
@@ -89,5 +75,24 @@ inline void assert_range(int value, int low, int high)
     assert(value < high);
 }
 
+//---------------------------------------------------------------------------
+// Mapping from colors to char, X for BORDER
+const char color_code[] = {'B', 'W', '.', 'X'};
+
+inline int char_to_color(char c)
+{
+    return c == 'B' ? BLACK : WHITE;
+}
+
+inline char color_char(int color)
+{
+    assert_range(color, 0, 4);
+    return color_code[color];
+}
+
+inline bool is_black_white_char(char c)
+{
+    return c == 'B' || c == 'W';
+}
 //---------------------------------------------------------------------------
 #endif // cgt_basics_H
