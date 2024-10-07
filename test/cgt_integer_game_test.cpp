@@ -28,36 +28,25 @@ namespace cgt_integer_move_generator{
 void test1()
 {
     integer_game g(3);
-    std::unique_ptr<move_generator>mgp(g.create_move_generator(BLACK));
-    move_generator& mg(*mgp);
-    assert(mg);
-    ++mg;
-    assert(!mg);
+    assert_num_moves(g, BLACK, 1);
 }
 
 void test2()
 {
     integer_game g(3);
-    std::unique_ptr<move_generator>mgp(g.create_move_generator(WHITE));
-    move_generator& mg(*mgp);
-    assert(!mg);
+    assert_num_moves(g, WHITE, 0);
 }
+
 void test3()
 {
     integer_game g(-5);
-    std::unique_ptr<move_generator>mgp(g.create_move_generator(BLACK));
-    move_generator& mg(*mgp);
-    assert(!mg);
+    assert_num_moves(g, BLACK, 0);
 }
 
 void test4()
 {
     integer_game g(-5);
-    std::unique_ptr<move_generator>mgp(g.create_move_generator(WHITE));
-    move_generator& mg(*mgp);
-    assert(mg);
-    ++mg;
-    assert(!mg);
+    assert_num_moves(g, WHITE, 1);
 }
 
 } // namespace cgt_integer_move_generator
