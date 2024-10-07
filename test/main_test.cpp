@@ -2,7 +2,7 @@
     main_test.cpp - main loop of MCGS unit test
 */
 
-#include "cgt_game_test.h"
+#include "cgt_dyadic_rational_test.h"
 #include "cgt_integer_game_test.h"
 #include "cgt_move_test.h"
 #include "clobber_1xn_test.h"
@@ -14,9 +14,9 @@ const bool DO_SLOWER_TESTS = false;
 
 int main()
 {
-    cgt_game_test_all();
-    cgt_integer_game_test_all();
     cgt_move_test_all();
+    cgt_integer_game_test_all();
+    cgt_dyadic_rational_test_all();
     clobber_1xn_test_all();
     nim_test_all();
     if (DO_SLOWER_TESTS)
