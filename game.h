@@ -1,7 +1,7 @@
 #ifndef game_H
 #define game_H
 
-#include <ostream>
+#include <iostream>
 #include <string>
 #include <vector>
 #include "cgt_basics.h"
@@ -39,7 +39,11 @@ inline const vector<move>& game::move_stack() const
 
 inline void game::play(const move& m, int to_play)
 {
-    _move_stack.push_back(cgt_move::encode(m, to_play));
+    assert(cgt_move::get_color(m) == 0);
+    const move mc = cgt_move::encode(m, to_play);
+    _move_stack.push_back(mc);
+//     std::cout << "move "<< cgt_move::print(m) << "\n";
+//     std::cout << "move + color "<< cgt_move::print(mc) << std::endl;
 }
 
 inline void game::undo_move()
