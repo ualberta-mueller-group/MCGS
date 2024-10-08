@@ -32,6 +32,8 @@ game.generate_random(size)?
 - make board implementations (char, int, bitset, list?) separate from game classes, with common interface - allow composition of different board implementations with game mechanics
 - `rule_set` class as in CGSuite?
 
+## TODO TESTS
+- `test/cgt_basics_test`
 # DONE
 - in game:
 add to move stack
