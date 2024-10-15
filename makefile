@@ -1,6 +1,6 @@
 CC = c++
 FLAGS = -Wall --std=c++17 -O3
-INC = -I/Users/mmueller/Projects/ualberta-mueller-group/MCGS
+INC = -I.
 
 MCGS: *.cpp *.h main/*.cpp
 	$(CC) $(FLAGS) $(INC) *cpp main/main.cpp -o MCGS
