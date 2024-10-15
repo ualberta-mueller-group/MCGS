@@ -1,5 +1,6 @@
 #include "solve.h"
 
+#include <memory>
 #include "game.h"
 
 // solve by negamax boolean search
