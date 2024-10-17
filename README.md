@@ -71,6 +71,13 @@ XXO W loss
     - I tried to make a generic abstract move class, but could not implement it in a "nice" and efficient way.
     - There are some utilities in `cgt_move.h` which help pack and unpack moves from/to int
     - Plan: probably keep it this way unless I find an elegant general solution
+    - Move stored in game's move stack always includes a "color bit"
+    - utilities to deal with color bit and "rest" of move
+    - rest of move (without color bit) can be further broken up into
+        two smaller integers (first one signed, second one unsigned)
+        - utilities to encode and decode move from color, and two parts
+    - sign bit for first part of two part move
+
 - `move_generator` objects are dynamically allocated.
     - This is very ugly but could not solve it in a better way. I would love to have move generators just as local variables.
     - A workaround to prevent memory leaks is to always wrap a move generator in a `std::unique_ptr` - see examples in `nim_test.cpp`, function `nim_move_generator_test_1`, and in `solve.cpp`
