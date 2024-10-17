@@ -11,6 +11,7 @@
 #include "clobber_1xn_test.h"
 #include "nim_random_test.h"
 #include "nim_test.h"
+#include "nogo_1xn_test.h"
 
 // TODO make a "do slow tests" build target?
 const bool DO_SLOWER_TESTS = false;
@@ -27,4 +28,5 @@ int main()
     nim_test_all();
     if (DO_SLOWER_TESTS)
         nim_random_test(); // takes about a second.
+    nogo_1xn_test_all();
 }

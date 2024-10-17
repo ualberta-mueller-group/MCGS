@@ -7,6 +7,7 @@
 #include "game.h"
 #include "clobber_1xn.h"
 #include "nim.h"
+#include "nogo_1xn.h"
 
 using std::cout;
 
@@ -31,5 +32,12 @@ int main()
         alternating_move_game g(pos, BLACK);
         bool result = g.solve();
         cout << "Solve clobber_1xn " << pos << ", result " << result << std::endl;
+    }
+
+    {
+        nogo_1xn pos("....");
+        alternating_move_game g(pos, BLACK);
+        bool result = g.solve();
+        cout << "Solve nogo_1xn " << pos << ", result " << result << std::endl;
     }
 }
