@@ -15,7 +15,7 @@ using std::endl;
 namespace {
 void assert_solve(clobber_1xn& pos, bw to_play, bool expected_result)
 {
-    alternating_move_game g(pos, BLACK);
+    alternating_move_game g(pos, to_play);
     const bool result = g.solve();
     assert(result == expected_result);
 }
