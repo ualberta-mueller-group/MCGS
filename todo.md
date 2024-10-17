@@ -11,8 +11,15 @@
     - what if a game such as clobber is equal to a simpler game such as up
         - what if we do not know it at first, but learn it after evaluation?
     - should zero be its own type??
-- how to deal with signed integers in two part games? sign bit?
-
+    - Can handle in V1 with sum game - move creates list of new subgames,
+        can include a new type of game
+- play in `up_star` when there are two move options to 0 and *
+    - need both informations
+        - which move to play
+        - how to restore old game in undo
+        - put both on the move stack? hack into a single int???
+        - how would it work in general? store incentive?
+            store delta-value, delta-star?
 # TODO
 - simplify() hook for game
     - simplify nim - remove equal pairs
@@ -31,6 +38,8 @@ game.generate_random(size)?
 - scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
 - make board implementations (char, int, bitset, list?) separate from game classes, with common interface - allow composition of different board implementations with game mechanics
 - `rule_set` class as in CGSuite?
+- implement generic game::inverse(), with overrides?
+    h = inverse(g) ???
 
 ## TODO TESTS
 - `test/cgt_basics_test`
