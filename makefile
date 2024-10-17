@@ -13,4 +13,4 @@ test: MCGS_test
 	./MCGS_test
 
 clean:
-	-rm *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM
+	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM
