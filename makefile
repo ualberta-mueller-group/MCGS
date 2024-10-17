@@ -6,9 +6,11 @@ INC = -I.
 MCGS: *.cpp *.h main/*.cpp
 	$(CC) $(FLAGS) $(INC) *cpp main/main.cpp -o MCGS
 
-test: *.cpp *.h test/*.cpp test/*.h
+MCGS_test: *.cpp *.h test/*.cpp test/*.h
 	$(CC) $(TESTFLAGS) $(INC) *cpp test/*cpp -o MCGS_test
+
+test: MCGS_test
 	./MCGS_test
 
 clean:
-	-rm *.o main/*.o test/*.o MCGS
+	-rm *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM
