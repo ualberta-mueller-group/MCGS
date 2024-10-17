@@ -6,6 +6,7 @@
 #include "cgt_integer_game_test.h"
 #include "cgt_move_test.h"
 #include "cgt_nimber_test.h"
+#include "cgt_switch_test.h"
 #include "clobber_1xn_test.h"
 #include "nim_random_test.h"
 #include "nim_test.h"
@@ -19,6 +20,7 @@ int main()
     cgt_integer_game_test_all();
     cgt_move_test_all();
     cgt_nimber_test_all();
+    cgt_switch_test_all();
     clobber_1xn_test_all();
     nim_test_all();
     if (DO_SLOWER_TESTS)
