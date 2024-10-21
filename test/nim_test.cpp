@@ -13,9 +13,7 @@ using std::endl;
 
 void assert_solve(nim& pos)
 {
-    alternating_move_game g(pos, BLACK);
-    const bool result = g.solve();
-    assert(result == pos.static_solve());
+    assert_solve(pos, BLACK, pos.static_solve());
 }
 
 namespace {
