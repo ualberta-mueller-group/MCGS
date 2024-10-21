@@ -12,94 +12,92 @@
 using std::cout;
 using std::endl;
 
-namespace {
-void assert_solve(clobber_1xn& pos, bw to_play, bool expected_result)
-{
-    alternating_move_game g(pos, to_play);
-    const bool result = g.solve();
-    assert(result == expected_result);
-}
+namespace clobber_1xn_test {
 
-void clobber_1xn_test_zero()
+void zero()
 {
     clobber_1xn g("");
     assert_solve(g, BLACK, false);
 }
 
-void clobber_1xn_test_zero2()
+void zero2()
 {
     clobber_1xn g("X");
     assert_solve(g, BLACK, false);
 }
 
-void clobber_1xn_test_1()
+void game_xo()
 {
     clobber_1xn g("XO");
     assert_solve(g, BLACK, true);
     assert_solve(g, WHITE, true);
 }
 
-void clobber_1xn_test_2()
+void game_xox()
 {
     clobber_1xn g("XOX");
     assert_solve(g, BLACK, true);
 }
 
-void clobber_1xn_test_4()
-{
-    clobber_1xn g("XOXOXO");
-    assert_solve(g, BLACK, false);
-}
-
-void clobber_1xn_test_5()
-{
-    clobber_1xn g("XXOXOXOOX");
-    assert_solve(g, BLACK, true);
-}
-
-void clobber_1xn_test_3()
+void game_xoxo()
 {
     clobber_1xn g("XOXO");
     assert_solve(g, BLACK, true);
 }
 
-void clobber_1xn_test_sum_1()
+void game_xoxoxo()
+{
+    clobber_1xn g("XOXOXO");
+    assert_solve(g, BLACK, false);
+}
+
+void game_9()
+{
+    clobber_1xn g("XXOXOXOOX");
+    assert_solve(g, BLACK, true);
+}
+
+void sum_1()
 {
     clobber_1xn g("XO.X");
     assert_solve(g, BLACK, true);
 }
 
-void clobber_1xn_test_sum_2()
+void sum_2()
 {
     clobber_1xn g("XO.OX");
     assert_solve(g, BLACK, false);
 }
 
-void clobber_1xn_test_sum_3()
+void sum_3()
 {
     clobber_1xn g("XO.XO.XO");
     assert_solve(g, BLACK, true);
 }
 
-void clobber_1xn_test_sum_4()
+void sum_4()
 {
     clobber_1xn g("XOX.OXO");
     assert_solve(g, BLACK, false);
 }
 
-void clobber_1xn_test_sum_5()
+void sum_5()
 {
     clobber_1xn g("XO.XOXOXO");
     assert_solve(g, BLACK, true);
 }
 
-void clobber_1xn_test_sum_6()
+void sum_6()
 {
     clobber_1xn g("XOXOXO.XOXOXO");
     assert_solve(g, BLACK, false);
 }
 
-void clobber_1xn_move_generator_test_1()
+} // namespace clobber_1xn_test
+
+namespace clobber_1xn_move_generator {
+
+void test_1()
 {
     clobber_1xn g("XXX.OOO");
     
@@ -109,7 +107,7 @@ void clobber_1xn_move_generator_test_1()
     assert(!mg);
 }
 
-void clobber_1xn_move_generator_test_2()
+void test_2()
 {
     clobber_1xn g("XO");
     
@@ -121,7 +119,7 @@ void clobber_1xn_move_generator_test_2()
     assert(!mg);
 }
 
-void clobber_1xn_move_generator_test_3()
+void test_3()
 {
     clobber_1xn g("OXOX");
     
@@ -139,7 +137,7 @@ void clobber_1xn_move_generator_test_3()
     assert(!mg);
 }
 
-void clobber_1xn_move_generator_test_4()
+void test_4()
 {
     clobber_1xn g("OXOX");
     
@@ -156,8 +154,11 @@ void clobber_1xn_move_generator_test_4()
     ++mg;
     assert(!mg);
 }
+} // namespace clobber_1xn_move_generator
 
-void clobber_1xn_test_string_1()
+namespace clobber_1xn_string_test {
+
+void oxox()
 {
     std::string board("OXOX");
     clobber_1xn g(board);
@@ -165,7 +166,7 @@ void clobber_1xn_test_string_1()
     assert(board == output);
 }
 
-void clobber_1xn_test_string_2()
+void string_12()
 {
     std::string board("OXOX.XXX.OOO");
     clobber_1xn g(board);
@@ -173,7 +174,7 @@ void clobber_1xn_test_string_2()
     assert(board == output);
 }
 
-void clobber_1xn_test_string_3()
+void empty()
 {
     std::string board("");
     clobber_1xn g(board);
@@ -196,7 +197,7 @@ void test(const test_case &c)
     // TODO write_bw(to_play), not c._black_first
 }
 
-void clobber_test_file()
+void file()
 {
     std::vector<test_case> cases;
     std::string game_name;
@@ -211,29 +212,29 @@ void clobber_test_file()
     }
 }
 
-} // namespace
+} // namespace clobber_1xn_string
 
 void clobber_1xn_test_all()
 {
-    clobber_1xn_test_zero();
-    clobber_1xn_test_zero2();
-    clobber_1xn_move_generator_test_1();
-    clobber_1xn_move_generator_test_2();
-    clobber_1xn_move_generator_test_3();
-    clobber_1xn_move_generator_test_4();
-    clobber_1xn_test_1();
-    clobber_1xn_test_2();
-    clobber_1xn_test_3();
-    clobber_1xn_test_4();
-    clobber_1xn_test_5();
-    clobber_1xn_test_sum_1();
-    clobber_1xn_test_sum_2();
-    clobber_1xn_test_sum_3();
-    clobber_1xn_test_sum_4();
-    clobber_1xn_test_sum_5();
-    clobber_1xn_test_sum_6();
-    clobber_1xn_test_string_1();
-    clobber_1xn_test_string_2();
-    clobber_1xn_test_string_3();
-    clobber_test_file();
+    clobber_1xn_test::zero();
+    clobber_1xn_test::zero2();
+    clobber_1xn_test::game_xo();
+    clobber_1xn_test::game_xox();
+    clobber_1xn_test::game_xoxo();
+    clobber_1xn_test::game_xoxoxo();
+    clobber_1xn_test::game_9();
+    clobber_1xn_test::sum_1();
+    clobber_1xn_test::sum_2();
+    clobber_1xn_test::sum_3();
+    clobber_1xn_test::sum_4();
+    clobber_1xn_test::sum_5();
+    clobber_1xn_test::sum_6();
+    clobber_1xn_move_generator::test_1();
+    clobber_1xn_move_generator::test_2();
+    clobber_1xn_move_generator::test_3();
+    clobber_1xn_move_generator::test_4();
+    clobber_1xn_string_test::oxox();
+    clobber_1xn_string_test::string_12();
+    clobber_1xn_string_test::empty();
+    clobber_1xn_string_test::file();
 }
