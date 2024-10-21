@@ -6,6 +6,7 @@
 #define test_utilities_H
 
 #include <iostream>
+#include <memory>
 #include "cgt_move.h"
 #include "game.h"
 
