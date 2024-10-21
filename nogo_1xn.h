@@ -16,8 +16,6 @@ public:
     void play(const move& m, bw to_play);
     void undo_move();
     move_generator* create_move_generator(bw to_play) const;
-
-    std::vector<int> get_board() const { return _board; };
 };
 
 

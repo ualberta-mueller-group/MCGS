@@ -75,18 +75,18 @@ inline bool nogo_1xn_move_generator::is_legal(int p) const
 {
     if (at(p) != EMPTY)
         return false;
-    
-    std::vector<int> _board = _game.get_board();
-    int num = (int)_board.size();
 
-    _board[p] = to_play();
+    int num = _game.size();
 
-    bool has_liberty = _board[0] == EMPTY;
+    int current, previous = (p == 0) ? to_play() : _game.at(0);
+    bool has_liberty = previous == EMPTY;
     for (int i = 1; i < num; i++) {
-        if (_board[i] == EMPTY) {
+        current = (p == i) ? to_play() : _game.at(i);
+
+        if (current == EMPTY) {
             has_liberty = true;
         }
-        else if (_board[i] != _board[i-1] && _board[i-1] != EMPTY) {
+        else if (current != previous && previous != EMPTY) {
             if (has_liberty) {
                 has_liberty = false;
             }
@@ -94,11 +94,11 @@ inline bool nogo_1xn_move_generator::is_legal(int p) const
                 return false;
             }
         }
+
+        previous = current;
     }
     if (!has_liberty)   // last block is not empty and has no liberty
         return false;
-
-    _board[p] = EMPTY;
 
     return true;
 }
