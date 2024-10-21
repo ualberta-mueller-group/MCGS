@@ -18,7 +18,7 @@ A Minimax-based Combinatorial Game Solver".
 - Currently it uses a "flat" organisation. The only subdirectories are:
     - `main` contains the main program
     - `test` contains all unit tests, and the `main_test.cpp` program
-- There are two text/markdown files: this `README.md`, and a `todo.txt`
+- There are two text/markdown files: this `README.md`, and a `todo.md`
 
 ## How to implement a new game
 - Also see `nim` and `clobber_1xn` as examples
@@ -52,6 +52,25 @@ XXO B win
 XXO W loss
 </pre>
 
+## Implementation Notes
+- every game implementation:
+    `x::play()` must call `game::play()`
+    `x::undo_move()` must call `game::undo_move()`
+- move generators are accessible only through game `create_move_generator`
+    - they are dynamically allocated - wrap each use in a `std::unique_ptr`
+    - Example: `solve` in `solve.cpp`
+    - move generator is declared and used only in `x.cpp`, not in header file
+- game unit tests
+    - move generator
+        - count moves and details
+    - solve
+    - convert from/to string
+    - test cases in file, read and solve
+- play may not assume alternating colors, since games can be subgames 
+in a sum. The color of the player is encoded as part of the move 
+and is stored in the move stack. Undo must respect and use this 
+color information.
+
 ## Versions
 ### Version 0
 - Now working on version 0
@@ -61,8 +80,8 @@ XXO W loss
     - Clobber: `clobber_1xn` implementation done
     - Basic minimax implementation in `solve.cpp` done
     - Basic test cases in files, run automatically
-- Version 0 still to do:
     - Nogo: `nogo_1xn` class
+- Version 0 still to do:
     - review, finish in-file comments, headers
     - Tag version 0
 

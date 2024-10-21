@@ -1,7 +1,5 @@
 # BUGS
-- `clobber_1xn_move_generator` does not encode toplay in move
-- need test cases that play and undo two black moves in a row, two white moves in a row
-- how to deal with negative integers in `two_part_game`, e.g. for integers, downs, and fractions
+- `switch_game` is incomplete, cannot play out integers
 
 # DESIGN ISSUES
 - play() can change the type of game
@@ -13,13 +11,8 @@
     - should zero be its own type??
     - Can handle in V1 with sum game - move creates list of new subgames,
         can include a new type of game
-- play in `up_star` when there are two move options to 0 and *
-    - need both informations
-        - which move to play
-        - how to restore old game in undo
-        - put both on the move stack? hack into a single int???
-        - how would it work in general? store incentive?
-            store delta-value, delta-star?
+    - Could do even in V0 if game::play() returns a new game. How
+        to manage memory?
 # TODO
 - simplify() hook for game
     - simplify nim - remove equal pairs
@@ -29,11 +22,6 @@
     - later: transposition hits, simplifications, zero removal, inverse removal
 - use a proper unit test framework, maybe https://github.com/siu/minunit
 
-- random testing for nim 
-    - increase size limit as program becomes better
-    - generate 2nd player win game by adding nim sum
-- add random in general? how to check results? size parameter for random games?
-game.generate_random(size)?
 
 - scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
 - make board implementations (char, int, bitset, list?) separate from game classes, with common interface - allow composition of different board implementations with game mechanics
@@ -43,30 +31,26 @@ game.generate_random(size)?
 
 ## TODO TESTS
 - `test/cgt_basics_test`
-# DONE
-- in game:
-add to move stack
-- change toplay
-- everyone must call game::play()
-- clobber board conversion char `x,o,.` vs board as `EMPTY, BLACK, WHITE`
-- `move_generator clobber_1xn`
-- clobber unit tests
-    - move generator, solve, convert from/to string
-- test write clobber board
-- move generators are memory leaks - use `std::unique_ptr`
-- add nim formula
-- nim move generator could go into cpp. Only needed by `nim_test` - it could - just use the generic movegenerator interface?
-- add random testing for nim
-- nim static solver tests
 
+### Nogo
+- Nogo - add test cases for move generator
+- Nogo - add test cases in text file, reading/running them
+- get, convert existing NoGo tests
 
-## TEST CASES
-- get, convert existing small clobber and NoGo tests
-- should just read one by one, no need for vector. write an iterator???
+### Nim
+- random testing for nim 
+    - increase size limit as program becomes better
+    - generate 2nd player win game by adding nim sum
+- add random in general? how to check results? 
+- size parameter for random games? `game.generate_random(size)`?
 
+### Clobber
+- get, convert existing small clobber tests
 - From class in `~/Projects/ualberta-mueller-group/combinatorial_game_solver/PriorWork`
-
 - From Taylor's solver 
+
+## Test Cases Implementation
+- should just read one by one, no need for vector. write an iterator???
 
 ## TALK
 - cgt solver talk
