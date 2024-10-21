@@ -1,3 +1,7 @@
+//---------------------------------------------------------------------------
+// Combinatorial game and move generator
+//---------------------------------------------------------------------------
+
 #ifndef game_H
 #define game_H
 
@@ -50,8 +54,6 @@ inline void game::undo_move()
 {
     _move_stack.pop_back();
 }
-
-
 
 std::ostream& operator<<(std::ostream& out, const game& g);
 
@@ -130,7 +132,7 @@ public:
     virtual operator bool() const = 0;
     virtual move gen_move() const = 0;
 private:
-    bw _to_play;
+    const bw _to_play;
 }; // move_generator
 
 inline move_generator::move_generator(bw to_play) :

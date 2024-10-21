@@ -1,3 +1,6 @@
+//---------------------------------------------------------------------------
+// Read test cases for combinatorial game defined in a text file
+//---------------------------------------------------------------------------
 #include "test_case.h"
 
 #include <cassert>

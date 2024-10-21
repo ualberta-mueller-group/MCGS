@@ -1,3 +1,6 @@
+//---------------------------------------------------------------------------
+// Simple combinatorial games - nimbers
+//---------------------------------------------------------------------------
 #include "cgt_nimber.h"
 
 void nimber::play(const move& m, bw to_play)

@@ -5,20 +5,15 @@
 #ifndef test_utilities_H
 #define test_utilities_H
 
-#include <iostream>
 #include <memory>
 #include "cgt_move.h"
 #include "game.h"
 
-using std::cout;
-using std::endl;
-
 inline void assert_equal(int a, int b)
 { 
-    if (!(a==b))
-        cout << "assert_equal FAIL: " << a << ' ' << b << endl;
     assert(a == b);
 }
+
 inline void assert_move(move_generator& mg, int mv)
 { 
     const move m = mg.gen_move();

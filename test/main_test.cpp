@@ -1,6 +1,7 @@
-/*
-    main_test.cpp - main loop of MCGS unit test
-*/
+//---------------------------------------------------------------------------
+// main_test.cpp - main loop of MCGS unit test
+// Imports all unit tests
+//---------------------------------------------------------------------------
 
 #include "cgt_dyadic_rational_test.h"
 #include "cgt_integer_game_test.h"

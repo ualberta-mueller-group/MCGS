@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// Implementation of a board as a 1-dimensional strip
+// A game board which is a 1-dimensional strip
 // Board representation, play and remove stones
 //---------------------------------------------------------------------------
 

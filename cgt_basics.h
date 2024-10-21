@@ -3,6 +3,7 @@
 // Players, colors, ranges, outcome_class, 
 // conversion color to char and back
 //---------------------------------------------------------------------------
+
 #ifndef cgt_basics_H
 #define cgt_basics_H
 

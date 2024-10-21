@@ -1,9 +1,11 @@
+//---------------------------------------------------------------------------
+// Simple combinatorial games - multiples of up, down, with/without star
+//---------------------------------------------------------------------------
 #ifndef cgt_up_star_H
 #define cgt_up_star_H
 
 #include "cgt_basics.h"
 #include "game.h"
-
 
 //---------------------------------------------------------------------------
 

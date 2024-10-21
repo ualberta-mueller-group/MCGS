@@ -2,7 +2,7 @@
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
-Martin Müller, 2024
+Martin Müller and Henry Du, 2024
 
 ## Design Documentation
 For the overall approach and future plans, see the document "The Design of MCGS:
@@ -15,15 +15,20 @@ A Minimax-based Combinatorial Game Solver".
     - `make test` builds and runs all unit tests, in program `./MCGS_test`. No output means that the tests succeeded.
 
 ## How the MCGS code is organised
-- Currently it uses a "flat" organisation. The only subdirectories are:
-    - `main` contains the main program
-    - `test` contains all unit tests, and the `main_test.cpp` program
+- Currently it uses a "flat" organisation. All game-independent 
+codes and all game-specific implementation files are in the `MCGS` directory.  The two subdirectories are:
+    - `main` contains a single file, the main program `main.cpp`
+    - `test` contains all testing-related code:
+        - All unit tests. Each unit test consists of a `x_test.h` file which exports a single function `x_test_all`, and a file `x_test.cpp` with all tests for a file `x.cpp`.
+        - the `main_test.cpp` program which calls all 
+        - Helper functions for writing tests in `test_case.h`, `test_case.cpp` and `test_utilities.h`
+    
 - There are two text/markdown files: this `README.md`, and a `todo.md`
 
 ## How to implement a new game
 - Also see `nim` and `clobber_1xn` as examples
-- Say game name is `x`
-- Create 4 files: `x.h, x.cpp, x_test.h, x_test.cpp`
+- For game name `x`:
+- Create 4 files: `x.h, x.cpp, test/x_test.h, test/x_test.cpp`
     - Define `class x` in `x.h`, derive from `game` or `strip`
     - Each new game must implement at least 3 virtual methods: 
     `play, undo_move, create_move_generator`
@@ -52,24 +57,26 @@ XXO B win
 XXO W loss
 </pre>
 
-## Implementation Notes
-- every game implementation:
-    `x::play()` must call `game::play()`
-    `x::undo_move()` must call `game::undo_move()`
-- move generators are accessible only through game `create_move_generator`
-    - they are dynamically allocated - wrap each use in a `std::unique_ptr`
+## Some Implementation Notes
+- In every game implementation:
+    - `x::play()` must call `game::play()`
+    - `x::undo_move()` must call `game::undo_move()`
+- Move generators are accessible only through game `create_move_generator`
+    - They are dynamically allocated - wrap each use in a `std::unique_ptr`
     - Example: `solve` in `solve.cpp`
-    - move generator is declared and used only in `x.cpp`, not in header file
-- game unit tests
-    - move generator
-        - count moves and details
-    - solve
-    - convert from/to string
-    - test cases in file, read and solve
-- play may not assume alternating colors, since games can be subgames 
-in a sum. The color of the player is encoded as part of the move 
-and is stored in the move stack. Undo must respect and use this 
-color information.
+    - A game-specific move generator is declared and used only in `x.cpp`, not in a header file
+- Game unit tests should cover at least:
+    - `play` and `undo_move`
+    - `solve`
+    - Convert from/to string
+    - Write test cases in file, read and solve
+    - Game-specific move generator
+        - Count number of moves and details of moves generated
+- `play()` may not assume alternating colors, since games can be subgames 
+in a sum. 
+- The color of the player is encoded as part of the move 
+and is stored in the move stack. 
+- `undo_move` must respect and use the move player color information.
 
 ## Versions
 ### Version 0
@@ -77,13 +84,12 @@ color information.
 - Version 0 done:
     - Nim: `nim` implementation done
     - Utility class `strip` for 1xn boards
-    - Clobber: `clobber_1xn` implementation done
+    - Clobber on a strip: `clobber_1xn`
     - Basic minimax implementation in `solve.cpp` done
     - Basic test cases in files, run automatically
-    - Nogo: `nogo_1xn` class
-- Version 0 still to do:
-    - review, finish in-file comments, headers
-    - Tag version 0
+    - Nogo on a strip: `nogo_1xn` class
+
+### Version 1
 
 #### Version 0 Design Choices and Remaining Uglinesses
 - A `move` must be an `int`. 
@@ -92,12 +98,13 @@ color information.
     - Plan: probably keep it this way unless I find an elegant general solution
     - Move stored in game's move stack always includes a "color bit"
     - utilities to deal with color bit and "rest" of move
-    - rest of move (without color bit) can be further broken up into
-        two smaller integers (first one signed, second one unsigned)
-        - utilities to encode and decode move from color, and two parts
-    - sign bit for first part of two part move
+    - Rest of move (after the color bit) can be further broken up
+        - Two smaller integers (first one signed, second one unsigned)
+        - A sign bit for the first part of two part move
+        - Utilities to encode and decode move from/to color, 
+        and two parts including sign bit
 
 - `move_generator` objects are dynamically allocated.
-    - This is very ugly but could not solve it in a better way. I would love to have move generators just as local variables.
+    - This is ugly but I could not solve it in a better way. I would love to have move generators just as local variables.
     - A workaround to prevent memory leaks is to always wrap a move generator in a `std::unique_ptr` - see examples in `nim_test.cpp`, function `nim_move_generator_test_1`, and in `solve.cpp`
 

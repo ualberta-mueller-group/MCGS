@@ -1,3 +1,7 @@
+//---------------------------------------------------------------------------
+// Read test cases for combinatorial game defined in a text file
+//---------------------------------------------------------------------------
+
 #ifndef test_case_H
 #define test_case_H
 

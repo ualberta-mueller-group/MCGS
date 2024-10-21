@@ -17,7 +17,7 @@ class dyadic_rational : public game
 {
 public:
     dyadic_rational(int p, int q);
-    // HACK: the move argument is the OLD value that must be restored..
+    // The move argument is the OLD value that must be restored.
     void play(const move& m, bw to_play);
     void undo_move();
     move_generator* create_move_generator(bw to_play) const;

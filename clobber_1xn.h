@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// Implementation of clobber on a 1-dimensional 1xn board
+// Implementation of Clobber on a 1-dimensional strip
 //---------------------------------------------------------------------------
 
 #ifndef clobber_1xn_H

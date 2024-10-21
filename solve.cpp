@@ -1,3 +1,7 @@
+//---------------------------------------------------------------------------
+// Solve combinatorial games - find winner
+// Game-independent implementation of basic boolean minimax
+//---------------------------------------------------------------------------
 #include "solve.h"
 
 #include <memory>

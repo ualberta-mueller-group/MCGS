@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// Implementation of clobber on a 1-dimensional 1xn board
+// Implementation of NoGo on a 1-dimensional 1xn board
 //---------------------------------------------------------------------------
 
 #ifndef nogo_1xn_H
