@@ -9,24 +9,50 @@
 #include "test_case.h"
 #include "test_utilities.h"
 
+namespace nogo_test {
 
-namespace {
-void assert_solve(nogo_1xn& pos, bw to_play, bool expected_result)
+void solve_1x1()
 {
-    alternating_move_game g(pos, to_play);
-    const bool result = g.solve();
-    assert(result == expected_result);
+    nogo_1xn g(".");
+    assert_solve(g, BLACK, false);
+    assert_solve(g, WHITE, false);
 }
 
-void nogo_1x4_solve()
+void solve_1x2()
+{
+    nogo_1xn g("..");
+    assert_solve(g, BLACK, true);
+    assert_solve(g, WHITE, true);
+}
+
+void solve_1x3()
+{
+    nogo_1xn g("...");
+    assert_solve(g, BLACK, true);
+    assert_solve(g, WHITE, true);
+}
+
+void solve_1x4()
 {
     nogo_1xn g("....");
     assert_solve(g, BLACK, false);
+    assert_solve(g, WHITE, false);
 }
 
+void solve_1x5()
+{
+    nogo_1xn g(".....");
+    assert_solve(g, BLACK, true);
+    assert_solve(g, WHITE, true);
 }
+
+} // namespace nogo_test
 
 void nogo_1xn_test_all()
 {
-    nogo_1x4_solve();
+    nogo_test::solve_1x1();
+    nogo_test::solve_1x2();
+    nogo_test::solve_1x3();
+    nogo_test::solve_1x4();
+    nogo_test::solve_1x5();
 }
