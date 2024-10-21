@@ -5,7 +5,7 @@
 #define solve_H
 
 #include "cgt_basics.h"
-#include "game.h"
+#include "alternating_move_game.h"
 
 // True means that g.to_play() wins,
 // false means g.to_play() loses,

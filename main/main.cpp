@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "cgt_basics.h"
-#include "game.h"
+#include "alternating_move_game.h"
 #include "clobber_1xn.h"
 #include "nim.h"
 #include "nogo_1xn.h"

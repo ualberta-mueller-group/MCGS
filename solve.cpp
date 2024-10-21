@@ -5,6 +5,7 @@
 #include "solve.h"
 
 #include <memory>
+#include "alternating_move_game.h"
 #include "game.h"
 
 // solve by negamax boolean search
