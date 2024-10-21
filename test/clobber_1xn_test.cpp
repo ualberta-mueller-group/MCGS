@@ -93,6 +93,19 @@ void sum_6()
     assert_solve(g, BLACK, false);
 }
 
+void play_two_white_moves()
+{
+    clobber_1xn g("XXO");
+    g.play(cgt_move::two_part_move(2, 1), WHITE);
+    assert(g.board_as_string() == "XO.");
+    g.play(cgt_move::two_part_move(1, 0), WHITE);
+    assert(g.board_as_string() == "O..");
+    g.undo_move();
+    assert(g.board_as_string() == "XO.");
+    g.undo_move();
+    assert(g.board_as_string() == "XXO");
+}
+
 } // namespace clobber_1xn_test
 
 namespace clobber_1xn_move_generator {
@@ -229,6 +242,7 @@ void clobber_1xn_test_all()
     clobber_1xn_test::sum_4();
     clobber_1xn_test::sum_5();
     clobber_1xn_test::sum_6();
+    clobber_1xn_test::play_two_white_moves();
     clobber_1xn_move_generator::test_1();
     clobber_1xn_move_generator::test_2();
     clobber_1xn_move_generator::test_3();
