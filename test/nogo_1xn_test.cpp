@@ -46,6 +46,13 @@ void solve_1x5()
     assert_solve(g, WHITE, true);
 }
 
+void solve_1x6()
+{
+    nogo_1xn g("..XO..");
+    assert_solve(g, BLACK, false);
+    assert_solve(g, WHITE, false);
+}
+
 } // namespace nogo_test
 
 void nogo_1xn_test_all()
@@ -55,4 +62,5 @@ void nogo_1xn_test_all()
     nogo_test::solve_1x3();
     nogo_test::solve_1x4();
     nogo_test::solve_1x5();
+    nogo_test::solve_1x6();
 }
