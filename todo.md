@@ -38,6 +38,7 @@
 - `rule_set` class as in CGSuite?
 - implement generic game::inverse(), with overrides?
     h = inverse(g) ???
+- should allow fractions in `switch_game`? e.g. 1/2 | -3/4
 
 ## TODO TESTS
 - `test/cgt_basics_test`

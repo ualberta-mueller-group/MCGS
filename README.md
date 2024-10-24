@@ -63,11 +63,11 @@ XXO W loss
     - `x::undo_move()` must call `game::undo_move()`
 - Move generators are accessible only through game `create_move_generator`
     - They are dynamically allocated - wrap each use in a `std::unique_ptr`
-    - Example: `solve` in `solve.cpp`
+    - Example: `alternating_move_game::solve`
     - A game-specific move generator is declared and used only in `x.cpp`, not in a header file
 - Game unit tests should cover at least:
     - `play` and `undo_move`
-    - `solve`
+    - `solve` for both black and white
     - Convert from/to string
     - Write test cases in file, read and solve
     - Game-specific move generator
@@ -85,26 +85,36 @@ and is stored in the move stack.
     - Nim: `nim` implementation done
     - Utility class `strip` for 1xn boards
     - Clobber on a strip: `clobber_1xn`
-    - Basic minimax implementation in `solve.cpp` done
+    - Basic minimax implementation
     - Basic test cases in files, run automatically
     - Nogo on a strip: `nogo_1xn` class
 
 ### Version 1
+- Plan for early steps:
+    - minimalistic sumgame class
+    - rewrite nim to use sumgame and nimber
+    - first experiments with clobber and NoGo sums
+    - change read from string functions to directly create sumgame
+    
+## Design Choices and Remaining Uglinesses
+#### A `move` must be an `int` 
+- I tried to make a generic abstract move class, but could not implement it in a "nice" and efficient way.
+- There are some utilities in `cgt_move.h` which help pack and unpack moves from/to int
+- Plan: probably keep it this way unless I find an elegant general solution
+- Move stored in game's move stack always includes a "color bit"
+- utilities to deal with color bit and "rest" of move
+- Rest of move (after the color bit) can be further broken up
+    - Two smaller integers (first one signed, second one unsigned)
+    - A sign bit for the first part of two part move
+    - Utilities to encode and decode move from/to color, 
+    and two parts including sign bit
 
-#### Version 0 Design Choices and Remaining Uglinesses
-- A `move` must be an `int`. 
-    - I tried to make a generic abstract move class, but could not implement it in a "nice" and efficient way.
-    - There are some utilities in `cgt_move.h` which help pack and unpack moves from/to int
-    - Plan: probably keep it this way unless I find an elegant general solution
-    - Move stored in game's move stack always includes a "color bit"
-    - utilities to deal with color bit and "rest" of move
-    - Rest of move (after the color bit) can be further broken up
-        - Two smaller integers (first one signed, second one unsigned)
-        - A sign bit for the first part of two part move
-        - Utilities to encode and decode move from/to color, 
-        and two parts including sign bit
-
-- `move_generator` objects are dynamically allocated.
-    - This is ugly but I could not solve it in a better way. I would love to have move generators just as local variables.
-    - A workaround to prevent memory leaks is to always wrap a move generator in a `std::unique_ptr` - see examples in `nim_test.cpp`, function `nim_move_generator_test_1`, and in `solve.cpp`
+#### `move_generator` objects are dynamically allocated
+- This is ugly but I could not solve it in a better way. 
+- I would love to have move generators just as local variables.
+- A workaround to prevent memory leaks is to always wrap 
+a move generator in a `std::unique_ptr` 
+    - Example in `nim_test.cpp`, 
+    function `nim_move_generator_test_1`
+    - Example in `alternating_move_game::solve`
 
