@@ -2,7 +2,6 @@
 - `switch_game` is incomplete, cannot play out integers
 
 # V0 todo
-- review, finish in-file comments, headers
 - Tag version 0
 
 # V1 todo
@@ -41,7 +40,6 @@
 - should allow fractions in `switch_game`? e.g. 1/2 | -3/4
 
 ## TODO TESTS
-- `test/cgt_basics_test`
 
 ### Nogo
 - Nogo - add test cases for move generator

@@ -3,6 +3,7 @@
 // Imports all unit tests
 //---------------------------------------------------------------------------
 
+#include "cgt_basics_test.h"
 #include "cgt_dyadic_rational_test.h"
 #include "cgt_integer_game_test.h"
 #include "cgt_move_test.h"
@@ -19,6 +20,7 @@ const bool DO_SLOWER_TESTS = false;
 
 int main()
 {
+    cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
     cgt_move_test_all();
