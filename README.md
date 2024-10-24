@@ -81,17 +81,16 @@ and is stored in the move stack.
 - `undo_move` must respect and use the move player color information.
 
 ## Versions
-### Version 0
-- Now working on version 0
-- Version 0 done:
-    - Nim: `nim` implementation done
-    - Utility class `strip` for 1xn boards
-    - Clobber on a strip: `clobber_1xn`
-    - Basic minimax implementation
-    - Basic test cases in files, run automatically
-    - Nogo on a strip: `nogo_1xn` class
+### Version 0 completed
+- Nim: `nim` implementation done
+- Utility class `strip` for 1xn boards
+- Clobber on a strip: `clobber_1xn`
+- Basic minimax implementation
+- Basic test cases in files, run automatically
+- Nogo on a strip: `nogo_1xn` class
+- Simple game classes: integer, dyadic rational, up-star, switch, nimber
 
-### Version 1
+### Version 1 in progress
 - Plan for early steps:
     - minimalistic sumgame class
     - rewrite nim to use sumgame and nimber

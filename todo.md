@@ -1,8 +1,5 @@
 # BUGS
 
-# V0 todo
-- Tag version 0
-
 # V1 todo
 - define goals for first, minimalistic sumgame class
 - rewrite nim to use sumgame and nimbers classes
