@@ -7,7 +7,10 @@
 #include "cgt_basics.h"
 #include "game.h"
 
-// A move for integer_game encodes just the to_play
+// A move encoding any move in an integer_game.
+// This is also used by other simple games, e.g. switch_game
+const int INTEGER_MOVE_CODE = 0;
+
 // This is needed for undo_move in the case when _value has reached 0
 class integer_game : public game
 {
@@ -16,6 +19,7 @@ public:
     void play(const move& m, bw to_play);
     void undo_move();
     int value() const { return _value; }
+    void set_value(int value) { _value = value; }
     move_generator* create_move_generator(bw to_play) const;
 private:
     int _value;

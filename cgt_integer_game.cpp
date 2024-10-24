@@ -5,7 +5,7 @@
 
 void integer_game::play(const move& m, bw to_play)
 {
-    assert(cgt_move::get_color(m) == to_play);
+    assert(m == INTEGER_MOVE_CODE);
     assert(_value != 0);
     if (to_play == BLACK)
     {
@@ -17,12 +17,12 @@ void integer_game::play(const move& m, bw to_play)
         assert(_value < 0);
         _value += 1;
     }
-    game::play(0, to_play);
+    game::play(INTEGER_MOVE_CODE, to_play);
 }
 
 void integer_game::undo_move()
 {
-    const move m = move_stack().back();
+    const move m = last_move();
     const bw to_play = cgt_move::get_color(m);
     if (to_play == BLACK)
     {
@@ -72,9 +72,8 @@ integer_move_generator::operator bool() const
 move integer_move_generator::gen_move() const
 {
     assert(_has_move);
-    return cgt_move::encode3(0, 0, to_play());
+    return INTEGER_MOVE_CODE;
 }
-
 
 //---------------------------------------------------------------------------
 
