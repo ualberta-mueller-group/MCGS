@@ -56,6 +56,8 @@ OXOXOX W loss
 XXO B win
 XXO W loss
 </pre>
+- A test game can be a sum, enclosed in quotes. 
+It is read with `std::quoted`
 
 ## Some Implementation Notes
 - In every game implementation:

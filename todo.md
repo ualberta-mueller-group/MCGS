@@ -1,5 +1,4 @@
 # BUGS
-- `switch_game` is incomplete, cannot play out integers
 
 # V0 todo
 - Tag version 0
@@ -7,23 +6,23 @@
 # V1 todo
 - define goals for first, minimalistic sumgame class
 - rewrite nim to use sumgame and nimbers classes
+- Can handle type conversion from game to option with sum game
+    - move creates list of new subgames
+    - those can include a new type of game
+        - e.g. play in a `switch_game`  or `dyadic_rational` 
+        can create an integer
+- replace a game (e.g. clobber position) by an equal game of simpler type
+    - when we learn equality after evaluation or database lookup
+    - who manages the memory of the new and old games?
 
-# Design and Naming Issues
+# Todo Design and Naming Issues
 - rename `x_1xn` to `x_strip` ?
 - play() can change the type of game
     - how to handle?
-    - e.g. play in `switch_game` leads to a number
-    - e.g. some dyadic rationals are integers
     - what if a game such as clobber is equal to a simpler game such as up
-        - what if we do not know it at first, 
-        but learn it after evaluation?
-        - what if we have those games in a database?
     - should zero be its own type??
-    - Can handle in V1 with sum game - move creates list of new subgames,
-        can include a new type of game
-    - Could do even in V0 if game::play() returns a new game. How
-        to manage memory?
-# TODO
+
+# Todo Coding - deferred to V1
 - simplify() hook for game
     - simplify nim - remove equal pairs
 - move ordering hook for game
@@ -37,28 +36,29 @@
 - `rule_set` class as in CGSuite?
 - implement generic game::inverse(), with overrides?
     h = inverse(g) ???
-- should allow fractions in `switch_game`? e.g. 1/2 | -3/4
+- should we allow fractions in `switch_game`? e.g. 1/2 | -3/4
 
-## TODO TESTS
+## Todo - Tests
 
 ### Nogo
 - Nogo - add test cases for move generator
-- Nogo - add test cases in text file, reading/running them
-- get, convert existing NoGo tests
 
 ### Nim
 - random testing for nim 
     - increase size limit as program becomes better
     - generate 2nd player win game by adding nim sum
-- add random in general? how to check results? 
-- size parameter for random games? `game.generate_random(size)`?
 
 ### Clobber
 - get, convert existing small clobber tests
 - From class in `~/Projects/ualberta-mueller-group/combinatorial_game_solver/PriorWork`
 - From Taylor's solver 
 
-## Test Cases Implementation
+### Randomised Testing
+- add random game generation in general? 
+    - size parameter for random games? `game.generate_random(size)`?
+- how to check results of testing with random games?
+
+### Test Cases Implementation
 - should just read one by one, no need for vector. write an iterator???
 - `DO_SLOWER_TESTS` in `main_test.cpp` - implement as a command line option
 
