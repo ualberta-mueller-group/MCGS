@@ -51,7 +51,7 @@ void nim::play(const move& m, bw to_play)
 void nim::undo_move()
 {
     // ignore to_play color
-    const move m = cgt_move::decode(move_stack().back());
+    const move m = cgt_move::decode(last_move());
     const int heap = nim_heap(m);
     const int number = nim_number(m);
     _heaps[heap] += number;

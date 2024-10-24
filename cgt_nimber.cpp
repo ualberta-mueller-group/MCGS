@@ -15,7 +15,7 @@ void nimber::play(const move& m, bw to_play)
 
 void nimber::undo_move()
 {
-    const move m = cgt_move::decode(move_stack().back());
+    const move m = cgt_move::decode(last_move());
     const int number = cgt_move::second(m);
     assert(number > 0);
     _value += number;

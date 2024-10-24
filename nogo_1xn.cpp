@@ -19,7 +19,7 @@ void nogo_1xn::play(const move& m, bw to_play)
 
 void nogo_1xn::undo_move()
 {
-    const move mc = move_stack().back();
+    const move mc = last_move();
     const int to = cgt_move::decode(mc);
     game::undo_move();
     const bw player = cgt_move::get_color(mc);

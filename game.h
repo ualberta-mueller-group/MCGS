@@ -22,7 +22,7 @@ class game
 {
 public:
     game();
-    const vector<move>& move_stack() const;
+    move last_move() const;
     
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
@@ -36,9 +36,9 @@ inline game::game() :
     _move_stack()
 { }
 
-inline const vector<move>& game::move_stack() const
+inline move game::last_move() const
 {
-    return _move_stack;
+    return _move_stack.back();
 }
 
 inline void game::play(const move& m, int to_play)

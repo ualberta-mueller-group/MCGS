@@ -36,7 +36,7 @@ void up_star::play(const move& m, bw to_play)
 
 void up_star::undo_move()
 {
-    const move m = move_stack().back();
+    const move m = last_move();
     int flip_star;
     bw to_play;
     const int delta_v = cgt_move::decode3(m, &flip_star, &to_play);

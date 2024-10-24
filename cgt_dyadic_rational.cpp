@@ -35,7 +35,7 @@ void dyadic_rational::play(const move& m, bw to_play)
 
 void dyadic_rational::undo_move()
 {
-    const move m = move_stack().back();
+    const move m = last_move();
     int q;
     bw to_play;
     const int p = cgt_move::decode3(m, &q, &to_play);

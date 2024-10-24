@@ -23,7 +23,7 @@ void clobber_1xn::play(const move& m, bw to_play)
 
 void clobber_1xn::undo_move()
 {
-    const move mc = move_stack().back();
+    const move mc = last_move();
     const move m = cgt_move::decode(mc);
     const int from = cgt_move::from(m);
     const int to = cgt_move::to(m);
