@@ -22,6 +22,8 @@ class game
 {
 public:
     game();
+    bool is_active() const;
+    void set_active(bool status);
     move last_move() const;
     
     virtual void play(const move& m, bw to_play);
@@ -31,11 +33,23 @@ public:
 
 private:
     vector<move> _move_stack;
+    bool _is_active;
 }; // game
 
 inline game::game() :
-    _move_stack()
+    _move_stack(),
+    _is_active(true)
 { }
+
+inline bool game::is_active() const
+{
+    return _is_active;
+}
+
+inline void game::set_active(bool status)
+{
+    _is_active = status;
+}
 
 inline move game::last_move() const
 {
@@ -68,8 +82,8 @@ class move_generator
 public:
     move_generator(bw to_play);
     virtual ~move_generator() { }
-    int to_play() const {return _to_play; }
-    int opponent() const {return ::opponent(_to_play); }
+    int to_play() const { return _to_play; }
+    int opponent() const { return ::opponent(_to_play); }
 
     virtual void operator++() = 0;
     virtual operator bool() const = 0;
@@ -81,4 +95,6 @@ private:
 inline move_generator::move_generator(bw to_play) :
     _to_play(to_play)
 { }
+//---------------------------------------------------------------------------
+
 #endif // game_H
