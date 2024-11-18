@@ -17,7 +17,7 @@ public:
     bw to_play() const;
     bw opponent() const;
     void set_to_play(bw color);
-    bool solve();
+    virtual bool solve();
     game& game_pos() {return _game;}
 
     // Default just returns false, a specific game may override
