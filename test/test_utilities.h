@@ -9,6 +9,7 @@
 #include "alternating_move_game.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "sumgame.h"
 
 inline void assert_equal(int a, int b)
 { 
@@ -40,10 +41,20 @@ inline void assert_two_part_move(move_generator& mg, int from, int to)
     assert(to == cgt_move::to(m));
 }
 
-inline void assert_solve(game& pos, bw to_play, bool expected_result)
+inline void assert_solve(game& pos, bw to_play,
+                         const bool expected_result)
 {
     assert_black_white(to_play);
     alternating_move_game g(pos, to_play);
+    const bool result = g.solve();
+    assert(result == expected_result);
+}
+
+inline void assert_solve_sum(sumgame& g, bw to_play, 
+                             const bool expected_result)
+{
+    assert_black_white(to_play);
+    g.set_to_play(to_play);
     const bool result = g.solve();
     assert(result == expected_result);
 }
