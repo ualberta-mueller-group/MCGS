@@ -36,6 +36,12 @@ void integer_game::undo_move()
     }
     game::undo_move();
 }
+
+void integer_game::print(std::ostream& str) const
+{
+    str << "integer:" << _value;
+}
+
 //---------------------------------------------------------------------------
 
 class integer_move_generator : public move_generator

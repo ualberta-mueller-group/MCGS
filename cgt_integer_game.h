@@ -21,6 +21,7 @@ public:
     int value() const { return _value; }
     void set_value(int value) { _value = value; }
     move_generator* create_move_generator(bw to_play) const;
+    void print(std::ostream& str) const;
 private:
     int _value;
 };

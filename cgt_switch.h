@@ -26,6 +26,7 @@ public:
         assert(is_integer());
         return _int_game.value();
     }
+    void print(std::ostream& str) const;
 
 private:
     const int _left, _right;

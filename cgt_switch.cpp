@@ -46,6 +46,14 @@ void switch_game::undo_move()
     game::undo_move();
 }
 
+void switch_game::print(std::ostream& str) const
+{
+    if (_is_integer)
+        str << "switch:integer:" << value();
+    else
+        str << "switch:{ " << _left << " | " << _right << '}';
+}
+
 //---------------------------------------------------------------------------
 class switch_move_generator : public move_generator
 {

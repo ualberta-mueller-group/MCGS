@@ -27,6 +27,7 @@ public:
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
     virtual move_generator* create_move_generator(bw to_play) const = 0;
+    virtual void print(std::ostream& str) const = 0;
 
 private:
     vector<move> _move_stack;
@@ -55,7 +56,11 @@ inline void game::undo_move()
     _move_stack.pop_back();
 }
 
-std::ostream& operator<<(std::ostream& out, const game& g);
+inline std::ostream& operator<<(std::ostream& out, const game& g)
+{
+    g.print(out);
+    return out;
+}
 
 //---------------------------------------------------------------------------
 class move_generator

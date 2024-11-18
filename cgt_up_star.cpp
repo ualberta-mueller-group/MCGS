@@ -46,6 +46,13 @@ void up_star::undo_move()
     game::undo_move();
 }
 
+void up_star::print(std::ostream& str) const
+{
+    str << "up_star:" << _value;
+    if (has_star())
+        str << '*';
+}
+
 //---------------------------------------------------------------------------
 
 class up_star_move_generator : public move_generator

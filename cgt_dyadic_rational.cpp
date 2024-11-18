@@ -44,6 +44,10 @@ void dyadic_rational::undo_move()
     game::undo_move();
 }
 
+void dyadic_rational::print(std::ostream& str) const
+{
+    str << "dyadic_rational:"<< _p << '/' << _q;
+}
 
 //---------------------------------------------------------------------------
 

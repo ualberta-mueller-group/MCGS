@@ -12,7 +12,6 @@ void nimber::play(const move& m, bw to_play)
     game::play(m, to_play);
 }
 
-
 void nimber::undo_move()
 {
     const move m = cgt_move::decode(last_move());
@@ -20,6 +19,11 @@ void nimber::undo_move()
     assert(number > 0);
     _value += number;
     game::undo_move();
+}
+
+void nimber::print(std::ostream& str) const
+{
+    str << "nimber:*" << _value;
 }
 
 //---------------------------------------------------------------------------

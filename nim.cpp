@@ -72,6 +72,12 @@ bool nim::static_solve() const
 {
     return nim_value() != 0;
 }
+
+void nim::print(std::ostream& str) const
+{
+    str << "nim:" << *this;
+}
+
 //---------------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& out, const nim& g)

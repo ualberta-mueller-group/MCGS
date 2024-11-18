@@ -24,6 +24,7 @@ public:
     void simplify();
     int p() const { return _p;}
     int q() const { return _q;}
+    void print(std::ostream& str) const;
 private:
     int _p, _q;
 };

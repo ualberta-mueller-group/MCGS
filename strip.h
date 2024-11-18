@@ -26,6 +26,7 @@ public:
     // Less checking than play_stone or remove_stone
     void replace(int p, int color);
     std::string board_as_string() const;
+    void print(std::ostream& str) const { str << board_as_string();}
 private:
     vector<int> _board; // todo try char as well.
 };
