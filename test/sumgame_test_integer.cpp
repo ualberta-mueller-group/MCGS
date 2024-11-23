@@ -56,8 +56,14 @@ void test_three_integers(int value1, int value2, int value3,
 void sumgame_test_integer_all()
 {
     test_empty();
-    test_one_integer(0, false, false);
-    test_two_integers(0, 0, false, false);
+    integer_game zero(0);
+    integer_game one(1);
+    integer_game minus_one(-1);
+    test_zero_1(zero);
+    test_zero_2(zero, zero);
+    test_zero_3(zero, zero, zero);
+    test_inverse(zero, zero);
+    test_inverse(minus_one, one);
     test_one_integer(1, true, false);
     test_one_integer(-1, false, true);
     test_one_integer(2, true, false);

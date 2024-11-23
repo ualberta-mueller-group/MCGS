@@ -50,4 +50,23 @@ void test_one_game(game& g, bool resB, bool resW);
 void test_two_games(game& g1, game& g2, bool resB, bool resW);
 void test_three_games(game& g1, game& g2, game& g3, bool resB, bool resW);
 
+inline void test_zero_1(game& g)
+{
+    test_one_game(g, false, false);
+}
+
+inline void test_zero_2(game& g1, game& g2)
+{
+    test_two_games(g1, g2, false, false);
+}
+inline void test_zero_3(game& g1, game& g2, game& g3)
+{
+    test_three_games(g1, g2, g3, false, false);
+}
+
+inline void test_inverse(game& g1, game& g2) // g1+g2 == 0
+{
+    test_zero_2(g1, g2);
+}
+//void test_equal(game& g1, game& g2); // needs game::inverse()
 #endif // test_utilities_H
