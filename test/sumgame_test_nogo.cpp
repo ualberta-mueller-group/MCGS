@@ -61,6 +61,18 @@ void sum_6()
 {
     test_2_nogo("...", "...", false, false);
 }
+
+void test_inverses()
+{
+    auto games = {".", "..", "..O", "X.X..", "X..O.O"};
+    for (auto gs: games)
+    {
+        nogo_1xn g(gs);
+        std::unique_ptr<game> inv(g.inverse());
+        test_inverse(g, *inv);
+    }
+}
+
 } // namespace
 
 void sumgame_test_nogo_all()
@@ -71,4 +83,5 @@ void sumgame_test_nogo_all()
     sum_4();
     sum_5();
     sum_6();
+    test_inverses();
 }

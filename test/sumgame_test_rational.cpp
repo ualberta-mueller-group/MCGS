@@ -48,9 +48,7 @@ dyadic_rational value3,
 dyadic_rational r(int p, int q)
 { return dyadic_rational(p, q); }
 
-} // namespace
-
-void sumgame_test_rational_integer()
+void test_integers()
 {
     test_one_rational(r(0,1), false, false);
     test_two_rationals(r(0,1), r(0,1), false, false);
@@ -72,7 +70,7 @@ void sumgame_test_rational_integer()
     test_three_rationals(r(1,1), r(-1,1), r(-1,1), false, true);
 }
 
-void sumgame_test_rational_fraction()
+void test_fractions()
 {
     test_one_rational(r(1,2), true, false);
     test_one_rational(r(-1,2), false, true);
@@ -92,8 +90,21 @@ void sumgame_test_rational_fraction()
     test_three_rationals(r(5,8), r(-11,16), r(1,8), true, false);
 }
 
+void test_inverses()
+{
+    auto games = {r(0,1), r(1,1), r(1,16), r(-3,16), r(57,8)};
+    for (auto g: games)
+    {
+        std::unique_ptr<game> inv(g.inverse());
+        test_inverse(g, *inv);
+    }
+}
+
+} // namespace
+
 void sumgame_test_rational_all()
 {
-    sumgame_test_rational_integer();
-    sumgame_test_rational_fraction();
+    test_integers();
+    test_fractions();
+    test_inverses();
 }

@@ -37,6 +37,11 @@ void integer_game::undo_move()
     game::undo_move();
 }
 
+game* integer_game::inverse() const
+{
+    return new integer_game(-_value);
+}
+
 void integer_game::print(std::ostream& str) const
 {
     str << "integer:" << _value;

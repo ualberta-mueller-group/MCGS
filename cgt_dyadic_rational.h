@@ -20,6 +20,7 @@ public:
     // The move argument is the OLD value that must be restored.
     void play(const move& m, bw to_play);
     void undo_move();
+    game* inverse() const;
     move_generator* create_move_generator(bw to_play) const;
     void simplify();
     int p() const { return _p;}

@@ -46,6 +46,15 @@ void switch_game::undo_move()
     game::undo_move();
 }
 
+game* switch_game::inverse() const
+{
+    switch_game* inv = new switch_game(-_right, -_left);
+    inv->_is_integer = _is_integer;
+    if (_is_integer)
+        inv->_int_game.set_value(-_int_game.value());
+    return inv;
+}
+
 void switch_game::print(std::ostream& str) const
 {
     if (_is_integer)

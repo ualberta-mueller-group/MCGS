@@ -14,6 +14,7 @@
 class strip : public game
 {
 public:
+    strip(const vector<int>& board);
     strip(const std::string& game_as_string);
     int size() const;
     int at(int p) const;
@@ -25,6 +26,7 @@ public:
     // replaces whatever is there. 
     // Less checking than play_stone or remove_stone
     void replace(int p, int color);
+    vector<int> inverse_board() const;
     std::string board_as_string() const;
     void print(std::ostream& str) const { str << board_as_string();}
 private:

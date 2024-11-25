@@ -17,6 +17,7 @@ public:
     void play(const move& m, bw to_play);
     void undo_move();
     move_generator* create_move_generator(bw to_play) const;
+    game* inverse() const;
     
     int left() const { return _left;}
     int right() const { return _right;}
@@ -32,6 +33,7 @@ private:
     const int _left, _right;
     bool _is_integer; // has root move been played?
     integer_game _int_game; //only meaningful if _is_integer
+    // TODO make it a unique_ptr
 };
 
 inline switch_game::switch_game(int left, int right) : 

@@ -16,10 +16,14 @@ public:
     void undo_move();
     move_generator* create_move_generator(bw to_play) const;
     int value() const {return _value;}
+    game* inverse() const;
     void print(std::ostream& str) const;
 private:
     int _value;
 };
+
+inline game* nimber::inverse() const
+{ return new nimber(_value); }
 
 inline nimber::nimber(int value) : _value(value)
 { }

@@ -6,6 +6,10 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 
+clobber_1xn::clobber_1xn(const vector<int>& board) :
+    strip(board)
+{ }
+
 clobber_1xn::clobber_1xn(std::string game_as_string) :
     strip(game_as_string)
 { }
@@ -35,6 +39,10 @@ void clobber_1xn::undo_move()
     replace(to, opponent(player));
 }
 
+game* clobber_1xn::inverse() const
+{
+    return new clobber_1xn(inverse_board());
+}
 
 std::ostream& operator<<(std::ostream& out, const clobber_1xn& g)
 {

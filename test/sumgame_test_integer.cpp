@@ -51,11 +51,23 @@ void test_three_integers(int value1, int value2, int value3,
     assert_solve_sum(g, WHITE, resW);
 }
 
+void test_inverses()
+{
+    auto ints = {0, 1, -1, 2, 16, -3, 57, 8};
+    for (auto i: ints)
+    {
+        integer_game ig(i);
+        std::unique_ptr<game> inv(ig.inverse());
+        test_inverse(ig, *inv);
+    }
+}
+
 } // namespace
 
 void sumgame_test_integer_all()
 {
     test_empty();
+    test_inverses();
     integer_game zero(0);
     integer_game one(1);
     integer_game minus_one(-1);

@@ -8,18 +8,17 @@
 #include "cgt_basics.h"
 #include "strip.h"
 
-
 class nogo_1xn : public strip
 {
 public:
     nogo_1xn(std::string game_as_string);
+    nogo_1xn(const vector<int>& board);
     void play(const move& m, bw to_play);
     void undo_move();
+    game* inverse() const;
     move_generator* create_move_generator(bw to_play) const;
 };
 
-
 std::ostream& operator<<(std::ostream& out, const nogo_1xn& g);
-
 
 #endif

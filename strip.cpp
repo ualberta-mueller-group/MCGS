@@ -55,12 +55,26 @@ std::string board_to_string(const vector<int>& board)
 } // namespace
 //---------------------------------------------------------------------------
 
-strip::strip(const std::string& game_as_string) :
+strip::strip(const vector<int>& board) :
     game(),
-    _board(string_to_board(game_as_string))
+    _board(board)
+{ }
+
+strip::strip(const std::string& game_as_string) :
+    strip(string_to_board(game_as_string))
 { }
 
 std::string strip::board_as_string() const
 {
     return board_to_string(_board);
+}
+
+vector<int> strip::inverse_board() const
+{
+    vector<int> inv_board(_board);
+    for (auto i = 0; i < size(); ++i)
+    {
+        inv_board[i] = ebw_opponent(_board[i]);
+    }
+    return inv_board;
 }

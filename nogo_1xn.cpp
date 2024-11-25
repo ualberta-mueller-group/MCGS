@@ -5,6 +5,10 @@
 
 #include "strip.h"
 
+nogo_1xn::nogo_1xn(const vector<int>& board) :
+    strip(board)
+{ }
+
 nogo_1xn::nogo_1xn(std::string game_as_string) :
     strip(game_as_string)
 { }
@@ -25,6 +29,11 @@ void nogo_1xn::undo_move()
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
     replace(to, EMPTY);
+}
+
+game* nogo_1xn::inverse() const
+{
+    return new nogo_1xn(inverse_board());
 }
 
 std::ostream& operator<<(std::ostream& out, const nogo_1xn& g)

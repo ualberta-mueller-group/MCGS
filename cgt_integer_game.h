@@ -20,6 +20,7 @@ public:
     void undo_move();
     int value() const { return _value; }
     void set_value(int value) { _value = value; }
+    game* inverse() const;
     move_generator* create_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:

@@ -47,7 +47,9 @@ public:
     void undo_move();
     move_generator* create_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
-    
+    game* inverse() const
+    { assert(false); return 0; }
+   
     // accessor/helper functions
     const vector<int>& heaps() const;
     

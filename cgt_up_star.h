@@ -18,6 +18,7 @@ public:
     // encoded as 0/1
     void play(const move& m, bw to_play);
     void undo_move();
+    game* inverse() const;
     move_generator* create_move_generator(bw to_play) const;
     int num_ups() const { return _value;}
     bool has_star() const { return _star;}

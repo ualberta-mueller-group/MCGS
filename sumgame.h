@@ -23,6 +23,8 @@ public:
     void play(const move& m, bw to_play) {}
     void undo_move() {}
     void print(std::ostream& str) const {}
+    game* inverse() const
+    { assert(false); return 0; }
     move_generator* create_move_generator(bw to_play) const
     { assert(false); return 0; }
 };

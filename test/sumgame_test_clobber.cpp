@@ -61,6 +61,18 @@ void sum_6()
 {
     test_2_clobber("XOXOXO", "OXOXOX", false, false);
 }
+
+void test_inverses()
+{
+    auto games = {"X", "XO", "OXO", "XOOOOO", "XOXOXO"};
+    for (auto gs: games)
+    {
+        clobber_1xn g(gs);
+        std::unique_ptr<game> inv(g.inverse());
+        test_inverse(g, *inv);
+    }
+}
+
 } // namespace
 
 void sumgame_test_clobber_all()
@@ -71,4 +83,5 @@ void sumgame_test_clobber_all()
     sum_4();
     sum_5();
     sum_6();
+    test_inverses();
 }

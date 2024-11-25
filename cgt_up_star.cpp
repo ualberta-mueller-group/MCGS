@@ -46,6 +46,11 @@ void up_star::undo_move()
     game::undo_move();
 }
 
+game* up_star::inverse() const
+{
+    return new up_star(-num_ups(), has_star());
+}
+
 void up_star::print(std::ostream& str) const
 {
     str << "up_star:" << _value;

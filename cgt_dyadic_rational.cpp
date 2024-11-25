@@ -44,6 +44,11 @@ void dyadic_rational::undo_move()
     game::undo_move();
 }
 
+game* dyadic_rational::inverse() const
+{
+    return new dyadic_rational(-_p, _q);
+}
+
 void dyadic_rational::print(std::ostream& str) const
 {
     str << "dyadic_rational:"<< _p << '/' << _q;
