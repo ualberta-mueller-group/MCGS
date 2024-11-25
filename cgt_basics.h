@@ -60,6 +60,14 @@ inline void assert_empty_black_white(ebw color)
     assert(is_empty_black_white(color));
 }
 
+inline int ebw_opponent(int c)
+{
+    assert_empty_black_white(c);
+    if (c == EMPTY)
+        return EMPTY;
+    return opponent(c);
+}
+
 //---------------------------------------------------------------------------
 
 // range includes low but excludes high
