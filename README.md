@@ -91,11 +91,19 @@ and is stored in the move stack.
 - Simple game classes: integer, dyadic rational, up-star, switch, nimber
 
 ### Version 1 in progress
+- Done so far:
+    - minimalistic `sumgame` class
+    - first experiments with sums of simple games, Clobber and NoGo
+    - Current limitation: games need to be defined beforehand, cannot create/delete new games on the fly
+
 - Plan for early steps:
-    - minimalistic sumgame class
-    - rewrite nim to use sumgame and nimber
-    - first experiments with clobber and NoGo sums
+    - rewrite `nim` to use sumgame and nimber
     - change read from string functions to directly create sumgame
+
+#### General improvements in Version 1 - changes not specifically related to sumgame
+
+- implement game::inverse() for all game types
+- created classes `impartial_game` and `impartial_sumgame`, moved some funcxtionality from obsolete `nim` class here
     
 ## Design Choices and Remaining Uglinesses
 #### A `move` must be an `int` 
