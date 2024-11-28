@@ -2,7 +2,8 @@
 
 # V1 todo
 - define goals for first, minimalistic sumgame class
-- rewrite nim to use sumgame and nimbers classes
+- rewrite `unused/nim` to use sumgame and nimbers classes
+- rewrite `unused/nim_test` and `unused/nim_random_test`
 - Can handle type conversion from game to option with sum game
     - move creates list of new subgames
     - those can include a new type of game
@@ -31,11 +32,13 @@
 - scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
 - make board implementations (char, int, bitset, list?) separate from game classes, with common interface - allow composition of different board implementations with game mechanics
 - `rule_set` class as in CGSuite?
-- implement generic game::inverse(), with overrides?
-    h = inverse(g) ???
 - should we allow fractions in `switch_game`? e.g. 1/2 | -3/4
 
 ## Todo - Tests
+
+### sum games
+- A test game on file can be a sum, enclosed in quotes. 
+- modify reading to build a sum
 
 ### Nogo
 - Nogo - add test cases for move generator
