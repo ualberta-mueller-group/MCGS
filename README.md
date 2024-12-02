@@ -31,7 +31,7 @@ codes and all game-specific implementation files are in the `MCGS` directory.  T
 - Create 4 files: `x.h, x.cpp, test/x_test.h, test/x_test.cpp`
     - Define `class x` in `x.h`, derive from `game` or `strip`
     - Each new game must implement at least 3 virtual methods: 
-    `play, undo_move, create_move_generator`
+    `play, undo_move, create_move_generator` (two more now - see below)
     - Class `x_move_generator` - I have made the move generators private, only in the `x.cpp` files. The only access is through the game's `create_move_generator` method
 - In `x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. 
     - Add the declaration in `x_test.h` 
@@ -59,7 +59,9 @@ XXO W loss
 - A test game can be a sum, enclosed in quotes. 
 It is read with `std::quoted`
 
-## Some Implementation Notes
+## Implementation Notes for extending the `game` class
+- virtual methods in game that must be implemented:
+    - `play`, `undo_move`, `create_move_generator`, `print`, `inverse`
 - In every game implementation:
     - `x::play()` must call `game::play()`
     - `x::undo_move()` must call `game::undo_move()`
@@ -100,10 +102,17 @@ and is stored in the move stack.
     - rewrite `nim` to use sumgame and nimber
     - change read from string functions to directly create sumgame
 
+#### `sumgame` class
+
+- keeps `vector<game*> _subgames`
+    - should be owner??? copy on add?
+- derived from `alternating_move_game` but reimplements solve 
+    - it uses `sumgame_move` containing subgame index and move, not just `move`
+    - keeps its own `_sumgame_move_stack` with sum-level info; subgames keep their own stacks as well
 #### General improvements in Version 1 - changes not specifically related to sumgame
 
 - implement game::inverse() for all game types
-- created classes `impartial_game` and `impartial_sumgame`, moved some funcxtionality from obsolete `nim` class here
+- created classes `impartial_game` and `impartial_sumgame`, moved some functionality from obsolete `nim` class here
     
 ## Design Choices and Remaining Uglinesses
 #### A `move` must be an `int` 
@@ -127,3 +136,10 @@ a move generator in a `std::unique_ptr`
     function `nim_move_generator_test_1`
     - Example in `alternating_move_game::solve`
 
+#### Reimplementation/duplication of `game` concepts in `sumgame`
+- This is a consequence of - A `move` must be an `int`
+- A move in a sumgame is specified in `struct sumgame_move` by two parts: index of subgame, and move inside the subgame
+- so play() in sumgame takes a `sumgame_move` as argument, not a `move`
+- solve() also rewritten to use `sumgame_move`
+- `alternating_move_game` currently requires a game 
+argument - a ugly dummy game `empty_game`. See todo.md.

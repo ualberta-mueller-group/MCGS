@@ -1,14 +1,29 @@
 # BUGS
+- none known
 
 # V1 todo
+
+## V1 sumgame design questions
 - define goals for first, minimalistic sumgame class
+- how to implement play() that can split a game into 0,1,2,... subgames
+    - option 1: approach in Martin's old clobber code
+        - sumgame has list of active and inactive subgames
+        - to play in subgame `G_i`
+        - play returns list of 0 or more new subgames
+        - old subgame `G_i` is always deactivated
+        - all new subgames are created as active, and appended to sum
+    - option 2:
+        - similar, but allow `G_i` itself to be modified, and included in result of play(). In this case, `G_i` would stay active. This makes sense e.g. when splits into two or more subgames are rare.
+    - option 3: allow play() to directly modify sumgame, i.e. deactivate, ad new subgames. Probably not a good idea for design/encapsulation
+- Should handle type conversion from game to option within a sum game
+    - new subgames can include a new type of game
+        - e.g. play in a `switch_game` or `dyadic_rational` 
+        can create an integer
+
+## V1 todo other
+## V1 todo other
 - rewrite `unused/nim` to use sumgame and nimbers classes
 - rewrite `unused/nim_test` and `unused/nim_random_test`
-- Can handle type conversion from game to option with sum game
-    - move creates list of new subgames
-    - those can include a new type of game
-        - e.g. play in a `switch_game`  or `dyadic_rational` 
-        can create an integer
 - replace a game (e.g. clobber position) by an equal game of simpler type
     - when we learn equality after evaluation or database lookup
     - who manages the memory of the new and old games?
@@ -19,6 +34,10 @@
     - how to handle?
     - what if a game such as clobber is equal to a simpler game such as up
     - should zero be its own type??
+- `alternating_move_game` add constructor without game; 
+    - add a `set_game` and assert there is a game before solving.
+    - remove `empty_game` in `sumgame`
+    - remove old `nim` implementation once we have a sum of nimbers replacement for it
 
 # Todo Coding - deferred to V1
 - simplify() hook for game
