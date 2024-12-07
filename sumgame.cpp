@@ -92,12 +92,20 @@ void sumgame::add(game* g)
     //                      &_subgames.back()));
 }
 
+const bool PRINT_SUBGAMES = false;
+
+bool sumgame::solve() const
+{
+    assert_restore_game ar(*this);
+    sumgame& sum = 
+        const_cast<sumgame&>(*this);
+    return sum._solve();
+}
+
 // Solve combinatorial game - find winner
 // Game-independent implementation of boolean minimax,
 // plus sumgame simplification
-const bool PRINT_SUBGAMES = false;
-
-bool sumgame::solve()
+bool sumgame::_solve()
 {
     if (PRINT_SUBGAMES)
     {

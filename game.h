@@ -26,6 +26,8 @@ public:
     bool is_active() const;
     void set_active(bool status);
     move last_move() const;
+    // Used to verify that game is restored after search
+    int moves_hash() const; // TODO do a proper implementation
     
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
@@ -70,6 +72,11 @@ inline void game::play(const move& m, int to_play)
 inline void game::undo_move()
 {
     _move_stack.pop_back();
+}
+
+inline int game::moves_hash() const
+{
+    return _move_stack.size();
 }
 
 inline std::ostream& operator<<(std::ostream& out, const game& g)

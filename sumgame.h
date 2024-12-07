@@ -40,7 +40,7 @@ public:
     void play_sum(const sumgame_move& m, bw to_play);
     void undo_move();
     void add(game* g);
-    bool solve();
+    bool solve() const;
     sumgame_move last_sumgame_move() const;
     int num_total_games() const;
     int num_active_games() const;
@@ -49,6 +49,7 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
+    bool _solve();
     empty_game _empty_game;
     vector<game*> _subgames; // sumgame owns these subgames
     vector<sumgame_move> _sumgame_move_stack;

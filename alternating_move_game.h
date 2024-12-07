@@ -17,14 +17,16 @@ public:
     bw to_play() const;
     bw opponent() const;
     void set_to_play(bw color);
-    virtual bool solve();
-    game& game_pos() {return _game;}
+    virtual bool solve() const;
+    game& game_pos() { return _game; }
+    const game& game_pos() const { return _game; }
 
     // Default just returns false, a specific game may override
     virtual bool find_static_winner(bool& success) const;
     virtual void play(const move& m);
     virtual void undo_move();
 private:
+    bool _solve();
     game& _game;
     bw _to_play;
 }; // alternating_move_game
@@ -68,5 +70,16 @@ inline bool alternating_move_game::find_static_winner(bool& success) const
 {
     return false;
 }
+
+//---------------------------------------------------------------------------
+class assert_restore_game
+{
+public:
+    assert_restore_game(const alternating_move_game& game);
+    ~assert_restore_game();
+private:
+    const alternating_move_game& _game;
+    const int _game_hash;
+};
 
 #endif // alternating_move_game_H
