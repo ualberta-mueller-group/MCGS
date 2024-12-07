@@ -45,6 +45,13 @@ and `sumgame`
 - `sumgame` is used to store and solve a sum of games. 
 It is derived from `alternating_move_game`.
     - `sumgame::solve` is a basic boolean negamax search for sums
+    - enforced const-ness of games when calling solver
+        - game state may modify during solve but is restored 
+        at the end in any case
+        - a checking function to make sure state is unchanged
+            - a naive first implementation just checks length of move stack
+            - TODO it probably is broken for sumgame, since it uses a different stack
+            - to be replaced by a full hash
 
 
 ## File Format for Test Cases

@@ -3,6 +3,84 @@
 
 # V1 todo
 
+## To discuss with Taylor
+- any questions on code, or document?
+- next steps:
+    - github repo, full access
+    - what to work on this week?
+    - meet Henry? Define agenda first, or just chat?
+    - Weekly meeting - when?
+- from email: For me, a few high priority things 
+that you could work on are:
+    - extending the sumgame class to support changes after a move, 
+    i.e. split game into two subgames, or change the type of game.
+    - design and implementation of database
+    - design and implementation of hash codes and transposition table
+    - performance tests and test cases. Tests with time limits.
+    - I think you should just work on one at a time, in a git branch, and then merge it back in when completed.
+
+- recent changes by Martin: 
+    - const interface for solve()
+    - check that game is restored after search - first simple implementation
+- Admin things? Work from home regulations?
+- Testing and documentation
+    - unit tests
+    - coding style, "simple C++"
+    - Use Google coding style document?
+        - https://google.github.io/styleguide/cppguide.html
+        - I looked at it several years back, and it was good then. 
+        Look at it again?
+    - documentation style. For now it is somewhat minimal
+- What are things we can adapt from previous clobber, Nogo solvers? What is general, what is game-specific?
+
+### Code to do for Taylor
+- what to do first? DB? hashing? small things from clobber solver?
+- design small complete units to code+test
+- review in next meeting after it is ready
+
+### Design questions to discuss
+- hashing for sum games
+    - in general, similar to Taylor's and Henry's approach
+        - main problem: mixing games, or game + simple abstract values
+    - game-specific hash functions?
+    - game ID decides which hash to use?
+- database
+    - internal and external database format
+        - general design? game-specific?
+    
+- "Value scales" and bounds on game values
+    - E.g. clobber: multiples of up, up-star
+    - binary search to find confusion interval
+- simplification of sums
+    - mostly, this will need the DB first
+    
+### Publications
+- Clobber paper, based on 701 report
+    - Where to publish?
+    - What work needs to be done to turn report into paper?
+- New paper with MCGS design and results
+    - What goals? Match game-specific performance in 1xn Clobber, Nogo? 
+    - Get good performance on 2-D boards?
+    
+### Code to do/finish for Martin
+- New nim implementation with sumgame and nimber
+- new base class `impartial_game`
+    - knowledge of nimbers
+    - In future: specialised search algorithms
+        - Mex rule
+        - Lemoine and Viennot, Nimbers are inevitable (2012)
+- Re-use parts of old nim code
+    - read nim sums from file
+    - unit test cases
+- Remove old nim code
+- from email:
+A few other things that I was planning to tackle myself, but we can also discuss them:
+    - document sumgame and implementation choices.
+    - Semantics of game-in-sumgame. Does the sumgame become the owner (e.g. with unique_ptr)? Or should it copy the game?
+    - Can we have multiple references to the same subgame in a sum? Probably not a good idea, then we should guard against that. 
+        - E.g. sumgame s; game(of some sort) g; s.add(&g); s.add(&g); (add twice)
+        - write test cases and documentation for these.
+
 ## V1 sumgame design questions
 - define goals for first, minimalistic sumgame class
 - how to implement play() that can split a game into 0,1,2,... subgames
