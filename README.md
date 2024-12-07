@@ -37,6 +37,16 @@ codes and all game-specific implementation files are in the `MCGS` directory.  T
     - Add the declaration in `x_test.h` 
     - Call `x_test_all` from `test/test_main.cpp`
 
+## Search and solving a game
+- Two classes implement game solving: `alternating_move_game`
+and `sumgame`
+- `alternating_move_game` is used for solving a single game
+    - `alternating_move_game::solve` is a basic boolean negamax search
+- `sumgame` is used to store and solve a sum of games. 
+It is derived from `alternating_move_game`.
+    - `sumgame::solve` is a basic boolean negamax search for sums
+
+
 ## File Format for Test Cases
 - simple file format for tests:
 - line 1: game name, file format version, currently 0
