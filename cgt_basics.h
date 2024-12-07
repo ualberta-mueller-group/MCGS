@@ -69,6 +69,7 @@ inline int ebw_opponent(int c)
 }
 
 //---------------------------------------------------------------------------
+// Utilities for ranges
 
 // range includes low but excludes high
 inline bool in_range(int value, int low, int high)
@@ -102,6 +103,13 @@ inline char color_char(int color)
 inline bool is_black_white_char(char c)
 {
     return c == 'B' || c == 'W';
+}
+//---------------------------------------------------------------------------
+// Utilities for assertions
+
+inline void assert_equal(int a, int b)
+{ 
+    assert(a == b);
 }
 //---------------------------------------------------------------------------
 #endif // cgt_basics_H

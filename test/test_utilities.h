@@ -11,11 +11,6 @@
 #include "game.h"
 #include "sumgame.h"
 
-inline void assert_equal(int a, int b)
-{ 
-    assert(a == b);
-}
-
 inline void assert_move(move_generator& mg, int mv)
 { 
     const move m = mg.gen_move();
