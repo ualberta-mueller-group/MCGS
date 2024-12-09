@@ -3,6 +3,43 @@
 
 # V1 todo
 
+## Martin - Version 1 - Dec 9
+- update the document and the todo with today's discussion
+- clear up what is/is not in version 1
+
+## Taylor - Version 1 - Dec 9
+- better makefile, with .o files
+- try to implement a simple game following the README
+- implement `play_and_split` on subgame G
+    - leave current play function as-is, to play the move on G
+    - split: check if G can be split into subgames
+        - cases:
+        - case a: subgame is over after play() -> 0 new games, old game G deactivated
+        - case b: still the same subgame after split - no split found, 
+            - G changed into GL or GR, same object in memory
+        - case c: Still one game, but different type:
+            - Example: G = switch {3 | 1}, Black plays to 3
+                - deactivate G
+                - create new `integer_game(3)`, add to sum
+        - case d: Two or more subgames after split: 
+            - create new subgames G1, G2,..as active games
+            - split should return the vector of (new or old) games
+            - sometimes, after the split some subgames can be pruned (later)
+        - sumgame should deal with changes to the sum in each case
+            - if new games: deactivate G, add G1, G2, ... to sum
+        - split has to be implemented for each existing game type
+            - default implementation in `game` does nothing 
+                - return the game, case b
+            - Clobber: can do it based on existing game-specific codes
+            - NoGo: ask Henry
+            - `integer_game`: default
+            - `dyadic_rational` p/q can become integer if q=1
+            - switch can become integer
+            - `up_star`: default
+            - nimber: default
+    - write unit tests for split, for play_and_split
+    - use it in sumgame::solve
+
 ## To discuss with Taylor
 - any questions on code, or document?
 - next steps:
@@ -10,6 +47,7 @@
     - what to work on this week?
     - meet Henry? Define agenda first, or just chat?
     - Weekly meeting - when?
+    - First goal: finish Version 1 as of the plan in the document
 - from email: For me, a few high priority things 
 that you could work on are:
     - extending the sumgame class to support changes after a move, 
