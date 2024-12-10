@@ -19,10 +19,8 @@ MCGS_TEST_DEPS = $(MCGS_TEST_SRC:.cpp=.d)
 .DEFAULT_GOAL := MCGS
 
 
-ifneq ($(MAKECMDGOALS),clean)
-	ifeq ($(INCLUDE_DEPS),1)
-		-include $(DEPS)
-	endif
+ifeq ($(INCLUDE_DEPS),1)
+	-include $(DEPS)
 endif
 
 
