@@ -1,4 +1,6 @@
-# TODO: should probably generate .d files every run...
+# TODO: do we need to generate .d files every build? 
+# 	should we have ".td" dependency files built with testing flags?
+
 CC = c++
 NORMAL_FLAGS = -Wall --std=c++17 -O3
 TEST_FLAGS = -Wall --std=c++17 -O3 -g
@@ -19,13 +21,18 @@ MCGS_TEST_DEPS = $(MCGS_TEST_SRC:.cpp=.d)
 .DEFAULT_GOAL := MCGS
 
 
-ifeq ($(INCLUDE_DEPS),1)
-	-include $(DEPS)
+CAN_BUILD=0
+
+ifdef USE_FLAGS
+	ifdef DEPS
+		CAN_BUILD=1
+	endif
 endif
 
 
 
-ifeq ($(INCLUDE_DEPS),1)
+
+ifeq ($(CAN_BUILD), 1)
 
 MCGS: $(MCGS_OBJS)
 	$(CC) $(USE_FLAGS) $(INC) $^ -o $@
@@ -37,10 +44,10 @@ else
 .PHONY: MCGS MCGS_test
 
 MCGS:
-	make $@ USE_FLAGS="$(NORMAL_FLAGS)" INCLUDE_DEPS=1 DEPS="$(MCGS_DEPS)"
+	make $@ USE_FLAGS="$(NORMAL_FLAGS)" DEPS="$(MCGS_DEPS)"
 
 MCGS_test:
-	make $@ USE_FLAGS="$(TEST_FLAGS)" INCLUDE_DEPS=1 DEPS="$(MCGS_TEST_DEPS)"
+	make $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)"
 endif
 
 
@@ -54,18 +61,17 @@ test: MCGS_test
 	./MCGS_test
 
 
-%.d: %.cpp
-	$(CC) -MM $(USE_FLAGS) $(INC) $< > $@
+#%.d: %.cpp
+#	$(CC) -MM $(USE_FLAGS) $(INC) $< > $@
 
-%.o: %.cpp %.h
-	$(CC) $(USE_FLAGS) $(INC) $< -o $@ -c
+#%.o: %.cpp %.h
+#	$(CC) $(USE_FLAGS) $(INC) $< -o $@ -c
+
+
 
 %.o: %.cpp
-	$(CC) $(USE_FLAGS) $(INC) $< -o $@ -c
+	$(CC) $(USE_FLAGS) $(INC) -MMD -MP -c $< -o $@
 
 
-
-
-
-
+-include $(DEPS)
 
