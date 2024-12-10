@@ -8,11 +8,14 @@
 #include "clobber_1xn.h"
 #include "nim.h"
 #include "nogo_1xn.h"
+#include "temp.h"
 
 using std::cout;
 
 int main()
 {
+    std::cout << "\"SOME_VALUE\" is " << SOME_VALUE << std::endl;
+
     {
         nim pos("1 2 3");
         alternating_move_game g(pos, BLACK);
