@@ -1,36 +1,63 @@
+# TODO: should probably generate .d files every run...
 CC = c++
 NORMAL_FLAGS = -Wall --std=c++17 -O3
 TEST_FLAGS = -Wall --std=c++17 -O3 -g
 INC = -I.
 
-MCGS_FILES := *.cpp *.h main/*.cpp
-MCGS_TEST_FILES := *.cpp *.h test/*.cpp test/*.h
+#MCGS_FILES := *.cpp *.h main/*.cpp
+#MCGS_TEST_FILES := *.cpp *.h test/*.cpp test/*.h
 
-# Given a string of .h and .cpp files, keep only .cpp files, then
-# replace ".cpp" with ".o"
-define getObjs
-	$(eval DEPS_CPP = $(shell echo $(1) | grep -o "[^ ]*\.cpp"))
-	$(eval DEPS_OBJ = $(shell echo $(DEPS_CPP) | sed "s/\.cpp/.o/g"))
-	$(DEPS_OBJ)
-endef
+MCGS_SRC = $(wildcard *.cpp main/*.cpp)
+MCGS_OBJS = $(MCGS_SRC:.cpp=.o)
+MCGS_DEPS = $(MCGS_SRC:.cpp=.d)
 
-# TODO: are these evaluated lazily, or are these both evaluated here?
-MCGS_OBJS := $(call getObjs, $(MCGS_FILES))
-MCGS_TEST_OBJS := $(call getObjs, $(MCGS_TEST_FILES))
+MCGS_TEST_SRC = $(wildcard *.cpp test/*.cpp)
+MCGS_TEST_OBJS = $(MCGS_TEST_SRC:.cpp=.o)
+MCGS_TEST_DEPS = $(MCGS_TEST_SRC:.cpp=.d)
 
 
-MCGS: USE_FLAGS = $(NORMAL_FLAGS)
+.DEFAULT_GOAL := MCGS
+
+
+ifneq ($(MAKECMDGOALS),clean)
+	ifeq ($(INCLUDE_DEPS),1)
+		-include $(DEPS)
+	endif
+endif
+
+
+
+ifeq ($(INCLUDE_DEPS),1)
+
 MCGS: $(MCGS_OBJS)
 	$(CC) $(USE_FLAGS) $(INC) $^ -o $@
 
-MCGS_test: USE_FLAGS = $(TEST_FLAGS)
 MCGS_test: $(MCGS_TEST_OBJS)
 	$(CC) $(USE_FLAGS) $(INC) $^ -o $@
+
+else
+.PHONY: MCGS MCGS_test
+
+MCGS:
+	make $@ USE_FLAGS="$(NORMAL_FLAGS)" INCLUDE_DEPS=1 DEPS="$(MCGS_DEPS)"
+
+MCGS_test:
+	make $@ USE_FLAGS="$(TEST_FLAGS)" INCLUDE_DEPS=1 DEPS="$(MCGS_TEST_DEPS)"
+endif
+
+
+
+
+
+clean:
+	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM *.d main/*.d test/*.d
 
 test: MCGS_test
 	./MCGS_test
 
 
+%.d: %.cpp
+	$(CC) -MM $(USE_FLAGS) $(INC) $< > $@
 
 %.o: %.cpp %.h
 	$(CC) $(USE_FLAGS) $(INC) $< -o $@ -c
@@ -40,5 +67,7 @@ test: MCGS_test
 
 
 
-clean:
-	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM
+
+
+
+
