@@ -9,61 +9,12 @@
 #include "clobber_1xn.h"
 #include "nim.h"
 #include "nogo_1xn.h"
-#include "temp.h"
-#include "elephants_rhinos.h";
+#include "elephants.h"
 
 using std::cout, std::endl;
 
 int main()
 {
-    std::cout << "\"SOME_VALUE\" is " << SOME_VALUE << std::endl;
-
-
-    const char * strs[] = {
-        "XX...XO.X",
-        "X..X.O..O.O",
-        "X.O",
-        "X..X..X.....O..OOO",
-    };
-
-    /*
-    for (int i = 0; i < sizeof(strs) / sizeof(strs[0]); i++)
-    {
-        elephants_rhinos pos(strs[i]);
-        cout << pos << endl;
-
-        move_generator* mg = pos.create_move_generator(BLACK);
-
-        while (*mg)
-        {
-            move m = mg->gen_move();
-
-            int from = cgt_move::first(m);
-            int to = cgt_move::second(m);
-
-            cout << from << " -> " << to << endl;
-            ++(*mg);
-        }
-
-        delete mg;
-        cout << endl;
-
-    }
-    */
-
-    for (int i = 0; i < sizeof(strs) / sizeof(strs[0]); i++)
-    {
-        elephants_rhinos pos(strs[i]);
-        cout << pos << endl;
-        alternating_move_game g(pos, BLACK);
-        bool result = g.solve();
-
-        cout << "Solve elephants_rhinos: " << result << endl;
-
-        cout << endl;
-    }
-
-
     {
         nim pos("1 2 3");
         alternating_move_game g(pos, BLACK);
@@ -90,5 +41,13 @@ int main()
         alternating_move_game g(pos, BLACK);
         bool result = g.solve();
         cout << "Solve nogo_1xn " << pos << ", result " << result << std::endl;
+    }
+
+    {
+        elephants pos("X..X.O..O.O");
+        alternating_move_game g(pos, BLACK);
+        bool result = g.solve();
+        cout << "Solve elephants " << pos << ", result " << result << endl;
+        
     }
 }
