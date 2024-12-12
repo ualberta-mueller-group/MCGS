@@ -8,24 +8,6 @@ int player_dir(bw to_play)
     return (to_play == BLACK) ? 1 : -1;
 }
 
-//////////////////////////////////////// elephants_move_generator declaration
-
-class elephants_move_generator : public move_generator
-{
-public:
-    elephants_move_generator(const elephants& game, bw to_play);
-
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    bool is_move(int from, int to, bw to_play) const;
-
-    const elephants& _game;
-    int _idx;
-    int _dir;
-};
 
 //////////////////////////////////////// elephants
 

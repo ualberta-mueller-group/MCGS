@@ -1,6 +1,58 @@
 //------------------------------------------------------------
 // Unit tests for the game Elephants and Rhinos
 //------------------------------------------------------------
+
+/*
+
+    TODO: use these test cases later (include split() test)
+        These should be in the elephants.hard.test file, but
+
+    XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO
+    XX...XO.O + X..X.O..O.O + X.O + X..X..X.....O..OOO
+    ?? --> N position from book, (first wins)
+    XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO B win
+    XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO W win
+
+    X.......O.....XO.O.....X..OO.X.O.OOXO...
+    X.......O + XO.O + X..OO + X.O.OO + XO...
+    {-4* | -6*} --> R position (white wins)
+    X.......O.....XO.O.....X..OO.X.O.OOXO... B loss
+    X.......O.....XO.O.....X..OO.X.O.OOXO... W win
+
+    X...XX.O...X.....OOOO..X...O.....O.O...O
+    X...XX.O + X.....OOOO + X...O.....O.O...O
+    {-27 | -29} --> R position (white wins)
+    X...XX.O...X.....OOOO..X...O.....O.O...O B loss
+    X...XX.O...X.....OOOO..X...O.....O.O...O W win
+
+    X..X........O....X....O...O.......XO.X..
+    X..X........O + X....O...O + XO + X..
+    3 --> L position (black wins)
+    X..X........O....X....O...O.......XO.X.. B win
+    X..X........O....X....O...O.......XO.X.. W loss
+
+    .......X.....O..X.....O.......
+    .......X.....O + X.....O.......
+    0 --> P position (first loses)
+    .......X.....O..X.....O....... B loss
+    .......X.....O..X.....O....... W loss
+
+    .OXO...O.O..O.X.X......X...X..OO..X....X
+    .O + XO...O.O..O + X.X......X...X..OO + X....X
+    14 --> L position (black wins)
+    .OXO...O.O..O.X.X......X...X..OO..X....X B win
+    .OXO...O.O..O.X.X......X...X..OO..X....X W loss
+
+    ....OXO.....X......X.XOX..O...O...O.XXO.
+    ....O + XO + X......X.XO + X..O...O...O + XXO.
+    -7 --> R position (white wins)
+    ....OXO.....X......X.XOX..O...O...O.XXO. B loss
+    ....OXO.....X......X.XOX..O...O...O.XXO. W win
+*/
+
+
+
+#include "elephants_test.h"
 #include "cgt_move.h"
 #include "elephants.h"
 
@@ -178,8 +230,8 @@ void manual1() {
 
     assert(pos.board_as_string() == "X..X.X.O.OO.XX.O");
     pos.play(cgt_move::two_part_move(3, 4), BLACK);
+    assert(pos.board_as_string() == "X...XX.O.OO.XX.O");
     pos.play(cgt_move::two_part_move(7, 6), WHITE);
-
     assert(pos.board_as_string() == "X...XXO..OO.XX.O");
 }
 
@@ -200,12 +252,12 @@ void test(const test_case &c)
 }
 
 // lifted from clobber_1xn_test.cpp
-void file()
+void file(const std::string& file_name)
 {
     std::vector<test_case> cases;
     std::string game_name;
     int version;
-    if (! read_test_cases("elephants.test", game_name, version, cases))
+    if (! read_test_cases(file_name, game_name, version, cases))
         return;
     assert(game_name == "elephants");
     assert(version == 0);
@@ -215,6 +267,78 @@ void file()
     }
 }
 
+void undo1()
+{
+    elephants pos(".X.O.X..O.O");
+
+    pos.play(cgt_move::two_part_move(1, 2), BLACK);
+    assert(pos.board_as_string() == "..XO.X..O.O");
+
+    pos.play(cgt_move::two_part_move(10, 9), WHITE);
+    assert(pos.board_as_string() == "..XO.X..OO.");
+
+
+    pos.undo_move();
+    assert(pos.board_as_string() == "..XO.X..O.O");
+
+    pos.undo_move();
+    assert(pos.board_as_string() == ".X.O.X..O.O");
+}
+
+
+void undo2()
+{
+    elephants pos(".OO.X.O.XOX..O..X.X");
+    pos.play(cgt_move::two_part_move(1, 0), WHITE);
+    assert(pos.board_as_string() == "O.O.X.O.XOX..O..X.X");
+    pos.play(cgt_move::two_part_move(2, 1), WHITE);
+    assert(pos.board_as_string() == "OO..X.O.XOX..O..X.X");
+
+    pos.undo_move();
+    assert(pos.board_as_string() == "O.O.X.O.XOX..O..X.X");
+    pos.undo_move();
+    assert(pos.board_as_string() == ".OO.X.O.XOX..O..X.X");
+
+}
+
+void inverse1()
+{
+    elephants pos("X..O.O.XX.O");
+
+    unique_ptr<elephants> inv(dynamic_cast<elephants*>(pos.inverse()));
+    assert(inv.get() != nullptr);
+    assert(inv->board_as_string() == "O..X.X.OO.X");
+}
+
+void inverse2()
+{
+    elephants pos("...");
+
+    unique_ptr<elephants> inv(dynamic_cast<elephants*>(pos.inverse()));
+    assert(inv.get() != nullptr);
+    assert(inv->board_as_string() == "...");
+}
+
+
+
+void test_is_move()
+{
+    elephants pos(".XX.O.OO.X");
+    unique_ptr<elephants_move_generator> gen_b(dynamic_cast<elephants_move_generator*>(pos.create_move_generator(BLACK)));
+    unique_ptr<elephants_move_generator> gen_w(dynamic_cast<elephants_move_generator*>(pos.create_move_generator(WHITE)));
+
+    assert(gen_b.get() != nullptr);
+    assert(gen_w.get() != nullptr);
+
+    assert(!gen_b->is_move(1, 2, BLACK));
+    assert(gen_b->is_move(2, 3, BLACK));
+    assert(!gen_b->is_move(3, 2, BLACK));
+    assert(!gen_b->is_move(9, 10, BLACK));
+
+    assert(gen_w->is_move(4, 3, WHITE));
+    assert(gen_w->is_move(6, 5, WHITE));
+    assert(!gen_w->is_move(7, 6, WHITE));
+}
 
 
 
@@ -227,5 +351,13 @@ void elephants_test_all()
     simple1();
     simple2();
     manual1();
-    file();
+    undo1();
+    undo2();
+    inverse1();
+    inverse2();
+    test_is_move();
+    file("elephants.test");
+
+    // Use these later, for now they're too hard
+    //file("elephants.hard.test");
 }
