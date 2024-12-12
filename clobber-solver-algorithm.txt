@@ -1,0 +1,86 @@
+Clearer (?) description of Taylor's linear Clobber search algorithm
+============================================================
+
+
+
+
+complexity metric for game substitutions: # of immediate undominated moves, + metric of all immediate children following those moves
+    <-- this number considers moves for both black and white
+    <-- complexity metric is different from heuristic value of a node
+
+Simplification algorithm:
+    1:
+        Replace single subgames found in DB with linked games
+        Delete P positions
+        Set aside single subgames with self links
+        No replacing games not found in DB
+
+    2:
+        Pairwise combine and replace the set aside subgames when found in DB
+        Delete P positions
+
+    3:
+        Delete 0 sums by doing pairwise string comparisons
+
+    4:
+        Sort games in order of decreasing string length, with tie breaking rule
+
+
+Search algorithm:
+    search() is a recursive function implementing a minimax search with several heuristics and optimizations
+
+    Search at the root level must play a move, so it can't do these optimizations:
+        -- simplify board
+        -- solve entire board through direct DB search
+        -- use static rules to determine outcome of entire board
+        -- omit subgames that are "positive" for the current player
+
+    The search() function is called on the root of the game tree, with "max depth" and "max leaf node count" parameters, and recursively invokes itself to visit nodes until it has either solved the root node, or has reached the leaf node limit. The number of leaf nodes visited so far is a global variable outside of the search() function. "max depth" and "max leaf node count" are increased with each subsequent invocation of search() on the root, and the number of already visited leaf nodes is reset with each invocation at the root. Eventually the depth and leaf node limits are removed (effectively becoming infinite)
+
+    An invocation of the search() function on a node (anywhere in the search tree) is a leaf node when:
+        -- Is a terminal node (i.e. no more moves left)
+        -- Is at current max depth in the search tree
+        -- Current node is solved through direct DB search
+        -- Current node is solved through static outcome rules
+
+    Search steps:
+    1:
+        Simplify board (G --> G') according to simplification steps listed above
+
+    2:
+        Check G' in DB, if found return (LEAF NODE)
+        Check G' in TT, if found and solved, return
+
+    3:
+        DB lookup all subgames of G', and if all are found, use static rules:
+            -- All L
+            -- All R
+            -- One N, all others are "positive" for current player
+                <-- this case includes single N with no other games
+            If solved, write to TT, return (LEAF NODE)
+
+    4:
+        For g subgame of G', where g is "positive" for current player, recurse on (G' - g), maintaining current depth and current player still playing
+            if (G' - g) is a win for current player, write to TT and return
+
+    5:
+        If terminal node (no moves), write to TT and return (LEAF NODE)
+
+    6:
+        If search is at max depth, or has reached max leaf node count, write heuristic H(G') to TT, then return. (LEAF NODE)
+            <-- H(G') is the negative of the opponent's number of moves, or some function based on the heuristic value of nodes deeper in the tree
+
+    7:
+        Generate all moves, delete dominated moves from the move list
+    
+    8:
+        Play moves in this order:
+            1: "best move" (if exists), informed by heuristic of TT entry (best move is stored in G' TT entry, and may not exist)
+            2: moves on "negative" subgames for current player (player W plays on B outcome class, player B plays on W outcome class)
+            3: all other moves
+            <-- Moves are randomized within these sets, each set is exhausted in this order
+
+            If a winning move is played, update the TT, return
+            If all moves are losing, update the TT, return
+            If no winning move found, and not all immediate child nodes solved, update TT (use heuristic). Return heuristic
+
