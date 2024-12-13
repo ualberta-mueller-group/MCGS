@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <optional>
 #include "cgt_basics.h"
 #include "cgt_move.h"
 //---------------------------------------------------------------------------
@@ -16,7 +17,10 @@ using std::vector;
 //---------------------------------------------------------------------------
 
 class move_generator;
+class game;
 //---------------------------------------------------------------------------
+
+typedef std::optional<std::vector<game*>> split_result;
 
 class game
 {
@@ -31,6 +35,7 @@ public:
     
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
+    virtual split_result split() const;
     virtual move_generator* create_move_generator(bw to_play) const = 0;
     virtual void print(std::ostream& str) const = 0;
     virtual game* inverse() const = 0; // caller takes ownership
@@ -74,6 +79,11 @@ inline void game::undo_move()
     _move_stack.pop_back();
 }
 
+inline split_result game::split() const
+{
+    return split_result(); // no value
+}
+
 inline int game::moves_hash() const
 {
     return _move_stack.size();
@@ -105,5 +115,8 @@ inline move_generator::move_generator(bw to_play) :
     _to_play(to_play)
 { }
 //---------------------------------------------------------------------------
+
+std::ostream& operator<<(std::ostream& os, const split_result& split);
+
 
 #endif // game_H

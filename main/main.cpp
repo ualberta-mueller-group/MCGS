@@ -15,6 +15,29 @@ using std::cout, std::endl;
 
 int main()
 {
+
+    {
+        clobber_1xn pos("X..XO.XX.OXO");
+        cout << pos << endl;
+
+        split_result result = pos.split();
+        cout << result << endl;
+    }
+    cout << endl;
+
+    {
+        clobber_1xn pos("XXOOXO");
+        cout << pos << endl;
+
+        split_result result = pos.split();
+        cout << result << endl;
+    }
+    cout << endl;
+
+
+
+
+
     {
         nim pos("1 2 3");
         alternating_move_game g(pos, BLACK);

@@ -6,13 +6,6 @@
 #include "cgt_basics.h"
 //---------------------------------------------------------------------------
 
-namespace {
-
-void assert_is_clobber_char(char c)
-{
-    assert(c == 'X' || c == 'O' || c == '.');
-}
-
 int clobber_char_to_color(char c)
 {
     if (c == 'X')
@@ -23,6 +16,14 @@ int clobber_char_to_color(char c)
         return EMPTY;
     else assert(false); return -1;
 }
+
+namespace {
+
+void assert_is_clobber_char(char c)
+{
+    assert(c == 'X' || c == 'O' || c == '.');
+}
+
 
 char color_to_char(int color)
 {
