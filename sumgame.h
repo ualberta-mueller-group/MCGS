@@ -10,8 +10,8 @@
 
 struct sumgame_move
 {
-    sumgame_move(int subg, move m) : _subgame(subg), _move(m) { }
-    int _subgame;
+    sumgame_move(int subg, move m) : _subgame_idx(subg), _move(m) { }
+    int _subgame_idx;
     move _move;
 };
 

@@ -17,11 +17,19 @@
 #include "sumgame_test.h"
 #include "elephants_test.h"
 
+#include "test_split.h"
+
+
+
+
 // TODO make a "do slow tests" build target?
 const bool DO_SLOWER_TESTS = false;
 
 int main()
 {
+
+    test_split();
+
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
