@@ -84,6 +84,7 @@ void sumgame_move_generator::next_move(bool init)
         assert(_subgame_generator == nullptr);
         const game* g = current();
 
+        // inactive game
         if (!g->is_active())
         {
             continue;
@@ -145,7 +146,7 @@ bool sumgame::solve() const
 // plus sumgame simplification
 bool sumgame::_solve()
 {
-    if (PRINT_SUBGAMES || true)
+    if (PRINT_SUBGAMES)
     {
         cout << "solve sum ";
         print(cout);
@@ -181,25 +182,21 @@ void sumgame::play_sum(const sumgame_move& m, bw to_play)
     game* g = subgame(subg);
 
     g->play(mv, to_play);
-    split_result sr = g->split(); // adding split...
+    split_result sr = g->split();
 
-    if (sr)
+    if (sr) // split() changed the sum
     {
         record.did_split = true;
 
-        cout << "Split deactivate " << g << endl;
+        // g is no longer part of the sum
         g->set_active(false);
 
         for (game* gp : *sr)
         {
             add(gp);
-            record.add_game(gp);
+            record.add_game(gp); // save these games in the record for debugging
         }
     }
-
-
-    // TODO use play_record here
-
     
     _play_record_stack.push_back(record);
     alternating_move_game::play(mv);
@@ -213,19 +210,16 @@ void sumgame::undo_move()
     const int subg = m._subgame_idx;
     game* s = subgame(subg);
 
-
-    // undo the split
+    // undo split (if necessary)
     if (record.did_split)
     {
         assert(!s->is_active()); // should have been deactivated on last split
 
-        cout << "Split reactivate " << s << endl;
         s->set_active(true);
-
 
         for (auto it = record.new_games.rbegin(); it != record.new_games.rend(); it++)
         {
-            game* g = *it;
+            game const* g = *it;
             assert(g == _subgames.back()); // we're deleting the same game
             assert(_subgames.back()->is_active()); // a previous undo should have reactivated g 
 

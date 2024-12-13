@@ -7,8 +7,6 @@ using std::cout, std::endl;
 
 void test_split()
 {
-    cout << "RUNNING SPLIT TEST" << endl;
-
     clobber_1xn c1("XOX");
     clobber_1xn c2("XOXO");
     clobber_1xn c3("OXOX");

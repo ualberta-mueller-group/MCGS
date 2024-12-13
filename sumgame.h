@@ -18,7 +18,7 @@ struct sumgame_move
 
 struct play_record
 {
-    play_record(sumgame_move move, const vector<game*>& new_games) :
+    play_record(sumgame_move move, const vector<game const*>& new_games) :
         did_split(false), move(move), new_games(new_games)
     { }
 
@@ -27,7 +27,7 @@ struct play_record
 
     bool did_split;
     sumgame_move move;
-    vector<game*> new_games;
+    vector<game const*> new_games; // doesn't own games, just stores them for debugging
 
 };
 
