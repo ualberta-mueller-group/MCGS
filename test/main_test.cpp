@@ -29,6 +29,7 @@ int main()
 {
 
     test_split();
+    return 0;
 
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();

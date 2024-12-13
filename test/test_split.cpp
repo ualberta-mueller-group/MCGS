@@ -7,7 +7,7 @@ using std::cout, std::endl;
 
 void test_split()
 {
-    cout << "ASDASD123" << endl;
+    cout << "RUNNING SPLIT TEST" << endl;
 
     clobber_1xn c1("XOX");
     clobber_1xn c2("XOXO");
@@ -19,7 +19,9 @@ void test_split()
     game.add(&c2);
     game.add(&c3);
 
-    c2.set_active(false);
+
+    game.solve();
+
 
 
 

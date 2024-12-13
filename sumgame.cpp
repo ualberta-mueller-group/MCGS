@@ -8,6 +8,10 @@
 using std::cout;
 using std::endl;
 
+
+//---------------------------------------------------------------------------
+
+
 //---------------------------------------------------------------------------
 class sumgame_move_generator : public move_generator
 {
@@ -78,7 +82,7 @@ void sumgame_move_generator::next_move(bool init)
     for (; _subgame_idx < _num_subgames; _subgame_idx++)
     {
         assert(_subgame_generator == nullptr);
-        const game* g = _game.subgame(_subgame_idx);
+        const game* g = current();
 
         if (!g->is_active())
         {
@@ -115,7 +119,7 @@ sumgame_move sumgame_move_generator::gen_sum_move() const
 sumgame::~sumgame()
 {
 // todo delete subgames, or store in vector of std::unique_ptr
-    assert(_sumgame_move_stack.empty());
+    assert(_play_record_stack.empty());
 }
 
 void sumgame::add(game* g)
@@ -141,7 +145,7 @@ bool sumgame::solve() const
 // plus sumgame simplification
 bool sumgame::_solve()
 {
-    if (PRINT_SUBGAMES)
+    if (PRINT_SUBGAMES || true)
     {
         cout << "solve sum ";
         print(cout);
@@ -169,27 +173,79 @@ bool sumgame::_solve()
 
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
 {
+    play_record record(m, {});
+
     const int subg = m._subgame_idx;
     const move mv = m._move;
-    subgame(subg)->play(mv, to_play);
-    _sumgame_move_stack.push_back(m);
+
+    game* g = subgame(subg);
+
+    g->play(mv, to_play);
+    split_result sr = g->split(); // adding split...
+
+    if (sr)
+    {
+        record.did_split = true;
+
+        cout << "Split deactivate " << g << endl;
+        g->set_active(false);
+
+        for (game* gp : *sr)
+        {
+            add(gp);
+            record.add_game(gp);
+        }
+    }
+
+
+    // TODO use play_record here
+
+    
+    _play_record_stack.push_back(record);
     alternating_move_game::play(mv);
 }
 
 void sumgame::undo_move()
 {
-    const sumgame_move m = last_sumgame_move();
+    const play_record& record = last_play_record();
+
+    const sumgame_move m = record.move;
     const int subg = m._subgame_idx;
     game* s = subgame(subg);
+
+
+    // undo the split
+    if (record.did_split)
+    {
+        assert(!s->is_active()); // should have been deactivated on last split
+
+        cout << "Split reactivate " << s << endl;
+        s->set_active(true);
+
+
+        for (auto it = record.new_games.rbegin(); it != record.new_games.rend(); it++)
+        {
+            game* g = *it;
+            assert(g == _subgames.back()); // we're deleting the same game
+            assert(_subgames.back()->is_active()); // a previous undo should have reactivated g 
+
+            delete _subgames.back();
+            _subgames.pop_back();
+        }
+    }
+
+
     const move subm = cgt_move::decode(s->last_move());
+
     if(!(m._move == subm))
     {
         cout << subg << ' ' << m._move << ' ' << subm << endl;
     }
+
     assert(m._move == subm);
     s->undo_move();
     alternating_move_game::undo_move();
-    _sumgame_move_stack.pop_back();
+    _play_record_stack.pop_back();
 }
 
 void sumgame::print(std::ostream& str) const

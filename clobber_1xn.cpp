@@ -105,7 +105,7 @@ split_result clobber_1xn::split() const
     {
         split_result result = split_result(vector<game*>());
 
-        for (const pair<int, int> &bounds : chunk_bounds)
+        for (const pair<int, int>& bounds : chunk_bounds)
         {
             result->push_back(new clobber_1xn(board.substr(bounds.first, bounds.second)));
         }

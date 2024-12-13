@@ -11,9 +11,26 @@
 struct sumgame_move
 {
     sumgame_move(int subg, move m) : _subgame_idx(subg), _move(m) { }
+
     int _subgame_idx;
     move _move;
 };
+
+struct play_record
+{
+    play_record(sumgame_move move, const vector<game*>& new_games) :
+        did_split(false), move(move), new_games(new_games)
+    { }
+
+    inline void add_game(game* game) { new_games.push_back(game); }
+
+
+    bool did_split;
+    sumgame_move move;
+    vector<game*> new_games;
+
+};
+
 
 // TODO dummy since alternating_move_game requires a game argument
 class empty_game : public game
@@ -30,6 +47,7 @@ public:
 };
 
 class sumgame_move_generator;
+struct play_record;
 
 class sumgame : public alternating_move_game
 {
@@ -41,7 +59,11 @@ public:
     void undo_move();
     void add(game* g);
     bool solve() const;
-    sumgame_move last_sumgame_move() const;
+
+
+
+
+    const play_record& last_play_record() const;
     int num_total_games() const;
     int num_active_games() const;
     const game* subgame_const(int i) const {return _subgames[i]; }
@@ -52,7 +74,7 @@ private:
     bool _solve();
     empty_game _empty_game;
     vector<game*> _subgames; // sumgame owns these subgames
-    vector<sumgame_move> _sumgame_move_stack;
+    vector<play_record> _play_record_stack;
 };
 //---------------------------------------------------------------------------
 
@@ -60,12 +82,12 @@ inline sumgame::sumgame(bw color) :
     alternating_move_game(_empty_game, color),
     _empty_game(),
     _subgames(),
-    _sumgame_move_stack()
+    _play_record_stack()
 { }
 
-inline sumgame_move sumgame::last_sumgame_move() const
+inline const play_record& sumgame::last_play_record() const
 {
-    return _sumgame_move_stack.back();
+    return _play_record_stack.back();
 }
 
 inline int sumgame::num_total_games() const
