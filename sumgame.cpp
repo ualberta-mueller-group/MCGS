@@ -63,7 +63,7 @@ void sumgame_move_generator::next_move(bool init)
         }
     }
 
-    // no generator OR it has no moves
+    // discard generator
     if (_subgame_generator != nullptr)
     {
         delete _subgame_generator;
