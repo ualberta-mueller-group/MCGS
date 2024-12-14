@@ -18,12 +18,11 @@ struct sumgame_move
 
 struct play_record
 {
-    play_record(sumgame_move move, const vector<game const*>& new_games) :
-        did_split(false), move(move), new_games(new_games)
+    play_record(sumgame_move move) :
+        did_split(false), move(move), new_games()
     { }
 
     inline void add_game(game* game) { new_games.push_back(game); }
-
 
     bool did_split;
     sumgame_move move;

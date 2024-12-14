@@ -174,7 +174,7 @@ bool sumgame::_solve()
 
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
 {
-    play_record record(m, {});
+    play_record record(m);
 
     const int subg = m._subgame_idx;
     const move mv = m._move;

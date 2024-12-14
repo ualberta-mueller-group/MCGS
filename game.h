@@ -35,7 +35,16 @@ public:
     
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
+
+    /*
+        List of games to REPLACE current game. Empty list means game is 0.
+        No value means split didn't occur. See std::optional
+
+        TODO assert in sumgame::play_sum() and sumgame::undo_move() 
+            that list never contains the original game object?
+    */
     virtual split_result split() const;
+
     virtual move_generator* create_move_generator(bw to_play) const = 0;
     virtual void print(std::ostream& str) const = 0;
     virtual game* inverse() const = 0; // caller takes ownership
