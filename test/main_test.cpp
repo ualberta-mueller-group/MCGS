@@ -28,8 +28,6 @@ const bool DO_SLOWER_TESTS = false;
 int main()
 {
 
-    test_split();
-    return 0;
 
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
@@ -38,6 +36,9 @@ int main()
     cgt_nimber_test_all();
     cgt_switch_test_all();
     cgt_up_star_test_all();
+
+
+    test_split();
 
     if (DO_SLOWER_TESTS)
     {
