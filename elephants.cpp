@@ -1,6 +1,10 @@
 #include "elephants.h"
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "strip.h"
+
+
+using std::string, std::cout, std::endl, std::pair;
 
 int player_dir(bw to_play)
 {
@@ -53,6 +57,73 @@ void elephants::undo_move()
     play_stone(from, to_play);
     remove_stone(to);
 }
+
+
+split_result elephants::split() const
+{
+    vector<pair<int, int>> subgame_ranges;
+
+    // <g1> O <0 or more empty tiles> X <g2>
+
+    string board = board_as_string();
+    size_t N = board.size();
+
+    int chunk_start = 0;
+    int last_white = -1;
+    int last_black = -1;
+
+    // game splits when last_black > last_white and both are > -1
+
+    for (int i = 0; i < N; i++)
+    {
+        const char c = board[i];
+        int color = clobber_char_to_color(c);
+
+        if (color == BLACK)
+        {
+            last_black = i;
+        } else if (color == WHITE)
+        {
+            last_white = i;
+        }
+
+        // split game in two
+        if ((last_white >= 0 && last_black >= 0) && last_white < last_black)
+        {
+            subgame_ranges.push_back({chunk_start, last_white - chunk_start + 1});
+
+            chunk_start = i;
+            last_white = -1;
+            // keep last_black
+        }
+
+    }
+
+    // always have one more subgame
+    if (N > 0)
+    {
+        subgame_ranges.push_back({chunk_start, (board.size() - 1) - chunk_start + 1});
+    }
+
+    if (subgame_ranges.size() == 1)
+    {
+        return split_result(); // no split
+    } else
+    {
+        split_result result = split_result(vector<game*>());
+
+        for (const pair<int, int>& range : subgame_ranges)
+        {
+            result->push_back(new elephants(board.substr(range.first, range.second)));
+        }
+
+        return result;
+    }
+
+
+
+}
+
 
 move_generator* elephants::create_move_generator(bw to_play) const
 { 

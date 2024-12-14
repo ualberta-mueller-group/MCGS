@@ -16,6 +16,7 @@ public:
 
     void play(const move& m, bw to_play) override;
     void undo_move() override;
+    split_result split() const override;
     move_generator* create_move_generator(bw to_play) const override;
     game* inverse() const override; // caller takes ownership
 };

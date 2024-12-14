@@ -1,17 +1,22 @@
 import random
+import sys
 
 BLACK = "X"
 WHITE = "O"
 EMPTY = "."
 
+def einput(prompt):
+    print(prompt, file=sys.stderr, end="")
+    return input()
 
-boardLen = int(input("Strip length: "))
-minBlackStones = int(input("Min black stones: "))
-maxBlackStones = int(input("Max black stones: "))
 
-minWhiteStones = int(input("Min white stones: "))
-maxWhiteStones = int(input("Max white stones: "))
-count = int(input("Number of cases: "))
+boardLen = int(einput("Strip length: ", ))
+minBlackStones = int(einput("Min black stones: "))
+maxBlackStones = int(einput("Max black stones: "))
+
+minWhiteStones = int(einput("Min white stones: "))
+maxWhiteStones = int(einput("Max white stones: "))
+count = int(einput("Number of cases: "))
 
 blackStones = random.randint(minBlackStones, maxBlackStones)
 whiteStones = random.randint(minWhiteStones, maxWhiteStones)

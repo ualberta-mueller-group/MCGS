@@ -131,7 +131,7 @@ void sumgame::add(game* g)
     //                      &_subgames.back()));
 }
 
-const bool PRINT_SUBGAMES = false;
+const bool PRINT_SUBGAMES = true;
 
 bool sumgame::solve() const
 {
@@ -186,6 +186,7 @@ void sumgame::play_sum(const sumgame_move& m, bw to_play)
 
     if (sr) // split() changed the sum
     {
+        cout << "Splitting into " << sr->size() << " games" << endl;
         record.did_split = true;
 
         // g is no longer part of the sum
@@ -213,6 +214,8 @@ void sumgame::undo_move()
     // undo split (if necessary)
     if (record.did_split)
     {
+        cout << "Undoing split of " << record.new_games.size() << " games" << endl;
+
         assert(!s->is_active()); // should have been deactivated on last split
 
         s->set_active(true);
