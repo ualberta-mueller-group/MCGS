@@ -415,10 +415,21 @@ void test_integer_game_split()
 
 }
 
-void test_split()
+//////////////////////////////////////// switch
+
+void test_switch_split()
+{
+    // TODO
+}
+
+
+//////////////////////////////////////// switch
+
+void test_split_all()
 {
     test_elephants_split();
     test_clobber_split();
     test_dyadic_rational_split();
     test_integer_game_split();
+    test_switch_split();
 }

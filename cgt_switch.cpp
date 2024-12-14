@@ -46,6 +46,24 @@ void switch_game::undo_move()
     game::undo_move();
 }
 
+
+split_result switch_game::split() const
+{
+    if (!is_integer())
+    {
+        return split_result();
+    } else
+    {
+        /*
+            TODO this returns a new integer_game though we already have one
+
+            maybe ok; not much memory wasted, and switch_game should function
+                when split() is disabled by global options
+        */
+        return split_result({new integer_game(value())});
+    }
+}
+
 game* switch_game::inverse() const
 {
     switch_game* inv = new switch_game(-_right, -_left);

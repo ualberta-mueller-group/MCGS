@@ -37,8 +37,10 @@ public:
     virtual void undo_move();
 
     /*
-        List of games to REPLACE current game. Empty list means game is 0.
+        List of games to replace current game. Empty list means game is 0.
         No value means split didn't occur. See std::optional
+
+        The returned games are owned by the caller
 
         TODO assert in sumgame::play_sum() and sumgame::undo_move() 
             that list never contains the original game object?

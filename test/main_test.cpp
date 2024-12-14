@@ -38,7 +38,7 @@ int main()
     cgt_up_star_test_all();
 
 
-    test_split();
+    test_split_all();
 
     if (DO_SLOWER_TESTS)
     {
