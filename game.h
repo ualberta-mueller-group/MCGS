@@ -13,7 +13,7 @@
 #include "cgt_move.h"
 //---------------------------------------------------------------------------
 
-using std::vector;
+using std::vector; // TODO probably remove this?
 //---------------------------------------------------------------------------
 
 class move_generator;

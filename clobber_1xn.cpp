@@ -45,7 +45,7 @@ void clobber_1xn::undo_move()
 
 split_result clobber_1xn::split() const
 {
-    vector<pair<int, int>> chunk_bounds;
+    vector<pair<int, int>> chunk_ranges;
 
     string board = board_as_string();
     size_t N = board.size();
@@ -84,7 +84,7 @@ split_result clobber_1xn::split() const
             // end of chunk
             if (chunk_start != -1 && found_black && found_white)
             {
-                chunk_bounds.push_back({chunk_start, i - chunk_start});
+                chunk_ranges.push_back({chunk_start, i - chunk_start});
             }
 
             chunk_start = -1;
@@ -95,19 +95,19 @@ split_result clobber_1xn::split() const
 
     if (chunk_start != -1)
     {
-        chunk_bounds.push_back({chunk_start, N - chunk_start});
+        chunk_ranges.push_back({chunk_start, N - chunk_start});
     }
 
-    if (chunk_bounds.size() == 1) 
+    if (chunk_ranges.size() == 1) 
     {
         return split_result();
     } else
     {
         split_result result = split_result(vector<game*>());
 
-        for (const pair<int, int>& bounds : chunk_bounds)
+        for (const pair<int, int>& range : chunk_ranges)
         {
-            result->push_back(new clobber_1xn(board.substr(bounds.first, bounds.second)));
+            result->push_back(new clobber_1xn(board.substr(range.first, range.second)));
         }
 
         return result;

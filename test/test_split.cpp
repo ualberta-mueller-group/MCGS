@@ -5,6 +5,7 @@
 #include "cgt_move.h"
 #include "clobber_1xn.h"
 #include "game.h"
+#include "nogo_1xn.h"
 #include "strip.h"
 #include "sumgame.h"
 #include "elephants.h"
@@ -509,9 +510,24 @@ void test_switch_game_split()
 }
 
 
-//////////////////////////////////////// switch
+
+void nogo_1xn_split1()
+{
+}
+ 
+
+
 
 //////////////////////////////////////// nogo_1xn
+
+void test_nogo_1xn_split()
+{
+    nogo_1xn_split1();
+}
+
+
+
+//////////////////////////////////////// run all split tests
 
 void test_split_all()
 {
@@ -521,4 +537,20 @@ void test_split_all()
     test_dyadic_rational_split();
     test_integer_game_split();
     test_switch_game_split();
+
+    test_nogo_1xn_split();
+
+    nogo_1xn pos(".X..OX..");
+    split_result sr = pos.split();
+    assert(sr);
+
+    cout << "Split result: " << endl;
+
+    for (game* g : *sr)
+    {
+        cout << *g << endl;
+        delete g;
+    }
+
+
 }
