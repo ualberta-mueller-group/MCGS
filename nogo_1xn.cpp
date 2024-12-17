@@ -36,12 +36,37 @@ void nogo_1xn::undo_move()
     replace(to, EMPTY);
 }
 
+
+string block_simplify(const string& board)
+{
+    string result;
+
+    int N = board.size();
+
+    const char empty_char = color_to_clobber_char(EMPTY);
+
+    char prev_tile = empty_char;
+
+
+    for (int i = 0; i < N; i++)
+    {
+        const char tile = board[i];
+
+        if (tile == empty_char || tile != prev_tile)
+        {
+            result.push_back(tile);
+        }
+
+        prev_tile = tile;
+    }
+
+    return result;
+}
+
+
 /*
    implements "xo split" from
    Henry's paper
-   
-
-TODO: block simplification
 
 */
 split_result nogo_1xn::split() const
@@ -50,8 +75,9 @@ split_result nogo_1xn::split() const
 
 
     string board = board_as_string();
+    board = block_simplify(board);
+
     int N = board.size();
-    // should do block simplification right here
 
     vector<pair<int, int>> subgame_ranges;
 

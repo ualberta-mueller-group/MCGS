@@ -7,6 +7,7 @@
 #include "split_test_switch_game.h"
 #include "split_test_nogo_1xn.h"
 
+
 void split_test_all()
 {
     // TODO do we need to test nim and other games that don't split?
