@@ -163,7 +163,7 @@ void test_elephants_split()
 
 //////////////////////////////////////// clobber_1xn
 
-void clobber_split1()
+void clobber_1xn_split1()
 {
     test_strip<clobber_1xn>(".XO.X.X...X.......O..O.XOXOX....O.O..OOX", {
         "XO",
@@ -172,7 +172,7 @@ void clobber_split1()
     });
 }
 
-void clobber_split2()
+void clobber_1xn_split2()
 {
 
     test_strip<clobber_1xn>(".XOO.O.OOO...O..OX.XXX.O......X.X.....X.", {
@@ -181,7 +181,7 @@ void clobber_split2()
     });
 }
 
-void clobber_split3()
+void clobber_1xn_split3()
 {
     test_strip<clobber_1xn>("...OXOX.XOO.OO.XOX....O.X.........XXO...", {
         "OXOX",
@@ -191,7 +191,7 @@ void clobber_split3()
     });
 }
 
-void clobber_split4()
+void clobber_1xn_split4()
 {
     test_strip<clobber_1xn>("X..OO.OO.X.XOOO.X....X.X....O....OX.X...", {
         "XOOO",
@@ -199,7 +199,7 @@ void clobber_split4()
     });
 }
 
-void clobber_split5()
+void clobber_1xn_split5()
 {
     test_strip<clobber_1xn>("X.XO...X..O..O..O.OO......XXO.X..XO.O.X.", {
         "XO",
@@ -208,7 +208,7 @@ void clobber_split5()
     });
 }
 
-void clobber_split6()
+void clobber_1xn_split6()
 {
     test_strip<clobber_1xn>("..O....X..O.O.X..XXO..X...OXO.X..X.OO.O.", {
         "XXO",
@@ -216,7 +216,7 @@ void clobber_split6()
     });
 }
 
-void clobber_split7()
+void clobber_1xn_split7()
 {
     test_strip<clobber_1xn>("..X.", {
     });
@@ -224,38 +224,38 @@ void clobber_split7()
 
 }
 
-void clobber_split8()
+void clobber_1xn_split8()
 {
     test_strip<clobber_1xn>("...", {
     });
 
 }
 
-void clobber_split9()
+void clobber_1xn_split9()
 {
     clobber_1xn pos("XOXOXO");
     assert_no_split(&pos);
 }
 
-void clobber_split10()
+void clobber_1xn_split10()
 {
     clobber_1xn pos("OOXXOXOXOX");
     assert_no_split(&pos);
 }
 
 
-void test_clobber_split()
+void test_clobber_1xn_split()
 {
-    clobber_split1();
-    clobber_split2();
-    clobber_split3();
-    clobber_split4();
-    clobber_split5();
-    clobber_split6();
-    clobber_split7();
-    clobber_split8();
-    clobber_split9();
-    clobber_split10();
+    clobber_1xn_split1();
+    clobber_1xn_split2();
+    clobber_1xn_split3();
+    clobber_1xn_split4();
+    clobber_1xn_split5();
+    clobber_1xn_split6();
+    clobber_1xn_split7();
+    clobber_1xn_split8();
+    clobber_1xn_split9();
+    clobber_1xn_split10();
 }
 
 //////////////////////////////////////// dyadic_rational
@@ -511,11 +511,13 @@ void test_switch_game_split()
 
 //////////////////////////////////////// switch
 
+//////////////////////////////////////// nogo_1xn
+
 void test_split_all()
 {
     // TODO do we need to test nim and other games that don't split?
     test_elephants_split();
-    test_clobber_split();
+    test_clobber_1xn_split();
     test_dyadic_rational_split();
     test_integer_game_split();
     test_switch_game_split();
