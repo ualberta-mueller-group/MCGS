@@ -132,7 +132,22 @@ move_generator* elephants::create_move_generator(bw to_play) const
 
 game* elephants::inverse() const
 {
-    return new elephants(inverse_board());
+    // reverse AND negate tiles
+    string new_board;
+
+    const string board = board_as_string();
+    const int N = board.size();
+
+
+    for (int i = N - 1; i >= 0; i--)
+    {
+        int color = clobber_char_to_color(board[i]);
+        char new_char = color_to_clobber_char(ebw_opponent(color));
+
+        new_board.push_back(new_char);
+    }
+
+    return new elephants(new_board);
 }
 
 //////////////////////////////////////// elephants_move_generator
