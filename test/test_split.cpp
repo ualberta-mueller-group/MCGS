@@ -2,11 +2,13 @@
 #include <iostream>
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
+#include "cgt_move.h"
 #include "clobber_1xn.h"
 #include "game.h"
 #include "strip.h"
 #include "sumgame.h"
 #include "elephants.h"
+#include "cgt_switch.h"
 #include <algorithm>
 #include <memory>
 
@@ -417,9 +419,93 @@ void test_integer_game_split()
 
 //////////////////////////////////////// switch
 
-void test_switch_split()
+void test_switch_generic(int l, int r)
 {
-    // TODO
+    switch_game pos(l, r);
+
+    // Shouldn't split until move is played
+    assert(!pos.split().has_value());
+
+    // Play black move, check split
+    {
+        unique_ptr<move_generator> mgb(pos.create_move_generator(BLACK));
+        assert(mgb);
+        move mb = mgb->gen_move();
+        pos.play(mb, BLACK);
+        assert(pos.is_integer());
+        assert(pos.value() == l);
+
+        split_result srb = pos.split();
+
+        assert(srb);
+        assert(srb->size() == 1);
+
+        integer_game* igb = dynamic_cast<integer_game*>(srb->back());
+        assert(igb != nullptr);
+        assert(igb->value() == l);
+
+        for (game* g : *srb)
+        {
+            delete g;
+        }
+    }
+
+    // undo move
+    pos.undo_move();
+    assert(!pos.split().has_value());
+
+    // Play white move, check split
+    {
+        unique_ptr<move_generator> mgw(pos.create_move_generator(WHITE));
+        assert(mgw);
+        move mw = mgw->gen_move();
+        pos.play(mw, WHITE);
+        assert(pos.is_integer());
+        assert(pos.value() == r);
+
+        split_result srw = pos.split();
+
+        assert(srw);
+        assert(srw->size() == 1);
+
+        integer_game* igw = dynamic_cast<integer_game*>(srw->back());
+        assert(igw != nullptr);
+        assert(igw->value() == r);
+
+        for (game* g : *srw)
+        {
+            delete g;
+        }
+    }
+
+}
+
+
+
+void switch_game1()
+{
+    test_switch_generic(7, 5);
+
+}
+
+void switch_game2()
+{
+    test_switch_generic(400, -300);
+
+}
+
+void switch_game3()
+{
+    test_switch_generic(-21, -90);
+}
+
+
+
+void test_switch_game_split()
+{
+    switch_game1();
+    switch_game2();
+    switch_game3();
 }
 
 
@@ -427,9 +513,10 @@ void test_switch_split()
 
 void test_split_all()
 {
+    // TODO do we need to test nim and other games that don't split?
     test_elephants_split();
     test_clobber_split();
     test_dyadic_rational_split();
     test_integer_game_split();
-    test_switch_split();
+    test_switch_game_split();
 }
