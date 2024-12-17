@@ -82,19 +82,19 @@ struct game_spec
 
 // general case
 template <class T, class ...Ts>
-void add_to(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1, Ts... gs)
+void _add_to(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1, Ts... gs)
 {
     T* pos = new T(g1.board);
 
     game_vec.push_back(pos);
     sum.add(pos);
 
-    add_to(sum, game_vec, gs...);
+    _add_to(sum, game_vec, gs...);
 }
 
 // base case
 template <class T>
-void add_to(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1)
+void _add_to(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1)
 {
     T* pos = new T(g1.board);
 
@@ -110,7 +110,7 @@ void assert_sum_outcome_for(int player, bool expected_outcome, Ts... game_specs)
 
     vector<game*> games; // clean up later...
 
-    add_to(sum, games, game_specs...);
+    _add_to(sum, games, game_specs...);
 
     bool outcome = sum.solve();
 
