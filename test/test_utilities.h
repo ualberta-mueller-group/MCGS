@@ -2,8 +2,8 @@
 // Utility functions for unit tests
 //---------------------------------------------------------------------------
 
-#ifndef test_utilities_H
-#define test_utilities_H
+#pragma once
+// simpler include guard
 
 #include <memory>
 #include "alternating_move_game.h"
@@ -63,5 +63,109 @@ inline void test_inverse(game& g1, game& g2) // g1+g2 == 0
 {
     test_zero_2(g1, g2);
 }
+
 //void test_equal(game& g1, game& g2); // needs game::inverse()
-#endif // test_utilities_H
+
+
+//////////////////////////////////////////////////////////// evil recursive function template
+
+// game specification for testing function
+template <class T>
+struct game_spec
+{
+    game_spec<T>(const std::string& board) : board(board)
+    {}
+
+    const std::string& board;
+
+};
+
+// general case
+template <class T, class ...Ts>
+void add_to(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1, Ts... gs)
+{
+    T* pos = new T(g1.board);
+
+    game_vec.push_back(pos);
+    sum.add(pos);
+
+    add_to(sum, game_vec, gs...);
+}
+
+// base case
+template <class T>
+void add_to(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1)
+{
+    T* pos = new T(g1.board);
+
+    game_vec.push_back(pos);
+    sum.add(pos);
+}
+
+template <class ...Ts>
+void assert_sum_outcome_for(int player, bool expected_outcome, Ts... game_specs)
+{
+    assert_black_white(player);
+    sumgame sum(player);
+
+    vector<game*> games; // clean up later...
+
+    add_to(sum, games, game_specs...);
+
+    bool outcome = sum.solve();
+
+    assert(outcome == expected_outcome);
+
+    for (game* g : games)
+    {
+        delete g;
+    }
+}
+
+template <class ...Ts>
+void assert_sum_outcome(bool black_outcome, bool white_outcome, Ts... gs)
+{
+    assert_sum_outcome_for(BLACK, black_outcome, gs...);
+    assert_sum_outcome_for(WHITE, white_outcome, gs...);
+}
+
+//////////////////////////////////////////////////////////// other templates
+
+template <class T>
+void assert_correct_inverse(const std::string& game_as_string)
+{
+    {
+        T* pos = new T(game_as_string);
+        game* pos_negative = pos->inverse();
+
+        sumgame sum(BLACK);
+        sum.add(pos);
+        sum.add(pos_negative);
+
+        bool outcome = sum.solve();
+
+        assert(outcome == false);
+
+        delete pos;
+        delete pos_negative;
+    }
+
+    {
+        T* pos = new T(game_as_string);
+        game* pos_negative = pos->inverse();
+
+        sumgame sum(WHITE);
+        sum.add(pos);
+        sum.add(pos_negative);
+
+        bool outcome = sum.solve();
+
+        assert(outcome == false);
+
+        delete pos;
+        delete pos_negative;
+    }
+
+}
+
+
