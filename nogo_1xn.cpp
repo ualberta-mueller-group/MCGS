@@ -91,24 +91,7 @@ split_result nogo_1xn::split() const
         for (const pair<int, int>& range : subgame_ranges)
         {
             game* g = new nogo_1xn(board.substr(range.first, range.second));
-
-            // only add game if it has moves
-            bool has_move = false;
-
-            unique_ptr<move_generator> mgb = unique_ptr<move_generator>(g->create_move_generator(BLACK));
-            if (*mgb)
-            {
-                has_move = true;
-            } else
-            {
-                unique_ptr<move_generator> mgw = unique_ptr<move_generator>(g->create_move_generator(WHITE));
-                has_move |= (*mgw);
-            }
-
-            if (has_move)
-                result->push_back(g);
-            else
-                delete g;
+            result->push_back(g);
         }
 
         return result;

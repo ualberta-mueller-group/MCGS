@@ -32,6 +32,7 @@ public:
     move last_move() const;
     // Used to verify that game is restored after search
     int moves_hash() const; // TODO do a proper implementation
+    bool has_moves() const;
     
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
@@ -46,6 +47,9 @@ public:
             that list never contains the original game object?
     */
     virtual split_result split() const;
+
+    // Like split() but only returns games that have moves
+    split_result split_non_empty() const;
 
     virtual move_generator* create_move_generator(bw to_play) const = 0;
     virtual void print(std::ostream& str) const = 0;
@@ -93,6 +97,30 @@ inline void game::undo_move()
 inline split_result game::split() const
 {
     return split_result(); // no value
+}
+
+inline split_result game::split_non_empty() const
+{
+    split_result sr = split();
+
+    // no split happened
+    if (!sr)
+    {
+        return sr;
+    }
+
+    // filter games
+    split_result result = split_result(vector<game*>());
+
+    for (game* g : *sr)
+    {
+        if (g->has_moves())
+            result->push_back(g);
+        else
+            delete g;
+    }
+
+    return result;
 }
 
 inline int game::moves_hash() const

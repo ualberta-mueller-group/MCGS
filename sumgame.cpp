@@ -182,9 +182,9 @@ void sumgame::play_sum(const sumgame_move& m, bw to_play)
     game* g = subgame(subg);
 
     g->play(mv, to_play);
-    split_result sr = g->split();
+    split_result sr = g->split_non_empty();
 
-    if (sr) // split() changed the sum
+    if (sr) // split changed the sum
     {
         record.did_split = true;
 
