@@ -1,4 +1,4 @@
-#include "test_split.h"
+#include "split_test.h"
 #include <iostream>
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
@@ -17,9 +17,10 @@ using std::cout, std::endl, std::string, std::unique_ptr;
 
 //////////////////////////////////////// helper functions
 
-void assert_strip_split_result(const strip* g, vector<string> expected)
+void assert_strip_split_result(const strip* g, vector<string> expected, bool non_empty = false)
 {
-    split_result result = g->split();
+    split_result result = non_empty ? g->split_non_empty() : g->split();
+
     assert(result);
 
     vector<string> got;
@@ -44,25 +45,35 @@ void assert_strip_split_result(const strip* g, vector<string> expected)
     }
 }
 
-void assert_no_split(const game* g)
+void assert_no_split(const game* g, bool non_empty = false)
 {
-    assert(!g->split().has_value());
+    if (non_empty)
+        assert(!g->split_non_empty().has_value());
+    else
+        assert(!g->split().has_value());
 }
 
 template <class T>
-void test_strip(const string& board, const vector<string>& expected, bool no_split = false)
+void test_strip(const string& board, const vector<string>& expected, bool no_split = false, bool non_empty = false)
 {
     T pos(board);
 
     if (no_split)
     {
-        assert_no_split(&pos);
+        assert_no_split(&pos, non_empty);
     } else
     {
-        assert_strip_split_result(&pos, expected);
+        assert_strip_split_result(&pos, expected, non_empty);
     }
 
 }
+
+template <class T>
+void test_strip_non_empty(const string& board, const vector<string>& expected, bool no_split = false)
+{
+    test_strip<T>(board, expected, no_split, true);
+}
+
 
 //////////////////////////////////////// elephants
 
@@ -513,8 +524,64 @@ void test_switch_game_split()
 
 void nogo_1xn_split1()
 {
+    test_strip_non_empty<nogo_1xn>(".X..OX..", {
+        ".X..O",
+        "X..",
+    });
+
 }
- 
+
+void nogo_1xn_split2()
+{
+    test_strip_non_empty<nogo_1xn>("..OO.X...OOO...O.XO..OO.....OX.XO.O.", {
+        "..OO.X...OOO...O.X",
+        "O..OO.....O",
+        "O.O.",
+    });
+}
+void nogo_1xn_split3()
+{
+    test_strip_non_empty<nogo_1xn>("O.....OOX....OO..XXO.XO.O..OOXX....O.O", {
+        "O.....OO",
+        "X....OO..XX",
+        "O.O..OO",
+        "XX....O.O",
+    });
+}
+void nogo_1xn_split4()
+{
+    test_strip_non_empty<nogo_1xn>(".X.OO.XO.O.X.X....XO.OX.O.O.OX..O...OO.", {
+        ".X.OO.X",
+        "O.O.X.X....X",
+        "X.O.O.O",
+        "X..O...OO.",
+    });
+}
+void nogo_1xn_split5()
+{
+    test_strip_non_empty<nogo_1xn>(".OO..O..X..O......X...OX.....X......X.X......X..OO", {
+        ".OO..O..X..O......X...O",
+        "X.....X......X.X......X..OO",
+    });
+}
+void nogo_1xn_split6()
+{
+    test_strip_non_empty<nogo_1xn>(".....", {
+    }, true);
+}
+void nogo_1xn_split7()
+{
+    test_strip_non_empty<nogo_1xn>(".X...", {
+    }, true);
+}
+void nogo_1xn_split8()
+{
+    test_strip_non_empty<nogo_1xn>("..XO..", {
+        "..X",
+        "O..",
+    });
+}
+
 
 
 
@@ -523,13 +590,20 @@ void nogo_1xn_split1()
 void test_nogo_1xn_split()
 {
     nogo_1xn_split1();
+    nogo_1xn_split2();
+    nogo_1xn_split3();
+    nogo_1xn_split4();
+    nogo_1xn_split5();
+    nogo_1xn_split6();
+    nogo_1xn_split7();
+    nogo_1xn_split8();
 }
 
 
 
 //////////////////////////////////////// run all split tests
 
-void test_split_all()
+void split_test_all()
 {
     // TODO do we need to test nim and other games that don't split?
     test_elephants_split();
@@ -537,20 +611,6 @@ void test_split_all()
     test_dyadic_rational_split();
     test_integer_game_split();
     test_switch_game_split();
-
     test_nogo_1xn_split();
-
-    nogo_1xn pos(".X..OX..");
-    split_result sr = pos.split();
-    assert(sr);
-
-    cout << "Split result: " << endl;
-
-    for (game* g : *sr)
-    {
-        cout << *g << endl;
-        delete g;
-    }
-
 
 }

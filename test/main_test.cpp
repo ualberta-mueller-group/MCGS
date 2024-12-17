@@ -17,7 +17,7 @@
 #include "sumgame_test.h"
 #include "elephants_test.h"
 
-#include "test_split.h"
+#include "split_test.h"
 
 
 
@@ -38,7 +38,7 @@ int main()
     cgt_up_star_test_all();
 
 
-    test_split_all();
+    split_test_all();
 
     if (DO_SLOWER_TESTS)
     {
