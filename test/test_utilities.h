@@ -191,3 +191,51 @@ void assert_inverse_sum_zero(const game_spec<T>& gs)
 }
 
 
+// This can replace game_spec
+
+/*
+// Interface of instantiated game factory
+struct game_factory
+{
+    virtual game* new_game() const
+    {
+        assert(false);
+    }
+};
+
+
+// Messy hidden internals of game factory
+template <class T, class ...Ts>
+struct game_factory_impl : public game_factory
+{
+
+    game_factory_impl(Ts... args) : data(args...)
+    { }
+
+    game* new_game() const override
+    {
+        return std::apply(_make_new, data);
+    }
+
+private:
+
+    static game* _make_new(Ts... args)
+    {
+        return new T(args...);
+    }
+
+
+    std::tuple<Ts...> data;
+};
+
+// Builds a game factory
+template <class T, class ...Ts>
+game_factory_impl<T, Ts...> get_factory(Ts... data)
+{
+    return game_factory_impl<T, Ts...>(data...);
+}
+
+*/
+
+
+
