@@ -37,6 +37,11 @@ public:
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
 
+    // calls split_implementation() and filters out games having no moves
+    split_result split() const;
+
+protected:
+
     /*
         List of games to replace current game. Empty list means game is 0.
         No value means split didn't occur. See std::optional
@@ -46,10 +51,9 @@ public:
         TODO assert in sumgame::play_sum() and sumgame::undo_move() 
             that list never contains the original game object?
     */
-    virtual split_result split() const;
+    virtual split_result split_implementation() const;
 
-    // Like split() but only returns games that have moves
-    split_result split_non_empty() const;
+public:
 
     virtual move_generator* create_move_generator(bw to_play) const = 0;
     virtual void print(std::ostream& str) const = 0;
@@ -96,12 +100,7 @@ inline void game::undo_move()
 
 inline split_result game::split() const
 {
-    return split_result(); // no value
-}
-
-inline split_result game::split_non_empty() const
-{
-    split_result sr = split();
+    split_result sr = split_implementation();
 
     // no split happened
     if (!sr)
@@ -121,6 +120,11 @@ inline split_result game::split_non_empty() const
     }
 
     return result;
+}
+
+inline split_result game::split_implementation() const
+{
+    return split_result(); // no value
 }
 
 inline int game::moves_hash() const

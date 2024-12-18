@@ -15,10 +15,8 @@ void elephants_split2()
 {
     test_strip<elephants>("....OXO.....X......X.XOX..O...O...O.XXO.", {
         "....O",
-        "XO",
         "X......X.XO",
         "X..O...O...O",
-        "XXO.",
     });
 }
 
@@ -39,7 +37,6 @@ void elephants_split4()
         "XO.O",
         "X..OO",
         "X.O.OO",
-        "XO...",
     });
 }
 
@@ -57,7 +54,6 @@ void elephants_split6()
     test_strip<elephants>("X..X........O....X....O...O.......XO.X..", {
         "X..X........O",
         "X....O...O",
-        "XO",
         "X..",
     });
 }

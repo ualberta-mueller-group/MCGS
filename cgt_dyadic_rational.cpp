@@ -45,7 +45,7 @@ void dyadic_rational::undo_move()
     game::undo_move();
 }
 
-split_result dyadic_rational::split() const
+split_result dyadic_rational::split_implementation() const
 {
     if (_q != 1)
     {

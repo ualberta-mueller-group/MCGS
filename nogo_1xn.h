@@ -15,7 +15,11 @@ public:
     nogo_1xn(const vector<int>& board);
     void play(const move& m, bw to_play) override;
     void undo_move() override;
-    split_result split() const override;
+
+protected:
+    split_result split_implementation() const override;
+
+public:
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;
 };

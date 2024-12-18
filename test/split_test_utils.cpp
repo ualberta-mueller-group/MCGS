@@ -6,9 +6,9 @@ using std::string;
 
 //////////////////////////////////////// helper functions
 
-void assert_strip_split_result(const strip* g, vector<string> expected, bool non_empty)
+void assert_strip_split_result(const strip* g, vector<string> expected)
 {
-    split_result result = non_empty ? g->split_non_empty() : g->split();
+    split_result result = g->split();
 
     assert(result);
 
@@ -34,12 +34,9 @@ void assert_strip_split_result(const strip* g, vector<string> expected, bool non
     }
 }
 
-void assert_no_split(const game* g, bool non_empty)
+void assert_no_split(const game* g)
 {
-    if (non_empty)
-        assert(!g->split_non_empty().has_value());
-    else
-        assert(!g->split().has_value());
+    assert(!g->split().has_value());
 }
 
 

@@ -43,7 +43,7 @@ void clobber_1xn::undo_move()
     replace(to, opponent(player));
 }
 
-split_result clobber_1xn::split() const
+split_result clobber_1xn::split_implementation() const
 {
     vector<pair<int, int>> chunk_ranges;
 

@@ -69,7 +69,7 @@ string block_simplify(const string& board)
    Henry's paper
 
 */
-split_result nogo_1xn::split() const
+split_result nogo_1xn::split_implementation() const
 {
     // NOTE: don't use checked_is_color here -- it accesses the board before block simplification
 
