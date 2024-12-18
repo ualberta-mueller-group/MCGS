@@ -77,11 +77,11 @@ struct game_spec
     virtual game* new_game() const = 0;
 };
 
-// T is some type derived from "strip" class
+// strip games use this
 template <class T>
 struct string_spec : public game_spec<T>
 {
-    string_spec<T>(const std::string& board) : board(board)
+    string_spec(const std::string& board) : board(board)
     {}
 
     game* new_game() const override
@@ -92,6 +92,26 @@ struct string_spec : public game_spec<T>
 private:
     const std::string& board;
 };
+
+// switches use this
+template <class T>
+struct int2_spec : public game_spec<T>
+{
+    int2_spec(const int& x1, const int& x2) : x1(x1), x2(x2)
+    {}
+
+    game* new_game() const override
+    {
+        return new T(x1, x2);
+    }
+
+private:
+    const int& x1;
+    const int& x2;
+};
+
+// TODO make generic template spec later?
+
 
 // general case
 template <class T, class ...Ts>
