@@ -12,16 +12,13 @@
 
 #include <iostream>
 
-/*
-
-*/
 
 void test_mixed1()
 {
     // * + * == 0
     assert_sum_outcomes(false, false,
-        string_spec<clobber_1xn>("XO"),
-        string_spec<elephants>("X.O")
+        make_factory<clobber_1xn>("XO"),
+        make_factory<elephants>("X.O")
     );
 }
 
@@ -29,11 +26,9 @@ void test_mixed2()
 {
     // ** + * == *
     assert_sum_outcomes(true, true,
-        string_spec<clobber_1xn>("XO.XO"),
-        string_spec<elephants>("X.O")
+        make_factory<clobber_1xn>("XO.XO"),
+        make_factory<elephants>("X.O")
     );
-
-
 }
 
 void test_mixed3()

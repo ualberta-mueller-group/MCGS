@@ -70,55 +70,57 @@ inline void test_inverse(game& g1, game& g2) // g1+g2 == 0
 
 //////////////////////////////////////////////////////////// evil recursive function template
 
-// game specification for testing function
-
-template <class T>
-struct game_spec
+// Interface of instantiated game factory
+struct game_factory
 {
     virtual game* new_game() const = 0;
 };
 
-// strip games use this
-template <class T>
-struct string_spec : public game_spec<T>
+
+// Messy hidden internals of game factory
+template <class T, class ...Ts>
+struct _game_factory_impl : public game_factory
 {
-    string_spec(const std::string& board) : board(board)
-    {}
+    // T is type of game
+    // ...Ts is arguments to game constructor
+
+    _game_factory_impl(Ts... args) : data(args...)
+    { }
 
     game* new_game() const override
     {
-        return new T(board);
+        return std::apply(_make_new, data);
     }
 
 private:
-    const std::string& board;
-};
 
-// switches use this
-template <class T>
-struct int2_spec : public game_spec<T>
-{
-    int2_spec(const int& x1, const int& x2) : x1(x1), x2(x2)
-    {}
-
-    game* new_game() const override
+    // this is just here so we can call std::apply to unpack the tuple
+    static game* _make_new(Ts... args)
     {
-        return new T(x1, x2);
+        return new T(args...);
     }
 
-private:
-    const int& x1;
-    const int& x2;
+
+    std::tuple<Ts...> data;
 };
 
-// TODO make generic template spec later?
+/*
+
+*/
+template <class T, class ...Ts>
+_game_factory_impl<T, Ts...> make_factory(Ts... data)
+{
+    return _game_factory_impl<T, Ts...>(data...);
+}
 
 
 // general case
 template <class T, class ...Ts>
-void _add_games(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1, Ts... gs)
+void _add_games(sumgame& sum, vector<game*>& game_vec, const T& g1, Ts... gs)
 {
-    game* pos = g1.new_game();
+    const game_factory& _g1 = g1;
+
+    game* pos = _g1.new_game();
 
     game_vec.push_back(pos);
     sum.add(pos);
@@ -127,10 +129,12 @@ void _add_games(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1, T
 }
 
 // base case
-template <class T>
-void _add_games(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1)
+template<class T>
+void _add_games(sumgame& sum, vector<game*>& game_vec, const T& g1)
 {
-    game* pos = g1.new_game();
+    const game_factory& _g1 = g1;
+
+    game* pos = _g1.new_game();
 
     game_vec.push_back(pos);
     sum.add(pos);
@@ -165,8 +169,7 @@ void assert_sum_outcomes(bool black_outcome, bool white_outcome, Ts... gs)
 
 //////////////////////////////////////////////////////////// other templates
 
-template <class T>
-void assert_inverse_sum_zero(const game_spec<T>& gs)
+inline void assert_inverse_sum_zero(const game_factory& gs)
 {
 
     for (int i = 0; i <= 1; i++)
@@ -191,51 +194,7 @@ void assert_inverse_sum_zero(const game_spec<T>& gs)
 }
 
 
-// This can replace game_spec
 
-/*
-// Interface of instantiated game factory
-struct game_factory
-{
-    virtual game* new_game() const
-    {
-        assert(false);
-    }
-};
-
-
-// Messy hidden internals of game factory
-template <class T, class ...Ts>
-struct game_factory_impl : public game_factory
-{
-
-    game_factory_impl(Ts... args) : data(args...)
-    { }
-
-    game* new_game() const override
-    {
-        return std::apply(_make_new, data);
-    }
-
-private:
-
-    static game* _make_new(Ts... args)
-    {
-        return new T(args...);
-    }
-
-
-    std::tuple<Ts...> data;
-};
-
-// Builds a game factory
-template <class T, class ...Ts>
-game_factory_impl<T, Ts...> get_factory(Ts... data)
-{
-    return game_factory_impl<T, Ts...>(data...);
-}
-
-*/
 
 
 
