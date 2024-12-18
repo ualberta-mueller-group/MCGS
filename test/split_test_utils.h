@@ -18,10 +18,3 @@ void test_strip(const std::string& board, const vector<std::string>& expected, b
     }
 
 }
-
-template <class T>
-void test_strip_non_empty(const std::string& board, const vector<std::string>& expected, bool no_split = false)
-{
-    test_strip<T>(board, expected, no_split);
-}
-
