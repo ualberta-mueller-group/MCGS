@@ -6,6 +6,7 @@
 // simpler include guard
 
 #include <memory>
+#include <tuple>
 #include "alternating_move_game.h"
 #include "cgt_move.h"
 #include "game.h"
