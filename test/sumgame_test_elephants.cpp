@@ -9,24 +9,20 @@ using std::cout, std::endl;
 
 using std::string;
 
-
-
-//////////////////////////////////////////////////////////// tests
-
 void elephants1()
 {
     // 1* (this game is positive)
-    assert_sum_outcome(true, false, 
-        game_spec<elephants>("X.O.X.X")
+    assert_sum_outcomes(true, false, 
+        string_spec<elephants>("X.O.X.X")
     );
 }
 
 void elephants2()
 {
     // {* | -1*} (this game is negative, not 0)
-    assert_sum_outcome(false, true, 
-        game_spec<elephants>("X.O.X.X"),
-        game_spec<elephants>("O.X.O.O")
+    assert_sum_outcomes(false, true, 
+        string_spec<elephants>("X.O.X.X"),
+        string_spec<elephants>("O.X.O.O")
     );
 
 }
@@ -34,31 +30,31 @@ void elephants2()
 void elephants3()
 {
     // 0
-    assert_sum_outcome(false, false, 
-        game_spec<elephants>("X.O.X.X"),
-        game_spec<elephants>("O.O.X.O")
+    assert_sum_outcomes(false, false, 
+        string_spec<elephants>("X.O.X.X"),
+        string_spec<elephants>("O.O.X.O")
     );
 
 }
 
 void elephants4()
 {
-    assert_correct_inverse<elephants>("X.O.X.X");
+    assert_inverse_sum_zero(string_spec<elephants>("X.O.X.X"));
 }
 
 void elephants5()
 {
-    assert_correct_inverse<elephants>("O....X");
-    assert_correct_inverse<elephants>("X....O");
-    assert_correct_inverse<elephants>("X.X.O.O");
+    assert_inverse_sum_zero(string_spec<elephants>("O....X"));
+    assert_inverse_sum_zero(string_spec<elephants>("X....O"));
+    assert_inverse_sum_zero(string_spec<elephants>("X.X.O.O"));
 }
 
 void elephants6()
 {
     // * + * == 0
-    assert_sum_outcome(false, false, 
-        game_spec<elephants>("X.O"),
-        game_spec<elephants>("X.O")
+    assert_sum_outcomes(false, false, 
+        string_spec<elephants>("X.O"),
+        string_spec<elephants>("X.O")
     );
 
 }

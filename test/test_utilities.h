@@ -70,47 +70,60 @@ inline void test_inverse(game& g1, game& g2) // g1+g2 == 0
 //////////////////////////////////////////////////////////// evil recursive function template
 
 // game specification for testing function
+
 template <class T>
 struct game_spec
 {
-    game_spec<T>(const std::string& board) : board(board)
+    virtual game* new_game() const = 0;
+};
+
+// T is some type derived from "strip" class
+template <class T>
+struct string_spec : public game_spec<T>
+{
+    string_spec<T>(const std::string& board) : board(board)
     {}
 
-    const std::string& board;
+    game* new_game() const override
+    {
+        return new T(board);
+    }
 
+private:
+    const std::string& board;
 };
 
 // general case
 template <class T, class ...Ts>
-void _add_to(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1, Ts... gs)
+void _add_games(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1, Ts... gs)
 {
-    T* pos = new T(g1.board);
+    game* pos = g1.new_game();
 
     game_vec.push_back(pos);
     sum.add(pos);
 
-    _add_to(sum, game_vec, gs...);
+    _add_games(sum, game_vec, gs...);
 }
 
 // base case
 template <class T>
-void _add_to(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1)
+void _add_games(sumgame& sum, vector<game*>& game_vec, const game_spec<T>& g1)
 {
-    T* pos = new T(g1.board);
+    game* pos = g1.new_game();
 
     game_vec.push_back(pos);
     sum.add(pos);
 }
 
 template <class ...Ts>
-void assert_sum_outcome_for(int player, bool expected_outcome, Ts... game_specs)
+void assert_player_sum_outcome(int player, bool expected_outcome, Ts... game_specs)
 {
     assert_black_white(player);
     sumgame sum(player);
 
     vector<game*> games; // clean up later...
 
-    _add_to(sum, games, game_specs...);
+    _add_games(sum, games, game_specs...);
 
     bool outcome = sum.solve();
 
@@ -123,38 +136,26 @@ void assert_sum_outcome_for(int player, bool expected_outcome, Ts... game_specs)
 }
 
 template <class ...Ts>
-void assert_sum_outcome(bool black_outcome, bool white_outcome, Ts... gs)
+void assert_sum_outcomes(bool black_outcome, bool white_outcome, Ts... gs)
 {
-    assert_sum_outcome_for(BLACK, black_outcome, gs...);
-    assert_sum_outcome_for(WHITE, white_outcome, gs...);
+    assert_player_sum_outcome(BLACK, black_outcome, gs...);
+    assert_player_sum_outcome(WHITE, white_outcome, gs...);
 }
 
 //////////////////////////////////////////////////////////// other templates
 
 template <class T>
-void assert_correct_inverse(const std::string& game_as_string)
+void assert_inverse_sum_zero(const game_spec<T>& gs)
 {
+
+    for (int i = 0; i <= 1; i++)
     {
-        T* pos = new T(game_as_string);
+        int to_play = i == 0 ? BLACK : WHITE;
+
+        game* pos = gs.new_game();
         game* pos_negative = pos->inverse();
 
-        sumgame sum(BLACK);
-        sum.add(pos);
-        sum.add(pos_negative);
-
-        bool outcome = sum.solve();
-
-        assert(outcome == false);
-
-        delete pos;
-        delete pos_negative;
-    }
-
-    {
-        T* pos = new T(game_as_string);
-        game* pos_negative = pos->inverse();
-
-        sumgame sum(WHITE);
+        sumgame sum(to_play);
         sum.add(pos);
         sum.add(pos_negative);
 
