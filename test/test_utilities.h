@@ -82,7 +82,7 @@ template <class T, class ...Ts>
 struct _game_factory_impl : public game_factory
 {
     // T is type of game
-    // ...Ts is arguments to game constructor
+    // ...Ts is types of arguments to game constructor
 
     _game_factory_impl(Ts... args) : data(args...)
     { }
@@ -104,7 +104,9 @@ private:
     std::tuple<Ts...> data;
 };
 
-/*
+/*  i.e.
+    make_factory<clobber_1xn>("XO.OX");
+    make_factory<switch_game>(5, 3);
 
 */
 template <class T, class ...Ts>
@@ -116,39 +118,39 @@ _game_factory_impl<T, Ts...> make_factory(Ts... data)
 
 // general case
 template <class T, class ...Ts>
-void _add_games(sumgame& sum, vector<game*>& game_vec, const T& g1, Ts... gs)
+void _add_games(sumgame& sum, vector<game*>& game_vec, const T& factory, Ts... factories)
 {
-    const game_factory& _g1 = g1;
+    const game_factory& _factory = factory;
 
-    game* pos = _g1.new_game();
+    game* pos = _factory.new_game();
 
     game_vec.push_back(pos);
     sum.add(pos);
 
-    _add_games(sum, game_vec, gs...);
+    _add_games(sum, game_vec, factories...);
 }
 
 // base case
 template<class T>
-void _add_games(sumgame& sum, vector<game*>& game_vec, const T& g1)
+void _add_games(sumgame& sum, vector<game*>& game_vec, const T& factory)
 {
-    const game_factory& _g1 = g1;
+    const game_factory& _factory = factory;
 
-    game* pos = _g1.new_game();
+    game* pos = _factory.new_game();
 
     game_vec.push_back(pos);
     sum.add(pos);
 }
 
 template <class ...Ts>
-void assert_player_sum_outcome(int player, bool expected_outcome, Ts... game_specs)
+void assert_player_sum_outcome(int player, bool expected_outcome, Ts... factories)
 {
     assert_black_white(player);
     sumgame sum(player);
 
     vector<game*> games; // clean up later...
 
-    _add_games(sum, games, game_specs...);
+    _add_games(sum, games, factories...);
 
     bool outcome = sum.solve();
 
@@ -161,22 +163,22 @@ void assert_player_sum_outcome(int player, bool expected_outcome, Ts... game_spe
 }
 
 template <class ...Ts>
-void assert_sum_outcomes(bool black_outcome, bool white_outcome, Ts... gs)
+void assert_sum_outcomes(bool black_outcome, bool white_outcome, Ts... factories)
 {
-    assert_player_sum_outcome(BLACK, black_outcome, gs...);
-    assert_player_sum_outcome(WHITE, white_outcome, gs...);
+    assert_player_sum_outcome(BLACK, black_outcome, factories...);
+    assert_player_sum_outcome(WHITE, white_outcome, factories...);
 }
 
 //////////////////////////////////////////////////////////// other templates
 
-inline void assert_inverse_sum_zero(const game_factory& gs)
+inline void assert_inverse_sum_zero(const game_factory& factory)
 {
 
     for (int i = 0; i <= 1; i++)
     {
         int to_play = i == 0 ? BLACK : WHITE;
 
-        game* pos = gs.new_game();
+        game* pos = factory.new_game();
         game* pos_negative = pos->inverse();
 
         sumgame sum(to_play);
