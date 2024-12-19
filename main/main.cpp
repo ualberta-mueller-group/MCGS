@@ -10,11 +10,15 @@
 #include "nim.h"
 #include "nogo_1xn.h"
 #include "elephants.h"
+#include "parser.h"
 
 using std::cout, std::endl;
 
 int main()
 {
+
+
+    parse("general.test");
 
     {
         nim pos("1 2 3");
