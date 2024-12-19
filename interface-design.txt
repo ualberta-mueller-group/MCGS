@@ -194,3 +194,77 @@ Annoying problem: result macro isn't known until entire test is parsed --> don't
 
 "Nice" parsers i.e. "(general)" can come later if they're needed. Just do a good sanity check of this design, and then build it
 
+============================================================
+        File:
+{version 5}
+(clobber_1xn) XOXOOX.XO OX
+XXOOX.
+(nim) "1 4 9"
+// This is a comment
+{B win, W win}
+// Another comment
+
+OK:
+    read_file(some_file.test)
+    ./MCGS < some_file.test
+
+
+    -- File and stdin should preserve newlines, so comments should be parsed correctly
+    -- Version macro only required for file. Ignore it in args and stdin
+
+
+./MCGS --some_flag -o out.txt (clobber_1xn) XOXOXO {B win}
+
+^ Arg parser will always look for something starting with "-". Once it looks for a new flag and doesn't find a "-", it should treat the rest of the args as a "file"
+
+(clobber_2d)
+"XOXO OXOX"
+
+SAME AS:
+
+(clobber_2d)
+"
+XOXO
+OXOX
+"
+
+
+First is: "XOXO OXOX"
+Second is "\nXOXO\nOXOX\n"
+
+
+
+============================================================
+            Output stuff
+
+    -- Should print the games, time elapsed, results
+
+./MCGS --print-games
+    <-- Just print the games in the first TEST, then exit
+
+
+clobber1xn OXOX
+clobber1xn XOXO..X
+integer 5
+test B win : 10 ms
+test W win : 100 ms
+    <-- output of test script. Generate game string by calling ./MCGS --print-games
+
+Problem: testing framework has timeouts. Solution: Use Python to run ./MCGS. Force .test file macros to be on new lines within files. Python script can parse the macros and split the test by whitespace, then feed it to ./MCGS either through args or stdin
+
+{B win, W win} <-- outcomes only for python script?
+
+
+============================================================
+
+
+(sections) are always one ">>"
+{macros} are not...
+
+Keep reading tokens from the source (either args, stdin, file), have some simple state:
+    -- open macro
+    -- open quote
+    -- in section
+
+
+
