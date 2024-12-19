@@ -1,0 +1,196 @@
+TODO:
+    -- Do another pass over input format thoughts, make things understandable to someone else
+    -- Solve result macro problem
+        <-- Don't spend time on this. Return pair<game*, game*> for now...
+    -- Specify file format, output format (simply)
+    -- Verify this works for args, stdin, and file somehow
+        -- Specify some example flags for MCGS, make sure they're compatible with args input format
+
+    -- Testing framework should maybe not be Python. Just design something reasonable and then implement the MCGS CLI interface
+For now just run stuff from a "tests" directory? "run file" or "include" macro or some test-list solution can come later
+
+
+============================================================
+
+
+        Existing .test format:
+clobber_1xn 0
+XO B win
+XO W win
+OXOXOX B loss
+OXOXOX W loss
+XXO B win
+XXO W loss
+
+
+-- Doesn't allow sums of mixed types
+-- Sums within game type can be quoted i.e. nim "1 2 4"
+
+        Ideas:
+-- There should be one function to parse all game inputs, (whether from file, stdin, or args)
+-- file with tokens like {macro} (game type) 
+
+{version INT}
+{include FILENAME} <-- continue execution in another file
+{PLAYER OUTCOME} <-- run test case with this expected result
+(GAME TYPE) <-- passes control over to parser<GAME_TYPE>
+
+-- "include" is confusing for saving results
+-- passing control to another game-specific parser is good; newline shouldn't separate tests (i.e. 2D grid games)
+    -- map from game tag to parser object, initialized at startup
+        "clobber_1xn" --> strip_parser<clobber_1xn>
+        <-- use very simple C++ template; many games will share the same parsing logic
+        -- strip_parser<T>
+            -- clobber_1xn
+            -- elephants
+            -- nogo_1xn
+        -- int_parser<T>(int N) <-- N number of ints for game, -1 for unbounded number of ints
+            -- switch_game (2)
+            -- dyadic_rational (2)
+            -- integer (1)
+            -- nimber (1)
+        -- string_parser<T>
+            -- nim
+-- having reserved symbols like {} and () makes parsing simple
+
+        file:
+(clobber_1xn) XO OX
+XX..OO
+(nogo_1xn) X..O
+{B win, W win}
+
+        output:
+(clobber_1xn) XO + OX + XX..OO
+(nogo_1xn) X..O
+B win: PASS
+W win: PASS
+time elapsed: 5 ms
+
+        Problems:
+(dyadic_rational) 1 2 3 4
+
+above becomes (1/2) + (3/4) which is confusing
+
+simple games are unambiguous without game type tags:
+    up_star:            3^*
+    integer:            5
+    switch:             {2 | 0}
+    dyadic_rational:    (3 / 2)
+    nimber:             *6
+
+nim shouldn't be confusing to use with tags i.e.:
+    (nim) 4 5 6
+    above becomes nim("4 5 6")?
+
+    maybe:
+    (nim) "4 5" "6"
+    could become nim("4 5") + nim("6")
+
+could do:
+(simple) 3 + 2^ + * + {2 | 0}
+
+but it's weird for (simple) to have its own rules with "+" --> should it also have "-"? Then should all tags have "+" and "-"?
+(simple) 3 2^ * {2 | 0}
+
+
+multiplication in CGT is defined (?) --> if we allow expressions with operators +, -, * etc, could be confusing if "*" represents the star game. I don't think this is within scope of the project?
+
+
+Will we ever support "general" game definitions, i.e.:
+    { (clobber_1xn) XOXO, (integer) 4 | (nogo_1xn) X..O }
+(black can move to XOXO or 4, white can move to X..O)
+    probably not? nested "general" games are tricky to parse
+
+Having many separate parser objects could create inconsistencies in conventions
+
+Problem: some games (i.e. dyadic_rational) simplify their state on construction: 2/4 --> 1/2
+    -- Test cases need some way to be identified; keep this state change in mind
+
+============================================================
+        Takeaways:
+-- Games should have their own separate parsing logic
+    -- Adding a new game type requires modifying whatever parsing solution we use --> good to encapsulate this
+
+-- Games should reuse existing parser templates when possible (i.e. strip_parser<T>)
+    -- This templating should be very simple
+    -- Existing parsers need to be well documented and easy to understand
+
+-- Think of constraints to simplify the system
+    -- Input within quotes could be considered one game. Default to separating by whitespace?
+    -- What's the minimum number of parsers we need (without complex templates)?
+    -- Disallow: "Some text"SomeTextBesideQuote
+
+-- Prioritize having something functional quickly over making it "nice"
+    -- simple grammars i.e.
+        game_token: "ANY QUOTED TEXT" \OR <text without space>
+            i.e.:
+                "This is a single game token"
+                This is 5 game tokens
+
+            <-- a game token represents a single game
+            <-- top level parser can identify "game tokens" and pass them to game-specific parsers
+
+        (up_star): INT\? *\?
+        (clobber_1xn, nogo_1xn, elephants) CLOBBER_STRIP
+        (switch_game, dyadic_rational) INT INT
+        (integer, nimber) INT
+        (nim) GAME_TOKEN <-- assert this game_token was generated by quoted text?
+
+    -- Keep this parser solution simple. No regular expressions, no complicated templates
+    -- Simplest set of parsers:
+        -- basic_parser<T>
+            <-- just forward the game_token to the constructor
+            -- clobber_1xn
+            -- nogo_1xn
+            -- elephants
+            -- nim
+
+        -- int_star_parser<T>
+            -- up_star
+
+        -- int_parser<T>
+            -- integer
+            -- nimber
+
+        -- int2_parser<T>
+            -- switch_game
+            -- dyadic_rational
+
+        <-- It's tempting to combine int_parser and int2_parser using a template with tuples. Don't do this.
+
+
+
+    Overall file format:
+
+FILE:
+    {version INT}
+    TEST\+
+
+COMMENT:
+    \^//\.\*
+
+TEST:
+    SUM_SPECIFICATION
+    {RESULT MACRO}
+
+
+{version 5}
+(clobber_1xn) XOXO
+{B win, W win}
+(clobber_1xn) XOXO XXO
+(integer_game) 7
+{B win, W win}
+
+
+Annoying problem: result macro isn't known until entire test is parsed --> don't know how many game copies we need
+    -- game_factory could solve this
+        i.e. return make_factory<dyadic_rational>(2, 3)
+        but game_factory is meant for unit testing and may be slow with how it stores data in tuples
+    -- Just create 2 copies of a game for now...
+        <-- function interface for this is messy: pair<game*, game*> ??
+    -- Or make a game->clone() function and call it before the game is mutated.
+        <-- this adds more unit testing work, so don't do it yet
+
+
+"Nice" parsers i.e. "(general)" can come later if they're needed. Just do a good sanity check of this design, and then build it
+
