@@ -3,101 +3,115 @@
 #include <iostream>
 #include <cassert>
 
+using std::string, std::ifstream, std::cout, std::cin, std::endl;
 
-/*
-    TODO expand on this and make it not awful
-   */
-
-using std::string, std::ifstream, std::cout, std::endl, std::cin;
-
-void assert_macro_format(const string& s)
+bool token_is_format(const string& token, const char& open, const char& close)
 {
-    int N = s.size();
+    int N = token.size();
 
-    assert(N > 0);
-    assert(s[0] == '{');
-    assert(s.back() == '}');
+    if (N <= 0 || token[0] != open || token.back() != close)
+    {
+        return false;
+    }
 
     for (int i = 1; i < N - 1; i++)
     {
-        const char c = s[i];
-        assert(c != '{');
-        assert(c != '}');
+        const char c = token[i];
+
+        if (c == open || c == close)
+        {
+            return false;
+        }
     }
+
+    return true;
 }
 
-void assert_section_format(const string& s)
+string get_format(string chunk, ifstream& stream, const char& open, const char& close)
 {
-    int N = s.size();
-
-    assert(N > 0);
-    assert(s[0] == '(');
-    assert(s.back() == ')');
-
-    for (int i = 1; i < N - 1; i++)
+    if (chunk.back() == close)
     {
-        const char c = s[i];
-        assert(c != '(');
-        assert(c != ')');
+        assert(token_is_format(chunk, open, close));
+        return chunk;
     }
+
+    string token;
+    while (stream >> token)
+    {
+        chunk += " " + token;
+        if (chunk.back() == close)
+        {
+            break;
+        }
+    }
+
+    if (chunk.back() == close)
+    {
+        assert(token_is_format(chunk, open, close));
+        return chunk;
+    }
+
+    assert(false);
+    return "";
 }
 
+void strip_title(string& title)
+{
+    assert(title.size() >= 2);
+    title.pop_back();
+    title = title.substr(1);
+}
 
 void parse(const string& file_name)
 {
-    bool macro_open = false;
-    bool quote_open = false;
-    bool in_section = false;
-
     ifstream stream(file_name);
 
     if (!stream.is_open())
     {
         cout << "Failed to open" << endl;
+        return;
     }
 
-    // Read the file...
-
-    cout << "Parsing..." << endl;
-    string chunk;
 
     string token;
+    string chunk;
+
+    string current_title;
 
     while (stream >> token)
     {
-        if (token[0] == '(' && token.back() == ')')
+        // Match macro
+        if (token[0] == '{')
         {
-            assert_section_format(token);
-            chunk.clear();
-            cout << "FOUND SECTION: " << token << endl;
+            chunk = get_format(token, stream, '{', '}');
+            cout << "GOT MACRO: " << chunk << endl;
             continue;
         }
 
-
-        chunk = (chunk.size() > 0) ? chunk + " " + token : chunk + token;
-
-        if (!macro_open && token[0] == '{')
+        // Match title
+        if (token[0] == '(')
         {
-            macro_open = true;
             chunk = token;
-        }
-
-
-        // Looking for macro
-        if (macro_open)
-        {
-            if (token.back() == '}')
-            {
-                cout << "FOUND MACRO: " << chunk << endl;
-                assert_macro_format(chunk);
-                macro_open = false;
-                chunk.clear();
-            }
+            assert(token_is_format(token, '(', ')'));
+            strip_title(chunk);
+            cout << "GOT TITLE: " << chunk << endl;
+            current_title = chunk;
             continue;
         }
 
 
+        // Match quote
+        if (token[0] == '\"')
+        {
+            chunk = get_format(token, stream, '\"', '\"');
+            cout << "GOT QUOTE: " << chunk << endl;
+            continue;
+        }
+
+        // Token must be a game_token
+        cout << "GOT GAME TOKEN: " << token << endl;
 
     }
+
 }
 
