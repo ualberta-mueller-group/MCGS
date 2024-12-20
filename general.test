@@ -138,6 +138,10 @@ XOXOO...XO
     Comments can have reserved characters without creating strange parse results, because an opening brace that matches with
     a closing brace contained by a comment will also contain the reserved "slash" character, causing a parser error indicating
     the line of the initial opening brace
+
+    
+    Slashes can be used in comments if followed by another character: /4
+    Odd inconsistency
 /
 
 
