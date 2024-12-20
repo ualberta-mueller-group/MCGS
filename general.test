@@ -62,6 +62,8 @@ XOXOO...XO
 [elephants] X..O.X.
 [nim] 1 4 2
 {B, W}
+
+/ The game list is cleared by run commands like the one above /
 [nim]
 (1 2 3) 4 5 (6 7)
 {W}
