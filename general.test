@@ -157,9 +157,18 @@ XOXOO...XO
     containing expected results i.e.: {B win, W loss}
     would have MCGS ignore the result part, and have the expected result only be used by the Python testing tool.
     The testing tool would do some really minimal parsing to find run commands, and feed MCGS everything up to a run command
-    without reading it.
+    without actually parsing it
 
-    ./MCGS --print-games
+    Also:
+        ./MCGS --print-games
 
     Could just print the games resulting from an input before the first run command, and then exit, so that the testing tool can use this output
+    in its user interface
+
+
+
+    Maybe input like [dyadic_rational] 1 2
+    can be legal where unambiguous. If first token fails the game_token_parser, keep combining tokens? Fail "1", then try "1 2"?
+    This could be allowed if and only if the entire combined tokens of a section form a single successful game parse.
+    Probably a bad idea as it gets confusing
 /
