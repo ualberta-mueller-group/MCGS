@@ -1,13 +1,5 @@
 {version 1}
-[clobber_1xn] XOOX. XOX
-/ This is a comment /
-OOXXX
-[dyadic_rational] (3 2)
-(9 2)
-[nim] (1 6
-2 7
-3 1
-)
-{B win}
-[dyadic_rational] (4 8)
-{W win}
+[clobber_1xn] OXOXO. XOXO
+[integer_game] 5 6 2 3
+[dyadic_rational] (5 2)
+[up_star] (4 *)

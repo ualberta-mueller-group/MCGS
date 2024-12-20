@@ -3,6 +3,11 @@
 #include <cassert>
 #include <string>
 #include "cgt_basics.h"
+#include "all_game_headers.h"
+#include "game_parser.h"
+
+
+std::map<std::string, std::shared_ptr<game_parser>> parser::game_map;
 
 using std::string, std::ifstream, std::cout, std::cin, std::endl, std::stringstream, std::getline, std::istream;
 
@@ -323,6 +328,7 @@ bool parser::parse_chunk(game_case& gc)
                 return false;
             }
 
+            strip_enclosing(token);
             cout << "Got game title: " << token << endl;
 
             _game_name = token;
@@ -346,7 +352,29 @@ bool parser::parse_chunk(game_case& gc)
                 return false;
             }
 
+            auto it = game_map.find(_game_name);
+
+            if (it == game_map.end())
+            {
+                cout << "Parser error on line " << line_number << ": Couldn't find game parser for game \"" << _game_name << "\"" << endl;
+                return false;
+            }
+
             cout << "Got bracket token: " << token << endl;
+
+            strip_enclosing(token);
+
+            game* g = (*it).second->parse_game(token);
+            if (g)
+            {
+                cout << *g << endl;
+                delete g;
+            } else
+            {
+                cout << "Game parsing error on line " << line_number << ": \"" << token << "\" didn't parse into a game" << endl;
+                return false;
+            }
+
             continue;
         }
 
@@ -365,14 +393,32 @@ bool parser::parse_chunk(game_case& gc)
         }
 
         // Must be game token
-
         if (_game_name.size() == 0)
         {
             cout << "Parser error on line " << line_number << ": Found simple game token without game title" << endl;
             return false;
         }
 
+        auto it = game_map.find(_game_name);
+
+        if (it == game_map.end())
+        {
+            cout << "Parser error on line " << line_number << ": Couldn't find game parser for game \"" << _game_name << "\"" << endl;
+            return false;
+        }
+
         cout << "Got simple token: " << token << endl;
+
+        game* g = (*it).second->parse_game(token);
+        if (g)
+        {
+            cout << *g << endl;
+            delete g;
+        } else
+        {
+            cout << "Game parsing error on line " << line_number << ": \"" << token << "\" didn't parse into a game" << endl;
+            return false;
+        }
     }
 
 
@@ -395,6 +441,8 @@ parser parser::from_string(const std::string& string)
 {
     return parser(new stringstream(string), true, false);
 }
+
+
 
 
 parser::parser(std::istream* stream, bool delete_stream, bool do_version_check)
@@ -425,4 +473,41 @@ void parser::version_check(const string& version_string)
 
         assert(false);
     }
+}
+
+
+void parser::add_game_parser(const std::string& game_title, game_parser* gp)
+{
+    auto it = game_map.find(game_title);
+
+    if (it != game_map.end())
+    {
+        cout << "Tried to add game parser \"" << game_title << "\" but it already exists" << endl;
+
+        delete gp;
+        return;
+    }
+
+    game_map.insert({game_title, std::shared_ptr<game_parser>(gp)});
+}
+
+
+void parser::init_game_parsers()
+{
+    assert(game_map.size() == 0);
+
+    add_game_parser("clobber_1xn",      new basic_parser<clobber_1xn>());
+    add_game_parser("nogo_1xn",         new basic_parser<nogo_1xn>());
+    add_game_parser("elephants",        new basic_parser<elephants>());
+    add_game_parser("nim",              new basic_parser<nim>());
+
+    add_game_parser("integer_game",     new int_parser<integer_game>());
+    add_game_parser("nimber",           new int_parser<nimber>());
+
+    add_game_parser("dyadic_rational",  new int2_parser<dyadic_rational>());
+    add_game_parser("switch_game",      new int2_parser<switch_game>());
+
+    add_game_parser("up_star",          new up_star_parser());
+
+    cout << game_map.size() << endl;
 }

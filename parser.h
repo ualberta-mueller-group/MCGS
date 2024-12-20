@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 #include "game.h"
+#include <unordered_map>
+#include <map>
+#include "game_parser.h"
+#include <memory>
 
 class token_iterator;
 
@@ -98,6 +102,15 @@ public:
     static parser from_file(const std::string& file_name);
     static parser from_string(const std::string& string);
 
+
+
+    static std::map<std::string, std::shared_ptr<game_parser>> game_map;
+    static void add_game_parser(const std::string& game_title, game_parser* gp);
+    static void init_game_parsers();
+
+
+
+
 private:
     parser(std::istream* stream, bool delete_stream, bool do_version_check);
     void close_if_file();
@@ -113,3 +126,5 @@ private:
 
     std::string _game_name;
 };
+
+

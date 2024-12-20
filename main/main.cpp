@@ -21,6 +21,8 @@ using std::cout, std::endl;
 int main(int argc, char** argv)
 {
 
+    parser::init_game_parsers();
+
 
 
     //parse("general.test");
