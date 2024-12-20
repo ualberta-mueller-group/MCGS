@@ -1,10 +1,163 @@
 {version 1}
-[clobber_1xn] OXOXO. XOXO
-/ Reserved characters (})([]}[{)( can be used in comments! 
 
-These won't be matched when parsing a previously unclosed tag, because if it tries to match the closing character, the sequence will contain a slash character of the comment
-}
+/ This is a comment /
+
+/ Comments and other things can
+be on
+ multiple
+ lines
+
 /
-[integer_game] 5 6 2 3
-[dyadic_rational] (5 2)
-[up_star] (4 *)
+
+/ This file is valid input that can be run by MCGS /
+
+/ The basic file features:
+
+    {this is a command}
+        i.e. {version 2}
+             {B win}
+             {W loss}
+             {B win, W loss}
+             {B}
+             {W}
+             {B, W}
+        Commands are used to run games, indicate file format version, and do other things
+
+        When reading from stdin or file, the input must start with a version command.
+        When reading from args, the version command is optional, but if present will still be checked
+
+    [this is a section title, indicating a specific game]
+        i.e. [clobber_1xn]
+        "Game tokens" within a section create games, explained below
+        Section titles can contain spaces i.e. [some other game]
+
+    (everything in parentheses belongs to a single game and is a single "game token")
+        i.e. (4 5 3) <-- a single game token interpreted as 3 numbers OR a string
+        Things outside of parentheses are broken up by white space, i.e.
+        "4 2 3" is 3 game tokens, creating 3 games, while "(4 2 3)" is 1 game token, creating 1 game
+
+
+        The example below runs a sum of:
+            2 clobber games
+            2 integer games
+            one more clobber game
+            2 dyadic rational games
+            2 nim games
+            1 elephants game
+            three more nim games
+        Two times, once for black, once for white. And then it runs a sum of 4 nim games, for white
+        
+/
+
+[clobber_1xn] XOXO OXX
+[integer_game] 4
+-5
+[clobber_1xn]
+XOXOO...XO
+[dyadic_rational] (3 4) (7 8)
+/ Comments are allowed here too! /
+[nim] 
+    (1 5 3)
+(2 3)
+[elephants] X..O.X.
+[nim] 1 4 2
+{B, W}
+[nim]
+(1 2 3) 4 5 (6 7)
+{W}
+
+/
+
+    Games have game_token_parser classes defining how their game tokens are
+    parsed and given to the game's constructor. A file_parser class reads the file input
+    and when it sees a game token, gives it to the game_token_parser of the current section,
+    first omitting the parentheses. The input:
+        (4 5 3)
+    Could mean a string "4 5 3", or 3 ints, as determined by a game's game_token_parser.
+
+    game_token_parsers usually have a template argument for the game class to make it easy
+    to add new games. See file_parser::init_game_parsers() in file_parser.cpp
+
+
+    Disallowed things:
+
+        [clobber_1xn] (XOXO OXX)
+    The string "XOXO OXX" is not a valid clobber board (it contains a space). No
+    parser error happens, and the program stops when the strip class's assertion
+    sees the space
+
+        [elephants()]
+    The section title "elephants()" contains reserved characters. Reserved characters
+    can only be used for their intended purposes, OR inside of comments. A parser error
+    is printed along with the line number, and the program stops
+
+    Reserved characters are: "slash" { } ( ) [ ] 
+
+    Also not allowed: [[elephants]]
+
+        [dyadic_rational] 6 3
+    The dyadic rational game requires 2 ints, but the above input tries to make
+    2 games with 1 int each. Instead these must be enclosed in braces i.e. (6 3). The game_token_parser only sees single numbers,
+    and returns null, and a parser error will be printed indicating the line number of this error,
+    then the program will stop
+
+        [integer_game] (-2 1 3)
+    The integer game only takes one int, but the above tries to make 1 game
+    with 3 ints
+
+        [integer game]3
+    OR
+        [integer_game]3
+    OR
+        3[integer_game]
+    OR
+        3[integer game]
+    The section title isn't found, and a parser error is printed. The file parser finds matches by looking at edges of whitespace-separated chunks,
+    and in both cases the "3" is at an edge. The first example contains 2 "chunks" while the second contains 1 "chunk"
+
+        [integer ]3 game]
+    Will initially match to a game title, but be rejected because it contains a reserved character. Prints a parser error
+
+        [clobber_1xn] XOXO{B}
+    "XOXO{B}" is not a valid clobber board
+
+        [nogo_1xn] X..O {B} O..X.
+    After running the game for black, a new section title is necessary
+    TODO: This is arguably bad for readability, maybe sections should persist across "run" commands?
+
+
+    Allowed things:
+
+        [clobber_1xn] (XOXO.XOOX) (XOXO)
+        [integer_game] (1) (2) (4)
+    The clobber parser sees the strings "XOXO.XOOX" and "XOXO", which are both legal
+    The integer game parser sees 3 games
+
+    Comments can have reserved characters without creating strange parse results, because an opening brace that matches with
+    a closing brace contained by a comment will also contain the reserved "slash" character, causing a parser error indicating
+    the line of the initial opening brace
+/
+
+
+
+
+/ ============================== TODO thoughts below ============================== /
+
+
+/ TODO:
+    Comments should maybe use double slash or match "slash *" "* slash".
+    This makes slashes useable within comments, and makes comments boundaries clearer
+    It's trivial to pick a different opening and closing character, but longer strings require a slight change
+
+
+
+    The testing framework should probably be a Python program and it needs to somehow use these files. I was thinking run commands
+    containing expected results i.e.: {B win, W loss}
+    would have MCGS ignore the result part, and have the expected result only be used by the Python testing tool.
+    The testing tool would do some really minimal parsing to find run commands, and feed MCGS everything up to a run command
+    without reading it.
+
+    ./MCGS --print-games
+
+    Could just print the games resulting from an input before the first run command, and then exit, so that the testing tool can use this output
+/

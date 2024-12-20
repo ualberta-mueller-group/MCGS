@@ -8,7 +8,7 @@
 #include "all_game_headers.h"
 #include "game_token_parsers.h"
 
-// TODO: Parser should allow reserved characters in comments?
+// TODO: Version command should be optional, BUT STILL CHECKED, when reading from args
 
 using namespace std;
 
