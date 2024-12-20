@@ -115,7 +115,7 @@ XOXOO...XO
     OR
         3[integer game]
     The section title isn't found, and a parser error is printed. The file parser finds matches by looking at edges of whitespace-separated chunks,
-    and in both cases the "3" is at an edge. The first example contains 2 "chunks" while the second contains 1 "chunk"
+    and in all cases the "3" is at an edge where a bracket should be. Examples 1 and 4 contain 2 "chunks" and examples 2 and 3 contain 1 "chunk".
 
         [integer ]3 game]
     Will initially match to a game title, but be rejected because it contains a reserved character. Prints a parser error
