@@ -1,64 +1,57 @@
-#include "parser.h"
+#include "file_parser.h"
 #include <iostream>
 #include <cassert>
 #include <string>
+#include <istream>
+#include <fstream>
 #include "cgt_basics.h"
 #include "all_game_headers.h"
-#include "game_parser.h"
+#include "game_token_parsers.h"
 
+// TODO: Parser should allow reserved characters in comments?
 
-std::map<std::string, std::shared_ptr<game_parser>> parser::game_map;
+using namespace std;
 
-using std::string, std::ifstream, std::cout, std::cin, std::endl, std::stringstream, std::getline, std::istream;
+unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 
-/*
-    (clobber_1xn) <-- game title
-    {B win} <-- command
-
-*/
 
 //////////////////////////////////////////////////////////// file_token_iterator
 
 file_token_iterator::file_token_iterator(istream& stream)
-    : _stream(stream), _line_number(0)
+    : _main_stream(stream), _line_number(0)
 {
-
-    next_token(true);
+    next_token();
 }
 
+// Since the istream isn't owned by us, don't try closing it
 file_token_iterator::~file_token_iterator()
-{
-}
+{ }
 
-string file_token_iterator::get_token()
+string file_token_iterator::get_token() const
 {
     assert(*this);
     return _token;
 }
 
-int file_token_iterator::line_number()
+int file_token_iterator::line_number() const
 {
+    assert(*this);
     return _line_number;
 }
 
-file_token_iterator::operator bool()
+file_token_iterator::operator bool() const
 {
     return _token.size() > 0;
 }
 
 void file_token_iterator::operator++()
 {
-    next_token(false);
+    assert(*this);
+    next_token();
 }
 
-
-void file_token_iterator::next_token(bool init)
+void file_token_iterator::next_token()
 {
-    if (!init)
-    {
-        assert(*this);
-    }
-
     _token.clear();
 
     // Check if current line has more tokens
@@ -67,9 +60,15 @@ void file_token_iterator::next_token(bool init)
         return;
     }
 
+    if (_line_stream.fail() && !_line_stream.eof())
+    {
+        cout << "file_token_iterator operator++ line IO error" << endl;
+        assert(false);
+    }
+
     // Scroll through the file's lines until we get a token
     string next_line;
-    while (_stream && getline(_stream, next_line) && !_stream.fail())
+    while (_main_stream && getline(_main_stream, next_line) && !_main_stream.fail())
     {
         _line_number++;
         _line_stream = stringstream(next_line);
@@ -78,77 +77,38 @@ void file_token_iterator::next_token(bool init)
         {
             return;
         }
+
+        if (_line_stream.fail() && !_line_stream.eof())
+        {
+            cout << "file_token_iterator operator++ line IO error" << endl;
+            assert(false);
+        }
     }
 
-    if (_stream.fail())
+    if (_main_stream.fail())
     {
-        if (_stream.eof())
+        if (_main_stream.eof())
         {
             //cout << "file_token_iterator successfully reached EOF" << endl;
-        } else if (_stream.bad())
+        } else if (_main_stream.bad())
         {
             cout << "file_token_iterator operator++ file IO error" << endl;
+            assert(false);
         }
 
         _token.clear();
     }
 }
 
-//////////////////////////////////////////////////////////// args_token_iterator
-
-args_token_iterator::args_token_iterator(const std::string& args_string)
-    : _line_stream(args_string)
-{ 
-    next_token(true);
-}
-
-args_token_iterator::~args_token_iterator()
-{ }
-
-string args_token_iterator::get_token()
-{
-    assert(*this);
-    return _token;
-}
-
-int args_token_iterator::line_number()
-{
-    assert(*this);
-    return 1;
-}
-
-args_token_iterator::operator bool()
-{
-    return _token.size() > 0;
-}
-
-void args_token_iterator::operator++()
-{
-    next_token(false);
-}
-
-void args_token_iterator::next_token(bool init)
-{
-    if (!init)
-    {
-        assert(*this);
-    }
-
-    _token.clear();
-
-    if (_line_stream)
-    {
-        _line_stream >> _token;
-    }
-}
-
-//////////////////////////////////////////////////////////// utility functions
+//////////////////////////////////////////////////////////// helper functions
 
 /*
     TODO: a lookup table would be much faster
         this function is slow in general...
 
     [ ] ( ) { } /
+
+    These characters can only appear in opening or closing tags
 */
 bool is_reserved_char(const char& c)
 {
@@ -168,7 +128,19 @@ bool is_reserved_char(const char& c)
     return false;
 }
 
+/*
+    Check if token is of the format:
+        <open>...<close>
 
+        With reserved characters only at the ends
+
+        i.e. for open = '(' and close = ')'
+
+            ( this is a valid string )
+            ( this is not { a valid string )
+            (( this is also not valid ))
+            
+*/
 bool is_enclosed_format(const string& token, const char& open, const char& close)
 {
     if (token.size() < 2)
@@ -195,6 +167,29 @@ bool is_enclosed_format(const string& token, const char& open, const char& close
     return true;
 }
 
+/*
+   Expand given token using the token iterator until it is formatted according
+       to is_enclosed_format(). Return false if match not found
+
+    i.e. given open = '(' and close = ')', and the input:
+
+    (1 5 3)
+
+    the token expands like this:
+    (1
+    (1 5
+    (1 5 3)
+    at which point it is accepted
+
+    The input:
+    (1 5 3)[clobber_1xn]
+
+    is invalid and will be rejected because the token will expand like: 
+    (1
+    (1 5
+    (1 5 3)[clobber_1xn]
+    which doesn't match
+*/
 bool get_enclosed(token_iterator& iterator, string& token, const char& open, const char& close)
 {
     if (token[0] != open)
@@ -224,6 +219,7 @@ bool get_enclosed(token_iterator& iterator, string& token, const char& open, con
     return false;
 }
 
+// remove first and last characters
 void strip_enclosing(string& str)
 {
     assert(str.size() >= 2);
@@ -246,8 +242,51 @@ void game_case::cleanup_games()
 
 ////////////////////////////////////////////////// parser implementation
 
+// Private constructor -- use static functions instead
+file_parser::file_parser(istream* stream, bool delete_stream, bool do_version_check)
+    : _delete_stream(delete_stream), _stream(stream), _do_version_check(do_version_check), _iterator(*stream), _game_name()
+{ }
 
-parser::~parser()
+void file_parser::close_if_file()
+{
+    ifstream* file = dynamic_cast<ifstream*>(_stream);
+
+    if (file != nullptr && file->is_open())
+    {
+        file->close();
+    }
+}
+
+void file_parser::version_check(const string& version_string)
+{
+    const string expected = "version " + to_string(FILE_PARSER_VERSION);
+
+    if (version_string != expected)
+    {
+        cout << "Parser version mismatch. Expected \"" << expected << "\", got: \"";
+        cout << version_string << "\"" << endl;
+
+        assert(false);
+    }
+}
+
+void file_parser::add_game_parser(const string& game_title, game_token_parser* gp)
+{
+    auto it = _game_map.find(game_title);
+
+    if (it != _game_map.end())
+    {
+        cout << "Tried to add game parser \"" << game_title << "\" but it already exists" << endl;
+
+        delete gp;
+        assert(false);
+        return;
+    }
+
+    _game_map.insert({game_title, shared_ptr<game_token_parser>(gp)});
+}
+
+file_parser::~file_parser()
 {
     close_if_file();
 
@@ -259,8 +298,7 @@ parser::~parser()
     }
 }
 
-
-bool parser::parse_chunk(game_case& gc)
+bool file_parser::parse_chunk(game_case& gc)
 {
     assert(gc.games.size() == 0);
 
@@ -352,9 +390,9 @@ bool parser::parse_chunk(game_case& gc)
                 return false;
             }
 
-            auto it = game_map.find(_game_name);
+            auto it = _game_map.find(_game_name);
 
-            if (it == game_map.end())
+            if (it == _game_map.end())
             {
                 cout << "Parser error on line " << line_number << ": Couldn't find game parser for game \"" << _game_name << "\"" << endl;
                 return false;
@@ -399,9 +437,9 @@ bool parser::parse_chunk(game_case& gc)
             return false;
         }
 
-        auto it = game_map.find(_game_name);
+        auto it = _game_map.find(_game_name);
 
-        if (it == game_map.end())
+        if (it == _game_map.end())
         {
             cout << "Parser error on line " << line_number << ": Couldn't find game parser for game \"" << _game_name << "\"" << endl;
             return false;
@@ -421,80 +459,27 @@ bool parser::parse_chunk(game_case& gc)
         }
     }
 
-
     return false;
-
 }
 
-
-parser parser::from_stdin()
+file_parser file_parser::from_stdin()
 {
-    return parser(&std::cin, false, true);
+    return file_parser(&cin, false, true);
 }
 
-parser parser::from_file(const std::string& file_name)
+file_parser file_parser::from_file(const string& file_name)
 {
-    return parser(new ifstream(file_name), true, true);
+    return file_parser(new ifstream(file_name), true, true);
 }
 
-parser parser::from_string(const std::string& string)
+file_parser file_parser::from_string(const string& string)
 {
-    return parser(new stringstream(string), true, false);
+    return file_parser(new stringstream(string), true, false);
 }
 
-
-
-
-parser::parser(std::istream* stream, bool delete_stream, bool do_version_check)
-    : _delete_stream(delete_stream), _stream(stream), _do_version_check(do_version_check), _iterator(*stream), _game_name()
+void file_parser::init_game_parsers()
 {
-
-}
-
-
-void parser::close_if_file()
-{
-    ifstream* file = dynamic_cast<ifstream*>(_stream);
-
-    if (file != nullptr && file->is_open())
-    {
-        file->close();
-    }
-}
-
-void parser::version_check(const string& version_string)
-{
-    const string expected = "version " + std::to_string(PARSER_VERSION);
-
-    if (version_string != expected)
-    {
-        cout << "Parser version mismatch. Expected \"" << expected << "\", got: \"";
-        cout << version_string << "\"" << endl;
-
-        assert(false);
-    }
-}
-
-
-void parser::add_game_parser(const std::string& game_title, game_parser* gp)
-{
-    auto it = game_map.find(game_title);
-
-    if (it != game_map.end())
-    {
-        cout << "Tried to add game parser \"" << game_title << "\" but it already exists" << endl;
-
-        delete gp;
-        return;
-    }
-
-    game_map.insert({game_title, std::shared_ptr<game_parser>(gp)});
-}
-
-
-void parser::init_game_parsers()
-{
-    assert(game_map.size() == 0);
+    assert(_game_map.size() == 0);
 
     add_game_parser("clobber_1xn",      new basic_parser<clobber_1xn>());
     add_game_parser("nogo_1xn",         new basic_parser<nogo_1xn>());
@@ -508,6 +493,4 @@ void parser::init_game_parsers()
     add_game_parser("switch_game",      new int2_parser<switch_game>());
 
     add_game_parser("up_star",          new up_star_parser());
-
-    cout << game_map.size() << endl;
 }

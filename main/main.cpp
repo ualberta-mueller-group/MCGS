@@ -14,21 +14,21 @@
 #include "nim.h"
 #include "nogo_1xn.h"
 #include "elephants.h"
-#include "parser.h"
+#include "file_parser.h"
 
 using std::cout, std::endl;
 
 int main(int argc, char** argv)
 {
 
-    parser::init_game_parsers();
+    file_parser::init_game_parsers();
 
 
 
     //parse("general.test");
     //std::stringstream stream(argv[1]);
 
-    parser p = parser::from_file("general.test");
+    file_parser p = file_parser::from_file("general.test");
 
     game_case gc;
     while (p.parse_chunk(gc))
