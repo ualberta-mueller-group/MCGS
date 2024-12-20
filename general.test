@@ -1,5 +1,10 @@
 {version 1}
 [clobber_1xn] OXOXO. XOXO
+/ Reserved characters (})([]}[{)( can be used in comments! 
+
+These won't be matched when parsing a previously unclosed tag, because if it tries to match the closing character, the sequence will contain a slash character of the comment
+}
+/
 [integer_game] 5 6 2 3
 [dyadic_rational] (5 2)
 [up_star] (4 *)

@@ -141,7 +141,7 @@ bool is_reserved_char(const char& c)
             (( this is also not valid ))
             
 */
-bool is_enclosed_format(const string& token, const char& open, const char& close)
+bool is_enclosed_format(const string& token, const char& open, const char& close, bool allow_inner)
 {
     if (token.size() < 2)
     {
@@ -153,15 +153,19 @@ bool is_enclosed_format(const string& token, const char& open, const char& close
         return false;
     }
 
-    int N = token.size();
-    for (int i = 1; i < N - 1; i++)
+    if (!allow_inner)
     {
-        const char& c = token[i];
-
-        if (is_reserved_char(c))
+        int N = token.size();
+        for (int i = 1; i < N - 1; i++)
         {
-            return false;
+            const char& c = token[i];
+
+            if (is_reserved_char(c))
+            {
+                return false;
+            }
         }
+
     }
 
     return true;
@@ -190,14 +194,14 @@ bool is_enclosed_format(const string& token, const char& open, const char& close
     (1 5 3)[clobber_1xn]
     which doesn't match
 */
-bool get_enclosed(token_iterator& iterator, string& token, const char& open, const char& close)
+bool get_enclosed(token_iterator& iterator, string& token, const char& open, const char& close, bool allow_inner = false)
 {
     if (token[0] != open)
     {
         return false;
     }
 
-    if (is_enclosed_format(token, open, close))
+    if (is_enclosed_format(token, open, close, allow_inner))
     {
         return true;
     }
@@ -209,7 +213,7 @@ bool get_enclosed(token_iterator& iterator, string& token, const char& open, con
 
         token += " " + new_token;
 
-        if (is_enclosed_format(token, open, close))
+        if (is_enclosed_format(token, open, close, allow_inner))
         {
             return true;
         }
@@ -419,7 +423,7 @@ bool file_parser::parse_chunk(game_case& gc)
         // Match comment
         if (token[0] == '/')
         {
-            bool success = get_enclosed(iterator, token, '/', '/');
+            bool success = get_enclosed(iterator, token, '/', '/', true);
 
             if (!success)
             {
