@@ -75,7 +75,6 @@ private:
 struct game_case
 {
     int to_play;
-    bool expected;
     std::vector<game*> games;
 
     void cleanup_games();

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cassert>
 #include <string>
+#include "cgt_basics.h"
 
 using std::string, std::ifstream, std::cout, std::cin, std::endl, std::stringstream, std::getline, std::istream;
 
@@ -300,6 +301,13 @@ bool parser::parse_chunk(game_case& gc)
 
             strip_enclosing(token);
 
+            // TODO make this cleaner and more general...
+            const char player = token[0];
+            assert(player == 'B' || player == 'W');
+            gc.to_play = char_to_color(player);
+
+            _game_name.clear();
+
             return true;
             //continue;
         }
@@ -332,6 +340,12 @@ bool parser::parse_chunk(game_case& gc)
                 return false;
             }
 
+            if (_game_name.size() == 0)
+            {
+                cout << "Parser error on line " << line_number << ": Found bracketed game token without game title" << endl;
+                return false;
+            }
+
             cout << "Got bracket token: " << token << endl;
             continue;
         }
@@ -351,6 +365,13 @@ bool parser::parse_chunk(game_case& gc)
         }
 
         // Must be game token
+
+        if (_game_name.size() == 0)
+        {
+            cout << "Parser error on line " << line_number << ": Found simple game token without game title" << endl;
+            return false;
+        }
+
         cout << "Got simple token: " << token << endl;
     }
 
