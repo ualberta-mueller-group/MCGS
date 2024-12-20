@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include "cgt_basics.h"
 #include "alternating_move_game.h"
@@ -21,14 +22,19 @@ int main(int argc, char** argv)
 {
 
 
+
     //parse("general.test");
+    //std::stringstream stream(argv[1]);
+
+    parser p = parser::from_file("general.test");
+
+    game_case gc;
+    while (p.parse_chunk(gc))
+    {
+        cout << "GOT CASE" << endl;
+    }
 
 
-    std::ifstream stream("general.test");
-    file_token_iterator iterator(stream);
-
-
-    parse(iterator);
 
     {
         nim pos("1 2 3");

@@ -1,6 +1,7 @@
 #include "parser.h"
 #include <iostream>
 #include <cassert>
+#include <string>
 
 using std::string, std::ifstream, std::cout, std::cin, std::endl, std::stringstream, std::getline, std::istream;
 
@@ -21,7 +22,6 @@ file_token_iterator::file_token_iterator(istream& stream)
 
 file_token_iterator::~file_token_iterator()
 {
-    close_if_file();
 }
 
 string file_token_iterator::get_token()
@@ -84,19 +84,7 @@ void file_token_iterator::next_token(bool init)
             cout << "file_token_iterator operator++ file IO error" << endl;
         }
 
-        close_if_file();
         _token.clear();
-    }
-}
-
-
-void file_token_iterator::close_if_file()
-{
-    ifstream* file = dynamic_cast<ifstream*>(&_stream);
-
-    if (file != nullptr && file->is_open())
-    {
-        file->close();
     }
 }
 
@@ -230,46 +218,90 @@ bool get_enclosed(token_iterator& iterator, string& token, const char& open, con
     return false;
 }
 
-
-
-//////////////////////////////////////////////////////////// main code
-
-//void parse(const string& file_name)
-void parse(token_iterator& iterator)
+void strip_enclosing(string& str)
 {
+    assert(str.size() >= 2);
 
-    //file_token_iterator iterator(file_name);
+    str.pop_back();
+    str = str.substr(1);
+}
 
-    /*
-    while (iterator)
+//////////////////////////////////////////////////////////// game_case
+
+void game_case::cleanup_games()
+{
+    for (game* g : games)
     {
-        cout << iterator.get_token() << endl;
-        ++iterator;
+        delete g;
     }
-    cout << endl;
-    */
+
+    games.clear();
+}
+
+////////////////////////////////////////////////// parser implementation
+
+
+parser::~parser()
+{
+    close_if_file();
+
+    if (_delete_stream && _stream != nullptr)
+    {
+        delete _stream;
+        _delete_stream = false;
+        _stream = nullptr;
+    }
+}
+
+
+bool parser::parse_chunk(game_case& gc)
+{
+    assert(gc.games.size() == 0);
+
+    token_iterator& iterator = _iterator;
 
     while (iterator)
     {
-
         int line_number = iterator.line_number();
         string token = iterator.get_token();
         ++iterator;
+
+        // Check file version
+        if (_do_version_check)
+        {
+            bool success = get_enclosed(iterator, token, '{', '}');
+            if (!success)
+            {
+                cout << "Parser error on line " << line_number << ": Failed to match version string command" << endl;
+                return false;
+            }
+
+            strip_enclosing(token);
+
+            version_check(token);
+            _do_version_check = false;
+
+            continue;
+        }
 
 
         // Match command
         if (token[0] == '{')
         {
-            bool success =  get_enclosed(iterator, token, '{', '}');
+            bool success = get_enclosed(iterator, token, '{', '}');
 
             if (!success)
             {
                 cout << "Parser error on line " << line_number << ": Failed to match command" << endl;
-                return;
+                return false;
             }
 
             cout << "Got command: " << token << endl;
-            continue;
+
+            strip_enclosing(token);
+
+            return true;
+            //continue;
         }
 
         // Match title
@@ -280,10 +312,12 @@ void parse(token_iterator& iterator)
             if (!success)
             {
                 cout << "Parser error on line " << line_number << ": Failed to match game title" << endl;
-                return;
+                return false;
             }
 
             cout << "Got game title: " << token << endl;
+
+            _game_name = token;
             continue;
         }
 
@@ -295,7 +329,7 @@ void parse(token_iterator& iterator)
             if (!success)
             {
                 cout << "Parser error on line " << line_number << ": Failed to match bracket token" << endl;
-                return;
+                return false;
             }
 
             cout << "Got bracket token: " << token << endl;
@@ -321,4 +355,53 @@ void parse(token_iterator& iterator)
     }
 
 
+    return false;
+
+}
+
+
+parser parser::from_stdin()
+{
+    return parser(&std::cin, false, true);
+}
+
+parser parser::from_file(const std::string& file_name)
+{
+    return parser(new ifstream(file_name), true, true);
+}
+
+parser parser::from_string(const std::string& string)
+{
+    return parser(new stringstream(string), true, false);
+}
+
+
+parser::parser(std::istream* stream, bool delete_stream, bool do_version_check)
+    : _delete_stream(delete_stream), _stream(stream), _do_version_check(do_version_check), _iterator(*stream), _game_name()
+{
+
+}
+
+
+void parser::close_if_file()
+{
+    ifstream* file = dynamic_cast<ifstream*>(_stream);
+
+    if (file != nullptr && file->is_open())
+    {
+        file->close();
+    }
+}
+
+void parser::version_check(const string& version_string)
+{
+    const string expected = "version " + std::to_string(PARSER_VERSION);
+
+    if (version_string != expected)
+    {
+        cout << "Parser version mismatch. Expected \"" << expected << "\", got: \"";
+        cout << version_string << "\"" << endl;
+
+        assert(false);
+    }
 }
