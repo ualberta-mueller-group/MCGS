@@ -1,12 +1,8 @@
 #include "parser.h"
-#include <fstream>
 #include <iostream>
 #include <cassert>
-#include <sstream>
-#include <string>
-#include <istream>
 
-using std::string, std::ifstream, std::cout, std::cin, std::endl, std::stringstream, std::getline;
+using std::string, std::ifstream, std::cout, std::cin, std::endl, std::stringstream, std::getline, std::istream;
 
 /*
     (clobber_1xn) <-- game title
@@ -14,64 +10,49 @@ using std::string, std::ifstream, std::cout, std::cin, std::endl, std::stringstr
 
 */
 
-//////////////////////////////////////////////////////////// token_iterator
+//////////////////////////////////////////////////////////// file_token_iterator
 
-
-class token_iterator
+file_token_iterator::file_token_iterator(istream& stream)
+    : _stream(stream), _line_number(0)
 {
-public:
-    virtual ~token_iterator() {}
 
-    virtual operator bool() = 0;
-    virtual void operator++() = 0;
-    virtual string get_token() = 0;
-    virtual int line_number() = 0;
-};
-
-class file_token_iterator : public token_iterator
-{
-public:
-    file_token_iterator(const string& file_name);
-    ~file_token_iterator();
-
-    operator bool() override;
-    void operator++() override;
-    string get_token() override;
-    int line_number() override;
-
-
-private:
-    ifstream _file_stream;
-    stringstream _line_stream;
-    string _token;
-
-    int _line_number;
-
-};
-
-file_token_iterator::file_token_iterator(const string& file_name)
-    : _file_stream(file_name), _line_number(0)
-{
-    if (!_file_stream.is_open())
-    {
-        cout << "Failed to open file: " << file_name << endl;
-        return;
-    }
-
-    ++(*this);
+    next_token(true);
 }
-
 
 file_token_iterator::~file_token_iterator()
 {
-    if (_file_stream.is_open())
-    {
-        _file_stream.close();
-    }
+    close_if_file();
+}
+
+string file_token_iterator::get_token()
+{
+    assert(*this);
+    return _token;
+}
+
+int file_token_iterator::line_number()
+{
+    return _line_number;
+}
+
+file_token_iterator::operator bool()
+{
+    return _token.size() > 0;
 }
 
 void file_token_iterator::operator++()
 {
+    next_token(false);
+}
+
+
+void file_token_iterator::next_token(bool init)
+{
+    if (!init)
+    {
+        assert(*this);
+    }
+
     _token.clear();
 
     // Check if current line has more tokens
@@ -82,7 +63,7 @@ void file_token_iterator::operator++()
 
     // Scroll through the file's lines until we get a token
     string next_line;
-    while (_file_stream && getline(_file_stream, next_line) && !_file_stream.fail())
+    while (_stream && getline(_stream, next_line) && !_stream.fail())
     {
         _line_number++;
         _line_stream = stringstream(next_line);
@@ -93,41 +74,105 @@ void file_token_iterator::operator++()
         }
     }
 
-    if (_file_stream.fail())
+    if (_stream.fail())
     {
-        if (_file_stream.eof())
+        if (_stream.eof())
         {
             //cout << "file_token_iterator successfully reached EOF" << endl;
-        } else if (_file_stream.bad())
+        } else if (_stream.bad())
         {
             cout << "file_token_iterator operator++ file IO error" << endl;
         }
 
-        _file_stream.close();
+        close_if_file();
         _token.clear();
     }
 }
 
 
-file_token_iterator::operator bool()
+void file_token_iterator::close_if_file()
+{
+    ifstream* file = dynamic_cast<ifstream*>(&_stream);
+
+    if (file != nullptr && file->is_open())
+    {
+        file->close();
+    }
+}
+
+//////////////////////////////////////////////////////////// args_token_iterator
+
+args_token_iterator::args_token_iterator(const std::string& args_string)
+    : _line_stream(args_string)
+{ 
+    next_token(true);
+}
+
+args_token_iterator::~args_token_iterator()
+{ }
+
+string args_token_iterator::get_token()
+{
+    assert(*this);
+    return _token;
+}
+
+int args_token_iterator::line_number()
+{
+    assert(*this);
+    return 1;
+}
+
+args_token_iterator::operator bool()
 {
     return _token.size() > 0;
 }
 
-int file_token_iterator::line_number()
+void args_token_iterator::operator++()
 {
-    return _line_number;
+    next_token(false);
 }
 
-string file_token_iterator::get_token()
+void args_token_iterator::next_token(bool init)
 {
-    return _token;
+    if (!init)
+    {
+        assert(*this);
+    }
+
+    _token.clear();
+
+    if (_line_stream)
+    {
+        _line_stream >> _token;
+    }
 }
 
 //////////////////////////////////////////////////////////// utility functions
 
+/*
+    TODO: a lookup table would be much faster
+        this function is slow in general...
 
+    [ ] ( ) { } /
+*/
+bool is_reserved_char(const char& c)
+{
+    if (
+        c == '[' ||
+        c == ']' ||
+        c == '(' ||
+        c == ')' ||
+        c == '{' ||
+        c == '}' ||
+        c == '/'
+        )
+    {
+        return true;
+    }
 
+    return false;
+}
 
 
 bool is_enclosed_format(const string& token, const char& open, const char& close)
@@ -147,8 +192,7 @@ bool is_enclosed_format(const string& token, const char& open, const char& close
     {
         const char& c = token[i];
 
-        // TODO check for reserved characters instead
-        if (c == open || c == close)
+        if (is_reserved_char(c))
         {
             return false;
         }
@@ -190,11 +234,20 @@ bool get_enclosed(token_iterator& iterator, string& token, const char& open, con
 
 //////////////////////////////////////////////////////////// main code
 
-void parse(const string& file_name)
+//void parse(const string& file_name)
+void parse(token_iterator& iterator)
 {
 
-    file_token_iterator iterator(file_name);
+    //file_token_iterator iterator(file_name);
 
+    /*
+    while (iterator)
+    {
+        cout << iterator.get_token() << endl;
+        ++iterator;
+    }
+    cout << endl;
+    */
 
     while (iterator)
     {
@@ -220,9 +273,9 @@ void parse(const string& file_name)
         }
 
         // Match title
-        if (token[0] == '(')
+        if (token[0] == '[')
         {
-            bool success = get_enclosed(iterator, token, '(', ')');
+            bool success = get_enclosed(iterator, token, '[', ']');
 
             if (!success)
             {
@@ -234,18 +287,18 @@ void parse(const string& file_name)
             continue;
         }
 
-        // Match quotes
-        if (token[0] == '"')
+        // Match brackets
+        if (token[0] == '(')
         {
-            bool success = get_enclosed(iterator, token, '"', '"');
+            bool success = get_enclosed(iterator, token, '(', ')');
 
             if (!success)
             {
-                cout << "Parser error on line " << line_number << ": Failed to match quotes" << endl;
+                cout << "Parser error on line " << line_number << ": Failed to match bracket token" << endl;
                 return;
             }
 
-            cout << "Got quotes: " << token << endl;
+            cout << "Got bracket token: " << token << endl;
             continue;
         }
 

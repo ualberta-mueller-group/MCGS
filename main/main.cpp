@@ -2,7 +2,10 @@
 // main.cpp - main loop of MCGS
 //---------------------------------------------------------------------------
 
+#include <cstdio>
+#include <fstream>
 #include <iostream>
+#include <string>
 #include "cgt_basics.h"
 #include "alternating_move_game.h"
 #include "cgt_move.h"
@@ -14,11 +17,18 @@
 
 using std::cout, std::endl;
 
-int main()
+int main(int argc, char** argv)
 {
 
 
-    parse("general.test");
+    //parse("general.test");
+
+
+    std::ifstream stream("general.test");
+    file_token_iterator iterator(stream);
+
+
+    parse(iterator);
 
     {
         nim pos("1 2 3");

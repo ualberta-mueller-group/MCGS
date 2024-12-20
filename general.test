@@ -1,12 +1,12 @@
 {version 5}
-(clobber_1xn) XOOX. XOX
+[clobber_1xn] XOOX. XOX
 / This is a comment /
 OOXXX
-(dyadic_rational) "3 2"
-"9 2"
-(nim) "1 6
+[dyadic_rational] (3 2)
+(9 2)
+[nim] (1 6
 2 7
 3 1
-"
+)
 {B win, W win}
 {jank}
