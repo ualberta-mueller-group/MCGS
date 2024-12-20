@@ -39,6 +39,11 @@ bool is_int(const string& str)
         }
     }
 
+    if (str[0] == '-' && str.size() < 2)
+    {
+        return false;
+    }
+
     return true;
 }
 
