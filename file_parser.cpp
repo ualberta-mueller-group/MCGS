@@ -407,6 +407,9 @@ bool file_parser::parse_game()
 
 bool file_parser::parse_command()
 {
+    // previous cases should have been consumed and reset
+    assert(_case_count == 0);
+
     /*
         The version command is handled elsewhere right now, so the only command
             we have is to run games
@@ -438,11 +441,11 @@ bool file_parser::parse_command()
             return false;
         }
 
-        const string& str = chunks[i];
+        const string& chunk = chunks[i];
 
         for (const string& allowed : allowed_words)
         {
-            if (str == allowed)
+            if (chunk == allowed)
             {
                 return true;
             }
@@ -459,7 +462,8 @@ bool file_parser::parse_command()
         // player
         if (chunk_is_allowed(chunk_idx, {"B", "W"}))
         {
-            const char c = chunks[chunk_idx++][0];
+            const char c = chunks[chunk_idx][0];
+            chunk_idx++;
             to_play = char_to_color(c);
         } else
         {
@@ -469,15 +473,16 @@ bool file_parser::parse_command()
         // optional outcome
         if (chunk_is_allowed(chunk_idx, {"win", "loss"}))
         {
-            const string& chunk = chunks[chunk_idx++];
+            const string& chunk = chunks[chunk_idx];
+            chunk_idx++;
             expected = (chunk == "win") ? TEST_OUTCOME_WIN : TEST_OUTCOME_LOSS;
         }
 
         return true;
     };
 
-    assert(_case_count == 0);
 
+    // max 2 cases (run command allows 1 or 2 runs)
     for (int i = 0; i < 2; i++)
     {
         if (!(chunk_idx < chunks.size()))
@@ -551,9 +556,11 @@ bool file_parser::parse_chunk(game_case& gc)
         return true;
     }
 
-    // No remaining cases. No cleanup necessary; all cases were moved with std::move()
+    // No remaining cases
     _next_case_idx = 0;
     _case_count = 0;
+    _cases[0].cleanup_games();
+    _cases[1].cleanup_games();
 
 
     token_iterator& iterator = _iterator;

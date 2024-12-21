@@ -16,6 +16,10 @@
 
 using std::cout, std::endl, std::string;
 
+/*
+
+*/
+
 int main(int argc, char** argv)
 {
     // TODO clean this all up and move it somewhere else. Store options in some other file
