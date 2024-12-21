@@ -1,15 +1,15 @@
 {version 1}
 
-/ This is a comment /
+/ This is a comment \
 
 / Comments and other things can
 be on
  multiple
  lines
 
-/
+\
 
-/ This file is valid input that can be run by MCGS /
+/ This file is valid input that can be run by MCGS \
 
 / The basic file features:
 
@@ -47,7 +47,7 @@ be on
             three more nim games
         Two times, once for black, once for white. And then it runs a sum of 4 nim games, for white
         
-/
+\
 
 [clobber_1xn] XOXO OXX
 [integer_game] 4
@@ -55,7 +55,7 @@ be on
 [clobber_1xn]
 XOXOO...XO
 [dyadic_rational] (3 4) (7 8)
-/ Comments are allowed here too! /
+/ Comments are allowed here too! \
 [nim] 
     (1 5 3)
 (2 3)
@@ -63,7 +63,7 @@ XOXOO...XO
 [nim] 1 4 2
 {B, W}
 
-/ The game list is cleared by run commands like the one above /
+/ The game list is cleared by run commands like the one above \
 [nim]
 (1 2 3) 4 5 (6 7)
 {W}
@@ -93,7 +93,7 @@ XOXOO...XO
     can only be used for their intended purposes, OR inside of comments. A parser error
     is printed along with the line number, and the program stops
 
-    Reserved characters are: "slash" { } ( ) [ ] 
+    Reserved characters are: "/" "\" { } ( ) [ ] 
 
     Also not allowed: [[elephants]]
 
@@ -140,18 +140,18 @@ XOXOO...XO
     the line of the initial opening brace
 
     
-    Slashes can be used in comments if followed by another character: /4
+    "/" and "\" can be used in comments if followed by another character: /4
     Odd inconsistency
-/
+\
 
 
 
 
-/ ============================== TODO thoughts below ============================== /
+/ ============================== TODO thoughts below ============================== \
 
 
 / TODO:
-    Comments should maybe use double slash or match "slash *" "* slash".
+    Comments should maybe use double slash or match "/*" "*/".
     This makes slashes useable within comments, and makes comments boundaries clearer
     It's trivial to pick a different opening and closing character, but longer strings require a slight change
 
@@ -175,4 +175,4 @@ XOXOO...XO
     can be legal where unambiguous. If first token fails the game_token_parser, keep combining tokens? Fail "1", then try "1 2"?
     This could be allowed if and only if the entire combined tokens of a section form a single successful game parse.
     Probably a bad idea as it gets confusing
-/
+\

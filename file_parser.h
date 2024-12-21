@@ -107,9 +107,9 @@ public:
 
     bool parse_chunk(game_case& gc);
 
-    static file_parser from_stdin();
-    static file_parser from_file(const std::string& file_name);
-    static file_parser from_string(const std::string& string);
+    static file_parser* from_stdin();
+    static file_parser* from_file(const std::string& file_name);
+    static file_parser* from_string(const std::string& string);
 
     static void init_game_parsers();
 

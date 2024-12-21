@@ -5,7 +5,7 @@
 [clobber_1xn]
 XOXOO...XO
 [dyadic_rational] (3 4) (7 8)
-/ Comments are allowed here too! /
+/ Comments are allowed here too! \
 [nim] 
     (1 5 3)
 (2 3)
@@ -13,7 +13,7 @@ XOXOO...XO
 [nim] 1 4 2
 {B, W}
 
-/ The game list is cleared by run commands like the one above /
+/ The game list is cleared by run commands like the one above \
 [nim]
 (1 2 3) 4 5 (6 7)
 {W}

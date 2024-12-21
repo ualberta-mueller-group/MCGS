@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 #include "cgt_basics.h"
 #include "alternating_move_game.h"
 #include "cgt_move.h"
@@ -16,38 +17,113 @@
 #include "elephants.h"
 #include "file_parser.h"
 
-using std::cout, std::endl;
+using std::cout, std::endl, std::string;
+
+/*
+    ./MCGS --file "someFile.test" <-- run parser on file
+    ./MCGS --stdin <-- run parser on stdin
+    ./MCGS <-- run parser on args
+
+    ./MCGS -h --help <-- print help, exit
+*/
 
 int main(int argc, char** argv)
 {
-
+    // This should run first. TODO: maybe we need a general init() function?
     file_parser::init_game_parsers();
 
+    // Parse args
+    vector<string> args;
+    for (int i = 0; i < argc; i++)
+    {
+        args.push_back(string(argv[i]));
+    }
+
+    file_parser* parser = nullptr;
+
+    int arg_idx = 0;
+    for (arg_idx = 1; arg_idx < argc; arg_idx++) // skip "./MCGS"
+    {
+        const string& arg = args[arg_idx];
+        const string& arg_next = (arg_idx + 1) < argc ? args[arg_idx + 1] : "";
+
+        if (arg == "--stdin" && parser == nullptr)
+        {
+            cout << "Reading game input from stdin" << endl;
+            parser = file_parser::from_stdin();
+            continue;
+        }
+
+        if (arg == "--file")
+        {
+            arg_idx++; // consume the file name
+
+            if (arg_next.size() == 0)
+            {
+                cout << "Error: got --file but no file path" << endl;
+                return -1;
+            }
+
+            if (parser == nullptr)
+            {
+            cout << "Reading game input from file: \"" << arg_next << "\"" << endl;
+                parser = file_parser::from_file(arg_next);
+            }
+
+            continue;
+        }
+
+        if (arg == "-h" || arg == "--help")
+        {
+            cout << "TODO: print useful help message" << endl;
+            continue;
+        }
+
+        if (arg.size() > 0 && arg.front() != '-')
+        {
+            // the rest of args is input to the parser
+
+            // for now it should be quoted, so there should only be one arg at this point...
+            assert(arg_idx == argc - 1);
+
+            break;
+        }
+
+        cout << "Error: unrecognized flag (TODO print help message)" << endl;
+        return -1;
+    }
+
+    if (parser == nullptr)
+    {
+        cout << "Reading game input from args" << endl;
+        const string& input = arg_idx < argc ? args[arg_idx] : "";
+
+        parser = file_parser::from_string(input);
+    }
 
 
     //parse("general.test");
     //std::stringstream stream(argv[1]);
 
-    file_parser p = file_parser::from_file("simple.test");
-
-    game_case gc;
-    while (p.parse_chunk(gc))
     {
-        /*
-        cout << "GOT CASE" << endl;
-
-        cout << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << endl;
-        for (game* g : gc.games)
+        game_case gc;
+        while (parser->parse_chunk(gc))
         {
-            cout << *g << endl;
+
+            cout << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << endl;
+            cout << "TEST CASE" << endl;
+            cout << "Player: " << gc.to_play << endl;
+            cout << "Expected outcome: " << gc.expected << endl;
+
+            for (game* g : gc.games)
+            {
+                cout << *g << endl;
+            }
+            cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
+
+            gc.cleanup_games();
         }
-        cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
-        */
-
-        gc.cleanup_games();
     }
-
-
 
     {
         nim pos("1 2 3");

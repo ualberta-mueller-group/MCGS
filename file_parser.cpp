@@ -343,7 +343,7 @@ bool file_parser::match(const char& open, const char& close, const string& match
         return false;
     }
 
-    bool success = get_enclosed(open, close, false);
+    bool success = get_enclosed(open, close, allow_inner);
 
     if (success)
     {
@@ -610,7 +610,7 @@ bool file_parser::parse_chunk(game_case& gc)
         }
 
         // Match comment
-        if (match('/', '/', "comment", true))
+        if (match('/', '\\', "comment", true))
         {
             continue;
         }
@@ -624,19 +624,19 @@ bool file_parser::parse_chunk(game_case& gc)
     return false;
 }
 
-file_parser file_parser::from_stdin()
+file_parser* file_parser::from_stdin()
 {
-    return file_parser(&cin, false, true);
+    return new file_parser(&cin, false, true);
 }
 
-file_parser file_parser::from_file(const string& file_name)
+file_parser* file_parser::from_file(const string& file_name)
 {
-    return file_parser(new ifstream(file_name), true, true);
+    return new file_parser(new ifstream(file_name), true, true);
 }
 
-file_parser file_parser::from_string(const string& string)
+file_parser* file_parser::from_string(const string& string)
 {
-    return file_parser(new stringstream(string), true, false);
+    return new file_parser(new stringstream(string), true, false);
 }
 
 void file_parser::init_game_parsers()
