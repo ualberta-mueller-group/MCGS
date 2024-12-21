@@ -16,18 +16,14 @@
 
 using std::cout, std::endl, std::string;
 
-/*
-    ./MCGS --file "someFile.test" <-- run parser on file
-    ./MCGS --stdin <-- run parser on stdin
-    ./MCGS <-- run parser on args
-
-    ./MCGS -h --help <-- print help, exit
-*/
-
 int main(int argc, char** argv)
 {
+    // TODO clean this all up and move it somewhere else. Store options in some other file
+
     // This should run first. TODO: maybe we need a general init() function?
     file_parser::init_game_parsers();
+
+    bool skip_running = false;
 
     // Parse args
     vector<string> args;
@@ -76,6 +72,12 @@ int main(int argc, char** argv)
             continue;
         }
 
+        if (arg == "--skip-running")
+        {
+            skip_running = true;
+            continue;
+        }
+
         if (arg.size() > 0 && arg.front() != '-')
         {
             // the rest of args is input to the parser
@@ -116,10 +118,16 @@ int main(int argc, char** argv)
                 sum.add(g);
             }
 
-            bool result = sum.solve();
 
-            cout << "Result: " << result << endl;
-            cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
+            if (skip_running)
+            {
+                cout << "Not running games..." << endl;
+            } else
+            {
+                bool result = sum.solve();
+                cout << "Result: " << result << endl;
+                cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
+            }
 
             gc.cleanup_games();
         }
