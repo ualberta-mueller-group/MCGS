@@ -579,6 +579,8 @@ bool file_parser::parse_chunk(game_case& gc)
             {
                 print_error_start();
                 cout << "Failed to match version string command" << endl;
+
+                exit(-1);
                 return false;
             }
 
