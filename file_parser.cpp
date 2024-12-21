@@ -172,59 +172,6 @@ bool is_enclosed_format(const string& token, const char& open, const char& close
     return true;
 }
 
-/*
-   Expand given token using the token iterator until it is formatted according
-       to is_enclosed_format(). Return false if match not found
-
-    i.e. given open = '(' and close = ')', and the input:
-
-    (1 5 3)
-
-    the token expands like this:
-    (1
-    (1 5
-    (1 5 3)
-    at which point it is accepted
-
-    The input:
-    (1 5 3)[clobber_1xn]
-
-    is invalid and will be rejected because the token will expand like: 
-    (1
-    (1 5
-    (1 5 3)[clobber_1xn]
-    which doesn't match
-*/
-bool file_parser::get_enclosed(const char& open, const char& close, bool allow_inner)
-{
-    token_iterator& iterator = _iterator;
-
-    if (_token[0] != open)
-    {
-        return false;
-    }
-
-    if (is_enclosed_format(_token, open, close, allow_inner))
-    {
-        return true;
-    }
-
-    while (iterator)
-    {
-        string new_token = iterator.get_token();
-        ++iterator;
-
-        _token += " " + new_token;
-
-        if (is_enclosed_format(_token, open, close, allow_inner))
-        {
-            return true;
-        }
-
-    }
-
-    return false;
-}
 
 // remove first and last characters
 void strip_enclosing(string& str)
@@ -293,20 +240,59 @@ void file_parser::add_game_parser(const string& game_title, game_token_parser* g
     _game_map.insert({game_title, shared_ptr<game_token_parser>(gp)});
 }
 
-file_parser::~file_parser()
+/*
+   Expand given token using the token iterator until it is formatted according
+       to is_enclosed_format(). Return false if match not found
+
+    i.e. given open = '(' and close = ')', and the input:
+
+    (1 5 3)
+
+    the token expands like this:
+    (1
+    (1 5
+    (1 5 3)
+    at which point it is accepted
+
+    The input:
+    (1 5 3)[clobber_1xn]
+
+    is invalid and will be rejected because the token will expand like: 
+    (1
+    (1 5
+    (1 5 3)[clobber_1xn]
+    which doesn't match
+*/
+bool file_parser::get_enclosed(const char& open, const char& close, bool allow_inner)
 {
-    close_if_file();
+    token_iterator& iterator = _iterator;
 
-    if (_delete_stream && _stream != nullptr)
+    if (_token[0] != open)
     {
-        delete _stream;
-        _delete_stream = false;
-        _stream = nullptr;
+        return false;
     }
+
+    if (is_enclosed_format(_token, open, close, allow_inner))
+    {
+        return true;
+    }
+
+    while (iterator)
+    {
+        string new_token = iterator.get_token();
+        ++iterator;
+
+        _token += " " + new_token;
+
+        if (is_enclosed_format(_token, open, close, allow_inner))
+        {
+            return true;
+        }
+
+    }
+
+    return false;
 }
-
-////////////////////////////////////////////////// more helper functions
-
 
 bool file_parser::match(const char& open, const char& close, const string& match_name, bool allow_inner)
 {
@@ -333,11 +319,6 @@ bool file_parser::match(const char& open, const char& close, const string& match
     exit(-1);
 
     return false;
-}
-
-void file_parser::print_error_start()
-{
-    cout << "Parser error on line " << _line_number << ": ";
 }
 
 bool file_parser::parse_game(game_case& gc)
@@ -381,6 +362,29 @@ bool file_parser::parse_game(game_case& gc)
 
     return true;
 }
+
+void file_parser::print_error_start()
+{
+    cout << "Parser error on line " << _line_number << ": ";
+}
+
+file_parser::~file_parser()
+{
+    close_if_file();
+
+    if (_delete_stream && _stream != nullptr)
+    {
+        delete _stream;
+        _delete_stream = false;
+        _stream = nullptr;
+    }
+}
+
+////////////////////////////////////////////////// more helper functions
+
+
+
+
 
 
 //////////////////////////////////////////////////

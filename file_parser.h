@@ -69,6 +69,12 @@ private:
     void version_check(const std::string& version_string);
     static void add_game_parser(const std::string& game_title, game_token_parser* gp);
 
+    bool get_enclosed(const char& open, const char& close, bool allow_inner);
+    bool match(const char& open, const char& close, const std::string& match_name, bool allow_inner);
+    bool parse_game(game_case& gc);
+    void print_error_start();
+
+
 public:
     // Prevent accidental memory bugs
     // Can change these if _stream is a shared_ptr with a custom deleter
@@ -87,11 +93,6 @@ public:
     static void init_game_parsers();
 
 private:
-
-    bool get_enclosed(const char& open, const char& close, bool allow_inner);
-    bool match(const char& open, const char& close, const std::string& match_name, bool allow_inner);
-    bool parse_game(game_case& gc);
-    void print_error_start();
 
 
     static std::unordered_map<std::string, std::shared_ptr<game_token_parser>> _game_map;
