@@ -52,9 +52,9 @@ private:
 
 enum test_outcome
 {
-    TEST_OUTCOME_UNKNOWN = 0,
+    TEST_OUTCOME_UNKNOWN = 3,
     TEST_OUTCOME_WIN = 1,
-    TEST_OUTCOME_LOSS = -1,
+    TEST_OUTCOME_LOSS = 0,
 };
 
 struct game_case

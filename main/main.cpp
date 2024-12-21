@@ -3,19 +3,16 @@
 //---------------------------------------------------------------------------
 
 #include <cstdio>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
-#include <vector>
 #include "cgt_basics.h"
 #include "alternating_move_game.h"
-#include "cgt_move.h"
 #include "clobber_1xn.h"
 #include "nim.h"
 #include "nogo_1xn.h"
 #include "elephants.h"
 #include "file_parser.h"
+#include "sumgame.h"
 
 using std::cout, std::endl, std::string;
 
@@ -101,10 +98,6 @@ int main(int argc, char** argv)
         parser = file_parser::from_string(input);
     }
 
-
-    //parse("general.test");
-    //std::stringstream stream(argv[1]);
-
     {
         game_case gc;
         while (parser->parse_chunk(gc))
@@ -115,10 +108,17 @@ int main(int argc, char** argv)
             cout << "Player: " << gc.to_play << endl;
             cout << "Expected outcome: " << gc.expected << endl;
 
+            sumgame sum(gc.to_play);
+
             for (game* g : gc.games)
             {
                 cout << *g << endl;
+                sum.add(g);
             }
+
+            bool result = sum.solve();
+
+            cout << "Result: " << result << endl;
             cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
 
             gc.cleanup_games();

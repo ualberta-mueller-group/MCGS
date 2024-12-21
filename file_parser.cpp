@@ -631,7 +631,14 @@ file_parser* file_parser::from_stdin()
 
 file_parser* file_parser::from_file(const string& file_name)
 {
-    return new file_parser(new ifstream(file_name), true, true);
+    ifstream* stream = new ifstream(file_name);
+    if (!stream->is_open())
+    {
+        cout << "file_parser failed to open file \"" << file_name << "\"" << endl;
+        exit(-1);
+    }
+
+    return new file_parser(stream, true, true);
 }
 
 file_parser* file_parser::from_string(const string& string)

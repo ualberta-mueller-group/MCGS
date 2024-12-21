@@ -31,7 +31,7 @@ public:
     void replace(int p, int color);
     vector<int> inverse_board() const;
     std::string board_as_string() const;
-    void print(std::ostream& str) const { str << board_as_string();}
+    //void print(std::ostream& str) const { str << board_as_string();}
 private:
     vector<int> _board; // todo try char as well.
 };
