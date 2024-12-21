@@ -130,9 +130,8 @@ int main(int argc, char** argv)
             {
                 bool result = sum.solve();
                 cout << "Result: " << result << endl;
-                cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
             }
-
+            cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
             gc.cleanup_games();
         }
     }
