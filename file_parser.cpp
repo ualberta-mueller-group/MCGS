@@ -562,6 +562,8 @@ bool file_parser::parse_chunk(game_case& gc)
     _cases[0].cleanup_games();
     _cases[1].cleanup_games();
 
+    assert(_cases[0].games.size() == 0);
+    assert(_cases[1].games.size() == 0);
 
     token_iterator& iterator = _iterator;
 
