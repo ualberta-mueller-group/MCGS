@@ -5,9 +5,11 @@
 #include <string>
 #include <istream>
 #include <fstream>
+#include <utility>
 #include "cgt_basics.h"
 #include "all_game_headers.h"
 #include "game_token_parsers.h"
+#include "utilities.h"
 
 // TODO: Version command should be optional, BUT STILL CHECKED, when reading from args
 
@@ -184,6 +186,37 @@ void strip_enclosing(string& str)
 
 //////////////////////////////////////////////////////////// game_case
 
+
+// move assignment
+
+game_case::~game_case()
+{
+    assert(games.size() == 0);
+}
+
+void game_case::_move_impl(game_case&& other) noexcept
+{
+    assert(games.size() == 0);
+
+    to_play = std::move(other.to_play);
+    expected = std::move(other.expected);
+    games = std::move(other.games);
+
+    other.release_games();
+}
+
+game_case::game_case(game_case&& other) noexcept
+{
+    _move_impl(std::forward<game_case>(other));
+}
+
+game_case& game_case::operator=(game_case&& other) noexcept
+{
+    _move_impl(std::forward<game_case>(other));
+
+    return *this;
+}
+
 void game_case::cleanup_games()
 {
     for (game* g : games)
@@ -194,12 +227,19 @@ void game_case::cleanup_games()
     games.clear();
 }
 
+
+void game_case::release_games()
+{
+    games.clear();
+}
+
 ////////////////////////////////////////////////// parser implementation
 
 // Private constructor -- use static functions instead
 file_parser::file_parser(istream* stream, bool delete_stream, bool do_version_check)
-    : _delete_stream(delete_stream), _stream(stream), _do_version_check(do_version_check), _iterator(*stream), _section_title(), _line_number(0)
-{ }
+    : _delete_stream(delete_stream), _stream(stream), _do_version_check(do_version_check), _iterator(*stream), _section_title(), _line_number(0), _token(""), _case_count(0), _next_case_idx(0)
+{ 
+}
 
 void file_parser::close_if_file()
 {
@@ -321,7 +361,7 @@ bool file_parser::match(const char& open, const char& close, const string& match
     return false;
 }
 
-bool file_parser::parse_game(game_case& gc)
+bool file_parser::parse_game()
 {
     if (_section_title.size() == 0)
     {
@@ -346,9 +386,10 @@ bool file_parser::parse_game(game_case& gc)
 
     game_token_parser* gp = (it->second).get();
 
-    game* g = gp->parse_game(_token);
+    game* g1 = gp->parse_game(_token);
+    game* g2 = gp->parse_game(_token);
 
-    if (g == nullptr)
+    if (g1 == nullptr || g2 == nullptr)
     {
         print_error_start();
         cout << "game parser for section \"" << _section_title;
@@ -358,7 +399,116 @@ bool file_parser::parse_game(game_case& gc)
         return false;
     }
 
-    gc.games.push_back(g);
+    _cases[0].games.push_back(g1);
+    _cases[1].games.push_back(g2);
+
+    return true;
+}
+
+bool file_parser::parse_command()
+{
+    /*
+        The version command is handled elsewhere right now, so the only command
+            we have is to run games
+    */
+
+    cout << "PARSING COMMAND " << _token << endl;
+
+    // remove commas, then split by whitespace
+    {
+        int idx = 0;
+        while ((idx = _token.find(',')) != -1)
+        {
+            _token[idx] = ' ';
+        }
+    }
+
+    vector<string> chunks = split_string(_token);
+    int chunk_idx = 0;
+
+    int to_play = EMPTY;
+    test_outcome expected = TEST_OUTCOME_UNKNOWN;
+
+
+    // check if chunks[i] is some allowed word
+    auto chunk_is_allowed = [&chunks](int i, const vector<string>& allowed_words) -> bool
+    {
+        if (i < 0 || !(i < chunks.size()))
+        {
+            return false;
+        }
+
+        const string& str = chunks[i];
+
+        for (const string& allowed : allowed_words)
+        {
+            if (str == allowed)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    auto get_case = [&]() -> bool
+    {
+        to_play = EMPTY;
+        expected = TEST_OUTCOME_UNKNOWN;
+
+        // player
+        if (chunk_is_allowed(chunk_idx, {"B", "W"}))
+        {
+            const char c = chunks[chunk_idx++][0];
+            to_play = char_to_color(c);
+        } else
+        {
+            return false;
+        }
+
+        // optional outcome
+        if (chunk_is_allowed(chunk_idx, {"win", "loss"}))
+        {
+            const string& chunk = chunks[chunk_idx++];
+            expected = (chunk == "win") ? TEST_OUTCOME_WIN : TEST_OUTCOME_LOSS;
+        }
+
+        return true;
+    };
+
+    assert(_case_count == 0);
+
+    for (int i = 0; i < 2; i++)
+    {
+        if (!(chunk_idx < chunks.size()))
+        {
+            break;
+        }
+
+        if (!get_case())
+        {
+            print_error_start();
+            cout << "failed to parse case command" << endl;
+
+            exit(-1);
+            return false;
+        }
+
+        game_case& gc = _cases[_case_count];
+        gc.to_play = to_play;
+        gc.expected = expected;
+
+        _case_count++;
+    }
+
+    if (chunk_idx < chunks.size())
+    {
+        print_error_start();
+        cout << "failed to parse case command" << endl;
+
+        exit(-1);
+        return false;
+    }
 
     return true;
 }
@@ -383,10 +533,6 @@ file_parser::~file_parser()
 ////////////////////////////////////////////////// more helper functions
 
 
-
-
-
-
 //////////////////////////////////////////////////
 
 bool file_parser::parse_chunk(game_case& gc)
@@ -396,6 +542,19 @@ bool file_parser::parse_chunk(game_case& gc)
         cout << "Parser error: game_case not empty at start of file_parser::parse_chunk()" << endl;
         exit(-1);
     }
+
+    // Check if there's already a case from the previous parse
+    if (_next_case_idx < _case_count)
+    {
+        gc = std::move(_cases[_next_case_idx]);
+        _next_case_idx++;
+        return true;
+    }
+
+    // No remaining cases. No cleanup necessary; all cases were moved with std::move()
+    _next_case_idx = 0;
+    _case_count = 0;
+
 
     token_iterator& iterator = _iterator;
 
@@ -428,15 +587,10 @@ bool file_parser::parse_chunk(game_case& gc)
         // Match command
         if (match('{', '}', "command", false))
         {
-            const char player = _token[0];
-            if (player != 'B' && player != 'W')
-            {
-                print_error_start();
-                cout << "Expected player B or W in command" << endl;
-                exit(-1);
-            }
+            parse_command();
 
-            gc.to_play = char_to_color(player);
+            gc = std::move(_cases[_next_case_idx]);
+            _next_case_idx++;
 
             return true;
         }
@@ -451,7 +605,7 @@ bool file_parser::parse_chunk(game_case& gc)
         // Match brackets
         if (match('(', ')', "bracket token", false))
         {
-            parse_game(gc);
+            parse_game();
             continue;
         }
 
@@ -463,7 +617,7 @@ bool file_parser::parse_chunk(game_case& gc)
 
         // Must be game token
         cout << "Got simple token: " << _token << endl;
-        parse_game(gc);
+        parse_game();
 
     }
 

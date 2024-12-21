@@ -33,7 +33,17 @@ int main(int argc, char** argv)
     game_case gc;
     while (p.parse_chunk(gc))
     {
+        /*
         cout << "GOT CASE" << endl;
+
+        cout << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << endl;
+        for (game* g : gc.games)
+        {
+            cout << *g << endl;
+        }
+        cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
+        */
+
         gc.cleanup_games();
     }
 

@@ -50,12 +50,32 @@ private:
 
 ////////////////////////////////////////////////// game_case
 
+enum test_outcome
+{
+    TEST_OUTCOME_UNKNOWN = 0,
+    TEST_OUTCOME_WIN = 1,
+    TEST_OUTCOME_LOSS = -1,
+};
+
 struct game_case
 {
     int to_play;
+    int expected;
     std::vector<game*> games;
 
+    game_case() { }
+    ~game_case();
+
+    // move constructor and move assignment operator
+    game_case(game_case&& other) noexcept;
+    game_case& operator=(game_case&& other) noexcept;
+
     void cleanup_games();
+    void release_games();
+
+
+private:
+    void _move_impl(game_case&& other) noexcept;
 };
 
 ////////////////////////////////////////////////// file_parser
@@ -71,7 +91,8 @@ private:
 
     bool get_enclosed(const char& open, const char& close, bool allow_inner);
     bool match(const char& open, const char& close, const std::string& match_name, bool allow_inner);
-    bool parse_game(game_case& gc);
+    bool parse_game();
+    bool parse_command();
     void print_error_start();
 
 
@@ -107,6 +128,10 @@ private:
 
     int _line_number;
     std::string _token;
+
+    game_case _cases[2];
+    int _case_count;
+    int _next_case_idx;
 };
 
 
