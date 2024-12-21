@@ -88,6 +88,12 @@ public:
 
 private:
 
+    bool get_enclosed(const char& open, const char& close, bool allow_inner);
+    bool match(const char& open, const char& close, const std::string& match_name, bool allow_inner);
+    bool parse_game(game_case& gc);
+    void print_error_start();
+
+
     static std::unordered_map<std::string, std::shared_ptr<game_token_parser>> _game_map;
     bool _delete_stream;
     std::istream* _stream;
@@ -96,7 +102,10 @@ private:
     
     file_token_iterator _iterator;
 
-    std::string _game_name;
+    std::string _section_title;
+
+    int _line_number;
+    std::string _token;
 };
 
 

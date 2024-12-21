@@ -28,12 +28,13 @@ int main(int argc, char** argv)
     //parse("general.test");
     //std::stringstream stream(argv[1]);
 
-    file_parser p = file_parser::from_file("general.test");
+    file_parser p = file_parser::from_file("simple.test");
 
     game_case gc;
     while (p.parse_chunk(gc))
     {
         cout << "GOT CASE" << endl;
+        gc.cleanup_games();
     }
 
 

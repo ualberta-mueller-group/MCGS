@@ -1,4 +1,5 @@
 #include "file_parser.h"
+#include <cstdlib>
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -194,14 +195,16 @@ bool is_enclosed_format(const string& token, const char& open, const char& close
     (1 5 3)[clobber_1xn]
     which doesn't match
 */
-bool get_enclosed(token_iterator& iterator, string& token, const char& open, const char& close, bool allow_inner = false)
+bool file_parser::get_enclosed(const char& open, const char& close, bool allow_inner)
 {
-    if (token[0] != open)
+    token_iterator& iterator = _iterator;
+
+    if (_token[0] != open)
     {
         return false;
     }
 
-    if (is_enclosed_format(token, open, close, allow_inner))
+    if (is_enclosed_format(_token, open, close, allow_inner))
     {
         return true;
     }
@@ -211,9 +214,9 @@ bool get_enclosed(token_iterator& iterator, string& token, const char& open, con
         string new_token = iterator.get_token();
         ++iterator;
 
-        token += " " + new_token;
+        _token += " " + new_token;
 
-        if (is_enclosed_format(token, open, close, allow_inner))
+        if (is_enclosed_format(_token, open, close, allow_inner))
         {
             return true;
         }
@@ -248,7 +251,7 @@ void game_case::cleanup_games()
 
 // Private constructor -- use static functions instead
 file_parser::file_parser(istream* stream, bool delete_stream, bool do_version_check)
-    : _delete_stream(delete_stream), _stream(stream), _do_version_check(do_version_check), _iterator(*stream), _game_name()
+    : _delete_stream(delete_stream), _stream(stream), _do_version_check(do_version_check), _iterator(*stream), _section_title(), _line_number(0)
 { }
 
 void file_parser::close_if_file()
@@ -302,31 +305,116 @@ file_parser::~file_parser()
     }
 }
 
+////////////////////////////////////////////////// more helper functions
+
+
+bool file_parser::match(const char& open, const char& close, const string& match_name, bool allow_inner)
+{
+    assert(_token.size() > 0);
+
+    if (_token[0] != open)
+    {
+        return false;
+    }
+
+    bool success = get_enclosed(open, close, false);
+
+    if (success)
+    {
+        cout << "Got " << match_name << ": " << _token << endl;
+        strip_enclosing(_token);
+        return true;
+    }
+
+    print_error_start();
+    cout << ": failed to match " << match_name << endl;
+
+    assert(false);
+    exit(-1);
+
+    return false;
+}
+
+void file_parser::print_error_start()
+{
+    cout << "Parser error on line " << _line_number << ": ";
+}
+
+bool file_parser::parse_game(game_case& gc)
+{
+    if (_section_title.size() == 0)
+    {
+        print_error_start();
+        cout << "game token found but section title missing" << endl;
+
+        exit(-1);
+        return false;
+    }
+
+    auto it = _game_map.find(_section_title);
+
+    if (it == _game_map.end())
+    {
+        print_error_start();
+        cout << "game token found, but game parser doesn't exist for section \"";
+        cout << _section_title << "\"" << endl;
+
+        exit(-1);
+        return false;
+    }
+
+    game_token_parser* gp = (it->second).get();
+
+    game* g = gp->parse_game(_token);
+
+    if (g == nullptr)
+    {
+        print_error_start();
+        cout << "game parser for section \"" << _section_title;
+        cout << "\" failed to parse game token: \"" << _token << "\"" << endl;
+
+        exit(-1);
+        return false;
+    }
+
+    gc.games.push_back(g);
+
+    return true;
+}
+
+
+//////////////////////////////////////////////////
+
 bool file_parser::parse_chunk(game_case& gc)
 {
-    assert(gc.games.size() == 0);
+    if (gc.games.size() != 0)
+    {
+        cout << "Parser error: game_case not empty at start of file_parser::parse_chunk()" << endl;
+        exit(-1);
+    }
 
     token_iterator& iterator = _iterator;
 
     while (iterator)
     {
-        int line_number = iterator.line_number();
-        string token = iterator.get_token();
+        _line_number = iterator.line_number();
+        _token = iterator.get_token();
         ++iterator;
 
         // Check file version
         if (_do_version_check)
         {
-            bool success = get_enclosed(iterator, token, '{', '}');
+            bool success = get_enclosed('{', '}', false);
             if (!success)
             {
-                cout << "Parser error on line " << line_number << ": Failed to match version string command" << endl;
+                print_error_start();
+                cout << "Failed to match version string command" << endl;
                 return false;
             }
 
-            strip_enclosing(token);
+            strip_enclosing(_token);
 
-            version_check(token);
+            version_check(_token);
             _do_version_check = false;
 
             continue;
@@ -334,133 +422,45 @@ bool file_parser::parse_chunk(game_case& gc)
 
 
         // Match command
-        if (token[0] == '{')
+        if (match('{', '}', "command", false))
         {
-            bool success = get_enclosed(iterator, token, '{', '}');
-
-            if (!success)
+            const char player = _token[0];
+            if (player != 'B' && player != 'W')
             {
-                cout << "Parser error on line " << line_number << ": Failed to match command" << endl;
-                return false;
+                print_error_start();
+                cout << "Expected player B or W in command" << endl;
+                exit(-1);
             }
 
-            cout << "Got command: " << token << endl;
-
-            strip_enclosing(token);
-
-            // TODO make this cleaner and more general...
-            const char player = token[0];
-            assert(player == 'B' || player == 'W');
             gc.to_play = char_to_color(player);
 
-            _game_name.clear();
-
             return true;
-            //continue;
         }
 
         // Match title
-        if (token[0] == '[')
+        if (match('[', ']', "section title", false))
         {
-            bool success = get_enclosed(iterator, token, '[', ']');
-
-            if (!success)
-            {
-                cout << "Parser error on line " << line_number << ": Failed to match game title" << endl;
-                return false;
-            }
-
-            strip_enclosing(token);
-            cout << "Got game title: " << token << endl;
-
-            _game_name = token;
+            _section_title = _token;
             continue;
         }
 
         // Match brackets
-        if (token[0] == '(')
+        if (match('(', ')', "bracket token", false))
         {
-            bool success = get_enclosed(iterator, token, '(', ')');
-
-            if (!success)
-            {
-                cout << "Parser error on line " << line_number << ": Failed to match bracket token" << endl;
-                return false;
-            }
-
-            if (_game_name.size() == 0)
-            {
-                cout << "Parser error on line " << line_number << ": Found bracketed game token without game title" << endl;
-                return false;
-            }
-
-            auto it = _game_map.find(_game_name);
-
-            if (it == _game_map.end())
-            {
-                cout << "Parser error on line " << line_number << ": Couldn't find game parser for game \"" << _game_name << "\"" << endl;
-                return false;
-            }
-
-            cout << "Got bracket token: " << token << endl;
-
-            strip_enclosing(token);
-
-            game* g = (*it).second->parse_game(token);
-            if (g)
-            {
-                cout << *g << endl;
-                delete g;
-            } else
-            {
-                cout << "Game parsing error on line " << line_number << ": \"" << token << "\" didn't parse into a game" << endl;
-                return false;
-            }
-
+            parse_game(gc);
             continue;
         }
 
         // Match comment
-        if (token[0] == '/')
+        if (match('/', '/', "comment", true))
         {
-            bool success = get_enclosed(iterator, token, '/', '/', true);
-
-            if (!success)
-            {
-                cout << "Parser error on line " << line_number << ": Failed to match comment" << endl;
-            }
-
-            cout << "Got comment: " << token << endl;
             continue;
         }
 
         // Must be game token
-        if (_game_name.size() == 0)
-        {
-            cout << "Parser error on line " << line_number << ": Found simple game token without game title" << endl;
-            return false;
-        }
+        cout << "Got simple token: " << _token << endl;
+        parse_game(gc);
 
-        auto it = _game_map.find(_game_name);
-
-        if (it == _game_map.end())
-        {
-            cout << "Parser error on line " << line_number << ": Couldn't find game parser for game \"" << _game_name << "\"" << endl;
-            return false;
-        }
-
-        cout << "Got simple token: " << token << endl;
-
-        game* g = (*it).second->parse_game(token);
-        if (g)
-        {
-            cout << *g << endl;
-            delete g;
-        } else
-        {
-            cout << "Game parsing error on line " << line_number << ": \"" << token << "\" didn't parse into a game" << endl;
-            return false;
-        }
     }
 
     return false;
