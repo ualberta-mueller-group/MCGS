@@ -2,14 +2,16 @@
 // Utility functions for unit tests
 //---------------------------------------------------------------------------
 
-#ifndef test_utilities_H
-#define test_utilities_H
+#pragma once
+// simpler include guard
 
 #include <memory>
+#include <tuple>
 #include "alternating_move_game.h"
 #include "cgt_move.h"
 #include "game.h"
 #include "sumgame.h"
+#include "game_factory.h"
 
 inline void assert_move(move_generator& mg, int mv)
 { 
@@ -63,5 +65,11 @@ inline void test_inverse(game& g1, game& g2) // g1+g2 == 0
 {
     test_zero_2(g1, g2);
 }
+
 //void test_equal(game& g1, game& g2); // needs game::inverse()
-#endif // test_utilities_H
+
+
+void assert_player_sum_outcome(int player, bool expected_outcome, const std::vector<game_factory_ptr>& factories);
+void assert_sum_outcomes(bool black_outcome, bool white_outcome, const std::vector<game_factory_ptr>& factories);
+void assert_inverse_sum_zero(const game_factory_ptr& factory);
+

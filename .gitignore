@@ -39,3 +39,6 @@ MCGS_test.dSYM/Contents/Resources/Relocations/aarch64/MCGS_test.yml
 # Editor temp files  (clangd cache, bear output)
 .cache
 compile_commands.json
+
+# Other temp files (output of random_strip.py)
+temp.txt

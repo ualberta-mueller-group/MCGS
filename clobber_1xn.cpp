@@ -5,6 +5,10 @@
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "game.h"
+#include "strip.h"
+
+using std::string, std::pair;
 
 clobber_1xn::clobber_1xn(const vector<int>& board) :
     strip(board)
@@ -37,6 +41,78 @@ void clobber_1xn::undo_move()
     assert(at(to) == player);
     replace(from, player);
     replace(to, opponent(player));
+}
+
+split_result clobber_1xn::split_implementation() const
+{
+    vector<pair<int, int>> chunk_ranges;
+
+    string board = board_as_string();
+    size_t N = board.size();
+
+    //auto add_chunk = [&](int start, int len) -> void
+    //{
+    //    result->push_back(new clobber_1xn(board.substr(start, len)));
+    //};
+
+    int chunk_start = -1;
+    bool found_black = false;
+    bool found_white = false;
+
+    for (size_t i = 0; i < N; i++)
+    {
+        const char c = board[i];
+        int color = clobber_char_to_color(c);
+
+        if (color != EMPTY)
+        {
+            // new chunk
+            if (chunk_start == -1)
+            {
+                chunk_start = i;
+            }
+
+            if (color == BLACK)
+            {
+                found_black = true;
+            } else
+            {
+                found_white = true;
+            }
+        } else
+        {
+            // end of chunk
+            if (chunk_start != -1 && found_black && found_white)
+            {
+                chunk_ranges.push_back({chunk_start, i - chunk_start});
+            }
+
+            chunk_start = -1;
+            found_black = false;
+            found_white = false;
+        }
+    }
+
+    if (chunk_start != -1)
+    {
+        chunk_ranges.push_back({chunk_start, N - chunk_start});
+    }
+
+    if (chunk_ranges.size() == 1) 
+    {
+        return split_result();
+    } else
+    {
+        split_result result = split_result(vector<game*>());
+
+        for (const pair<int, int>& range : chunk_ranges)
+        {
+            result->push_back(new clobber_1xn(board.substr(range.first, range.second)));
+        }
+
+        return result;
+    }
+
 }
 
 game* clobber_1xn::inverse() const

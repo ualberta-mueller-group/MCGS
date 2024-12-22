@@ -6,13 +6,6 @@
 #include "cgt_basics.h"
 //---------------------------------------------------------------------------
 
-namespace {
-
-void assert_is_clobber_char(char c)
-{
-    assert(c == 'X' || c == 'O' || c == '.');
-}
-
 int clobber_char_to_color(char c)
 {
     if (c == 'X')
@@ -24,7 +17,7 @@ int clobber_char_to_color(char c)
     else assert(false); return -1;
 }
 
-char color_to_char(int color)
+char color_to_clobber_char(int color)
 {
     static char clobber_char[] = {'X', 'O', '.'};
     
@@ -32,6 +25,16 @@ char color_to_char(int color)
     return clobber_char[color];
     
 }
+
+
+namespace {
+
+void assert_is_clobber_char(char c)
+{
+    assert(c == 'X' || c == 'O' || c == '.');
+}
+
+
 
 vector<int> string_to_board(const std::string& game_as_string)
 {
@@ -48,7 +51,7 @@ std::string board_to_string(const vector<int>& board)
 {
     std::string result;
     for(int p: board)
-        result += color_to_char(p);
+        result += color_to_clobber_char(p);
     return result;
 }
 

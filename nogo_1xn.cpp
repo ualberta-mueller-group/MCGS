@@ -3,13 +3,18 @@
 //---------------------------------------------------------------------------
 #include "nogo_1xn.h"
 
+#include "cgt_basics.h"
+#include "game.h"
 #include "strip.h"
+#include <memory>
+
+using std::string, std::pair, std::unique_ptr;
 
 nogo_1xn::nogo_1xn(const vector<int>& board) :
     strip(board)
 { }
 
-nogo_1xn::nogo_1xn(std::string game_as_string) :
+nogo_1xn::nogo_1xn(string game_as_string) :
     strip(game_as_string)
 { }
 
@@ -29,6 +34,95 @@ void nogo_1xn::undo_move()
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
     replace(to, EMPTY);
+}
+
+
+string block_simplify(const string& board)
+{
+    string result;
+
+    int N = board.size();
+
+    const char empty_char = color_to_clobber_char(EMPTY);
+
+    char prev_tile = empty_char;
+
+
+    for (int i = 0; i < N; i++)
+    {
+        const char tile = board[i];
+
+        if (tile == empty_char || tile != prev_tile)
+        {
+            result.push_back(tile);
+        }
+
+        prev_tile = tile;
+    }
+
+    return result;
+}
+
+
+/*
+   implements "xo split" from
+   Henry's paper
+
+*/
+split_result nogo_1xn::split_implementation() const
+{
+    // NOTE: don't use checked_is_color here -- it accesses the board before block simplification
+
+
+    string board = board_as_string();
+    board = block_simplify(board);
+
+    int N = board.size();
+
+    vector<pair<int, int>> subgame_ranges;
+
+    int subgame_start = 0;
+
+    for (int i = 0; i < N; i++)
+    {
+        const int color = clobber_char_to_color(board[i]);
+
+        const bool prev_in_range = i - 1 >= 0;
+        const int color_prev = prev_in_range ? clobber_char_to_color(board[i - 1]) : EMPTY;
+
+        if ( color != EMPTY
+            && prev_in_range 
+            && color_prev == opponent(color)
+            )
+        {
+            // found an XO or OX split
+            subgame_ranges.push_back({subgame_start, (i - 1) - subgame_start + 1});
+            subgame_start = i;
+        }
+    }
+
+    // remainder at end
+    if (N > 0)
+    {
+        subgame_ranges.push_back({subgame_start, (N - 1) - subgame_start + 1});
+    }
+
+    if (subgame_ranges.size() == 1)
+    {
+        return split_result(); // no split
+    } else
+    {
+        split_result result = split_result(vector<game*>());
+
+        for (const pair<int, int>& range : subgame_ranges)
+        {
+            game* g = new nogo_1xn(board.substr(range.first, range.second));
+            result->push_back(g);
+        }
+
+        return result;
+    }
+
 }
 
 game* nogo_1xn::inverse() const

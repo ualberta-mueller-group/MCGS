@@ -8,15 +8,19 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <optional>
 #include "cgt_basics.h"
 #include "cgt_move.h"
 //---------------------------------------------------------------------------
 
-using std::vector;
+using std::vector; // TODO probably remove this?
 //---------------------------------------------------------------------------
 
 class move_generator;
+class game;
 //---------------------------------------------------------------------------
+
+typedef std::optional<std::vector<game*>> split_result;
 
 class game
 {
@@ -28,9 +32,29 @@ public:
     move last_move() const;
     // Used to verify that game is restored after search
     int moves_hash() const; // TODO do a proper implementation
+    bool has_moves() const;
     
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
+
+    // calls split_implementation() and filters out games having no moves
+    split_result split() const;
+
+protected:
+
+    /*
+        List of games to replace current game. Empty list means game is 0.
+        No value means split didn't occur. See std::optional
+
+        The returned games are owned by the caller
+
+        TODO assert in sumgame::play_sum() and sumgame::undo_move() 
+            that list never contains the original game object?
+    */
+    virtual split_result split_implementation() const;
+
+public:
+
     virtual move_generator* create_move_generator(bw to_play) const = 0;
     virtual void print(std::ostream& str) const = 0;
     virtual game* inverse() const = 0; // caller takes ownership
@@ -74,6 +98,35 @@ inline void game::undo_move()
     _move_stack.pop_back();
 }
 
+inline split_result game::split() const
+{
+    split_result sr = split_implementation();
+
+    // no split happened
+    if (!sr)
+    {
+        return sr;
+    }
+
+    // filter games
+    split_result result = split_result(vector<game*>());
+
+    for (game* g : *sr)
+    {
+        if (g->has_moves())
+            result->push_back(g);
+        else
+            delete g;
+    }
+
+    return result;
+}
+
+inline split_result game::split_implementation() const
+{
+    return split_result(); // no value
+}
+
 inline int game::moves_hash() const
 {
     return _move_stack.size();
@@ -105,5 +158,8 @@ inline move_generator::move_generator(bw to_play) :
     _to_play(to_play)
 { }
 //---------------------------------------------------------------------------
+
+std::ostream& operator<<(std::ostream& os, const split_result& split);
+
 
 #endif // game_H

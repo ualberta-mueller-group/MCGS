@@ -15,12 +15,20 @@
 #include "nim_test.h"
 #include "nogo_1xn_test.h"
 #include "sumgame_test.h"
+#include "elephants_test.h"
+
+#include "split_test.h"
+
+
+
 
 // TODO make a "do slow tests" build target?
 const bool DO_SLOWER_TESTS = false;
 
 int main()
 {
+
+
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
@@ -28,12 +36,17 @@ int main()
     cgt_nimber_test_all();
     cgt_switch_test_all();
     cgt_up_star_test_all();
+
+
+    split_test_all();
+
     if (DO_SLOWER_TESTS)
     {
         clobber_1xn_test_all();
         nim_test_all();
         nim_random_test(); // takes about a second.
         nogo_1xn_test_all();
+        elephants_test_all(); // takes several seconds
     }
     sumgame_test_all();
 }

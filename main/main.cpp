@@ -5,14 +5,17 @@
 #include <iostream>
 #include "cgt_basics.h"
 #include "alternating_move_game.h"
+#include "cgt_move.h"
 #include "clobber_1xn.h"
 #include "nim.h"
 #include "nogo_1xn.h"
+#include "elephants.h"
 
-using std::cout;
+using std::cout, std::endl;
 
 int main()
 {
+
     {
         nim pos("1 2 3");
         alternating_move_game g(pos, BLACK);
@@ -39,5 +42,13 @@ int main()
         alternating_move_game g(pos, BLACK);
         bool result = g.solve();
         cout << "Solve nogo_1xn " << pos << ", result " << result << std::endl;
+    }
+
+    {
+        elephants pos("X..X.O..O.O");
+        alternating_move_game g(pos, BLACK);
+        bool result = g.solve();
+        cout << "Solve elephants " << pos << ", result " << result << endl;
+        
     }
 }

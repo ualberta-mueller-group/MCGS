@@ -2,6 +2,7 @@
 // Simple combinatorial games - dyadic rationals
 //---------------------------------------------------------------------------
 #include "cgt_dyadic_rational.h"
+#include "cgt_integer_game.h"
 
 //---------------------------------------------------------------------------
 void dyadic_rational::simplify()
@@ -43,6 +44,18 @@ void dyadic_rational::undo_move()
     _q = q;
     game::undo_move();
 }
+
+split_result dyadic_rational::split_implementation() const
+{
+    if (_q != 1)
+    {
+        return split_result(); // no split
+    } else
+    {
+        return split_result({new integer_game(_p)}); // becomes integer
+    }
+
+};
 
 game* dyadic_rational::inverse() const
 {

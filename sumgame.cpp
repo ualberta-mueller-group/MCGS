@@ -8,21 +8,25 @@
 using std::cout;
 using std::endl;
 
+
+//---------------------------------------------------------------------------
+
+
 //---------------------------------------------------------------------------
 class sumgame_move_generator : public move_generator
 {
 public:
     sumgame_move_generator(const sumgame& game, bw to_play);
     void operator++();
+    void next_move(bool init);
     operator bool() const;
     sumgame_move gen_sum_move() const;
     move gen_move() const {assert(false);}
 private:
-    const game* current() const { return _game.subgame(_current_subgame); }
-    void skip_no_move_subgames(); // no moves for this player
+    const game* current() const { return _game.subgame(_subgame_idx); }
     const sumgame& _game;
     const int _num_subgames;
-    int _current_subgame;
+    int _subgame_idx;
     move_generator* _subgame_generator;
 };
 
@@ -30,59 +34,93 @@ sumgame_move_generator::sumgame_move_generator(const sumgame& game, bw to_play)
     : move_generator(to_play),
       _game(game),
       _num_subgames(game.num_total_games()),
-      _current_subgame(0),
-      _subgame_generator(0)
+      _subgame_idx(0),
+      _subgame_generator(nullptr)
 {
-    if (_num_subgames > 0)
-    {
-        _subgame_generator =
-            current()->create_move_generator(to_play);
-        skip_no_move_subgames();
-    }
+    // scroll to first move
+    next_move(true);
+
 }
 
-void sumgame_move_generator::skip_no_move_subgames()
-{
-    assert(_subgame_generator);
-    while ((_current_subgame < _num_subgames)
-        && !(*_subgame_generator))
-    {
-        delete _subgame_generator;
-        _subgame_generator = 0;
-        ++_current_subgame;
-        if (  (_current_subgame < _num_subgames)
-            && current()->is_active())
-            _subgame_generator =
-                current()->create_move_generator(to_play());
-    }
-}
+//void sumgame_move_generator::skip_no_move_subgames()
+//{
+//    assert(_subgame_generator);
+//}
 
 void sumgame_move_generator::operator++()
 {
-    if (*_subgame_generator)
-        ++(*_subgame_generator);
-    if (!(*_subgame_generator))
+    // scroll to next move
+    next_move(false);
+}
+
+void sumgame_move_generator::next_move(bool init)
+{
+    // increment existing generator and check for move
+    if (_subgame_generator != nullptr)
     {
-        skip_no_move_subgames();
+        ++(*_subgame_generator);
+
+        if (*_subgame_generator)
+        {
+            // we have a move
+            return;
+        }
+    }
+
+    // discard generator
+    if (_subgame_generator != nullptr)
+    {
+        delete _subgame_generator;
+        _subgame_generator = nullptr;
+    }
+
+
+    // scroll until we have an active subgame AND its generator has a move
+    _subgame_idx = init ? 0 : _subgame_idx + 1;
+
+    assert(_subgame_generator == nullptr);
+    for (; _subgame_idx < _num_subgames; _subgame_idx++)
+    {
+        assert(_subgame_generator == nullptr);
+        const game* g = current();
+
+        // inactive game
+        if (!g->is_active())
+        {
+            continue;
+        }
+
+        _subgame_generator = g->create_move_generator(to_play());
+
+        if (*_subgame_generator)
+        {
+            // found move
+            return;
+        } else
+        {
+            delete _subgame_generator;
+            _subgame_generator = nullptr;
+        }
     }
 }
 
 sumgame_move_generator::operator bool() const
 {
-    return _current_subgame < _num_subgames;
+    // do we have a move?
+    return _subgame_idx < _num_subgames;
 }
 
 sumgame_move sumgame_move_generator::gen_sum_move() const
 {
     assert(_subgame_generator);
-    return sumgame_move(_current_subgame, _subgame_generator->gen_move());
+    return sumgame_move(_subgame_idx, _subgame_generator->gen_move());
 }
 //---------------------------------------------------------------------------
 
 sumgame::~sumgame()
 {
 // todo delete subgames, or store in vector of std::unique_ptr
-    assert(_sumgame_move_stack.empty());
+    assert(_play_record_stack.empty());
 }
 
 void sumgame::add(game* g)
@@ -136,27 +174,72 @@ bool sumgame::_solve()
 
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
 {
-    const int subg = m._subgame;
+    play_record record(m);
+
+    const int subg = m._subgame_idx;
     const move mv = m._move;
-    subgame(subg)->play(mv, to_play);
-    _sumgame_move_stack.push_back(m);
+
+    game* g = subgame(subg);
+
+    g->play(mv, to_play);
+    split_result sr = g->split();
+
+    if (sr) // split changed the sum
+    {
+        record.did_split = true;
+
+        // g is no longer part of the sum
+        g->set_active(false);
+
+        for (game* gp : *sr)
+        {
+            add(gp);
+            record.add_game(gp); // save these games in the record for debugging
+        }
+    }
+    
+    _play_record_stack.push_back(record);
     alternating_move_game::play(mv);
 }
 
 void sumgame::undo_move()
 {
-    const sumgame_move m = last_sumgame_move();
-    const int subg = m._subgame;
+    const play_record& record = last_play_record();
+
+    const sumgame_move m = record.move;
+    const int subg = m._subgame_idx;
     game* s = subgame(subg);
+
+    // undo split (if necessary)
+    if (record.did_split)
+    {
+        assert(!s->is_active()); // should have been deactivated on last split
+
+        s->set_active(true);
+
+        for (auto it = record.new_games.rbegin(); it != record.new_games.rend(); it++)
+        {
+            game const* g = *it;
+            assert(g == _subgames.back()); // we're deleting the same game
+            assert(_subgames.back()->is_active()); // a previous undo should have reactivated g 
+
+            delete _subgames.back();
+            _subgames.pop_back();
+        }
+    }
+
+
     const move subm = cgt_move::decode(s->last_move());
+
     if(!(m._move == subm))
     {
         cout << subg << ' ' << m._move << ' ' << subm << endl;
     }
+
     assert(m._move == subm);
     s->undo_move();
     alternating_move_game::undo_move();
-    _sumgame_move_stack.pop_back();
+    _play_record_stack.pop_back();
 }
 
 void sumgame::print(std::ostream& str) const

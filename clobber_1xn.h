@@ -13,10 +13,15 @@ class clobber_1xn : public strip
 public:
     clobber_1xn(const vector<int>& board);
     clobber_1xn(std::string game_as_string);
-    void play(const move& m, bw to_play);
-    void undo_move();
-    game* inverse() const;
-    move_generator* create_move_generator(bw to_play) const;
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
+
+protected:
+    split_result split_implementation() const override;
+
+public:
+    game* inverse() const override;
+    move_generator* create_move_generator(bw to_play) const override;
 private:
 };
 

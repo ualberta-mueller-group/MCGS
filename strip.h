@@ -11,6 +11,9 @@
 
 //---------------------------------------------------------------------------
 
+int clobber_char_to_color(char c);
+char color_to_clobber_char(int color);
+
 class strip : public game
 {
 public:

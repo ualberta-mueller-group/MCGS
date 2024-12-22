@@ -18,14 +18,19 @@ class dyadic_rational : public game
 public:
     dyadic_rational(int p, int q);
     // The move argument is the OLD value that must be restored.
-    void play(const move& m, bw to_play);
-    void undo_move();
-    game* inverse() const;
-    move_generator* create_move_generator(bw to_play) const;
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
+
+protected:
+    split_result split_implementation() const override;
+
+public:
+    game* inverse() const override;
+    move_generator* create_move_generator(bw to_play) const override;
     void simplify();
     int p() const { return _p;}
     int q() const { return _q;}
-    void print(std::ostream& str) const;
+    void print(std::ostream& str) const override;
 private:
     int _p, _q;
 };
