@@ -1,12 +1,8 @@
 #pragma once
-#include "cgt_up_star.h"
 #include "game.h"
 #include "utilities.h"
 #include <cctype>
-#include <cstddef>
 #include <string>
-#include <sstream>
-#include <iostream>
 
 
 /*

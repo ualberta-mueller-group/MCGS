@@ -1,4 +1,5 @@
 #include "game_token_parsers.h"
+#include "cgt_up_star.h"
 
 
 game* up_star_parser::parse_game(const std::string& game_token) const 
