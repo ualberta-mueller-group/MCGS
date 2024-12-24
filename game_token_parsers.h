@@ -8,7 +8,14 @@
 #include <sstream>
 #include <iostream>
 
-// TODO: It's tempting to rewrite int_parser<T>, int2_parser<T> etc into int_parser<T, N> -- probably a bad idea?
+
+/*
+    New games must add a file_parser::add_game_parser() call to
+        file_parser::init_game_parsers()
+
+
+    TODO: It's tempting to rewrite int_parser<T>, int2_parser<T> etc into int_parser<T, N> -- probably a bad idea?
+*/
 
 class game_token_parser
 {
@@ -17,11 +24,19 @@ public:
     virtual ~game_token_parser()
     {}
 
+    /*
+        Input: string representing a game
+
+
+        Returns a new game owned by the caller, OR nullptr if an error
+            occurred
+    */
     virtual game* parse_game(const std::string& game_token) const = 0;
 };
 
-//////////////////////////////////////////////////////////// 
+//////////////////////////////////////////////////////////// implementations below
 
+// forwards the string as-is to the game constructor
 template <class T>
 class basic_parser : public game_token_parser
 {
@@ -33,6 +48,7 @@ public:
     }
 };
 
+// takes a string of 1 and only 1 int, passes it to the game constructor
 template <class T>
 class int_parser : public game_token_parser
 {
@@ -51,6 +67,7 @@ public:
     }
 };
 
+// takes a string of 2 and only 2 ints, passes them to the game constructor
 template <class T>
 class int2_parser : public game_token_parser
 {
@@ -81,6 +98,12 @@ public:
     }
 };
 
+/*
+    special case for up_star game
+
+    Allows up to 1 int and 1 "*" in any order. Empty input is invalid
+        and will return nullptr
+*/
 class up_star_parser : public game_token_parser
 {
 public:

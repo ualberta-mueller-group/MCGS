@@ -5,7 +5,7 @@ game* up_star_parser::parse_game(const std::string& game_token) const
 {
     std::vector<std::string> strs = split_string(game_token);
 
-    if (strs.size() > 2)
+    if (strs.size() > 2 || strs.size() == 0)
     {
         return nullptr;
     }
@@ -34,6 +34,7 @@ game* up_star_parser::parse_game(const std::string& game_token) const
             continue;
         }
 
+        // got chunk that isn't star or integer
         return nullptr;
     }
 

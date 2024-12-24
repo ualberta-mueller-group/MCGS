@@ -24,9 +24,6 @@ int main(int argc, char** argv)
 {
     // TODO clean this all up and move it somewhere else. Store options in some other file
 
-    // This should run first. TODO: maybe we need a general init() function?
-    file_parser::init_game_parsers();
-
     bool skip_running = false;
 
     // Parse args
@@ -112,7 +109,7 @@ int main(int argc, char** argv)
             cout << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << endl;
             cout << "TEST CASE" << endl;
             cout << "Player: " << gc.to_play << endl;
-            cout << "Expected outcome: " << gc.expected << endl;
+            cout << "Expected outcome: " << gc.expected_outcome << endl;
 
             sumgame sum(gc.to_play);
 
