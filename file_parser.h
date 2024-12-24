@@ -66,6 +66,40 @@ enum test_outcome
 };
 
 
+inline const std::string test_outcome_to_string(const test_outcome& outcome)
+{
+    switch (outcome)
+    {
+        case TEST_OUTCOME_UNKNOWN:
+        {
+            return "Unknown";
+            break;
+        }
+
+        case TEST_OUTCOME_WIN:
+        {
+            return "Win";
+            break;
+        }
+
+        case TEST_OUTCOME_LOSS:
+        {
+            return "Loss";
+            break;
+        }
+
+        default:
+        {
+            std::cerr << "test_outcome_to_string() invalid input: ";
+            std::cerr << outcome << std::endl;
+            exit(-1); // exit instead of assert (could be due to bad file input)
+        }
+
+    }
+
+    return "This string should not appear: see test_outcome_to_string()";
+}
+
 /*
     game_case: 
         Games and other data returned from parsing input with file_parser.
@@ -77,7 +111,7 @@ enum test_outcome
 */
 struct game_case
 {
-    int to_play;
+    ebw to_play;
     test_outcome expected_outcome;
     std::vector<game*> games;
 
@@ -135,6 +169,8 @@ public:
     static file_parser* from_file(const std::string& file_name);
     static file_parser* from_string(const std::string& string);
 
+    static bool debug_printing;
+
 
 private:
     // initializes parsers for every game. Called automatically upon construction of first file_parser
@@ -149,6 +185,7 @@ private:
 
     int _line_number;
     std::string _token;
+
 
 
     /*

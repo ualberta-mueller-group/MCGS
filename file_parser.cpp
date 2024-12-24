@@ -22,6 +22,7 @@
 
 using namespace std;
 
+bool file_parser::debug_printing = false;
 unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 
 
@@ -387,7 +388,10 @@ bool file_parser::match(const char& open, const char& close, const string& match
 
     if (success)
     {
-        cout << "Got " << match_name << ": " << _token << endl;
+        if (file_parser::debug_printing)
+        {
+            cout << "Got " << match_name << ": " << _token << endl;
+        }
         strip_enclosing(_token);
         return true;
     }
@@ -457,7 +461,10 @@ bool file_parser::parse_command()
             we have is to run games
     */
 
-    cout << "PARSING COMMAND " << _token << endl;
+    if (file_parser::debug_printing)
+    {
+        cout << "PARSING COMMAND " << _token << endl;
+    }
 
     // remove commas, then split by whitespace
     {
@@ -684,7 +691,10 @@ bool file_parser::parse_chunk(game_case& gc)
         }
 
         // Must be game token
-        cout << "Got simple token: " << _token << endl;
+        if (file_parser::debug_printing)
+        {
+            cout << "Got simple token: " << _token << endl;
+        }
         parse_game();
 
     }
