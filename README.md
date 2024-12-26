@@ -2,7 +2,7 @@
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
-Martin Müller and Henry Du, 2024
+Taylor Folkersen, Martin Müller and Henry Du, 2024
 
 ## Design Documentation
 For the overall approach and future plans, see the document "The Design of MCGS:
@@ -25,6 +25,47 @@ codes and all game-specific implementation files are in the `MCGS` directory.  T
     
 - There are two text/markdown files: this `README.md`, and a `todo.md`
 
+## Main data types of MCGS
+
+### `move`
+The abstract type `move` is used in all (sub-)games to represent a move in that particular subgame. Also compare with `sumgame_move`
+- Implementation: A `move` is typedef as an `int`.
+- Each game is free to define its own representation of a move.
+- The `move` representation must include space for one "color bit"
+- Utilities in `cgt_move.h`
+    - help pack and unpack moves from/to int
+    - deal with color bit and "rest" of move
+    - Rest of move, after the color bit, can be further broken up
+    - Two smaller integers (first one signed, second one unsigned)
+    - A sign bit for the first part of the two part move
+    - Utilities encode and decode move from/to color, 
+    and two integer parts including the sign bit
+Comments and TODOs:
+- TODO: should guarantee that a move is at least 32 bit
+- Also see comments about `move` under "Design Choices"
+
+### `game`
+A `game` is the base type for all combinatorial games supported by MCGS. 
+Its main use is as one subgame in a sum. However, it can also be solved as a
+standalone game in combination with `alternating_move_game`.
+- Each `move` stored in the move stack of `game` includes the "color bit"
+
+#### `sumgame_move` struct
+Represents a move made in a `sumgame`
+- contains a subgame index and the move made in the subgame
+- The index is into the vector `sumgame::_subgames`
+- The `move` is for the subgame stored there
+
+#### `sumgame` class
+A `sumgame` represents a (possibly empty) set of subgames. 
+It derives from `alternating_move_game` and reimplements the
+`solve` method to take advantage of sum structure
+- Main data structure: `vector<game*> _subgames`
+    - TODO sumgame should be owner of these games? Use `std::unique_ptr`
+    - TODO copy on add?
+- derived from `alternating_move_game` but reimplements solve 
+    - it uses `sumgame_move`
+    - keeps its own `_sumgame_move_stack` with sum-level info; subgames keep their own stacks as well
 ## How to implement a new game
 - Also see `nim` and `clobber_1xn` as examples
 - For game name `x`:
@@ -101,48 +142,63 @@ and is stored in the move stack.
 
 ## Versions
 ### Version 0 completed
+- `move` and `game` classes, `alternating_move_game`
 - Nim: `nim` implementation done
 - Utility class `strip` for 1xn boards
 - Clobber on a strip: `clobber_1xn`
-- Basic minimax implementation
+- Basic minimax implementation in `alternating_move_game::solve`
 - Basic test cases in files, run automatically
 - Nogo on a strip: `nogo_1xn` class
 - Simple game classes: integer, dyadic rational, up-star, switch, nimber
 
 ### Version 1 in progress
-- Done so far:
-    - minimalistic `sumgame` class
-    - first experiments with sums of simple games, Clobber and NoGo
-    - Current limitation: games need to be defined beforehand, cannot create/delete new games on the fly
 
-- Plan for early steps:
-    - rewrite `nim` to use sumgame and nimber
-    - change read from string functions to directly create sumgame
+#### Version 1 completed
+- `sumgame` class
+    - game-dependent `split` into 0,1,2 or more subgames after a move
+    - supports both keeping the old `game`, and replacing it after a `split`
+    - supports changes of game type, such as `switch_game` to `integer_game`
+- first experiments with sums of simple games, Clobber and NoGo
+- Current limitation: games need to be defined beforehand, cannot create/delete new games on the fly
 
-#### `sumgame` class
+#### Version 1 completed - General improvements not specifically related to sumgame
+- implemented game::inverse() for all game types
 
-- keeps `vector<game*> _subgames`
-    - should be owner??? copy on add?
-- derived from `alternating_move_game` but reimplements solve 
-    - it uses `sumgame_move` containing subgame index and move, not just `move`
-    - keeps its own `_sumgame_move_stack` with sum-level info; subgames keep their own stacks as well
-#### General improvements in Version 1 - changes not specifically related to sumgame
+#### Version 1 in progress / to do
+- performance testing framework
+    - performance tests
+    - compare with/without subgame split
+    - other options to compare?
+- change read from string functions to directly create sumgame
+- created classes `impartial_game` and `impartial_sumgame`
+    - moved some functionality from obsolete `nim` class here
+    - TODO rewrite all `nim` tests to use `sumgame` and `nimber`
+    - TODO remove `nim` class after converting tests
+- go through TODO list, decide which items are done, to do for V1, 
+and which we should defer to 1.x or later
 
-- implement game::inverse() for all game types
-- created classes `impartial_game` and `impartial_sumgame`, moved some functionality from obsolete `nim` class here
-    
+### Future: Smaller step Versions 1.x , prepare for Version 2
+
+#### Version 1.1 - simplification rules for `game` and `sumgame`
+    - simplify `game` G in `sumgame` S
+        - compare G with a simpler game H, replace in S if equal
+        - compare G1+G2 with a simpler H, replace in S if equal
+        - simplify games of same type in S, e.g.
+            - add up integers/rationals
+            - add ups+stars
+            - add nimbers
+        - general sum simplifications
+            - remove/deactivate 0
+            - find inverse pairs and deactivate
+
+#### Version 1.2 - Tools and Components for database
+- `scale` such as multiples of up, or up+star, or integers
+    - binary search to find upper/lower bounds for a game G on scale S
+
 ## Design Choices and Remaining Uglinesses
 #### A `move` must be an `int` 
 - I tried to make a generic abstract move class, but could not implement it in a "nice" and efficient way.
-- There are some utilities in `cgt_move.h` which help pack and unpack moves from/to int
 - Plan: probably keep it this way unless I find an elegant general solution
-- Move stored in game's move stack always includes a "color bit"
-- utilities to deal with color bit and "rest" of move
-- Rest of move (after the color bit) can be further broken up
-    - Two smaller integers (first one signed, second one unsigned)
-    - A sign bit for the first part of two part move
-    - Utilities to encode and decode move from/to color, 
-    and two parts including sign bit
 
 #### `move_generator` objects are dynamically allocated
 - This is ugly but I could not solve it in a better way. 
