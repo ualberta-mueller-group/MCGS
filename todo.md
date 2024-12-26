@@ -4,12 +4,9 @@
 # V1 todo
 
 ## Martin - Version 1 - Dec 9
-- update the document and the todo with today's discussion
-- clear up what is/is not in version 1
+- update the todo file
 
 ## Taylor - Version 1 - Dec 9
-- better makefile, with .o files
-- try to implement a simple game following the README
 - implement `play_and_split` on subgame G
     - leave current play function as-is, to play the move on G
     - split: check if G can be split into subgames
@@ -43,15 +40,9 @@
 ## To discuss with Taylor
 - any questions on code, or document?
 - next steps:
-    - github repo, full access
-    - what to work on this week?
-    - meet Henry? Define agenda first, or just chat?
     - Weekly meeting - when?
     - First goal: finish Version 1 as of the plan in the document
-- from email: For me, a few high priority things 
-that you could work on are:
-    - extending the sumgame class to support changes after a move, 
-    i.e. split game into two subgames, or change the type of game.
+- from email: a few high priority things 
     - design and implementation of database
     - design and implementation of hash codes and transposition table
     - performance tests and test cases. Tests with time limits.
@@ -137,7 +128,6 @@ A few other things that I was planning to tackle myself, but we can also discuss
         can create an integer
 
 ## V1 todo other
-## V1 todo other
 - rewrite `unused/nim` to use sumgame and nimbers classes
 - rewrite `unused/nim_test` and `unused/nim_random_test`
 - replace a game (e.g. clobber position) by an equal game of simpler type
@@ -146,6 +136,7 @@ A few other things that I was planning to tackle myself, but we can also discuss
 
 # Todo Design and Naming Issues
 - rename `x_1xn` to `x_strip` ?
+- rename `x_game` to `game_x`? E.g. `integer_game` to `game_integer`
 - play() can change the type of game
     - how to handle?
     - what if a game such as clobber is equal to a simpler game such as up
@@ -209,4 +200,7 @@ A few other things that I was planning to tackle myself, but we can also discuss
     - avoid canonical form
     - use sum game structure
     - get more from cgt-search writeup
+- techniques
+- examples, performance
+- future plans
 
