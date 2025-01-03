@@ -289,7 +289,7 @@ void file_parser::version_check(const string& version_string)
     {
         string why = "Parser version mismatch. Expected \"" + expected + "\", got: \"";
         why += version_string + "\"";
-        throw parser_exception(why);
+        throw parser_exception(why, WRONG_VERSION_COMMAND);
     }
 }
 
@@ -302,7 +302,7 @@ void file_parser::add_game_parser(const string& game_title, game_token_parser* g
         delete gp;
         
         string why = "Tried to add game parser \"" + game_title + "\" but it already exists";
-        throw parser_exception(why);
+        throw parser_exception(why, DUPLICATE_GAME_PARSER);
     }
 
     _game_map.insert({game_title, shared_ptr<game_token_parser>(gp)});
@@ -391,7 +391,7 @@ bool file_parser::match(const char& open, const char& close, const string& match
     }
     
     string why = get_error_start() + "failed to match " + match_name;
-    throw parser_exception(why);
+    throw parser_exception(why, FAILED_MATCH);
 
     return false;
 }
@@ -402,7 +402,7 @@ bool file_parser::parse_game()
     if (_section_title.size() == 0)
     {
         string why = get_error_start() + "game token found but section title missing";
-        throw parser_exception(why);
+        throw parser_exception(why, MISSING_SECTION_TITLE);
 
         return false;
     }
@@ -413,7 +413,7 @@ bool file_parser::parse_game()
     {
         string why = get_error_start() + "game token found, but game parser doesn't exist for section \"";
         why += _section_title + "\"";
-        throw parser_exception(why);
+        throw parser_exception(why, MISSING_SECTION_PARSER);
         
         return false;
     }
@@ -431,7 +431,7 @@ bool file_parser::parse_game()
             // will be cleaned up when the file_parser is destructed
             string why = get_error_start() + "game parser for section \"" + _section_title;
             why += "\" failed to parse game token: \"" + _token + "\"";
-            throw parser_exception(why);
+            throw parser_exception(why, FAILED_GAME_TOKEN_PARSE);
 
             return false;
         } else
@@ -551,7 +551,7 @@ bool file_parser::parse_command()
         {
             string why = get_error_start() + "run command has too many cases, maximum is: ";
             why += to_string(FILE_PARSER_MAX_CASES);
-            throw parser_exception(why);
+            throw parser_exception(why, CASE_LIMIT_EXCEEDED);
 
             return false;
         }
@@ -567,7 +567,7 @@ bool file_parser::parse_command()
     if (chunk_idx < chunks.size())
     {
         string why = get_error_start() + "failed to parse case command";
-        throw parser_exception(why);
+        throw parser_exception(why, FAILED_CASE_COMMAND);
 
         return false;
     }
@@ -575,7 +575,7 @@ bool file_parser::parse_command()
     if (_case_count == 0)
     {
         string why = get_error_start() + "\"run\" command with no cases";
-        throw parser_exception(why);
+        throw parser_exception(why, EMPTY_CASE_COMMAND);
     }
 
     return true;
@@ -605,7 +605,7 @@ bool file_parser::parse_chunk(game_case& gc)
 {
     if (gc.games.size() != 0)
     {
-        throw parser_exception("Parser error: caller's game_case not empty at start of file_parser::parse_chunk()");
+        throw parser_exception("Parser error: caller's game_case not empty at start of file_parser::parse_chunk()", PARSE_CHUNK_CALLER_ERROR);
     }
 
     // Check if there's already a case from the previous parse
@@ -640,7 +640,7 @@ bool file_parser::parse_chunk(game_case& gc)
             if (!success)
             {
                 string why = get_error_start() + "Failed to match version string command";
-                throw parser_exception(why);
+                throw parser_exception(why, MISSING_VERSION_COMMAND);
 
                 return false;
             }

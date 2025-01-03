@@ -228,11 +228,29 @@ private:
 };
 
 
+enum parser_exception_code
+{
+    PARSER_OK = 0,
+    WRONG_VERSION_COMMAND = 1,
+    MISSING_VERSION_COMMAND,
+    MISSING_SECTION_TITLE,
+    MISSING_SECTION_PARSER,
+    DUPLICATE_GAME_PARSER,
+    FAILED_MATCH,
+    FAILED_GAME_TOKEN_PARSE,
+    CASE_LIMIT_EXCEEDED,
+    EMPTY_COMMAND,
+    EMPTY_CASE_COMMAND,
+    FAILED_CASE_COMMAND,
+    PARSE_CHUNK_CALLER_ERROR,
+};
+
 // Thrown on bad input
 class parser_exception : public std::exception
 {
 public:
-    parser_exception(const std::string& why) : _why(why + " (Parser exception)") 
+    parser_exception(const std::string& why, parser_exception_code code) 
+        : _why(why + " (Parser exception code " + std::to_string(code) + ")"), _code(code)
     { };
 
     ~parser_exception() {}
@@ -242,7 +260,14 @@ public:
         return _why.c_str();
     }
 
+    parser_exception_code code() const noexcept
+    {
+        return _code;
+    }
+
 private:
     std::string _why;
+    parser_exception_code _code;
+    //parser_exception_code code;
 };
 

@@ -19,6 +19,8 @@
 
 #include "split_test.h"
 
+#include "file_parser_test.h"
+
 
 
 
@@ -28,6 +30,8 @@ const bool DO_SLOWER_TESTS = false;
 int main()
 {
 
+
+    file_parser_test_all();
 
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
