@@ -1,4 +1,5 @@
 #include "cli_options.h"
+#include <filesystem>
 #include <vector>
 #include <iostream>
 #include "file_parser.h"
@@ -23,7 +24,6 @@ void print_flag(const string& flag_string, const string& flag_description)
     cout << "\t\t" << flag_description << endl;
 }
 
-
 void print_help_message(const string& exec_name)
 {
     cout << "Usage: " << exec_name << " [flags] [game cases string]" << endl;
@@ -32,7 +32,7 @@ void print_help_message(const string& exec_name)
     cout << "\tReads game cases from a quoted string after [flags], if present, \
 using same format as \".test\" files, but without version command. \
 See info.test for explanation of game case format. \
-Flags specifying input from stdin or files will cause game cases string \
+Reading input from stdin or file will cause game cases string \
 to be ignored.";
 
     cout << endl;
@@ -86,8 +86,7 @@ cli_options parse_cli_args(int _argc, char** argv)
 
             if (arg_next.size() == 0)
             {
-                cerr << "Error: got --file but no file path" << endl;
-                exit(-1);
+                throw cli_options_exception("Error: got --file but no file path");
             }
 
             if (!opts.parser)
@@ -125,10 +124,9 @@ cli_options parse_cli_args(int _argc, char** argv)
             // for now it should be quoted, so there should only be one arg at this point...
             if (arg_idx != argN - 1)
             {
-                cerr << "Unexpected arg count: ";
-                cerr << "did you forget to quote game input passed as args?"; 
-                cerr << endl;
-                exit(-1);
+                string why = "Unexpected arg count: ";
+                why += "did you forget to quote game input passed as args?"; 
+                throw cli_options_exception(why);
             }
 
             if (!opts.parser)
@@ -142,12 +140,15 @@ cli_options parse_cli_args(int _argc, char** argv)
             break;
         }
 
-        cerr << "Error: unrecognized flag. See ";
-        cerr << "\"" << args[0] << " --help\" or ";
-        cerr << "\"" << args[0] << " -h\"" << endl;
-        exit(-1);
-    }
+        {
+            string why = "Error: unrecognized flag. See ";
+            why += "\"" + args[0] + " --help\" or ";
+            why += "\"" + args[0] + " -h\"";
 
+            throw cli_options_exception(why);
+        }
+        
+    }
 
     return opts;
 }

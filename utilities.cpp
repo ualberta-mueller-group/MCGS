@@ -8,7 +8,6 @@ vector<string> split_string(const string& str)
 {
     vector<string> strs;
 
-
     stringstream stream(str);
 
     string next_string;
@@ -33,7 +32,7 @@ bool is_int(const string& str)
     {
         const char& c = str[i];
 
-        if (!isdigit(c) && i != 0 && c != '-')
+        if (!isdigit(c) && (i != 0 || c != '-'))
         {
             return false;
         }

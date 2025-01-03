@@ -6,7 +6,7 @@
 
 
 /*
-    New games must add a file_parser::add_game_parser() call to
+    New games must have a corresponding call to file_parser::add_game_parser() in
         file_parser::init_game_parsers()
 
 
