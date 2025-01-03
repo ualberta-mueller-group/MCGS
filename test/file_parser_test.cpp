@@ -39,6 +39,7 @@ void assert_throw_status_file(const string& file_name, bool should_throw, parser
 {
     file_parser* parser = file_parser::from_file(input_root_dir + file_name);
     _assert_throw_status(parser, should_throw, code);
+    delete parser;
 }
 
 
