@@ -17,7 +17,7 @@
         file_parser functions; many errors will be from bad user input rather than programming bugs,
         and exceptions also make unit testing easier
 
-    TODO: Version command should be optional, BUT STILL CHECKED, when reading from string
+    Version command is optional, BUT STILL CHECKED, when reading from string
 */
 
 using namespace std;
@@ -656,6 +656,12 @@ bool file_parser::parse_chunk(game_case& gc)
         // Match command
         if (match('{', '}', "command", false))
         {
+            if (!_do_version_check && _token.find("version") != -1)
+            {
+                version_check(_token);
+                continue;
+            }
+
             parse_command();
 
             // the only command is a "run" command, so just return a case.

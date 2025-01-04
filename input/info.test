@@ -24,7 +24,7 @@ be on
         Commands are used to run games, indicate file format version, and do other things.
 
         When reading from stdin or file, the input must start with a version command.
-        When reading from args, the version command is omitted.
+        When reading from args, the version command is optional
 
     [this is a section title, indicating a specific game]
         i.e. [clobber_1xn]

@@ -1,0 +1,15 @@
+{version 1.0}
+[nogo_1xn] X..O
+{B win, W win}
+
+[integer_game]
+4 -5
+{B loss, W win}
+
+[clobber_1xn]
+XOXOXOXO
+{B win, W}
+
+/ Now test the 0 game \
+{B loss, W loss}
+

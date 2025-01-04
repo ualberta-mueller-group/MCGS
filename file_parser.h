@@ -238,7 +238,7 @@ enum parser_exception_code
     DUPLICATE_GAME_PARSER,
     FAILED_MATCH,
     FAILED_GAME_TOKEN_PARSE,
-    CASE_LIMIT_EXCEEDED,
+    CASE_LIMIT_EXCEEDED, // shouldn't happen in practice
     EMPTY_COMMAND,
     EMPTY_CASE_COMMAND,
     FAILED_CASE_COMMAND,
