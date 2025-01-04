@@ -20,8 +20,7 @@
 #include "split_test.h"
 
 #include "file_parser_test.h"
-
-
+#include "cli_options_test.h"
 
 
 // TODO make a "do slow tests" build target?
@@ -29,9 +28,8 @@ const bool DO_SLOWER_TESTS = false;
 
 int main()
 {
-
-
     file_parser_test_all();
+    cli_options_test_all();
 
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
