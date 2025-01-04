@@ -5,9 +5,7 @@
 
 using std::cout, std::endl, std::string, std::ifstream;
 
-
 const string input_root_dir = "test/input/file_parser/";
-
 
 ////////////////////////////////////////////////// end to end tests
 
@@ -93,21 +91,6 @@ void assert_throw_status_string(const string& file_name, bool should_throw, pars
     _assert_throw_status(parser, should_throw, code);
     delete parser;
 }
-
-
-/*
-
-- end to end tests (from file and string)
-    - valid input
-    - invalid input
-
-
-
-
-///// wrong CLI flags
-- unit tests
-    - test helper functions (from a friend function?)
-   */
 
 
 ////////////////////////////// invalid input
@@ -238,6 +221,7 @@ void e2e_test18() {
     assert_throw_status_string("missing_whitespace2.test", true, FAILED_MATCH);
 }
 
+
 ////////////////////////////// valid input
 
 // reserved characters in comments
@@ -289,6 +273,7 @@ void e2e_test20() {
 
 }
 
+
 ////////////////////////////// some sums of games
 
 void e2e_test21()
@@ -310,20 +295,6 @@ void e2e_test24()
 {
     run_file(input_root_dir + "sumgames4.test", 1);
 }
-
-void e2e_test25()
-{
-
-}
-
-void e2e_test26()
-{
-
-}
-
-
-
-
 
 void end_to_end_tests()
 {
@@ -351,18 +322,6 @@ void end_to_end_tests()
     e2e_test22();
     e2e_test23();
     e2e_test24();
-    e2e_test25();
-    e2e_test26();
-
-
-}
-
-
-////////////////////////////////////////////////// unit tests
-
-void unit_tests()
-{
-
 }
 
 
@@ -370,5 +329,4 @@ void unit_tests()
 void file_parser_test_all()
 {
     end_to_end_tests();
-    unit_tests();
 }
