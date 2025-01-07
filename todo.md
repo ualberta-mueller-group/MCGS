@@ -10,7 +10,7 @@
 - file parser + CLI options
     - end to end tests (from file and string)
         - valid input
-            - not calling parse_chunk() over the whole file
+            - not calling `parse_chunk()` over the whole file
             - reserved characters in comments
         - invalid input
             - missing/wrong version command
@@ -25,38 +25,66 @@
             - missing whitespace
     - unit tests
         - test helper functions (from a friend function?)
-- testing framework
-    - design with functionality loosely inspired by GoGui tools
-        - not actually based on/compatible with GoGui tools?
+- testing framework for V1 and beyond
+    - ideas based on:
+        - loosely inspired by GoGui tools
         - gogui-regress
         - gogui-statistics
+        - not actually based on/compatible with GoGui tools
+    - design for MCGS testing framework
+        - what is a minimal usable framework for V1?
+        - single run vs diff between runs - two separate tools?
+        - persistent mode for DB, transposition table etc. 
+        versus "from scratch" mode for repeatability
+        - define a 1.x version to add other functions
         - output raw data as CSV-like file
-            - visualizations generated from this format?
-        - python program using MCGS to parse tests?
-            - "./MCGS --file some-file.test --print-tests" (prints info used by testing framework)
-            - "./MCGS --file some-file.test --case 3" (runs only case 3 from a file)
-            - Some way to include comments in the output (i.e. start with "/!" instead of "/")
-        - HTML tables
+        - visualisations generated from this format
+            - basic html, with expected and unexpected pass/fail
+                - different levels of "badness", e.g. wrong result = red,
+                  timeout = yellow
+        - list the functionality needed by the test framework
+            - decide what parts to do in MCGS, or outside (Python)
+                - python program using MCGS to parse tests?
+                    - "./MCGS --file some-file.test --print-tests" (prints info used by testing framework)
+                    - "./MCGS --file some-file.test --case 3" (runs only case 3 from a file)
+        - Some way to include user comments in the output 
+            - (i.e. start with "/!" instead of "/")
+            - Example: point out problematic test cases to focus on
+        - HTML table output
             - colors to differentiate outcomes
-                - timeout
-                - MCGS crash
-                - wrong result
-                - slower result?
+                - timeout = orange
+                - MCGS crash = dark red
+                - wrong result = red
+                - slower result than expected? threshold? = yellow
+                    - color this if "significantly" different from previous time? some threshold of percentage difference?
                 - "unexpected pass/fail" (just regression test? unexpected pass is a good thing?)
-            - sort by column
+                - input hash changed = blue
+            - sort by columns
+            - columns:
                 - file + case number
                 - human-readable sum representation
                 - to-play
-                - included comments
-                - "value" (i.e. win/lose)
-                - "outcome" (i.e. pass, timeout, etc)
-                - time
-                    - color this if "significantly" different from previous time? some threshold of percentage difference?
-                - input hash (MD5 or SHA512 of input tokens, to verify the test case hasn't changed. Color this and print warnings when it has)
-                    - or just compare previous human readable representation (this could change if a game's game::print() function changes)
-- documentation
+                - included comments (if any)
+                - expected value (i.e. win/lose)
+                - search outcome (i.e. pass, timeout, etc)
+                - time used
+                - input hash (MD5 or SHA512 of input tokens)
+
+        - diff tool
+            - based on (one or) two csv files
+            - HTML output
+                - compare content
+                    - add cases
+                    - delete cases
+                    - human readable representation changed
+                    (this could change if a game's game::print() function changes)
+                    - hash changed between runs
+        
+    - documentation
     - make sure README.md, "./MCGS --help", info.test, etc are up to date and complete enough
         - i.e. game::split() is no longer virtual, calls virtual split_implementation() and filters out games with no moves
+
+## V2 and beyond
 - transposition table
     - "random seed" Henry mentioned (each game has random data added to hash)?
 - databases
