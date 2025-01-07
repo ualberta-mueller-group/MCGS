@@ -1,42 +1,59 @@
 #include "file_parser_test.h"
+#include "clobber_1xn.h"
 #include "file_parser.h"
 #include <fstream>
+#include "nogo_1xn.h"
 #include "sumgame.h"
+#include "all_game_headers.h"
+#include <sstream>
 
-using std::cout, std::endl, std::string, std::ifstream;
+using std::cout, std::endl, std::string, std::ifstream, std::stringstream;
 
 const string input_root_dir = "test/input/file_parser/";
 
 ////////////////////////////////////////////////// end to end tests
 
-void run_file(const string& file_name, int expected_case_count)
+void run_file(const string& file_name, vector<game_case *> expected_cases)
 {
-    file_parser* parser = file_parser::from_file(file_name);
+    file_parser *parser = file_parser::from_file(file_name);
 
     game_case gc;
+    int case_idx = 0;
 
-    int case_count = 0;
     while (parser->parse_chunk(gc))
     {
-        case_count++;
+        assert(case_idx < expected_cases.size());
 
-        sumgame sum(gc.to_play);
+        game_case& expected = *expected_cases[case_idx];
+        case_idx++;
 
-        for (game* g : gc.games)
+        assert(gc.to_play == expected.to_play);
+        assert(gc.expected_outcome == expected.expected_outcome);
+        assert(gc.games.size() == expected.games.size());
+
+        for (int i = 0; i < gc.games.size(); i++)
         {
-            sum.add(g);
-        }
+            string str_got;
+            string str_expected;
 
-        bool outcome = sum.solve();
-        if (gc.expected_outcome != TEST_OUTCOME_UNKNOWN)
-        {
-            assert(outcome == gc.expected_outcome);
+            {
+                stringstream stream;
+                gc.games[i]->print(stream);
+                str_got = stream.str();
+            }
+
+            {
+                stringstream stream;
+                expected.games[i]->print(stream);
+                str_expected = stream.str();
+            }
+
+            assert(str_got == str_expected);
+
         }
 
         gc.cleanup_games();
     }
-
-    assert(case_count == expected_case_count);
 
     delete parser;
 }
@@ -278,22 +295,138 @@ void e2e_test20() {
 
 void e2e_test21()
 {
-    run_file(input_root_dir + "sumgames1.test", 8);
+    vector<game_case *> cases;
+
+    {
+        game_case* gc = new game_case();
+        cases.push_back(gc);
+
+        gc->to_play = BLACK;
+        gc->expected_outcome = TEST_OUTCOME_WIN;
+        gc->games.push_back(new nogo_1xn("X..O"));
+    }
+
+    {
+        game_case* gc = new game_case();
+        cases.push_back(gc);
+
+        gc->to_play = WHITE;
+        gc->expected_outcome = TEST_OUTCOME_WIN;
+        gc->games.push_back(new nogo_1xn("X..O"));
+    }
+
+    {
+        game_case* gc = new game_case();
+        cases.push_back(gc);
+
+        gc->to_play = BLACK;
+        gc->expected_outcome = TEST_OUTCOME_LOSS;
+        gc->games.push_back(new integer_game(4));
+        gc->games.push_back(new integer_game(-5));
+    }
+
+    {
+        game_case* gc = new game_case();
+        cases.push_back(gc);
+
+        gc->to_play = WHITE;
+        gc->expected_outcome = TEST_OUTCOME_WIN;
+        gc->games.push_back(new integer_game(4));
+        gc->games.push_back(new integer_game(-5));
+    }
+
+    {
+        game_case* gc = new game_case();
+        cases.push_back(gc);
+
+        gc->to_play = BLACK;
+        gc->expected_outcome = TEST_OUTCOME_WIN;
+        gc->games.push_back(new clobber_1xn("XOXOXOXO"));
+    }
+
+    {
+        game_case* gc = new game_case();
+        cases.push_back(gc);
+
+        gc->to_play = WHITE;
+        gc->expected_outcome = TEST_OUTCOME_UNKNOWN;
+        gc->games.push_back(new clobber_1xn("XOXOXOXO"));
+    }
+
+    {
+        game_case* gc = new game_case();
+        cases.push_back(gc);
+
+        gc->to_play = BLACK;
+        gc->expected_outcome = TEST_OUTCOME_LOSS;
+    }
+
+    {
+        game_case* gc = new game_case();
+        cases.push_back(gc);
+
+        gc->to_play = WHITE;
+        gc->expected_outcome = TEST_OUTCOME_LOSS;
+    }
+
+
+    run_file(input_root_dir + "sumgames1.test", cases);
+
+    for (game_case* gc : cases) 
+    {
+        gc->cleanup_games();
+        delete gc;
+    }
+
+
 }
 
 void e2e_test22()
 {
-    run_file(input_root_dir + "sumgames2.test", 0);
+    vector<game_case *> cases;
+
+    run_file(input_root_dir + "sumgames2.test", cases);
+
+    for (game_case* gc : cases) 
+    {
+        gc->cleanup_games();
+        delete gc;
+    }
 }
 
 void e2e_test23()
 {
-    run_file(input_root_dir + "sumgames3.test", 0);
+    vector<game_case *> cases;
+
+    run_file(input_root_dir + "sumgames3.test", cases);
+
+    for (game_case* gc : cases) 
+    {
+        gc->cleanup_games();
+        delete gc;
+    }
 }
 
 void e2e_test24()
 {
-    run_file(input_root_dir + "sumgames4.test", 1);
+    vector<game_case *> cases;
+
+    {
+        game_case* gc = new game_case();
+        cases.push_back(gc);
+
+        gc->to_play = BLACK;
+        gc->expected_outcome = TEST_OUTCOME_LOSS;
+        gc->games.push_back(new clobber_1xn("XOOX"));
+    }
+
+    run_file(input_root_dir + "sumgames4.test", cases);
+
+    for (game_case* gc : cases) 
+    {
+        gc->cleanup_games();
+        delete gc;
+    }
 }
 
 void end_to_end_tests()
