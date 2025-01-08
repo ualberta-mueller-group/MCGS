@@ -10,7 +10,7 @@ using namespace std;
 ////////////////////////////////////////////////// cli_options
 
 cli_options::cli_options() : parser(nullptr), dry_run(false),
-    should_exit(false)
+    should_exit(false), run_tests(false)
 { }
 
 cli_options::~cli_options()
@@ -44,6 +44,8 @@ to be ignored.";
     print_flag("--stdin", "Read game cases from stdin");
     print_flag("--file <file name>", "Read game cases from <file name>");
     print_flag("--parser-debug", "Print file_parser debug info");
+    print_flag("--run-tests", "TODO");
+    print_flag("--case", "TODO");
 }
 
 cli_options parse_cli_args(int _argc, const char** argv, bool silent)
@@ -124,6 +126,24 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
         {
             file_parser::debug_printing = true;
             continue;
+        }
+
+        if (arg == "--run-tests")
+        {
+            opts.run_tests = true;
+            continue;
+        }
+
+        if (arg == "--case")
+        {
+            if (arg_next.size() == 0)
+            {
+                string why = "--case but no case number";
+                throw cli_options_exception(why);
+            }
+
+            cout << "CASE IS " << arg_next << endl;
+            exit(0); // TODO
         }
 
         if (arg.size() > 0 && arg.front() != '-')

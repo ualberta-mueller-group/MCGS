@@ -14,6 +14,7 @@ struct cli_options
     std::shared_ptr<file_parser> parser;
     bool dry_run; // Do dry run without running games
     bool should_exit; // Exit from main() i.e. when "--help" used
+    bool run_tests;
 };
 
 

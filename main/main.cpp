@@ -11,6 +11,7 @@
 #include "file_parser.h"
 #include "sumgame.h"
 #include "cli_options.h"
+#include "autotests.h"
 
 #include "all_game_headers.h"
 
@@ -22,6 +23,12 @@ int main(int argc, const char** argv)
 
     if (opts.should_exit)
     {
+        return 0;
+    }
+
+    if (opts.run_tests)
+    {
+        run_autotests();
         return 0;
     }
 
