@@ -18,7 +18,7 @@
 
 using std::cout, std::endl, std::string;
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
     cli_options opts = parse_cli_args(argc, argv);
 

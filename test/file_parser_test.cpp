@@ -6,6 +6,7 @@
 #include "sumgame.h"
 #include "all_game_headers.h"
 #include <sstream>
+#include "test_utilities.h"
 
 using std::cout, std::endl, std::string, std::ifstream, std::stringstream;
 
@@ -13,50 +14,6 @@ const string input_root_dir = "test/input/file_parser/";
 
 ////////////////////////////////////////////////// end to end tests
 
-void run_file(const string& file_name, vector<game_case *> expected_cases)
-{
-    file_parser *parser = file_parser::from_file(file_name);
-
-    game_case gc;
-    int case_idx = 0;
-
-    while (parser->parse_chunk(gc))
-    {
-        assert(case_idx < expected_cases.size());
-
-        game_case& expected = *expected_cases[case_idx];
-        case_idx++;
-
-        assert(gc.to_play == expected.to_play);
-        assert(gc.expected_outcome == expected.expected_outcome);
-        assert(gc.games.size() == expected.games.size());
-
-        for (int i = 0; i < gc.games.size(); i++)
-        {
-            string str_got;
-            string str_expected;
-
-            {
-                stringstream stream;
-                gc.games[i]->print(stream);
-                str_got = stream.str();
-            }
-
-            {
-                stringstream stream;
-                expected.games[i]->print(stream);
-                str_expected = stream.str();
-            }
-
-            assert(str_got == str_expected);
-
-        }
-
-        gc.cleanup_games();
-    }
-
-    delete parser;
-}
 
 void _assert_throw_status(file_parser* parser, bool should_throw, parser_exception_code code)
 {
@@ -370,7 +327,7 @@ void e2e_test21()
     }
 
 
-    run_file(input_root_dir + "sumgames1.test", cases);
+    assert_file_parser_output_file(input_root_dir + "sumgames1.test", cases);
 
     for (game_case* gc : cases) 
     {
@@ -385,7 +342,7 @@ void e2e_test22()
 {
     vector<game_case *> cases;
 
-    run_file(input_root_dir + "sumgames2.test", cases);
+    assert_file_parser_output_file(input_root_dir + "sumgames2.test", cases);
 
     for (game_case* gc : cases) 
     {
@@ -398,7 +355,7 @@ void e2e_test23()
 {
     vector<game_case *> cases;
 
-    run_file(input_root_dir + "sumgames3.test", cases);
+    assert_file_parser_output_file(input_root_dir + "sumgames3.test", cases);
 
     for (game_case* gc : cases) 
     {
@@ -420,7 +377,7 @@ void e2e_test24()
         gc->games.push_back(new clobber_1xn("XOOX"));
     }
 
-    run_file(input_root_dir + "sumgames4.test", cases);
+    assert_file_parser_output_file(input_root_dir + "sumgames4.test", cases);
 
     for (game_case* gc : cases) 
     {

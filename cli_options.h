@@ -17,7 +17,7 @@ struct cli_options
 
 
 // Parses CLI options and returns them. May or may not include a file_parser
-cli_options parse_cli_args(int _argc, char** argv);
+cli_options parse_cli_args(int _argc, const char** argv, bool silent = false);
 
 // Thrown on bad input
 class cli_options_exception : public std::exception

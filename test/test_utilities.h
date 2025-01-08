@@ -12,6 +12,7 @@
 #include "game.h"
 #include "sumgame.h"
 #include "game_factory.h"
+#include "file_parser.h"
 
 inline void assert_move(move_generator& mg, int mv)
 { 
@@ -73,3 +74,5 @@ void assert_player_sum_outcome(int player, bool expected_outcome, const std::vec
 void assert_sum_outcomes(bool black_outcome, bool white_outcome, const std::vector<game_factory_ptr>& factories);
 void assert_inverse_sum_zero(const game_factory_ptr& factory);
 
+void assert_file_parser_output(file_parser* parser, vector<game_case *>& expected_cases);
+void assert_file_parser_output_file(const std::string& file_name, vector<game_case *>& expected_cases);
