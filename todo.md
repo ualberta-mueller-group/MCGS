@@ -6,25 +6,7 @@
 ## Martin - Version 1 - Dec 9
 - update the todo file
 
-## Taylor - Version 1 - Jan 3
-- file parser + CLI options
-    - end to end tests (from file and string)
-        - valid input
-            - not calling `parse_chunk()` over the whole file
-            - reserved characters in comments
-        - invalid input
-            - missing/wrong version command
-            - games without sections
-            - reserved characters outside of comments
-            - invalid commands
-            - invalid section titles
-            - unmatched "brackets"
-            - invalid game tokens
-            - wrong file name
-            - wrong CLI flags
-            - missing whitespace
-    - unit tests
-        - test helper functions (from a friend function?)
+## Taylor - Version 1 - Jan 7
 - testing framework for V1 and beyond
     - ideas based on:
         - loosely inspired by GoGui tools
@@ -81,8 +63,9 @@
                     - hash changed between runs
         
     - documentation
-    - make sure README.md, "./MCGS --help", info.test, etc are up to date and complete enough
-        - i.e. game::split() is no longer virtual, calls virtual split_implementation() and filters out games with no moves
+        - Document file_parser, cli_options, game_case etc
+        - make sure README.md, "./MCGS --help", info.test, etc are up to date and complete enough
+            - i.e. game::split() is no longer virtual, calls virtual split_implementation() and filters out games with no moves
 
 ## V2 and beyond
 - transposition table
