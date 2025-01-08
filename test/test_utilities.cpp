@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------
 #include "test_utilities.h"
 
-using std::vector;
+using std::vector, std::string, std::stringstream;
 
 void assert_solve(game& pos, bw to_play,
                   const bool expected_result)
@@ -112,3 +112,54 @@ void assert_inverse_sum_zero(const game_factory_ptr& factory)
     }
 
 }
+
+void assert_file_parser_output(file_parser* parser, vector<game_case *>& expected_cases)
+{
+    game_case gc;
+    int case_idx = 0;
+
+    while (parser->parse_chunk(gc))
+    {
+        assert(case_idx < expected_cases.size());
+
+        game_case& expected = *expected_cases[case_idx];
+        case_idx++;
+
+        assert(gc.to_play == expected.to_play);
+        assert(gc.expected_outcome == expected.expected_outcome);
+        assert(gc.games.size() == expected.games.size());
+
+        for (int i = 0; i < gc.games.size(); i++)
+        {
+            string str_got;
+            string str_expected;
+
+            {
+                stringstream stream;
+                gc.games[i]->print(stream);
+                str_got = stream.str();
+            }
+
+            {
+                stringstream stream;
+                expected.games[i]->print(stream);
+                str_expected = stream.str();
+            }
+
+            assert(str_got == str_expected);
+
+        }
+
+        gc.cleanup_games();
+    }
+
+    assert(case_idx == expected_cases.size());
+}
+
+void assert_file_parser_output_file(const string& file_name, vector<game_case *>& expected_cases)
+{
+    file_parser* parser = file_parser::from_file(file_name);
+    assert_file_parser_output(parser, expected_cases);
+    delete parser;
+}
+

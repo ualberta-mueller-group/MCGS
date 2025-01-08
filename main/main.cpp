@@ -2,19 +2,64 @@
 // main.cpp - main loop of MCGS
 //---------------------------------------------------------------------------
 
+#include <cstdio>
 #include <iostream>
+#include <string>
 #include "cgt_basics.h"
 #include "alternating_move_game.h"
-#include "cgt_move.h"
-#include "clobber_1xn.h"
-#include "nim.h"
-#include "nogo_1xn.h"
-#include "elephants.h"
+#include "cli_options.h"
+#include "file_parser.h"
+#include "sumgame.h"
+#include "cli_options.h"
 
-using std::cout, std::endl;
+#include "all_game_headers.h"
 
-int main()
+using std::cout, std::endl, std::string;
+
+int main(int argc, const char** argv)
 {
+    cli_options opts = parse_cli_args(argc, argv);
+
+    if (opts.should_exit)
+    {
+        return 0;
+    }
+
+    // Run sums from input
+    if (opts.parser)
+    {
+        game_case gc;
+
+        while (opts.parser->parse_chunk(gc))
+        {
+            cout << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << endl;
+            cout << "TEST CASE" << endl;
+            cout << "Player: " << color_char(gc.to_play) << endl;
+            cout << "Expected outcome: " << test_outcome_to_string(gc.expected_outcome) << endl;
+            cout << endl;
+
+            sumgame sum(gc.to_play);
+
+            for (game* g : gc.games)
+            {
+                cout << *g << endl;
+                sum.add(g);
+            }
+            cout << endl;
+
+
+            if (opts.dry_run)
+            {
+                cout << "Not running games..." << endl;
+            } else
+            {
+                bool result = sum.solve();
+                cout << "Result: " << result << endl;
+            }
+            cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
+            gc.cleanup_games();
+        }
+    }
 
     {
         nim pos("1 2 3");
@@ -51,4 +96,5 @@ int main()
         cout << "Solve elephants " << pos << ", result " << result << endl;
         
     }
+
 }

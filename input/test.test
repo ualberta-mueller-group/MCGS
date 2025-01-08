@@ -1,0 +1,21 @@
+{version 1.0}
+
+/ Some simple tests \
+
+[clobber_1xn]
+XO              {B win, W win}
+XOXO            {B win, W win}
+XOXOXO          {B loss, W loss}
+XOXOXOXO        {B win, W win}
+
+
+/ Sums of different game types \
+[nogo_1xn] X..O
+[clobber_1xn] XO
+{B loss, W loss}
+
+
+
+
+
+

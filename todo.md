@@ -105,8 +105,9 @@
                     - hash changed between runs
         
     - documentation
-    - make sure README.md, "./MCGS --help", info.test, etc are up to date and complete enough
-        - i.e. game::split() is no longer virtual, calls virtual split_implementation() and filters out games with no moves
+        - Document file_parser, cli_options, game_case etc
+        - make sure README.md, "./MCGS --help", info.test, etc are up to date and complete enough
+            - i.e. game::split() is no longer virtual, calls virtual split_implementation() and filters out games with no moves
 
 ## V1.1 improve testing framework
 - Tests with more detailed time limits

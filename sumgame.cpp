@@ -17,6 +17,8 @@ class sumgame_move_generator : public move_generator
 {
 public:
     sumgame_move_generator(const sumgame& game, bw to_play);
+    ~sumgame_move_generator();
+
     void operator++();
     void next_move(bool init);
     operator bool() const;
@@ -40,6 +42,15 @@ sumgame_move_generator::sumgame_move_generator(const sumgame& game, bw to_play)
     // scroll to first move
     next_move(true);
 
+}
+
+sumgame_move_generator::~sumgame_move_generator()
+{
+    if (_subgame_generator != nullptr)
+    {
+        delete _subgame_generator;
+        _subgame_generator = nullptr;
+    }
 }
 
 //void sumgame_move_generator::skip_no_move_subgames()

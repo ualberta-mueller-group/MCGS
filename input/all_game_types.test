@@ -1,0 +1,14 @@
+{version 1.0}
+[clobber_1xn] XOXO OX..
+[nogo_1xn] X..O
+[elephants] X...O
+[nim] (1 2 3) 4
+
+[integer_game] 5 -4 0
+[nimber] 7
+
+[dyadic_rational] (5 2) (-3 4) (0 1)
+[switch_game] (4 3) (-4 -6)
+
+[up_star] (-4 *) 5 *
+{B, W}

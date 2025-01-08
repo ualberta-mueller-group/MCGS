@@ -1,0 +1,33 @@
+{version 1.0}
+
+[clobber_1xn]
+    XOOOXXX
+    XOO.X XOOOXXXXX
+
+[nogo_1xn]
+    X...X..O.O
+    X...X...X...X..O.O
+    O...X
+    OOOO.O.O.O.X.X.X....X
+
+[switch_game]
+    (4 -1)
+    (4 -2)
+    (100 -3)
+    (4 -1)
+
+{B, W}
+
+
+    (2 -4)
+
+{W win, B win}
+
+
+[clobber_1xn]
+    XOOX X..X
+
+[switch_game]
+    (1 0)
+
+{W loss, B loss}
