@@ -19,6 +19,7 @@ MCGS_TEST_DEPS = $(MCGS_TEST_SRC:.cpp=.d)
 
 
 .DEFAULT_GOAL := MCGS
+.PHONY: lc test clean
 
 
 CAN_BUILD=0
@@ -59,6 +60,10 @@ clean:
 
 test: MCGS_test
 	./MCGS_test
+
+lc: MCGS
+	clear
+	valgrind --leak-check=full ./MCGS "[clobber_1xn] XOXOXO {B}"
 
 
 #%.d: %.cpp

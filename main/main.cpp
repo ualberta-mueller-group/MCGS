@@ -8,18 +8,26 @@
 #include "cgt_basics.h"
 #include "alternating_move_game.h"
 #include "cli_options.h"
-#include "clobber_1xn.h"
-#include "nim.h"
-#include "nogo_1xn.h"
-#include "elephants.h"
 #include "file_parser.h"
 #include "sumgame.h"
 #include "cli_options.h"
+
+#include "all_game_headers.h"
 
 using std::cout, std::endl, std::string;
 
 int main(int argc, const char** argv)
 {
+
+    /*
+    clobber_1xn* g1 = new clobber_1xn("XO");
+    sumgame sum(BLACK);
+    sum.add(g1);
+    bool outcome = sum.solve();
+    delete g1;
+    return 0;
+    */
+
     cli_options opts = parse_cli_args(argc, argv);
 
     if (opts.should_exit)
@@ -98,4 +106,5 @@ int main(int argc, const char** argv)
         cout << "Solve elephants " << pos << ", result " << result << endl;
         
     }
+
 }
