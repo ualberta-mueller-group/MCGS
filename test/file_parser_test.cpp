@@ -1,12 +1,10 @@
 #include "file_parser_test.h"
-#include "clobber_1xn.h"
+
+#include "test_utilities.h"
+#include "all_game_headers.h"
 #include "file_parser.h"
 #include <fstream>
-#include "nogo_1xn.h"
-#include "sumgame.h"
-#include "all_game_headers.h"
 #include <sstream>
-#include "test_utilities.h"
 
 using std::cout, std::endl, std::string, std::ifstream, std::stringstream;
 
@@ -244,7 +242,6 @@ void e2e_test20() {
     }
 
     // No exception should have been thrown
-
 }
 
 
@@ -334,8 +331,6 @@ void e2e_test21()
         gc->cleanup_games();
         delete gc;
     }
-
-
 }
 
 void e2e_test22()

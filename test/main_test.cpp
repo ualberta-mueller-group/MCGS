@@ -18,7 +18,6 @@
 #include "elephants_test.h"
 
 #include "split_test.h"
-
 #include "file_parser_test.h"
 #include "cli_options_test.h"
 
@@ -28,9 +27,6 @@ const bool DO_SLOWER_TESTS = false;
 
 int main()
 {
-    file_parser_test_all();
-    cli_options_test_all();
-
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
@@ -38,7 +34,6 @@ int main()
     cgt_nimber_test_all();
     cgt_switch_test_all();
     cgt_up_star_test_all();
-
 
     split_test_all();
 
@@ -51,4 +46,7 @@ int main()
         elephants_test_all(); // takes several seconds
     }
     sumgame_test_all();
+
+    file_parser_test_all();
+    cli_options_test_all();
 }

@@ -3,12 +3,13 @@
 #include "file_parser.h"
 #include <memory>
 
+/*
+    Variables resulting from command line options. "parser" may be nullptr
+*/
 struct cli_options
 {
     cli_options();
     ~cli_options();
-
-    void cleanup();
 
     std::shared_ptr<file_parser> parser;
     bool dry_run; // Do dry run without running games
@@ -16,7 +17,11 @@ struct cli_options
 };
 
 
-// Parses CLI options and returns them. May or may not include a file_parser
+/*
+    Parses CLI options and returns them. May or may not include a file_parser
+
+    When "silent" is true, dont print to stdout (useful for unit testing)
+*/
 cli_options parse_cli_args(int _argc, const char** argv, bool silent = false);
 
 // Thrown on bad input

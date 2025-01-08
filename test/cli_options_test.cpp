@@ -1,15 +1,15 @@
 #include "cli_options_test.h"
-#include "cli_options.h"
-#include <istream>
-#include <sstream>
+
+
 #include "all_game_headers.h"
+#include "cli_options.h"
 #include "clobber_1xn.h"
 #include "file_parser.h"
 #include "test/test_utilities.h"
 
 using namespace std;
 
-cli_options call_parse(vector<string> args)
+cli_options call_parse(const vector<string>& args)
 {
     /*
         don't allocate memory here; exceptions will be thrown and 

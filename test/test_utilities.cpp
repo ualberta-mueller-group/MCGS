@@ -152,6 +152,8 @@ void assert_file_parser_output(file_parser* parser, vector<game_case *>& expecte
 
         gc.cleanup_games();
     }
+
+    assert(case_idx == expected_cases.size());
 }
 
 void assert_file_parser_output_file(const string& file_name, vector<game_case *>& expected_cases)
