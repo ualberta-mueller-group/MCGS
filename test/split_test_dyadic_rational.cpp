@@ -107,6 +107,11 @@ void dyadic_rational_split3()
     assert(ig != nullptr);
 
     assert(ig->value() == 8);
+
+    for (game* g : *sr)
+    {
+        delete g;
+    }
 }
 
 void split_test_dyadic_rational_all()
