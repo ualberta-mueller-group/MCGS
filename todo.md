@@ -4,54 +4,108 @@
 # V1 todo
 
 ## Martin - Version 1 - Dec 9
-- update the document and the todo with today's discussion
-- clear up what is/is not in version 1
+- update the todo file
 
-## Taylor - Version 1 - Dec 9
-- better makefile, with .o files
-- try to implement a simple game following the README
-- implement `play_and_split` on subgame G
-    - leave current play function as-is, to play the move on G
-    - split: check if G can be split into subgames
-        - cases:
-        - case a: subgame is over after play() -> 0 new games, old game G deactivated
-        - case b: still the same subgame after split - no split found, 
-            - G changed into GL or GR, same object in memory
-        - case c: Still one game, but different type:
-            - Example: G = switch {3 | 1}, Black plays to 3
-                - deactivate G
-                - create new `integer_game(3)`, add to sum
-        - case d: Two or more subgames after split: 
-            - create new subgames G1, G2,..as active games
-            - split should return the vector of (new or old) games
-            - sometimes, after the split some subgames can be pruned (later)
-        - sumgame should deal with changes to the sum in each case
-            - if new games: deactivate G, add G1, G2, ... to sum
-        - split has to be implemented for each existing game type
-            - default implementation in `game` does nothing 
-                - return the game, case b
-            - Clobber: can do it based on existing game-specific codes
-            - NoGo: ask Henry
-            - `integer_game`: default
-            - `dyadic_rational` p/q can become integer if q=1
-            - switch can become integer
-            - `up_star`: default
-            - nimber: default
-    - write unit tests for split, for play_and_split
-    - use it in sumgame::solve
+## Taylor - Version 1 - Jan 3
+- file parser + CLI options
+    - end to end tests (from file and string)
+        - valid input
+            - not calling `parse_chunk()` over the whole file
+            - reserved characters in comments
+        - invalid input
+            - missing/wrong version command
+            - games without sections
+            - reserved characters outside of comments
+            - invalid commands
+            - invalid section titles
+            - unmatched "brackets"
+            - invalid game tokens
+            - wrong file name
+            - wrong CLI flags
+            - missing whitespace
+    - unit tests
+        - test helper functions (from a friend function?)
+- testing framework for V1 and beyond
+    - ideas based on:
+        - loosely inspired by GoGui tools
+        - gogui-regress
+        - gogui-statistics
+        - not actually based on/compatible with GoGui tools
+    - design for MCGS testing framework
+        - what is a minimal usable framework for V1?
+        - single run vs diff between runs - two separate tools?
+        - persistent mode for DB, transposition table etc. 
+        versus "from scratch" mode for repeatability
+        - define a 1.x version to add other functions
+        - output raw data as CSV-like file
+        - visualisations generated from this format
+            - basic html, with expected and unexpected pass/fail
+                - different levels of "badness", e.g. wrong result = red,
+                  timeout = yellow
+        - list the functionality needed by the test framework
+            - decide what parts to do in MCGS, or outside (Python)
+                - python program using MCGS to parse tests?
+                    - "./MCGS --file some-file.test --print-tests" (prints info used by testing framework)
+                    - "./MCGS --file some-file.test --case 3" (runs only case 3 from a file)
+        - Some way to include user comments in the output 
+            - (i.e. start with "/!" instead of "/")
+            - Example: point out problematic test cases to focus on
+        - HTML table output
+            - colors to differentiate outcomes
+                - timeout = orange
+                - MCGS crash = dark red
+                - wrong result = red
+                - slower result than expected? threshold? = yellow
+                    - color this if "significantly" different from previous time? some threshold of percentage difference?
+                - "unexpected pass/fail" (just regression test? unexpected pass is a good thing?)
+                - input hash changed = blue
+            - sort by columns
+            - columns:
+                - file + case number
+                - human-readable sum representation
+                - to-play
+                - included comments (if any)
+                - expected value (i.e. win/lose)
+                - search outcome (i.e. pass, timeout, etc)
+                - time used
+                - input hash (MD5 or SHA512 of input tokens)
+
+        - diff tool
+            - based on (one or) two csv files
+            - HTML output
+                - compare content
+                    - add cases
+                    - delete cases
+                    - human readable representation changed
+                    (this could change if a game's game::print() function changes)
+                    - hash changed between runs
+        
+    - documentation
+    - make sure README.md, "./MCGS --help", info.test, etc are up to date and complete enough
+        - i.e. game::split() is no longer virtual, calls virtual split_implementation() and filters out games with no moves
+
+## V2 and beyond
+- transposition table
+    - "random seed" Henry mentioned (each game has random data added to hash)?
+- databases
+    - should this make it into the talk?
+    - "hierarchical hash buckets" default case?
+    - only in memory, or dynamic loading of "chunks" from disk?
+
+## To discuss in meeting (Jan 3)
+- goals/scope for Portugal talk?
+    - minimum features
+    - ideal features
+- are we behind/on/ahead of schedule?
+- testing framework design
+
 
 ## To discuss with Taylor
 - any questions on code, or document?
 - next steps:
-    - github repo, full access
-    - what to work on this week?
-    - meet Henry? Define agenda first, or just chat?
     - Weekly meeting - when?
     - First goal: finish Version 1 as of the plan in the document
-- from email: For me, a few high priority things 
-that you could work on are:
-    - extending the sumgame class to support changes after a move, 
-    i.e. split game into two subgames, or change the type of game.
+- from email: a few high priority things 
     - design and implementation of database
     - design and implementation of hash codes and transposition table
     - performance tests and test cases. Tests with time limits.
@@ -137,7 +191,6 @@ A few other things that I was planning to tackle myself, but we can also discuss
         can create an integer
 
 ## V1 todo other
-## V1 todo other
 - rewrite `unused/nim` to use sumgame and nimbers classes
 - rewrite `unused/nim_test` and `unused/nim_random_test`
 - replace a game (e.g. clobber position) by an equal game of simpler type
@@ -146,6 +199,7 @@ A few other things that I was planning to tackle myself, but we can also discuss
 
 # Todo Design and Naming Issues
 - rename `x_1xn` to `x_strip` ?
+- rename `x_game` to `game_x`? E.g. `integer_game` to `game_integer`
 - play() can change the type of game
     - how to handle?
     - what if a game such as clobber is equal to a simpler game such as up
@@ -209,4 +263,7 @@ A few other things that I was planning to tackle myself, but we can also discuss
     - avoid canonical form
     - use sum game structure
     - get more from cgt-search writeup
+- techniques
+- examples, performance
+- future plans
 
