@@ -1,5 +1,6 @@
 #include "cli_options.h"
 #include <filesystem>
+#include <unistd.h>
 #include <vector>
 #include <iostream>
 #include "file_parser.h"
@@ -142,6 +143,7 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
                 throw cli_options_exception(why);
             }
 
+            sleep(2);
             cout << "CASE IS " << arg_next << endl;
             exit(0); // TODO
         }

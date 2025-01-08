@@ -63,3 +63,24 @@ MCGS needs to parse the input for me to even know how many cases are in the file
 
 ./MCGS --persist
     fileName caseNumber
+
+
+============================================================
+
+Use these to spawn a subprocess with 2 way communication: (????????)
+
+pipe()
+fork()
+close()
+dup2()
+execl()
+
+write()
+
+read()
+waitpid()
+
+poll()
+
+
+Probably not supported on Windows...

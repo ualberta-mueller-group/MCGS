@@ -3,14 +3,23 @@
 #include "cgt_basics.h"
 
 #include <cerrno>
+#include <csignal>
+#include <poll.h>
 #include <iostream>
 #include <fstream>
+#include <sys/poll.h>
+#include <sys/wait.h>
 #include <filesystem>
 #include <cassert>
 #include "game.h"
 #include <string>
 #include <vector>
 #include <stdio.h>
+
+#include <unistd.h>
+
+#define READ_END 0
+#define WRITE_END 1
 
 
 using namespace std;
@@ -141,8 +150,9 @@ void run_autotests()
 
 
             // Invoke subprocess...
-            string command_string = "./MCGS --casse " + to_string(case_number);
 
+            /*
+            string command_string = "./MCGS --case " + to_string(case_number);
             FILE* proc = popen(command_string.c_str(), "r");
             cout << "[" << (proc == nullptr) << "]" << newline;
 
@@ -162,9 +172,70 @@ void run_autotests()
             pclose(proc);
 
             outfile << proc_result << newline;
+            */
 
 
+            int down_pipe[2];
+            int up_pipe[2];
 
+            if (pipe(down_pipe) != 0 || pipe(up_pipe) != 0)
+            {
+                throw "Failed to create subprocess pipe...";
+            }
+
+            int pid = fork();
+
+            if (pid == 0) // child
+            {
+                close(down_pipe[WRITE_END]);
+                close(up_pipe[READ_END]);
+
+                dup2(down_pipe[READ_END], STDIN_FILENO);
+                dup2(up_pipe[WRITE_END], STDOUT_FILENO);
+
+                execlp("./MCGS", "./MCGS", "--case", to_string(case_number).c_str(), NULL);
+                throw "execl() call failed";
+            }
+
+            // parent
+            close(down_pipe[READ_END]);
+            close(up_pipe[WRITE_END]);
+
+            // Wait for exit...
+            /*
+                int exit_status = 0;
+                int got_pid = waitpid(pid, &exit_status, 0);
+                assert(got_pid == pid);
+                assert(exit_status == 0);
+            */
+
+            pollfd fds;
+            fds.fd = up_pipe[READ_END];
+            fds.events = POLLIN;
+
+            poll(&fds, 1, 500);
+
+            if (!(fds.revents & POLLIN))
+            {
+                cout << "TIMEOUT" << endl;
+            }
+
+            string result;
+
+            char buffer[512];
+            int bytes_read = read(up_pipe[READ_END], buffer, sizeof(buffer) - 1);
+            assert(bytes_read >= 0);
+            buffer[bytes_read] = '\0';
+
+            result = buffer;
+            if (result.size() > 0 && result.back() == '\n')
+            {
+                result.pop_back();
+            }
+            outfile << result << newline;
+
+            close(down_pipe[WRITE_END]);
+            close(up_pipe[READ_END]);
 
             outfile << newline;
             gc.cleanup_games();
