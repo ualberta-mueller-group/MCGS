@@ -18,16 +18,6 @@ using std::cout, std::endl, std::string;
 
 int main(int argc, const char** argv)
 {
-
-    /*
-    clobber_1xn* g1 = new clobber_1xn("XO");
-    sumgame sum(BLACK);
-    sum.add(g1);
-    bool outcome = sum.solve();
-    delete g1;
-    return 0;
-    */
-
     cli_options opts = parse_cli_args(argc, argv);
 
     if (opts.should_exit)
