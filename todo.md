@@ -1,20 +1,62 @@
 # BUGS
 - none known
 
+# Martin to do
+- Jan 9: first draft of talk
+- document const interface for solve(), check that game is restored after search - first simple implementation
+- Decide on V1 Testing and documentation guide
+    - unit tests
+    - coding style, "simple C++"
+    - Use Google coding style document?
+        - https://google.github.io/styleguide/cppguide.html
+        - I looked at it several years back, and it was good then. 
+        Look at it again?
+    - documentation style. For now it is somewhat minimal
+- What are things we can adapt from previous clobber, Nogo solvers? What is general, what is game-specific?
+
+
 # V1 todo
+- Meeting Jan 9
+    - review
+    - style guide
+- Meeting Jan 16
+    - final decisions about V1
+- Goal: freeze V1 code on Jan 17
+- Polish, document, test until Jan 25/31
+- Jan 28 public release on github?
+- Talk on Feb 1, announce V1 to world
 
-## Martin - Version 1 - Dec 9
-- update the todo file
+## V1 minimal usable framework
+    - finish/document current state of parser
+    - add examples for it
+    - Simple file-level timeout
 
-## Taylor - Version 1 - Jan 7
-- testing framework for V1 and beyond
+## file parser + CLI options
+    - end to end tests (from file and string)
+        - valid input
+            - not calling `parse_chunk()` over the whole file
+            - reserved characters in comments
+        - invalid input
+            - missing/wrong version command
+            - games without sections
+            - reserved characters outside of comments
+            - invalid commands
+            - invalid section titles
+            - unmatched "brackets"
+            - invalid game tokens
+            - wrong file name
+            - wrong CLI flags
+            - missing whitespace
+    - unit tests
+        - test helper functions (from a friend function?)
+
+## testing framework for V1 and beyond
     - ideas based on:
         - loosely inspired by GoGui tools
         - gogui-regress
         - gogui-statistics
         - not actually based on/compatible with GoGui tools
     - design for MCGS testing framework
-        - what is a minimal usable framework for V1?
         - single run vs diff between runs - two separate tools?
         - persistent mode for DB, transposition table etc. 
         versus "from scratch" mode for repeatability
@@ -67,50 +109,22 @@
         - make sure README.md, "./MCGS --help", info.test, etc are up to date and complete enough
             - i.e. game::split() is no longer virtual, calls virtual split_implementation() and filters out games with no moves
 
+## V1.1 improve testing framework
+- Tests with more detailed time limits
+- Move most of above framework pieces here
+
 ## V2 and beyond
 - transposition table
-    - "random seed" Henry mentioned (each game has random data added to hash)?
+    - "random seed" Henry mentioned
+        - each game has random data added to hash?
+        - related to using game ID to modify hash
 - databases
     - should this make it into the talk?
     - "hierarchical hash buckets" default case?
     - only in memory, or dynamic loading of "chunks" from disk?
 
-## To discuss in meeting (Jan 3)
-- goals/scope for Portugal talk?
-    - minimum features
-    - ideal features
-- are we behind/on/ahead of schedule?
-- testing framework design
-
-
-## To discuss with Taylor
-- any questions on code, or document?
-- next steps:
-    - Weekly meeting - when?
-    - First goal: finish Version 1 as of the plan in the document
-- from email: a few high priority things 
-    - design and implementation of database
-    - design and implementation of hash codes and transposition table
-    - performance tests and test cases. Tests with time limits.
-    - I think you should just work on one at a time, in a git branch, and then merge it back in when completed.
-
-- recent changes by Martin: 
-    - const interface for solve()
-    - check that game is restored after search - first simple implementation
-- Admin things? Work from home regulations?
-- Testing and documentation
-    - unit tests
-    - coding style, "simple C++"
-    - Use Google coding style document?
-        - https://google.github.io/styleguide/cppguide.html
-        - I looked at it several years back, and it was good then. 
-        Look at it again?
-    - documentation style. For now it is somewhat minimal
-- What are things we can adapt from previous clobber, Nogo solvers? What is general, what is game-specific?
 
 ### Code to do for Taylor
-- what to do first? DB? hashing? small things from clobber solver?
-- design small complete units to code+test
 - review in next meeting after it is ready
 
 ### Design questions to discuss
@@ -233,20 +247,4 @@ A few other things that I was planning to tackle myself, but we can also discuss
 ### Test Cases Implementation
 - should just read one by one, no need for vector. write an iterator???
 - `DO_SLOWER_TESTS` in `main_test.cpp` - implement as a command line option
-
-## Cgt Solver Talk for Portugal
-- check old talk from BIRS
-- intro - math cgt vs cs cgt:
-    - math: prove theorems about class of games
-    - cs: efficiently compute result for a specific game
-    - cs for math: explore, try to find patterns, verify conjectures
-    - math for cs: improve efficiency of computation, simplify, shortcuts
-- goals of solver:
-    - general, efficient
-    - avoid canonical form
-    - use sum game structure
-    - get more from cgt-search writeup
-- techniques
-- examples, performance
-- future plans
 
