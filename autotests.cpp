@@ -12,6 +12,7 @@
 #include "game.h"
 #include "sumgame.h"
 #include "utilities.h"
+#include <ratio>
 #include <sstream>
 #include <poll.h>
 #include <fcntl.h>
@@ -20,6 +21,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "misc_constants.h"
+#include <chrono>
 
 using namespace std;
 
@@ -61,8 +63,22 @@ string human_readable_game_string(const vector<game *>& games, int* line_count)
 
 void run_one_case(cli_options& opts)
 {
-    assert(opts.parser);
-    assert(opts.case_number >= 0);
+    if (opts.case_number == 2)
+    {
+        *((int *) (41)) = 234546;
+    }
+
+    if (!opts.parser)
+    {
+        cerr << "Missing game input" << endl;
+        exit(-1);
+    }
+
+    if (opts.case_number < 0)
+    {
+        cerr << "Missing/invalid case number" << endl;
+        exit(-1);
+    }
 
     int current_case = 0;
     file_parser* parser = opts.parser.get();
@@ -78,6 +94,7 @@ void run_one_case(cli_options& opts)
             did_run = true;
 
             assert(is_black_white(gc.to_play));
+
             sumgame sum(gc.to_play);
 
             for (game* g : gc.games)
@@ -85,10 +102,14 @@ void run_one_case(cli_options& opts)
                 sum.add(g);
             }
 
+            chrono::time_point<chrono::high_resolution_clock> start = chrono::high_resolution_clock::now();
             bool outcome = sum.solve();
+            chrono::time_point<chrono::high_resolution_clock> end = chrono::high_resolution_clock::now();
+            chrono::duration<double, std::milli> duration = (end - start);
 
-            cout << (outcome ? "Win" : "Loss") << "\n";
-            cout << 5.12 << "\n";
+
+            cout << (outcome ? "Win" : "Loss") << newline;
+            cout << duration.count() << newline;
             cout << flush;
 
             gc.cleanup_games();
@@ -124,7 +145,7 @@ void run_one_case(cli_options& opts)
 void run_autotests()
 {
     // test timeout (ms)
-    const int timeout = 2000;
+    const int timeout = 1200;
 
     ofstream outfile("out.txt");
     assert(outfile.is_open());
@@ -262,7 +283,7 @@ void run_autotests()
             int middle_status;
             int returned_pid = waitpid(fork_id, &middle_status, WNOHANG);
 
-            if (returned_pid == -1 || ( (returned_pid == fork_id) && (WEXITSTATUS(middle_status) != 0) ))
+            if (returned_pid == -1 || ( (returned_pid == fork_id) && (!WIFEXITED(middle_status) || WEXITSTATUS(middle_status) != 0 )))
             {
                 test_crashed = true;
             }

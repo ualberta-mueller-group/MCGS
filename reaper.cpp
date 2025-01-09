@@ -1,5 +1,6 @@
 #include "reaper.h"
 #include "utilities.h"
+#include <cstdlib>
 #include <cstring>
 
 #include <fcntl.h>
@@ -185,8 +186,15 @@ void reaper(int argc, char** argv)
         // returned_pid == fork_id means process state changed
         if (returned_pid == fork_id)
         {
-            int exit_status = WEXITSTATUS(bottom_status);
-            exit(exit_status);
+            if (WIFEXITED(bottom_status))
+            {
+                int exit_status = WEXITSTATUS(bottom_status);
+                exit(exit_status);
+            } else
+            {
+                exit(-1);
+            }
+
         }
     }
 }
