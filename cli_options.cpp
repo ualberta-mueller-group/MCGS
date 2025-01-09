@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include "file_parser.h"
+#include "utilities.h"
 
 
 using namespace std;
@@ -11,7 +12,7 @@ using namespace std;
 ////////////////////////////////////////////////// cli_options
 
 cli_options::cli_options() : parser(nullptr), dry_run(false),
-    should_exit(false), run_tests(false)
+    should_exit(false), run_tests(false), case_number(-1)
 { }
 
 cli_options::~cli_options()
@@ -47,9 +48,10 @@ to be ignored.";
     print_flag("--parser-debug", "Print file_parser debug info");
     print_flag("--run-tests", "TODO");
     print_flag("--case", "TODO");
+    print_flag("--silent", "TODO");
 }
 
-cli_options parse_cli_args(int _argc, const char** argv, bool silent)
+cli_options parse_cli_args(int _argc, char** argv, bool silent)
 {
     cli_options opts;
 
@@ -71,6 +73,12 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
     {
         const string& arg = args[arg_idx];
         const string& arg_next = (arg_idx + 1) < argN ? args[arg_idx + 1] : "";
+
+        if (arg == "--silent")
+        {
+            silent = true;
+            continue;
+        }
 
         if (arg == "--stdin")
         {
@@ -143,9 +151,22 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
                 throw cli_options_exception(why);
             }
 
-            sleep(2);
-            cout << "CASE IS " << arg_next << endl;
-            exit(0); // TODO
+            if (!is_int(arg_next))
+            {
+                string why = "--case but case number isn't an integer";
+                throw cli_options_exception(why);
+            }
+
+            arg_idx++; // consume next arg
+            opts.case_number = atoi(arg_next.c_str());
+
+            if (opts.case_number < 0)
+            {
+                string why = "--case but case number is negative";
+                throw cli_options_exception(why);
+            }
+
+            continue;
         }
 
         if (arg.size() > 0 && arg.front() != '-')
@@ -182,6 +203,12 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
             throw cli_options_exception(why);
         }
         
+    }
+
+    if (opts.case_number != -1 && !opts.parser)
+    {
+        string why = "--case specified but no case input";
+        throw cli_options_exception(why);
     }
 
     return opts;

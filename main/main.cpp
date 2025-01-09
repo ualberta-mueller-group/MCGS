@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include "cgt_basics.h"
@@ -17,8 +18,17 @@
 
 using std::cout, std::endl, std::string;
 
-int main(int argc, const char** argv)
+int main(int argc, char** argv)
 {
+    // Check if --reaper was given
+    for (int i = 0; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--reaper") == 0)
+        {
+            reaper(argc, argv);
+        }
+    }
+
     cli_options opts = parse_cli_args(argc, argv);
 
     if (opts.should_exit)
@@ -29,6 +39,12 @@ int main(int argc, const char** argv)
     if (opts.run_tests)
     {
         run_autotests();
+        return 0;
+    }
+
+    if (opts.case_number != -1)
+    {
+        run_one_case(opts);
         return 0;
     }
 

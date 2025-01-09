@@ -1,0 +1,15 @@
+{version 1.0}
+/   
+    1st case should complete
+    2nd case should time out
+
+\
+
+
+[clobber_1xn]
+XOXOXO
+{B loss}
+
+[clobber_1xn]
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO
+{B win}
