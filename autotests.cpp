@@ -1,5 +1,7 @@
 #include "autotests.h"
+#include <csignal>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -14,6 +16,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <sys/poll.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 using namespace std;
@@ -25,6 +28,22 @@ constexpr char newline = '\n';
 #define READ_END 0
 #define WRITE_END 1
 
+
+int kill_pid = 0;
+
+void kill_bottom()
+{
+    if (kill_pid != 0)
+    {
+        kill(kill_pid, SIGKILL);
+        kill_pid = 0;
+    }
+}
+
+void sigkill_handler(int sig)
+{
+    kill_bottom();
+}
 
 void reaper(int argc, char** argv)
 {
@@ -45,6 +64,7 @@ void reaper(int argc, char** argv)
         }
     }
 
+
     // Start child
     int up_pipe[2];
     int err_pipe[2];
@@ -61,7 +81,7 @@ void reaper(int argc, char** argv)
     {
         close(up_pipe[READ_END]);
         close(err_pipe[READ_END]);
-        dup2(up_pipe[WRITE_END], STDIN_FILENO);
+        dup2(up_pipe[WRITE_END], STDOUT_FILENO);
         dup2(err_pipe[WRITE_END], STDERR_FILENO);
 
         // no --reaper or PID, but must have NULL
@@ -94,7 +114,74 @@ void reaper(int argc, char** argv)
     }
 
     // middle process
+    kill_pid = fork_id;
+    signal(SIGQUIT, sigkill_handler);
+    atexit(kill_bottom);
 
+    // Forward data upwards
+    while (true)
+    {
+        pollfd pfds[2];
+
+        pfds[0].fd = up_pipe[READ_END];
+        pfds[0].events = POLLIN;
+
+        pfds[1].fd = err_pipe[READ_END];
+        pfds[1].events = POLLIN;
+
+        poll(pfds, sizeof(pfds) / sizeof(pfds[0]), 50);
+
+        if ((pfds[0].revents & POLLIN) != 0)
+        {
+            char buffer[2];
+            int bytes_read;
+            if ((bytes_read = read(up_pipe[READ_END], buffer, sizeof(buffer) - 1)) > 0)
+            {
+                buffer[bytes_read] = '\0';
+                cout << buffer;
+            }
+        }
+        cout << flush;
+
+        if ((pfds[1].revents & POLLIN) != 0)
+        {
+            char buffer[2];
+            int bytes_read;
+            if ((bytes_read = read(err_pipe[READ_END], buffer, sizeof(buffer) - 1)) > 0)
+            {
+                buffer[bytes_read] = '\0';
+                cerr << buffer;
+            }
+        }
+        cerr << flush;
+
+        // Check if parent exists
+        if (kill(parent_pid, 0) == -1)
+        {
+            kill(fork_id, SIGKILL);
+            exit(0);
+        }
+    
+        int bottom_status;
+        int returned_pid = waitpid(fork_id, &bottom_status, WNOHANG);
+
+        // returned_pid being 0 means process still running
+
+        // returned_pid being -1 means error with waitpid()
+        if (returned_pid == -1)
+        {
+            kill(fork_id, SIGKILL);
+            cerr << "waitpid() error" << endl;
+            exit(-1);
+        }
+
+        // returned_pid == fork_id means process state changed
+        if (returned_pid == fork_id)
+        {
+            int exit_status = WEXITSTATUS(bottom_status);
+            exit(exit_status);
+        }
+    }
 }
 
 
@@ -162,6 +249,7 @@ void run_one_case(cli_options& opts)
 
             cout << outcome << "\n";
             cout << 5.12 << "\n";
+            cout << flush;
         }
 
         current_case++;
@@ -193,7 +281,7 @@ void run_one_case(cli_options& opts)
 void run_autotests()
 {
     // test timeout (ms)
-    const int timeout = 500;
+    const int timeout = 2000;
 
     ofstream outfile("out.txt");
     assert(outfile.is_open());
@@ -268,7 +356,7 @@ void run_autotests()
             {
                 close(up_pipe[READ_END]);
                 close(err_pipe[READ_END]);
-                dup2(up_pipe[WRITE_END], STDIN_FILENO);
+                dup2(up_pipe[WRITE_END], STDOUT_FILENO);
                 dup2(err_pipe[WRITE_END], STDERR_FILENO);
 
                 execl("./MCGS",
@@ -295,8 +383,54 @@ void run_autotests()
             }
 
             // top process
+            close(up_pipe[WRITE_END]);
+            close(err_pipe[WRITE_END]);
+
+            pollfd pfd;
+            pfd.fd = up_pipe[READ_END];
+            pfd.events = POLLIN;
+
+            cout << "POLLING" << endl;
+            poll(&pfd, 1, 2000);
+            cout << "FINISHED POLL" << endl;
+
+            bool timed_out = false;
+
+            if ((pfd.revents & POLLIN) == 0)
+            {
+                timed_out = true;
+                cout << "NO DATA" << endl;
+            } else
+            {
+                cout << "/|||" << endl;
+                char buffer[512];
+                int bytes_read;
+                if ((bytes_read = read(up_pipe[READ_END], buffer, 512 - 1)) > 0)
+                {
+                    buffer[bytes_read] = '\0';
+                    cout << buffer << flush;
+                }
+                cout << "|||\\" << endl;
+            }
+
+            bool test_crashed = false;
+
+            int middle_status;
+            int returned_pid = waitpid(fork_id, &middle_status, WNOHANG);
+
+            if (returned_pid == -1 || ( (returned_pid == fork_id) && (WEXITSTATUS(middle_status) != 0) ))
+            {
+                test_crashed = true;
+            }
+
+            outfile << (timed_out ? "TIMEOUT" : "COMPLETED") << newline;
+            outfile << (test_crashed ? "CRASHED" : "NO CRASH") << newline;
 
 
+            close(up_pipe[READ_END]);
+            close(err_pipe[READ_END]);
+
+            kill(fork_id, SIGQUIT);
 
 
             // End of loop

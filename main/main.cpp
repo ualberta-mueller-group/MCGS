@@ -26,6 +26,7 @@ int main(int argc, char** argv)
         if (strcmp(argv[i], "--reaper") == 0)
         {
             reaper(argc, argv);
+            return 0;
         }
     }
 
