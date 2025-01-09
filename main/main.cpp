@@ -22,13 +22,10 @@ using std::cout, std::endl, std::string;
 int main(int argc, char** argv)
 {
     // Check if --reaper was given
-    for (int i = 0; i < argc; i++)
+    if (argc >= 2 && strcmp(argv[1], "--reaper") == 0)
     {
-        if (strcmp(argv[i], "--reaper") == 0)
-        {
-            reaper(argc, argv);
-            return 0;
-        }
+        reaper(argc, argv);
+        return 0;
     }
 
     cli_options opts = parse_cli_args(argc, argv);

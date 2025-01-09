@@ -31,31 +31,58 @@ void sigquit_handler(int sig)
     kill_bottom();
 }
 
-void reaper(int argc, char** argv)
+void parse_reaper_args(int argc, char** argv, int* parent_pid)
 {
-    int parent_pid = 0;
+    assert(parent_pid != nullptr);
 
+    *parent_pid = 0;
+
+    bool found_flag = false;
     for (int i = 0; i < argc; i++)
     {
         if (strcmp(argv[i], "--reaper") == 0)
         {
-            int argnext = i + 1;
-            if (argnext >= argc || !is_int(argv[argnext]))
+            found_flag = true;
+
+            if (i != 1)
             {
-                cerr << "Bad or missing PID" << endl;
+                cerr << "Error: --reaper not first arg" << endl;
                 exit(-1);
             }
 
-            parent_pid = atoi(argv[argnext]);
-            break;
+            if (i + 1 >= argc || !is_int(argv[i + 1]))
+            {
+                cerr << "Error: --reaper missing/invalid PID" << endl;
+                exit(-1);
+            }
+
+            *parent_pid = atoi(argv[i + 1]);
         }
     }
 
-    if (parent_pid == 0) 
+    assert(found_flag);
+}
+
+void make_nonblocking(int fd)
+{
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1)
     {
-        cerr << "Invalid reaper() args" << endl;
+        cerr << "fcntl() failed F_GETFL" << endl;
         exit(-1);
     }
+
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+    {
+        cerr << "fcntl() failed F_SETFL" << endl;
+        exit(-1);
+    }
+}
+
+void reaper(int argc, char** argv)
+{
+    int parent_pid = 0;
+    parse_reaper_args(argc, argv, &parent_pid);
 
     // Start bottom process
     int up_pipe[2];
@@ -102,29 +129,21 @@ void reaper(int argc, char** argv)
         execv(argv[0], args);
 
         // Should be unreachable
-        cerr << "Failed execv()" << endl;
+        cerr << "Bottom process failed execv()" << endl;
         exit(-1);
     }
 
     // middle process
     kill_pid = fork_id;
     atexit(kill_bottom);
-    signal(SIGQUIT, sigquit_handler);
+    signal(SIGQUIT, sigquit_handler); // TODO don't use signal()
 
     close(up_pipe[WRITE_END]);
     close(err_pipe[WRITE_END]);
 
     // Don't block when reading pipes...
-    {
-        int flags = fcntl(up_pipe[READ_END], F_GETFL, 0);
-        fcntl(up_pipe[READ_END], F_SETFL, flags | O_NONBLOCK);
-    }
-
-    {
-        int flags = fcntl(err_pipe[READ_END], F_GETFL, 0);
-        fcntl(err_pipe[READ_END], F_SETFL, flags | O_NONBLOCK);
-    }
-
+    make_nonblocking(up_pipe[READ_END]);
+    make_nonblocking(err_pipe[READ_END]);
 
     // Forward data upwards
     while (true)
@@ -143,7 +162,7 @@ void reaper(int argc, char** argv)
         {
             char buffer[2];
             int bytes_read;
-            while ((bytes_read = read(up_pipe[READ_END], buffer, sizeof(buffer) - 1)) > 0)
+            while ((bytes_read = read(pfds[0].fd, buffer, sizeof(buffer) - 1)) > 0)
             {
                 buffer[bytes_read] = '\0';
                 cout << buffer;
@@ -155,7 +174,7 @@ void reaper(int argc, char** argv)
         {
             char buffer[2];
             int bytes_read;
-            while ((bytes_read = read(err_pipe[READ_END], buffer, sizeof(buffer) - 1)) > 0)
+            while ((bytes_read = read(pfds[1].fd, buffer, sizeof(buffer) - 1)) > 0)
             {
                 buffer[bytes_read] = '\0';
                 cerr << buffer;
@@ -186,7 +205,7 @@ void reaper(int argc, char** argv)
         // returned_pid == fork_id means process state changed
         if (returned_pid == fork_id)
         {
-            if (WIFEXITED(bottom_status))
+            if (WIFEXITED(bottom_status) != 0)
             {
                 int exit_status = WEXITSTATUS(bottom_status);
                 exit(exit_status);

@@ -142,6 +142,11 @@ cli_options parse_cli_args(int _argc, char** argv, bool silent)
             opts.run_tests = true;
             continue;
         }
+        
+        if (arg == "--reaper")
+        {
+            throw cli_options_exception("--reaper must be first argument");
+        }
 
         if (arg == "--case")
         {
