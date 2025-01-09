@@ -15,6 +15,7 @@
 #include "autotests.h"
 
 #include "all_game_headers.h"
+#include "reaper.h"
 
 using std::cout, std::endl, std::string;
 

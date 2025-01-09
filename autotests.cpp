@@ -15,175 +15,15 @@
 #include <sstream>
 #include <poll.h>
 #include <fcntl.h>
+#include <string>
 #include <sys/poll.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "misc_constants.h"
 
 using namespace std;
 
 using filesystem::recursive_directory_iterator;
-
-constexpr char newline = '\n';
-
-#define READ_END 0
-#define WRITE_END 1
-
-
-int kill_pid = 0;
-
-void kill_bottom()
-{
-    if (kill_pid != 0)
-    {
-        kill(kill_pid, SIGKILL);
-        kill_pid = 0;
-    }
-}
-
-void sigkill_handler(int sig)
-{
-    kill_bottom();
-}
-
-void reaper(int argc, char** argv)
-{
-    int parent_pid;
-
-    for (int i = 0; i < argc; i++)
-    {
-        if (strcmp(argv[i], "--reaper") == 0)
-        {
-            int argnext = i + 1;
-            if (argnext >= argc || !is_int(argv[argnext]))
-            {
-                cerr << "Bad or missing PID" << endl;
-                exit(-1);
-            }
-
-            parent_pid = atoi(argv[argnext]);
-        }
-    }
-
-
-    // Start child
-    int up_pipe[2];
-    int err_pipe[2];
-
-    if (pipe(up_pipe) != 0 || pipe(err_pipe) != 0)
-    {
-        cerr << "Failed to create pipe" << endl;
-        exit(-1);
-    }
-
-    int fork_id = fork();
-
-    if (fork_id == 0) // bottom process
-    {
-        close(up_pipe[READ_END]);
-        close(err_pipe[READ_END]);
-        dup2(up_pipe[WRITE_END], STDOUT_FILENO);
-        dup2(err_pipe[WRITE_END], STDERR_FILENO);
-
-        // no --reaper or PID, but must have NULL
-        int arg_len = argc - 2 + 1;
-
-        char* args[arg_len];
-        int argidx = 0;
-
-        for (int i = 0; i < argc; i++)
-        {
-            if (strcmp(argv[i], "--reaper") == 0)
-            {
-                // skip 2
-                i++;
-                continue;
-            }
-
-            args[argidx] = argv[i];
-            argidx++;
-        }
-
-        assert(argidx == arg_len - 1);
-        args[argidx] = NULL;
-
-        execv(argv[0], args);
-
-        // Should be unreachable
-        cerr << "Failed execv()" << endl;
-        exit(-1);
-    }
-
-    // middle process
-    kill_pid = fork_id;
-    signal(SIGQUIT, sigkill_handler);
-    atexit(kill_bottom);
-
-    // Forward data upwards
-    while (true)
-    {
-        pollfd pfds[2];
-
-        pfds[0].fd = up_pipe[READ_END];
-        pfds[0].events = POLLIN;
-
-        pfds[1].fd = err_pipe[READ_END];
-        pfds[1].events = POLLIN;
-
-        poll(pfds, sizeof(pfds) / sizeof(pfds[0]), 50);
-
-        if ((pfds[0].revents & POLLIN) != 0)
-        {
-            char buffer[2];
-            int bytes_read;
-            if ((bytes_read = read(up_pipe[READ_END], buffer, sizeof(buffer) - 1)) > 0)
-            {
-                buffer[bytes_read] = '\0';
-                cout << buffer;
-            }
-        }
-        cout << flush;
-
-        if ((pfds[1].revents & POLLIN) != 0)
-        {
-            char buffer[2];
-            int bytes_read;
-            if ((bytes_read = read(err_pipe[READ_END], buffer, sizeof(buffer) - 1)) > 0)
-            {
-                buffer[bytes_read] = '\0';
-                cerr << buffer;
-            }
-        }
-        cerr << flush;
-
-        // Check if parent exists
-        if (kill(parent_pid, 0) == -1)
-        {
-            kill(fork_id, SIGKILL);
-            exit(0);
-        }
-    
-        int bottom_status;
-        int returned_pid = waitpid(fork_id, &bottom_status, WNOHANG);
-
-        // returned_pid being 0 means process still running
-
-        // returned_pid being -1 means error with waitpid()
-        if (returned_pid == -1)
-        {
-            kill(fork_id, SIGKILL);
-            cerr << "waitpid() error" << endl;
-            exit(-1);
-        }
-
-        // returned_pid == fork_id means process state changed
-        if (returned_pid == fork_id)
-        {
-            int exit_status = WEXITSTATUS(bottom_status);
-            exit(exit_status);
-        }
-    }
-}
-
 
 string human_readable_game_string(const vector<game *>& games, int* line_count)
 {
@@ -247,9 +87,12 @@ void run_one_case(cli_options& opts)
 
             bool outcome = sum.solve();
 
-            cout << outcome << "\n";
+            cout << (outcome ? "Win" : "Loss") << "\n";
             cout << 5.12 << "\n";
             cout << flush;
+
+            gc.cleanup_games();
+            break;
         }
 
         current_case++;
@@ -268,8 +111,8 @@ void run_one_case(cli_options& opts)
        case number
        to play
        expected value
-   got value
-   time
+       got value
+       time
    test case hash
        LINE COUNT
        human readable game representation
@@ -293,9 +136,10 @@ void run_autotests()
     outfile << "expected value" << newline;
     outfile << "LINE COUNT" << newline;
     outfile << "human readable games" << newline;
-    outfile << newline;
-
-
+    outfile << "no crash/crash" << newline;
+    outfile << "completed/dnf" << newline;
+    outfile << "search result" << newline;
+    outfile << "time (ms)" << newline;
 
     for (const filesystem::directory_entry& entry : recursive_directory_iterator("test/input/autotests"))
     {
@@ -322,6 +166,7 @@ void run_autotests()
         int case_number = 0;
         while (parser->parse_chunk(gc))
         {
+            outfile << newline;
             outfile << file_name << newline;
             outfile << case_number << newline;
             outfile << color_char(gc.to_play) << newline;
@@ -386,31 +231,30 @@ void run_autotests()
             close(up_pipe[WRITE_END]);
             close(err_pipe[WRITE_END]);
 
+            int flags = fcntl(up_pipe[READ_END], F_GETFL, 0);
+            fcntl(up_pipe[READ_END], F_SETFL, flags | O_NONBLOCK);
+
             pollfd pfd;
             pfd.fd = up_pipe[READ_END];
             pfd.events = POLLIN;
 
-            cout << "POLLING" << endl;
-            poll(&pfd, 1, 2000);
-            cout << "FINISHED POLL" << endl;
+            poll(&pfd, 1, timeout);
 
             bool timed_out = false;
+            string data;
 
             if ((pfd.revents & POLLIN) == 0)
             {
                 timed_out = true;
-                cout << "NO DATA" << endl;
             } else
             {
-                cout << "/|||" << endl;
-                char buffer[512];
+                char buffer[2];
                 int bytes_read;
-                if ((bytes_read = read(up_pipe[READ_END], buffer, 512 - 1)) > 0)
+                while ((bytes_read = read(up_pipe[READ_END], buffer, sizeof(buffer) - 1)) > 0)
                 {
                     buffer[bytes_read] = '\0';
-                    cout << buffer << flush;
+                    data += buffer;
                 }
-                cout << "|||\\" << endl;
             }
 
             bool test_crashed = false;
@@ -423,30 +267,42 @@ void run_autotests()
                 test_crashed = true;
             }
 
-            outfile << (timed_out ? "TIMEOUT" : "COMPLETED") << newline;
             outfile << (test_crashed ? "CRASHED" : "NO CRASH") << newline;
+            outfile << (timed_out ? "TIMED OUT" : "COMPLETED") << newline;
+
+            if (!timed_out && !test_crashed)
+            {
+                stringstream stream(data);
+
+                string line;
+                
+                assert(getline(stream, line));
+                outfile << line << newline;
+                assert(getline(stream, line));
+                outfile << line << newline;
+
+            } else
+            {
+                outfile << "Unknown" << newline;
+                outfile << "DNF" << newline;
+            }
 
 
             close(up_pipe[READ_END]);
             close(err_pipe[READ_END]);
 
             kill(fork_id, SIGQUIT);
+            int status;
+            waitpid(fork_id, &status, 0); // avoid zombie process
 
 
             // End of loop
-            outfile << newline;
             case_number++;
             gc.cleanup_games();
         }
 
-
-
         delete parser;
-
     }
-
-
-
 
     outfile.close();
 }
