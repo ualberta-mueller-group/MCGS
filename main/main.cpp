@@ -15,19 +15,11 @@
 #include "autotests.h"
 
 #include "all_game_headers.h"
-#include "reaper.h"
 
 using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
 {
-    // Check if --reaper was given
-    if (argc >= 2 && strcmp(argv[1], "--reaper") == 0)
-    {
-        reaper(argc, argv);
-        return 0;
-    }
-
     cli_options opts = parse_cli_args(argc, argv);
 
     if (opts.should_exit)
@@ -38,12 +30,6 @@ int main(int argc, char** argv)
     if (opts.run_tests)
     {
         run_autotests();
-        return 0;
-    }
-
-    if (opts.case_number != -1)
-    {
-        run_one_case(opts);
         return 0;
     }
 

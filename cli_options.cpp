@@ -12,7 +12,7 @@ using namespace std;
 ////////////////////////////////////////////////// cli_options
 
 cli_options::cli_options() : parser(nullptr), dry_run(false),
-    should_exit(false), run_tests(false), case_number(-1)
+    should_exit(false), run_tests(false)
 { }
 
 cli_options::~cli_options()
@@ -46,9 +46,13 @@ to be ignored.";
     print_flag("--stdin", "Read game cases from stdin");
     print_flag("--file <file name>", "Read game cases from <file name>");
     print_flag("--parser-debug", "Print file_parser debug info");
-    print_flag("--run-tests", "TODO");
-    print_flag("--case", "TODO");
-    print_flag("--silent", "TODO");
+
+
+    print_flag("--run-tests", "Run all autotests");
+
+    print_flag("--case", "TODO: Run a specific test, must be used in combination with --file"); // TODO
+    print_flag("--print-case-count", "TODO: Print number of cases in file, must be used in combination with --file"); // TODO
+
 }
 
 cli_options parse_cli_args(int _argc, char** argv, bool silent)
@@ -73,12 +77,6 @@ cli_options parse_cli_args(int _argc, char** argv, bool silent)
     {
         const string& arg = args[arg_idx];
         const string& arg_next = (arg_idx + 1) < argN ? args[arg_idx + 1] : "";
-
-        if (arg == "--silent")
-        {
-            silent = true;
-            continue;
-        }
 
         if (arg == "--stdin")
         {
@@ -143,37 +141,6 @@ cli_options parse_cli_args(int _argc, char** argv, bool silent)
             continue;
         }
         
-        if (arg == "--reaper")
-        {
-            throw cli_options_exception("--reaper must be first argument");
-        }
-
-        if (arg == "--case")
-        {
-            if (arg_next.size() == 0)
-            {
-                string why = "--case but no case number";
-                throw cli_options_exception(why);
-            }
-
-            if (!is_int(arg_next))
-            {
-                string why = "--case but case number isn't an integer";
-                throw cli_options_exception(why);
-            }
-
-            arg_idx++; // consume next arg
-            opts.case_number = atoi(arg_next.c_str());
-
-            if (opts.case_number < 0)
-            {
-                string why = "--case but case number is negative";
-                throw cli_options_exception(why);
-            }
-
-            continue;
-        }
-
         if (arg.size() > 0 && arg.front() != '-')
         {
             // the rest of args is input to the file_parser
@@ -208,12 +175,6 @@ cli_options parse_cli_args(int _argc, char** argv, bool silent)
             throw cli_options_exception(why);
         }
         
-    }
-
-    if (opts.case_number != -1 && !opts.parser)
-    {
-        string why = "--case specified but no case input";
-        throw cli_options_exception(why);
     }
 
     return opts;
