@@ -24,7 +24,7 @@ struct cli_options
 
     When "silent" is true, dont print to stdout (useful for unit testing)
 */
-cli_options parse_cli_args(int _argc, char** argv, bool silent = false);
+cli_options parse_cli_args(int _argc, const char** argv, bool silent = false);
 
 // Thrown on bad input
 class cli_options_exception : public std::exception

@@ -8,9 +8,10 @@
 #include "cgt_move.h"
 #include "game.h"
 #include <chrono>
+#include <ctime>
 #include <limits>
 
-typedef std::chrono::high_resolution_clock sumgame_clock;
+typedef std::chrono::steady_clock sumgame_clock; // important that time is monotonic
 
 struct sumgame_move
 {
@@ -87,7 +88,7 @@ public:
     void add(game* g);
 
     bool solve() const;
-    solve_result solve_with_timeout(const double& timeout = std::numeric_limits<double>::infinity()) const;
+    solve_result solve_with_timeout(unsigned long long timeout) const;
     
 
 
@@ -108,8 +109,7 @@ private:
         these values are used by _solve_with_timeout() and are here so they don't
             need to be passed as arguments to the function every time it's called
     */
-    mutable std::chrono::time_point<sumgame_clock> start_time;
-    mutable double timeout_duration;
+    mutable bool should_stop;
 
     bool _solve();
     solve_result _solve_with_timeout();

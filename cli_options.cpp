@@ -55,7 +55,7 @@ to be ignored.";
 
 }
 
-cli_options parse_cli_args(int _argc, char** argv, bool silent)
+cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 {
     cli_options opts;
 

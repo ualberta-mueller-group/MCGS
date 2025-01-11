@@ -3,8 +3,15 @@
 //---------------------------------------------------------------------------
 #include "sumgame.h"
 
+#include <chrono>
+#include <ctime>
 #include <iostream>
+#include <limits>
 #include <memory>
+
+#include <thread>
+#include <future>
+
 using std::cout;
 using std::endl;
 
@@ -149,12 +156,18 @@ bool sumgame::solve() const
     assert_restore_game ar(*this);
     sumgame& sum = 
         const_cast<sumgame&>(*this);
-    return sum._solve();
+
+    solve_result result = sum.solve_with_timeout(0);
+    assert(result.timed_out == NOT_OVER_TIME);
+
+    return result.win;
 }
 
 // Solve combinatorial game - find winner
 // Game-independent implementation of boolean minimax,
 // plus sumgame simplification
+
+/*
 bool sumgame::_solve()
 {
     if (PRINT_SUBGAMES)
@@ -181,18 +194,44 @@ bool sumgame::_solve()
     }
     return false;
 }
+*/
 
-
-solve_result sumgame::solve_with_timeout(const double& timeout) const
+solve_result sumgame::solve_with_timeout(unsigned long long timeout) const
 {
     assert_restore_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
+    should_stop = false;
 
-    timeout_duration = timeout;
-    start_time = sumgame_clock::now();
+    // spawn a thread, then wait with a timeout for it to complete
+    std::promise<solve_result> promise;
+    std::future<solve_result> future = promise.get_future();
 
-    return sum._solve_with_timeout();
+    std::thread thr([&]() -> void
+    {
+        solve_result result = sum._solve_with_timeout();
+        promise.set_value(result);
+    });
+
+    std::future_status status = std::future_status::ready;
+
+    if (timeout == 0)
+    {
+        future.wait();
+    } else
+    {
+        status = future.wait_for(std::chrono::milliseconds(timeout));
+    }
+
+    if (timeout != 0 && status == std::future_status::timeout)
+    {
+        // Stop the thread
+        should_stop = true;
+    }
+
+    thr.join();
+
+    return future.get();
 }
 
 solve_result sumgame::_solve_with_timeout()
@@ -245,12 +284,11 @@ solve_result sumgame::_solve_with_timeout()
 }
 
 
+// Tests should take 0.6 to 1.0 seconds, this function seems to be slow...
 bool sumgame::over_time() const
 {
-    std::chrono::time_point<sumgame_clock> now = sumgame_clock::now();
-    std::chrono::duration<double, std::milli> duration = now - start_time;
-    return duration.count() >= timeout_duration;
-}
+    return should_stop;
+};
 
 
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
