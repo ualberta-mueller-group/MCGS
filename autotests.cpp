@@ -78,7 +78,7 @@ void run_autotests()
     outfile << "expected value" << sep;
     outfile << "found value" << sep;
     outfile << "time (ms)" << sep;
-    outfile << "outcome (pass, fail, timeout)";
+    outfile << "outcome (PASS, FAIL, TIMEOUT)";
     outfile << newline;
 
 
@@ -124,14 +124,24 @@ void run_autotests()
 
 
             chrono::time_point start = chrono::high_resolution_clock::now();
-            bool win = sum.solve();
+            solve_result result = sum.solve_with_timeout(1000);
             chrono::time_point end = chrono::high_resolution_clock::now();
 
             chrono::duration<double, std::milli> duration = end - start;
 
-            string win_string = win ? test_outcome_to_string(TEST_OUTCOME_WIN)
-                : test_outcome_to_string(TEST_OUTCOME_LOSS);
+            string win_string = test_outcome_to_string(TEST_OUTCOME_UNKNOWN);
 
+            if (!result.timed_out)
+            {
+                win_string = result.win ? test_outcome_to_string(TEST_OUTCOME_WIN)
+                    : test_outcome_to_string(TEST_OUTCOME_LOSS);
+            }
+
+            string outcome_string = "TIMEOUT";
+            if (!result.timed_out)
+            {
+                outcome_string = (result.win == gc.expected_outcome) ? "PASS" : "FAIL";
+            }
 
 
             outfile << file_name << sep;
@@ -141,12 +151,9 @@ void run_autotests()
             outfile << test_outcome_to_string(gc.expected_outcome) << sep;
             outfile << win_string << sep;
             outfile << duration.count() << sep;
-            outfile << "TODO test outcome" << newline;
+            outfile << outcome_string << newline;
 
             gc.cleanup_games();
-            break;
-
-
 
 
 

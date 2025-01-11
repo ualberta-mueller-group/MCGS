@@ -7,6 +7,10 @@
 #include "alternating_move_game.h"
 #include "cgt_move.h"
 #include "game.h"
+#include <chrono>
+#include <limits>
+
+typedef std::chrono::high_resolution_clock sumgame_clock;
 
 struct sumgame_move
 {
@@ -48,6 +52,30 @@ public:
 class sumgame_move_generator;
 struct play_record;
 
+
+
+enum timeout_status
+{
+    NOT_OVER_TIME = false,
+    OVER_TIME = true,
+};
+
+struct solve_result
+{
+    timeout_status timed_out;
+    bool win;
+
+    solve_result() = delete;
+
+    solve_result(timeout_status timed_out, bool win) : timed_out(timed_out), win(win)
+    { }
+
+    inline static solve_result over_time()
+    {
+        return {OVER_TIME, false};
+    }
+};
+
 class sumgame : public alternating_move_game
 {
 public:
@@ -57,7 +85,10 @@ public:
     void play_sum(const sumgame_move& m, bw to_play);
     void undo_move();
     void add(game* g);
+
     bool solve() const;
+    solve_result solve_with_timeout(const double& timeout = std::numeric_limits<double>::infinity()) const;
+    
 
 
 
@@ -70,7 +101,21 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
+
+    /*
+        mutable makes sense here? 
+
+        these values are used by _solve_with_timeout() and are here so they don't
+            need to be passed as arguments to the function every time it's called
+    */
+    mutable std::chrono::time_point<sumgame_clock> start_time;
+    mutable double timeout_duration;
+
     bool _solve();
+    solve_result _solve_with_timeout();
+
+    bool over_time() const;
+
     empty_game _empty_game;
     vector<game*> _subgames; // sumgame owns these subgames
     vector<play_record> _play_record_stack;

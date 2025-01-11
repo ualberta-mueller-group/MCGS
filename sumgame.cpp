@@ -183,6 +183,76 @@ bool sumgame::_solve()
 }
 
 
+solve_result sumgame::solve_with_timeout(const double& timeout) const
+{
+    assert_restore_game ar(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+
+    timeout_duration = timeout;
+    start_time = sumgame_clock::now();
+
+    return sum._solve_with_timeout();
+}
+
+solve_result sumgame::_solve_with_timeout()
+{
+    if (over_time())
+    {
+        return solve_result::over_time();
+    }
+
+    if (PRINT_SUBGAMES)
+    {
+        cout << "solve sum ";
+        print(cout);
+    }
+
+    const bw toplay = to_play();
+
+    std::unique_ptr<sumgame_move_generator>
+      mgp(create_sum_move_generator(toplay));
+
+    sumgame_move_generator& mg = *mgp;
+    
+    for (; mg; ++mg)
+    {
+        if (over_time())
+        {
+            return solve_result::over_time();
+        }
+
+        const sumgame_move m = mg.gen_sum_move();
+        play_sum(m, toplay);
+
+        solve_result result(NOT_OVER_TIME, false);
+
+        bool found = find_static_winner(result.win);
+
+        if (! found)
+        {
+            solve_result child_result = _solve_with_timeout();
+            result.win = not child_result.win;
+        }
+
+        undo_move();
+        if (result.win)
+        {
+            return result;
+        }
+    }
+    return {NOT_OVER_TIME, false};
+}
+
+
+bool sumgame::over_time() const
+{
+    std::chrono::time_point<sumgame_clock> now = sumgame_clock::now();
+    std::chrono::duration<double, std::milli> duration = now - start_time;
+    return duration.count() >= timeout_duration;
+}
+
+
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
 {
     play_record record(m);
