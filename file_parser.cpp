@@ -254,6 +254,8 @@ void game_case::release_games()
     expected_outcome = TEST_OUTCOME_UNKNOWN;
 
     games.clear();
+
+    comments.clear();
 }
 
 void game_case::_move_impl(game_case&& other) noexcept
@@ -263,6 +265,7 @@ void game_case::_move_impl(game_case&& other) noexcept
     to_play = std::move(other.to_play);
     expected_outcome = std::move(other.expected_outcome);
     games = std::move(other.games);
+    comments = std::move(other.comments);
 
     other.release_games();
 }
@@ -693,6 +696,14 @@ bool file_parser::parse_chunk(game_case& gc)
         // Match comment
         if (match('/', '\\', "comment", true))
         {
+            if (true || (_token.size() > 0 && _token[0] == '!'))
+            {
+                for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
+                {
+                    _cases[i].comments += _token;
+                }
+            }
+
             continue;
         }
 

@@ -1,6 +1,6 @@
 {version 1.0}
 /   
-    1st case should complete
+    1st case should complete, , , , ,,,,
     2nd case should time out
 
 \
@@ -9,6 +9,8 @@
 [clobber_1xn]
 XOXOXO
 {B loss}
+
+/this should time out\
 
 [clobber_1xn]
 XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO

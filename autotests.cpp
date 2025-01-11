@@ -1,5 +1,6 @@
 #include "autotests.h"
 
+#include <iomanip>
 #include <ios>
 #include <iostream>
 #include <filesystem>
@@ -32,7 +33,7 @@ using filesystem::recursive_directory_iterator;
 
    outcome (pass, fail, timeout)
 
-       included comments
+   included comments
 */
 
 
@@ -67,22 +68,64 @@ string human_readable_game_string(const vector<game *>& games)
     return game_string;
 }
 
+void append_field(ostream& os, const string& field, bool include_separator)
+{
+    // Remove leading/trailing whitespace, replace quotes
+    string sanitized_field;
+
+    bool past_left_whitespace = false;
+
+    const size_t N = field.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        const char& c = field[i];
+
+        if (!past_left_whitespace && c == ' ')
+        {
+            continue;
+        } else
+        {
+            past_left_whitespace = true;
+        }
+
+        if (c == '\"')
+        {
+            sanitized_field += "''";
+        } else
+        {
+            sanitized_field.push_back(c);
+        }
+    }
+
+    while (sanitized_field.size() > 0 && sanitized_field.back() == ' ')
+    {
+        sanitized_field.pop_back();
+    }
+    
+    os << "\"" << sanitized_field << "\"";
+    if (include_separator)
+    {
+        os << sep;
+    }
+}
+
+
 void run_autotests()
 {
     ofstream outfile("out.txt");
 
     // print format to file
 
-    outfile << "file name" << sep;
-    outfile << "case number" << sep;
-    outfile << "human readable games" << sep;
-    outfile << "to play" << sep;
-    outfile << "expected value" << sep;
-    outfile << "found value" << sep;
-    outfile << "time (ms)" << sep;
-    outfile << "outcome (PASS, FAIL, TIMEOUT)";
+    append_field(outfile, "file name", true);
+    append_field(outfile, "case number", true);
+    append_field(outfile, "human readable games", true);
+    append_field(outfile, "to play", true);
+    append_field(outfile, "expected value", true);
+    append_field(outfile, "found value", true);
+    append_field(outfile, "time (ms)", true);
+    append_field(outfile, "outcome (PASS, FAIL, TIMEOUT)", true);
+    append_field(outfile, "included comments", false);
     outfile << newline;
-
 
     if (!outfile.is_open())
     {
@@ -125,7 +168,6 @@ void run_autotests()
                 sum.add(g);
             }
 
-
             chrono::time_point start = chrono::high_resolution_clock::now();
             optional<solve_result> result = sum.solve_with_timeout(1000);
             chrono::time_point end = chrono::high_resolution_clock::now();
@@ -146,14 +188,19 @@ void run_autotests()
                 outcome_string = (result.value().win == gc.expected_outcome) ? "PASS" : "FAIL";
             }
 
-            outfile << file_name << sep;
-            outfile << case_number << sep;
-            outfile << human_readable_game_string(gc.games) << sep;
-            outfile << color_char(gc.to_play) << sep;
-            outfile << test_outcome_to_string(gc.expected_outcome) << sep;
-            outfile << win_string << sep;
-            outfile << duration.count() << sep;
-            outfile << outcome_string << newline;
+
+
+            append_field(outfile, file_name, true);
+            append_field(outfile, to_string(case_number), true);
+            append_field(outfile, human_readable_game_string(gc.games), true);
+            append_field(outfile, string(1, color_char(gc.to_play)), true);
+            append_field(outfile, test_outcome_to_string(gc.expected_outcome), true);
+            append_field(outfile, win_string, true);
+            append_field(outfile, to_string(duration.count()), true);
+            append_field(outfile, outcome_string, true);
+            append_field(outfile, gc.comments, false);
+            outfile << newline;
+
 
             gc.cleanup_games();
 

@@ -129,6 +129,7 @@ struct game_case
     ebw to_play;
     test_outcome expected_outcome;
     std::vector<game*> games;
+    std::string comments;
 
     game_case();
     ~game_case();
