@@ -240,8 +240,10 @@ optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) c
         should_stop = true;
     }
 
+    future.wait();
     thr.join();
 
+    assert(future.valid());
     return future.get();
 }
 
