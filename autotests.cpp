@@ -116,15 +116,15 @@ void run_autotests()
 
     // print format to file
 
-    append_field(outfile, "file name", true);
-    append_field(outfile, "case number", true);
-    append_field(outfile, "human readable games", true);
-    append_field(outfile, "to play", true);
-    append_field(outfile, "expected value", true);
-    append_field(outfile, "found value", true);
-    append_field(outfile, "time (ms)", true);
-    append_field(outfile, "outcome (PASS, FAIL, TIMEOUT)", true);
-    append_field(outfile, "included comments", false);
+    append_field(outfile, "File", true);
+    append_field(outfile, "Case", true);
+    append_field(outfile, "Games", true);
+    append_field(outfile, "Player", true);
+    append_field(outfile, "Expected", true);
+    append_field(outfile, "Got", true);
+    append_field(outfile, "Time (ms)", true);
+    append_field(outfile, "Outcome", true);
+    append_field(outfile, "Comments", false);
     outfile << newline;
 
     if (!outfile.is_open())
