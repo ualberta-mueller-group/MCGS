@@ -31,6 +31,8 @@ using filesystem::recursive_directory_iterator;
    time (ms)
 
    outcome (pass, fail, timeout)
+
+       included comments
 */
 
 
@@ -125,25 +127,24 @@ void run_autotests()
 
 
             chrono::time_point start = chrono::high_resolution_clock::now();
-            solve_result result = sum.solve_with_timeout(1000);
+            optional<solve_result> result = sum.solve_with_timeout(1000);
             chrono::time_point end = chrono::high_resolution_clock::now();
 
             chrono::duration<double, std::milli> duration = end - start;
 
             string win_string = test_outcome_to_string(TEST_OUTCOME_UNKNOWN);
 
-            if (!result.timed_out())
+            if (result)
             {
-                win_string = result.win() ? test_outcome_to_string(TEST_OUTCOME_WIN)
+                win_string = result.value().win ? test_outcome_to_string(TEST_OUTCOME_WIN)
                     : test_outcome_to_string(TEST_OUTCOME_LOSS);
             }
 
             string outcome_string = "TIMEOUT";
-            if (!result.timed_out())
+            if (result)
             {
-                outcome_string = (result.win() == gc.expected_outcome) ? "PASS" : "FAIL";
+                outcome_string = (result.value().win == gc.expected_outcome) ? "PASS" : "FAIL";
             }
-
 
             outfile << file_name << sep;
             outfile << case_number << sep;
@@ -155,7 +156,6 @@ void run_autotests()
             outfile << outcome_string << newline;
 
             gc.cleanup_games();
-
 
 
             case_number++;

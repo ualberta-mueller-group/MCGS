@@ -53,40 +53,19 @@ public:
 class sumgame_move_generator;
 struct play_record;
 
-
-
-enum timeout_status
-{
-    NOT_OVER_TIME = false,
-    OVER_TIME = true,
-};
-
 struct solve_result
 {
+    bool win;
+
     solve_result() = delete;
 
-    solve_result(timeout_status timed_out, bool win) : _timed_out(timed_out), _win(win)
+    solve_result(bool win) : win(win)
     { }
 
-    inline static solve_result invalid()
+    inline static std::optional<solve_result> invalid()
     {
-        return {OVER_TIME, false};
+        return std::optional<solve_result>();
     }
-
-    timeout_status& timed_out()
-    {
-        return _timed_out;
-    }
-
-    bool& win()
-    {
-        assert(!_timed_out);
-        return _win;
-    }
-
-private:
-    timeout_status _timed_out;
-    bool _win;
 };
 
 class sumgame : public alternating_move_game
@@ -100,7 +79,7 @@ public:
     void add(game* g);
 
     bool solve() const;
-    solve_result solve_with_timeout(unsigned long long timeout) const;
+    std::optional<solve_result> solve_with_timeout(unsigned long long timeout) const;
 
 
 
@@ -122,7 +101,7 @@ private:
     mutable bool should_stop;
 
     //bool _solve();
-    solve_result _solve_with_timeout();
+    std::optional<solve_result> _solve_with_timeout();
 
     bool over_time() const;
 

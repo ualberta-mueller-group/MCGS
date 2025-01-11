@@ -14,6 +14,7 @@
 
 using std::cout;
 using std::endl;
+using std::optional;
 
 
 //---------------------------------------------------------------------------
@@ -157,10 +158,10 @@ bool sumgame::solve() const
     sumgame& sum = 
         const_cast<sumgame&>(*this);
 
-    solve_result result = sum.solve_with_timeout(0);
-    assert(result.timed_out() == NOT_OVER_TIME);
+    optional<solve_result> result = sum.solve_with_timeout(0);
+    assert(result.has_value());
 
-    return result.win();
+    return result.value().win;
 }
 
 // Solve combinatorial game - find winner
@@ -206,7 +207,7 @@ bool sumgame::_solve()
         ~4s with clock(), and ~11s with chrono...
 
 */
-solve_result sumgame::solve_with_timeout(unsigned long long timeout) const
+optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) const
 {
     assert_restore_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
@@ -214,12 +215,12 @@ solve_result sumgame::solve_with_timeout(unsigned long long timeout) const
     should_stop = false;
 
     // spawn a thread, then wait with a timeout for it to complete
-    std::promise<solve_result> promise;
-    std::future<solve_result> future = promise.get_future();
+    std::promise<optional<solve_result>> promise;
+    std::future<optional<solve_result>> future = promise.get_future();
 
     std::thread thr([&]() -> void
     {
-        solve_result result = sum._solve_with_timeout();
+        optional<solve_result> result = sum._solve_with_timeout();
         promise.set_value(result);
     });
 
@@ -244,7 +245,7 @@ solve_result sumgame::solve_with_timeout(unsigned long long timeout) const
     return future.get();
 }
 
-solve_result sumgame::_solve_with_timeout()
+optional<solve_result> sumgame::_solve_with_timeout()
 {
     if (over_time())
     {
@@ -269,17 +270,17 @@ solve_result sumgame::_solve_with_timeout()
         const sumgame_move m = mg.gen_sum_move();
         play_sum(m, toplay);
 
-        solve_result result(NOT_OVER_TIME, false);
+        solve_result result(false);
 
-        bool found = find_static_winner(result.win());
+        bool found = find_static_winner(result.win);
 
         if (! found)
         {
-            solve_result child_result = _solve_with_timeout();
+            optional<solve_result> child_result = _solve_with_timeout();
 
-            if (!child_result.timed_out())
+            if (child_result)
             {
-                result.win() = not child_result.win(); 
+                result.win = not child_result.value().win;
             }
         }
 
@@ -290,12 +291,12 @@ solve_result sumgame::_solve_with_timeout()
             return solve_result::invalid();
         }
 
-        if (result.win())
+        if (result.win)
         {
             return result;
         }
     }
-    return {NOT_OVER_TIME, false};
+    return solve_result(false);
 }
 
 bool sumgame::over_time() const
