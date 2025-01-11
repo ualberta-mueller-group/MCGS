@@ -63,18 +63,30 @@ enum timeout_status
 
 struct solve_result
 {
-    timeout_status timed_out;
-    bool win;
-
     solve_result() = delete;
 
-    solve_result(timeout_status timed_out, bool win) : timed_out(timed_out), win(win)
+    solve_result(timeout_status timed_out, bool win) : _timed_out(timed_out), _win(win)
     { }
 
-    inline static solve_result over_time()
+    inline static solve_result invalid()
     {
         return {OVER_TIME, false};
     }
+
+    timeout_status& timed_out()
+    {
+        return _timed_out;
+    }
+
+    bool& win()
+    {
+        assert(!_timed_out);
+        return _win;
+    }
+
+private:
+    timeout_status _timed_out;
+    bool _win;
 };
 
 class sumgame : public alternating_move_game
@@ -89,8 +101,6 @@ public:
 
     bool solve() const;
     solve_result solve_with_timeout(unsigned long long timeout) const;
-    
-
 
 
 
@@ -111,7 +121,7 @@ private:
     */
     mutable bool should_stop;
 
-    bool _solve();
+    //bool _solve();
     solve_result _solve_with_timeout();
 
     bool over_time() const;

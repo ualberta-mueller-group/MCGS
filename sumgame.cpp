@@ -158,9 +158,9 @@ bool sumgame::solve() const
         const_cast<sumgame&>(*this);
 
     solve_result result = sum.solve_with_timeout(0);
-    assert(result.timed_out == NOT_OVER_TIME);
+    assert(result.timed_out() == NOT_OVER_TIME);
 
-    return result.win;
+    return result.win();
 }
 
 // Solve combinatorial game - find winner
@@ -196,6 +196,16 @@ bool sumgame::_solve()
 }
 */
 
+/*
+    Spawns a thread that runs _solve_with_timeout(), then blocks until
+        the thread returns, or the timeout has elapsed. It seems using
+        std::chrono or clock() to check timeouts is very slow.
+
+        As of writing this, unit tests take 1s to complete when no
+        timeout is implemented, 1s when timeout is implemented with threads,
+        ~4s with clock(), and ~11s with chrono...
+
+*/
 solve_result sumgame::solve_with_timeout(unsigned long long timeout) const
 {
     assert_restore_game ar(*this);
@@ -238,7 +248,7 @@ solve_result sumgame::_solve_with_timeout()
 {
     if (over_time())
     {
-        return solve_result::over_time();
+        return solve_result::invalid();
     }
 
     if (PRINT_SUBGAMES)
@@ -256,26 +266,31 @@ solve_result sumgame::_solve_with_timeout()
     
     for (; mg; ++mg)
     {
-        if (over_time())
-        {
-            return solve_result::over_time();
-        }
-
         const sumgame_move m = mg.gen_sum_move();
         play_sum(m, toplay);
 
         solve_result result(NOT_OVER_TIME, false);
 
-        bool found = find_static_winner(result.win);
+        bool found = find_static_winner(result.win());
 
         if (! found)
         {
             solve_result child_result = _solve_with_timeout();
-            result.win = not child_result.win;
+
+            if (!child_result.timed_out())
+            {
+                result.win() = not child_result.win(); 
+            }
         }
 
         undo_move();
-        if (result.win)
+
+        if (over_time())
+        {
+            return solve_result::invalid();
+        }
+
+        if (result.win())
         {
             return result;
         }
@@ -283,13 +298,10 @@ solve_result sumgame::_solve_with_timeout()
     return {NOT_OVER_TIME, false};
 }
 
-
-// Tests should take 0.6 to 1.0 seconds, this function seems to be slow...
 bool sumgame::over_time() const
 {
     return should_stop;
 };
-
 
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
 {

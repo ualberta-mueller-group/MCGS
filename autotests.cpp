@@ -115,6 +115,7 @@ void run_autotests()
         int case_number = 0;
         while (parser->parse_chunk(gc))
         {
+            cout << file_name << " " << case_number << endl;
 
             sumgame sum(gc.to_play);
             for (game* g : gc.games)
@@ -131,16 +132,16 @@ void run_autotests()
 
             string win_string = test_outcome_to_string(TEST_OUTCOME_UNKNOWN);
 
-            if (!result.timed_out)
+            if (!result.timed_out())
             {
-                win_string = result.win ? test_outcome_to_string(TEST_OUTCOME_WIN)
+                win_string = result.win() ? test_outcome_to_string(TEST_OUTCOME_WIN)
                     : test_outcome_to_string(TEST_OUTCOME_LOSS);
             }
 
             string outcome_string = "TIMEOUT";
-            if (!result.timed_out)
+            if (!result.timed_out())
             {
-                outcome_string = (result.win == gc.expected_outcome) ? "PASS" : "FAIL";
+                outcome_string = (result.win() == gc.expected_outcome) ? "PASS" : "FAIL";
             }
 
 
