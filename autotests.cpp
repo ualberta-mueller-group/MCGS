@@ -58,13 +58,6 @@ string human_readable_game_string(const vector<game *>& games)
 
     string game_string = stream.str();
 
-    // TODO replace separator maybe?
-    if (game_string.find(sep) != string::npos)
-    {
-        cerr << "human_readable_game_string() output contains separator string" << endl;
-        exit(-1);
-    }
-
     return game_string;
 }
 

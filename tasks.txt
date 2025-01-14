@@ -1,6 +1,6 @@
 Planning + remaining tasks for this week
 ============================================================
-        [CLI args]
+        [CLI args] (DONE)
 
 For now just keep CLI options simple. Polish can come later, and will require some restructuring. Just have these options for now, to keep things simple for a user.
 
