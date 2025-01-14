@@ -195,7 +195,13 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
             string outcome_string = "TIMEOUT";
             if (result)
             {
-                outcome_string = (result.value().win == gc.expected_outcome) ? "PASS" : "FAIL";
+                if (gc.expected_outcome == TEST_OUTCOME_UNKNOWN)
+                {
+                    outcome_string = "UNSPECIFIED";
+                } else
+                {
+                    outcome_string = (result.value().win == gc.expected_outcome) ? "PASS" : "FAIL";
+                }
             }
 
             append_field(outfile, relative_file_path.string(), true);
