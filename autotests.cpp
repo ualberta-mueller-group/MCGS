@@ -165,6 +165,9 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
 
         const string file_name = file_path.string();
 
+        // Path relative to test directory
+        filesystem::path relative_file_path = filesystem::relative(file_path, filesystem::path(test_directory));
+
         // Open test
         file_parser* parser = file_parser::from_file(file_name);
         game_case gc;
@@ -201,10 +204,7 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
                 outcome_string = (result.value().win == gc.expected_outcome) ? "PASS" : "FAIL";
             }
 
-
-
-
-            append_field(outfile, file_name, true);
+            append_field(outfile, relative_file_path.string(), true);
             append_field(outfile, to_string(case_number), true);
             append_field(outfile, human_readable_game_string(gc.games), true);
             append_field(outfile, string(1, color_char(gc.to_play)), true);

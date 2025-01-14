@@ -39,7 +39,7 @@ Remove these (??):
 
 
 DONE: Time should only be printed to 2-3 decimal places
--- File names should be printed as relative to the test directory
+DONE: File names should be printed as relative to the test directory
 -- Add input hash column (???, check if it can be displayed nicely)
 
 
