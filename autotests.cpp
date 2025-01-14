@@ -184,7 +184,7 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
 
             chrono::duration<double, std::milli> duration = end - start;
 
-            string win_string = test_outcome_to_string(TEST_OUTCOME_UNSPECIFIED);
+            string win_string = "???";
 
             if (result)
             {

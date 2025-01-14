@@ -15,13 +15,6 @@ if len(sys.argv) < 2:
 infile_names = []
 outfile_name = ""
 
-INCLUDE_ALL = "ALL"
-INCLUDE_FAIL = "FAIL"
-INCLUDE_TIMEOUT = "TIMEOUT"
-
-filter_outcome = INCLUDE_ALL
-
-
 
 # Parsing loop
 skip_next = False
@@ -57,26 +50,35 @@ if len(outfile_name) == 0 or not (len(infile_names) > 0 and len(infile_names) <=
 
 
 ######################################## Style functions
-# These return: [<displayed text>, <CSS class list>]
+# These functions return: [<displayed text>, <local CSS class list>, <row CSS class list>]
+# Local CSS classes are applied to <td> elements. Row CSS classes are applied to <tr> elements
 
 def style_basic(text):
-    return [text, []]
+    return [text, [], []]
+
+
+def style_games(text):
+    return [text, ["break-anywhere"], []]
 
 
 def style_outcome(text):
     class_names = []
+    class_names_row = []
 
     if text == "FAIL":
         class_names.append("bg-red")
+        class_names_row.append("row-fail")
     elif text == "TIMEOUT":
         class_names.append("bg-orange")
+        class_names_row.append("row-timeout")
     elif text == "COMPLETED":
         class_names.append("bg-yellow")
 
-    return [text, class_names]
+    return [text, class_names, class_names_row]
 
 ######################################## FieldTemplates
 # If a style function is missing, the field will be omitted from the output
+
 
 class FieldTemplate:
     def __init__(self, field_name, style_function):
@@ -87,7 +89,7 @@ class FieldTemplate:
 field_templates = [
     FieldTemplate("File", style_basic),
     FieldTemplate("Case", style_basic),
-    FieldTemplate("Games", style_basic),
+    FieldTemplate("Games", style_games),
     FieldTemplate("Player", style_basic),
     FieldTemplate("Expected", style_basic),
     FieldTemplate("Got", style_basic),
@@ -97,9 +99,11 @@ field_templates = [
     FieldTemplate("Input hash", None),
 ]
 
+
+######################################## Read files and build output
+
 for x in field_templates:
     assert type(x) is FieldTemplate
-
 
 infile1 = open(infile_names[0], "r")
 reader = csv.DictReader(infile1)
@@ -125,18 +129,25 @@ outtext += "</tr>\n"
 
 # Make table rows
 for row in reader:
-    outtext += "<tr>\n"
+    rowtext = ""
+    row_classes = ["row-data"]
+
     for ft in field_templates:
         if ft.style_function is None:
             continue
         data = row[ft.field_name]
 
-        display_text, class_list = ft.style_function(data)
+        display_text, class_list, class_list_row = ft.style_function(data)
         class_list_string = " ".join(class_list)
+        for c in class_list_row:
+            row_classes.append(c)
 
-        outtext += f"<td class=\"{class_list_string}\"><div class=\"data-div\">{display_text}</div></td>"
+        rowtext += f"<td class=\"{class_list_string}\"><div class=\"data-div\">{display_text}</div></td>"
 
-    outtext += "</tr>\n"
+    row_classes_string = " ".join(row_classes)
+
+    rowtext = f"<tr class=\"{row_classes_string}\">" + "\n" + rowtext + "</tr>\n"
+    outtext += rowtext
 
 outtext += "</table>\n"
 

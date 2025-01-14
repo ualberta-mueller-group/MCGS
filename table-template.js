@@ -1,46 +1,43 @@
 
 
+// Hide or show certain rows of the table
 function setTableFilter(table, mode) {
 
-    // Find outcome column
-    let outcomeColumn = -1;
+    // Hide or show rows having at least one given class
+    const showByClass = (classes, show) => {
+        for (const className of classes) {
+            const rows = document.getElementsByClassName(className);
 
-    const firstRow = table.rows[0].cells;
-    for (let i = 0; i < firstRow.length; i++) {
-        const text = firstRow[i].children[0].innerText;
-
-        if (text === "Outcome") {
-            outcomeColumn = i;
-            break;
+            for (let i = 0; i < rows.length; i++) {
+                rows[i].hidden = !show;
+            }
         }
+    };
+
+
+    if (mode == "all") {
+        showByClass(["row-data"], true);
     }
 
-    if (outcomeColumn == -1) {
-        console.log("Failed to find outcome column index");
-        return;
+    if (mode == "fail") {
+        showByClass(["row-data"], false);
+        showByClass(["row-fail"], true);
     }
 
-    // Iterate over rows
-    for (let i = 1; i < table.rows.length; i++) {
-        const row = table.rows[i];
-        const text = row.cells[outcomeColumn].children[0].innerText;
+    if (mode == "timeout") {
+        showByClass(["row-data"], false);
+        showByClass(["row-timeout"], true);
+    }
 
-        row.hidden = false;
-
-        if (mode == "all") {
-            row.hidden = false;
-        } else if (mode == "bad" && !(text == "FAIL" || text == "TIMEOUT")) {
-            row.hidden = true;
-        } else if (mode == "timeout" && !(text == "TIMEOUT")) {
-            row.hidden = true;
-        } else if (mode == "fail" && !(text == "FAIL")) {
-            row.hidden = true;
-        }
-        
+    if (mode == "bad") {
+        showByClass(["row-data"], false);
+        showByClass(["row-fail"], true);
+        showByClass(["row-timeout"], true);
     }
 }
 
 
+// Wait for the document to finish loading before doing anything
 document.addEventListener("DOMContentLoaded", () => {
     const dropdown = document.getElementById("outcome-filter-dropdown");
     const table = document.getElementById("data-table");
