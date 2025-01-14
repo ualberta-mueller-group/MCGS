@@ -303,7 +303,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = WHITE;
-        gc->expected_outcome = TEST_OUTCOME_UNKNOWN;
+        gc->expected_outcome = TEST_OUTCOME_UNSPECIFIED;
         gc->games.push_back(new clobber_1xn("XOXOXOXO"));
     }
 

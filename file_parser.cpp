@@ -251,7 +251,7 @@ void game_case::cleanup_games()
 void game_case::release_games()
 {
     to_play = EMPTY;
-    expected_outcome = TEST_OUTCOME_UNKNOWN;
+    expected_outcome = TEST_OUTCOME_UNSPECIFIED;
 
     games.clear();
 
@@ -487,7 +487,7 @@ bool file_parser::parse_command()
     int chunk_idx = 0;
 
     int to_play = EMPTY;
-    test_outcome expected_outcome = TEST_OUTCOME_UNKNOWN;
+    test_outcome expected_outcome = TEST_OUTCOME_UNSPECIFIED;
 
 
     // check if chunks[i] is some allowed word
@@ -516,7 +516,7 @@ bool file_parser::parse_command()
     auto get_case = [&]() -> bool
     {
         to_play = EMPTY;
-        expected_outcome = TEST_OUTCOME_UNKNOWN;
+        expected_outcome = TEST_OUTCOME_UNSPECIFIED;
 
         // player always comes first
         if (chunk_is_allowed(chunk_idx, {"B", "W"}))

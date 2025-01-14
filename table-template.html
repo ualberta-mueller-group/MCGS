@@ -11,9 +11,6 @@
                 border: 0px;
             }
 
-            html {
-            }
-
             body {
                 width: 100vw;
             }
@@ -25,14 +22,16 @@
             }
 
             tr {
-
+                border-bottom: 1px solid black;
             }
 
             td {
-                outline: 1px solid black;
+                border-right: 1px solid black;
+                padding: 0px;
             }
 
-            td {
+            td:last-child {
+                border-right: 0px;
             }
 
             tr:nth-child(odd) {
@@ -43,13 +42,8 @@
                 background-color: #afafaf;
             }
 
-            .table-container {
-                width: 100vw;
-            }
-
             .data-div {
                 overflow-wrap: anywhere;
-                max-height: 50px;
                 overflow: scroll;
                 padding: 2px;
             }
@@ -66,16 +60,31 @@
                 background-color: yellow;
             }
 
-
+            select {
+                outline: 1px solid black;
+            }
 
         </style>
+
+        <script>
+<!-- REPLACE WITH SCRIPT -->
+        </script>
 
 
     </head>
 
     <body>
 
-        <!-- REPLACE ME -->
+        <label for="outcome-filter-dropdown">Show outcome: </label>
+        <select name="outcome-filter" id="outcome-filter-dropdown">
+            <option value="all">All</option>
+            <option value="bad">All bad outcomes</option>
+            <option value="timeout">Only timeout</option>
+            <option value="fail">Only fail</option>
+
+        </select>
+
+        <!-- REPLACE WITH TABLE -->
 
     </body>
 </html>

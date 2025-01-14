@@ -77,7 +77,7 @@ private:
 // expected outcome of a game_case
 enum test_outcome
 {
-    TEST_OUTCOME_UNKNOWN = 3,
+    TEST_OUTCOME_UNSPECIFIED = 3,
     TEST_OUTCOME_WIN = (int) true,
     TEST_OUTCOME_LOSS = (int) false,
 };
@@ -87,9 +87,9 @@ inline std::string test_outcome_to_string(const test_outcome& outcome)
 {
     switch (outcome)
     {
-        case TEST_OUTCOME_UNKNOWN:
+        case TEST_OUTCOME_UNSPECIFIED:
         {
-            return "Unknown";
+            return "Unspecified";
             break;
         }
 

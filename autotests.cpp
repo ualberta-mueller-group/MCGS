@@ -184,7 +184,7 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
 
             chrono::duration<double, std::milli> duration = end - start;
 
-            string win_string = test_outcome_to_string(TEST_OUTCOME_UNKNOWN);
+            string win_string = test_outcome_to_string(TEST_OUTCOME_UNSPECIFIED);
 
             if (result)
             {
@@ -195,9 +195,9 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
             string outcome_string = "TIMEOUT";
             if (result)
             {
-                if (gc.expected_outcome == TEST_OUTCOME_UNKNOWN)
+                if (gc.expected_outcome == TEST_OUTCOME_UNSPECIFIED)
                 {
-                    outcome_string = "UNSPECIFIED";
+                    outcome_string = "COMPLETED";
                 } else
                 {
                     outcome_string = (result.value().win == gc.expected_outcome) ? "PASS" : "FAIL";
