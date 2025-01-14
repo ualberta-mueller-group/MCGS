@@ -35,12 +35,12 @@ Remove these (??):
     Just print the games, don't run them
 
 ------------------------------------------------------------
-        [CSV output]
+        [CSV output] (DONE)
 
 
 DONE: Time should only be printed to 2-3 decimal places
 DONE: File names should be printed as relative to the test directory
--- Add input hash column (???, check if it can be displayed nicely)
+DONE: Add input hash column (???, check if it can be displayed nicely)
 
 
 ------------------------------------------------------------
