@@ -109,6 +109,18 @@ void append_field(ostream& os, const string& field, bool include_separator)
     }
 }
 
+string format_duration(double duration)
+{
+    int size = snprintf(0, 0, "%.2f", duration) + 1;
+    char buffer[size];
+
+    int got_size = snprintf(buffer, size, "%.2f", duration);
+    assert(size == got_size + 1);
+
+    return string(buffer);
+}
+
+
 
 void run_autotests(const string& test_directory, const string& outfile_name, unsigned long long test_timeout)
 {
@@ -191,13 +203,14 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
 
 
 
+
             append_field(outfile, file_name, true);
             append_field(outfile, to_string(case_number), true);
             append_field(outfile, human_readable_game_string(gc.games), true);
             append_field(outfile, string(1, color_char(gc.to_play)), true);
             append_field(outfile, test_outcome_to_string(gc.expected_outcome), true);
             append_field(outfile, win_string, true);
-            append_field(outfile, to_string(duration.count()), true);
+            append_field(outfile, format_duration(duration.count()), true);
             append_field(outfile, outcome_string, true);
             append_field(outfile, gc.comments, false);
             outfile << newline;
