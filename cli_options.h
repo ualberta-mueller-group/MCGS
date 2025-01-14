@@ -16,6 +16,11 @@ struct cli_options
     bool should_exit; // Exit from main() i.e. when "--help" used
 
     bool run_tests;
+
+    std::string test_directory;
+    std::string outfile_name;
+    unsigned long long test_timeout;
+
 };
 
 

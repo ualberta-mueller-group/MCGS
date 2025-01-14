@@ -12,7 +12,11 @@ using namespace std;
 ////////////////////////////////////////////////// cli_options
 
 cli_options::cli_options() : parser(nullptr), dry_run(false),
-    should_exit(false), run_tests(false)
+    should_exit(false), run_tests(false),
+    test_directory("test/input/autotests"),
+    outfile_name("out.csv"),
+    test_timeout(1000)
+
 { }
 
 cli_options::~cli_options()
@@ -42,16 +46,21 @@ to be ignored.";
 
     cout << "Flags:" << endl;
     print_flag("-h, --help", "Print this message and exit");
-    print_flag("--dry-run", "Skip running games");
     print_flag("--stdin", "Read game cases from stdin");
     print_flag("--file <file name>", "Read game cases from <file name>");
+
+    // Remove these? Hide them instead?
+    print_flag("--dry-run", "Skip running games");
     print_flag("--parser-debug", "Print file_parser debug info");
 
 
-    print_flag("--run-tests", "Run all autotests");
+    print_flag("--run-tests", "Run all autotests. By default, reads tests from \"test/input/autotests\"");
+    print_flag("--test-dir <directory name>", "Sets input directory for --run-tests. Default is \"test/input/autotests\"");
+    print_flag("--out-file <file name>", "Name of CSV output file resulting from --run-tests. Default is out.csv");
+    print_flag("--test-timeout <timeout in ms>", "Set timeout duration for tests, in milliseconds. Timeout of 0 means tests never time out. Default is 1000");
 
-    print_flag("--case", "TODO: Run a specific test, must be used in combination with --file"); // TODO
-    print_flag("--print-case-count", "TODO: Print number of cases in file, must be used in combination with --file"); // TODO
+
+
 
 }
 
@@ -138,6 +147,51 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
         if (arg == "--run-tests")
         {
             opts.run_tests = true;
+            continue;
+        }
+
+        if (arg == "--test-dir")
+        {
+            arg_idx++;
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: got --test-dir but no directory");
+            }
+
+            opts.test_directory = arg_next;
+            continue;
+        }
+
+        if (arg == "--out-file")
+        {
+            arg_idx++;
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: Got --out-file but no file path");
+            }
+
+            opts.outfile_name = arg_next;
+            continue;
+        }
+
+        if (arg == "--test-timeout")
+        {
+            arg_idx++;
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: got --test-timeout but no timeout");
+            }
+
+            if (!is_int(arg_next)) 
+            {
+                throw cli_options_exception("Error: --test-timeout argument not an integer");
+            }
+
+            opts.test_timeout = atoi(arg_next.c_str());
+
             continue;
         }
         

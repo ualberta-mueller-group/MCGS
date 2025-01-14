@@ -110,12 +110,17 @@ void append_field(ostream& os, const string& field, bool include_separator)
 }
 
 
-void run_autotests()
+void run_autotests(const string& test_directory, const string& outfile_name, unsigned long long test_timeout)
 {
-    ofstream outfile("out.txt");
+    ofstream outfile(outfile_name);
+
+    if (!outfile.is_open())
+    {
+        throw ios_base::failure("Couldn't open file for writing: \"" + outfile_name +  "\"");
+    }
+
 
     // print format to file
-
     append_field(outfile, "File", true);
     append_field(outfile, "Case", true);
     append_field(outfile, "Games", true);
@@ -127,13 +132,9 @@ void run_autotests()
     append_field(outfile, "Comments", false);
     outfile << newline;
 
-    if (!outfile.is_open())
-    {
-        throw ios_base::failure("Couldn't open file out.txt");
-    }
 
     // iterate over autotests directory
-    for (const filesystem::directory_entry& entry : recursive_directory_iterator("test/input/autotests"))
+    for (const filesystem::directory_entry& entry : recursive_directory_iterator(test_directory))
     {
         if (!entry.is_regular_file())
         {
@@ -169,7 +170,7 @@ void run_autotests()
             }
 
             chrono::time_point start = chrono::high_resolution_clock::now();
-            optional<solve_result> result = sum.solve_with_timeout(1000);
+            optional<solve_result> result = sum.solve_with_timeout(test_timeout);
             chrono::time_point end = chrono::high_resolution_clock::now();
 
             chrono::duration<double, std::milli> duration = end - start;

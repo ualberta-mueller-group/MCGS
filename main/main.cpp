@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
     if (opts.run_tests)
     {
-        run_autotests();
+        run_autotests(opts.test_directory, opts.outfile_name, opts.test_timeout);
         return 0;
     }
 
