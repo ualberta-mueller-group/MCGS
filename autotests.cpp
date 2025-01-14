@@ -134,7 +134,8 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
     append_field(outfile, "Got", true);
     append_field(outfile, "Time (ms)", true);
     append_field(outfile, "Outcome", true);
-    append_field(outfile, "Comments", false);
+    append_field(outfile, "Comments", true);
+    append_field(outfile, "Input hash", false);
     outfile << newline;
 
 
@@ -205,7 +206,8 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
             append_field(outfile, win_string, true);
             append_field(outfile, format_duration(duration.count()), true);
             append_field(outfile, outcome_string, true);
-            append_field(outfile, gc.comments, false);
+            append_field(outfile, gc.comments, true);
+            append_field(outfile, gc.hash.get_string(), false);
             outfile << newline;
 
 

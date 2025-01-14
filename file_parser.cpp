@@ -256,6 +256,7 @@ void game_case::release_games()
     games.clear();
 
     comments.clear();
+    hash.clear();
 }
 
 void game_case::_move_impl(game_case&& other) noexcept
@@ -266,6 +267,7 @@ void game_case::_move_impl(game_case&& other) noexcept
     expected_outcome = std::move(other.expected_outcome);
     games = std::move(other.games);
     comments = std::move(other.comments);
+    hash = std::move(other.hash);
 
     other.release_games();
 }
@@ -440,6 +442,10 @@ bool file_parser::parse_game()
         } else
         {
             _cases[i].games.push_back(g);
+
+            // Update hash. Should include section title for every token
+            string hashable_chunk = _section_title + _token;
+            _cases[i].hash.update(hashable_chunk);
         }
 
 
@@ -562,6 +568,11 @@ bool file_parser::parse_command()
         game_case& gc = _cases[_case_count];
         gc.to_play = to_play;
         gc.expected_outcome = expected_outcome;
+
+        // Update hash
+        string player_string = string(1, gc.to_play);
+        string hashable_chunk = "PLAYER" + player_string;
+        gc.hash.update(hashable_chunk);
 
         _case_count++;
     }

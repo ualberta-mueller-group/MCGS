@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -7,6 +8,7 @@
 #include "game_token_parsers.h"
 #include <memory>
 #include <exception>
+#include "simple_text_hash.h"
 
 // file_parser checks for a version command when reading from file or stdin
 #define FILE_PARSER_VERSION_STRING "version 1.0"
@@ -130,6 +132,8 @@ struct game_case
     test_outcome expected_outcome;
     std::vector<game*> games;
     std::string comments;
+    simple_text_hash hash;
+
 
     game_case();
     ~game_case();
