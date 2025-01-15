@@ -101,11 +101,14 @@ def row_populate_double_mode(input_rows, output_row):
     faster_by_string = "N/A"
     faster_css_class = None
     if comparison_row is not None:
-        num1 = float(input_row["time"])
-        num2 = float(comparison_row["time"])
-        faster_by = num2 - num1
-        faster_by_string = "{:.2f}".format(faster_by)
-        faster_css_class = get_faster_css(num1, num2)
+        if input_row["outcome"] == "TIMEOUT" or comparison_row["outcome"] == "TIMEOUT":
+            faster_by_string = "???"
+        else:
+            num1 = float(input_row["time"])
+            num2 = float(comparison_row["time"])
+            faster_by = num2 - num1
+            faster_by_string = "{:.2f}".format(faster_by)
+            faster_css_class = get_faster_css(num1, num2)
     output_row["faster"] = new_default_cell(faster_by_string)
     if faster_css_class is not None:
         output_row["faster"]["css_classes"].append(faster_css_class)
