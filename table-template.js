@@ -16,21 +16,21 @@ function setTableFilter(table, mode) {
 
 
     if (mode == "all") {
-        showByClass(["row-data"], true);
+        showByClass(["row"], true);
     }
 
     if (mode == "fail") {
-        showByClass(["row-data"], false);
+        showByClass(["row"], false);
         showByClass(["row-fail"], true);
     }
 
     if (mode == "timeout") {
-        showByClass(["row-data"], false);
+        showByClass(["row"], false);
         showByClass(["row-timeout"], true);
     }
 
     if (mode == "bad") {
-        showByClass(["row-data"], false);
+        showByClass(["row"], false);
         showByClass(["row-fail"], true);
         showByClass(["row-timeout"], true);
     }

@@ -48,127 +48,155 @@ if len(outfile_name) == 0 or not (len(infile_names) > 0 and len(infile_names) <=
     print_usage()
     exit(-1)
 
-
-######################################## Style functions
-# These functions return: [<displayed text>, <local CSS class list>, <row CSS class list>]
-# Local CSS classes are applied to <td> elements. Row CSS classes are applied to <tr> elements
-
-def style_basic(text):
-    return [text, [], []]
+######################################## row functions
 
 
-def style_games(text):
-    return [text, ["break-anywhere"], []]
+def row_populate_single_mode(input_rows, output_row):
+    input_row = input_rows[0]
+
+    for alias in output_field_dict:
+        output_row[alias] = new_default_cell(input_row[alias])
 
 
-def style_outcome(text):
-    class_names = []
-    class_names_row = []
+def row_style_single_mode(input_rows, output_row):
+    output_row["games"]["css_classes"].append("break-anywhere")
 
-    if text == "FAIL":
-        class_names.append("bg-red")
-        class_names_row.append("row-fail")
-    elif text == "TIMEOUT":
-        class_names.append("bg-orange")
-        class_names_row.append("row-timeout")
-    elif text == "COMPLETED":
-        class_names.append("bg-yellow")
-
-    return [text, class_names, class_names_row]
-
-######################################## FieldTemplates
-# If a style function is missing, the field will be omitted from the output
+    outcome = output_row["outcome"]
+    if outcome["text"] == "FAIL":
+        outcome["css_classes"].append("cell-fail")
+        output_row["css_classes"].append("row-fail")
+    elif outcome["text"] == "TIMEOUT":
+        outcome["css_classes"].append("cell-timeout")
+        output_row["css_classes"].append("row-timeout")
+    elif outcome["text"] == "COMPLETED":
+        outcome["css_classes"].append("cell-completed")
 
 
-class FieldTemplate:
-    def __init__(self, field_name, style_function):
-        self.field_name = field_name
-        self.style_function = style_function
+######################################## Define input/output formats
+
+input_field_list = []
+input_field_dict = {
+
+}
+
+output_field_list = []
+output_field_dict = {
+}
+
+row_functions = []
 
 
-field_templates = [
-    FieldTemplate("File", style_basic),
-    FieldTemplate("Case", style_basic),
-    FieldTemplate("Games", style_games),
-    FieldTemplate("Player", style_basic),
-    FieldTemplate("Expected", style_basic),
-    FieldTemplate("Got", style_basic),
-    FieldTemplate("Time (ms)", style_basic),
-    FieldTemplate("Outcome", style_outcome),
-    FieldTemplate("Comments", style_basic),
-    FieldTemplate("Input hash", None),
-]
+def add_input_row(alias, column_name):
+    input_field_list.append(column_name)
+    input_field_dict[alias] = column_name
 
 
-######################################## Read files and build output
-
-for x in field_templates:
-    assert type(x) is FieldTemplate
-
-infile1 = open(infile_names[0], "r")
-reader = csv.DictReader(infile1)
+def add_output_row(alias, column_name):
+    output_field_list.append(column_name)
+    output_field_dict[alias] = column_name
 
 
-# Check that format is correct
-assert len(field_templates) == len(reader.fieldnames)
+def add_row_function(fn):
+    row_functions.append(fn)
 
-for i in range(len(field_templates)):
-    assert field_templates[i].field_name == reader.fieldnames[i]
 
-outtext = "<table id=\"data-table\">\n"
+def new_default_cell(text):
+    return {"css_classes": ["cell"], "text": text}
 
-# Make header row
-outtext += "<tr>\n"
-for ft in field_templates:
-    if ft.style_function is None:
-        continue
 
-    outtext += f"<th><div class=header-div>{ft.field_name}</div></th>\n"
+add_input_row("file", "File")
+add_input_row("case", "Case")
+add_input_row("games", "Games")
+add_input_row("player", "Player")
+add_input_row("expected", "Expected")
+add_input_row("got", "Got")
+add_input_row("time", "Time (ms)")
+add_input_row("outcome", "Outcome")
+add_input_row("comments", "Comments")
+add_input_row("hash", "Input hash")
 
-outtext += "</tr>\n"
+if len(infile_names) == 1:
+    add_output_row("file", "File")
+    add_output_row("case", "Case")
+    add_output_row("games", "Games")
+    add_output_row("player", "Player")
+    add_output_row("expected", "Expected")
+    add_output_row("got", "Got")
+    add_output_row("time", "Time (ms)")
+    add_output_row("outcome", "Outcome")
+    add_output_row("comments", "Comments")
 
-# Make table rows
-for row in reader:
-    rowtext = ""
-    row_classes = ["row-data"]
+    add_row_function(row_populate_single_mode)
+    add_row_function(row_style_single_mode)
 
-    for ft in field_templates:
-        if ft.style_function is None:
+
+######################################## process rows
+
+infile = open(infile_names[0], "r")
+reader = csv.DictReader(infile)
+
+assert len(input_field_list) == len(reader.fieldnames)
+for i in range(len(input_field_list)):
+    assert input_field_list[i] == reader.fieldnames[i]
+
+
+table = "<table>\n"
+
+table += "<tr class=\"row-header\">\n"
+for field in output_field_list:
+    table += f"<th>{field}</th>\n"
+table += "</tr>\n"
+
+for reader_row in reader:
+    input_row = {}
+    for alias in input_field_dict:
+        input_row[alias] = reader_row[input_field_dict[alias]]
+
+    output_row = {}
+    output_row["css_classes"] = ["row"]
+
+    for fn in row_functions:
+        fn([input_row], output_row)
+
+    assert len(output_row) == len(output_field_dict) + 1
+    for alias in output_row:
+        if alias == "css_classes":
             continue
-        data = row[ft.field_name]
+        assert alias in output_field_dict
 
-        display_text, class_list, class_list_row = ft.style_function(data)
-        class_list_string = " ".join(class_list)
-        for c in class_list_row:
-            row_classes.append(c)
+    row_class_string = " ".join(output_row["css_classes"])
+    row_text = f"<tr class=\"{row_class_string}\">\n"
+    for alias in output_row:
+        if alias == "css_classes":
+            continue
+        cell = output_row[alias]
+        cell_class_string = " ".join(cell["css_classes"])
+        row_text += f"<td class=\"{cell_class_string}\"><div>"
+        row_text += cell["text"]
+        row_text += "</div></td>\n"
+    row_text += "</tr>\n"
 
-        rowtext += f"<td class=\"{class_list_string}\"><div class=\"data-div\">{display_text}</div></td>"
+    table += row_text
 
-    row_classes_string = " ".join(row_classes)
+table += "</table>\n"
+infile.close()
 
-    rowtext = f"<tr class=\"{row_classes_string}\">" + "\n" + rowtext + "</tr>\n"
-    outtext += rowtext
+######################################## Write HTML file
 
-outtext += "</table>\n"
+html_template_file = open("table-template.html", "r")
+html_template_string = html_template_file.read()
+html_template_file.close()
+
+script_file = open("table-template.js", "r")
+script_string = script_file.read()
+script_file.close()
 
 
-templatefile = open("table-template.html", "r")
-
-# Read JS file
-scriptfile = open("table-template.js", "r")
-scripttext = scriptfile.read()
-scriptfile.close()
-
+html_template_string = html_template_string.replace("<!-- REPLACE WITH TABLE -->", table)
+html_template_string = html_template_string.replace("<!-- REPLACE WITH SCRIPT -->", script_string)
 
 outfile = open(outfile_name, "w")
-
-for line in templatefile:
-    line = line.replace("<!-- REPLACE WITH TABLE -->", outtext)
-    line = line.replace("<!-- REPLACE WITH SCRIPT -->", scripttext)
-    outfile.write(line)
-
+outfile.write(html_template_string)
 outfile.close()
-templatefile.close()
 
-infile1.close()
 
