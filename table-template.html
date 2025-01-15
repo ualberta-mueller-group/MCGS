@@ -8,7 +8,7 @@
             * {
                 box-sizing: border-box;
                 margin: 0px;
-                border: 0px;
+                padding: 0px;
             }
 
             body {
@@ -25,17 +25,18 @@
                 border-bottom: 1px solid black;
             }
 
-            td {
+            td, th {
                 border-right: 1px solid black;
                 padding: 0px;
             }
 
-            td:last-child {
+            td:last-child, th:last-child {
                 border-right: 0px;
             }
 
             tr:nth-child(odd) {
-                background-color: #d8d8d8;
+                //background-color: #d8d8d8;
+                background-color: #e6e6e6;
             }
 
             tr:nth-child(1) {
@@ -48,9 +49,14 @@
                 padding: 2px;
             }
 
+            .cell-pass {
+                background-color: #00ff00;
+            }
+
             .cell-fail {
                 background-color: red;
             }
+
 
             .cell-timeout {
                 background-color: orange;
@@ -58,10 +64,6 @@
 
             .cell-completed {
                 background-color: yellow;
-            }
-
-            select {
-                outline: 1px solid black;
             }
 
             .select-div {
@@ -73,6 +75,55 @@
             td.break-anywhere div {
                 overflow-wrap: anywhere;
             }
+
+            .cell-faster {
+                background-color: #40ffa0;
+            }
+
+            .cell-slower {
+                background-color: #ff8080;
+            }
+
+            .cell-new-fail {
+                background-color: #990000;
+            }
+
+            .cell-new-pass {
+                //background-color: #66ff66;
+                background-color: #004d00;
+            }
+
+            .cell-new-completed {
+                background-color: #ffff80;
+
+            }
+
+            .cell-new-timeout {
+                background-color: #994d00;
+            }
+
+            .filter-text-div {
+                display: inline-block;
+                margin-bottom: 10px;
+            }
+
+            tr.row-header {
+                border-top: 1px solid black;
+            }
+
+            div.sep {
+                background-color: red;
+                width: 15px;
+                display: inline-block;
+            }
+
+            #metadata-string {
+                white-space-collapse: preserve;
+            }
+
+
+
+
 
 
         </style>
@@ -86,6 +137,8 @@
 
     <body>
 
+        <!-- REPLACE WITH METADATA -->
+
     <div class="select-div">
         <label for="outcome-filter-dropdown">Show outcome: </label>
         <select name="outcome-filter" id="outcome-filter-dropdown">
@@ -93,8 +146,31 @@
             <option value="bad">All bad outcomes</option>
             <option value="timeout">Only timeout</option>
             <option value="fail">Only fail</option>
-
         </select>
+    </div>
+
+    <div class="filter-text-div">
+
+        <label for="filter-text-input">Search: </label>
+        <input type="text" id="filter-text-input">
+
+        <div class="sep"></div>
+
+        <label for="filter-text-exclude">Exclude</label>
+        <input type="checkbox" id="filter-text-exclude">
+
+        <div class="sep"></div>
+
+        <label for="filter-text-regex">Regex</label>
+        <input type="checkbox" id="filter-text-regex">
+
+        <div class="sep"></div>
+
+        <label for="filter-text-column-select">Search column: </label>
+        <select id="filter-text-column-select">
+            <!-- REPLACE WITH COLUMN OPTIONS -->
+        </select>
+
     </div>
 
         <!-- REPLACE WITH TABLE -->
