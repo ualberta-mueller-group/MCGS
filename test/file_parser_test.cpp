@@ -379,7 +379,68 @@ void e2e_test24()
         gc->cleanup_games();
         delete gc;
     }
+
 }
+
+// Comment stuff...
+
+// Make sure _, #0, #1 all work
+void e2e_test25()
+{
+    file_parser* p = file_parser::from_file(input_root_dir + "comments.test");
+
+    game_case case1;
+    game_case case2;
+    assert(p->parse_chunk(case1));
+    assert(p->parse_chunk(case2));
+
+    assert(case1.comments.find("A") != string::npos);
+    assert(case1.comments.find("B") == string::npos);
+    assert(case1.comments.find("C") != string::npos);
+    assert(case1.comments.find("D") == string::npos);
+
+    assert(case2.comments.find("A") != string::npos);
+    assert(case2.comments.find("B") == string::npos);
+    assert(case2.comments.find("C") == string::npos);
+    assert(case2.comments.find("D") != string::npos);
+
+    case1.cleanup_games();
+    case2.cleanup_games();
+
+    delete p;
+}
+
+//"#3"
+void e2e_test26()
+{
+    assert_throw_status_file("invalid_comment1.test", true, BAD_COMMENT_FORMAT);
+    assert_throw_status_string("invalid_comment1.test", true, BAD_COMMENT_FORMAT);
+}
+
+//"#"
+void e2e_test27()
+{
+    assert_throw_status_file("invalid_comment2.test", true, BAD_COMMENT_FORMAT);
+    assert_throw_status_string("invalid_comment2.test", true, BAD_COMMENT_FORMAT);
+}
+
+
+//#D
+void e2e_test28()
+{
+    assert_throw_status_file("invalid_comment3.test", true, BAD_COMMENT_FORMAT);
+    assert_throw_status_string("invalid_comment3.test", true, BAD_COMMENT_FORMAT);
+}
+
+
+//#0B
+void e2e_test29()
+{
+    assert_throw_status_file("invalid_comment4.test", true, BAD_COMMENT_FORMAT);
+    assert_throw_status_string("invalid_comment4.test", true, BAD_COMMENT_FORMAT);
+}
+
+
 
 void end_to_end_tests()
 {
@@ -407,6 +468,12 @@ void end_to_end_tests()
     e2e_test22();
     e2e_test23();
     e2e_test24();
+    e2e_test25();
+    e2e_test26();
+    e2e_test27();
+    e2e_test28();
+    e2e_test29();
+
 }
 
 

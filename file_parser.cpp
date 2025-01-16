@@ -707,11 +707,40 @@ bool file_parser::parse_chunk(game_case& gc)
         // Match comment
         if (match('/', '\\', "comment", true))
         {
-            if (true || (_token.size() > 0 && _token[0] == '!'))
+            static_assert(FILE_PARSER_MAX_CASES < 10); // next lines assume the case number is 1 digit
+
+            if (_token.size() > 0 && _token[0] != '_')
             {
-                for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
+                if (_token[0] == '#')
                 {
-                    _cases[i].comments += _token;
+                    // Get case number...
+                    int case_idx = -1;
+
+                    if (_token.size() >= 2)
+                    {
+                        case_idx = (int) (_token[1] - '0');
+                    }
+
+                    if (
+                        !(case_idx >= 0 && case_idx <= 9)
+                        || case_idx >= FILE_PARSER_MAX_CASES
+                        || (_token.size() >= 3 && _token[2] != ' ')
+                        )
+                    {
+                        string why = "Comment with '#' missing or bad number";
+                        throw parser_exception(why, BAD_COMMENT_FORMAT);
+                    }
+
+                    string remaining = _token.size() > 2 ? _token.substr(2) : "";
+                    _cases[case_idx].comments += remaining;
+
+                } else
+                {
+
+                    for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
+                    {
+                        _cases[i].comments += _token;
+                    }
                 }
             }
 

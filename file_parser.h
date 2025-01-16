@@ -248,6 +248,7 @@ enum parser_exception_code
     EMPTY_CASE_COMMAND,
     FAILED_CASE_COMMAND,
     PARSE_CHUNK_CALLER_ERROR,
+    BAD_COMMENT_FORMAT,
 };
 
 // Thrown on bad input
