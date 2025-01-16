@@ -1,5 +1,6 @@
 #include "autotests.h"
 
+#include <cstdio>
 #include <iomanip>
 #include <ios>
 #include <iostream>
@@ -17,30 +18,13 @@
 
 using namespace std;
 
-
 using filesystem::recursive_directory_iterator;
 
-/*
-   file name
-   case number
-   human readable games
-   to play
-
-   expected value
-   found value
-
-   time (ms)
-
-   outcome (pass, fail, timeout)
-
-   included comments
-*/
-
-
-// separator
+// CSV separator
 constexpr const char* sep = ",";
 
-string human_readable_game_string(const vector<game *>& games)
+// convert game list to string
+string human_readable_game_string(const vector<game*>& games)
 {
     stringstream stream;
 
@@ -61,9 +45,10 @@ string human_readable_game_string(const vector<game *>& games)
     return game_string;
 }
 
+// Print column contents to CSV file
 void append_field(ostream& os, const string& field, bool include_separator)
 {
-    // Remove leading/trailing whitespace, replace quotes
+    // Remove leading/trailing whitespace, replace double quotes with 2 single quotes
     string sanitized_field;
 
     bool past_left_whitespace = false;
@@ -102,30 +87,30 @@ void append_field(ostream& os, const string& field, bool include_separator)
     }
 }
 
+// Print elapsed time to 2 decimal places
 string format_duration(double duration)
 {
-    int size = snprintf(0, 0, "%.2f", duration) + 1;
+    const char* format = "%.2f";
+
+    int size = snprintf(nullptr, 0, format, duration) + 1;
     char buffer[size];
 
-    int got_size = snprintf(buffer, size, "%.2f", duration);
+    int got_size = snprintf(buffer, size, format, duration);
     assert(size == got_size + 1);
 
     return string(buffer);
 }
 
-
-
 void run_autotests(const string& test_directory, const string& outfile_name, unsigned long long test_timeout)
 {
-    ofstream outfile(outfile_name);
+    ofstream outfile(outfile_name); // CSV file
 
     if (!outfile.is_open())
     {
         throw ios_base::failure("Couldn't open file for writing: \"" + outfile_name +  "\"");
     }
 
-
-    // print format to file
+    // print format as first row to file
     append_field(outfile, "File", true);
     append_field(outfile, "Case", true);
     append_field(outfile, "Games", true);
@@ -142,6 +127,7 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
     // iterate over autotests directory
     for (const filesystem::directory_entry& entry : recursive_directory_iterator(test_directory))
     {
+        // Skip directories and non ".test" files
         if (!entry.is_regular_file())
         {
             continue;
@@ -152,20 +138,18 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
         if (file_path.extension() != ".test")
         {
             continue;
-
         }
-
-        cout << entry << endl;
 
         const string file_name = file_path.string();
 
-        // Path relative to test directory
+        cout << "New file: " << file_name << endl;
+
+        // Path relative to test directory (this string is printed to CSV file)
         filesystem::path relative_file_path = filesystem::relative(file_path, filesystem::path(test_directory));
 
-        // Open test
-        file_parser* parser = file_parser::from_file(file_name);
+        // Open test file
+        unique_ptr<file_parser> parser = unique_ptr<file_parser>(file_parser::from_file(file_name));
         game_case gc;
-
 
         int case_number = 0;
         while (parser->parse_chunk(gc))
@@ -186,14 +170,14 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
 
             string win_string = "???";
 
-            if (result)
+            if (result.has_value())
             {
                 win_string = result.value().win ? test_outcome_to_string(TEST_OUTCOME_WIN)
                     : test_outcome_to_string(TEST_OUTCOME_LOSS);
             }
 
             string outcome_string = "TIMEOUT";
-            if (result)
+            if (result.has_value())
             {
                 if (gc.expected_outcome == TEST_OUTCOME_UNSPECIFIED)
                 {
@@ -216,19 +200,9 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
             append_field(outfile, gc.hash.get_string(), false);
             outfile << newline;
 
-
             gc.cleanup_games();
-
-
             case_number++;
-            gc.cleanup_games();
         }
-
-
-
-
-        delete parser;
-
 
     }
 

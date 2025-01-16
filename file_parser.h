@@ -114,7 +114,9 @@ inline std::string test_outcome_to_string(const test_outcome& outcome)
 
     }
 
-    return "This string should not appear: see test_outcome_to_string()";
+    
+    std::cerr << "This string should not appear: see test_outcome_to_string()" << std::endl;
+    exit(-1);
 }
 
 /*

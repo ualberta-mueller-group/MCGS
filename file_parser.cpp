@@ -709,8 +709,10 @@ bool file_parser::parse_chunk(game_case& gc)
         {
             static_assert(FILE_PARSER_MAX_CASES < 10); // next lines assume the case number is 1 digit
 
+            // ignore comments starting with "_"
             if (_token.size() > 0 && _token[0] != '_')
             {
+                // i.e. "#0", "#1" to only include a comment in a specific case
                 if (_token[0] == '#')
                 {
                     // Get case number...
@@ -783,6 +785,17 @@ file_parser* file_parser::from_string(const string& string)
     return new file_parser(new stringstream(string), true, false);
 }
 
+
+/*
+    When implementing a new game, you must register its game parser here
+
+    i.e:
+        add_game_parser("clobber_1xn", new basic_parser<clobber_1xn>());
+
+    Will cause games in the section denoted by "[clobber_1xn]" to be
+        created as the clobber_1xn class.
+
+*/
 void file_parser::init_game_parsers()
 {
     assert(_game_map.size() == 0);

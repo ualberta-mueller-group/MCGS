@@ -32,6 +32,7 @@ void simple_text_hash::clear()
 
 void simple_text_hash::update(const string& data)
 {
+    // get_string() shouldn't have been called yet
     assert(string_representation.size() == 0);
 
     const size_t N = data.size();
@@ -54,22 +55,22 @@ const string& simple_text_hash::get_string()
         return string_representation;
     }
 
-    string_representation.clear();
-
     // Deal with common collision by adding bytes_seen into the hash buffer
     // This helps in the case where there's a repeating pattern that "wraps around" the buffer
     assert(buffer_size >= sizeof(bytes_seen));
     for (size_t i = 0; i < sizeof(bytes_seen); i++)
     {
-        buffer[i] ^= ((uint8_t *) (& bytes_seen))[i];
+        buffer[i] ^= ((uint8_t *) (&bytes_seen))[i];
     }
 
+    // convert each byte to hex characters
     for (size_t i = 0; i < buffer_size; i++)
     {
         const uint8_t& c = buffer[i];
 
         size_t conversion_space = 3;
         char converted_byte[conversion_space];
+        // snprintf won't overflow the buffer
         size_t used = snprintf(converted_byte, conversion_space, "%02X", (int) c);
 
         assert(used + 1 == conversion_space);
