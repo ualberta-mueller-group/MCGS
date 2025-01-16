@@ -4,8 +4,6 @@ let g_include = true;
 let g_regex = false;
 let g_searchColumn = -1;
 
-
-
 function showHideIndices() {
     const indexRow = document.getElementById("col-indices");
 
@@ -63,9 +61,6 @@ function setTableFilter() {
         showByClass(["row-timeout"], false);
         showByClass(["row-bad-hash"], false);
     }
-
-
-
 }
 
 function setTableFilterText() { 
@@ -130,8 +125,6 @@ function setTableFilterText() {
 
 }
 
-
-
 function refresh() {
     showHideIndices();
     setTableFilter();
@@ -152,19 +145,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const problemSummary = document.getElementById("problem-summary");
 
-    let problems = {
-        "row-fail": "test(s) failed",
-        "row-timeout": "test(s) timed out",
-        "row-bad-hash": "test(s) with non-matching hashes",
-    };
+    let problems = [
+        {
+            "row-css": "row-fail",
+            "new-css": "cell-new-fail",
+            "main-text": "test(s) failed",
+            "secondary-text": "newly failing",
+        },
+
+        {
+            "row-css": "row-timeout",
+            "new-css": "cell-new-timeout",
+            "main-text": "test(s) timed out",
+            "secondary-text": "newly timed out",
+        },
+
+        {
+            "row-css": "row-bad-hash",
+            "main-text": "test(s) with non-matching hashes",
+        },
+    ];
 
 
     let summaryText = "";
-    for (const [class_name, summary_text] of Object.entries(problems)) {
-        const elements = document.getElementsByClassName(class_name);
-        if (elements.length > 0) {
-            summaryText += elements.length.toString() + " " + summary_text + "\n";
+    for (const problem of problems) {
+        const rows = document.getElementsByClassName(problem["row-css"]);
+        let regressionCount = 0;
+
+        if (problem["new-css"]) {
+            const newCSS = problem["new-css"];
+
+            for (let i = 0; i < rows.length; i++) {
+                let newCells = rows[i].getElementsByClassName(newCSS);
+                if (newCells.length > 0) {
+                    regressionCount++;
+                }
+            }
         }
+
+        if (rows.length > 0) {
+            summaryText += rows.length.toString() + " " + problem["main-text"];
+
+            if (regressionCount > 0) {
+                summaryText += " (" + regressionCount.toString() + " " + problem["secondary-text"] + ")";
+            }
+
+            summaryText += "\n";
+        }
+
     }
     if (summaryText.length === 0) {
         summaryText = "No problems found. All tests passed!";
@@ -202,7 +230,6 @@ document.addEventListener("DOMContentLoaded", () => {
         g_searchColumn = e.target.value;
         refresh();
     });
-
 
     refresh();
 
