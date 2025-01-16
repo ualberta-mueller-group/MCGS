@@ -145,8 +145,6 @@ let g_include = true;
 let g_regex = false;
 let g_searchColumn = -1;
 
-
-
 function showHideIndices() {
     const indexRow = document.getElementById("col-indices");
 
@@ -204,9 +202,6 @@ function setTableFilter() {
         showByClass(["row-timeout"], false);
         showByClass(["row-bad-hash"], false);
     }
-
-
-
 }
 
 function setTableFilterText() { 
@@ -271,8 +266,6 @@ function setTableFilterText() {
 
 }
 
-
-
 function refresh() {
     showHideIndices();
     setTableFilter();
@@ -293,19 +286,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const problemSummary = document.getElementById("problem-summary");
 
-    let problems = {
-        "row-fail": "test(s) failed",
-        "row-timeout": "test(s) timed out",
-        "row-bad-hash": "test(s) with non-matching hashes",
-    };
+    let problems = [
+        {
+            "row-css": "row-fail",
+            "new-css": "cell-new-fail",
+            "main-text": "test(s) failed",
+            "secondary-text": "newly failing",
+        },
+
+        {
+            "row-css": "row-timeout",
+            "new-css": "cell-new-timeout",
+            "main-text": "test(s) timed out",
+            "secondary-text": "newly timed out",
+        },
+
+        {
+            "row-css": "row-bad-hash",
+            "main-text": "test(s) with non-matching hashes",
+        },
+    ];
 
 
     let summaryText = "";
-    for (const [class_name, summary_text] of Object.entries(problems)) {
-        const elements = document.getElementsByClassName(class_name);
-        if (elements.length > 0) {
-            summaryText += elements.length.toString() + " " + summary_text + "\n";
+    for (const problem of problems) {
+        const rows = document.getElementsByClassName(problem["row-css"]);
+        let regressionCount = 0;
+
+        if (problem["new-css"]) {
+            const newCSS = problem["new-css"];
+
+            for (let i = 0; i < rows.length; i++) {
+                let newCells = rows[i].getElementsByClassName(newCSS);
+                if (newCells.length > 0) {
+                    regressionCount++;
+                }
+            }
         }
+
+        if (rows.length > 0) {
+            summaryText += rows.length.toString() + " " + problem["main-text"];
+
+            if (regressionCount > 0) {
+                summaryText += " (" + regressionCount.toString() + " " + problem["secondary-text"] + ")";
+            }
+
+            summaryText += "\n";
+        }
+
     }
     if (summaryText.length === 0) {
         summaryText = "No problems found. All tests passed!";
@@ -344,7 +372,6 @@ document.addEventListener("DOMContentLoaded", () => {
         refresh();
     });
 
-
     refresh();
 
 });
@@ -356,9 +383,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     <body>
 
-        <p id="metadata-string">rand1.csv (2025-01-15 20:20:53 MD5:a26f0c97a96e0cd76cfc256eddfdaf3c)
-rand2.csv (2025-01-15 00:56:18 MD5:09e3b18e305d72d4358b98ef4469359f)
-Generated 2025-01-15 21:31:29</p>
+        <p id="metadata-string">out.csv (2025-01-15 22:59:05 MD5:7412f1ebc5b33c9121d530bb9aea9cf7)
+Generated 2025-01-15 22:59:15</p>
 
 
     <p id="problem-summary"></p>
@@ -402,12 +428,8 @@ Generated 2025-01-15 21:31:29</p>
 <option value=4>Expected</option>
 <option value=5>Got</option>
 <option value=6>Time (ms)</option>
-<option value=7>Faster by</option>
-<option value=8>Outcome</option>
-<option value=9>Regression</option>
-<option value=10>Old Outcome</option>
-<option value=11>Comments</option>
-<option value=12>Input hash</option>
+<option value=7>Outcome</option>
+<option value=8>Comments</option>
 <option value=-2>COMBINE AND TAG</option>
 
         </select>
@@ -423,12 +445,8 @@ Generated 2025-01-15 21:31:29</p>
 <th>Expected</th>
 <th>Got</th>
 <th>Time (ms)</th>
-<th>Faster by</th>
 <th>Outcome</th>
-<th>Regression</th>
-<th>Old Outcome</th>
 <th>Comments</th>
-<th>Input hash</th>
 </tr>
 <tr class="row-header" id="col-indices">
 <th>(COL0)</th>
@@ -440,40 +458,28 @@ Generated 2025-01-15 21:31:29</p>
 <th>(COL6)</th>
 <th>(COL7)</th>
 <th>(COL8)</th>
-<th>(COL9)</th>
-<th>(COL10)</th>
-<th>(COL11)</th>
-<th>(COL12)</th>
 </tr>
-<tr class="row row-timeout">
+<tr class="row">
 <td class="cell"><div>file1.test</div></td>
 <td class="cell"><div>0</div></td>
 <td class="cell break-anywhere"><div>clobber_1xn:XOXOXOXO</div></td>
 <td class="cell"><div>B</div></td>
 <td class="cell"><div>Win</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell"><div>881.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-timeout"><div>TIMEOUT</div></td>
-<td class="cell cell-new-timeout"><div>NEW TIMEOUT</div></td>
-<td class="cell"><div>PASS</div></td>
+<td class="cell"><div>Win</div></td>
+<td class="cell"><div>0.18</div></td>
+<td class="cell cell-pass"><div>PASS</div></td>
 <td class="cell"><div>This comment should be included for both game cases</div></td>
-<td class="cell"><div>554C4E6A617C6442</div></td>
 </tr>
-<tr class="row row-fail">
+<tr class="row">
 <td class="cell"><div>file1.test</div></td>
 <td class="cell"><div>1</div></td>
 <td class="cell break-anywhere"><div>clobber_1xn:XOXOXOXO</div></td>
 <td class="cell"><div>W</div></td>
 <td class="cell"><div>Win</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>1005.00</div></td>
-<td class="cell cell-slower"><div>-448.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-fail"><div>STILL FAIL</div></td>
-<td class="cell"><div>FAIL</div></td>
+<td class="cell"><div>Win</div></td>
+<td class="cell"><div>0.09</div></td>
+<td class="cell cell-pass"><div>PASS</div></td>
 <td class="cell"><div>This comment should be included for both game cases</div></td>
-<td class="cell"><div>554D4E6A617C6442</div></td>
 </tr>
 <tr class="row">
 <td class="cell"><div>file1.test</div></td>
@@ -482,403 +488,42 @@ Generated 2025-01-15 21:31:29</p>
 <td class="cell"><div>B</div></td>
 <td class="cell"><div>Loss</div></td>
 <td class="cell"><div>Loss</div></td>
-<td class="cell"><div>1915.00</div></td>
-<td class="cell cell-slower"><div>-1105.00</div></td>
+<td class="cell"><div>0.14</div></td>
 <td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-pass"><div>STILL PASS</div></td>
-<td class="cell"><div>PASS</div></td>
 <td class="cell"><div></div></td>
-<td class="cell"><div>0278456C58330239</div></td>
 </tr>
-<tr class="row">
+<tr class="row row-fail">
 <td class="cell"><div>file1.test</div></td>
 <td class="cell"><div>3</div></td>
 <td class="cell break-anywhere"><div>integer:5 integer:-6 clobber_1xn:XOXO</div></td>
 <td class="cell"><div>W</div></td>
 <td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>161.00</div></td>
-<td class="cell cell-faster"><div>1480.00</div></td>
-<td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-new-pass"><div>NEW PASS</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>0378456C58330239</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>file1.test</div></td>
-<td class="cell"><div>4</div></td>
-<td class="cell break-anywhere"><div>clobber_1xn:XO integer:1 integer:3 integer:6</div></td>
-<td class="cell"><div>B</div></td>
 <td class="cell"><div>Win</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>1003.00</div></td>
-<td class="cell"><div>???</div></td>
+<td class="cell"><div>0.12</div></td>
 <td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-new-fail"><div>NEW FAIL</div></td>
-<td class="cell"><div>TIMEOUT</div></td>
 <td class="cell"><div></div></td>
-<td class="cell"><div>51566A165E553774</div></td>
 </tr>
-<tr class="row row-timeout">
-<td class="cell"><div>many.test</div></td>
+<tr class="row">
+<td class="cell"><div>comments.test</div></td>
 <td class="cell"><div>0</div></td>
-<td class="cell break-anywhere"><div>integer:400</div></td>
+<td class="cell break-anywhere"><div>integer:1</div></td>
 <td class="cell"><div>B</div></td>
 <td class="cell"><div>Win</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell"><div>368.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-timeout"><div>TIMEOUT</div></td>
-<td class="cell cell-new-timeout"><div>NEW TIMEOUT</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450155420F</div></td>
+<td class="cell"><div>Win</div></td>
+<td class="cell"><div>0.05</div></td>
+<td class="cell cell-pass"><div>PASS</div></td>
+<td class="cell"><div>This comment should appear in both cases  This comment should also appear in both cases  This comment should only appear in the first case  This comment should appear in both cases again</div></td>
 </tr>
-<tr class="row row-bad-hash row-fail">
-<td class="cell"><div>many.test</div></td>
+<tr class="row">
+<td class="cell"><div>comments.test</div></td>
 <td class="cell"><div>1</div></td>
-<td class="cell break-anywhere"><div>integer:401</div></td>
-<td class="cell"><div>B</div></td>
+<td class="cell break-anywhere"><div>integer:1</div></td>
+<td class="cell"><div>W</div></td>
 <td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>198.00</div></td>
-<td class="cell cell-faster"><div>1603.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-fail"><div>STILL FAIL</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell cell-wrong-hash"><div>544E40450155435F BAD HASH</div></td>
-</tr>
-<tr class="row row-timeout">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>2</div></td>
-<td class="cell break-anywhere"><div>integer:402</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell"><div>1386.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-timeout"><div>TIMEOUT</div></td>
-<td class="cell cell-new-timeout"><div>NEW TIMEOUT</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450155400F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>3</div></td>
-<td class="cell break-anywhere"><div>integer:403</div></td>
-<td class="cell"><div>B</div></td>
 <td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>417.00</div></td>
-<td class="cell cell-faster"><div>689.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-fail"><div>STILL FAIL</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450155410F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>4</div></td>
-<td class="cell break-anywhere"><div>integer:404</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>361.00</div></td>
-<td class="cell cell-faster"><div>883.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-fail"><div>STILL FAIL</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450155460F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>5</div></td>
-<td class="cell break-anywhere"><div>integer:405</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>20.00</div></td>
-<td class="cell cell-faster"><div>1551.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-new-fail"><div>NEW FAIL</div></td>
-<td class="cell"><div>PASS</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450155470F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>6</div></td>
-<td class="cell break-anywhere"><div>integer:406</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>1253.00</div></td>
-<td class="cell cell-slower"><div>-839.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-fail"><div>STILL FAIL</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450155440F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>7</div></td>
-<td class="cell break-anywhere"><div>integer:407</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>258.00</div></td>
-<td class="cell cell-faster"><div>1237.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-fail"><div>STILL FAIL</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450155450F</div></td>
-</tr>
-<tr class="row">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>8</div></td>
-<td class="cell break-anywhere"><div>integer:408</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>173.00</div></td>
-<td class="cell"><div>???</div></td>
+<td class="cell"><div>0.03</div></td>
 <td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-new-pass"><div>NEW PASS</div></td>
-<td class="cell"><div>TIMEOUT</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E404501554A0F</div></td>
-</tr>
-<tr class="row row-timeout">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>9</div></td>
-<td class="cell break-anywhere"><div>integer:409</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell"><div>1777.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-timeout"><div>TIMEOUT</div></td>
-<td class="cell cell-new-timeout"><div>NEW TIMEOUT</div></td>
-<td class="cell"><div>PASS</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E404501554B0F</div></td>
-</tr>
-<tr class="row">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>10</div></td>
-<td class="cell break-anywhere"><div>integer:410</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>1326.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-new-pass"><div>NEW PASS</div></td>
-<td class="cell"><div>TIMEOUT</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450154420F</div></td>
-</tr>
-<tr class="row">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>11</div></td>
-<td class="cell break-anywhere"><div>integer:411</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>46.00</div></td>
-<td class="cell cell-faster"><div>1217.00</div></td>
-<td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-pass"><div>STILL PASS</div></td>
-<td class="cell"><div>PASS</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450154430F</div></td>
-</tr>
-<tr class="row">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>12</div></td>
-<td class="cell break-anywhere"><div>integer:412</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>244.00</div></td>
-<td class="cell cell-faster"><div>820.00</div></td>
-<td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-pass"><div>STILL PASS</div></td>
-<td class="cell"><div>PASS</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450154400F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>13</div></td>
-<td class="cell break-anywhere"><div>integer:413</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>562.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-new-fail"><div>NEW FAIL</div></td>
-<td class="cell"><div>TIMEOUT</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450154410F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>14</div></td>
-<td class="cell break-anywhere"><div>integer:414</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>1588.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-new-fail"><div>NEW FAIL</div></td>
-<td class="cell"><div>TIMEOUT</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450154460F</div></td>
-</tr>
-<tr class="row row-timeout">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>15</div></td>
-<td class="cell break-anywhere"><div>integer:415</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell"><div>988.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-timeout"><div>TIMEOUT</div></td>
-<td class="cell cell-timeout"><div>STILL TIMEOUT</div></td>
-<td class="cell"><div>TIMEOUT</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450154470F</div></td>
-</tr>
-<tr class="row">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>16</div></td>
-<td class="cell break-anywhere"><div>integer:416</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>1008.00</div></td>
-<td class="cell cell-slower"><div>-327.00</div></td>
-<td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-pass"><div>STILL PASS</div></td>
-<td class="cell"><div>PASS</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450154440F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>17</div></td>
-<td class="cell break-anywhere"><div>integer:417</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>261.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-new-fail"><div>NEW FAIL</div></td>
-<td class="cell"><div>TIMEOUT</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450154450F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>18</div></td>
-<td class="cell break-anywhere"><div>integer:418</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>519.00</div></td>
-<td class="cell cell-slower"><div>-415.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-fail"><div>STILL FAIL</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E404501544A0F</div></td>
-</tr>
-<tr class="row">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>19</div></td>
-<td class="cell break-anywhere"><div>integer:419</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>1045.00</div></td>
-<td class="cell cell-faster"><div>566.00</div></td>
-<td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-new-pass"><div>NEW PASS</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E404501544B0F</div></td>
-</tr>
-<tr class="row row-timeout">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>20</div></td>
-<td class="cell break-anywhere"><div>integer:420</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell"><div>1957.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-timeout"><div>TIMEOUT</div></td>
-<td class="cell cell-new-timeout"><div>NEW TIMEOUT</div></td>
-<td class="cell"><div>FAIL</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450157420F</div></td>
-</tr>
-<tr class="row row-fail">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>21</div></td>
-<td class="cell break-anywhere"><div>integer:421</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>1635.00</div></td>
-<td class="cell"><div>-35.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-new-fail"><div>NEW FAIL</div></td>
-<td class="cell"><div>PASS</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450157430F</div></td>
-</tr>
-<tr class="row">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>22</div></td>
-<td class="cell break-anywhere"><div>integer:422</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>1681.00</div></td>
-<td class="cell cell-slower"><div>-477.00</div></td>
-<td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-pass"><div>STILL PASS</div></td>
-<td class="cell"><div>PASS</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450157400F</div></td>
-</tr>
-<tr class="row">
-<td class="cell"><div>many.test</div></td>
-<td class="cell"><div>23</div></td>
-<td class="cell break-anywhere"><div>integer:423</div></td>
-<td class="cell"><div>B</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>277.00</div></td>
-<td class="cell cell-faster"><div>803.00</div></td>
-<td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-pass"><div>STILL PASS</div></td>
-<td class="cell"><div>PASS</div></td>
-<td class="cell"><div></div></td>
-<td class="cell"><div>544E40450157410F</div></td>
+<td class="cell"><div>This comment should appear in both cases  This comment should also appear in both cases  This comment should only appear in the second case  This comment should appear in both cases again</div></td>
 </tr>
 <tr class="row">
 <td class="cell"><div>verylong.test</div></td>
@@ -887,73 +532,53 @@ Generated 2025-01-15 21:31:29</p>
 <td class="cell"><div>B</div></td>
 <td class="cell"><div>Loss</div></td>
 <td class="cell"><div>Loss</div></td>
-<td class="cell"><div>840.00</div></td>
-<td class="cell cell-faster"><div>203.00</div></td>
+<td class="cell"><div>0.05</div></td>
 <td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-pass"><div>STILL PASS</div></td>
-<td class="cell"><div>PASS</div></td>
 <td class="cell"><div>1st case should complete, , , , ,,,, 2nd case should time out</div></td>
-<td class="cell"><div>05444D7B74786F07</div></td>
 </tr>
-<tr class="row row-fail">
+<tr class="row row-timeout">
 <td class="cell"><div>verylong.test</div></td>
 <td class="cell"><div>1</div></td>
 <td class="cell break-anywhere"><div>clobber_1xn:XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO</div></td>
 <td class="cell"><div>B</div></td>
 <td class="cell"><div>Win</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>780.00</div></td>
 <td class="cell"><div>???</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-new-fail"><div>NEW FAIL</div></td>
-<td class="cell"><div>TIMEOUT</div></td>
+<td class="cell"><div>1000.14</div></td>
+<td class="cell cell-timeout"><div>TIMEOUT</div></td>
 <td class="cell"><div>this should time out</div></td>
-<td class="cell"><div>D855587F7F3D3D0F</div></td>
 </tr>
-<tr class="row row-fail">
+<tr class="row">
 <td class="cell"><div>more_tests/file2.test</div></td>
 <td class="cell"><div>0</div></td>
 <td class="cell break-anywhere"><div>clobber_1xn:XOXOXOXO</div></td>
 <td class="cell"><div>B</div></td>
 <td class="cell"><div>Win</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>494.00</div></td>
-<td class="cell cell-faster"><div>1381.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-new-fail"><div>NEW FAIL</div></td>
-<td class="cell"><div>PASS</div></td>
+<td class="cell"><div>Win</div></td>
+<td class="cell"><div>0.12</div></td>
+<td class="cell cell-pass"><div>PASS</div></td>
 <td class="cell"><div></div></td>
-<td class="cell"><div>554C4E6A617C6442</div></td>
 </tr>
-<tr class="row row-fail">
+<tr class="row">
 <td class="cell"><div>more_tests/file2.test</div></td>
 <td class="cell"><div>1</div></td>
 <td class="cell break-anywhere"><div>clobber_1xn:XOXOXOXO</div></td>
 <td class="cell"><div>W</div></td>
 <td class="cell"><div>Win</div></td>
-<td class="cell"><div>Loss</div></td>
-<td class="cell"><div>362.00</div></td>
-<td class="cell cell-faster"><div>195.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-fail"><div>STILL FAIL</div></td>
-<td class="cell"><div>FAIL</div></td>
+<td class="cell"><div>Win</div></td>
+<td class="cell"><div>0.10</div></td>
+<td class="cell cell-pass"><div>PASS</div></td>
 <td class="cell"><div></div></td>
-<td class="cell"><div>554D4E6A617C6442</div></td>
 </tr>
-<tr class="row row-fail">
+<tr class="row">
 <td class="cell"><div>more_tests/file2.test</div></td>
 <td class="cell"><div>2</div></td>
 <td class="cell break-anywhere"><div>integer:5 integer:-6 clobber_1xn:XOXO</div></td>
 <td class="cell"><div>B</div></td>
 <td class="cell"><div>Loss</div></td>
-<td class="cell"><div>Win</div></td>
-<td class="cell"><div>69.00</div></td>
-<td class="cell cell-faster"><div>741.00</div></td>
-<td class="cell cell-fail"><div>FAIL</div></td>
-<td class="cell cell-new-fail"><div>NEW FAIL</div></td>
-<td class="cell"><div>PASS</div></td>
+<td class="cell"><div>Loss</div></td>
+<td class="cell"><div>0.25</div></td>
+<td class="cell cell-pass"><div>PASS</div></td>
 <td class="cell"><div></div></td>
-<td class="cell"><div>0278456C58330239</div></td>
 </tr>
 <tr class="row">
 <td class="cell"><div>more_tests/file2.test</div></td>
@@ -962,28 +587,20 @@ Generated 2025-01-15 21:31:29</p>
 <td class="cell"><div>W</div></td>
 <td class="cell"><div>Win</div></td>
 <td class="cell"><div>Win</div></td>
-<td class="cell"><div>205.00</div></td>
-<td class="cell"><div>???</div></td>
+<td class="cell"><div>0.20</div></td>
 <td class="cell cell-pass"><div>PASS</div></td>
-<td class="cell cell-new-pass"><div>NEW PASS</div></td>
-<td class="cell"><div>TIMEOUT</div></td>
 <td class="cell"><div></div></td>
-<td class="cell"><div>0378456C58330239</div></td>
 </tr>
-<tr class="row row-timeout">
+<tr class="row">
 <td class="cell"><div>missing-winner.test</div></td>
 <td class="cell"><div>0</div></td>
 <td class="cell break-anywhere"><div>integer:1</div></td>
 <td class="cell"><div>B</div></td>
 <td class="cell"><div>Win</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell"><div>1922.00</div></td>
-<td class="cell"><div>???</div></td>
-<td class="cell cell-timeout"><div>TIMEOUT</div></td>
-<td class="cell cell-new-timeout"><div>NEW TIMEOUT</div></td>
-<td class="cell"><div>PASS</div></td>
+<td class="cell"><div>Win</div></td>
+<td class="cell"><div>0.10</div></td>
+<td class="cell cell-pass"><div>PASS</div></td>
 <td class="cell"><div></div></td>
-<td class="cell"><div>434A4B0056353E1E</div></td>
 </tr>
 <tr class="row">
 <td class="cell"><div>missing-winner.test</div></td>
@@ -992,13 +609,9 @@ Generated 2025-01-15 21:31:29</p>
 <td class="cell"><div>W</div></td>
 <td class="cell"><div>Unspecified</div></td>
 <td class="cell"><div>Loss</div></td>
-<td class="cell"><div>1653.00</div></td>
-<td class="cell cell-slower"><div>-831.00</div></td>
+<td class="cell"><div>0.10</div></td>
 <td class="cell cell-completed"><div>COMPLETED</div></td>
-<td class="cell cell-completed"><div>STILL COMPLETED</div></td>
-<td class="cell"><div>COMPLETED</div></td>
 <td class="cell"><div></div></td>
-<td class="cell"><div>434A4B0156353E1E</div></td>
 </tr>
 </table>
 
