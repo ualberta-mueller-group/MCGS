@@ -280,6 +280,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
         {
             optional<solve_result> child_result = _solve_with_timeout();
 
+            // TODO make a macro to check this and return?
             if (child_result)
             {
                 result.win = not child_result.value().win;

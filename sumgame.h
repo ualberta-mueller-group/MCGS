@@ -11,8 +11,6 @@
 #include <ctime>
 #include <limits>
 
-typedef std::chrono::steady_clock sumgame_clock; // important that time is monotonic
-
 struct sumgame_move
 {
     sumgame_move(int subg, move m) : _subgame_idx(subg), _move(m) { }
@@ -62,6 +60,7 @@ struct solve_result
     solve_result(bool win) : win(win)
     { }
 
+    // return this on timeout
     inline static std::optional<solve_result> invalid()
     {
         return std::optional<solve_result>();
@@ -79,6 +78,12 @@ public:
     void add(game* g);
 
     bool solve() const;
+
+    /*
+        Timeout is in milliseconds. 0 means never timeout.
+
+        On timeout, the returned optional has no value
+    */
     std::optional<solve_result> solve_with_timeout(unsigned long long timeout) const;
 
 
