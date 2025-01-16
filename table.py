@@ -308,7 +308,7 @@ table += "</tr>\n"
 
 table += "<tr class=\"row-header\" id=\"col-indices\">\n"
 for i in range(len(output_field_list)):
-    table += f"<th>(COL{i})</th>\n"
+    table += f"<th class=\"th-index\">(COL{i})</th>\n"
 table += "</tr>\n"
 
 
