@@ -8,7 +8,7 @@
 */
 struct cli_options
 {
-    cli_options();
+    cli_options(const std::string& test_directory);
     ~cli_options();
 
     std::shared_ptr<file_parser> parser;

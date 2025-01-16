@@ -13,9 +13,9 @@ constexpr const char* default_relative_test_path = "test/input/autotests";
 
 ////////////////////////////////////////////////// cli_options
 
-cli_options::cli_options() : parser(nullptr), dry_run(false),
+cli_options::cli_options(const string& test_directory) : parser(nullptr), dry_run(false),
     should_exit(false), run_tests(false),
-    test_directory(default_relative_test_path),
+    test_directory(test_directory),
     outfile_name("out.csv"),
     test_timeout(1000)
 
@@ -69,14 +69,15 @@ to be ignored.";
 
 cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 {
-    cli_options opts;
-
     assert(_argc >= 1);
     std::filesystem::path exec_path = std::filesystem::canonical(argv[0]);
     std::filesystem::path parent_path = exec_path.parent_path();
     std::filesystem::path default_test_path = parent_path / default_relative_test_path;
 
-    opts.test_directory = default_test_path.string();
+
+    cli_options opts(default_test_path.string());
+
+
 
 
     vector<string> args;
