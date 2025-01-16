@@ -7,7 +7,6 @@
 #include <iostream>
 #include <string>
 #include "cgt_basics.h"
-#include "alternating_move_game.h"
 #include "cli_options.h"
 #include "file_parser.h"
 #include "sumgame.h"
@@ -23,6 +22,7 @@ int main(int argc, char** argv)
 {
     cli_options opts = parse_cli_args(argc, (const char**) argv, true);
 
+    // i.e. ./MCGS --help
     if (opts.should_exit)
     {
         return 0;
@@ -33,7 +33,6 @@ int main(int argc, char** argv)
         run_autotests(opts.test_directory, opts.outfile_name, opts.test_timeout);
         return 0;
     }
-
 
     // Run sums from input
     if (opts.parser)
@@ -51,7 +50,6 @@ int main(int argc, char** argv)
                 cout << endl;
             }
 
-
             sumgame sum(gc.to_play);
 
             for (game* g : gc.games)
@@ -65,18 +63,18 @@ int main(int argc, char** argv)
 
             if (opts.dry_run)
             {
-                cout << "Not running games..." << endl;
+                cout << "Not running search..." << endl;
             } else
             {
                 std::chrono::time_point start = std::chrono::high_resolution_clock::now();
-                bool result = sum.solve();
+                bool result = sum.solve(); // TODO allow timeout here?
                 std::chrono::time_point end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> duration = end - start;
 
                 cout << "Got: " << test_outcome_to_string((test_outcome) result) << endl;
                 cout << "Time (ms): " << duration.count() << endl;
                 
-                cout << "Test outcome: ";
+                cout << "Status: ";
                 if (gc.expected_outcome == TEST_OUTCOME_UNSPECIFIED)
                 {
                     cout << "COMPLETED";

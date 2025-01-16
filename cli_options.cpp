@@ -9,11 +9,13 @@
 
 using namespace std;
 
+constexpr const char* default_relative_test_path = "test/input/autotests";
+
 ////////////////////////////////////////////////// cli_options
 
 cli_options::cli_options() : parser(nullptr), dry_run(false),
     should_exit(false), run_tests(false),
-    test_directory("test/input/autotests"),
+    test_directory(default_relative_test_path),
     outfile_name("out.csv"),
     test_timeout(1000)
 
@@ -24,6 +26,7 @@ cli_options::~cli_options()
 
 ////////////////////////////////////////////////// functions
 
+// Format explanation of options, i.e. when using --help
 void print_flag(const string& flag_string, const string& flag_description)
 {
     cout << "\t" << flag_string << endl;
@@ -67,6 +70,14 @@ to be ignored.";
 cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 {
     cli_options opts;
+
+    assert(_argc >= 1);
+    std::filesystem::path exec_path = std::filesystem::canonical(argv[0]);
+    std::filesystem::path parent_path = exec_path.parent_path();
+    std::filesystem::path default_test_path = parent_path / default_relative_test_path;
+
+    opts.test_directory = default_test_path.string();
+
 
     vector<string> args;
     for (int i = 0; i < _argc; i++)

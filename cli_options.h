@@ -15,12 +15,11 @@ struct cli_options
     bool dry_run; // Do dry run without running games
     bool should_exit; // Exit from main() i.e. when "--help" used
 
-    bool run_tests;
+    bool run_tests; // Run autotests
 
     std::string test_directory;
-    std::string outfile_name;
-    unsigned long long test_timeout;
-
+    std::string outfile_name; // CSV output file
+    unsigned long long test_timeout; // ms
 };
 
 
