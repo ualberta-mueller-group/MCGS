@@ -42,3 +42,6 @@ compile_commands.json
 
 # Other temp files (output of random_strip.py)
 temp.txt
+
+# Default test framework output files
+out.*
