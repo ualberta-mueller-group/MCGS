@@ -90,9 +90,17 @@ def row_populate_double_mode(input_rows, output_row):
     comparison_row = input_rows[1] if len(input_rows) >= 2 else None
 
     # Populate simple fields
-    simple_fields = ["file", "case", "games", "player", "expected", "got", "time", "outcome", "comments"]
+    simple_fields = ["file", "case", "games", "player", "expected", "got", "time", "outcome", "comments", "hash"]
     for alias in simple_fields:
         output_row[alias] = new_default_cell(input_row[alias])
+
+
+    # style hash
+    if comparison_row is not None:
+        if input_row["hash"] != comparison_row["hash"]:
+            output_row["hash"]["css_classes"].append("cell-wrong-hash")
+            output_row["hash"]["text"] += " BAD HASH"
+            output_row["css_classes"].append("row-bad-hash")
 
     #oldoutcome
     oldoutcome_text = comparison_row["outcome"] if (comparison_row is not None) else "N/A"
@@ -236,6 +244,7 @@ else:
     add_output_col("regression", "Regression") #
     add_output_col("oldoutcome", "Old Outcome")
     add_output_col("comments", "Comments")
+    add_output_col("hash", "Input hash")
 
     add_row_function(row_populate_double_mode)
     add_row_function(row_style)

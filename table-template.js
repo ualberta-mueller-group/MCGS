@@ -25,6 +25,13 @@ function setTableFilter() {
         showByClass(["row"], true);
     }
 
+    if (g_mode == "problem") {
+        showByClass(["row"], false);
+        showByClass(["row-fail"], true);
+        showByClass(["row-timeout"], true);
+        showByClass(["row-bad-hash"], true);
+    }
+
     if (g_mode == "fail") {
         showByClass(["row"], false);
         showByClass(["row-fail"], true);
@@ -35,11 +42,20 @@ function setTableFilter() {
         showByClass(["row-timeout"], true);
     }
 
-    if (g_mode == "bad") {
+    if (g_mode == "hash") {
         showByClass(["row"], false);
-        showByClass(["row-fail"], true);
-        showByClass(["row-timeout"], true);
+        showByClass(["row-bad-hash"], true);
     }
+
+    if (g_mode == "no-problem") {
+        showByClass(["row"], true);
+        showByClass(["row-fail"], false);
+        showByClass(["row-timeout"], false);
+        showByClass(["row-bad-hash"], false);
+    }
+
+
+
 }
 
 function setTableFilterText() { 
@@ -110,6 +126,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterTextExclude = document.getElementById("filter-text-exclude");
     const filterTextRegex = document.getElementById("filter-text-regex");
     const filterColumnSelect = document.getElementById("filter-text-column-select");
+
+    const problemSummary = document.getElementById("problem-summary");
+
+    let problems = {
+        "row-fail": "test(s) failed",
+        "row-timeout": "test(s) timed out",
+        "row-bad-hash": "test(s) with non-matching hashes",
+    };
+
+
+    let summaryText = "";
+    for (const [class_name, summary_text] of Object.entries(problems)) {
+        const elements = document.getElementsByClassName(class_name);
+        if (elements.length > 0) {
+            summaryText += elements.length.toString() + " " + summary_text + "\n";
+        }
+    }
+    if (summaryText.length === 0) {
+        summaryText = "No problems found. All tests passed!";
+    }
+    problemSummary.innerHTML = summaryText;
 
     g_mode = dropdown.value;
     g_filterText = filterTextInput.value;

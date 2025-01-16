@@ -5,7 +5,7 @@
 "file1.test","3","integer:5 integer:-6 clobber_1xn:XOXO","W","Loss","Loss","161.00","PASS","","0378456C58330239"
 "file1.test","4","clobber_1xn:XO integer:1 integer:3 integer:6","B","Win","Loss","1003.00","FAIL","","51566A165E553774"
 "many.test","0","integer:400","B","Win","???","368.00","TIMEOUT","","544E40450155420F"
-"many.test","1","integer:401","B","Loss","Win","198.00","FAIL","","544E40450155430F"
+"many.test","1","integer:401","B","Loss","Win","198.00","FAIL","","544E40450155435F"
 "many.test","2","integer:402","B","Win","???","1386.00","TIMEOUT","","544E40450155400F"
 "many.test","3","integer:403","B","Loss","Win","417.00","FAIL","","544E40450155410F"
 "many.test","4","integer:404","B","Win","Loss","361.00","FAIL","","544E40450155460F"

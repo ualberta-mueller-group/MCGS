@@ -59,11 +59,15 @@
 
 
             .cell-timeout {
-                background-color: orange;
+                background-color: #ff8000;
             }
 
             .cell-completed {
                 background-color: yellow;
+            }
+
+            .cell-wrong-hash {
+                background-color: #5c5cff;
             }
 
             .select-div {
@@ -121,6 +125,12 @@
                 white-space-collapse: preserve;
             }
 
+            #problem-summary {
+                white-space-collapse: preserve;
+                font-weight: bold;
+            }
+
+
 
 
 
@@ -139,13 +149,17 @@
 
         <!-- REPLACE WITH METADATA -->
 
+    <p id="problem-summary"></p>
+
     <div class="select-div">
-        <label for="outcome-filter-dropdown">Show outcome: </label>
+        <label for="outcome-filter-dropdown">Show rows: </label>
         <select name="outcome-filter" id="outcome-filter-dropdown">
             <option value="all">All</option>
-            <option value="bad">All bad outcomes</option>
-            <option value="timeout">Only timeout</option>
-            <option value="fail">Only fail</option>
+            <option value="problem">Problems</option>
+            <option value="fail">Fails</option>
+            <option value="timeout">Timeouts</option>
+            <option value="hash">Bad hashes</option>
+            <option value="no-problem">No problems</option>
         </select>
     </div>
 
