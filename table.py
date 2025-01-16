@@ -306,6 +306,12 @@ for field in output_field_list:
     table += f"<th>{field}</th>\n"
 table += "</tr>\n"
 
+table += "<tr class=\"row-header\" id=\"col-indices\">\n"
+for i in range(len(output_field_list)):
+    table += f"<th>(COL{i})</th>\n"
+table += "</tr>\n"
+
+
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
 
@@ -394,9 +400,11 @@ metadata_string = get_metadata_string()
 
 
 column_options_string = "<option value=-1>All</option>\n"
+
 for i in range(len(output_field_list)):
     column_name = output_field_list[i]
     column_options_string += f"<option value={i}>{column_name}</option>\n"
+column_options_string += "<option value=-2>COMBINE AND TAG</option>\n"
 
 html_template_file = open("table-template.html", "r")
 html_template_string = html_template_file.read()

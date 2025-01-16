@@ -6,6 +6,16 @@ let g_searchColumn = -1;
 
 
 
+function showHideIndices() {
+    const indexRow = document.getElementById("col-indices");
+
+    if (g_searchColumn != -2) {
+        indexRow.hidden = true;
+    } else {
+        indexRow.hidden = false;
+    }
+}
+
 // Hide or show certain rows of the table
 function setTableFilter() {
 
@@ -78,7 +88,7 @@ function setTableFilterText() {
     }
 
 
-    for (let i = 1; i < rows.length; i++) {
+    for (let i = 2; i < rows.length; i++) {
         const row = rows[i];
 
         if (row.hidden) {
@@ -89,7 +99,7 @@ function setTableFilterText() {
 
 
         let foundMatch = false;
-        if (g_searchColumn == -1) {
+        if (g_searchColumn == -1) { // Search all columns
             for (let i = 0; i < divs.length; i++) {
                 const divText = divs[i].innerHTML;
 
@@ -98,7 +108,17 @@ function setTableFilterText() {
                     break;
                 }
             }
-        } else {
+        } else if (g_searchColumn == -2) { // "COMBINE AND TAG"
+            let rowText = "";
+
+            for (let i = 0; i < divs.length; i++) {
+                rowText += "(COL" + i.toString() + ")" + divs[i].innerHTML;
+            }
+
+            if (matchFunction(rowText)) {
+                foundMatch = true;
+            }
+        } else { // Search specific column
             foundMatch = matchFunction(divs[g_searchColumn].innerHTML);
         }
 
@@ -110,7 +130,10 @@ function setTableFilterText() {
 
 }
 
+
+
 function refresh() {
+    showHideIndices();
     setTableFilter();
     setTableFilterText();
 }
