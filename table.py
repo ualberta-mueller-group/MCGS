@@ -2,6 +2,8 @@ import csv
 import sys
 import pathlib
 import datetime
+import hashlib
+
 
 ######################################## Constants
 time_threshold_frac = 0.1
@@ -341,6 +343,7 @@ infile.close()
 def get_metadata_string():
     file_names = [x for x in infile_names]
     dates = []
+    hashes = []
 
     date_format = "%Y-%m-%d %H:%M:%S"
     for fname in file_names:
@@ -350,16 +353,22 @@ def get_metadata_string():
         date_string = date.strftime(date_format)
         dates.append(date_string)
 
+        f = open(fname, "rb")
+        hash = hashlib.file_digest(f, hashlib.md5)
+        f.close()
+        hashes.append(hash.hexdigest())
+
     assert len(file_names) == len(dates)
 
     result = "<p id=\"metadata-string\">"
     for i in range(len(file_names)):
         fname = file_names[i]
         date = dates[i]
-        result += f"{fname} ({date})"
+        hash = hashes[i]
+        result += f"{fname} ({date} MD5:{hash})"
 
         if i + 1 < len(file_names):
-            result += ", "
+            result += "\n"
 
     now = datetime.datetime.now().strftime(date_format)
     result += f"\nGenerated {now}"
