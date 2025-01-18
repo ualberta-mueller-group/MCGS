@@ -36,9 +36,9 @@ function setTableFilter() {
     if (g_mode == "problem") {
         showByClass(["row"], false);
         showByClass(["row-fail"], true);
+        showByClass(["row-diverging-result"], true);
         showByClass(["row-timeout"], true);
         showByClass(["row-bad-hash"], true);
-        showByClass(["row-completed-different"], true);
     }
 
     if (g_mode == "fail") {
@@ -46,14 +46,14 @@ function setTableFilter() {
         showByClass(["row-fail"], true);
     }
 
+    if (g_mode == "diverging-result") {
+        showByClass(["row"], false);
+        showByClass(["row-diverging-result"], true);
+    }
+
     if (g_mode == "timeout") {
         showByClass(["row"], false);
         showByClass(["row-timeout"], true);
-    }
-
-    if (g_mode == "completed-different") {
-        showByClass(["row"], false);
-        showByClass(["row-completed-different"], true);
     }
 
     if (g_mode == "hash") {
@@ -66,7 +66,7 @@ function setTableFilter() {
         showByClass(["row-fail"], false);
         showByClass(["row-timeout"], false);
         showByClass(["row-bad-hash"], false);
-        showByClass(["row-completed-different"], false);
+        showByClass(["row-diverging-result"], false);
     }
 }
 
@@ -161,17 +161,16 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         {
+            "row-css": "row-diverging-result",
+            "main-text": "\"completed\" test(s) with diverging results",
+        },
+
+        {
             "row-css": "row-timeout",
             "new-css": "cell-new-timeout",
             "main-text": "test(s) timed out",
             "secondary-text": "newly timed out",
         },
-
-        {
-            "row-css": "row-completed-different",
-            "main-text": "\"completed\" test(s) with different values",
-        },
-
 
         {
             "row-css": "row-bad-hash",

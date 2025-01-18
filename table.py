@@ -262,9 +262,9 @@ def get_regression(input_row, comparison_row):
             if result1 == result2:
                 css = "cell-completed"
             else:
-                css = "cell-completed-different"
-                css_row = "row-completed-different"
-                return "NEW COMPLETED BUT DIFFERENT", css, css_row
+                css = "cell-diverging-result"
+                css_row = "row-diverging-result"
+                return "NEW DIVERGING RESULT", css, css_row
         return f"STILL {stat1}", css, css_row
 
     if stat1 != stat2:
