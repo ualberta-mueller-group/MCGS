@@ -98,7 +98,8 @@ input_rows: A list of dicts representing relevant rows from the input files.
 
 output_row: A dict representing the output row.
 
-No value is returned; output_row is instead modified.
+No value is returned; output_row is instead modified, and the same output_row
+    dict object is passed to each subsequent function in the pipeline.
 
     The input row format is:
 {
@@ -135,6 +136,9 @@ i.e.:
         "text": "TIMEOUT",
     },
 }
+
+The output_row passed to the first function in the pipeline only contains
+    the "css_classes" pair.
 
 """
 
@@ -260,8 +264,10 @@ def get_regression(oc1, oc2):
 
 
 ######################################## Define input/output formats
+# Input and output fields have aliases to make them easy to refer to in the
+# "input row" and "output row" formats
 
-# Input field names, as they appear in input .csv
+# Input field names, as they appear in input .csv files
 input_field_list = []
 # Input alias --> input field name
 input_field_dict = {
@@ -274,7 +280,7 @@ output_field_list = []
 output_field_dict = {
 }
 
-# Pipeline of functions to convert data for a test cases into a single output row
+# Pipeline of functions to convert data for a test case into a single output row
 row_functions = []
 
 # List of input field aliases used to match rows between main input file
