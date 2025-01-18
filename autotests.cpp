@@ -115,10 +115,10 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
     append_field(outfile, "Case", true);
     append_field(outfile, "Games", true);
     append_field(outfile, "Player", true);
-    append_field(outfile, "Expected", true);
-    append_field(outfile, "Got", true);
+    append_field(outfile, "Expected Result", true);
+    append_field(outfile, "Result", true);
     append_field(outfile, "Time (ms)", true);
-    append_field(outfile, "Outcome", true);
+    append_field(outfile, "Status", true);
     append_field(outfile, "Comments", true);
     append_field(outfile, "Input hash", false);
     outfile << newline;
@@ -168,23 +168,23 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
 
             chrono::duration<double, std::milli> duration = end - start;
 
-            string win_string = "???";
+            string result_string = "???";
 
             if (result.has_value())
             {
-                win_string = result.value().win ? test_outcome_to_string(TEST_OUTCOME_WIN)
-                    : test_outcome_to_string(TEST_OUTCOME_LOSS);
+                result_string = result.value().win ? test_result_to_string(TEST_RESULT_WIN)
+                    : test_result_to_string(TEST_RESULT_LOSS);
             }
 
-            string outcome_string = "TIMEOUT";
+            string status_string = "TIMEOUT";
             if (result.has_value())
             {
-                if (gc.expected_outcome == TEST_OUTCOME_UNSPECIFIED)
+                if (gc.expected_outcome == TEST_RESULT_UNSPECIFIED)
                 {
-                    outcome_string = "COMPLETED";
+                    status_string = "COMPLETED";
                 } else
                 {
-                    outcome_string = (result.value().win == gc.expected_outcome) ? "PASS" : "FAIL";
+                    status_string = (result.value().win == gc.expected_outcome) ? "PASS" : "FAIL";
                 }
             }
 
@@ -192,10 +192,10 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
             append_field(outfile, to_string(case_number), true);
             append_field(outfile, human_readable_game_string(gc.games), true);
             append_field(outfile, string(1, color_char(gc.to_play)), true);
-            append_field(outfile, test_outcome_to_string(gc.expected_outcome), true);
-            append_field(outfile, win_string, true);
+            append_field(outfile, test_result_to_string(gc.expected_outcome), true);
+            append_field(outfile, result_string, true);
             append_field(outfile, format_duration(duration.count()), true);
-            append_field(outfile, outcome_string, true);
+            append_field(outfile, status_string, true);
             append_field(outfile, gc.comments, true);
             append_field(outfile, gc.hash.get_string(), false);
             outfile << newline;

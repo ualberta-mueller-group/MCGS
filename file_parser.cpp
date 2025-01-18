@@ -251,7 +251,7 @@ void game_case::cleanup_games()
 void game_case::release_games()
 {
     to_play = EMPTY;
-    expected_outcome = TEST_OUTCOME_UNSPECIFIED;
+    expected_outcome = TEST_RESULT_UNSPECIFIED;
 
     games.clear();
 
@@ -487,7 +487,7 @@ bool file_parser::parse_command()
     int chunk_idx = 0;
 
     int to_play = EMPTY;
-    test_outcome expected_outcome = TEST_OUTCOME_UNSPECIFIED;
+    test_result expected_outcome = TEST_RESULT_UNSPECIFIED;
 
 
     // check if chunks[i] is some allowed word
@@ -516,7 +516,7 @@ bool file_parser::parse_command()
     auto get_case = [&]() -> bool
     {
         to_play = EMPTY;
-        expected_outcome = TEST_OUTCOME_UNSPECIFIED;
+        expected_outcome = TEST_RESULT_UNSPECIFIED;
 
         // player always comes first
         if (chunk_is_allowed(chunk_idx, {"B", "W"}))
@@ -534,7 +534,7 @@ bool file_parser::parse_command()
         {
             const string& chunk = chunks[chunk_idx];
             chunk_idx++;
-            expected_outcome = (chunk == "win") ? TEST_OUTCOME_WIN : TEST_OUTCOME_LOSS;
+            expected_outcome = (chunk == "win") ? TEST_RESULT_WIN : TEST_RESULT_LOSS;
         }
 
         return true;

@@ -59,7 +59,7 @@ int main(int argc, char** argv)
             }
 
             cout << "Player: " << color_char(gc.to_play) << endl;
-            cout << "Expected: " << test_outcome_to_string(gc.expected_outcome) << endl;
+            cout << "Expected: " << test_result_to_string(gc.expected_outcome) << endl;
 
             if (opts.dry_run)
             {
@@ -71,11 +71,11 @@ int main(int argc, char** argv)
                 std::chrono::time_point end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> duration = end - start;
 
-                cout << "Got: " << test_outcome_to_string((test_outcome) result) << endl;
+                cout << "Got: " << test_result_to_string((test_result) result) << endl;
                 cout << "Time (ms): " << duration.count() << endl;
                 
                 cout << "Status: ";
-                if (gc.expected_outcome == TEST_OUTCOME_UNSPECIFIED)
+                if (gc.expected_outcome == TEST_RESULT_UNSPECIFIED)
                 {
                     cout << "COMPLETED";
                 } else

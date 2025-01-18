@@ -256,7 +256,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_OUTCOME_WIN;
+        gc->expected_outcome = TEST_RESULT_WIN;
         gc->games.push_back(new nogo_1xn("X..O"));
     }
 
@@ -265,7 +265,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = WHITE;
-        gc->expected_outcome = TEST_OUTCOME_WIN;
+        gc->expected_outcome = TEST_RESULT_WIN;
         gc->games.push_back(new nogo_1xn("X..O"));
     }
 
@@ -274,7 +274,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_OUTCOME_LOSS;
+        gc->expected_outcome = TEST_RESULT_LOSS;
         gc->games.push_back(new integer_game(4));
         gc->games.push_back(new integer_game(-5));
     }
@@ -284,7 +284,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = WHITE;
-        gc->expected_outcome = TEST_OUTCOME_WIN;
+        gc->expected_outcome = TEST_RESULT_WIN;
         gc->games.push_back(new integer_game(4));
         gc->games.push_back(new integer_game(-5));
     }
@@ -294,7 +294,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_OUTCOME_WIN;
+        gc->expected_outcome = TEST_RESULT_WIN;
         gc->games.push_back(new clobber_1xn("XOXOXOXO"));
     }
 
@@ -303,7 +303,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = WHITE;
-        gc->expected_outcome = TEST_OUTCOME_UNSPECIFIED;
+        gc->expected_outcome = TEST_RESULT_UNSPECIFIED;
         gc->games.push_back(new clobber_1xn("XOXOXOXO"));
     }
 
@@ -312,7 +312,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_OUTCOME_LOSS;
+        gc->expected_outcome = TEST_RESULT_LOSS;
     }
 
     {
@@ -320,7 +320,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = WHITE;
-        gc->expected_outcome = TEST_OUTCOME_LOSS;
+        gc->expected_outcome = TEST_RESULT_LOSS;
     }
 
 
@@ -368,7 +368,7 @@ void e2e_test24()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_OUTCOME_LOSS;
+        gc->expected_outcome = TEST_RESULT_LOSS;
         gc->games.push_back(new clobber_1xn("XOOX"));
     }
 

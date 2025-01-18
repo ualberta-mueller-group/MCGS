@@ -158,22 +158,22 @@ def row_populate_single_mode(input_rows, output_row):
 
 
 # Add some CSS classes
-def row_style(_input_rows, output_row):
+def row_style(input_rows, output_row):
     assert "games" in output_row
     output_row["games"]["css_classes"].append("break-anywhere")
 
-    assert "outcome" in output_row
-    outcome = output_row["outcome"]
-    if outcome["text"] == "FAIL":
-        outcome["css_classes"].append("cell-fail")
+    assert "status" in output_row
+    status = output_row["status"]
+    if status["text"] == "FAIL":
+        status["css_classes"].append("cell-fail")
         output_row["css_classes"].append("row-fail")
-    elif outcome["text"] == "TIMEOUT":
-        outcome["css_classes"].append("cell-timeout")
+    elif status["text"] == "TIMEOUT":
+        status["css_classes"].append("cell-timeout")
         output_row["css_classes"].append("row-timeout")
-    elif outcome["text"] == "COMPLETED":
-        outcome["css_classes"].append("cell-completed")
-    elif outcome["text"] == "PASS":
-        outcome["css_classes"].append("cell-pass")
+    elif status["text"] == "COMPLETED":
+        status["css_classes"].append("cell-completed")
+    elif status["text"] == "PASS":
+        status["css_classes"].append("cell-pass")
 
 
 # Populate/style output row when comparison_file is defined
@@ -182,7 +182,7 @@ def row_populate_double_mode(input_rows, output_row):
     comparison_row = input_rows[1] if len(input_rows) >= 2 else None
 
     # Populate simple fields
-    simple_fields = ["file", "case", "games", "player", "expected", "got", "time", "outcome", "comments", "hash"]
+    simple_fields = ["file", "case", "games", "player", "expected_result", "result", "time", "status", "comments", "hash"]
     for alias in simple_fields:
         output_row[alias] = new_default_cell(input_row[alias])
 
@@ -196,15 +196,19 @@ def row_populate_double_mode(input_rows, output_row):
             output_row["hash"]["text"] += " BAD HASH"
             output_row["css_classes"].append("row-bad-hash")
 
-    # oldoutcome
-    oldoutcome_text = comparison_row["outcome"] if (comparison_row is not None) else "N/A"
-    output_row["oldoutcome"] = new_default_cell(oldoutcome_text)
+    # old_status
+    old_status_text = comparison_row["status"] if (comparison_row is not None) else "N/A"
+    output_row["old_status"] = new_default_cell(old_status_text)
+
+    # old_result
+    old_result_text = comparison_row["result"] if (comparison_row is not None) else "N/A"
+    output_row["old_result"] = new_default_cell(old_result_text)
 
     # faster
     faster_by_string = "N/A"
     faster_css_class = None
     if comparison_row is not None:
-        if input_row["outcome"] == "TIMEOUT" or comparison_row["outcome"] == "TIMEOUT":
+        if input_row["status"] == "TIMEOUT" or comparison_row["status"] == "TIMEOUT":
             faster_by_string = "???"
         else:
             num1 = float(input_row["time"])
@@ -219,13 +223,14 @@ def row_populate_double_mode(input_rows, output_row):
     # regression
     regression = "N/A"
     regression_css = None
+    regression_css_row = None
     if comparison_row is not None:
-        outcome1 = input_row["outcome"]
-        outcome2 = comparison_row["outcome"]
-        regression, regression_css = get_regression(outcome1, outcome2)
+        regression, regression_css, regression_css_row = get_regression(input_row, comparison_row)
     output_row["regression"] = new_default_cell(regression)
     if regression_css is not None:
         output_row["regression"]["css_classes"].append(regression_css)
+    if regression_css_row is not None:
+        output_row["css_classes"].append(regression_css_row)
 
 
 def get_faster_css(new_time, old_time):
@@ -236,31 +241,44 @@ def get_faster_css(new_time, old_time):
     return None
 
 
-def get_regression(oc1, oc2):
-    # FAIL, PASS, TIMEOUT, COMPLETED
-    if oc1 == oc2:
-        css = None
-        if oc1 == "FAIL":
-            css = "cell-fail"
-        if oc1 == "TIMEOUT":
-            css = "cell-timeout"
-        if oc1 == "PASS":
-            css = "cell-pass"
-        if oc1 == "COMPLETED":
-            css = "cell-completed"
-        return f"STILL {oc1}", css
+def get_regression(input_row, comparison_row):
+    stat1 = input_row["status"]
+    stat2 = comparison_row["status"]
 
-    if oc1 != oc2:
+    result1 = input_row["result"]
+    result2 = comparison_row["result"]
+
+    # FAIL, PASS, TIMEOUT, COMPLETED
+    if stat1 == stat2:
         css = None
-        if oc1 == "FAIL":
+        css_row = None
+        if stat1 == "FAIL":
+            css = "cell-fail"
+        if stat1 == "TIMEOUT":
+            css = "cell-timeout"
+        if stat1 == "PASS":
+            css = "cell-pass"
+        if stat1 == "COMPLETED":
+            if result1 == result2:
+                css = "cell-completed"
+            else:
+                css = "cell-completed-different"
+                css_row = "row-completed-different"
+                return "NEW COMPLETED BUT DIFFERENT", css, css_row
+        return f"STILL {stat1}", css, css_row
+
+    if stat1 != stat2:
+        css = None
+        css_row = None
+        if stat1 == "FAIL":
             css = "cell-new-fail"
-        if oc1 == "PASS":
+        if stat1 == "PASS":
             css = "cell-new-pass"
-        if oc1 == "COMPLETED":
+        if stat1 == "COMPLETED":
             css = "cell-new-completed"
-        if oc1 == "TIMEOUT":
+        if stat1 == "TIMEOUT":
             css = "cell-new-timeout"
-        return f"NEW {oc1}", css
+        return f"NEW {stat1}", css, css_row
 
 
 ######################################## Define input/output formats
@@ -318,10 +336,10 @@ add_input_col("file", "File")
 add_input_col("case", "Case")
 add_input_col("games", "Games")
 add_input_col("player", "Player")
-add_input_col("expected", "Expected")
-add_input_col("got", "Got")
+add_input_col("expected_result", "Expected Result")
+add_input_col("result", "Result")
 add_input_col("time", "Time (ms)")
-add_input_col("outcome", "Outcome")
+add_input_col("status", "Status")
 add_input_col("comments", "Comments")
 add_input_col("hash", "Input hash")
 
@@ -331,10 +349,10 @@ if comparison_file_name is None:
     add_output_col("case", "Case")
     add_output_col("games", "Games")
     add_output_col("player", "Player")
-    add_output_col("expected", "Expected")
-    add_output_col("got", "Got")
+    add_output_col("expected_result", "Expected Result")
+    add_output_col("result", "Result")
     add_output_col("time", "Time (ms)")
-    add_output_col("outcome", "Outcome")
+    add_output_col("status", "Status")
     add_output_col("comments", "Comments")
 
     add_row_function(row_populate_single_mode)
@@ -346,19 +364,20 @@ else:
     add_output_col("case", "Case")
     add_output_col("games", "Games")
     add_output_col("player", "Player")
-    add_output_col("expected", "Expected")
-    add_output_col("got", "Got")
+    add_output_col("expected_result", "Expected Result")
+    add_output_col("result", "Result")
     add_output_col("time", "Time (ms)")
     add_output_col("faster", "Faster by") #
-    add_output_col("outcome", "Outcome")
+    add_output_col("status", "Status")
     add_output_col("regression", "Regression") #
-    add_output_col("oldoutcome", "Old Outcome")
+    add_output_col("old_status", "Old Status")
+    add_output_col("old_result", "Old Result")
     add_output_col("comments", "Comments")
     add_output_col("hash", "Input hash")
 
     add_row_function(row_populate_double_mode)
     add_row_function(row_style)
-    row_match_key = ["games", "player", "expected"]
+    row_match_key = ["games", "player", "expected_result"]
 
 
 ######################################## process rows

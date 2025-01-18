@@ -38,6 +38,7 @@ function setTableFilter() {
         showByClass(["row-fail"], true);
         showByClass(["row-timeout"], true);
         showByClass(["row-bad-hash"], true);
+        showByClass(["row-completed-different"], true);
     }
 
     if (g_mode == "fail") {
@@ -50,6 +51,11 @@ function setTableFilter() {
         showByClass(["row-timeout"], true);
     }
 
+    if (g_mode == "completed-different") {
+        showByClass(["row"], false);
+        showByClass(["row-completed-different"], true);
+    }
+
     if (g_mode == "hash") {
         showByClass(["row"], false);
         showByClass(["row-bad-hash"], true);
@@ -60,6 +66,7 @@ function setTableFilter() {
         showByClass(["row-fail"], false);
         showByClass(["row-timeout"], false);
         showByClass(["row-bad-hash"], false);
+        showByClass(["row-completed-different"], false);
     }
 }
 
@@ -159,6 +166,12 @@ document.addEventListener("DOMContentLoaded", () => {
             "main-text": "test(s) timed out",
             "secondary-text": "newly timed out",
         },
+
+        {
+            "row-css": "row-completed-different",
+            "main-text": "\"completed\" test(s) with different values",
+        },
+
 
         {
             "row-css": "row-bad-hash",

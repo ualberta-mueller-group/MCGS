@@ -75,31 +75,31 @@ private:
 ////////////////////////////////////////////////// game_case
 
 // expected outcome of a game_case
-enum test_outcome
+enum test_result
 {
-    TEST_OUTCOME_UNSPECIFIED = 3,
-    TEST_OUTCOME_WIN = (int) true,
-    TEST_OUTCOME_LOSS = (int) false,
+    TEST_RESULT_UNSPECIFIED = 3,
+    TEST_RESULT_WIN = (int) true,
+    TEST_RESULT_LOSS = (int) false,
 };
 
 
-inline std::string test_outcome_to_string(const test_outcome& outcome)
+inline std::string test_result_to_string(const test_result& outcome)
 {
     switch (outcome)
     {
-        case TEST_OUTCOME_UNSPECIFIED:
+        case TEST_RESULT_UNSPECIFIED:
         {
             return "Unspecified";
             break;
         }
 
-        case TEST_OUTCOME_WIN:
+        case TEST_RESULT_WIN:
         {
             return "Win";
             break;
         }
 
-        case TEST_OUTCOME_LOSS:
+        case TEST_RESULT_LOSS:
         {
             return "Loss";
             break;
@@ -107,7 +107,7 @@ inline std::string test_outcome_to_string(const test_outcome& outcome)
 
         default:
         {
-            std::cerr << "test_outcome_to_string() invalid input: ";
+            std::cerr << "test_result_to_string() invalid input: ";
             std::cerr << outcome << std::endl;
             exit(-1); // exit instead of assert (could be due to bad file input)
         }
@@ -115,7 +115,7 @@ inline std::string test_outcome_to_string(const test_outcome& outcome)
     }
 
     
-    std::cerr << "This string should not appear: see test_outcome_to_string()" << std::endl;
+    std::cerr << "This string should not appear: see test_result_to_string()" << std::endl;
     exit(-1);
 }
 
@@ -131,7 +131,7 @@ inline std::string test_outcome_to_string(const test_outcome& outcome)
 struct game_case
 {
     ebw to_play;
-    test_outcome expected_outcome;
+    test_result expected_outcome;
     std::vector<game*> games;
     std::string comments;
     simple_text_hash hash;
