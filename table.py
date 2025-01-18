@@ -234,7 +234,9 @@ def row_populate_double_mode(input_rows, output_row):
 
 
 def get_faster_css(new_time, old_time):
-    frac_diff = abs(new_time - old_time) / ((new_time + old_time) / 2)
+    frac_diff = 0
+    if (new_time + old_time) / 2.0 > 0:
+        frac_diff = abs(new_time - old_time) / ((new_time + old_time) / 2.0)
     diff = new_time - old_time
     if frac_diff >= time_threshold_frac and abs(diff) >= time_threshold_abs:
         return "cell-slower" if diff > 0 else "cell-faster"
