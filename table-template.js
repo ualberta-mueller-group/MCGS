@@ -1,3 +1,4 @@
+// Row filtering settings
 let g_mode = "";
 let g_filterText = "";
 let g_include = true;
@@ -27,7 +28,6 @@ function setTableFilter() {
             }
         }
     };
-
 
     if (g_mode == "all") {
         showByClass(["row"], true);
@@ -128,17 +128,17 @@ function setTableFilterText() {
             row.hidden = true;
         }
     }
-
-
 }
 
+/*
+    The bottleneck here is how long it takes the browser to re-render the table
+        after the DOM changes.
+*/
 function refresh() {
     showHideIndices();
     setTableFilter();
     setTableFilterText();
 }
-
-
 
 // Wait for the document to finish loading before doing anything
 document.addEventListener("DOMContentLoaded", () => {
