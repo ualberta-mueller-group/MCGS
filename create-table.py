@@ -204,21 +204,23 @@ def row_populate_double_mode(input_rows, output_row):
     old_result_text = comparison_row["result"] if (comparison_row is not None) else "N/A"
     output_row["old_result"] = new_default_cell(old_result_text)
 
+    #old_time
+    old_time_text = comparison_row["time"] if (comparison_row is not None) else "N/A"
+    output_row["old_time"] = new_default_cell(old_time_text)
+
     # faster
     faster_by_string = "N/A"
-    faster_css_class = None
+    faster_css = None
     if comparison_row is not None:
         if input_row["status"] == "TIMEOUT" or comparison_row["status"] == "TIMEOUT":
             faster_by_string = "???"
         else:
             num1 = float(input_row["time"])
             num2 = float(comparison_row["time"])
-            faster_by = num2 - num1
-            faster_by_string = "{:.2f}".format(faster_by) # 2 decimal places
-            faster_css_class = get_faster_css(num1, num2)
+            faster_by_string, faster_css = get_faster(num1, num2)
     output_row["faster"] = new_default_cell(faster_by_string)
-    if faster_css_class is not None:
-        output_row["faster"]["css_classes"].append(faster_css_class)
+    if faster_css is not None:
+        output_row["faster"]["css_classes"].append(faster_css)
 
     # regression
     regression = "N/A"
@@ -233,14 +235,22 @@ def row_populate_double_mode(input_rows, output_row):
         output_row["css_classes"].append(regression_css_row)
 
 
-def get_faster_css(new_time, old_time):
-    frac_diff = 0
-    if (new_time + old_time) / 2.0 > 0:
-        frac_diff = abs(new_time - old_time) / ((new_time + old_time) / 2.0)
+def get_faster(new_time, old_time):
+    new_time = max(0.0001, new_time)
+    old_time = max(0.0001, old_time)
+
+    frac_improved = -(new_time - old_time) / abs(old_time)
     diff = new_time - old_time
-    if frac_diff >= time_threshold_frac and abs(diff) >= time_threshold_abs:
-        return "cell-slower" if diff > 0 else "cell-faster"
-    return None
+
+    text = "{:.2f}% ".format(abs(frac_improved) * 100)
+    text += "SLOWER" if diff > 0 else "FASTER"
+
+    css = None
+
+    if abs(frac_improved) >= time_threshold_frac and abs(diff) >= time_threshold_abs:
+        css = "cell-slower" if diff > 0 else "cell-faster"
+
+    return text, css
 
 
 def get_regression(input_row, comparison_row):
@@ -369,7 +379,8 @@ else:
     add_output_col("expected_result", "Expected Result")
     add_output_col("result", "Result")
     add_output_col("time", "Time (ms)")
-    add_output_col("faster", "Faster by") #
+    add_output_col("faster", "Time Improvement") #
+    add_output_col("old_time", "Old Time (ms)")
     add_output_col("status", "Status")
     add_output_col("regression", "Regression") #
     add_output_col("old_status", "Old Status")
