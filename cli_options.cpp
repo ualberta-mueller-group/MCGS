@@ -105,10 +105,7 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
         {
             if (!opts.parser) 
             {
-                if (!silent)
-                {
-                    cout << "Reading game input from stdin" << endl;
-                }
+                //cout << "Reading game input from stdin" << endl;
                 opts.parser = shared_ptr<file_parser>(file_parser::from_stdin());
             }
 
@@ -126,10 +123,7 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 
             if (!opts.parser)
             {
-                if (!silent)
-                {
-                    cout << "Reading game input from file: \"" << arg_next << "\"" << endl;
-                }
+                //cout << "Reading game input from file: \"" << arg_next << "\"" << endl;
                 opts.parser = shared_ptr<file_parser>(file_parser::from_file(arg_next));
             }
 
@@ -138,7 +132,10 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 
         if (arg == "-h" || arg == "--help")
         {
-            print_help_message(args[0]);
+            if (!silent)
+            {
+                print_help_message(args[0]);
+            }
             opts.should_exit = true;
             break;
         }
@@ -220,10 +217,7 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 
             if (!opts.parser)
             {
-                if (!silent)
-                {
-                    cout << "Reading game input from args" << endl;
-                }
+                //cout << "Reading game input from args" << endl;
                 const string& input = args[arg_idx];
 
                 opts.parser = shared_ptr<file_parser>(file_parser::from_string(input));

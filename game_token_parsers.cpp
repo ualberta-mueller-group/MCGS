@@ -17,7 +17,7 @@ game* up_star_parser::parse_game(const std::string& game_token) const
     int ups = 0;
     bool star = false;
 
-    for (int i = 0; i < strs.size(); i++)
+    for (size_t i = 0; i < strs.size(); i++)
     {
         const std::string& chunk = strs[i];
 

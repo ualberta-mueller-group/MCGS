@@ -484,17 +484,18 @@ bool file_parser::parse_command()
     }
 
     vector<string> chunks = split_string(_token);
-    int chunk_idx = 0;
+    size_t chunk_idx = 0;
 
     int to_play = EMPTY;
     test_result expected_outcome = TEST_RESULT_UNSPECIFIED;
 
 
     // check if chunks[i] is some allowed word
-    auto chunk_is_allowed = [&chunks](int i, const vector<string>& allowed_words) -> bool
+    auto chunk_is_allowed = [&chunks](size_t i, const vector<string>& allowed_words) -> bool
     {
         // valid index?
-        if (i < 0 || !(i < chunks.size()))
+        //if (i < 0 || !(i < chunks.size()))
+        if (!(i < chunks.size()))
         {
             return false;
         }
@@ -670,7 +671,7 @@ bool file_parser::parse_chunk(game_case& gc)
         // Match command
         if (match('{', '}', "command", false))
         {
-            if (!_do_version_check && _token.find("version") != -1)
+            if (!_do_version_check && _token.find("version") != string::npos)
             {
                 version_check(_token);
                 continue;

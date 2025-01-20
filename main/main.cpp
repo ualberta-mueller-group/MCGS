@@ -20,7 +20,7 @@ using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
 {
-    cli_options opts = parse_cli_args(argc, (const char**) argv, true);
+    cli_options opts = parse_cli_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
     if (opts.should_exit)

@@ -89,7 +89,7 @@ void assert_same_moves(const game& g, bw to_play, vector<move>& expected)
 
     assert(expected.size() == moves.size());
 
-    for (int i = 0; i < expected.size(); i++)
+    for (size_t i = 0; i < expected.size(); i++)
     {
         assert(expected[i] == moves[i]);
     }

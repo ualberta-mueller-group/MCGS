@@ -7,6 +7,8 @@
 #include "file_parser.h"
 #include "test/test_utilities.h"
 
+constexpr const char* exec_name = "./MCGS_test";
+
 using namespace std;
 
 cli_options call_parse(const vector<string>& args)
@@ -29,7 +31,7 @@ cli_options call_parse(const vector<string>& args)
 // empty args gives correct options
 void cli_opts_test1()
 {
-    cli_options opts = call_parse({"./MCGS"});
+    cli_options opts = call_parse({exec_name});
     assert(opts.parser.get() == nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == false);
@@ -39,14 +41,14 @@ void cli_opts_test1()
 void cli_opts_test2()
 {
     {
-        cli_options opts = call_parse({"./MCGS", "-h"});
+        cli_options opts = call_parse({exec_name, "-h"});
         assert(opts.parser.get() == nullptr);
         assert(opts.dry_run == false);
         assert(opts.should_exit == true);
     }
 
     {
-        cli_options opts = call_parse({"./MCGS", "--help"});
+        cli_options opts = call_parse({exec_name, "--help"});
         assert(opts.parser.get() == nullptr);
         assert(opts.dry_run == false);
         assert(opts.should_exit == true);
@@ -57,7 +59,7 @@ void cli_opts_test2()
 void cli_opts_test3()
 {
     {
-        cli_options opts = call_parse({"./MCGS", "--dry-run"});
+        cli_options opts = call_parse({exec_name, "--dry-run"});
         assert(opts.parser.get() == nullptr);
         assert(opts.dry_run == true);
         assert(opts.should_exit == false);
@@ -71,7 +73,7 @@ void cli_opts_test4()
 
     try
     {
-        cli_options opts = call_parse({"./MCGS", "--file", "not_a_real_file.test"});
+        cli_options opts = call_parse({exec_name, "--file", "not_a_real_file.test"});
     }
     catch (ios_base::failure& e)
     {
@@ -88,7 +90,7 @@ void cli_opts_test5()
 
     try
     {
-        cli_options opts = call_parse({"./MCGS", "--file"});
+        cli_options opts = call_parse({exec_name, "--file"});
     }
     catch (cli_options_exception& e)
     {
@@ -105,7 +107,7 @@ void cli_opts_test6()
 
     try
     {
-        cli_options opts = call_parse({"./MCGS", "--not-a-valid-flag"});
+        cli_options opts = call_parse({exec_name, "--not-a-valid-flag"});
     }
     catch (cli_options_exception& e)
     {
@@ -123,7 +125,7 @@ void cli_opts_test7()
 
     try
     {
-        cli_options opts = call_parse({"./MCGS", "[clobber_1xn]", "XOXO", "{B}"});
+        cli_options opts = call_parse({exec_name, "[clobber_1xn]", "XOXO", "{B}"});
     }
     catch (cli_options_exception& e)
     {
@@ -136,7 +138,7 @@ void cli_opts_test7()
 // args give correct games/parser
 void cli_opts_test8()
 {
-    cli_options opts = call_parse({"./MCGS", "[nogo_1xn] X..O X...O..X {B win}"});
+    cli_options opts = call_parse({exec_name, "[nogo_1xn] X..O X...O..X {B win}"});
     assert(opts.parser.get() != nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == false);
@@ -165,7 +167,7 @@ void cli_opts_test8()
 // --file gives correct file/parser
 void cli_opts_test9()
 {
-    cli_options opts = call_parse({"./MCGS", "--file", "test/input/file_parser/sumgames4.test"});
+    cli_options opts = call_parse({exec_name, "--file", "test/input/file_parser/sumgames4.test"});
     assert(opts.parser.get() != nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == false);

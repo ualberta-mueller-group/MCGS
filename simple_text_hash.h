@@ -11,7 +11,7 @@
 class simple_text_hash
 {
 public:
-    static constexpr size_t buffer_size = 8;
+    static constexpr int buffer_size = 8;
 
     uint8_t buffer[buffer_size];
     int pos; // current index into buffer

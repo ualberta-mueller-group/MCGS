@@ -14,7 +14,10 @@ int clobber_char_to_color(char c)
         return WHITE;
     else if (c == '.')
         return EMPTY;
-    else assert(false); return -1;
+    else assert(false);
+
+    exit(-1);
+    return -1;
 }
 
 char color_to_clobber_char(int color)
