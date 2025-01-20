@@ -296,7 +296,8 @@ void file_parser::version_check(const string& version_string)
     {
         if (!file_parser::silence_warnings)
         {
-            cerr << "Parser version mismatch. Expected \"" + expected + "\", got: \"";
+            cerr << "WARNING: Parser version mismatch. Expected \"" + expected + "\", got: \"";
+            cerr << version_string << "\"" << endl;
         }
         _warned_wrong_version = true;
     }
