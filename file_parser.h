@@ -28,17 +28,11 @@ class token_iterator
 public:
     virtual ~token_iterator() {}
 
-    // get current token. User should first call the bool operator to check if one exists
-    virtual std::string get_token() const = 0;
+    // get next token, writing it into "token". Returns true iff result is valid
+    virtual bool get_token(std::string& token) = 0;
 
-    // line number of current token
+    // line number of previous token returned by get_token()
     virtual int line_number() const = 0;
-
-    // true IFF there are more tokens to read
-    virtual operator bool() const = 0;
-
-    // advance to next token
-    virtual void operator++() = 0;
 };
 
 class file_token_iterator : public token_iterator
@@ -53,20 +47,16 @@ public:
     file_token_iterator(std::istream* stream, bool delete_stream);
     ~file_token_iterator();
 
-    std::string get_token() const override;
+    bool get_token(std::string& token) override;
     int line_number() const override;
-    operator bool() const override;
-    void operator++() override;
 
 private:
-    void next_token();
     void cleanup();
 
     std::istream* __main_stream_ptr;
     bool _delete_stream; // do we own this stream?
 
     std::stringstream _line_stream;
-    std::string _token;
 
     int _line_number;
 };

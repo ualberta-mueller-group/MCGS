@@ -32,9 +32,8 @@ unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 //////////////////////////////////////////////////////////// file_token_iterator
 
 file_token_iterator::file_token_iterator(istream* stream, bool delete_stream)
-    : __main_stream_ptr(stream), _delete_stream(delete_stream), _line_number(0)
+    : __main_stream_ptr(stream), _delete_stream(delete_stream), _line_number(-1)
 {
-    next_token();
 }
 
 file_token_iterator::~file_token_iterator()
@@ -42,40 +41,25 @@ file_token_iterator::~file_token_iterator()
     cleanup();
 }
 
-string file_token_iterator::get_token() const
-{
-    assert(*this);
-    return _token;
-}
-
 int file_token_iterator::line_number() const
 {
-    assert(*this);
+    // Don't call without getting a valid token first
+    assert(_line_number >= 0);
+
     return _line_number;
 }
 
-file_token_iterator::operator bool() const
-{
-    return _token.size() > 0;
-}
-
-void file_token_iterator::operator++()
-{
-    assert(*this);
-    next_token();
-}
-
-void file_token_iterator::next_token()
+bool file_token_iterator::get_token(string& token)
 {
     assert(__main_stream_ptr != nullptr);
-    _token.clear();
+    token.clear();
 
     istream& _main_stream = *__main_stream_ptr;
 
     // Check if current line has more tokens
-    if (_line_stream && _line_stream >> _token)
+    if (_line_stream && _line_stream >> token)
     {
-        return;
+        return true;
     }
 
     if (_line_stream.fail() && !_line_stream.eof())
@@ -90,9 +74,9 @@ void file_token_iterator::next_token()
         _line_number++;
         _line_stream = stringstream(next_line);
 
-        if (_line_stream && _line_stream >> _token && !_line_stream.fail())
+        if (_line_stream && _line_stream >> token && !_line_stream.fail())
         {
-            return;
+            return true;
         }
 
         if (_line_stream.fail() && !_line_stream.eof())
@@ -107,7 +91,7 @@ void file_token_iterator::next_token()
     }
     
     // no remaining tokens
-    _token.clear();
+    return false;
 }
 
 void file_token_iterator::cleanup()
@@ -355,11 +339,9 @@ bool file_parser::get_enclosed(const char& open, const char& close, bool allow_i
         return true;
     }
 
-    while (iterator)
+    string new_token;
+    while (iterator.get_token(new_token))
     {
-        string new_token = iterator.get_token();
-        ++iterator;
-
         _token += " " + new_token;
 
         if (is_enclosed_format(_token, open, close, allow_inner))
@@ -647,11 +629,9 @@ bool file_parser::parse_chunk(game_case& gc)
 
     token_iterator& iterator = _iterator;
 
-    while (iterator)
+    while (iterator.get_token(_token))
     {
         _line_number = iterator.line_number();
-        _token = iterator.get_token();
-        ++iterator;
 
         // Check version (for file)
         if (_do_version_check)
