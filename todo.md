@@ -3,9 +3,6 @@
 
 # V1 todo
 
-## Martin - Version 1 - Dec 9
-- update the todo file
-
 ## Taylor - Version 1 - Jan 7
 - testing framework for V1 and beyond
     - ideas based on:

@@ -174,8 +174,6 @@ and is stored in the move stack.
     - moved some functionality from obsolete `nim` class here
     - TODO rewrite all `nim` tests to use `sumgame` and `nimber`
     - TODO remove `nim` class after converting tests
-- go through TODO list, decide which items are done, to do for V1, 
-and which we should defer to 1.x or later
 
 ### Future: Smaller step Versions 1.x , prepare for Version 2
 
