@@ -200,8 +200,12 @@ public:
     static file_parser* from_file(const std::string& file_name);
     static file_parser* from_string(const std::string& string);
 
+    // Used by unit tests to check whether a warning was printed
+    bool warned_wrong_version();
+
     // When true, file_parser prints info to stdout as it parses the input
     static bool debug_printing;
+    static bool silence_warnings;
 
 
 private:
@@ -232,13 +236,15 @@ private:
     game_case _cases[FILE_PARSER_MAX_CASES];
     int _case_count; // number of cases created by a previous parse_chunk() call
     int _next_case_idx; // next case to consume from a previous parse
+
+    bool _warned_wrong_version;
 };
 
 
 enum parser_exception_code
 {
     PARSER_OK = 0,
-    WRONG_VERSION_COMMAND = 1,
+    //WRONG_VERSION_COMMAND = 1, // Wrong version just prints warning
     MISSING_VERSION_COMMAND,
     MISSING_SECTION_TITLE,
     MISSING_SECTION_PARSER,

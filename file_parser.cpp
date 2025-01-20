@@ -25,6 +25,7 @@ using namespace std;
 
 //////////////////////////////////////////////////////////// static members
 bool file_parser::debug_printing = false;
+bool file_parser::silence_warnings = false;
 unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 
 
@@ -278,7 +279,8 @@ void game_case::_move_impl(game_case&& other) noexcept
 // Private constructor -- use static functions instead
 file_parser::file_parser(istream *stream, bool delete_stream, bool do_version_check)
     : _iterator(stream, delete_stream), _do_version_check(do_version_check),
-      _section_title(""), _line_number(0), _token(""), _case_count(0), _next_case_idx(0)
+      _section_title(""), _line_number(0), _token(""), _case_count(0), _next_case_idx(0),
+      _warned_wrong_version(false)
 {
     if (_game_map.size() == 0)
     {
@@ -292,9 +294,11 @@ void file_parser::version_check(const string& version_string)
 
     if (version_string != expected)
     {
-        string why = "Parser version mismatch. Expected \"" + expected + "\", got: \"";
-        why += version_string + "\"";
-        throw parser_exception(why, WRONG_VERSION_COMMAND);
+        if (!file_parser::silence_warnings)
+        {
+            cerr << "Parser version mismatch. Expected \"" + expected + "\", got: \"";
+        }
+        _warned_wrong_version = true;
     }
 }
 
@@ -648,19 +652,19 @@ bool file_parser::parse_chunk(game_case& gc)
         _token = iterator.get_token();
         ++iterator;
 
-        // Check file version
+        // Check version (for file)
         if (_do_version_check)
         {
-            bool success = get_enclosed('{', '}', false);
-            if (!success)
+            //bool success = get_enclosed('{', '}', false);
+            bool success = match('{', '}', "command", false);
+
+            if (!success || _token.find("version") != 0)
             {
-                string why = get_error_start() + "Failed to match version string command";
+                string why = get_error_start() + "Failed to match version command";
                 throw parser_exception(why, MISSING_VERSION_COMMAND);
 
                 return false;
             }
-
-            strip_enclosing(_token);
 
             version_check(_token);
             _do_version_check = false;
@@ -671,7 +675,7 @@ bool file_parser::parse_chunk(game_case& gc)
         // Match command
         if (match('{', '}', "command", false))
         {
-            if (!_do_version_check && _token.find("version") != string::npos)
+            if (_token.find("version") == 0)
             {
                 version_check(_token);
                 continue;
@@ -765,7 +769,7 @@ bool file_parser::parse_chunk(game_case& gc)
 
 file_parser* file_parser::from_stdin()
 {
-    return new file_parser(&cin, false, true);
+    return new file_parser(&cin, false, false);
 }
 
 file_parser* file_parser::from_file(const string& file_name)
@@ -784,6 +788,11 @@ file_parser* file_parser::from_file(const string& file_name)
 file_parser* file_parser::from_string(const string& string)
 {
     return new file_parser(new stringstream(string), true, false);
+}
+
+bool file_parser::warned_wrong_version()
+{
+    return _warned_wrong_version;
 }
 
 
