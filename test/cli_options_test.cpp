@@ -34,7 +34,7 @@ void cli_opts_test1()
     cli_options opts = call_parse({exec_name});
     assert(opts.parser.get() == nullptr);
     assert(opts.dry_run == false);
-    assert(opts.should_exit == false);
+    assert(opts.should_exit == true);
 }
 
 // -h and --help give correct options

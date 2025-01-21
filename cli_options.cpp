@@ -82,6 +82,18 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 
     cli_options opts(default_test_path.string());
 
+    if (_argc == 1)
+    {
+        if (!silent)
+        {
+            print_help_message(argv[0]);
+        }
+        opts.should_exit = true;
+        return opts;
+    }
+
+
+
     vector<string> args;
     for (int i = 0; i < _argc; i++)
     {
