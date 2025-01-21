@@ -11,6 +11,15 @@ For the overall approach and future plans, see the document "The Design of MCGS:
 # TODO IN THIS README
 - The intro says MCGS is efficient even though this release is very basic
 - Link the formal design document "The Design of MCGS..."?
+- "MCGS" is used a lot...
+
+### Sections
+- [Building MCGS](#building-mcgs)
+- [Using MCGS](#using-mcgs)
+- [Using the Testing Framework](#using-the-testing-framework)
+- [Extending MCGS](#extending-mcgs)
+- [MCGS Data Types](#mcgs-data-types)
+- [Implementing a New Game](#implementing-a-new-game)
 
 ### Building MCGS
 First download this repository.
@@ -27,17 +36,32 @@ make test
 This will build and then run `./MCGS_test`, and on successful completion of unit tests, no output should appear.
 
 ### Using MCGS
-```MCGS``` can read input from a file, or as a command line argument, or interactively from the command line via stdin. Example usage running a linear clobber game "XOXOXO" twice, once with black playing first, and once with white playing first: 
-```./MCGS "[clobber_1xn] XOXOXO {B, W}"```
+```MCGS``` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. Example usage running a linear clobber game ```XOXOXO``` twice, once with black playing first, and once with white playing first: 
+```
+./MCGS "[clobber_1xn] XOXOXO {B, W}"
+```
 
-For details about using ```./MCGS```, see ```./MCGS --help```. For a full description of input syntax, see [info.test](input/info.test)
+For details about using ```./MCGS```, see ```./MCGS --help```. For a full description of input syntax, see [input/info.test](input/info.test)
 
-SECTION TEXT
-### Using testing framework
-SECTION TEXT
+### Using the Testing Framework
+Included is a testing framework which is used to generate, compare, and analyze performance and correctness data from MCGS. Running:
+```
+./MCGS --run-tests
+```
+will run all ```.test``` files in the ```autotests``` directory, outputting performance and correctness data to ```out.csv```, with one row of data per game sum. Then, running:
+```
+python3 create-table.py out.csv -o table.html
+```
+will generate ```table.html```, which is to be viewed in a web browser. The output HTML includes one row for each row in ```out.csv```. ```create-table.py``` can also compare two CSV files. For more information, see:
+```
+python3 create-table.py --help
+```
+and for information about test options (i.e. timeout duration, input directory, output file, etc.), see:
+```
+./MCGS --help
+```
+
 ## Extending MCGS
-INTRO TEXT
-### Implementing a new game
-SECTION TEXT
 ### MCGS data types
-SECTION TEXT
+### Implementing a new game
+
