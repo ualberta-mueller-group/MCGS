@@ -16,6 +16,7 @@
 // Currently all moves must be encoded as int, and decoded from int
 // There is no abstract move class here.
 typedef int move;
+static_assert(sizeof(move) >= 4, "move should be at least 32 bits");
 
 namespace cgt_move {
 
