@@ -12,6 +12,7 @@ For the overall approach and future plans, see the document "The Design of MCGS:
 - The intro says MCGS is efficient even though this release is very basic
 - Link the formal design document "The Design of MCGS..."?
 - "MCGS" is used a lot...
+- License?
 
 ### Sections
 - [Building MCGS](#building-mcgs)
@@ -36,7 +37,7 @@ make test
 This will build and then run `./MCGS_test`, and on successful completion of unit tests, no output should appear.
 
 ### Using MCGS
-```MCGS``` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. Example usage running a linear clobber game ```XOXOXO``` twice, once with black playing first, and once with white playing first: 
+```MCGS``` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. Example usage solving a linear clobber game ```XOXOXO``` twice, once with black playing first, and once with white playing first: 
 ```
 ./MCGS "[clobber_1xn] XOXOXO {B, W}"
 ```
@@ -52,7 +53,7 @@ will run all ```.test``` files in the ```autotests``` directory, outputting perf
 ```
 python3 create-table.py out.csv -o table.html
 ```
-will generate ```table.html```, which is to be viewed in a web browser. The output HTML includes one row for each row in ```out.csv```. ```create-table.py``` can also compare two CSV files. For more information, see:
+will generate ```table.html```, which is to be viewed in a web browser. The output HTML includes one row for each row in ```out.csv```. ```create-table.py``` can also compare two CSV files. For more information (i.e. comparing CSV files, explanation of output HTML, etc.), see:
 ```
 python3 create-table.py --help
 ```
@@ -62,8 +63,34 @@ and for information about test options (i.e. timeout duration, input directory, 
 ```
 
 ## Extending MCGS
-MCGS has a modular design, allowing users to implement new kinds of games, and have them be recognized as input. The following sections first describe internal data types of interest to this goal, and then walk the reader through adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
+The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new kinds of games, and have them be recognized as input. The following sections first describe internal data types of interest to this goal, and then walk the reader through adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
 
 ### MCGS data types
+#### game (game.h)
+The abstract base type for all combinatorial games supported by MCGS.
+
+#### strip (strip.h)
+An abstract game type derived from ```game```, for games played on a "line" (1 dimensional board), consisting of black stones, white stones, and empty tiles. Used by games ```clobber_1xn```, ```nogo_1xn```, ```elephants```, etc. 
+
+#### move (cgt_move.h)
+Represents a move that can be played within a ```game```. In this version, ```move``` is an at least 32 bit integer. Games define the meaning of their ```move```s but can only use 31 bits, as the color of a player is also encoded in a ```move```. 
+
+#### move_generator (game.h)
+An abstract type implementing an iterator over a ```game```'s moves, for a specific position and player.
+
+#### split_result (game.h)
+Typedef of ```std::optional<std::vector<game*>>```. The (possibly absent) result of splitting a ```game``` into subgames whose sum equals the ```game``` being split. During search, ```game```s are split and replaced by their subgames. When ```has_value()``` is true and the vector is empty, the ```game``` being split is equal to 0. When ```has_value()``` is false, the vector is absent, and the split has no effect.
+
+#### file_parser (file_parser.h)
+Used by MCGS to read games from files, stdin, and quoted input strings passed as arguments to ```./MCGS```.
+
+#### game_token_parser (game_token_parsers.h)
+Abstract type converting input tokens into ```game```s.
+
+
+
+
+
+
 ### Implementing a new game
 
