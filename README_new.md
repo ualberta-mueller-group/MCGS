@@ -22,7 +22,7 @@ For the overall approach and future plans, see the document "The Design of MCGS:
 - [Implementing a New Game](#implementing-a-new-game)
 
 ### Building MCGS
-First download this repository.
+First download this repository, and enter its directory.
 
 To build the program, `./MCGS`, run:
 ```
@@ -62,6 +62,8 @@ and for information about test options (i.e. timeout duration, input directory, 
 ```
 
 ## Extending MCGS
+MCGS has a modular design, allowing users to implement new kinds of games, and have them be recognized as input. The following sections first describe internal data types of interest to this goal, and then walk the reader through adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
+
 ### MCGS data types
 ### Implementing a new game
 
