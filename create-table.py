@@ -77,13 +77,13 @@ comparison file will still be output.")
     print_flag("N/A", "The test case is missing from the comparison file.")
     print_flag("STILL (PASS | FAIL | COMPLETED | TIMEOUT)",
 "The test case's current \"Status\", which is the same in both files. On the \
-occurrence of \"STILL COMPLETED\", the \"Result\" of both files is consistent.")
+occurrence of \"STILL COMPLETED\", the \"Result\" of the test is consistent across both files.")
 
     print_flag("NEW (PASS | FAIL | COMPLETED | TIMEOUT)",
 "The test case's current \"Status\", which differs between files.")
 
     print_flag("NEW DIVERGING RESULT", "The test case's \"Status\" is \"COMPLETED\" \
-in both the input and comparison files, but with different \"Result\" columns.")
+in both the input and comparison files, but with a differing \"Result\".")
 
     format_print("""\
 The \"Regression\" column is shown when using \"--compare-to\", and \
