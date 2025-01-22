@@ -66,7 +66,7 @@ Default is \"" + string(cli_options::default_test_outfile) + "\".");
 milliseconds. Timeout of 0 means tests never time out. Default is " + to_string(cli_options::default_test_timeout) + ".");
 
     // Remove these? Keep them in this separate section instead?
-    cout << endl << "Debugging flags:" << endl;
+    cout << "Debugging flags:" << endl;
     print_flag("--dry-run", "Skip running games.");
 
     print_flag("--parser-debug", "Print file_parser debug info.");
