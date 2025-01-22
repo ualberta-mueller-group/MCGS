@@ -22,6 +22,7 @@ class game;
 
 typedef std::optional<std::vector<game*>> split_result;
 
+
 class game
 {
 public:
@@ -59,15 +60,18 @@ public:
 protected:
 
     /*
-        List of games to replace current game. Empty list means game is 0.
+        Return list of games to replace current game. Empty list means game is 0.
         No value means split didn't occur. See std::optional. The games
         within the list should be new objects, and not a pointer to the 
         game object returning the list.
 
         The returned games are owned by the caller.
 
-        TODO assert in sumgame::play_sum() and sumgame::undo_move() 
-            that list never contains the original game object?
+        To create an empty but present split_result:
+            split_result sr = split_result(vector<game*>());
+        
+        To create an absent split_result:
+            split_result sr = split_result();
     */
     virtual split_result split_implementation() const;
 
@@ -141,6 +145,7 @@ inline split_result game::split() const
 
     for (game* g : *sr)
     {
+        assert(g != this);
         if (g->has_moves())
             result->push_back(g);
         else
