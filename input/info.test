@@ -63,7 +63,6 @@ There are 5 types of 'things' that appear in input:
         5
 
 
-
     The following example solves a sum of
         2 clobber_1xn games
         2 integer_game games
@@ -71,8 +70,8 @@ There are 5 types of 'things' that appear in input:
         1 dyadic_rational game
     Twice: once for black, then white. Then it solves an 
     empty sum for black, expecting a loss.
-
 \
+
 
 [clobber_1xn] XOXO OXX
 [integer_game] 4
