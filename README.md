@@ -90,7 +90,7 @@ Abstract type converting input tokens into `game`s.
 To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
 - Define `class x` in `x.h`, derive from `game` or `strip`.
-- Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, and `inverse()`. See comments `game.h` for notes on important implementation details.
+- Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, and `inverse()`. See comments in `game.h` for notes on important implementation details.
 - Define `class x_move_generator`, derive from `move_generator`.
 - At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h`).
 - In `x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. Add the declaration in `x_test.h` 
