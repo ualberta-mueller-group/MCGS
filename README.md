@@ -8,11 +8,6 @@ MCGS is an efficient minimax search-based solver for sums of combinatorial games
 
 For the overall approach and future plans, see the document "The Design of MCGS: A Minimax Search-based Solver for Combinatorial Games".
 
-# TODO IN THIS README
-- The intro says MCGS is efficient even though this release is very basic
-- Link the formal design document "The Design of MCGS..."?
-- "MCGS" is used a lot...
-- License?
 
 ### Sections
 - [Building MCGS](#building-mcgs)
@@ -23,7 +18,6 @@ For the overall approach and future plans, see the document "The Design of MCGS:
   - [Implementing a New Game](#implementing-a-new-game)
   - [Implementing Game-Specific Optimizations](#implementing-game-specific-optimizations)
     - [Splitting Into Subgames](#splitting-into-subgames)
-
 
 ### Building MCGS
 First download this repository, and enter its directory.
