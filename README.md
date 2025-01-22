@@ -42,7 +42,7 @@ This will build and then run `./MCGS_test`, and on successful completion of unit
 ./MCGS "[clobber_1xn] XOXOXO {B, W}"
 ```
 
-For details about using `./MCGS`, see `./MCGS --help`. For a full description of input syntax, see [input/info.test](input/info.test)
+For details about using `./MCGS`, see `./MCGS --help`. For a full description of input syntax, see [input/info.test](input/info.test).
 
 ### Using the Testing Framework
 Included is a testing framework which is used to generate, compare, and analyze performance and correctness data from MCGS. Running:
@@ -63,7 +63,7 @@ and for information about test options (i.e. timeout duration, input directory, 
 ```
 
 ## Extending MCGS
-The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new kinds of games, and have them be recognized as input. The following sections first describe internal data types of interest to this goal, and then walk the reader through adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
+The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new kinds of games, and have them be recognized as input. The following sections first describe internal data types of interest to this goal, and then describe the steps for adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
 
 The code is organized in a mostly "flat" way; source code files are mostly in the root directory, with `main.cpp` being in `./main` and unit tests being in `./test`.
 
@@ -94,7 +94,7 @@ To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
 - Define `class x` in `x.h`, derive from `game` or `strip`.
 - Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, and `inverse()`.
-- Define `x_move_generator`, derive from `move_generator`.
+- Define `class x_move_generator`, derive from `move_generator`.
 - At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h`).
 - In `x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. Add the declaration in `x_test.h` 
 - Call `x_test_all` from `test/main_test.cpp`.
