@@ -106,5 +106,5 @@ To implement a new game `x`:
 Currently there is one (unused) game-specific optimization. In the future there will be more (and they will be used).
 
 #### Splitting Into Subgames
-In your game `x`, override and implement `game::split_implementation()`. See `game.h` for important implementation details.
+In your game `x`, override and implement `game::split_implementation()`. See `game.h` for important implementation details, and add unit tests.
 `split_implementation()` is used to break apart a `game` into a list of subgames whose sum is equal to the original `game`. This speeds up search by allowing MCGS to reason about smaller independent subproblems.
