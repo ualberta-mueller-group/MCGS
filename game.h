@@ -65,6 +65,8 @@ protected:
         within the list should be new objects, and not a pointer to the 
         game object returning the list.
 
+        In the case where a game doesn't split into subgames, return an absent split result.
+
         The returned games are owned by the caller.
 
         To create an empty but present split_result:
