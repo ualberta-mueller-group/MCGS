@@ -72,7 +72,7 @@ The abstract base type for all combinatorial games supported by MCGS.
 An abstract game type derived from `game`, for games played on a "line" (1 dimensional board), consisting of black stones, white stones, and empty tiles. Used by games `clobber_1xn`, `nogo_1xn`, `elephants`, etc. 
 
 #### move (cgt_move.h)
-Represents a move that can be played within a `game`. In this version, `move` is an at least 32 bit integer. Games define the meaning of their `move`s but can only use 31 bits, as the color of a player is also encoded in a `move`. cgt_move.h defines utilties for packing and unpacking `move`s, to deal with the color bit and "rest" of the `move`, including functions to encode and decode two smaller integers into a `move`.
+Represents a move that can be played within a `game`. In this version, `move` is an at least 32 bit integer. Games define the meaning of their `move`s but can only use 31 bits, as the color of a player is also encoded in a `move`. cgt_move.h defines utilties for packing and unpacking `move`s, to deal with the color bit and "rest" of the `move`, including functions to encode and decode two smaller integers into a `move` (i.e. to store a "from" and "to").
 
 #### move_generator (game.h)
 An abstract type implementing an iterator over a `game`'s moves, for a specific position and player.
