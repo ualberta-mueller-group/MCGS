@@ -92,7 +92,7 @@ defined in brackets. \
 /
         More on syntax:
 
-    Comments by default belong to the sum solved by the next
+    Comments by default belong to all (sum, player) pairs solved by the next
     'solve' command. These will be included in output from
     MCGS's testing framework.
 
