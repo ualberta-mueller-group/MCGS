@@ -52,7 +52,7 @@ Included is a testing framework which is used to generate, compare, and analyze 
 ```
 ./MCGS --run-tests
 ```
-will run all `.test` files in the `autotests` directory, outputting performance and correctness data to `out.csv`, with one row of data per game sum. Then, running:
+will run all `.test` files in the `test/input/autotests` directory, outputting performance and correctness data to `out.csv`, with one row of data per game sum. Then, running:
 ```
 python3 create-table.py out.csv -o table.html
 ```
