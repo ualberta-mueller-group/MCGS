@@ -38,10 +38,8 @@ void print_help_message(const string& exec_name)
     cout << endl;
 
     cout << "\tReads input from a quoted string after [flags], if present, \
-using same syntax as \".test\" files, but without version command. \
-See info.test for explanation of input syntax. \
-Reading input from stdin or file will cause [input string] \
-to be ignored.";
+using same syntax as \".test\" files. \
+See input/info.test for explanation of input syntax.";
 
     cout << endl;
     cout << endl;
@@ -50,10 +48,11 @@ to be ignored.";
     print_flag("-h, --help", "Print this message and exit.");
 
     print_flag("--file <file name>", "Read input from <file name>. Input must start \
-with version command.");
+with version command. Causes [input string] to be ignored.");
 
-    print_flag("--stdin", "Read input from stdin. Input must start with version command.");
+    print_flag("--stdin", "Read input from stdin. Causes [input string] to be ignored.");
 
+    cout << "Testing framework flags:" << endl;
     print_flag("--run-tests", "Run all autotests. By default, reads tests from \""
 + string(cli_options::default_relative_test_path) + "\".");
 
