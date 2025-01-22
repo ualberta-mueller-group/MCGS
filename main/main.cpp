@@ -57,6 +57,10 @@ int main(int argc, char** argv)
                 cout << "\t" << *g << endl;
                 sum.add(g);
             }
+            if (gc.games.size() == 0)
+            {
+                cout << "\t" << "<no games specified>" << endl;
+            }
 
             cout << "Player: " << color_char(gc.to_play) << endl;
             cout << "Expected: " << test_result_to_string(gc.expected_outcome) << endl;
