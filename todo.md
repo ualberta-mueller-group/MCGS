@@ -14,9 +14,17 @@
     - arrange steps chronologically with more precise ordering for near future
     - tasks near top of file roughly come sooner
 
+    - Polish, document, test until Jan 25/31
+    - Jan 28 public release on github?
+    - Talk on Feb 1, announce V1 to world
+
+## V1.1 improve testing framework
+- Tests with more detailed time limits
+
 ## V2 and beyond
 - transposition table
     - "random seed" Henry mentioned (each game has random data added to hash)?
+        - related to using game ID to modify hash
     - replacement policy?
 - random test generator
 - databases
@@ -142,20 +150,4 @@ A few other things that I was planning to tackle myself, but we can also discuss
 ### Test Cases Implementation
 - should just read one by one, no need for vector. write an iterator???
 - `DO_SLOWER_TESTS` in `main_test.cpp` - implement as a command line option
-
-## Cgt Solver Talk for Portugal
-- check old talk from BIRS
-- intro - math cgt vs cs cgt:
-    - math: prove theorems about class of games
-    - cs: efficiently compute result for a specific game
-    - cs for math: explore, try to find patterns, verify conjectures
-    - math for cs: improve efficiency of computation, simplify, shortcuts
-- goals of solver:
-    - general, efficient
-    - avoid canonical form
-    - use sum game structure
-    - get more from cgt-search writeup
-- techniques
-- examples, performance
-- future plans
 
