@@ -1,16 +1,22 @@
 #include "cli_options.h"
 #include <filesystem>
+#include <unistd.h>
 #include <vector>
 #include <iostream>
 #include "file_parser.h"
-
+#include "utilities.h"
 
 using namespace std;
 
+
 ////////////////////////////////////////////////// cli_options
 
-cli_options::cli_options() : parser(nullptr), dry_run(false),
-    should_exit(false)
+cli_options::cli_options(const string& test_directory) : parser(nullptr), dry_run(false),
+    should_exit(false), run_tests(false),
+    test_directory(test_directory),
+    outfile_name(cli_options::default_test_outfile),
+    test_timeout(cli_options::default_test_timeout)
+
 { }
 
 cli_options::~cli_options()
@@ -18,37 +24,74 @@ cli_options::~cli_options()
 
 ////////////////////////////////////////////////// functions
 
+// Format explanation of options, i.e. when using --help
 void print_flag(const string& flag_string, const string& flag_description)
 {
     cout << "\t" << flag_string << endl;
     cout << "\t\t" << flag_description << endl;
+    cout << endl;
 }
 
 void print_help_message(const string& exec_name)
 {
-    cout << "Usage: " << exec_name << " [flags] [game cases string]" << endl;
+    cout << "Usage: " << exec_name << " [flags] [input string]" << endl;
     cout << endl;
 
-    cout << "\tReads game cases from a quoted string after [flags], if present, \
-using same format as \".test\" files, but without version command. \
-See info.test for explanation of game case format. \
-Reading input from stdin or file will cause game cases string \
-to be ignored.";
+    cout << "\tReads input from a quoted string after [flags], if present, \
+using same syntax as \".test\" files. \
+See input/info.test for explanation of input syntax.";
 
     cout << endl;
     cout << endl;
 
     cout << "Flags:" << endl;
-    print_flag("-h, --help", "Print this message and exit");
-    print_flag("--dry-run", "Skip running games");
-    print_flag("--stdin", "Read game cases from stdin");
-    print_flag("--file <file name>", "Read game cases from <file name>");
-    print_flag("--parser-debug", "Print file_parser debug info");
+    print_flag("-h, --help", "Print this message and exit.");
+
+    print_flag("--file <file name>", "Read input from <file name>. Input must start \
+with version command. Causes [input string] to be ignored.");
+
+    print_flag("--stdin", "Read input from stdin. Causes [input string] to be ignored.");
+
+    cout << "Testing framework flags:" << endl;
+    print_flag("--run-tests", "Run all autotests. By default, reads tests from \""
++ string(cli_options::default_relative_test_path) + "\".");
+
+    print_flag("--test-dir <directory name>", "Sets input directory for --run-tests. Default is \""
++ string(cli_options::default_relative_test_path) + "\".");
+
+    print_flag("--out-file <file name>", "Name of CSV output file resulting from --run-tests. \
+Default is \"" + string(cli_options::default_test_outfile) + "\".");
+
+    print_flag("--test-timeout <timeout in ms>", "Set timeout duration for tests, in \
+milliseconds. Timeout of 0 means tests never time out. Default is " + to_string(cli_options::default_test_timeout) + ".");
+
+    // Remove these? Keep them in this separate section instead?
+    cout << "Debugging flags:" << endl;
+    print_flag("--dry-run", "Skip running games.");
+
+    print_flag("--parser-debug", "Print file_parser debug info.");
 }
 
 cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 {
-    cli_options opts;
+    assert(_argc >= 1);
+    std::filesystem::path abs_exec_path = std::filesystem::canonical(argv[0]);
+    std::filesystem::path parent_path = abs_exec_path.parent_path();
+    std::filesystem::path default_test_path = parent_path / cli_options::default_relative_test_path;
+
+    cli_options opts(default_test_path.string());
+
+    if (_argc == 1)
+    {
+        if (!silent)
+        {
+            print_help_message(argv[0]);
+        }
+        opts.should_exit = true;
+        return opts;
+    }
+
+
 
     vector<string> args;
     for (int i = 0; i < _argc; i++)
@@ -73,10 +116,7 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
         {
             if (!opts.parser) 
             {
-                if (!silent)
-                {
-                    cout << "Reading game input from stdin" << endl;
-                }
+                //cout << "Reading game input from stdin" << endl;
                 opts.parser = shared_ptr<file_parser>(file_parser::from_stdin());
             }
 
@@ -94,10 +134,7 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 
             if (!opts.parser)
             {
-                if (!silent)
-                {
-                    cout << "Reading game input from file: \"" << arg_next << "\"" << endl;
-                }
+                //cout << "Reading game input from file: \"" << arg_next << "\"" << endl;
                 opts.parser = shared_ptr<file_parser>(file_parser::from_file(arg_next));
             }
 
@@ -126,6 +163,57 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == "--run-tests")
+        {
+            opts.run_tests = true;
+            continue;
+        }
+
+        if (arg == "--test-dir")
+        {
+            arg_idx++;
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: got --test-dir but no directory");
+            }
+
+            opts.test_directory = arg_next;
+            continue;
+        }
+
+        if (arg == "--out-file")
+        {
+            arg_idx++;
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: Got --out-file but no file path");
+            }
+
+            opts.outfile_name = arg_next;
+            continue;
+        }
+
+        if (arg == "--test-timeout")
+        {
+            arg_idx++;
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: got --test-timeout but no timeout");
+            }
+
+            if (!is_int(arg_next)) 
+            {
+                throw cli_options_exception("Error: --test-timeout argument not an integer");
+            }
+
+            opts.test_timeout = atoi(arg_next.c_str());
+
+            continue;
+        }
+        
         if (arg.size() > 0 && arg.front() != '-')
         {
             // the rest of args is input to the file_parser
@@ -140,11 +228,8 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 
             if (!opts.parser)
             {
-                if (!silent)
-                {
-                    cout << "Reading game input from args" << endl;
-                }
-                const string& input = args[argN - 1];
+                //cout << "Reading game input from args" << endl;
+                const string& input = args[arg_idx];
 
                 opts.parser = shared_ptr<file_parser>(file_parser::from_string(input));
             }

@@ -16,6 +16,7 @@
 // Currently all moves must be encoded as int, and decoded from int
 // There is no abstract move class here.
 typedef int move;
+static_assert(sizeof(move) >= 4, "move should be at least 32 bits");
 
 namespace cgt_move {
 
@@ -46,7 +47,14 @@ inline move decode(move m) // remove color bit
 
 inline move encode(move m, bw color) // add color bit
 {
-    assert(m < WHITE_MASK);
+    // Before casting (to fix compiler warnings), check that casting is OK
+    static_assert(sizeof(WHITE_MASK) == sizeof(const unsigned int));
+    static_assert(sizeof(m) == sizeof(const unsigned int));
+    const unsigned int& m_unsigned = reinterpret_cast<const unsigned int&>(m);
+
+
+    //assert(m < WHITE_MASK);
+    assert(m_unsigned < WHITE_MASK);
     assert_black_white(color);
     return m + color * WHITE_MASK;
 }

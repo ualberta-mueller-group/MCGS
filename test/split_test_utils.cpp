@@ -28,7 +28,7 @@ void assert_strip_split_result(const strip* g, vector<string> expected)
     sort(got.begin(), got.end());
 
     assert(expected.size() == got.size());
-    for (int i = 0; i < got.size(); i++)
+    for (size_t i = 0; i < got.size(); i++)
     {
         assert(expected[i] == got[i]);
     }

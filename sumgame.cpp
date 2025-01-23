@@ -3,10 +3,18 @@
 //---------------------------------------------------------------------------
 #include "sumgame.h"
 
+#include <chrono>
+#include <ctime>
 #include <iostream>
+#include <limits>
 #include <memory>
+
+#include <thread>
+#include <future>
+
 using std::cout;
 using std::endl;
+using std::optional;
 
 
 //---------------------------------------------------------------------------
@@ -149,12 +157,18 @@ bool sumgame::solve() const
     assert_restore_game ar(*this);
     sumgame& sum = 
         const_cast<sumgame&>(*this);
-    return sum._solve();
+
+    optional<solve_result> result = sum.solve_with_timeout(0);
+    assert(result.has_value());
+
+    return result.value().win;
 }
 
 // Solve combinatorial game - find winner
 // Game-independent implementation of boolean minimax,
 // plus sumgame simplification
+
+/*
 bool sumgame::_solve()
 {
     if (PRINT_SUBGAMES)
@@ -181,7 +195,117 @@ bool sumgame::_solve()
     }
     return false;
 }
+*/
 
+/*
+    Spawns a thread that runs _solve_with_timeout(), then blocks until
+        the thread returns, or the timeout has elapsed. It seems using
+        std::chrono or clock() to check timeouts is very slow.
+
+        As of writing this, unit tests take 1s to complete when no
+        timeout is implemented, 1s when timeout is implemented with threads,
+        ~4s with clock(), and ~11s with chrono...
+
+*/
+optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) const
+{
+    assert_restore_game ar(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+    should_stop = false;
+
+    // spawn a thread, then wait with a timeout for it to complete
+    std::promise<optional<solve_result>> promise;
+    std::future<optional<solve_result>> future = promise.get_future();
+
+    std::thread thr([&]() -> void
+    {
+        optional<solve_result> result = sum._solve_with_timeout();
+        promise.set_value(result);
+    });
+
+    std::future_status status = std::future_status::ready;
+
+    if (timeout == 0)
+    {
+        future.wait();
+    } else
+    {
+        status = future.wait_for(std::chrono::milliseconds(timeout));
+    }
+
+    if (timeout != 0 && status == std::future_status::timeout)
+    {
+        // Stop the thread
+        should_stop = true;
+    }
+
+    future.wait();
+    thr.join();
+
+    assert(future.valid());
+    return future.get();
+}
+
+optional<solve_result> sumgame::_solve_with_timeout()
+{
+    if (over_time())
+    {
+        return solve_result::invalid();
+    }
+
+    if (PRINT_SUBGAMES)
+    {
+        cout << "solve sum ";
+        print(cout);
+    }
+
+    const bw toplay = to_play();
+
+    std::unique_ptr<sumgame_move_generator>
+      mgp(create_sum_move_generator(toplay));
+
+    sumgame_move_generator& mg = *mgp;
+    
+    for (; mg; ++mg)
+    {
+        const sumgame_move m = mg.gen_sum_move();
+        play_sum(m, toplay);
+
+        solve_result result(false);
+
+        bool found = find_static_winner(result.win);
+
+        if (! found)
+        {
+            optional<solve_result> child_result = _solve_with_timeout();
+
+            // TODO make a macro to check this and return?
+            if (child_result)
+            {
+                result.win = not child_result.value().win;
+            }
+        }
+
+        undo_move();
+
+        if (over_time())
+        {
+            return solve_result::invalid();
+        }
+
+        if (result.win)
+        {
+            return result;
+        }
+    }
+    return solve_result(false);
+}
+
+bool sumgame::over_time() const
+{
+    return should_stop;
+};
 
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
 {

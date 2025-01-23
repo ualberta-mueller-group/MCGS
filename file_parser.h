@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -7,6 +8,7 @@
 #include "game_token_parsers.h"
 #include <memory>
 #include <exception>
+#include "simple_text_hash.h"
 
 // file_parser checks for a version command when reading from file or stdin
 #define FILE_PARSER_VERSION_STRING "version 1.0"
@@ -26,17 +28,11 @@ class token_iterator
 public:
     virtual ~token_iterator() {}
 
-    // get current token. User should first call the bool operator to check if one exists
-    virtual std::string get_token() const = 0;
+    // get next token, writing it into "token". Returns true iff result is valid
+    virtual bool get_token(std::string& token) = 0;
 
-    // line number of current token
+    // line number of previous token returned by get_token()
     virtual int line_number() const = 0;
-
-    // true IFF there are more tokens to read
-    virtual operator bool() const = 0;
-
-    // advance to next token
-    virtual void operator++() = 0;
 };
 
 class file_token_iterator : public token_iterator
@@ -51,20 +47,16 @@ public:
     file_token_iterator(std::istream* stream, bool delete_stream);
     ~file_token_iterator();
 
-    std::string get_token() const override;
+    bool get_token(std::string& token) override;
     int line_number() const override;
-    operator bool() const override;
-    void operator++() override;
 
 private:
-    void next_token();
     void cleanup();
 
     std::istream* __main_stream_ptr;
     bool _delete_stream; // do we own this stream?
 
     std::stringstream _line_stream;
-    std::string _token;
 
     int _line_number;
 };
@@ -73,31 +65,31 @@ private:
 ////////////////////////////////////////////////// game_case
 
 // expected outcome of a game_case
-enum test_outcome
+enum test_result
 {
-    TEST_OUTCOME_UNKNOWN = 3,
-    TEST_OUTCOME_WIN = (int) true,
-    TEST_OUTCOME_LOSS = (int) false,
+    TEST_RESULT_UNSPECIFIED = 3,
+    TEST_RESULT_WIN = (int) true,
+    TEST_RESULT_LOSS = (int) false,
 };
 
 
-inline std::string test_outcome_to_string(const test_outcome& outcome)
+inline std::string test_result_to_string(const test_result& outcome)
 {
     switch (outcome)
     {
-        case TEST_OUTCOME_UNKNOWN:
+        case TEST_RESULT_UNSPECIFIED:
         {
-            return "Unknown";
+            return "Unspecified";
             break;
         }
 
-        case TEST_OUTCOME_WIN:
+        case TEST_RESULT_WIN:
         {
             return "Win";
             break;
         }
 
-        case TEST_OUTCOME_LOSS:
+        case TEST_RESULT_LOSS:
         {
             return "Loss";
             break;
@@ -105,14 +97,16 @@ inline std::string test_outcome_to_string(const test_outcome& outcome)
 
         default:
         {
-            std::cerr << "test_outcome_to_string() invalid input: ";
+            std::cerr << "test_result_to_string() invalid input: ";
             std::cerr << outcome << std::endl;
             exit(-1); // exit instead of assert (could be due to bad file input)
         }
 
     }
 
-    return "This string should not appear: see test_outcome_to_string()";
+    
+    std::cerr << "This string should not appear: see test_result_to_string()" << std::endl;
+    exit(-1);
 }
 
 /*
@@ -127,8 +121,11 @@ inline std::string test_outcome_to_string(const test_outcome& outcome)
 struct game_case
 {
     ebw to_play;
-    test_outcome expected_outcome;
+    test_result expected_outcome;
     std::vector<game*> games;
+    std::string comments;
+    simple_text_hash hash;
+
 
     game_case();
     ~game_case();
@@ -193,8 +190,12 @@ public:
     static file_parser* from_file(const std::string& file_name);
     static file_parser* from_string(const std::string& string);
 
+    // Used by unit tests to check whether a warning was printed
+    bool warned_wrong_version();
+
     // When true, file_parser prints info to stdout as it parses the input
     static bool debug_printing;
+    static bool silence_warnings;
 
 
 private:
@@ -225,13 +226,15 @@ private:
     game_case _cases[FILE_PARSER_MAX_CASES];
     int _case_count; // number of cases created by a previous parse_chunk() call
     int _next_case_idx; // next case to consume from a previous parse
+
+    bool _warned_wrong_version;
 };
 
 
 enum parser_exception_code
 {
     PARSER_OK = 0,
-    WRONG_VERSION_COMMAND = 1,
+    //WRONG_VERSION_COMMAND = 1, // Wrong version just prints warning
     MISSING_VERSION_COMMAND,
     MISSING_SECTION_TITLE,
     MISSING_SECTION_PARSER,
@@ -243,6 +246,7 @@ enum parser_exception_code
     EMPTY_CASE_COMMAND,
     FAILED_CASE_COMMAND,
     PARSE_CHUNK_CALLER_ERROR,
+    BAD_COMMENT_FORMAT,
 };
 
 // Thrown on bad input

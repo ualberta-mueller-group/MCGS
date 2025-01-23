@@ -8,12 +8,23 @@
 */
 struct cli_options
 {
-    cli_options();
+    cli_options(const std::string& test_directory);
     ~cli_options();
 
     std::shared_ptr<file_parser> parser;
     bool dry_run; // Do dry run without running games
     bool should_exit; // Exit from main() i.e. when "--help" used
+
+    bool run_tests; // Run autotests
+
+    std::string test_directory;
+    std::string outfile_name; // CSV output file
+    unsigned long long test_timeout; // ms
+
+
+    static constexpr const char* default_relative_test_path = "test/input/autotests";
+    static constexpr const char* default_test_outfile = "out.csv";
+    static constexpr const unsigned long long default_test_timeout = 500;
 };
 
 
@@ -37,6 +48,9 @@ public:
     {
         return _why.c_str();
     }
+
+
+
 
 private:
     std::string _why;

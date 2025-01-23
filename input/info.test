@@ -1,137 +1,115 @@
 {version 1.0}
+/ This is a comment\
 
-/ This is a comment. \
+/_ This file is valid input to MCGS, and describes the input syntax.
 
-/ Comments and other things can
-be on
- multiple
- lines.
+There are 5 types of 'things' that appear in input: 
+    Section titles
+        Enclosed by '[' and ']', text inside a section title defines what type
+        of game to interpret subsequent text as. Sections persist until
+        a new section title is encountered.
 
+        i.e. '[clobber_1xn]'
+
+    Comments
+        Enclosed by '/' and '\', text inside a comment is used by humans
+        reading input files, and may be included in output from MCGS's testing
+        framework. More on this later.
+
+    Commands
+        Enclosed by '{' and '}', commands are used to solve sums of games for 
+        one or more players, optionally defining an expected result (win/loss).
+        Commands are also used to specify what version of the input language
+        is used by a file. The version command must be present in files, but
+        can be omitted from input read from stdin or passed as a command line
+        argument to MCGS. The current version is 1.0.
+            i.e.
+            Version command:
+                {version 1.0}
+
+            Solve the current game sum for black, without expecting a particular
+            result:
+                {B}
+            Solve the current game sum for black, and then white, expecting
+            white to win.
+                {B, W win}
+            Solve the current game sum for white, then black, expecting
+            white to lose and black to win.
+                {W loss, B win}
+
+            'Solve' commands can solve a game sum up to 2 times, i.e.
+            {B, W, B} is illegal
+
+    Bracketed games
+        Enclosed by '(' and ')', text inside a bracketed game defines a single
+        game within the current section. The type of game depends on the
+        section.
+
+        i.e. 
+        A single game 'XOXOXO':
+            (XOXOXO)
+        A single game '1 2':
+            (1 2)
+
+    Unbracketed games
+        Whitespace-separated text not matched by the aforementioned cases
+        defines a single game within the current section. The type of game
+        depends on the section.
+
+    i.e.
+    define two games, 'XO.X' and 'XO':
+        XO.X XO
+    define one game, '5':
+        5
+
+
+    The following example solves a sum of
+        2 clobber_1xn games
+        2 integer_game games
+        2 more clobber_1xn games
+        1 dyadic_rational game
+    Twice: once for black, then white. Then it solves an 
+    empty sum for black, expecting a loss.
 \
 
-/ This file is valid input that can be run by MCGS. \
-
-/ The basic file features:
-
-    {this is a command}
-        i.e. {version 2}
-             {B win}
-             {W loss}
-             {B win, W loss}
-             {B}
-             {W}
-             {B, W}
-        Commands are used to run games, indicate file format version, and do other things.
-
-        When reading from stdin or file, the input must start with a version command.
-        When reading from args, the version command is optional
-
-    [this is a section title, indicating a specific game]
-        i.e. [clobber_1xn]
-        "Game tokens" within a section create games, explained below.
-        Section titles can contain spaces i.e. [some other game].
-
-    (everything in parentheses belongs to a single game and is a single "game token")
-        i.e. (4 5 3) <-- a single game token interpreted as 3
-        numbers OR a string, depending on what section it's in.
-        Things outside of parentheses are broken up by white space, i.e.
-        "4 2 3" is 3 game tokens, creating 3 games, while "(4 2 3)" is 1 game token, creating 1 game.
-
-
-        The example below runs a sum of:
-            2 clobber games
-            2 integer games
-            1 more clobber game
-            2 dyadic rational games
-            2 nim games
-            1 elephants game
-            3 more nim games
-        Two times, once for black, once for white. And then it runs a sum of 4 nim games, for white.
-        
-\
 
 [clobber_1xn] XOXO OXX
 [integer_game] 4
+/ Comments can go here too. \
 -5
 [clobber_1xn]
 XOXOO...XO
-[dyadic_rational] (3 4) (7 8)
-/ Comments are allowed here too! \
-[nim] 
-    (1 5 3)
-(2 3)
-[elephants] X..O.X.
-[nim] 1 4 2
+(XO)
+[dyadic_rational]
+(3 4) / Dyadic rational games are defined by 2 ints, so they must be
+defined in brackets. \
 {B, W}
-/ "Run" commands, like the line above, denote the end of a sum of games; the games below
-are a new sum. \
-[nim]
-(1 2 3) 4 5 (6 7)
-{W}
+
+/Now the current game sum is empty. The next line solves an empty sum\
+{B loss}
+
 
 /
+        More on syntax:
 
-    Games have game_token_parser classes defining how their game tokens are
-    parsed and given to the game's constructor. A file_parser class reads the file input
-    and when it sees a game token, gives it to the game_token_parser of the current section,
-    first omitting the parentheses. The input:
-        (4 5 3)
-    Could mean a string "4 5 3", or 3 ints, as determined by a game's game_token_parser.
+    Comments by default belong to all (sum, player) pairs solved by the next
+    'solve' command. These will be included in output from
+    MCGS's testing framework.
 
-    game_token_parsers usually have a template argument for the game class to make it easy
-    to add new games. See file_parser::init_game_parsers() in file_parser.cpp.
+    If a comment starts with '_', it will not be included in output.
+
+    If a comment starts with '#0' or '#1', it will only be included in 
+    output for the 1st or 2nd (sum, player) pair solved by the
+    next 'solve' command.
 
 
-    Disallowed things:
-
-        [clobber_1xn] (XOXO OXX)
-    The string "XOXO OXX" is not a valid clobber board (it contains a space).
-
-        [elephants()]
-    The section title "elephants()" contains reserved characters. Reserved characters
-    can only be used for their intended purposes, OR inside of comments.
-
-    Reserved characters are: "/" "\" { } ( ) [ ] 
-
-    Also not allowed: [[elephants]]
-
-        [dyadic_rational] 6 3
-    The dyadic rational game requires 2 ints, but the above input tries to make
-    2 games with 1 int each. Instead these must be enclosed in braces i.e. (6 3).
-
-        [integer_game] (-2 1 3)
-    The integer game only takes one int, but the above tries to make 1 game
-    with 3 ints.
-
-        [integer game]3
-    OR
+    Enclosing symbols i.e. '[', ']', '(', ')', etc must have at least one
+    whitespace character before (or after) them. The following is illegal:
         [integer_game]3
-    OR
-        3[integer_game]
-    OR
-        3[integer game]
-    The section title isn't found, and a parser error is printed. The file parser finds matches by looking at edges of whitespace-separated chunks,
-    and in all cases the "3" is at an edge where a bracket should be. Examples 1 and 4 contain 2 "chunks" and examples 2 and 3 contain 1 "chunk".
-
-        [integer ]3 game]
-    Will initially match to a game title, but be rejected because it contains a reserved character.
-
-        [clobber_1xn] XOXO{B}
-    "XOXO{B}" is not a valid clobber board.
+    or
+        3(4)
 
 
-    Allowed things:
-
-        [clobber_1xn] (XOXO.XOOX) (XOXO)
-        [integer_game] (1) (2) (4)
-    The clobber parser sees the strings "XOXO.XOOX" and "XOXO", which are both legal.
-    The integer game parser sees 3 games.
-
-    Comments can have reserved characters without creating strange parse results, because an opening brace that matches with
-    a closing brace contained by a comment will also contain the reserved "slash" character, causing a parser error indicating
-    the line of the initial opening brace.
-
-    
-    "/" and "\" can be used in comments if followed by another character: /4
-    Odd inconsistency
+    Names of sections, i.e. [clobber_1xn] are defined by the
+    add_game_parser() function of the file_parser class in file_parser.h
 \

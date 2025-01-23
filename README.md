@@ -1,218 +1,104 @@
-# MCGS
+# MCGS V1.0
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
 Taylor Folkersen, Martin Müller and Henry Du, 2024
 
-## Design Documentation
-For the overall approach and future plans, see the document "The Design of MCGS:
-A Minimax-based Combinatorial Game Solver".
+MCGS is an efficient minimax search-based solver for sums of combinatorial games. Given a sum of games and a first player, MCGS determines the winner. The code is modular and extensible, allowing users to easily add new types of games and benefit from existing game-independent optimizations. Future versions will include hooks for game-specific optimizations, and implement many general search optimizations.
 
-## How to build, run and test MCGS
-- Download the code and go to the directory
-- There is a basic makefile. It supports:
-    - `make` builds the program `.\MCGS`. Any tasks you want to run should be called in the main function.
-    - `make test` builds and runs all unit tests, in program `./MCGS_test`. No output means that the tests succeeded.
-
-## How the MCGS code is organised
-- Currently it uses a "flat" organisation. All game-independent 
-codes and all game-specific implementation files are in the `MCGS` directory.  The two subdirectories are:
-    - `main` contains a single file, the main program `main.cpp`
-    - `test` contains all testing-related code:
-        - All unit tests. Each unit test consists of a `x_test.h` file which exports a single function `x_test_all`, and a file `x_test.cpp` with all tests for a file `x.cpp`.
-        - the `main_test.cpp` program which calls all 
-        - Helper functions for writing tests in `test_case.h`, `test_case.cpp` and `test_utilities.h`
-    
-- There are two text/markdown files: this `README.md`, and a `todo.md`
-
-## Main data types of MCGS
-
-### `move`
-The abstract type `move` is used in all (sub-)games to represent a move in that particular subgame. Also compare with `sumgame_move`
-- Implementation: A `move` is typedef as an `int`.
-- Each game is free to define its own representation of a move.
-- The `move` representation must include space for one "color bit"
-- Utilities in `cgt_move.h`
-    - help pack and unpack moves from/to int
-    - deal with color bit and "rest" of move
-    - Rest of move, after the color bit, can be further broken up
-    - Two smaller integers (first one signed, second one unsigned)
-    - A sign bit for the first part of the two part move
-    - Utilities encode and decode move from/to color, 
-    and two integer parts including the sign bit
-Comments and TODOs:
-- TODO: should guarantee that a move is at least 32 bit
-- Also see comments about `move` under "Design Choices"
-
-### `game`
-A `game` is the base type for all combinatorial games supported by MCGS. 
-Its main use is as one subgame in a sum. However, it can also be solved as a
-standalone game in combination with `alternating_move_game`.
-- Each `move` stored in the move stack of `game` includes the "color bit"
-
-#### `sumgame_move` struct
-Represents a move made in a `sumgame`
-- contains a subgame index and the move made in the subgame
-- The index is into the vector `sumgame::_subgames`
-- The `move` is for the subgame stored there
-
-#### `sumgame` class
-A `sumgame` represents a (possibly empty) set of subgames. 
-It derives from `alternating_move_game` and reimplements the
-`solve` method to take advantage of sum structure
-- Main data structure: `vector<game*> _subgames`
-    - TODO sumgame should be owner of these games? Use `std::unique_ptr`
-    - TODO copy on add?
-- derived from `alternating_move_game` but reimplements solve 
-    - it uses `sumgame_move`
-    - keeps its own `_sumgame_move_stack` with sum-level info; subgames keep their own stacks as well
-## How to implement a new game
-- Also see `nim` and `clobber_1xn` as examples
-- For game name `x`:
-- Create 4 files: `x.h, x.cpp, test/x_test.h, test/x_test.cpp`
-    - Define `class x` in `x.h`, derive from `game` or `strip`
-    - Each new game must implement at least 3 virtual methods: 
-    `play, undo_move, create_move_generator` (two more now - see below)
-    - Class `x_move_generator` - I have made the move generators private, only in the `x.cpp` files. The only access is through the game's `create_move_generator` method
-- In `x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. 
-    - Add the declaration in `x_test.h` 
-    - Call `x_test_all` from `test/test_main.cpp`
-
-## Search and solving a game
-- Two classes implement game solving: `alternating_move_game`
-and `sumgame`
-- `alternating_move_game` is used for solving a single game
-    - `alternating_move_game::solve` is a basic boolean negamax search
-- `sumgame` is used to store and solve a sum of games. 
-It is derived from `alternating_move_game`.
-    - `sumgame::solve` is a basic boolean negamax search for sums
-    - enforced const-ness of games when calling solver
-        - game state may modify during solve but is restored 
-        at the end in any case
-        - a checking function to make sure state is unchanged
-            - a naive first implementation just checks length of move stack
-            - TODO it probably is broken for sumgame, since it uses a different stack
-            - to be replaced by a full hash
+For the overall approach and future plans, see the document "The Design of MCGS: A Minimax Search-based Solver for Combinatorial Games".
 
 
-## File Format for Test Cases
-- simple file format for tests:
-- line 1: game name, file format version, currently 0
-- line 2..n:
-    - one test per line
-    - format of test: game toPlay result
-        - game: a single string representing the game
-        - toPlay: B or W
-        - result: win or loss
-- Example:
-<pre>
-clobber_1xn 0
-XO B win
-XO W win
-OXOXOX B loss
-OXOXOX W loss
-XXO B win
-XXO W loss
-</pre>
-- A test game can be a sum, enclosed in quotes. 
-It is read with `std::quoted`
+### Sections
+- [Building MCGS](#building-mcgs)
+- [Using MCGS](#using-mcgs)
+- [Using the Testing Framework](#using-the-testing-framework)
+- [Extending MCGS](#extending-mcgs)
+  - [MCGS Data Types](#mcgs-data-types)
+  - [Implementing a New Game](#implementing-a-new-game)
+  - [Implementing Game-Specific Optimizations](#implementing-game-specific-optimizations)
+    - [Splitting Into Subgames](#splitting-into-subgames)
 
-## Implementation Notes for extending the `game` class
-- virtual methods in game that must be implemented:
-    - `play`, `undo_move`, `create_move_generator`, `print`, `inverse`
-- In every game implementation:
-    - `x::play()` must call `game::play()`
-    - `x::undo_move()` must call `game::undo_move()`
-- Move generators are accessible only through game `create_move_generator`
-    - They are dynamically allocated - wrap each use in a `std::unique_ptr`
-    - Example: `alternating_move_game::solve`
-    - A game-specific move generator is declared and used only in `x.cpp`, not in a header file
-- Game unit tests should cover at least:
-    - `play` and `undo_move`
-    - `solve` for both black and white
-    - Convert from/to string
-    - Write test cases in file, read and solve
-    - Game-specific move generator
-        - Count number of moves and details of moves generated
-- `play()` may not assume alternating colors, since games can be subgames 
-in a sum. 
-- The color of the player is encoded as part of the move 
-and is stored in the move stack. 
-- `undo_move` must respect and use the move player color information.
+### Building MCGS
+First download this repository, and enter its directory.
 
-## Versions
-### Version 0 completed
-- `move` and `game` classes, `alternating_move_game`
-- Nim: `nim` implementation done
-- Utility class `strip` for 1xn boards
-- Clobber on a strip: `clobber_1xn`
-- Basic minimax implementation in `alternating_move_game::solve`
-- Basic test cases in files, run automatically
-- Nogo on a strip: `nogo_1xn` class
-- Simple game classes: integer, dyadic rational, up-star, switch, nimber
+To build the program, `./MCGS`, run:
+```
+make
+```
 
-### Version 1 in progress
+To run all unit tests, run:
+```
+make test
+```
+This will build and then run `./MCGS_test`, and on successful completion of unit tests, no output should appear.
 
-#### Version 1 completed
-- `sumgame` class
-    - game-dependent `split` into 0,1,2 or more subgames after a move
-    - supports both keeping the old `game`, and replacing it after a `split`
-    - supports changes of game type, such as `switch_game` to `integer_game`
-- first experiments with sums of simple games, Clobber and NoGo
-- Current limitation: games need to be defined beforehand, cannot create/delete new games on the fly
+### Using MCGS
+`MCGS` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. Example usage solving a linear clobber game `XOXOXO` twice, once with black playing first, and once with white playing first: 
+```
+./MCGS "[clobber_1xn] XOXOXO {B, W}"
+```
 
-#### Version 1 completed - General improvements not specifically related to sumgame
-- implemented game::inverse() for all game types
+For details about using `./MCGS`, see `./MCGS --help`. For a full description of input syntax, see [input/info.test](input/info.test).
 
-#### Version 1 in progress / to do
-- performance testing framework
-    - performance tests
-    - compare with/without subgame split
-    - other options to compare?
-- change read from string functions to directly create sumgame
-- created classes `impartial_game` and `impartial_sumgame`
-    - moved some functionality from obsolete `nim` class here
-    - TODO rewrite all `nim` tests to use `sumgame` and `nimber`
-    - TODO remove `nim` class after converting tests
-- go through TODO list, decide which items are done, to do for V1, 
-and which we should defer to 1.x or later
+### Using the Testing Framework
+Included is a testing framework which is used to generate, compare, and analyze performance and correctness data from MCGS. Running:
+```
+./MCGS --run-tests
+```
+will run all `.test` files in the `test/input/autotests` directory, outputting performance and correctness data to `out.csv`, with one row of data per game sum. Then, running:
+```
+python3 create-table.py out.csv -o table.html
+```
+will generate `table.html`, which is to be viewed in a web browser. The output HTML includes one row for each row in `out.csv`. `create-table.py` can also compare two CSV files. For more information (i.e. comparing CSV files, explanation of output HTML, etc.), see:
+```
+python3 create-table.py --help
+```
+and for information about test options (i.e. timeout duration, input directory, output file, etc.), see:
+```
+./MCGS --help
+```
 
-### Future: Smaller step Versions 1.x , prepare for Version 2
+## Extending MCGS
+The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new kinds of games, and have them be recognized as input. The following sections first describe internal data types of interest to this goal, and then describe the steps for adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
 
-#### Version 1.1 - simplification rules for `game` and `sumgame`
-    - simplify `game` G in `sumgame` S
-        - compare G with a simpler game H, replace in S if equal
-        - compare G1+G2 with a simpler H, replace in S if equal
-        - simplify games of same type in S, e.g.
-            - add up integers/rationals
-            - add ups+stars
-            - add nimbers
-        - general sum simplifications
-            - remove/deactivate 0
-            - find inverse pairs and deactivate
+The code is organized in a mostly "flat" way; source code files are mostly in the root directory, with `main.cpp` being in `./main` and unit tests being in `./test`.
 
-#### Version 1.2 - Tools and Components for database
-- `scale` such as multiples of up, or up+star, or integers
-    - binary search to find upper/lower bounds for a game G on scale S
+### MCGS data types
+#### game (game.h)
+The abstract base type for all combinatorial games supported by MCGS.
 
-## Design Choices and Remaining Uglinesses
-#### A `move` must be an `int` 
-- I tried to make a generic abstract move class, but could not implement it in a "nice" and efficient way.
-- Plan: probably keep it this way unless I find an elegant general solution
+#### strip (strip.h)
+An abstract game type derived from `game`, for games played on a "line" (1 dimensional board), consisting of black stones, white stones, and empty tiles. Used by games `clobber_1xn`, `nogo_1xn`, `elephants`, etc. 
 
-#### `move_generator` objects are dynamically allocated
-- This is ugly but I could not solve it in a better way. 
-- I would love to have move generators just as local variables.
-- A workaround to prevent memory leaks is to always wrap 
-a move generator in a `std::unique_ptr` 
-    - Example in `nim_test.cpp`, 
-    function `nim_move_generator_test_1`
-    - Example in `alternating_move_game::solve`
+#### move (cgt_move.h)
+Represents a move that can be played within a `game`. In this version, `move` is an at least 32 bit integer. Games define the meaning of their `move`s but can only use 31 bits, as the color of a player is also encoded in a `move`. cgt_move.h defines utilties for packing and unpacking `move`s, to deal with the color bit and "rest" of the `move`, including functions to encode and decode two smaller integers into a `move` (i.e. to store a "from" and "to").
 
-#### Reimplementation/duplication of `game` concepts in `sumgame`
-- This is a consequence of - A `move` must be an `int`
-- A move in a sumgame is specified in `struct sumgame_move` by two parts: index of subgame, and move inside the subgame
-- so play() in sumgame takes a `sumgame_move` as argument, not a `move`
-- solve() also rewritten to use `sumgame_move`
-- `alternating_move_game` currently requires a game 
-argument - a ugly dummy game `empty_game`. See todo.md.
+#### move_generator (game.h)
+An abstract type implementing an iterator over a `game`'s moves, for a specific position and player.
+
+#### split_result (game.h)
+Typedef of `std::optional<std::vector<game*>>`. The (possibly absent) result of splitting a `game` into subgames whose sum equals the `game` being split. During search, `game`s are split and replaced by their subgames. When `has_value()` is true and the vector is empty, the `game` being split is equal to 0. When `has_value()` is false, the vector is absent, and the split has no effect.
+
+#### file_parser (file_parser.h)
+Used by MCGS to read games from files, stdin, and quoted input strings passed as arguments to `./MCGS`. Passes string tokens representing games to a ```game_token_parser``` to get back a ```game``` object.
+
+#### game_token_parser (game_token_parsers.h)
+Abstract type converting input tokens into `game`s.
+
+### Implementing a new game
+To implement a new game `x`:
+- Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
+- Define `class x` in `x.h`, derive from `game` or `strip`.
+- Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, and `inverse()`. See comments in `game.h` for notes on important implementation details.
+- Define `class x_move_generator`, derive from `move_generator`.
+- At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h`).
+- In `x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. Add the declaration in `x_test.h` 
+- Call `x_test_all` from `test/main_test.cpp`.
+
+### Implementing Game-Specific Optimizations
+Currently there is one (unused) game-specific optimization. In the future there will be more (and they will be used).
+
+#### Splitting Into Subgames
+In your game `x`, override and implement `game::split_implementation()`. See `game.h` for important implementation details, and add unit tests.
+`split_implementation()` is used to break apart a `game` into a list of subgames whose sum is equal to the original `game`. This speeds up search by allowing MCGS to reason about smaller independent subproblems.

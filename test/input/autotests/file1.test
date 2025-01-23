@@ -1,0 +1,9 @@
+{version 1.0}
+/This comment should be included for both game cases\
+[clobber_1xn]
+XOXOXOXO {B win, W win}
+[integer_game]
+5 -6
+[clobber_1xn]
+XOXO
+{B loss, W loss}

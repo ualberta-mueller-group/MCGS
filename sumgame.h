@@ -7,6 +7,9 @@
 #include "alternating_move_game.h"
 #include "cgt_move.h"
 #include "game.h"
+#include <chrono>
+#include <ctime>
+#include <limits>
 
 struct sumgame_move
 {
@@ -48,6 +51,22 @@ public:
 class sumgame_move_generator;
 struct play_record;
 
+struct solve_result
+{
+    bool win;
+
+    solve_result() = delete;
+
+    solve_result(bool win) : win(win)
+    { }
+
+    // return this on timeout
+    inline static std::optional<solve_result> invalid()
+    {
+        return std::optional<solve_result>();
+    }
+};
+
 class sumgame : public alternating_move_game
 {
 public:
@@ -57,8 +76,15 @@ public:
     void play_sum(const sumgame_move& m, bw to_play);
     void undo_move();
     void add(game* g);
+
     bool solve() const;
 
+    /*
+        Timeout is in milliseconds. 0 means never timeout.
+
+        On timeout, the returned optional has no value
+    */
+    std::optional<solve_result> solve_with_timeout(unsigned long long timeout) const;
 
 
 
@@ -70,7 +96,20 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
-    bool _solve();
+
+    /*
+        mutable makes sense here? 
+
+        these values are used by _solve_with_timeout() and are here so they don't
+            need to be passed as arguments to the function every time it's called
+    */
+    mutable bool should_stop;
+
+    //bool _solve();
+    std::optional<solve_result> _solve_with_timeout();
+
+    bool over_time() const;
+
     empty_game _empty_game;
     vector<game*> _subgames; // sumgame owns these subgames
     vector<play_record> _play_record_stack;

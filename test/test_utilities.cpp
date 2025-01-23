@@ -116,7 +116,7 @@ void assert_inverse_sum_zero(const game_factory_ptr& factory)
 void assert_file_parser_output(file_parser* parser, vector<game_case *>& expected_cases)
 {
     game_case gc;
-    int case_idx = 0;
+    size_t case_idx = 0;
 
     while (parser->parse_chunk(gc))
     {
@@ -129,7 +129,7 @@ void assert_file_parser_output(file_parser* parser, vector<game_case *>& expecte
         assert(gc.expected_outcome == expected.expected_outcome);
         assert(gc.games.size() == expected.games.size());
 
-        for (int i = 0; i < gc.games.size(); i++)
+        for (size_t i = 0; i < gc.games.size(); i++)
         {
             string str_got;
             string str_expected;

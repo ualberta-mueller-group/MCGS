@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>MCGS Test Output</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0px;
+                padding: 0px;
+            }
+
+            body {
+                width: 100vw;
+                font-family: "Noto Serif";
+            }
+
+            table {
+                table-layout: auto;
+                border-collapse: collapse;
+                width: 100vw;
+            }
+
+            tr {
+                border-bottom: 1px solid black;
+            }
+
+            td, th {
+                border-right: 1px solid black;
+                padding: 0px;
+            }
+
+            td:last-child, th:last-child {
+                border-right: 0px;
+            }
+
+            tr:nth-child(odd) {
+                /*background-color: #d8d8d8;*/
+                background-color: #e6e6e6;
+            }
+
+            tr:nth-child(1) {
+            }
+
+            .cell div {
+                overflow-wrap: break-word;
+                /*overflow: scroll;*/
+                padding: 2px;
+            }
+
+            .cell-pass {
+                background-color: #00ff00;
+            }
+
+            .cell-fail {
+                background-color: #ff0000;
+            }
+
+
+            .cell-timeout {
+                background-color: #ff8000;
+            }
+
+            .cell-completed {
+                background-color: yellow;
+            }
+
+            .cell-wrong-hash {
+                background-color: #5c5cff;
+            }
+
+            .cell-diverging-result {
+                background-color: #ff00ff;
+            }
+
+            .select-div {
+                padding-top: 20px;
+                padding-bottom: 20px;
+            }
+
+
+            td.break-anywhere div {
+                overflow-wrap: anywhere;
+            }
+
+            .cell-faster {
+                background-color: #40ffa0;
+            }
+
+            .cell-slower {
+                background-color: #ff8080;
+            }
+
+            .cell-new-fail {
+                background-color: #990000;
+            }
+
+            .cell-new-pass {
+                /*background-color: #66ff66;*/
+                background-color: #004d00;
+            }
+
+            .cell-new-completed {
+                background-color: #999900;
+
+            }
+
+            .cell-new-timeout {
+                background-color: #994d00;
+            }
+
+            .filter-text-div {
+                display: inline-block;
+                margin-bottom: 10px;
+            }
+
+            tr.row-header {
+                border-top: 1px solid black;
+                background-color: #afafaf;
+            }
+
+            div.sep {
+                background-color: red;
+                width: 15px;
+                display: inline-block;
+            }
+
+            #metadata-string {
+                white-space-collapse: preserve;
+            }
+
+            #problem-summary {
+                white-space-collapse: preserve;
+                font-weight: bold;
+            }
+
+            .th-index {
+                cursor: pointer;
+            }
+
+
+        </style>
+
+        <script>
+<!-- REPLACE WITH SCRIPT -->
+        </script>
+
+    </head>
+
+    <body>
+
+        <!-- REPLACE WITH METADATA -->
+
+    <p id="problem-summary"></p>
+
+    <div class="select-div">
+        <label for="outcome-filter-dropdown">Show rows: </label>
+        <select name="outcome-filter" id="outcome-filter-dropdown">
+            <option value="all">All</option>
+            <option value="problem">Problems</option>
+            <option value="fail">Fails</option>
+            <option value="diverging-result">Diverging results</option>
+            <option value="timeout">Timeouts</option>
+            <option value="hash">Bad hashes</option>
+            <option value="no-problem">No problems</option>
+        </select>
+    </div>
+
+    <div class="filter-text-div">
+
+        <label for="filter-text-input">Search: </label>
+        <textarea type="text" id="filter-text-input"></textarea>
+
+        <div class="sep"></div>
+
+        <label for="filter-text-exclude">Exclude</label>
+        <input type="checkbox" id="filter-text-exclude">
+
+        <div class="sep"></div>
+
+        <label for="filter-text-regex">Regex</label>
+        <input type="checkbox" id="filter-text-regex">
+
+        <div class="sep"></div>
+
+        <label for="filter-text-column-select">Search column: </label>
+        <select id="filter-text-column-select">
+            <!-- REPLACE WITH COLUMN OPTIONS -->
+        </select>
+
+    </div>
+
+        <!-- REPLACE WITH TABLE -->
+
+    </body>
+</html>

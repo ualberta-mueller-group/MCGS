@@ -22,6 +22,7 @@ class game;
 
 typedef std::optional<std::vector<game*>> split_result;
 
+
 class game
 {
 public:
@@ -34,6 +35,22 @@ public:
     int moves_hash() const; // TODO do a proper implementation
     bool has_moves() const;
     
+    /*
+        When overriding play() and undo_move(), the derived type's function should
+        first call these functions.
+
+        i.e. in derived type's play():
+            // pushes move onto move stack for later, after encoding player color into it
+            game::play(m, to_play);
+
+        and in derived type's undo_move():
+            move m_encoded = game::last_move(); // get back the move we remembered
+            game::undo_move(); // pop it off the stack
+            // now decode the move
+            bw to_play = cgt_move::get_color(m_encoded);
+            move m = cgt_move::decode(m_encoded);
+
+    */
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
 
@@ -43,20 +60,37 @@ public:
 protected:
 
     /*
-        List of games to replace current game. Empty list means game is 0.
-        No value means split didn't occur. See std::optional
+        Return list of games to replace current game. Empty list means game is 0.
+        No value means split didn't occur. See std::optional. The games
+        within the list should be new objects, and not a pointer to the 
+        game object returning the list.
 
-        The returned games are owned by the caller
+        In the case where a game doesn't split into subgames, return an absent split result.
 
-        TODO assert in sumgame::play_sum() and sumgame::undo_move() 
-            that list never contains the original game object?
+        The returned games are owned by the caller.
+
+        To create an empty but present split_result:
+            split_result sr = split_result(vector<game*>());
+        
+        To create an absent split_result:
+            split_result sr = split_result();
     */
     virtual split_result split_implementation() const;
 
 public:
 
     virtual move_generator* create_move_generator(bw to_play) const = 0;
+
+    /*
+        Print a string representation for a game. This should include a name
+            to differentiate the game from other types of games.
+    */
     virtual void print(std::ostream& str) const = 0;
+
+    /*
+        Return a new game representing the inverse of this game.
+            i.e. for the game "4", this should return the game "-4"
+    */
     virtual game* inverse() const = 0; // caller takes ownership
 
 private:
@@ -113,6 +147,7 @@ inline split_result game::split() const
 
     for (game* g : *sr)
     {
+        assert(g != this);
         if (g->has_moves())
             result->push_back(g);
         else

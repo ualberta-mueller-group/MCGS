@@ -1,0 +1,9 @@
+{version 1.0}
+/ This comment should appear in both cases \
+/ This comment should also appear in both cases \
+/#0 This comment should only appear in the first case \
+/#1 This comment should only appear in the second case \
+/ This comment should appear in both cases again \
+/_ THIS COMMENT SHOULD NOT APPEAR \
+
+[integer_game] 1 {B win, W loss}
