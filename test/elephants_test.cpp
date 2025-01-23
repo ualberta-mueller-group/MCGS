@@ -307,7 +307,7 @@ void inverse1()
 
     unique_ptr<elephants> inv(dynamic_cast<elephants*>(pos.inverse()));
     assert(inv.get() != nullptr);
-    assert(inv->board_as_string() == "O..X.X.OO.X");
+    assert(inv->board_as_string() == "X.OO.X.X..O");
 }
 
 void inverse2()
@@ -356,7 +356,7 @@ void elephants_test_all()
     inverse1();
     inverse2();
     test_is_move();
-    file("elephants.test");
+    file("input/elephants.test");
 
     // Use these later, for now they're too hard
     //file("elephants.hard.test");

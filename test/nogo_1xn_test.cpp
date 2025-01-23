@@ -73,7 +73,7 @@ void file()
     std::vector<test_case> cases;
     std::string game_name;
     int version;
-    if (! read_test_cases("nogo_1xn.test", game_name, version, cases))
+    if (! read_test_cases("input/nogo_1xn.test", game_name, version, cases))
         return;
     assert(game_name == "nogo_1xn");
     assert(version == 0);
