@@ -168,6 +168,8 @@ private:
 
     // functions to handle current token
     bool parse_game();
+
+    void validate_command(const std::string& token_copy);
     bool parse_command();
 
     std::string get_error_start();

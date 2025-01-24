@@ -441,9 +441,66 @@ bool file_parser::parse_game()
     return true;
 }
 
+
+void file_parser::validate_command(const string& token_copy)
+{
+    // First strip whitespace from the input token, where appropriate
+    stringstream stream(token_copy);
+    string got = "";
+
+    {
+        bool first_chunk = true;
+
+        string chunk;
+        while (stream >> chunk)
+        {
+            if (!first_chunk)
+            {
+                got += " ";
+            }
+            first_chunk = false;
+
+            got += chunk;
+        }
+    }
+
+    // Generate expected format
+    string expected = "";
+    for (int i = 0; i < _case_count; i++)
+    {
+        game_case& gc = _cases[i];
+
+        string player(1, color_char(gc.to_play));
+        test_result result = gc.expected_outcome;
+
+        expected += player;
+
+        if (result != TEST_RESULT_UNSPECIFIED)
+        {
+            expected += " ";
+            expected += ((result == TEST_RESULT_WIN) ? "win" : "loss");
+        }
+
+        if (i + 1 < _case_count)
+        {
+            expected += ", ";
+        }
+    }
+
+    if (got != expected)
+    {
+        string why = get_error_start();
+        why += "invalid command format";
+        throw parser_exception(why, parser_exception_code::FAILED_CASE_COMMAND);
+    }
+
+}
+
 // parse current token as a command
 bool file_parser::parse_command()
 {
+    const string token_copy = _token;
+
     // previous cases should have been consumed and reset
     assert(_case_count == 0);
 
@@ -579,6 +636,8 @@ bool file_parser::parse_command()
         string why = get_error_start() + "\"run\" command with no cases";
         throw parser_exception(why, EMPTY_CASE_COMMAND);
     }
+
+    validate_command(token_copy);
 
     return true;
 }
