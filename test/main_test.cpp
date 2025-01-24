@@ -22,6 +22,7 @@
 #include "split_test.h"
 #include "file_parser_test.h"
 #include "cli_options_test.h"
+#include "simple_text_hash_test.h"
 
 using std::cout, std::endl, std::string;
 
@@ -94,6 +95,7 @@ int main(int argc, const char** argv)
 
     file_parser_test_all();
     cli_options_test_all();
+    simple_text_hash_test_all();
 
     cout << "SUCCESS" << endl;
 }
