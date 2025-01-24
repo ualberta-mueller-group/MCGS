@@ -37,7 +37,7 @@ namespace
 
 void print_usage(const char* exec_name)
 {
-    cout << "Usage: " << exec_name << "[flags]" << endl;
+    cout << "Usage: " << exec_name << " [flags]" << endl;
 
     cout << "\tRuns unit tests. On successful completion, \"SUCCESS\" should be printed.";
     cout << endl;

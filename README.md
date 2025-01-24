@@ -31,7 +31,7 @@ To run all unit tests, run:
 ```
 make test
 ```
-This will build and then run `./MCGS_test`, and on successful completion of unit tests, no output should appear.
+This will build and then run `./MCGS_test`, and on successful completion of unit tests, the text "SUCCESS" should appear.
 
 ### Using MCGS
 `MCGS` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. Example usage solving a linear clobber game `XOXOXO` twice, once with black playing first, and once with white playing first: 
