@@ -1,0 +1,44 @@
+{version 1.0}
+
+    [elephants]
+/??? + inverse\
+XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO
+XXX..X.....O..O..O.X.O.X.X..X.O..O.X.XO...OO
+    {B loss, W loss}
+
+    [elephants]
+/{-4* | -6*} + inverse\
+X.......O.....XO.O.....X..OO.X.O.OOXO...
+    [up_star]
+*
+    [switch_game]
+(6 4)
+    {B loss, W loss}
+
+/{-27 | -29} + inverse\
+    [elephants]
+X...XX.O...X.....OOOO..X...O.....O.O...O
+    [switch_game]
+(29 27)
+    {B loss, W loss}
+
+/3 + inverse\
+    [elephants]
+X..X........O....X....O...O.......XO.X..
+    [integer_game]
+-3
+    {B loss, W loss}
+
+/14 + inverse\
+    [elephants]
+.OXO...O.O..O.X.X......X...X..OO..X....X
+    [integer_game]
+-14
+    {B loss, W loss}
+
+/-7 + inverse\
+    [elephants]
+....OXO.....X......X.XOX..O...O...O.XXO.
+    [integer_game]
+7
+    {B loss, W loss}

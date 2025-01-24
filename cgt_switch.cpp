@@ -78,7 +78,7 @@ void switch_game::print(std::ostream& str) const
     if (_is_integer)
         str << "switch:integer:" << value();
     else
-        str << "switch:{ " << _left << " | " << _right << '}';
+        str << "switch:{" << _left << " | " << _right << '}';
 }
 
 //---------------------------------------------------------------------------
