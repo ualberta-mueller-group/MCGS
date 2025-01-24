@@ -66,15 +66,19 @@ split_result elephants::split_implementation() const
     // <g1> O <0 or more empty tiles> X <g2>
 
     string board = board_as_string();
-    size_t N = board.size();
+    const size_t N = board.size();
 
-    int chunk_start = 0;
-    int last_white = -1;
-    int last_black = -1;
+    size_t chunk_start = 0;
+
+    bool seen_white = false;
+    size_t last_white = 0;
+
+    bool seen_black = false;
+    size_t last_black = 0;
 
     // game splits when last_black > last_white and both are > -1
 
-    for (int i = 0; i < N; i++)
+    for (size_t i = 0; i < N; i++)
     {
         const char c = board[i];
         int color = clobber_char_to_color(c);
@@ -82,18 +86,20 @@ split_result elephants::split_implementation() const
         if (color == BLACK)
         {
             last_black = i;
+            seen_black = true;
         } else if (color == WHITE)
         {
             last_white = i;
+            seen_white = true;
         }
 
         // split game in two
-        if ((last_white >= 0 && last_black >= 0) && last_white < last_black)
+        if ((seen_white && seen_black) && last_white < last_black)
         {
             subgame_ranges.push_back({chunk_start, last_white - chunk_start + 1});
 
             chunk_start = i;
-            last_white = -1;
+            seen_white = false;
             // keep last_black
         }
 
