@@ -26,6 +26,13 @@ void nimber::print(std::ostream& str) const
     str << "nimber:*" << _value;
 }
 
+int nimber::nim_sum(const std::vector<int>& values)
+{
+    int sum = 0;
+    for (int heap: values)
+        sum ^= heap;
+    return sum;
+}
 //---------------------------------------------------------------------------
 class nimber_move_generator : public move_generator
 {

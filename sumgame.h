@@ -93,6 +93,7 @@ public:
     int num_active_games() const;
     const game* subgame_const(int i) const {return _subgames[i]; }
     game* subgame(int i) const {return _subgames[i]; }
+    const vector<game*>& subgames() const { return _subgames; }
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:

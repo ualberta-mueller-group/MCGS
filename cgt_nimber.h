@@ -4,6 +4,7 @@
 #ifndef cgt_nimber_H
 #define cgt_nimber_H
 
+#include <vector>
 #include "cgt_basics.h"
 #include "game.h"
 //---------------------------------------------------------------------------
@@ -18,6 +19,8 @@ public:
     int value() const {return _value;}
     game* inverse() const;
     void print(std::ostream& str) const;
+    static int nim_sum(const std::vector<int>& values); // uses Nim formula
+
 private:
     int _value;
 };

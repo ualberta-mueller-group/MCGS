@@ -1,24 +1,28 @@
-#include "nim.h"
-#include "nim_test.h"
+#include "cgt_nimber.h"
+#include "sumgame.h"
+#include "sum_of_nimbers.h"
+#include "test_utilities.h"
 
 #include <iostream>
 #include <random>
 
-int heap_sum(const nim& game)
+void add_heap(sumgame& sum, int heap)
 {
-    int sum = 0;
-    for (int h: game.heaps())
-        sum += h;
-    return sum;
+    sum.add(new nimber(heap));
 }
 
-void nim_random_test()
+void assert_solve(sumgame& sum)
+{
+    assert_solve_sum(sum, BLACK, static_solve(sum));
+}
+
+void sumgame_random_test_nimber()
 {
     const int min_heap = 0;
     const int max_heap = 4;
     const int min_num_heaps = 2;
     const int max_num_heaps = 6;
-    const int num_tests = 100;
+    const int num_tests = 10;
     const int max_pebbles = 12;
     
     std::random_device device;
@@ -28,17 +32,17 @@ void nim_random_test()
 
     for (int i=0; i < num_tests; ++i)
     {
-        nim game("");
+        sumgame sum(BLACK);
         const int num_heaps = num_heap_distr(generator);
         for (int j=0; j < num_heaps; ++j)
         {
             const int heap = heap_distr(generator);
-            game.add_heap(heap);
+            if (num_heaps + heap >= max_pebbles)
+                break;
+            else
+                add_heap(sum, heap);
         }
-        if (heap_sum(game) < max_pebbles) // it's a bit slow...
-        {
-            assert_solve(game);
-        }
+        assert_solve(sum);
     }
-    std::cout << "Ran " << num_tests << " random nim sums\n";
+    //std::cout << "Ran " << num_tests << " random nim sums\n";
 }

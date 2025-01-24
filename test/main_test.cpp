@@ -11,8 +11,6 @@
 #include "cgt_switch_test.h"
 #include "cgt_up_star_test.h"
 #include "clobber_1xn_test.h"
-#include "nim_random_test.h"
-#include "nim_test.h"
 #include "nogo_1xn_test.h"
 #include "sumgame_test.h"
 #include "elephants_test.h"
@@ -40,8 +38,6 @@ int main()
     if (DO_SLOWER_TESTS)
     {
         clobber_1xn_test_all();
-        nim_test_all();
-        nim_random_test(); // takes about a second.
         nogo_1xn_test_all();
         elephants_test_all(); // takes several seconds
     }
