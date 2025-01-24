@@ -6,6 +6,7 @@
 #include "clobber_1xn.h"
 #include "file_parser.h"
 #include "test/test_utilities.h"
+#include <cassert>
 
 constexpr const char* exec_name = "./MCGS_test";
 
@@ -193,6 +194,25 @@ void cli_opts_test9()
 
 }
 
+// --test-timeout
+void cli_opts_test10() {
+    cli_options opts = call_parse({exec_name, "--test-timeout", "42734"});
+    assert(opts.test_timeout == 42734);
+}
+
+
+// --out-file
+void cli_opts_test11() {
+    cli_options opts = call_parse({exec_name, "--out-file", "65432.csv"});
+    assert(opts.outfile_name == "65432.csv");
+}
+
+// --test-dir
+void cli_opts_test12() {
+    cli_options opts = call_parse({exec_name, "--test-dir", "somedir462"});
+    assert(opts.test_directory == "somedir462");
+}
+
 void cli_options_test_all()
 {
     cli_opts_test1();
@@ -204,4 +224,9 @@ void cli_options_test_all()
     cli_opts_test7();
     cli_opts_test8();
     cli_opts_test9();
+
+
+    cli_opts_test10();
+    cli_opts_test11();
+    cli_opts_test12();
 }
