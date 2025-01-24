@@ -173,6 +173,28 @@ void e2e_test12()
     assert_throw_status_string("invalid_command3.test", true, EMPTY_CASE_COMMAND);
 }
 
+void more_invalid_commands()
+{
+    assert_throw_status_file("invalid_command4.test", true, FAILED_CASE_COMMAND);
+    assert_throw_status_string("invalid_command4.test", true, FAILED_CASE_COMMAND);
+
+
+    assert_throw_status_file("invalid_command5.test", true, FAILED_CASE_COMMAND);
+    assert_throw_status_string("invalid_command5.test", true, FAILED_CASE_COMMAND);
+
+
+    assert_throw_status_file("invalid_command6.test", true, FAILED_CASE_COMMAND);
+    assert_throw_status_string("invalid_command6.test", true, FAILED_CASE_COMMAND);
+
+
+    assert_throw_status_file("invalid_command7.test", true, FAILED_CASE_COMMAND);
+    assert_throw_status_string("invalid_command7.test", true, FAILED_CASE_COMMAND);
+
+
+    assert_throw_status_file("invalid_command8.test", true, FAILED_CASE_COMMAND);
+    assert_throw_status_string("invalid_command8.test", true, FAILED_CASE_COMMAND);
+}
+
 ///// reserved characters outside of comments
 void e2e_test13() {
     assert_throw_status_file("invalid_reserved_characters1.test", true, FAILED_MATCH);
@@ -469,6 +491,8 @@ void end_to_end_tests()
     e2e_test10();
     e2e_test11();
     e2e_test12();
+    more_invalid_commands();
+
     e2e_test13();
     e2e_test14();
     e2e_test15();
