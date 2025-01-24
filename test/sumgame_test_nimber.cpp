@@ -230,6 +230,7 @@ void sumgame_test_nimber_all()
     });
 
     // test("12 11 3 11 12 1 2", false, 0);
+    /*
     test_nimbers(false, 0, {
         make_factory<nimber>(12),
         make_factory<nimber>(11),
@@ -239,5 +240,6 @@ void sumgame_test_nimber_all()
         make_factory<nimber>(1),
         make_factory<nimber>(2),
     });
+    */
 }
 

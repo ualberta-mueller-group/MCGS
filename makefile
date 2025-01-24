@@ -61,6 +61,9 @@ clean:
 test: MCGS_test
 	./MCGS_test
 
+test-fast: MCGS_test
+	./MCGS_test --no-slow-tests
+
 leakcheck: MCGS
 	clear
 	valgrind --leak-check=full ./MCGS "[clobber_1xn] XOXOXO {B}"
