@@ -794,7 +794,6 @@ void file_parser::init_game_parsers()
     add_game_parser("clobber_1xn",      new basic_parser<clobber_1xn>());
     add_game_parser("nogo_1xn",         new basic_parser<nogo_1xn>());
     add_game_parser("elephants",        new basic_parser<elephants>());
-//     add_game_parser("nim",              new basic_parser<nim>());
 
     add_game_parser("integer_game",     new int_parser<integer_game>());
     add_game_parser("nimber",           new int_parser<nimber>());
