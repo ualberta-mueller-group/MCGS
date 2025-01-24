@@ -1,0 +1,60 @@
+{version 1.0}
+
+/* + * == 0\
+[clobber_1xn] XO
+[elephants] X.O
+{B loss, W loss}
+
+/** + * == *\
+[clobber_1xn] XO.XO
+[elephants] X.O
+{B win, W win}
+
+/5 + -5 == 0\
+[elephants] X.....
+[integer_game] -5
+{B loss, W loss}
+
+/-3 + -3 + 6 == 0\
+[nogo_1xn] O.O.O.O.X
+[elephants] XO...O
+[integer_game] 6
+{B loss, W loss}
+
+/{-10 | -12} + * < 0\
+[elephants] X.O...O....O
+[up_star] *
+{B loss, W win}
+
+/{-10 | -12} + ^* + * + v + {12 | 10} == 0\
+[elephants] X.O...O....O
+[up_star] (1 *)
+[nogo_1xn] X..O
+[clobber_1xn] OOX
+[switch_game] (12 10)
+{B loss, W loss}
+
+/{-10 | -12} + ^* + * + {12 | 10} == ^ ] 0\
+[elephants] X.O...O....O
+[up_star] (1 *)
+[nogo_1xn] X..O
+[switch_game] (12 10)
+{B win, W loss}
+
+/(2 + -4) + 2 == 0\
+[nogo_1xn] X.X.XX.OX.OO.O.O.O.O
+[integer_game] 2
+{B loss, W loss}
+
+/* + *4 + *4 + * == 0\
+[nimber] 1
+[nimber] 4
+[nimber] 4
+[clobber_1xn] XO
+{B loss, W loss}
+
+/{1 | 2} - (3/2) == + or - 1/2 --> N position\
+[switch_game] (2 1)
+[dyadic_rational] (-3 2)
+{B win, W win}
+
