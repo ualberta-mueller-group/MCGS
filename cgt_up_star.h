@@ -1,8 +1,7 @@
 //---------------------------------------------------------------------------
 // Simple combinatorial games - multiples of up, down, with/without star
 //---------------------------------------------------------------------------
-#ifndef cgt_up_star_H
-#define cgt_up_star_H
+#pragma once
 
 #include "cgt_basics.h"
 #include "game.h"
@@ -32,4 +31,3 @@ inline up_star::up_star(int value, bool star) :
     _value(value), _star(star)
 { }
 //---------------------------------------------------------------------------
-#endif // cgt_up_star_H

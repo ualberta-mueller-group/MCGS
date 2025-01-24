@@ -1,5 +1,4 @@
-#ifndef elephants_H
-#define elephants_H
+#pragma once
 
 /*
     Implements "Elephants and Rhinos" from Lessons in Play by David Wolfe et al.
@@ -49,5 +48,4 @@ private:
 
 
 
-#endif // elephants_H
 

@@ -3,8 +3,7 @@
 // An alternating_move_game contains a game, and a player to play first
 //---------------------------------------------------------------------------
 
-#ifndef alternating_move_game_H
-#define alternating_move_game_H
+#pragma once
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
@@ -82,4 +81,3 @@ private:
     const int _game_hash;
 };
 
-#endif // alternating_move_game_H

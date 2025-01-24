@@ -2,8 +2,7 @@
 // Implementation of Clobber on a 1-dimensional strip
 //---------------------------------------------------------------------------
 
-#ifndef clobber_1xn_H
-#define clobber_1xn_H
+#pragma once
 
 #include "cgt_basics.h"
 #include "strip.h"
@@ -28,4 +27,3 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const clobber_1xn& g);
 
-#endif // clobber_1xn_H

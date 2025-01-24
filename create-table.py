@@ -163,7 +163,7 @@ Row functions collectively define a pipeline to convert data for 1 test
 
 input_rows: A list of dicts representing relevant rows from the input files.
     The first dict is the row from the main input file, and the second dict,
-    if present, is the row from from the comparison file.
+    if present, is the row from the comparison file.
 
 output_row: A dict representing the output row.
 

@@ -1,8 +1,7 @@
 //---------------------------------------------------------------------------
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
-#ifndef sumgame_H
-#define sumgame_H
+#pragma once
 
 #include "alternating_move_game.h"
 #include "cgt_move.h"
@@ -149,5 +148,4 @@ std::ostream& operator<<(std::ostream& out, const sumgame& s);
 
 //---------------------------------------------------------------------------
 
-#endif // sumgame_H
 

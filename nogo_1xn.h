@@ -2,8 +2,7 @@
 // Implementation of NoGo on a 1-dimensional 1xn board
 //---------------------------------------------------------------------------
 
-#ifndef nogo_1xn_H
-#define nogo_1xn_H
+#pragma once
 
 #include "cgt_basics.h"
 #include "strip.h"
@@ -27,4 +26,3 @@ public:
 
 std::ostream& operator<<(std::ostream& out, const nogo_1xn& g);
 
-#endif

@@ -1,6 +1,4 @@
-#ifndef sumgame_test_nogo_H
-#define sumgame_test_nogo_H
+#pragma once
 
 void sumgame_test_nogo_all();
 
-#endif // sumgame_test_nogo_H

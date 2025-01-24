@@ -1,6 +1,4 @@
-#ifndef sumgame_test_rational_H
-#define sumgame_test_rational_H
+#pragma once
 
 void sumgame_test_rational_all();
 
-#endif // sumgame_test_rational_H

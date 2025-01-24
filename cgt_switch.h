@@ -1,8 +1,7 @@
 //---------------------------------------------------------------------------
 // Simple combinatorial games - switches
 //---------------------------------------------------------------------------
-#ifndef cgt_switch_H
-#define cgt_switch_H
+#pragma once
 
 #include "cgt_basics.h"
 #include "cgt_integer_game.h"
@@ -51,4 +50,3 @@ inline switch_game::switch_game(int left, int right) :
 }
 
 //---------------------------------------------------------------------------
-#endif // cgt_switch_H

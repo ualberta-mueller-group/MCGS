@@ -8,7 +8,6 @@
 #include <fstream>
 #include "cgt_basics.h"
 #include "file_parser.h"
-#include "misc_constants.h"
 #include "sumgame.h"
 #include <ratio>
 #include <unistd.h>
@@ -21,7 +20,8 @@ using namespace std;
 using filesystem::recursive_directory_iterator;
 
 // CSV separator
-constexpr const char* sep = ",";
+inline constexpr const char* sep = ",";
+inline constexpr const char newline = '\n';
 
 // convert game list to string
 string human_readable_game_string(const vector<game*>& games)

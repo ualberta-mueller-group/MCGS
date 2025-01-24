@@ -4,8 +4,7 @@
 // conversion color to char and back
 //---------------------------------------------------------------------------
 
-#ifndef cgt_basics_H
-#define cgt_basics_H
+#pragma once
 
 #include <cassert>
 
@@ -112,4 +111,3 @@ inline void assert_equal(int a, int b)
     assert(a == b);
 }
 //---------------------------------------------------------------------------
-#endif // cgt_basics_H

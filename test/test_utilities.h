@@ -3,7 +3,6 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-// simpler include guard
 
 #include <memory>
 #include "alternating_move_game.h"

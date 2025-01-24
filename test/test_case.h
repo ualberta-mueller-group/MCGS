@@ -2,8 +2,7 @@
 // Read test cases for combinatorial game defined in a text file
 //---------------------------------------------------------------------------
 
-#ifndef test_case_H
-#define test_case_H
+#pragma once
 
 #include <istream>
 #include <string>
@@ -24,4 +23,3 @@ bool read_test_cases(const std::string& file_name,
                      int& version,
                      std::vector<test_case>& cases);
 
-#endif // test_case_H

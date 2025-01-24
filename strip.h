@@ -2,9 +2,8 @@
 // A game board which is a 1-dimensional strip
 // Board representation, play and remove stones
 //---------------------------------------------------------------------------
+#pragma once
 
-#ifndef strip_H
-#define strip_H
 
 #include "cgt_basics.h"
 #include "game.h"
@@ -78,4 +77,3 @@ inline void strip::replace(int p, int color)
 
 //---------------------------------------------------------------------------
 
-#endif // strip_H

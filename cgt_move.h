@@ -5,8 +5,7 @@
 // Print move coordinate(s)
 //---------------------------------------------------------------------------
 
-#ifndef cgt_move_H
-#define cgt_move_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -107,4 +106,3 @@ inline move encode3(int first, int second, bw color)
 std::string print(const move& m);
 } // namespace cgt_move
 
-#endif // cgt_move_H

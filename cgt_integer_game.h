@@ -1,8 +1,7 @@
 //---------------------------------------------------------------------------
 // Simple combinatorial games - integers
 //---------------------------------------------------------------------------
-#ifndef cgt_integer_game_H
-#define cgt_integer_game_H
+#pragma once
 
 #include "cgt_basics.h"
 #include "game.h"
@@ -30,4 +29,3 @@ private:
 inline integer_game::integer_game(int value) : _value(value)
 { }
 //---------------------------------------------------------------------------
-#endif // cgt_integer_game_H

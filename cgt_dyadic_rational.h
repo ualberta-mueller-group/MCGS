@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 // Simple combinatorial games - dyadic rationals
 //---------------------------------------------------------------------------
-#ifndef cgt_dyadic_rational_H
-#define cgt_dyadic_rational_H
+
+#pragma once
 
 #include "cgt_basics.h"
 #include "game.h"
@@ -41,4 +41,3 @@ inline bool is_power_of_2(int n)
 }
 
 //---------------------------------------------------------------------------
-#endif // cgt_dyadic_rational_H

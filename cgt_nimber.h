@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 // Simple combinatorial games - nimbers
 //---------------------------------------------------------------------------
-#ifndef cgt_nimber_H
-#define cgt_nimber_H
+#pragma once
+
 
 #include <vector>
 #include "cgt_basics.h"
@@ -31,4 +31,3 @@ inline game* nimber::inverse() const
 inline nimber::nimber(int value) : _value(value)
 { }
 //---------------------------------------------------------------------------
-#endif // cgt_nimber_H

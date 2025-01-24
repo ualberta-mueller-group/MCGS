@@ -2,8 +2,7 @@
 // Combinatorial game and move generator
 //---------------------------------------------------------------------------
 
-#ifndef game_H
-#define game_H
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -197,4 +196,3 @@ inline move_generator::move_generator(bw to_play) :
 std::ostream& operator<<(std::ostream& os, const split_result& split);
 
 
-#endif // game_H
