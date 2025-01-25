@@ -100,6 +100,8 @@ To implement a new game `x`:
 - In `x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. Add the declaration in `x_test.h` 
 - Call `x_test_all` from `test/main_test.cpp`.
 
+The `test/input` directory contains input files used by unit tests.
+
 ### Implementing Game-Specific Optimizations
 Currently there is one (unused) game-specific optimization. In the future there will be more (and they will be used).
 

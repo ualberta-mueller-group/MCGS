@@ -1,0 +1,5 @@
+{version 1.0}
+
+/ This test should fail due to having a wrong expected value \
+[clobber_1xn]
+XO {B loss, W loss}
