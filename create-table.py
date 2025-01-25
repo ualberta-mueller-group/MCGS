@@ -12,6 +12,8 @@ time_threshold_abs = 5
 # Highlight times that differ by at least time_threshold_abs milliseconds AND have a percent difference
 # of at least time_threshold_frac * 100
 
+src_dir = "src"
+
 ######################################## Parse args
 
 
@@ -633,11 +635,11 @@ for i in range(len(output_field_list)):
     column_options_string += f"<option value={i}>{column_name}</option>\n"
 column_options_string += "<option value=-2>COMBINE AND TAG</option>\n"
 
-html_template_file = open("table-template.html", "r")
+html_template_file = open(src_dir + "/table-template.html", "r")
 html_template_string = html_template_file.read()
 html_template_file.close()
 
-script_file = open("table-template.js", "r")
+script_file = open(src_dir + "/table-template.js", "r")
 script_string = script_file.read()
 script_file.close()
 

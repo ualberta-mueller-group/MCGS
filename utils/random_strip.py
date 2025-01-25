@@ -1,3 +1,5 @@
+# Generate a random strip games based on various parameters
+
 import random
 import sys
 

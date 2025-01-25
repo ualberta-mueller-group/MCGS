@@ -36,6 +36,9 @@ MCGS_test.dSYM/Contents/Info.plist
 MCGS_test.dSYM/Contents/Resources/Relocations/aarch64/MCGS_test.yml
 .DS_Store
 
+# Build directory
+build
+
 # Editor temp files  (clangd cache, bear output)
 .cache
 compile_commands.json
