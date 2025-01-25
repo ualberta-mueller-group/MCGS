@@ -236,35 +236,10 @@ void manual1() {
 }
 
 
-// lifted from clobber_1xn_test.cpp
-void test(const test_case &c)
-{
-    elephants pos(c._game);
-    const bw to_play = c._black_first ? BLACK : WHITE;
-    alternating_move_game g(pos, to_play);
-    const bool result = g.solve();
-    if (result != c._is_win)
-    {
-        cout << "Test failed game " << pos << ' ' 
-             << c._black_first << " expected " << c._is_win << endl;
-        assert(false);
-    }
-}
 
-// lifted from clobber_1xn_test.cpp
-void file(const std::string& file_name)
+void file()
 {
-    std::vector<test_case> cases;
-    std::string game_name;
-    int version;
-    if (! read_test_cases(file_name, game_name, version, cases))
-        return;
-    assert(game_name == "elephants");
-    assert(version == 0);
-    for (const test_case& c: cases)
-    {
-        test(c);
-    }
+    assert_solve_test_file(unit_test_input_dir + "elephants.test", 6);
 }
 
 void undo1()
@@ -356,8 +331,6 @@ void elephants_test_all()
     inverse1();
     inverse2();
     test_is_move();
-    file("input/elephants.test");
+    file();
 
-    // Use these later, for now they're too hard
-    //file("elephants.hard.test");
 }

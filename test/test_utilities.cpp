@@ -2,6 +2,7 @@
 // Utility functions for unit tests
 //---------------------------------------------------------------------------
 #include "test_utilities.h"
+#include "file_parser.h"
 
 using std::vector, std::string, std::stringstream;
 
@@ -163,3 +164,35 @@ void assert_file_parser_output_file(const string& file_name, vector<game_case *>
     delete parser;
 }
 
+
+void assert_solve_test_file(const std::string& file_name, int expected_case_count)
+{
+    assert(expected_case_count >= 0);
+
+    std::unique_ptr<file_parser> fp = std::unique_ptr<file_parser>(file_parser::from_file(file_name));
+
+    int case_count = 0;
+    game_case gc;
+
+    while (fp->parse_chunk(gc))
+    {
+        case_count += 1;
+
+        // Should probably define a meaningful expected result for unit tests...
+        assert(gc.expected_outcome != TEST_RESULT_UNSPECIFIED);
+
+        sumgame s(gc.to_play);
+
+        for (game* g : gc.games)
+        {
+            s.add(g);
+        }
+
+        bool result = s.solve();
+        assert(result == gc.expected_outcome);
+
+        gc.cleanup_games();
+    }
+
+    assert(case_count == expected_case_count);
+}

@@ -1,0 +1,27 @@
+{version 1.0}
+/_ This file is used for unit tests \
+
+[nimber]
+
+ {B loss}
+0 {B loss}
+1 {B win}
+2 {B win}
+10 {B win}
+1 0 {B win}
+1 1 {B loss}
+ {W loss}
+0 {W loss}
+1 {W win}
+2 {W win}
+10 {W win}
+1 0 {W win}
+1 1 {W loss}
+4 5 {B win}
+1 2 3 {B loss}
+3 4 5 6 {B win}
+3 4 5 2 {B loss}
+4 5 {W win}
+1 2 3 {W loss}
+3 4 5 6 {W win}
+3 4 5 2 {W loss}

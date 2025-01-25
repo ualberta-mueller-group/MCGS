@@ -53,34 +53,9 @@ void solve_1x6()
     assert_solve(g, WHITE, false);
 }
 
-void test(const test_case &c)
-{
-    nogo_1xn pos(c._game);
-    const bw to_play = c._black_first ? BLACK : WHITE;
-    alternating_move_game g(pos, to_play);
-    const bool result = g.solve();
-    if (result != c._is_win)
-    {
-        std::cout << "Test failed game " << pos << ' ' 
-            << c._black_first << " expected " << c._is_win << std::endl;
-        assert(false);
-    }
-    // TODO write_bw(to_play), not c._black_first
-}
-
 void file()
 {
-    std::vector<test_case> cases;
-    std::string game_name;
-    int version;
-    if (! read_test_cases("input/nogo_1xn.test", game_name, version, cases))
-        return;
-    assert(game_name == "nogo_1xn");
-    assert(version == 0);
-    for (const test_case& c: cases)
-    {
-        test(c);
-    }
+    assert_solve_test_file(unit_test_input_dir + "nogo_1xn.test", 8);
 }
 
 } // namespace nogo_test

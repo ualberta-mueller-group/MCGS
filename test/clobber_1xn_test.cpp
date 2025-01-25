@@ -195,34 +195,9 @@ void empty()
     assert(board == output);
 }
 
-void test(const test_case &c)
-{
-    clobber_1xn pos(c._game);
-    const bw to_play = c._black_first ? BLACK : WHITE;
-    alternating_move_game g(pos, to_play);
-    const bool result = g.solve();
-    if (result != c._is_win)
-    {
-        cout << "Test failed game " << pos << ' ' 
-             << c._black_first << " expected " << c._is_win << endl;
-        assert(false);
-    }
-    // TODO write_bw(to_play), not c._black_first
-}
-
 void file()
 {
-    std::vector<test_case> cases;
-    std::string game_name;
-    int version;
-    if (! read_test_cases("input/clobber_1xn.test", game_name, version, cases))
-        return;
-    assert(game_name == "clobber_1xn");
-    assert(version == 0);
-    for (const test_case& c: cases)
-    {
-        test(c);
-    }
+    assert_solve_test_file(unit_test_input_dir + "/clobber_1xn.test", 14);
 }
 
 } // namespace clobber_1xn_string

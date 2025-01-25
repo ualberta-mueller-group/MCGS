@@ -22,7 +22,7 @@ struct cli_options
     unsigned long long test_timeout; // ms
 
 
-    static constexpr const char* default_relative_test_path = "test/input/autotests";
+    static constexpr const char* default_relative_test_path = "input/autotests";
     static constexpr const char* default_test_outfile = "out.csv";
     static constexpr const unsigned long long default_test_timeout = 500;
 };

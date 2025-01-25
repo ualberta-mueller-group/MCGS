@@ -1,8 +1,0 @@
-{version 1.0}
-[clobber_1xn]
-XOXOXOXO {B win, W win}
-[integer_game]
-5 -6
-[clobber_1xn]
-XOXO
-{B loss, W win}

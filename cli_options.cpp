@@ -53,8 +53,12 @@ with version command. Causes [input string] to be ignored.");
     print_flag("--stdin", "Read input from stdin. Causes [input string] to be ignored.");
 
     cout << "Testing framework flags:" << endl;
+    cout << endl;
+    cout << "\tThese flags only have an effect when using \"--run-tests\"." << endl;
+    cout << endl;
+
     print_flag("--run-tests", "Run all autotests. By default, reads tests from \""
-+ string(cli_options::default_relative_test_path) + "\".");
++ string(cli_options::default_relative_test_path) + "\". Causes other input (i.e. from file, stdin etc) to be ignored.");
 
     print_flag("--test-dir <directory name>", "Sets input directory for --run-tests. Default is \""
 + string(cli_options::default_relative_test_path) + "\".");
@@ -67,7 +71,7 @@ milliseconds. Timeout of 0 means tests never time out. Default is " + to_string(
 
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
-    print_flag("--dry-run", "Skip running games.");
+    print_flag("--dry-run", "Skip running games. Has no effect when using \"--run-tests\". Instead, set the test timeout low (i.e. 1).");
 
     print_flag("--parser-debug", "Print file_parser debug info.");
 }

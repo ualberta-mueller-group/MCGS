@@ -241,5 +241,7 @@ void sumgame_test_nimber_all()
         make_factory<nimber>(2),
     });
     */
+
+    assert_solve_test_file(unit_test_input_dir + "nimber.test", 22);
 }
 

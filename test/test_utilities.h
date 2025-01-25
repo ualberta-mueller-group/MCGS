@@ -68,9 +68,15 @@ inline void test_inverse(game& g1, game& g2) // g1+g2 == 0
 //void test_equal(game& g1, game& g2); // needs game::inverse()
 
 
+
+
 void assert_player_sum_outcome(int player, bool expected_outcome, const std::vector<game_factory_ptr>& factories);
 void assert_sum_outcomes(bool black_outcome, bool white_outcome, const std::vector<game_factory_ptr>& factories);
 void assert_inverse_sum_zero(const game_factory_ptr& factory);
 
 void assert_file_parser_output(file_parser* parser, vector<game_case *>& expected_cases);
 void assert_file_parser_output_file(const std::string& file_name, vector<game_case *>& expected_cases);
+
+const std::string unit_test_input_dir = "test/input/unit_tests/";
+
+void assert_solve_test_file(const std::string& file_name, int expected_case_count);

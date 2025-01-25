@@ -1,0 +1,11 @@
+{version 1.0}
+/_ This file is used for unit tests \
+
+[elephants]
+
+XX...XO.O {B win}
+X..X.O..O.O {B loss}
+X.O {B win}
+X.O {W win}
+X..X..X...O..OOO {B win}
+X..X..X...O..OOO {W win}

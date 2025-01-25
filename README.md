@@ -39,14 +39,16 @@ This will build and then run `./MCGS_test`, and on successful completion of unit
 ./MCGS "[clobber_1xn] XOXOXO {B, W}"
 ```
 
-For details about using `./MCGS`, see `./MCGS --help`. For a full description of input syntax, see [input/info.test](input/info.test).
+For details about using `./MCGS`, see `./MCGS --help`. Some command line arguments are meant to be used together, and will have no effect when they aren't. This is detailed in the `--help` output, and may change in future versions. 
+
+For a full description of input syntax, see [input/info.test](input/info.test).
 
 ### Using the Testing Framework
 Included is a testing framework which is used to generate, compare, and analyze performance and correctness data from MCGS. Running:
 ```
 ./MCGS --run-tests
 ```
-will run all `.test` files in the `test/input/autotests` directory, outputting performance and correctness data to `out.csv`, with one row of data per game sum. Then, running:
+will run all `.test` files in the `input/autotests` directory, outputting performance and correctness data to `out.csv`, with one row of data per game sum. Then, running:
 ```
 python3 create-table.py out.csv -o table.html
 ```
@@ -58,6 +60,8 @@ and for information about test options (i.e. timeout duration, input directory, 
 ```
 ./MCGS --help
 ```
+
+The `input` directory includes other sample input files, such as the `input/hard` directory, consisting of tests excluded from the `input/autotests` directory deemed to be too slow for demonstration purposes at this time.
 
 ## Extending MCGS
 The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new kinds of games, and have them be recognized as input. The following sections first describe internal data types of interest to this goal, and then describe the steps for adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
