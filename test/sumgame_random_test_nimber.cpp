@@ -5,11 +5,12 @@
 
 #include <iostream>
 #include <random>
-
+/*
 void add_heap(sumgame& sum, int heap)
 {
     sum.add(new nimber(heap));
 }
+*/
 
 void assert_solve(sumgame& sum)
 {
@@ -25,6 +26,7 @@ void sumgame_random_test_nimber()
     const int num_tests = 10;
     const int max_pebbles = 12;
     
+
     std::random_device device;
     std::mt19937 generator(device());
     std::uniform_int_distribution<int> heap_distr(min_heap, max_heap);
@@ -33,6 +35,8 @@ void sumgame_random_test_nimber()
     for (int i=0; i < num_tests; ++i)
     {
         sumgame sum(BLACK);
+        std::vector<nimber*> nimbers;
+
         const int num_heaps = num_heap_distr(generator);
         for (int j=0; j < num_heaps; ++j)
         {
@@ -40,9 +44,21 @@ void sumgame_random_test_nimber()
             if (num_heaps + heap >= max_pebbles)
                 break;
             else
-                add_heap(sum, heap);
+            {
+                //add_heap(sum, heap);
+
+                nimber* n = new nimber(heap);
+                nimbers.push_back(n);
+
+                sum.add(n);
+            }
         }
         assert_solve(sum);
+
+        for (nimber* n : nimbers)
+        {
+            delete n;
+        }
     }
     //std::cout << "Ran " << num_tests << " random nim sums\n";
 }
