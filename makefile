@@ -12,13 +12,37 @@ TEST_BUILD_DIR = build/test
 
 INC = -I. -I$(SRC_DIR)
 
-MCGS_SRC = $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/main/*.cpp)
-MCGS_OBJS = $(addprefix $(RELEASE_BUILD_DIR)/, $(MCGS_SRC:.cpp=.o))
-MCGS_DEPS = $(addprefix $(RELEASE_BUILD_DIR)/, $(MCGS_SRC:.cpp=.d))
+# TODO use a function for the following lines, they're very error prone
 
+##### Target: MCGS
+
+# .cpp files
+MCGS_SRC = $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/main/*.cpp)
+
+# .o files
+MCGS_OBJS := $(basename $(MCGS_SRC))
+MCGS_OBJS := $(addsuffix .o, $(MCGS_OBJS))
+MCGS_OBJS := $(addprefix $(RELEASE_BUILD_DIR)/, $(MCGS_OBJS))
+
+# .d files
+MCGS_DEPS := $(basename $(MCGS_SRC))
+MCGS_DEPS := $(addsuffix .d, $(MCGS_DEPS))
+MCGS_DEPS := $(addprefix $(RELEASE_BUILD_DIR)/, $(MCGS_DEPS))
+
+##### Target: MCGS_test
+
+# .cpp files
 MCGS_TEST_SRC = $(wildcard $(SRC_DIR)/*.cpp $(TEST_DIR)/*.cpp)
-MCGS_TEST_OBJS = $(addprefix $(TEST_BUILD_DIR)/, $(MCGS_TEST_SRC:.cpp=.o))
-MCGS_TEST_DEPS = $(addprefix $(TEST_BUILD_DIR)/, $(MCGS_TEST_SRC:.cpp=.d))
+
+# .o files
+MCGS_TEST_OBJS := $(basename $(MCGS_TEST_SRC))
+MCGS_TEST_OBJS := $(addsuffix .o, $(MCGS_TEST_OBJS))
+MCGS_TEST_OBJS := $(addprefix $(TEST_BUILD_DIR)/, $(MCGS_TEST_OBJS))
+
+# .d files
+MCGS_TEST_DEPS := $(basename $(MCGS_TEST_SRC))
+MCGS_TEST_DEPS := $(addsuffix .d, $(MCGS_TEST_DEPS))
+MCGS_TEST_DEPS := $(addprefix $(TEST_BUILD_DIR)/, $(MCGS_TEST_DEPS))
 
 
 .DEFAULT_GOAL := MCGS
