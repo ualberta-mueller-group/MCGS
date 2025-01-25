@@ -66,7 +66,7 @@ The `input` directory includes other sample input files, such as the `input/hard
 ## Extending MCGS
 The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new kinds of games, and have them be recognized as input. The following sections first describe internal data types of interest to this goal, and then describe the steps for adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
 
-The code is organized in a mostly "flat" way; source code files are mostly in the root directory, with `main.cpp` being in `./main` and unit tests being in `./test`.
+The code is organized in a mostly "flat" way; source code files are mostly in the `./src` directory, with `main.cpp` being in `./src/main` and unit tests being in `./test`. In following sections, files mentioned by name are assumed to be in the `./src` directory unless specified otherwise.
 
 ### MCGS data types
 #### game (game.h)
@@ -97,7 +97,7 @@ To implement a new game `x`:
 - Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, and `inverse()`. See comments in `game.h` for notes on important implementation details.
 - Define `class x_move_generator`, derive from `move_generator`.
 - At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h`).
-- In `x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. Add the declaration in `x_test.h` 
+- In `test/x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. Add the declaration in `test/x_test.h` 
 - Call `x_test_all` from `test/main_test.cpp`.
 
 The `test/input` directory contains input files used by unit tests.

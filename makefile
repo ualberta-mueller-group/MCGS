@@ -1,21 +1,24 @@
-# TODO: do we need to generate .d files every build? 
-# 	should we have ".td" dependency files built with testing flags?
 
 CC = c++
 NORMAL_FLAGS = -Wall --std=c++17 -O3
 TEST_FLAGS = -Wall --std=c++17 -O3 -g
-INC = -I.
 
-#MCGS_FILES := *.cpp *.h main/*.cpp
-#MCGS_TEST_FILES := *.cpp *.h test/*.cpp test/*.h
+SRC_DIR = src
+TEST_DIR = test
 
-MCGS_SRC = $(wildcard *.cpp main/*.cpp)
-MCGS_OBJS = $(MCGS_SRC:.cpp=.o)
-MCGS_DEPS = $(MCGS_SRC:.cpp=.d)
+RELEASE_BUILD_DIR = build/release
+TEST_BUILD_DIR = build/test
 
-MCGS_TEST_SRC = $(wildcard *.cpp test/*.cpp)
-MCGS_TEST_OBJS = $(MCGS_TEST_SRC:.cpp=.o)
-MCGS_TEST_DEPS = $(MCGS_TEST_SRC:.cpp=.d)
+
+INC = -I. -I$(SRC_DIR)
+
+MCGS_SRC = $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/main/*.cpp)
+MCGS_OBJS = $(addprefix $(RELEASE_BUILD_DIR)/, $(MCGS_SRC:.cpp=.o))
+MCGS_DEPS = $(addprefix $(RELEASE_BUILD_DIR)/, $(MCGS_SRC:.cpp=.d))
+
+MCGS_TEST_SRC = $(wildcard $(SRC_DIR)/*.cpp $(TEST_DIR)/*.cpp)
+MCGS_TEST_OBJS = $(addprefix $(TEST_BUILD_DIR)/, $(MCGS_TEST_SRC:.cpp=.o))
+MCGS_TEST_DEPS = $(addprefix $(TEST_BUILD_DIR)/, $(MCGS_TEST_SRC:.cpp=.d))
 
 
 .DEFAULT_GOAL := MCGS
@@ -26,7 +29,9 @@ CAN_BUILD=0
 
 ifdef USE_FLAGS
 	ifdef DEPS
-		CAN_BUILD=1
+		ifdef BUILD_DIR
+			CAN_BUILD=1
+		endif
 	endif
 endif
 
@@ -45,10 +50,10 @@ else
 .PHONY: MCGS MCGS_test
 
 MCGS:
-	make $@ USE_FLAGS="$(NORMAL_FLAGS)" DEPS="$(MCGS_DEPS)"
+	make $@ USE_FLAGS="$(NORMAL_FLAGS)" DEPS="$(MCGS_DEPS)" BUILD_DIR="$(RELEASE_BUILD_DIR)"
 
 MCGS_test:
-	make $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)"
+	make $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)" BUILD_DIR="$(TEST_BUILD_DIR)"
 endif
 
 
@@ -57,6 +62,7 @@ endif
 
 clean:
 	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM *.d main/*.d test/*.d
+	-rm -rf build
 
 test: MCGS_test
 	./MCGS_test
@@ -81,7 +87,9 @@ leakcheck_test: MCGS_test
 
 
 
-%.o: %.cpp
+# TODO should this call mkdir like this? There's probably a better way
+$(BUILD_DIR)/%.o: %.cpp
+	-mkdir -p $(dir $@)
 	$(CC) $(USE_FLAGS) $(INC) -MMD -MP -c $< -o $@
 
 
