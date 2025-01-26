@@ -1,7 +1,6 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 
-#include "test_case.h"
 #include "test_utilities.h"
 
 namespace cgt_basics {

@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include <iostream>
-#include "test_case.h"
 #include "test_utilities.h"
 
 void is_power_of_2_test()

@@ -2,63 +2,12 @@
 // Unit tests for the game Elephants and Rhinos
 //------------------------------------------------------------
 
-/*
-
-    TODO: use these test cases later (include split() test)
-        These should be in the elephants.hard.test file, but
-
-    XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO
-    XX...XO.O + X..X.O..O.O + X.O + X..X..X.....O..OOO
-    ?? --> N position from book, (first wins)
-    XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO B win
-    XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO W win
-
-    X.......O.....XO.O.....X..OO.X.O.OOXO...
-    X.......O + XO.O + X..OO + X.O.OO + XO...
-    {-4* | -6*} --> R position (white wins)
-    X.......O.....XO.O.....X..OO.X.O.OOXO... B loss
-    X.......O.....XO.O.....X..OO.X.O.OOXO... W win
-
-    X...XX.O...X.....OOOO..X...O.....O.O...O
-    X...XX.O + X.....OOOO + X...O.....O.O...O
-    {-27 | -29} --> R position (white wins)
-    X...XX.O...X.....OOOO..X...O.....O.O...O B loss
-    X...XX.O...X.....OOOO..X...O.....O.O...O W win
-
-    X..X........O....X....O...O.......XO.X..
-    X..X........O + X....O...O + XO + X..
-    3 --> L position (black wins)
-    X..X........O....X....O...O.......XO.X.. B win
-    X..X........O....X....O...O.......XO.X.. W loss
-
-    .......X.....O..X.....O.......
-    .......X.....O + X.....O.......
-    0 --> P position (first loses)
-    .......X.....O..X.....O....... B loss
-    .......X.....O..X.....O....... W loss
-
-    .OXO...O.O..O.X.X......X...X..OO..X....X
-    .O + XO...O.O..O + X.X......X...X..OO + X....X
-    14 --> L position (black wins)
-    .OXO...O.O..O.X.X......X...X..OO..X....X B win
-    .OXO...O.O..O.X.X......X...X..OO..X....X W loss
-
-    ....OXO.....X......X.XOX..O...O...O.XXO.
-    ....O + XO + X......X.XO + X..O...O...O + XXO.
-    -7 --> R position (white wins)
-    ....OXO.....X......X.XOX..O...O...O.XXO. B loss
-    ....OXO.....X......X.XOX..O...O...O.XXO. W win
-*/
-
-
-
 #include "elephants_test.h"
 #include "cgt_move.h"
 #include "elephants.h"
 
 #include <iostream>
 #include "test_utilities.h"
-#include "test_case.h"
 #include <memory>
 #include <vector>
 #include <algorithm>

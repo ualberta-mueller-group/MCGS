@@ -6,7 +6,6 @@
 #include <cassert>
 #include <iostream>
 #include "cgt_move.h"
-#include "test_case.h"
 #include "test_utilities.h"
 
 namespace nogo_test {
