@@ -59,59 +59,70 @@ void test_three_games(game& g1, game& g2, game& g3, bool resB, bool resW)
 
 //////////////////////////////////////////////////////////// game_factory tests
 
-void assert_player_sum_outcome(int player, bool expected_outcome, const vector<game_factory_ptr>& factories)
+
+void assert_player_sum_outcome(int player, bool expected_outcome, vector<game*> games, bool _delete_games)
+{
+    _assert_player_sum_outcome(player, expected_outcome, games, _delete_games);
+}
+
+void _assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*>& games, bool _delete_games)
 {
     assert_black_white(player);
 
     sumgame sum(player);
-    vector<game*> games; // clean up later...
 
-    for (const game_factory_ptr& factory: factories)
+    for (game* g : games)
     {
-        game* g = factory->new_game();
-
         sum.add(g);
-        games.push_back(g);
     }
 
     bool outcome = sum.solve();
 
     assert(outcome == expected_outcome);
 
-    for (game* g : games)
+    if (_delete_games)
     {
-        delete g;
+        for (game* g : games)
+        {
+            delete g;
+        }
+        games.clear();
     }
 }
 
-void assert_sum_outcomes(bool black_outcome, bool white_outcome, const vector<game_factory_ptr>& factories)
+void _assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*>& games)
 {
-    assert_player_sum_outcome(BLACK, black_outcome, factories);
-    assert_player_sum_outcome(WHITE, white_outcome, factories);
+
+    _assert_player_sum_outcome(BLACK, black_outcome, games, false);
+    _assert_player_sum_outcome(WHITE, white_outcome, games, true);
 }
 
-void assert_inverse_sum_zero(const game_factory_ptr& factory)
-{
 
+void assert_sum_outcomes(bool black_outcome, bool white_outcome, vector<game*> games)
+{
+    _assert_sum_outcomes(black_outcome, white_outcome, games);
+}
+
+void assert_inverse_sum_zero(game* g)
+{
     for (int i = 0; i <= 1; i++)
     {
         int to_play = i == 0 ? BLACK : WHITE;
 
-        game* pos = factory->new_game();
-        game* pos_negative = pos->inverse();
+        game* g_negative = g->inverse();
 
         sumgame sum(to_play);
-        sum.add(pos);
-        sum.add(pos_negative);
+        sum.add(g);
+        sum.add(g_negative);
 
         bool outcome = sum.solve();
 
         assert(outcome == false);
 
-        delete pos;
-        delete pos_negative;
+        delete g_negative;
     }
 
+    delete g;
 }
 
 void assert_file_parser_output(file_parser* parser, vector<game_case *>& expected_cases)

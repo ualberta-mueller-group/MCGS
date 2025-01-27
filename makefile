@@ -3,6 +3,11 @@ CC = c++
 NORMAL_FLAGS = -Wall --std=c++17 -O3
 TEST_FLAGS = -Wall --std=c++17 -O3 -g
 
+
+# Valgrind is too slow for even short computations. Instead add: -fsanitize=leak
+# as a flag when compiling. Should work for clang++ and g++
+# Still slows down executation considerably, but not nearly as much
+
 SRC_DIR = src
 TEST_DIR = test
 
@@ -80,14 +85,6 @@ test: MCGS_test
 
 test-fast: MCGS_test
 	./MCGS_test --no-slow-tests
-
-leakcheck: MCGS
-	clear
-	valgrind --leak-check=full ./MCGS "[clobber_1xn] XOXOXO {B}"
-
-leakcheck_test: MCGS_test
-	clear
-	valgrind --leak-check=full ./MCGS_test
 
 
 #%.d: %.cpp

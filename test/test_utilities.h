@@ -9,8 +9,8 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "sumgame.h"
-#include "game_factory.h"
 #include "file_parser.h"
+#include <string>
 
 inline void assert_move(move_generator& mg, int mv)
 { 
@@ -70,9 +70,17 @@ inline void test_inverse(game& g1, game& g2) // g1+g2 == 0
 
 
 
-void assert_player_sum_outcome(int player, bool expected_outcome, const std::vector<game_factory_ptr>& factories);
-void assert_sum_outcomes(bool black_outcome, bool white_outcome, const std::vector<game_factory_ptr>& factories);
-void assert_inverse_sum_zero(const game_factory_ptr& factory);
+// These functions take ownership of the games passed to them
+void assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*> games, bool _delete_games = true);
+void _assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*>& games, bool _delete_games = true);
+
+void assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*> games);
+void _assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*>& games);
+
+void assert_inverse_sum_zero(game* g);
+
+
+
 
 void assert_file_parser_output(file_parser* parser, vector<game_case *>& expected_cases);
 void assert_file_parser_output_file(const std::string& file_name, vector<game_case *>& expected_cases);

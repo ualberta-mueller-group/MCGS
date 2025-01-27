@@ -13,7 +13,7 @@ void elephants1()
 {
     // 1* (this game is positive)
     assert_sum_outcomes(true, false, {
-        make_factory<elephants>("X.O.X.X"),
+        new elephants("X.O.X.X"),
     });
 }
 
@@ -21,8 +21,8 @@ void elephants2()
 {
     // {* | -1*} (this game is negative, not 0)
     assert_sum_outcomes(false, true, {
-        make_factory<elephants>("X.O.X.X"),
-        make_factory<elephants>("O.X.O.O"),
+        new elephants("X.O.X.X"),
+        new elephants("O.X.O.O"),
     });
 
 }
@@ -31,29 +31,29 @@ void elephants3()
 {
     // 0
     assert_sum_outcomes(false, false, {
-        make_factory<elephants>("X.O.X.X"),
-        make_factory<elephants>("O.O.X.O"),
+        new elephants("X.O.X.X"),
+        new elephants("O.O.X.O"),
     });
 }
 
 void elephants4()
 {
-    assert_inverse_sum_zero(make_factory<elephants>("X.O.X.X"));
+    assert_inverse_sum_zero(new elephants("X.O.X.X"));
 }
 
 void elephants5()
 {
-    assert_inverse_sum_zero(make_factory<elephants>("O....X"));
-    assert_inverse_sum_zero(make_factory<elephants>("X....O"));
-    assert_inverse_sum_zero(make_factory<elephants>("X.X.O.O"));
+    assert_inverse_sum_zero(new elephants("O....X"));
+    assert_inverse_sum_zero(new elephants("X....O"));
+    assert_inverse_sum_zero(new elephants("X.X.O.O"));
 }
 
 void elephants6()
 {
     // * + * == 0
     assert_sum_outcomes(false, false, {
-        make_factory<elephants>("X.O"),
-        make_factory<elephants>("X.O"),
+        new elephants("X.O"),
+        new elephants("X.O"),
     });
 }
 

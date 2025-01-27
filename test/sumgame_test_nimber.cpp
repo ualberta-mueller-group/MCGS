@@ -60,32 +60,29 @@ void test_three_nimbers(int value1, int value2, int value3,
 }
 */
 
-void test_nimbers(bool expected_result, int nim_sum, const vector<game_factory_ptr>& nimber_factories)
+// Takes ownership of its games and deletes them
+void test_nimbers(bool expected_result, int nim_sum, vector<nimber*> nimbers)
 {
     std::array<bw, 2> players({BLACK, WHITE});
+    sumgame sum(BLACK);
+
+    for (nimber* n : nimbers)
+    {
+        sum.add(n);
+    }
 
     for (const bw& player : players)
     {
         assert_black_white(player);
-
-        sumgame sum(player);
-        vector<game*> games;
-
-        for (const game_factory_ptr& factory : nimber_factories)
-        {
-            game* g = factory->new_game();
-
-            games.push_back(g);
-            sum.add(g);
-        }
+        sum.set_to_play(player);
 
         assert_solve_sum(sum, player, expected_result);
         assert_nim_value(sum, nim_sum);
+    }
 
-        for (game* g : games)
-        {
-            delete g;
-        }
+    for (nimber* n : nimbers)
+    {
+        delete n;
     }
 }
 
@@ -117,128 +114,128 @@ void sumgame_test_nimber_all()
     */
 
     test_nimbers(false, 0, {
-        make_factory<nimber>(0),
+        new nimber(0),
     });
 
     test_nimbers(true, 1, {
-        make_factory<nimber>(1),
+        new nimber(1),
     });
 
     test_nimbers(true, 2, {
-        make_factory<nimber>(2),
+        new nimber(2),
     });
 
     test_nimbers(true, 7, {
-        make_factory<nimber>(7),
+        new nimber(7),
     });
 
     test_nimbers(true, 10, {
-        make_factory<nimber>(10),
+        new nimber(10),
     });
 
     test_nimbers(false, 0, {
-        make_factory<nimber>(0),
-        make_factory<nimber>(0),
+        new nimber(0),
+        new nimber(0),
     });
 
     test_nimbers(true, 1, {
-        make_factory<nimber>(1),
-        make_factory<nimber>(0),
+        new nimber(1),
+        new nimber(0),
     });
 
     test_nimbers(false, 0, {
-        make_factory<nimber>(1),
-        make_factory<nimber>(1),
+        new nimber(1),
+        new nimber(1),
     });
 
     test_nimbers(false, 0, {
-        make_factory<nimber>(2),
-        make_factory<nimber>(2),
+        new nimber(2),
+        new nimber(2),
     });
 
     test_nimbers(true, 3, {
-        make_factory<nimber>(2),
-        make_factory<nimber>(1),
+        new nimber(2),
+        new nimber(1),
     });
 
     test_nimbers(false, 0, {
-        make_factory<nimber>(5),
-        make_factory<nimber>(5),
+        new nimber(5),
+        new nimber(5),
     });
 
     test_nimbers(true, 1, {
-        make_factory<nimber>(5),
-        make_factory<nimber>(4),
+        new nimber(5),
+        new nimber(4),
     });
 
     test_nimbers(false, 0, {
-        make_factory<nimber>(0),
-        make_factory<nimber>(0),
-        make_factory<nimber>(0),
+        new nimber(0),
+        new nimber(0),
+        new nimber(0),
     });
 
     test_nimbers(false, 0, {
-        make_factory<nimber>(1),
-        make_factory<nimber>(0),
-        make_factory<nimber>(1),
+        new nimber(1),
+        new nimber(0),
+        new nimber(1),
     });
 
     test_nimbers(false, 0, {
-        make_factory<nimber>(1),
-        make_factory<nimber>(2),
-        make_factory<nimber>(3),
+        new nimber(1),
+        new nimber(2),
+        new nimber(3),
     });
 
     test_nimbers(true, 1, {
-        make_factory<nimber>(0),
-        make_factory<nimber>(0),
-        make_factory<nimber>(1),
+        new nimber(0),
+        new nimber(0),
+        new nimber(1),
     });
 
     test_nimbers(true, 3, {
-        make_factory<nimber>(1),
-        make_factory<nimber>(2),
-        make_factory<nimber>(0),
+        new nimber(1),
+        new nimber(2),
+        new nimber(0),
     });
 
     test_nimbers(true, 5, {
-        make_factory<nimber>(2),
-        make_factory<nimber>(3),
-        make_factory<nimber>(4),
+        new nimber(2),
+        new nimber(3),
+        new nimber(4),
     });
 
     test_nimbers(true, 1, {
-        make_factory<nimber>(1),
-        make_factory<nimber>(1),
-        make_factory<nimber>(1),
+        new nimber(1),
+        new nimber(1),
+        new nimber(1),
     });
 
     // test("3 4 5 6", true, 4);
     test_nimbers(true, 4, {
-        make_factory<nimber>(3),
-        make_factory<nimber>(4),
-        make_factory<nimber>(5),
-        make_factory<nimber>(6),
+        new nimber(3),
+        new nimber(4),
+        new nimber(5),
+        new nimber(6),
     });
 
     // test("3 4 5 2, false, 0);
     test_nimbers(false, 0, {
-        make_factory<nimber>(3),
-        make_factory<nimber>(4),
-        make_factory<nimber>(5),
-        make_factory<nimber>(2),
+        new nimber(3),
+        new nimber(4),
+        new nimber(5),
+        new nimber(2),
     });
 
     // test("12 11 3 11 12 1 2", false, 0);
     /*
     test_nimbers(false, 0, {
-        make_factory<nimber>(12),
-        make_factory<nimber>(11),
-        make_factory<nimber>(3),
-        make_factory<nimber>(11),
-        make_factory<nimber>(12),
-        make_factory<nimber>(1),
-        make_factory<nimber>(2),
+        new nimber(12),
+        new nimber(11),
+        new nimber(3),
+        new nimber(11),
+        new nimber(12),
+        new nimber(1),
+        new nimber(2),
     });
     */
 
