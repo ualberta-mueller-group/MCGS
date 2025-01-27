@@ -68,6 +68,8 @@ The following sections are for programmers who wish to add functionality to MCGS
 
 The code is organized in a mostly "flat" way; source code files are mostly in the `./src` directory, with `main.cpp` being in `./src/main` and unit tests being in `./test`. In following sections, files mentioned by name are assumed to be in the `./src` directory unless specified otherwise.
 
+For more info that might be useful for development, see [development-notes.md](docs/development-notes.md).
+
 ### MCGS data types
 #### game (game.h)
 The abstract base type for all combinatorial games supported by MCGS.
