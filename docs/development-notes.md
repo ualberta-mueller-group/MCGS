@@ -65,6 +65,32 @@ and is stored in the move stack.
 - `undo_move` must respect and use the move player color information.
 
 
+
+## Design Choices and Remaining Uglinesses
+#### A `move` must be an `int` 
+- I tried to make a generic abstract move class, but could not implement it in a "nice" and efficient way.
+- Plan: probably keep it this way unless I find an elegant general solution
+
+
+#### `move_generator` objects are dynamically allocated
+- This is ugly but I could not solve it in a better way. 
+- I would love to have move generators just as local variables.
+- A workaround to prevent memory leaks is to always wrap 
+a move generator in a `std::unique_ptr` 
+    - Example in `nim_test.cpp`, 
+    function `nim_move_generator_test_1`
+    - Example in `alternating_move_game::solve`
+
+
+#### Reimplementation/duplication of `game` concepts in `sumgame`
+- This is a consequence of - A `move` must be an `int`
+- A move in a sumgame is specified in `struct sumgame_move` by two parts: index of subgame, and move inside the subgame
+- so play() in sumgame takes a `sumgame_move` as argument, not a `move`
+- solve() also rewritten to use `sumgame_move`
+- `alternating_move_game` currently requires a game 
+argument - a ugly dummy game `empty_game`. See todo.md.
+
+
 ## Versions
 ### Version 0 completed
 - `move` and `game` classes, `alternating_move_game`
@@ -117,27 +143,3 @@ and is stored in the move stack.
 - `scale` such as multiples of up, or up+star, or integers
     - binary search to find upper/lower bounds for a game G on scale S
 
-
-## Design Choices and Remaining Uglinesses
-#### A `move` must be an `int` 
-- I tried to make a generic abstract move class, but could not implement it in a "nice" and efficient way.
-- Plan: probably keep it this way unless I find an elegant general solution
-
-
-#### `move_generator` objects are dynamically allocated
-- This is ugly but I could not solve it in a better way. 
-- I would love to have move generators just as local variables.
-- A workaround to prevent memory leaks is to always wrap 
-a move generator in a `std::unique_ptr` 
-    - Example in `nim_test.cpp`, 
-    function `nim_move_generator_test_1`
-    - Example in `alternating_move_game::solve`
-
-
-#### Reimplementation/duplication of `game` concepts in `sumgame`
-- This is a consequence of - A `move` must be an `int`
-- A move in a sumgame is specified in `struct sumgame_move` by two parts: index of subgame, and move inside the subgame
-- so play() in sumgame takes a `sumgame_move` as argument, not a `move`
-- solve() also rewritten to use `sumgame_move`
-- `alternating_move_game` currently requires a game 
-argument - a ugly dummy game `empty_game`. See todo.md.
