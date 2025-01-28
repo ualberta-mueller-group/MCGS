@@ -399,3 +399,9 @@ sumgame_move_generator* sumgame::create_sum_move_generator(bw to_play) const
 {
     return new sumgame_move_generator(*this, to_play);
 }
+
+std::ostream& operator<<(std::ostream& out, const sumgame& s)
+{
+    s.print(out);
+    return out;
+}
