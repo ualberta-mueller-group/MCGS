@@ -32,21 +32,6 @@ struct play_record
 
 };
 
-
-// TODO dummy since alternating_move_game requires a game argument
-class empty_game : public game
-{
-public:
-    empty_game() : game() { }
-    void play(const move& m, bw to_play) {}
-    void undo_move() {}
-    void print(std::ostream& str) const {}
-    game* inverse() const
-    { assert(false); return 0; }
-    move_generator* create_move_generator(bw to_play) const
-    { assert(false); return 0; }
-};
-
 class sumgame_move_generator;
 struct play_record;
 
@@ -85,8 +70,6 @@ public:
     */
     std::optional<solve_result> solve_with_timeout(unsigned long long timeout) const;
 
-
-
     const play_record& last_play_record() const;
     int num_total_games() const;
     int num_active_games() const;
@@ -96,6 +79,7 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
+    bool over_time() const;
 
     /*
         mutable makes sense here? 
@@ -104,21 +88,15 @@ private:
             need to be passed as arguments to the function every time it's called
     */
     mutable bool should_stop;
-
-    //bool _solve();
     std::optional<solve_result> _solve_with_timeout();
 
-    bool over_time() const;
-
-    empty_game _empty_game;
     vector<game*> _subgames; // sumgame owns these subgames
     vector<play_record> _play_record_stack;
 };
 //---------------------------------------------------------------------------
 
 inline sumgame::sumgame(bw color) :
-    alternating_move_game(_empty_game, color),
-    _empty_game(),
+    alternating_move_game(color),
     _subgames(),
     _play_record_stack()
 { }
@@ -147,5 +125,4 @@ inline int sumgame::num_active_games() const
 std::ostream& operator<<(std::ostream& out, const sumgame& s);
 
 //---------------------------------------------------------------------------
-
 
