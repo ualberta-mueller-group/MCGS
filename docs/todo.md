@@ -67,6 +67,8 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
     - Good to know how much time is spent doing transposition table lookups, DB lookups, etc, before designing these
         - i.e. if in-memory DB lookups already dominate the run time, then adding disk reads may be especially costly
 
+- Database components and utilities as per development-notes.md, V1.2
+
 ### Low priority (Consider doing if not behind):
 - Improve MCGS CLI args
     - Some arg combinations don't make sense and should maybe throw or print a warning?
