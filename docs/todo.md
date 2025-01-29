@@ -2,7 +2,6 @@
 - none known
 
 # Current tasks
-
 ## V1.0 (In progress)
 - V1 github release
     - license?
@@ -10,6 +9,7 @@
 - Jan 28 public release on github?
 - Talk on Feb 1, announce V1 to world
 
+# Future tasks
 ## Next steps? (V1.1? Multiple V1.X?)
 Tentative next steps/general improvements. TODO: this may need to be broken down into more versions, and expanded
 
@@ -76,7 +76,6 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
     - Arg parsing loop could be cleaned up/abstracted a bit
     - Unify "--help" page styles across scripts/executables
 
-# Future tasks
 ## V2 and beyond
 - Databases
     - "Hierarchical hash buckets" default case?
@@ -98,10 +97,10 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
         - "Current"/"Future" prefixes?
     - What does each version denote?
 - Discuss immediate next steps
-    - Add simplification rules to next steps as per development-notes.md?
     - Tentative "Next steps" stuff listed above. Are these all important right now? Should some be deferred/skipped?
         - Use a proper unit test framework, maybe https://github.com/siu/minunit
     - What discussion topics should be deferred, if any? (There's a lot of stuff in this section)
+        - Should these be assigned priorities?
 
 ## General design questions
 - Should we allow fractions in `switch_game`? e.g. 1/2 | -3/4
@@ -124,7 +123,6 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
     - Who manages the memory of the new and old games?
 
 # Future discussion topics
-
 ## Database/next version stuff
 - What can be reused from previous solvers? What's game-specific?
 - Hashing for sum games
