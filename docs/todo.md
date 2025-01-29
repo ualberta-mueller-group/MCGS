@@ -23,7 +23,7 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
 
 - Game simplification rules: see development-notes.md
 
-### Medium priority (Important/good to have before V2):
+### Medium priority (Important or good to have before V2):
 - Test framework improvements
     - More detailed timeouts
         - Per file? Per test?
