@@ -1,6 +1,6 @@
 
 CC = c++
-NORMAL_FLAGS = -Wall --std=c++17 -O3 -x c++
+NORMAL_FLAGS = -Wall --std=c++17 -O3
 TEST_FLAGS = -Wall --std=c++17 -O3 -g
 
 
@@ -24,6 +24,8 @@ $(addsuffix $(3), \
 		$(basename $(1)) \
 	) \
 )
+
+
 
 ##### Target: MCGS
 MCGS_SRC = $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/main/*.cpp)
@@ -54,12 +56,12 @@ endif
 
 
 
-#STYLE_TEST_FILES = src/file_parser.cpp src/file_parser.cpp style_test.cpp
+STYLE_TEST_FILES = src/file_parser.cpp src/file_parser.cpp style_test.cpp
 #STYLE_TEST_FILES = $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
-STYLE_TEST_FILES = style_test.cpp
+#STYLE_TEST_FILES = style_test.cpp
 
 style:
-	clang-tidy --config-file=clangTidyConfig $(STYLE_TEST_FILES) -- $(NORMAL_FLAGS) $(INC)
+	clang-tidy --config-file=clangTidyConfig $(STYLE_TEST_FILES) -- $(NORMAL_FLAGS) $(INC) -x c++
 
 
 ifeq ($(CAN_BUILD), 1)
@@ -106,7 +108,7 @@ test-fast: MCGS_test
 # TODO should this call mkdir like this? There's probably a better way
 $(BUILD_DIR)/%.o: %.cpp
 	-mkdir -p $(dir $@)
-	$(CC) $(USE_FLAGS) $(INC) -MMD -MP -c $< -o $@
+	$(CC) $(USE_FLAGS) -x c++ $(INC) -MMD -MP -c $< -o $@
 
 
 -include $(DEPS)
