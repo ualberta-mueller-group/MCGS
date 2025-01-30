@@ -41,7 +41,7 @@ MCGS_TEST_DEPS := $(call OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.d)
 
 
 .DEFAULT_GOAL := MCGS
-.PHONY: clean test leakcheck leakcheck_test style
+.PHONY: clean test leakcheck leakcheck_test style format
 
 
 CAN_BUILD=0
@@ -66,6 +66,16 @@ STYLE_TEST_FILES = $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
 
 style:
 	clang-tidy --config-file=clangTidyConfig $(STYLE_TEST_FILES) -- $(NORMAL_FLAGS) $(INC) -x c++
+
+
+
+#clang-format --style="file:clangFormatConfig" $$x -- $(NORMAL_FLAGS) $(INC) -x c++ | diff $$x - 
+
+format: $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
+	for x in $^ ; do \
+		! clang-format --style="file:clangFormatConfig" $$x | diff $$x - ; \
+	done
+
 
 
 ifeq ($(CAN_BUILD), 1)
