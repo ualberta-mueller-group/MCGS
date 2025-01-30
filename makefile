@@ -69,11 +69,13 @@ style:
 
 
 
-#clang-format --style="file:clangFormatConfig" $$x -- $(NORMAL_FLAGS) $(INC) -x c++ | diff $$x - 
+#! clang-format --style="file:clangFormatConfig" $$x | diff $$x - ;
 
+# TODO use diff and tr to make sure only whitespace has changed
 format: $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
 	for x in $^ ; do \
-		! clang-format --style="file:clangFormatConfig" $$x | diff $$x - ; \
+		echo "============"$$x"===============" ; \
+		! clang-format --style="file:clangFormatConfig" $$x ; \
 	done
 
 
