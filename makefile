@@ -1,6 +1,6 @@
 
 CC = c++
-NORMAL_FLAGS = -Wall --std=c++17 -O3
+NORMAL_FLAGS = -Wall --std=c++17 -O3 -x c++
 TEST_FLAGS = -Wall --std=c++17 -O3 -g
 
 
@@ -32,13 +32,14 @@ MCGS_DEPS := $(call OUTPATH,$(MCGS_SRC),$(RELEASE_BUILD_DIR),.d)
 
 ##### Target: MCGS_test
 MCGS_TEST_SRC = $(wildcard $(SRC_DIR)/*.cpp $(TEST_DIR)/*.cpp)
+MCGS_TEST_SRC_H = $(wildcard $(SRC_DIR)/*.h $(TEST_DIR)/*.h)
 MCGS_TEST_OBJS := $(call OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.o)
 MCGS_TEST_DEPS := $(call OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.d)
 
 
 
 .DEFAULT_GOAL := MCGS
-.PHONY: clean test leakcheck leakcheck_test
+.PHONY: clean test leakcheck leakcheck_test style
 
 
 CAN_BUILD=0
@@ -52,6 +53,13 @@ ifdef USE_FLAGS
 endif
 
 
+
+#STYLE_TEST_FILES = src/file_parser.cpp src/file_parser.cpp style_test.cpp
+#STYLE_TEST_FILES = $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
+STYLE_TEST_FILES = style_test.cpp
+
+style:
+	clang-tidy --config-file=clangTidyConfig $(STYLE_TEST_FILES) -- $(NORMAL_FLAGS) $(INC)
 
 
 ifeq ($(CAN_BUILD), 1)
