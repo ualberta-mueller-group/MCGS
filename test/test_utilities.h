@@ -41,10 +41,10 @@ void assert_solve(game& pos, bw to_play,
                   const bool expected_result);
 void assert_solve_sum(sumgame& g, bw to_play, 
                       const bool expected_result);
-void test_sum(sumgame& sum, bool resB, bool resW);
-void test_one_game(game& g, bool resB, bool resW);
-void test_two_games(game& g1, game& g2, bool resB, bool resW);
-void test_three_games(game& g1, game& g2, game& g3, bool resB, bool resW);
+void test_sum(sumgame& sum, bool res_b, bool res_w);
+void test_one_game(game& g, bool res_b, bool res_w);
+void test_two_games(game& g1, game& g2, bool res_b, bool res_w);
+void test_three_games(game& g1, game& g2, game& g3, bool res_b, bool res_w);
 
 inline void test_zero_1(game& g)
 {
@@ -71,11 +71,11 @@ inline void test_inverse(game& g1, game& g2) // g1+g2 == 0
 
 
 // These functions take ownership of the games passed to them
-void assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*> games, bool _delete_games = true);
-void _assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*>& games, bool _delete_games = true);
+void assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*> games, bool delete_games = true);
+void assert_player_sum_outcome_impl(int player, bool expected_outcome, std::vector<game*>& games, bool delete_games = true);
 
 void assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*> games);
-void _assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*>& games);
+void assert_sum_outcomes_impl(bool black_outcome, bool white_outcome, std::vector<game*>& games);
 
 void assert_inverse_sum_zero(game* g);
 
@@ -85,6 +85,6 @@ void assert_inverse_sum_zero(game* g);
 void assert_file_parser_output(file_parser* parser, vector<game_case *>& expected_cases);
 void assert_file_parser_output_file(const std::string& file_name, vector<game_case *>& expected_cases);
 
-const std::string unit_test_input_dir = "test/input/unit_tests/";
+const std::string UNIT_TEST_INPUT_DIR = "test/input/unit_tests/";
 
 void assert_solve_test_file(const std::string& file_name, int expected_case_count);

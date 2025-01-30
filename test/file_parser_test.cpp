@@ -8,7 +8,7 @@
 
 using std::cout, std::endl, std::string, std::ifstream, std::stringstream;
 
-const string input_root_dir = "test/input/file_parser/";
+const string INPUT_ROOT_DIR = "test/input/file_parser/";
 
 ////////////////////////////////////////////////// end to end tests
 
@@ -20,7 +20,7 @@ enum version_warn {
 };
 
 
-void _assert_throw_status(file_parser* parser, bool should_throw, parser_exception_code code, version_warn vw)
+void assert_throw_status_impl(file_parser* parser, bool should_throw, parser_exception_code code, version_warn vw)
 {
     game_case gc;
 
@@ -53,8 +53,8 @@ void _assert_throw_status(file_parser* parser, bool should_throw, parser_excepti
 
 void assert_throw_status_file(const string& file_name, bool should_throw, parser_exception_code code, version_warn vw = MAYBE_WARN)
 {
-    file_parser* parser = file_parser::from_file(input_root_dir + file_name);
-    _assert_throw_status(parser, should_throw, code, vw);
+    file_parser* parser = file_parser::from_file(INPUT_ROOT_DIR + file_name);
+    assert_throw_status_impl(parser, should_throw, code, vw);
     delete parser;
 
 }
@@ -62,7 +62,7 @@ void assert_throw_status_file(const string& file_name, bool should_throw, parser
 void assert_throw_status_string(const string& file_name, bool should_throw, parser_exception_code code, version_warn vw = MAYBE_WARN)
 {
     string file_content = "";
-    ifstream input_file(input_root_dir + file_name);
+    ifstream input_file(INPUT_ROOT_DIR + file_name);
 
     assert(input_file.is_open());
 
@@ -73,7 +73,7 @@ void assert_throw_status_string(const string& file_name, bool should_throw, pars
     }
 
     file_parser* parser = file_parser::from_string(file_content);
-    _assert_throw_status(parser, should_throw, code, vw);
+    assert_throw_status_impl(parser, should_throw, code, vw);
     delete parser;
 }
 
@@ -88,7 +88,7 @@ void e2e_test1()
 
     try
     {
-        parser = file_parser::from_file(input_root_dir + "some_nonexistent_file.test");
+        parser = file_parser::from_file(INPUT_ROOT_DIR + "some_nonexistent_file.test");
     }
     catch (std::ios_base::failure& e)
     {
@@ -242,7 +242,7 @@ void e2e_test20() {
     // First figure out how many cases are in the file
     int ncases = 0;
 
-    string file_name = input_root_dir + "partial_read.test";
+    string file_name = INPUT_ROOT_DIR + "partial_read.test";
 
     {
         file_parser* parser = file_parser::from_file(file_name);
@@ -359,7 +359,7 @@ void e2e_test21()
     }
 
 
-    assert_file_parser_output_file(input_root_dir + "sumgames1.test", cases);
+    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames1.test", cases);
 
     for (game_case* gc : cases) 
     {
@@ -372,7 +372,7 @@ void e2e_test22()
 {
     vector<game_case *> cases;
 
-    assert_file_parser_output_file(input_root_dir + "sumgames2.test", cases);
+    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames2.test", cases);
 
     for (game_case* gc : cases) 
     {
@@ -385,7 +385,7 @@ void e2e_test23()
 {
     vector<game_case *> cases;
 
-    assert_file_parser_output_file(input_root_dir + "sumgames3.test", cases);
+    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames3.test", cases);
 
     for (game_case* gc : cases) 
     {
@@ -407,7 +407,7 @@ void e2e_test24()
         gc->games.push_back(new clobber_1xn("XOOX"));
     }
 
-    assert_file_parser_output_file(input_root_dir + "sumgames4.test", cases);
+    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames4.test", cases);
 
     for (game_case* gc : cases) 
     {
@@ -422,7 +422,7 @@ void e2e_test24()
 // Make sure _, #0, #1 all work
 void e2e_test25()
 {
-    file_parser* p = file_parser::from_file(input_root_dir + "comments.test");
+    file_parser* p = file_parser::from_file(INPUT_ROOT_DIR + "comments.test");
 
     game_case case1;
     game_case case2;

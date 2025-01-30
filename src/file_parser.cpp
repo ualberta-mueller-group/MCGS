@@ -32,7 +32,7 @@ unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 //////////////////////////////////////////////////////////// file_token_iterator
 
 file_token_iterator::file_token_iterator(istream* stream, bool delete_stream)
-    : __main_stream_ptr(stream), _delete_stream(delete_stream), _line_number(-1)
+    : _main_stream_ptr(stream), _delete_stream(delete_stream), _line_number(-1)
 {
 }
 
@@ -51,10 +51,10 @@ int file_token_iterator::line_number() const
 
 bool file_token_iterator::get_token(string& token)
 {
-    assert(__main_stream_ptr != nullptr);
+    assert(_main_stream_ptr != nullptr);
     token.clear();
 
-    istream& _main_stream = *__main_stream_ptr;
+    istream& main_stream = *_main_stream_ptr;
 
     // Check if current line has more tokens
     if (_line_stream && _line_stream >> token)
@@ -69,7 +69,7 @@ bool file_token_iterator::get_token(string& token)
 
     // Scroll through the file's lines until we get a token
     string next_line;
-    while (_main_stream && getline(_main_stream, next_line) && !_main_stream.fail())
+    while (main_stream && getline(main_stream, next_line) && !main_stream.fail())
     {
         _line_number++;
         _line_stream = stringstream(next_line);
@@ -85,7 +85,7 @@ bool file_token_iterator::get_token(string& token)
         }
     }
 
-    if (_main_stream.fail() && !_main_stream.eof())
+    if (main_stream.fail() && !main_stream.eof())
     {
         throw ios_base::failure("file_token_iterator operator++ file IO error");
     }
@@ -96,20 +96,20 @@ bool file_token_iterator::get_token(string& token)
 
 void file_token_iterator::cleanup()
 {
-    if (_delete_stream && __main_stream_ptr != nullptr)
+    if (_delete_stream && _main_stream_ptr != nullptr)
     {
         // close if it's a file...
-        ifstream* file = dynamic_cast<ifstream*>(__main_stream_ptr);
+        ifstream* file = dynamic_cast<ifstream*>(_main_stream_ptr);
 
         if (file != nullptr && file->is_open())
         {
             file->close();
         }
 
-        delete __main_stream_ptr;
+        delete _main_stream_ptr;
     }
 
-    __main_stream_ptr = nullptr;
+    _main_stream_ptr = nullptr;
 }
 
 
@@ -171,7 +171,7 @@ bool is_enclosed_format(const string& token, const char& open, const char& close
 
     if (!allow_inner)
     {
-        int N = token.size();
+        const int N = token.size();
         for (int i = 1; i < N - 1; i++)
         {
             const char& c = token[i];

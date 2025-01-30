@@ -1,5 +1,7 @@
 
 
+# Static class members are global variables
+
 
 Checks: '-*,readability-identifier-naming'
 WarningsAsErrors: '-*,readability-identifier-naming'
@@ -7,8 +9,8 @@ CheckOptions:
 
 #<l>
   - { key: readability-identifier-naming.ClassCase, value: lower_case }
-  - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
-  - { key: readability-identifier-naming.ClassMethodCase, value: lower_case }
+#  - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
+#  - { key: readability-identifier-naming.ClassMethodCase, value: lower_case }
 #  - { key: readability-identifier-naming.ConstantCase, value: lower_case }
   - { key: readability-identifier-naming.ConstantParameterCase, value: lower_case }
   - { key: readability-identifier-naming.ConstantPointerParameterCase, value: lower_case }
@@ -32,7 +34,7 @@ CheckOptions:
   - { key: readability-identifier-naming.TypeAliasCase, value: lower_case }
   - { key: readability-identifier-naming.TypedefCase, value: lower_case }
   - { key: readability-identifier-naming.UnionCase, value: lower_case }
-  - { key: readability-identifier-naming.VariableCase, value: lower_case }
+#  - { key: readability-identifier-naming.VariableCase, value: lower_case }
   - { key: readability-identifier-naming.VirtualMethodCase, value: lower_case }
 
 #<u>
@@ -55,8 +57,23 @@ CheckOptions:
   - { key: readability-identifier-naming.PrivateMemberPrefix, value: _ }
   - { key: readability-identifier-naming.ProtectedMemberPrefix, value: _ }
 
-  - { key: readability-identifier-naming.PrivateMethodPrefix, value: _ }
-  - { key: readability-identifier-naming.ProtectedMethodPrefix, value: _ }
+# TODO: Probably keep these?
+#  - { key: readability-identifier-naming.PrivateMethodPrefix, value: _ }
+#  - { key: readability-identifier-naming.ProtectedMethodPrefix, value: _ }
+
+# This allows private methods to keep or omit the "_"
+  - { key: readability-identifier-naming.PrivateMethodIgnoredRegexp, value: "_[a-z_0-9]+" }
+  - { key: readability-identifier-naming.ClassMemberIgnoredRegexp, value: "_[a-z_0-9]+" }
+
+  - { key: readability-identifier-naming.LocalConstantIgnoredRegexp, value: "([a-z_0-9]+|[A-Z0-9]+)" }
+
+
+
+
+
+
+
+
 
 #<k>
 #  - { key: readability-identifier-naming.ConceptCase, value: <SOMEVALUE> }

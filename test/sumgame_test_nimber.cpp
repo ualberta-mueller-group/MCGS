@@ -239,6 +239,6 @@ void sumgame_test_nimber_all()
     });
     */
 
-    assert_solve_test_file(unit_test_input_dir + "nimber.test", 22);
+    assert_solve_test_file(UNIT_TEST_INPUT_DIR + "nimber.test", 22);
 }
 

@@ -53,7 +53,7 @@ public:
 private:
     void cleanup();
 
-    std::istream* __main_stream_ptr;
+    std::istream* _main_stream_ptr;
     bool _delete_stream; // do we own this stream?
 
     std::stringstream _line_stream;

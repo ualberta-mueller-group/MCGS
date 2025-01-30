@@ -12,10 +12,10 @@
 
 struct sumgame_move
 {
-    sumgame_move(int subg, move m) : _subgame_idx(subg), _move(m) { }
+    sumgame_move(int subg, move m) : subgame_idx(subg), m(m) { }
 
-    int _subgame_idx;
-    move _move;
+    int subgame_idx;
+    move m;
 };
 
 struct play_record
@@ -87,7 +87,7 @@ private:
         these values are used by _solve_with_timeout() and are here so they don't
             need to be passed as arguments to the function every time it's called
     */
-    mutable bool should_stop;
+    mutable bool _should_stop;
     std::optional<solve_result> _solve_with_timeout();
 
     vector<game*> _subgames; // sumgame owns these subgames

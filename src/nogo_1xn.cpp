@@ -41,7 +41,7 @@ string block_simplify(const string& board)
 {
     string result;
 
-    int N = board.size();
+    const int N = board.size();
 
     const char empty_char = color_to_clobber_char(EMPTY);
 
@@ -77,7 +77,7 @@ split_result nogo_1xn::split_implementation() const
     string board = board_as_string();
     board = block_simplify(board);
 
-    int N = board.size();
+    const int N = board.size();
 
     vector<pair<int, int>> subgame_ranges;
 

@@ -196,7 +196,7 @@ void empty()
 
 void file()
 {
-    assert_solve_test_file(unit_test_input_dir + "/clobber_1xn.test", 14);
+    assert_solve_test_file(UNIT_TEST_INPUT_DIR + "/clobber_1xn.test", 14);
 }
 
 } // namespace clobber_1xn_string

@@ -48,7 +48,7 @@ split_result clobber_1xn::split_implementation() const
     vector<pair<int, int>> chunk_ranges;
 
     string board = board_as_string();
-    size_t N = board.size();
+    const size_t N = board.size();
 
     //auto add_chunk = [&](int start, int len) -> void
     //{
