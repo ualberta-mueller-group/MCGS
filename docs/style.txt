@@ -1,0 +1,46 @@
+
+(AccessModifierOffset: -2 --> -4) #3
+"public", "private", "protected" not indented from brace level
+
+(AllowShortFunctionsOnASingleLine: None --> Empty) #74
+Empty functions have braces on the same line i.e.:
+    cli_options::~cli_options() {}
+
+(BraceWrapping.AfterCaseLabel: false --> true) #86
+Brace on own line for case statement
+
+(BraceWrapping.BeforeLambdaBody: false --> true) #98
+Brace on own line for lambda function
+
+(BreakTemplateDeclarations: MultiLine --> Yes) #118
+"template <class T>" on its own line
+
+(EmptyLineBeforeAccessModifier: LogicalBlock --> Always) #128
+For access modifiers (i.e. "public" etc) other than the first, an empty line is
+included before. "LogicalBlock" is insufficient as it treats comments as empty lines
+
+(IndentCaseLabels: false --> true) #155
+Case label indented inside of switch braces
+
+(PointerAlignment: Right --> Left) #202
+Pointers on left side
+
+(SortIncludes: CaseSensitive --> false) #215
+Don't change "#include" ordering
+
+(SpaceAfterCStyleCast: false --> true) #218
+i.e. "(float) 4" instead of "(float)4"
+
+(SeparateDefinitionBlocks: Leave --> Always) #212
+Empty lines between definitions for classes, structs, enums, and functions
+
+    DON'T KEEP:
+    (SpaceAroundPointerQualifiers: Default --> Both) #221
+
+
+
+============================================================
+
+Require "override" where applicable
+
+No "using" keyword in headers

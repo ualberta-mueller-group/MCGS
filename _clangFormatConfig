@@ -1,6 +1,6 @@
 ---
 Language:        Cpp
-AccessModifierOffset: -4
+AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
 AlignArrayOfStructures: None
 AlignConsecutiveAssignments:
@@ -71,7 +71,7 @@ AllowShortCaseExpressionOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortCompoundRequirementOnASingleLine: true
 AllowShortEnumsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: false
@@ -83,7 +83,7 @@ BinPackArguments: true
 BinPackParameters: true
 BitFieldColonSpacing: Both
 BraceWrapping:
-  AfterCaseLabel:  true
+  AfterCaseLabel:  true # CHANGED
   AfterClass:      true
   AfterControlStatement: Always
   AfterEnum:       true
@@ -95,7 +95,7 @@ BraceWrapping:
   AfterUnion:      false
   BeforeCatch:     true
   BeforeElse:      true
-  BeforeLambdaBody: true
+  BeforeLambdaBody: true # CHANGED
   BeforeWhile:     false
   IndentBraces:    false
   SplitEmptyFunction: true
@@ -115,7 +115,7 @@ BreakConstructorInitializers: BeforeColon
 BreakFunctionDefinitionParameters: false
 BreakInheritanceList: BeforeColon
 BreakStringLiterals: true
-BreakTemplateDeclarations: Yes
+BreakTemplateDeclarations: MultiLine
 ColumnLimit:     120
 CommentPragmas:  '^ IWYU pragma:'
 CompactNamespaces: false
@@ -125,7 +125,7 @@ Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 DisableFormat:   false
 EmptyLineAfterAccessModifier: Never
-EmptyLineBeforeAccessModifier: Always
+EmptyLineBeforeAccessModifier: LogicalBlock
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
 ForEachMacros:
@@ -152,7 +152,7 @@ IncludeIsMainRegex: '(Test)?$'
 IncludeIsMainSourceRegex: ''
 IndentAccessModifiers: false
 IndentCaseBlocks: false
-IndentCaseLabels: true
+IndentCaseLabels: true # CHANGED
 IndentExternBlock: AfterExternBlock
 IndentGotoLabels: true
 IndentPPDirectives: None
@@ -199,7 +199,7 @@ PenaltyBreakTemplateDeclaration: 10
 PenaltyExcessCharacter: 1000000
 PenaltyIndentedWhitespace: 0
 PenaltyReturnTypeOnItsOwnLine: 1000
-PointerAlignment: Left
+PointerAlignment: Left # CHANGED
 PPIndentWidth:   -1
 QualifierAlignment: Leave
 ReferenceAlignment: Pointer
@@ -209,16 +209,16 @@ RemoveParentheses: Leave
 RemoveSemicolon: false
 RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: OuterScope
-SeparateDefinitionBlocks: Always
+SeparateDefinitionBlocks: Leave
 ShortNamespaceLines: 1
 SkipMacroDefinitionBody: false
-SortIncludes:    false
+SortIncludes:    false # CHANGED
 SortJavaStaticImport: Before
 SortUsingDeclarations: LexicographicNumeric
-SpaceAfterCStyleCast: true
+SpaceAfterCStyleCast: true # CHANGED
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: true
-SpaceAroundPointerQualifiers: Default
+SpaceAroundPointerQualifiers: Both # CHANGED
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeCaseColon: false
 SpaceBeforeCpp11BracedList: false

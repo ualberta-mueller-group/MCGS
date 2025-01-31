@@ -71,12 +71,21 @@ style:
 
 #! clang-format --style="file:clangFormatConfig" $$x | diff $$x - ;
 
+
+
+
+		! clang-format --style="file:clangFormatConfig" backup/"$$x" > $$x ; \
+
 # TODO use diff and tr to make sure only whitespace has changed
 format: $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
-	for x in $^ ; do \
-		echo "============"$$x"===============" ; \
-		! clang-format --style="file:clangFormatConfig" $$x ; \
+	-rm diffResult.txt
+	- ! for x in $^ ; do \
+		! echo "============"$$x"===============" | tee -a diffResult.txt ; \
+		! clang-format --style="file:clangFormatConfig" backup/"$$x" | diff backup/"$$x" - >> diffResult.txt || true ; \
+		! clang-format --style="file:clangFormatConfig" backup/"$$x" > $$x ; \
 	done
+
+		#! clang-format --style="file:clangFormatConfig" backup/"$$x" > $$x ; \
 
 
 
