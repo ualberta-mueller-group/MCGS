@@ -1,6 +1,3 @@
-ALIGNTRAILINGCOMMENTS
-
-
 (AccessModifierOffset: -2 --> -4) #3
 "public", "private", "protected" not indented from brace level
 
@@ -13,7 +10,6 @@ i.e.:
 Other options seem to cause problems with initializer lists near the end of
 function call parameters
 
-
 (AllowShortFunctionsOnASingleLine: None --> Empty) #74
 Empty functions have braces on the same line i.e.:
     cli_options::~cli_options() {}
@@ -21,13 +17,14 @@ Empty functions have braces on the same line i.e.:
 (BraceWrapping.AfterCaseLabel: false --> true) #86
 Brace on own line for case statement
 
+(BraceWrapping.AfterUnion: false --> true) #95
+Brace on own line for union
+
 (BraceWrapping.BeforeLambdaBody: false --> true) #98
 Brace on own line for lambda function
 
 (BreakTemplateDeclarations: MultiLine --> Yes) #118
 "template <class T>" on its own line
-
-(Cpp11BracedListStyle: true -> false) #124
 
 (EmptyLineBeforeAccessModifier: LogicalBlock --> Always) #128
 For access modifiers (i.e. "public" etc) other than the first, an empty line is
@@ -39,20 +36,18 @@ Case label indented inside of switch braces
 (PointerAlignment: Right --> Left) #202
 Pointers on left side
 
+(SeparateDefinitionBlocks: Leave --> Always) #212
+Empty lines between definitions for classes, structs, enums, and functions
 
-
-
-(SortIncludes: CaseSensitive --> false) #215
+(SortIncludes: CaseSensitive --> Never) #215
 Don't change "#include" ordering
+
+(SpaceBeforeCpp11BracedList: false --> true) #224
+i.e. new int[3] {1, 2, 3}; instead of new int[3]{1, 2, 3};
 
 (SpaceAfterCStyleCast: false --> true) #218
 i.e. "(float) 4" instead of "(float)4"
 
-(SeparateDefinitionBlocks: Leave --> Always) #212
-Empty lines between definitions for classes, structs, enums, and functions
-
-    DON'T KEEP:
-    (SpaceAroundPointerQualifiers: Default --> Both) #221
 
 
 

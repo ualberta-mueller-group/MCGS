@@ -74,7 +74,7 @@ style:
 
 
 
-		! clang-format --style="file:clangFormatConfig" backup/"$$x" > $$x ; \
+		#! clang-format --style="file:clangFormatConfig" backup/"$$x" > $$x ; \
 
 # TODO use diff and tr to make sure only whitespace has changed
 format: $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
