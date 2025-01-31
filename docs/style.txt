@@ -1,8 +1,18 @@
+ALIGNTRAILINGCOMMENTS
+
 
 (AccessModifierOffset: -2 --> -4) #3
 "public", "private", "protected" not indented from brace level
 
-(AlignAfterOpenBracket: Align --> DontAlign) #4
+(AlignAfterOpenBracket: Align --> BlockIndent) #4
+When items between brackets don't fit on the line, add line break
+i.e.:
+    someLongFunction(
+        argument1, argument2
+    )
+Other options seem to cause problems with initializer lists near the end of
+function call parameters
+
 
 (AllowShortFunctionsOnASingleLine: None --> Empty) #74
 Empty functions have braces on the same line i.e.:
@@ -17,6 +27,8 @@ Brace on own line for lambda function
 (BreakTemplateDeclarations: MultiLine --> Yes) #118
 "template <class T>" on its own line
 
+(Cpp11BracedListStyle: true -> false) #124
+
 (EmptyLineBeforeAccessModifier: LogicalBlock --> Always) #128
 For access modifiers (i.e. "public" etc) other than the first, an empty line is
 included before. "LogicalBlock" is insufficient as it treats comments as empty lines
@@ -26,6 +38,9 @@ Case label indented inside of switch braces
 
 (PointerAlignment: Right --> Left) #202
 Pointers on left side
+
+
+
 
 (SortIncludes: CaseSensitive --> false) #215
 Don't change "#include" ordering
