@@ -2,6 +2,8 @@
 (AccessModifierOffset: -2 --> -4) #3
 "public", "private", "protected" not indented from brace level
 
+(AlignAfterOpenBracket: Align --> DontAlign) #4
+
 (AllowShortFunctionsOnASingleLine: None --> Empty) #74
 Empty functions have braces on the same line i.e.:
     cli_options::~cli_options() {}
