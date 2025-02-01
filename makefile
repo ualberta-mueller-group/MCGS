@@ -56,37 +56,20 @@ endif
 
 
 
-#STYLE_TEST_FILES = src/file_parser.cpp src/file_parser.cpp style_test.cpp
 STYLE_TEST_FILES = $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
-#STYLE_TEST_FILES = style_test.cpp
-
-#FILE_START = 20
-#FILE_END = 40
-#STYLE_TEST_FILES = $(wordlist $(FILE_START), $(FILE_END), $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H))
 
 style:
 	clang-tidy --config-file=clangTidyConfig $(STYLE_TEST_FILES) -- $(NORMAL_FLAGS) $(INC) -x c++
 
 
-
-#! clang-format --style="file:clangFormatConfig" $$x | diff $$x - ;
-
-
-
-
-		#! clang-format --style="file:clangFormatConfig" backup/"$$x" > $$x ; \
-
 # TODO use diff and tr to make sure only whitespace has changed
 format: $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
 	-rm diffResult.txt
 	- ! for x in $^ ; do \
-		! echo "============"$$x"===============" | tee -a diffResult.txt ; \
-		! clang-format --style="file:clangFormatConfig" backup/"$$x" | diff backup/"$$x" - >> diffResult.txt || true ; \
-		! clang-format --style="file:clangFormatConfig" backup/"$$x" > $$x ; \
+		! echo "============"$$x"===============" ; \
+		! clang-format --style="file:clangFormatConfig" "backup/"$$x > $$x || true ; \
+		! diff "backup/"$$x $$x >> diffResult.txt || true ; \
 	done
-
-		#! clang-format --style="file:clangFormatConfig" backup/"$$x" > $$x ; \
-
 
 
 ifeq ($(CAN_BUILD), 1)
