@@ -46,7 +46,7 @@ LINT_FILES ?= $(ALL_SRC_FILES)
 
 
 .DEFAULT_GOAL := MCGS
-.PHONY: clean test leakcheck leakcheck_test style format
+.PHONY: clean test leakcheck leakcheck_test tidy format
 
 
 CAN_BUILD=0
@@ -63,16 +63,14 @@ endif
 tidy:
 	clang-tidy --config-file=clangTidyConfig $(LINT_FILES) -- $(NORMAL_FLAGS) $(INC) -x c++ 2>&1 | tee tidy_result.txt
 
+format:
+	@python3 format_files.py $(LINT_FILES)
 
-# TODO use diff and tr to make sure only whitespace has changed
-format: $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
-	-rm diffResult.txt
-	- ! for x in $^ ; do \
-		! echo "============"$$x"===============" ; \
-		! clang-format --style="file:clangFormatConfig" "backup/"$$x > $$x || true ; \
-		! diff "backup/"$$x $$x >> diffResult.txt || true ; \
-	done
+format_delete:
+	@python3 format_files.py --delete $(LINT_FILES)
 
+format_apply:
+	@python3 format_files.py --apply $(LINT_FILES)
 
 ifeq ($(CAN_BUILD), 1)
 
