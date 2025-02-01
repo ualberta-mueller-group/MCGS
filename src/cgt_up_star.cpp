@@ -68,7 +68,7 @@ public:
     operator bool() const;
     move gen_move() const;
 private:
-    int compute_num_moves(const up_star& game, bw to_play) const;
+    int _compute_num_moves(const up_star& game, bw to_play) const;
     const up_star& _game;
     const int _num_moves;
     int _num_generated;
@@ -77,7 +77,7 @@ private:
 up_star_move_generator::up_star_move_generator(const up_star& game, bw to_play)
     : move_generator(to_play),
       _game(game),
-      _num_moves(compute_num_moves(game, to_play)),
+      _num_moves(_compute_num_moves(game, to_play)),
       _num_generated(0)
 { }
 
@@ -91,7 +91,7 @@ up_star_move_generator::operator bool() const
     return _num_moves > _num_generated;
 }
 
-int up_star_move_generator::compute_num_moves(
+int up_star_move_generator::_compute_num_moves(
     const up_star& game, bw to_play) const
 {
     const int ups = game.num_ups();

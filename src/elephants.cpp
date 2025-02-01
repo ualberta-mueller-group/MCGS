@@ -59,7 +59,7 @@ void elephants::undo_move()
 }
 
 
-split_result elephants::split_implementation() const
+split_result elephants::_split_implementation() const
 {
     vector<pair<int, int>> subgame_ranges;
 

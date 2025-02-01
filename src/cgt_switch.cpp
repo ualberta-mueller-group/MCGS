@@ -47,7 +47,7 @@ void switch_game::undo_move()
 }
 
 
-split_result switch_game::split_implementation() const
+split_result switch_game::_split_implementation() const
 {
     if (!is_integer())
     {

@@ -79,7 +79,7 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
-    bool over_time() const;
+    bool _over_time() const;
 
     /*
         mutable makes sense here? 

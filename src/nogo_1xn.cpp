@@ -69,7 +69,7 @@ string block_simplify(const string& board)
    Henry's paper
 
 */
-split_result nogo_1xn::split_implementation() const
+split_result nogo_1xn::_split_implementation() const
 {
     // NOTE: don't use checked_is_color here -- it accesses the board before block simplification
 
@@ -145,10 +145,10 @@ public:
     operator bool() const;
     move gen_move() const;
 private:
-    int at(int p) const {return _game.at(p); }
-    bool is_legal(int p) const;
+    int _at(int p) const {return _game.at(p); }
+    bool _is_legal(int p) const;
 
-    void find_next_move();
+    void _find_next_move();
     const nogo_1xn& _game;
     int _current; // current stone location to test
 };
@@ -158,28 +158,28 @@ inline nogo_1xn_move_generator::nogo_1xn_move_generator(const nogo_1xn& game, bw
     _game(game),
     _current(0)
 {
-    if (_game.size() > 0 && !is_legal(_current))
-        find_next_move();
+    if (_game.size() > 0 && !_is_legal(_current))
+        _find_next_move();
 }
 
 void nogo_1xn_move_generator::operator++()
 {
-    find_next_move();
+    _find_next_move();
 }
 
-inline void nogo_1xn_move_generator::find_next_move()
+inline void nogo_1xn_move_generator::_find_next_move()
 {
     _current++;
 
     int num = (int)_game.size();
-    while (_current < num && !is_legal(_current)) {
+    while (_current < num && !_is_legal(_current)) {
         _current++;
     }
 }
 
-inline bool nogo_1xn_move_generator::is_legal(int p) const
+inline bool nogo_1xn_move_generator::_is_legal(int p) const
 {
-    if (at(p) != EMPTY)
+    if (_at(p) != EMPTY)
         return false;
 
     int num = _game.size();

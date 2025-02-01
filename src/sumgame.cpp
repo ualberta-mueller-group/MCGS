@@ -33,7 +33,7 @@ public:
     sumgame_move gen_sum_move() const;
     move gen_move() const {assert(false);}
 private:
-    const game* current() const { return _game.subgame(_subgame_idx); }
+    const game* _current() const { return _game.subgame(_subgame_idx); }
     const sumgame& _game;
     const int _num_subgames;
     int _subgame_idx;
@@ -101,7 +101,7 @@ void sumgame_move_generator::next_move(bool init)
     for (; _subgame_idx < _num_subgames; _subgame_idx++)
     {
         assert(_subgame_generator == nullptr);
-        const game* g = current();
+        const game* g = _current();
 
         // inactive game
         if (!g->is_active())
@@ -249,7 +249,7 @@ optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) c
 
 optional<solve_result> sumgame::_solve_with_timeout()
 {
-    if (over_time())
+    if (_over_time())
     {
         return solve_result::invalid();
     }
@@ -289,7 +289,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
         undo_move();
 
-        if (over_time())
+        if (_over_time())
         {
             return solve_result::invalid();
         }
@@ -302,7 +302,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
     return solve_result(false);
 }
 
-bool sumgame::over_time() const
+bool sumgame::_over_time() const
 {
     return _should_stop;
 };

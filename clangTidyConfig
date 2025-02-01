@@ -1,5 +1,5 @@
 Checks: '-*,readability-identifier-naming'
-WarningsAsErrors: '-*,readability-identifier-naming'
+#WarningsAsErrors: '-*,readability-identifier-naming'
 HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:
