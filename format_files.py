@@ -3,40 +3,36 @@ import sys
 from pathlib import Path
 import os
 
-summary_filename = "format_result.txt"
+summary_path = Path("format_result.txt")
 transform_suffix = "___transformed"
 
-assert len(sys.argv) > 1
+if summary_path.exists():
+    os.remove(summary_path)
 
 args = sys.argv[1 : ]
 
-if args[0] == "--delete":
-    print("Deleting transformations...")
-    for file_name in args[1 : ]:
-        if transform_suffix in file_name:
-            print(f"Deleting {file_name}")
-            os.remove(file_name)
-        else:
-            print(f"Skipping {file_name}")
-            continue
-    print("Done!")
-    exit(0)
+def print_flag(flag_text, flag_description):
+    print("\t" + flag_text)
+    print("\t\t" + flag_description)
+    print("")
 
-if args[0] == "--apply":
-    print("Applying transformations...")
-    for file_name in args[1 : ]:
-        if transform_suffix in file_name:
-            print(f"Applying {file_name}")
-            src_name = file_name.replace(transform_suffix, "")
-            os.remove(src_name)
-            os.rename(file_name, src_name)
-        else:
-            print(f"Skipping {file_name}")
-            continue
-    print("Done!")
-    exit(0)
+def print_help():
+    print("TODO help page")
+
+if len(args) < 1:
+    print(f"{sys.argv[0]} too few arguments")
+    print_help()
+    exit(-1)
 
 
+def remove_if_exists(filename, print_message):
+    p = Path(filename)
+    if p.exists():
+        if print_message:
+            print(f"Deleting {filename}")
+        os.remove(p)
+        return True
+    return False
 
 def transform_filename(filename):
     assert type(filename) is str
@@ -50,6 +46,41 @@ def transform_filename(filename):
     assert without_suffix + suffix == filename
 
     return without_suffix + transform_suffix + suffix
+
+
+def apply_transform(src_filename, transformed_filename):
+    p2 = Path(transformed_filename)
+
+    if p2.exists():
+        print(f"Applying {transformed_filename}")
+        remove_if_exists(src_filename, False)
+        os.rename(transformed_filename, src_filename)
+
+
+if args[0] == "--delete":
+    print("Deleting transformations...")
+    for filename in args[1 : ]:
+        if transform_suffix in filename:
+            remove_if_exists(filename, True)
+        else:
+            transformed_filename = transform_filename(filename)
+            remove_if_exists(transformed_filename, True)
+
+    print("Done!")
+    exit(0)
+
+if args[0] == "--apply":
+    print("Applying transformations...")
+    for filename in args[1 : ]:
+        if transform_suffix in filename:
+            src_filename = filename.replace(transform_suffix, "")
+            apply_transform(src_filename, filename)
+        else:
+            transformed_filename = transform_filename(filename)
+            apply_transform(filename, transformed_filename)
+
+    print("Done!")
+    exit(0)
 
 class File_Thing:
     def __init__(self, file):
@@ -102,6 +133,7 @@ def diff_ignore_whitespace(filename1, filename2):
                 return False
 
 unsafe_changes = []
+
 
 for src_filename in args:
     if transform_suffix in src_filename:
