@@ -17,7 +17,39 @@ def print_flag(flag_text, flag_description):
     print("")
 
 def print_help():
-    print("TODO help page")
+
+    print(f"Usage: python3 {sys.argv[0]} [flags] [input files]")
+    print("\n\tCreates, deletes, or applies format transformations on source files.")
+
+    print(f"""
+[input files] is a possibly mixed list of source files and transform files.
+Transform files have the transform suffix \"{transform_suffix}\" in their names, i.e.
+\tSource file: some_file.cpp
+\tTransform file: some_file{transform_suffix}.cpp
+
+Modes:
+    Create:
+        When [flags] is empty, operates in \"create\" mode, using clang-format
+        to generate transform files of given source files.
+        Transform files in the input list are ignored.
+
+    Delete:
+        For each given source file, delete its corresponding transform file.
+        For each given transform file, delete it.
+
+    Replace:
+        For each given source file, find its transform file. If the transform
+        file exists, replace the source file with it.
+        For each existing given transform file, replace its source file with it.
+""")
+
+    print("\nFlags:")
+    print_flag("--delete", "Operate in \"delete\" mode")
+    print_flag("--replace", "Operate in \"replace\" mode")
+
+if "-h" in args or "--help" in args:
+    print_help()
+    exit(0)
 
 if len(args) < 1:
     print(f"{sys.argv[0]} too few arguments")
@@ -48,7 +80,7 @@ def transform_filename(filename):
     return without_suffix + transform_suffix + suffix
 
 
-def apply_transform(src_filename, transformed_filename):
+def replace_with_transform(src_filename, transformed_filename):
     p2 = Path(transformed_filename)
 
     if p2.exists():
@@ -69,15 +101,15 @@ if args[0] == "--delete":
     print("Done!")
     exit(0)
 
-if args[0] == "--apply":
+if args[0] == "--replace":
     print("Applying transformations...")
     for filename in args[1 : ]:
         if transform_suffix in filename:
             src_filename = filename.replace(transform_suffix, "")
-            apply_transform(src_filename, filename)
+            replace_with_transform(src_filename, filename)
         else:
             transformed_filename = transform_filename(filename)
-            apply_transform(filename, transformed_filename)
+            replace_with_transform(filename, transformed_filename)
 
     print("Done!")
     exit(0)
