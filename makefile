@@ -56,9 +56,9 @@ endif
 
 
 
-#STYLE_TEST_FILES = $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H)
+STYLE_TEST_FILES = $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H) src/main/main.cpp
 #STYLE_TEST_FILES = src/main/main.cpp src/file_parser.* src/cli_options.* src/game.* style_test.cpp
-STYLE_TEST_FILES = style_test.cpp
+#STYLE_TEST_FILES = style_test.cpp
 
 style:
 	clang-tidy --config-file=clangTidyConfig $(STYLE_TEST_FILES) -- $(NORMAL_FLAGS) $(INC) -x c++
