@@ -4,12 +4,13 @@ outfile = open("style_test.cpp", "w")
 replacements = ["YESERROR", "NOERROR"]
 
 error_count = 0
+var_number = 1
 
 for line in infile:
     repl = None
     upper = False
 
-    if line.find("VAR") != -1:
+    if line.find("CHECK") != -1:
         upper = True
 
     for r in replacements:
@@ -21,9 +22,11 @@ for line in infile:
         error_count += 1
 
     if repl is not None:
-        old = "VAR" if upper else "var"
+        old = "CHECK" if upper else "check"
         if not upper:
             repl = repl.lower()
+        repl += "_" + str(var_number)
+        var_number += 1
         line = line.replace(old, repl)
 
     outfile.write(line)

@@ -4,80 +4,85 @@
 using namespace std;
 
 
-void some_function(const int some_var)
-{
-}
-
-
 struct some_struct
 {
 public:
-    int var_1; // NOERROR
-    int _var_2; // YESERROR
-    const int var_3; // NOERROR
-    const int _var_4; // YESERROR
-    int VAR_5; // YESERROR
-    int _VAR_6; // YESERROR
-    const int VAR_7; // YESERROR
-    const int _VAR_8; // YESERROR
+    int check; // NOERROR
+    int _check; // YESERROR
+    const int check; // NOERROR
+    const int _check; // YESERROR
+    int CHECK; // YESERROR
+    int _CHECK; // YESERROR
+    const int CHECK; // YESERROR
+    const int _CHECK; // YESERROR
 
-    static int var_9; // NOERROR
-    static int _var_10; // NOERROR
-    static const int var_11; // YESERROR
-    static const int _var_12; // YESERROR
-    static int VAR_13; // YESERROR
-    static int _VAR_14; // YESERROR
-    static const int VAR_15; // NOERROR
-    static const int _VAR_16; // NOERROR
+    static int check; // NOERROR
+    static int _check; // NOERROR
+    static const int check; // YESERROR
+    static const int _check; // YESERROR
+    static int CHECK; // YESERROR
+    static int _CHECK; // YESERROR
+    static const int CHECK; // NOERROR
+    static const int _CHECK; // NOERROR
 
 protected:
-    int var_17; // YESERROR
-    int _var_18; // NOERROR
-    const int var_19; // YESERROR
-    const int _var_20; // NOERROR
-    int VAR_21; // YESERROR
-    int _VAR_22; // YESERROR
-    const int VAR_23; // YESERROR
-    const int _VAR_24; // YESERROR
+    int check; // YESERROR
+    int _check; // NOERROR
+    const int check; // YESERROR
+    const int _check; // NOERROR
+    int CHECK; // YESERROR
+    int _CHECK; // YESERROR
+    const int CHECK; // YESERROR
+    const int _CHECK; // YESERROR
 
-    static int var_25; // NOERROR
-    static int _var_26; // NOERROR
-    static const int var_27; // YESERROR
-    static const int _var_28; // YESERROR
-    static int VAR_29; // YESERROR
-    static int _VAR_30; // YESERROR
-    static const int VAR_31; // NOERROR
-    static const int _VAR_32; // NOERROR
-
-
+    static int check; // NOERROR
+    static int _check; // NOERROR
+    static const int check; // YESERROR
+    static const int _check; // YESERROR
+    static int CHECK; // YESERROR
+    static int _CHECK; // YESERROR
+    static const int CHECK; // NOERROR
+    static const int _CHECK; // NOERROR
 
 private:
-    int var_33; // YESERROR
-    int _var_34; // NOERROR
-    const int var_35; // YESERROR
-    const int _var_36; // NOERROR
-    int VAR_37; // YESERROR
-    int _VAR_38; // YESERROR
-    const int VAR_39; // YESERROR
-    const int _VAR_40; // YESERROR
+    int check; // YESERROR
+    int _check; // NOERROR
+    const int check; // YESERROR
+    const int _check; // NOERROR
+    int CHECK; // YESERROR
+    int _CHECK; // YESERROR
+    const int CHECK; // YESERROR
+    const int _CHECK; // YESERROR
 
-    static int var_41; // NOERROR
-    static int _var_42; // NOERROR
-    static const int var_43; // YESERROR
-    static const int _var_44; // YESERROR
-    static int VAR_45; // YESERROR
-    static int _VAR_46; // YESERROR
-    static const int VAR_47; // NOERROR
-    static const int _VAR_48; // NOERROR
-
-
-
-
+    static int check; // NOERROR
+    static int _check; // NOERROR
+    static const int check; // YESERROR
+    static const int _check; // YESERROR
+    static int CHECK; // YESERROR
+    static int _CHECK; // YESERROR
+    static const int CHECK; // NOERROR
+    static const int _CHECK; // NOERROR
 };
 
 
 int main() {
+    int check = 0; // NOERROR
+    int _check = 0; // YESERROR
+    const int check = 0; // NOERROR
+    const int _check = 0; // YESERROR
+    int CHECK = 0; // YESERROR
+    int _CHECK = 0; // YESERROR
+    const int CHECK = 0; // NOERROR
+    const int _CHECK = 0; // YESERROR
 
+    static int check = 0; // NOERROR
+    static int _check = 0; // YESERROR
+    static const int check = 0; // YESERROR
+    static const int _check = 0; // YESERROR
+    static int CHECK = 0; // YESERROR
+    static int _CHECK = 0; // YESERROR
+    static const int CHECK = 0; // NOERROR
+    static const int _CHECK = 0; // YESERROR
 
 
     return 0;
