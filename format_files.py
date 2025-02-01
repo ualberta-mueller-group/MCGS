@@ -6,8 +6,6 @@ import os
 summary_path = Path("format_result.txt")
 transform_suffix = "___transformed"
 
-if summary_path.exists():
-    os.remove(summary_path)
 
 args = sys.argv[1 : ]
 
@@ -32,6 +30,7 @@ Modes:
         When [flags] is empty, operates in \"create\" mode, using clang-format
         to generate transform files of given source files.
         Transform files in the input list are ignored.
+        Prints a diff of all files to {summary_path}.
 
     Delete:
         For each given source file, delete its corresponding transform file.
@@ -46,16 +45,18 @@ Modes:
     print("\nFlags:")
     print_flag("--delete", "Operate in \"delete\" mode")
     print_flag("--replace", "Operate in \"replace\" mode")
+    print_flag("--help, -h", "Print this message")
 
 if "-h" in args or "--help" in args:
     print_help()
     exit(0)
 
 if len(args) < 1:
-    print(f"{sys.argv[0]} too few arguments")
-    print_help()
+    print("Too few arguments. Try: \'LINT_FILES=\"some_file.cpp\" make format\'")
     exit(-1)
 
+if summary_path.exists():
+    os.remove(summary_path)
 
 def remove_if_exists(filename, print_message):
     p = Path(filename)
@@ -84,13 +85,13 @@ def replace_with_transform(src_filename, transformed_filename):
     p2 = Path(transformed_filename)
 
     if p2.exists():
-        print(f"Applying {transformed_filename}")
+        print(f"Replacing {src_filename} with {transformed_filename}")
         remove_if_exists(src_filename, False)
         os.rename(transformed_filename, src_filename)
 
 
 if args[0] == "--delete":
-    print("Deleting transformations...")
+    print("Deleting transformations:")
     for filename in args[1 : ]:
         if transform_suffix in filename:
             remove_if_exists(filename, True)
@@ -102,7 +103,7 @@ if args[0] == "--delete":
     exit(0)
 
 if args[0] == "--replace":
-    print("Applying transformations...")
+    print("Applying transformations:")
     for filename in args[1 : ]:
         if transform_suffix in filename:
             src_filename = filename.replace(transform_suffix, "")
@@ -173,10 +174,21 @@ for src_filename in args:
 
     new_filename = transform_filename(src_filename)
 
+    print(f"Creating transform: {new_filename}")
+
     with open(new_filename, "w") as new_file:
         command = f"clang-format --style=file:clangFormatConfig {src_filename}"
         proc = subprocess.run(command.split(), stdout = new_file)
         assert proc.returncode == 0
+
+    with open(summary_path, "a") as diff_file:
+        diff_file.write(f"{src_filename} --> {new_filename}\n")
+        diff_file.flush()
+
+
+        command = f"diff {src_filename} {new_filename}"
+        proc = subprocess.run(command.split(), stdout = diff_file)
+
 
     if diff_ignore_whitespace(src_filename, new_filename):
         unsafe_changes.append(new_filename)

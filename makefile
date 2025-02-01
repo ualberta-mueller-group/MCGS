@@ -69,8 +69,11 @@ format:
 format_delete:
 	@python3 format_files.py --delete $(LINT_FILES)
 
-format_apply:
-	@python3 format_files.py --apply $(LINT_FILES)
+format_replace:
+	@python3 format_files.py --replace $(LINT_FILES)
+
+format_help:
+	@python3 format_files.py --help
 
 ifeq ($(CAN_BUILD), 1)
 
