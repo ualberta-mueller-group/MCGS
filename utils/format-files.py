@@ -201,6 +201,28 @@ def diff_ignore_whitespace(filename1, filename2):
             if c1 is None:
                 return False
 
+# True iff files differ
+def diff(filename1, filename2):
+    with (
+        open(filename1, "r") as file1,
+        open(filename2, "r") as file2
+    ):
+
+        ft1 = File_Thing(file1)
+        ft2 = File_Thing(file2)
+
+        while True:
+            c1 = ft1.get_next()
+            c2 = ft2.get_next()
+
+            if c1 != c2:
+                return True
+
+            if c1 is None:
+                return False
+
+
+
 
 # List of files differing by more than just whitespace
 unsafe_changes = []
@@ -226,6 +248,11 @@ for filename in args:
         command = f"clang-format --style=file:{config_name} {src_name}"
         proc = subprocess.run(command.split(), stdout = trn_file)
         assert proc.returncode == 0
+
+    if not diff(src_name, trn_name):
+        print("\tNo changes, deleting transform")
+        remove_if_exists(trn_name, False)
+        continue
 
     with open(summary_path, "a") as diff_file:
         diff_file.write(f"{src_name} --> {trn_name}\n")
