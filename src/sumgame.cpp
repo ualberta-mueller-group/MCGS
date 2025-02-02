@@ -27,11 +27,11 @@ public:
     sumgame_move_generator(const sumgame& game, bw to_play);
     ~sumgame_move_generator();
 
-    void operator++();
+    void operator++() override;
     void next_move(bool init);
-    operator bool() const;
+    operator bool() const override;
     sumgame_move gen_sum_move() const;
-    move gen_move() const {assert(false);}
+    move gen_move() const override {assert(false);}
 private:
     const game* _current() const { return _game.subgame(_subgame_idx); }
     const sumgame& _game;

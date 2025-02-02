@@ -141,9 +141,9 @@ class nogo_1xn_move_generator : public move_generator
 {
 public:
     nogo_1xn_move_generator(const nogo_1xn& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
 private:
     int _at(int p) const {return _game.at(p); }
     bool _is_legal(int p) const;

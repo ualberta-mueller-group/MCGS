@@ -73,9 +73,9 @@ class dyadic_rational_move_generator : public move_generator
 {
 public:
     dyadic_rational_move_generator(const dyadic_rational& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
 private:
     const dyadic_rational& _game;
     bool _has_move;

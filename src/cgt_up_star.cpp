@@ -64,9 +64,9 @@ class up_star_move_generator : public move_generator
 {
 public:
     up_star_move_generator(const up_star& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
 private:
     int _compute_num_moves(const up_star& game, bw to_play) const;
     const up_star& _game;

@@ -131,9 +131,9 @@ class clobber_1xn_move_generator : public move_generator
 {
 public:
     clobber_1xn_move_generator(const clobber_1xn& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
 private:
     int _at(int p) const {return _game.at(p); }
     bool _is_move(int p, int dir) const;

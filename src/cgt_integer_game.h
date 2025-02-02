@@ -15,13 +15,13 @@ class integer_game : public game
 {
 public:
     integer_game(int value);
-    void play(const move& m, bw to_play);
-    void undo_move();
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
     int value() const { return _value; }
     void set_value(int value) { _value = value; }
-    game* inverse() const;
-    move_generator* create_move_generator(bw to_play) const;
-    void print(std::ostream& str) const;
+    game* inverse() const override;
+    move_generator* create_move_generator(bw to_play) const override;
+    void print(std::ostream& str) const override;
 private:
     int _value;
 };

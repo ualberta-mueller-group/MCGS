@@ -86,9 +86,9 @@ class switch_move_generator : public move_generator
 {
 public:
     switch_move_generator(const switch_game& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
 private:
     bool _generated;
 };

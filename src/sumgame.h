@@ -58,10 +58,10 @@ public:
     ~sumgame();
     
     void play_sum(const sumgame_move& m, bw to_play);
-    void undo_move();
+    void undo_move() override;
     void add(game* g);
 
-    bool solve() const;
+    bool solve() const override;
 
     /*
         Timeout is in milliseconds. 0 means never timeout.
