@@ -9,13 +9,14 @@ transform_suffix = "___transformed"
 
 args = sys.argv[1 : ]
 
+
 def print_flag(flag_text, flag_description):
     print("\t" + flag_text)
     print("\t\t" + flag_description)
     print("")
 
-def print_help():
 
+def print_help():
     print(f"Usage: python3 {sys.argv[0]} [flags] [input files]")
     print("\n\tCreates, deletes, or applies format transformations on source files.")
 
@@ -25,27 +26,32 @@ Transform files have the transform suffix \"{transform_suffix}\" in their names,
 \tSource file: some_file.cpp
 \tTransform file: some_file{transform_suffix}.cpp
 
+Source and transform files can be used interchangeably in the input list, producing
+the same effect. This tool will convert between the two notations and deduplicate
+the input list. i.e.:
+\tpython3 {sys.argv[0]} some_file.cpp
+and
+\tpython3 {sys.argv[0]} some_file{transform_suffix}.cpp
+are equivalent.
+
 Modes:
     Create:
-        When [flags] is empty, operates in \"create\" mode, using clang-format
-        to generate transform files of given source files.
-        Transform files in the input list are ignored.
+        When [flags] is empty, use clang-format to create transform files.
         Prints a diff of all files to {summary_path}.
 
     Delete:
-        For each given source file, delete its corresponding transform file.
-        For each given transform file, delete it.
+        For each file in the input list, delete the corresponding transform file.
 
     Replace:
-        For each given source file, find its transform file. If the transform
-        file exists, replace the source file with it.
-        For each existing given transform file, replace its source file with it.
+        For each file in the input list, replace the corresponding source file
+        with its existing transform file.
 """)
 
     print("\nFlags:")
     print_flag("--delete", "Operate in \"delete\" mode")
     print_flag("--replace", "Operate in \"replace\" mode")
     print_flag("--help, -h", "Print this message")
+
 
 if "-h" in args or "--help" in args:
     print_help()
@@ -58,6 +64,7 @@ if len(args) < 1:
 if summary_path.exists():
     os.remove(summary_path)
 
+
 def remove_if_exists(filename, print_message):
     p = Path(filename)
     if p.exists():
@@ -67,8 +74,10 @@ def remove_if_exists(filename, print_message):
         return True
     return False
 
+
 def transform_filename(filename):
     assert type(filename) is str
+    assert transform_suffix not in filename
 
     p = Path(filename)
     suffix = str(p.suffix)
@@ -81,46 +90,64 @@ def transform_filename(filename):
     return without_suffix + transform_suffix + suffix
 
 
-def replace_with_transform(src_filename, transformed_filename):
-    p2 = Path(transformed_filename)
+def replace_with_transform_if_exists(src_filename, trn_filename):
+    p2 = Path(trn_filename)
 
     if p2.exists():
-        print(f"Replacing {src_filename} with {transformed_filename}")
+        print(f"Replacing {src_filename} with {trn_filename}")
         remove_if_exists(src_filename, False)
-        os.rename(transformed_filename, src_filename)
+        os.rename(trn_filename, src_filename)
+
+
+def get_src_trn_filename_pair(filename):
+    if transform_suffix in filename:
+        return [filename.replace(transform_suffix, ""), filename]
+    else:
+        return [filename, transform_filename(filename)]
 
 
 if args[0] == "--delete":
     print("Deleting transformations:")
+
+    seen_files = set()
+
     for filename in args[1 : ]:
-        if transform_suffix in filename:
-            remove_if_exists(filename, True)
-        else:
-            transformed_filename = transform_filename(filename)
-            remove_if_exists(transformed_filename, True)
+        src_name, trn_name = get_src_trn_filename_pair(filename)
+
+        if trn_name not in seen_files:
+            seen_files.add(trn_name)
+            remove_if_exists(trn_name, True)
 
     print("Done!")
     exit(0)
+
 
 if args[0] == "--replace":
     print("Applying transformations:")
+
+    seen_files = set()
+
     for filename in args[1 : ]:
-        if transform_suffix in filename:
-            src_filename = filename.replace(transform_suffix, "")
-            replace_with_transform(src_filename, filename)
-        else:
-            transformed_filename = transform_filename(filename)
-            replace_with_transform(filename, transformed_filename)
+        src_name, trn_name = get_src_trn_filename_pair(filename)
+
+        if trn_name not in seen_files:
+            seen_files.add(trn_name)
+            replace_with_transform_if_exists(src_name, trn_name)
 
     print("Done!")
     exit(0)
 
+
+# For reading a file one character at a time
 class File_Thing:
+
+    # Takes a file created with open()
     def __init__(self, file):
         self.file = file
         self.index = 0
         self.line = ""
 
+    # Return next character, or None if EOF
     def get_next(self):
         if self.index < len(self.line):
             c = self.line[self.index]
@@ -137,6 +164,7 @@ class File_Thing:
         self.index += 1
         return c
 
+    # Return next non-whitespace character, or None if EOF
     def get_next_non_space(self):
         while True:
             c = self.get_next()
@@ -146,6 +174,8 @@ class File_Thing:
                 continue
             return c
 
+
+# True iff files differ after deleting all whitespace
 def diff_ignore_whitespace(filename1, filename2):
     with (
         open(filename1, "r") as file1,
@@ -165,33 +195,43 @@ def diff_ignore_whitespace(filename1, filename2):
             if c1 is None:
                 return False
 
+
+# List of files differing by more than just whitespace
 unsafe_changes = []
 
+seen_files = set()
 
-for src_filename in args:
-    if transform_suffix in src_filename:
+
+for filename in args:
+    src_name, trn_name = get_src_trn_filename_pair(filename)
+
+    if trn_name in seen_files:
         continue
 
-    new_filename = transform_filename(src_filename)
+    seen_files.add(trn_name)
 
-    print(f"Creating transform: {new_filename}")
+    if not Path(src_name).exists():
+        print(f"SKIPPING {src_name}, file doesn't exist")
+        continue
 
-    with open(new_filename, "w") as new_file:
-        command = f"clang-format --style=file:clangFormatConfig {src_filename}"
-        proc = subprocess.run(command.split(), stdout = new_file)
+    print(f"Creating transform: {trn_name}")
+
+    with open(trn_name, "w") as trn_file:
+        command = f"clang-format --style=file:clangFormatConfig {src_name}"
+        proc = subprocess.run(command.split(), stdout = trn_file)
         assert proc.returncode == 0
 
     with open(summary_path, "a") as diff_file:
-        diff_file.write(f"{src_filename} --> {new_filename}\n")
+        diff_file.write(f"{src_name} --> {trn_name}\n")
         diff_file.flush()
 
-
-        command = f"diff {src_filename} {new_filename}"
+        command = f"diff {src_name} {trn_name}"
         proc = subprocess.run(command.split(), stdout = diff_file)
+        assert proc.returncode in [0, 1]
 
 
-    if diff_ignore_whitespace(src_filename, new_filename):
-        unsafe_changes.append(new_filename)
+    if diff_ignore_whitespace(src_name, trn_name):
+        unsafe_changes.append(trn_name)
 
 
 if len(unsafe_changes) > 0:
@@ -199,5 +239,3 @@ if len(unsafe_changes) > 0:
     print("Relevant files:")
     for f in unsafe_changes:
         print(f)
-
-
