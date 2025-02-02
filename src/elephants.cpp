@@ -5,6 +5,7 @@
 
 
 using std::string, std::cout, std::endl, std::pair;
+using std::vector;
 
 int player_dir(bw to_play)
 {

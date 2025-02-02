@@ -12,8 +12,6 @@
 #include "cgt_move.h"
 //---------------------------------------------------------------------------
 
-using std::vector; // TODO probably remove this?
-//---------------------------------------------------------------------------
 
 class move_generator;
 class game;
@@ -93,7 +91,7 @@ public:
     virtual game* inverse() const = 0; // caller takes ownership
 
 private:
-    vector<move> _move_stack;
+    std::vector<move> _move_stack;
     bool _is_active;
 }; // game
 
@@ -142,7 +140,7 @@ inline split_result game::split() const
     }
 
     // filter games
-    split_result result = split_result(vector<game*>());
+    split_result result = split_result(std::vector<game*>());
 
     for (game* g : *sr)
     {

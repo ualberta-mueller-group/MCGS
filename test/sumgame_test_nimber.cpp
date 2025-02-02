@@ -7,6 +7,9 @@
 #include <cassert>
 #include <array>
 #include "test_utilities.h"
+#include <vector>
+
+using std::vector;
 
 namespace {
 

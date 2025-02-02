@@ -11,6 +11,7 @@
 #include "sumgame.h"
 #include "file_parser.h"
 #include <string>
+#include <vector>
 
 inline void assert_move(move_generator& mg, int mv)
 { 
@@ -82,8 +83,8 @@ void assert_inverse_sum_zero(game* g);
 
 
 
-void assert_file_parser_output(file_parser* parser, vector<game_case *>& expected_cases);
-void assert_file_parser_output_file(const std::string& file_name, vector<game_case *>& expected_cases);
+void assert_file_parser_output(file_parser* parser, std::vector<game_case *>& expected_cases);
+void assert_file_parser_output_file(const std::string& file_name, std::vector<game_case *>& expected_cases);
 
 const std::string UNIT_TEST_INPUT_DIR = "test/input/unit_tests/";
 

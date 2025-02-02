@@ -28,7 +28,7 @@ struct play_record
 
     bool did_split;
     sumgame_move move;
-    vector<game const*> new_games; // doesn't own games, just stores them for debugging
+    std::vector<game const*> new_games; // doesn't own games, just stores them for debugging
 
 };
 
@@ -75,7 +75,7 @@ public:
     int num_active_games() const;
     const game* subgame_const(int i) const {return _subgames[i]; }
     game* subgame(int i) const {return _subgames[i]; }
-    const vector<game*>& subgames() const { return _subgames; }
+    const std::vector<game*>& subgames() const { return _subgames; }
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
@@ -90,8 +90,8 @@ private:
     mutable bool _should_stop;
     std::optional<solve_result> _solve_with_timeout();
 
-    vector<game*> _subgames; // sumgame owns these subgames
-    vector<play_record> _play_record_stack;
+    std::vector<game*> _subgames; // sumgame owns these subgames
+    std::vector<play_record> _play_record_stack;
 };
 //---------------------------------------------------------------------------
 

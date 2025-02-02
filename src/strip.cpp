@@ -6,6 +6,8 @@
 #include "cgt_basics.h"
 //---------------------------------------------------------------------------
 
+using std::vector;
+
 int clobber_char_to_color(char c)
 {
     if (c == 'X')

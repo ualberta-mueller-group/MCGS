@@ -1,4 +1,4 @@
-Checks: '-*,readability-identifier-naming,modernize-use-override'
+Checks: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers'
 WarningsAsErrors: '*'
 HeaderFilterRegex: .h
 SystemHeaders: false
