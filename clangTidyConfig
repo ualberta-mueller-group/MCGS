@@ -1,8 +1,13 @@
-Checks: '-*,readability-identifier-naming'
-#WarningsAsErrors: '-*,readability-identifier-naming'
+Checks: '-*,readability-identifier-naming,modernize-use-override'
+WarningsAsErrors: '*'
 HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:
+
+
+  - { key: modernize-use-override.IgnoreDestructors, value: true }
+  - { key: modernize-use-override.AllowOverrideAndFinal, value: true }
+
   - { key: readability-identifier-naming.PrivateMemberPrefix, value: _ }
   - { key: readability-identifier-naming.PrivateMethodPrefix, value: _ }
   - { key: readability-identifier-naming.ProtectedMemberPrefix, value: _ }

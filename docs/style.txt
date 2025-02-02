@@ -75,3 +75,4 @@ Require "override" where applicable
 No "using" keyword in headers
 
 
+llvm-namespace-comment
