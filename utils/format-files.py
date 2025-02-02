@@ -5,6 +5,9 @@ import os
 
 summary_path = Path("format_result.txt")
 transform_suffix = "___transformed"
+config_name = ".clang-format"
+
+assert Path(config_name).exists()
 
 
 args = sys.argv[1 : ]
@@ -34,10 +37,13 @@ and
 \tpython3 {sys.argv[0]} some_file{transform_suffix}.cpp
 are equivalent.
 
+
 Modes:
     Create:
         When [flags] is empty, use clang-format to create transform files.
-        Prints a diff of all files to {summary_path}.
+        Prints a diff of all files to {summary_path}. Also prints to stdout, a
+        list of created transform files who differ from their source file by
+        more than just whitespace.
 
     Delete:
         For each file in the input list, delete the corresponding transform file.
@@ -47,7 +53,7 @@ Modes:
         with its existing transform file.
 """)
 
-    print("\nFlags:")
+    print("Flags:")
     print_flag("--delete", "Operate in \"delete\" mode")
     print_flag("--replace", "Operate in \"replace\" mode")
     print_flag("--help, -h", "Print this message")
@@ -217,7 +223,7 @@ for filename in args:
     print(f"Creating transform: {trn_name}")
 
     with open(trn_name, "w") as trn_file:
-        command = f"clang-format --style=file:clangFormatConfig {src_name}"
+        command = f"clang-format --style=file:{config_name} {src_name}"
         proc = subprocess.run(command.split(), stdout = trn_file)
         assert proc.returncode == 0
 
@@ -234,8 +240,12 @@ for filename in args:
         unsafe_changes.append(trn_name)
 
 
+
+print("")
+print(f"{len(unsafe_changes)} file(s) differ by more than just whitespace")
+
 if len(unsafe_changes) > 0:
-    print(f"{len(unsafe_changes)} files seem to have been meaningfully changed. Check if it's a comment at the end of a namespace")
+    print("Check if the differences are from comments at the end of namespace braces")
     print("Relevant files:")
     for f in unsafe_changes:
         print(f)

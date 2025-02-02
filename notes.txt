@@ -1,9 +1,0 @@
-identifiers: lower_case
-macro: UPPER_CASE
-
-constexpr: UPPER_CASE
-
-private member (both field and method): prefix with "_"
-
-
-methods first, THEN fields later

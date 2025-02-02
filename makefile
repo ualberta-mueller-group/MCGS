@@ -1,9 +1,6 @@
-
 CC = c++
-NORMAL_FLAGS = -Wall --std=c++17 -O3
-TEST_FLAGS = -Wall --std=c++17 -O3 -g
-
-
+NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3
+TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g
 # Valgrind is too slow for even short computations. Instead add: -fsanitize=leak
 # as a flag when compiling. Should work for clang++ and g++
 # Still slows down executation considerably, but not nearly as much
@@ -14,8 +11,10 @@ TEST_DIR = test
 RELEASE_BUILD_DIR = build/release
 TEST_BUILD_DIR = build/test
 
-
 INC = -I. -I$(SRC_DIR)
+
+NORMAL_FLAGS := $(NORMAL_FLAGS_BASE) $(INC)
+TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC)
 
 # args: files, directory prefix, file extension
 OUTPATH = \
@@ -37,16 +36,18 @@ MCGS_TEST_SRC_H = $(wildcard $(SRC_DIR)/*.h $(TEST_DIR)/*.h)
 MCGS_TEST_OBJS := $(call OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.o)
 MCGS_TEST_DEPS := $(call OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.d)
 
-#### For linter tools
+#### For linter tooling
 ALL_SRC_FILES := $(MCGS_SRC) $(MCGS_SRC_H) $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H) 
 ALL_SRC_FILES := $(sort $(ALL_SRC_FILES))
-
-LINT_FILES ?= $(ALL_SRC_FILES)
+TIDY_CONFIG := .clang-tidy
+FORMAT_SCRIPT := utils/format-files.py
 
 
 
 .DEFAULT_GOAL := MCGS
-.PHONY: clean test leakcheck leakcheck_test tidy format
+.PHONY: clean test
+.PHONY: tidy tidy_release tidy_test
+.PHONY: format format_delete format_replace
 
 
 CAN_BUILD=0
@@ -60,30 +61,39 @@ ifdef USE_FLAGS
 endif
 
 
+# Tidy targets
 tidy:
-	clang-tidy --config-file=clangTidyConfig $(LINT_FILES) -- $(NORMAL_FLAGS) $(INC) -x c++ 2>&1 | tee tidy_result.txt
+	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
+	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
 
+tidy_release:
+	$(eval LINT_FILES ?= $(MCGS_SRC) $(MCGS_SRC_H))
+	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+
+tidy_test:
+	$(eval LINT_FILES ?= $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H))
+	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+
+# Format targets
 format:
-	@python3 format_files.py $(LINT_FILES)
+	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
+	@python3 $(FORMAT_SCRIPT) $(LINT_FILES)
 
 format_delete:
-	@python3 format_files.py --delete $(LINT_FILES)
+	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
+	@python3 $(FORMAT_SCRIPT) --delete $(LINT_FILES)
 
 format_replace:
-	@python3 format_files.py --replace $(LINT_FILES)
+	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
+	@python3 $(FORMAT_SCRIPT) --replace $(LINT_FILES)
 
-format_help:
-	@python3 format_files.py --help
 
 ifeq ($(CAN_BUILD), 1)
-
 MCGS: $(MCGS_OBJS)
-	$(CC) $(USE_FLAGS) $(INC) $^ -o $@
+	$(CC) $(USE_FLAGS) $^ -o $@
 
 MCGS_test: $(MCGS_TEST_OBJS)
-	$(CC) $(USE_FLAGS) $(INC) $^ -o $@
-
-
+	$(CC) $(USE_FLAGS) $^ -o $@
 
 else
 .PHONY: MCGS MCGS_test
@@ -93,10 +103,11 @@ MCGS:
 
 MCGS_test:
 	make $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)" BUILD_DIR="$(TEST_BUILD_DIR)"
+
 endif
 
 
-
+# Simple targets
 clean:
 	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM *.d main/*.d test/*.d
 	-rm -rf build
@@ -108,18 +119,11 @@ test-fast: MCGS_test
 	./MCGS_test --no-slow-tests
 
 
-#%.d: %.cpp
-#	$(CC) -MM $(USE_FLAGS) $(INC) $< > $@
-
-#%.o: %.cpp %.h
-#	$(CC) $(USE_FLAGS) $(INC) $< -o $@ -c
-
-
-
+# Object file target
 # TODO should this call mkdir like this? There's probably a better way
 $(BUILD_DIR)/%.o: %.cpp
 	-mkdir -p $(dir $@)
-	$(CC) $(USE_FLAGS) -x c++ $(INC) -MMD -MP -c $< -o $@
+	$(CC) $(USE_FLAGS) -x c++ -MMD -MP -c $< -o $@
 
 
 -include $(DEPS)
