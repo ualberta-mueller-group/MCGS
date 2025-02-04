@@ -2,11 +2,11 @@
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
-Taylor Folkersen, Martin Müller and Henry Du, 2024
+Taylor Folkersen, Martin Müller and Henry Du, 2024-25
 
 MCGS is an efficient minimax search-based solver for sums of combinatorial games. Given a sum of games and a first player, MCGS determines the winner. The code is modular and extensible, allowing users to easily add new types of games and benefit from existing game-independent optimizations. Future versions will include hooks for game-specific optimizations, and implement many general search optimizations.
 
-For the overall approach and future plans, see the document "The Design of MCGS: A Minimax Search-based Solver for Combinatorial Games".
+The overall approach and future plans will be described in a forthcoming document "The Design of MCGS: A Minimax Search-based Solver for Combinatorial Games".
 
 
 ### Sections
@@ -31,10 +31,10 @@ To run all unit tests, run:
 ```
 make test
 ```
-This will build and then run `./MCGS_test`, and on successful completion of unit tests, the text "SUCCESS" should appear.
+This will build and then run `./MCGS_test`, and on successful completion of unit tests, the text "SUCCESS" should appear. Running all tests can take several seconds, depending on your hardware.
 
 ### Using MCGS
-`MCGS` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. Example usage solving a linear clobber game `XOXOXO` twice, once with black playing first, and once with white playing first: 
+`MCGS` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. The example below solvies a linear clobber game `XOXOXO` twice, once with black playing first, and once with white playing first: 
 ```
 ./MCGS "[clobber_1xn] XOXOXO {B, W}"
 ```
@@ -44,44 +44,48 @@ For details about using `./MCGS`, see `./MCGS --help`. Some command line argumen
 For a full description of input syntax, see [input/info.test](input/info.test).
 
 ### Using the Testing Framework
-Included is a testing framework which is used to generate, compare, and analyze performance and correctness data from MCGS. Running:
+The testing framework included in MCGS is used to generate, compare, and analyze performance and correctness data from MCGS. The command:
 ```
 ./MCGS --run-tests
 ```
-will run all `.test` files in the `input/autotests` directory, outputting performance and correctness data to `out.csv`, with one row of data per game sum. Then, running:
+will do two things:
+- run all `.test` files in the `input/autotests` directory
+- output all performance and correctness data to a file `out.csv`, with one row of data per game sum. 
+
+To show test results in a form suitable for viewing in a web browser, run:
 ```
 python3 create-table.py out.csv -o table.html
 ```
-will generate `table.html`, which is to be viewed in a web browser. The output HTML includes one row for each row in `out.csv`. `create-table.py` can also compare two CSV files. For more information (i.e. comparing CSV files, explanation of output HTML, etc.), see:
+This will generate a HTML file `table.html` with a table, with one row for each row in `out.csv`. The script `create-table.py` contains more functionality, such as comparing two CSV result files. For information on the options and an explanation of the HTML output run:
 ```
 python3 create-table.py --help
 ```
-and for information about test options (i.e. timeout duration, input directory, output file, etc.), see:
+For information about MCGS test options such as timeout duration, input directory, and output file, run:
 ```
 ./MCGS --help
 ```
 
-The `input` directory includes other sample input files, such as the `input/hard` directory, consisting of tests excluded from the `input/autotests` directory deemed to be too slow for demonstration purposes at this time.
+The `input` directory of MCGS includes other sample input files. For example, the `input/hard` directory contains tests that run more slowly in the current MCGS version than the ones in `input/autotests`.
 
-## Extending MCGS
-The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new kinds of games, and have them be recognized as input. The following sections first describe internal data types of interest to this goal, and then describe the steps for adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
+## Source Code and Extending MCGS
+The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new games, and define a text input format for them. The following sections first describe key internal data types, and then describe the steps for adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
 
-The code is organized in a mostly "flat" way; source code files are mostly in the `./src` directory, with `main.cpp` being in `./src/main` and unit tests being in `./test`. In following sections, files mentioned by name are assumed to be in the `./src` directory unless specified otherwise.
+The code is organized in a mostly "flat" way; most source code files are in the `./src` directory. The `main.cpp` file is in `./src/main` and all unit tests are in `./test`. In the following sections, all files mentioned by name are assumed to be in `./src` unless specified otherwise.
 
-For more info that might be useful for development, see [development-notes.md](docs/development-notes.md).
+For more information about ongoing development, see [development-notes.md](docs/development-notes.md).
 
 ### MCGS data types
 #### game (game.h)
 The abstract base type for all combinatorial games supported by MCGS.
 
 #### strip (strip.h)
-An abstract game type derived from `game`, for games played on a "line" (1 dimensional board), consisting of black stones, white stones, and empty tiles. Used by games `clobber_1xn`, `nogo_1xn`, `elephants`, etc. 
+An abstract game type derived from `game`, for games played on a "line" (1 dimensional board), consisting of black stones, white stones, and empty tiles. The games `clobber_1xn`, `nogo_1xn`, and `elephants` extend `strip` and can be used as examples for new implementations.
 
 #### move (cgt_move.h)
-Represents a move that can be played within a `game`. In this version, `move` is an at least 32 bit integer. Games define the meaning of their `move`s but can only use 31 bits, as the color of a player is also encoded in a `move`. cgt_move.h defines utilties for packing and unpacking `move`s, to deal with the color bit and "rest" of the `move`, including functions to encode and decode two smaller integers into a `move` (i.e. to store a "from" and "to").
+Represents a move that can be played within a `game`. In this version, `move` is an integer with at least 32 bits. Each game defines the encoding of legal moves into `move`. The highest order bit is always used to encode the color of the player making the move, leaving 31 bits for the move itself. File `cgt_move.h` defines utility functions for packing and unpacking `move`s, to deal with the color bit and the "rest" of each `move`. This includies functions to encode and decode a `move` consisting of two smaller integers, for example to store a "from" and a "to" coordinate, or to encode a fraction.
 
 #### move_generator (game.h)
-An abstract type implementing an iterator over a `game`'s moves, for a specific position and player.
+This abstract type defines the interface for an iterator over all legal moves in a  position derived from `game`, for a given player.
 
 #### split_result (game.h)
 Typedef of `std::optional<std::vector<game*>>`. The (possibly absent) result of splitting a `game` into subgames whose sum equals the `game` being split. During search, `game`s are split and replaced by their subgames. When `has_value()` is true and the vector is empty, the `game` being split is equal to 0. When `has_value()` is false, the vector is absent, and the split has no effect.
@@ -102,7 +106,7 @@ To implement a new game `x`:
 - In `test/x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. Add the declaration in `test/x_test.h` 
 - Call `x_test_all` from `test/main_test.cpp`.
 
-The `test/input` directory contains input files used by unit tests.
+The `test/input` directory contains input files used by unit tests. Add your new tests there.
 
 ### Implementing Game-Specific Optimizations
 Currently there is one (unused) game-specific optimization. In the future there will be more (and they will be used).
