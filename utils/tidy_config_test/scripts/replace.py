@@ -1,5 +1,11 @@
-infile = open("style_test_template.cpp", "r")
-outfile = open("style_test.cpp", "w")
+import sys
+
+# <template cpp> <output cpp>
+assert len(sys.argv) == 3
+
+
+infile = open(sys.argv[1], "r")
+outfile = open(sys.argv[2], "w")
 
 replacements = ["YESERROR", "NOERROR"]
 

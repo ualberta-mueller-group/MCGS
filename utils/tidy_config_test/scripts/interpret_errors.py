@@ -1,13 +1,18 @@
-got_file = open("got_errors.txt", "r")
-exp_file = open("expected_errors.txt", "r")
+import sys
 
-got = [x for x in got_file]
+# <expected> <got> <out>
+assert len(sys.argv) == 4
+
+exp_file = open(sys.argv[1], "r")
+got_file = open(sys.argv[2], "r")
+
 exp = [x for x in exp_file]
+got = [x for x in got_file]
 
 exp_file.close()
 got_file.close()
 
-out_file = open("errors.txt", "w")
+out_file = open(sys.argv[3], "w")
 
 
 for x in got:
