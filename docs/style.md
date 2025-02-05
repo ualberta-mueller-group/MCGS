@@ -1,3 +1,18 @@
+# Style guide
+
+This document outlines the style used in C++ source files within this project, then explains configuration options 
+
+
+- Code style summary
+- Style tools
+- Configuration options
+- Other scripts
+
+
+
+
+
+
 (AccessModifierOffset: -2 --> -4) #3
 "public", "private", "protected" not indented from brace level
 
