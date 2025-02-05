@@ -29,11 +29,11 @@ int& y;
 ```
 
 ### Identifier naming
-Identifiers should be lower case, with underscores separating words. This includes struct/class names, function signature parameters, variables, etc, with the following exceptions:
-- Global constants, static constants, static struct/class constants, macros, and constexprs should be upper case
+Identifiers should be lower case, with underscores separating words, with the following exceptions:
+- Global/static/enum constants, macros, and constexprs should be upper case
 - Local constants can be either lower or upper case
 
-Additionally, private and protected member and method names should start with a `_`. Other identifiers should not.
+Additionally, private and protected member methods/fields should start with a `_`. Other identifiers should not.
 
 Example:
 ```
@@ -42,28 +42,33 @@ const int GLOBAL2 = 0;
 
 #define MACRO1 5
 
-struct some_struct
+enum some_enum
+{
+    SOME_ENUM_CONSTANT1,
+};
+
+class some_class
 {
     void method1(int param1);
 
-    int member1;
-    const int member2;
+    int field1;
+    const int field2;
 
-    static const int MEMBER3;
+    static const int FIELD3;
 
 private:
     void _method2();
 
-    int _member4;
-    const int _member5;
+    int _field4;
+    const int _field5;
 
-    static const int _MEMBER6;
+    static const int _FIELD6;
 };
 
 int main()
 {
-    const int n = 0;
-    const int N = 0;
+    const int some_local_constant = 0;
+    const int SOME_LOCAL_CONSTANT = 0;
 
     ...
 }
@@ -72,21 +77,21 @@ int main()
 ### Structs/classes
 Generally, use structs for plain data structures, and classes for objects with more complicated semantics (i.e. methods, private/protected specifiers, non-trivial constructors, etc.).
 
-Within a struct/class, and within a given (possibly implicit) access specifier, methods should come before member variables:
+Within a struct/class, and within a given (possibly implicit) access specifier, methods should come before fields:
 ```
-struct some_struct
+class some_class
 {
 public:
     void some_method1();
     void some_method2();
 
-    int some_member1;
-    int some_member2;
+    int some_field1;
+    int some_field2;
 
 private:
     void _some_method3();
 
-    int _some_member3;
+    int _some_field3;
 };
 ```
 
@@ -107,10 +112,10 @@ namespace cgt
 ```
 
 ### Implementations in headers
-Function/method definitions should generally go in `.cpp` files and not `.h` files, unless the function/method is both short and declared `inline`. Definitions possibly leading to [ODR violations](https://en.cppreference.com/w/cpp/language/definition) should be caught by the linter tools explained in following sections
+Function/method definitions should generally go in `.cpp` files and not `.h` files, unless the function/method is both short and declared `inline`. Definitions possibly leading to [ODR violations](https://en.cppreference.com/w/cpp/language/definition) should be caught by the linter tools explained in following sections.
 
-### Using keyword
-The `using` keyword should not appear in headers. This should be caught by our linter tools, (i.e. `using namespace std;`, `using std::vector`).
+### "using" keyword
+The `using` keyword should not appear in headers. This should be caught by our linter tools, (i.e. `using namespace std;`, `using std::vector;`).
 
 ### Empty lines
 Definition blocks (i.e. classes/structs, enums, functions/methods) should be separated by a single empty line:
@@ -127,7 +132,7 @@ void some_function()
 {
 }
 
-struct
+class some_class
 {
     void some_method()
     {
@@ -144,11 +149,12 @@ struct
 ```
 
 ### Spaces
-Leave spaces between around operators, but not unary operators:
+Leave spaces around binary operators, but not unary operators:
 ```
 int x = 4 + 5;
 int y = *some_pointer;
 ++y;
+int z = some_pointer[x];
 ```
 
 Leave spaces between statements of a for loop's "head", unless the statement is empty:
@@ -167,9 +173,6 @@ Leave a space after a C-style cast:
 float x = (float) 5;
 ```
 
-
-
-
 # Style Tooling
 TODO clang-format, clang-tidy
 
@@ -177,6 +180,7 @@ TODO clang-format, clang-tidy
 TODO tidy_test_template.cpp
 
 # Configuration Options
+This section explains some configuration options chosen 
 
 
 
