@@ -3,6 +3,25 @@
 
 using namespace std;
 
+int check = 0; // NOERROR
+int _check = 0; // YESERROR
+const int check = 0; // YESERROR
+const int _check = 0; // YESERROR
+int CHECK = 0; // YESERROR
+int _CHECK = 0; // YESERROR
+const int CHECK = 0; // NOERROR
+const int _CHECK = 0; // YESERROR
+
+static int check = 0; // NOERROR
+static int _check = 0; // YESERROR
+static const int check = 0; // YESERROR
+static const int _check = 0; // YESERROR
+static int CHECK = 0; // YESERROR
+static int _CHECK = 0; // YESERROR
+static const int CHECK = 0; // NOERROR
+static const int _CHECK = 0; // YESERROR
+
+
 
 struct some_struct
 {
