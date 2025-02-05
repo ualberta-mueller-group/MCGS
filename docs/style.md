@@ -1,15 +1,182 @@
 # Style guide
 
-This document outlines the style used in C++ source files within this project, then explains configuration options 
+This document gives details about coding style for C++ files in this project, and tools relating to style.
+
+## Sections
+- [Code Style](#code-style)
+- [Style Tooling](#style-tooling)
+- [Other Scripts](#other-scripts)
+- [Configuration Options](#configuration-options)
 
 
-- Code style summary
-- Style tools
-- Configuration options
-- Other scripts
+# Code Style
+This section describes the style used by C++ files in this project.
+
+### Brace wrapping
+Braces get their own lines:
+```
+if (true)
+{
+    do_something();
+}
+```
+
+### Pointer/reference symbols
+Pointer/reference symbols go on the left:
+```
+int* x;
+int& y;
+```
+
+### Identifier naming
+Identifiers should be lower case, with underscores separating words. This includes struct/class names, function signature parameters, variables, etc, with the following exceptions:
+- Global constants, static constants, static struct/class constants, macros, and constexprs should be upper case
+- Local constants can be either lower or upper case
+
+Additionally, private and protected member and method names should start with a `_`. Other identifiers should not.
+
+Example:
+```
+int global1;
+const int GLOBAL2 = 0;
+
+#define MACRO1 5
+
+struct some_struct
+{
+    void method1(int param1);
+
+    int member1;
+    const int member2;
+
+    static const int MEMBER3;
+
+private:
+    void _method2();
+
+    int _member4;
+    const int _member5;
+
+    static const int _MEMBER6;
+};
+
+int main()
+{
+    const int n = 0;
+    const int N = 0;
+
+    ...
+}
+```
+
+### Structs/classes
+Generally, use structs for plain data structures, and classes for objects with more complicated semantics (i.e. methods, private/protected specifiers, non-trivial constructors, etc.).
+
+Within a struct/class, and within a given (possibly implicit) access specifier, methods should come before member variables:
+```
+struct some_struct
+{
+public:
+    void some_method1();
+    void some_method2();
+
+    int some_member1;
+    int some_member2;
+
+private:
+    void _some_method3();
+
+    int _some_member3;
+};
+```
+
+Additionally:
+- Include 1 empty line above access specifiers (i.e. public/protected/private), unless the access specifier comes immediately after the opening brace
+- Access specifiers aren't indented past the opening/closing brace level
+
+### Override
+Implementations of virtual methods should use either the `override` or `final` keywords. The linter tools explained in following sections should catch missing occurrences of these.
+
+### Namespaces
+End namespace blocks with a comment like "namespace your_namespace_name":
+```
+namespace cgt
+{
+...
+} // namespace cgt
+```
+
+### Implementations in headers
+Function/method definitions should generally go in `.cpp` files and not `.h` files, unless the function/method is both short and declared `inline`. Definitions possibly leading to [ODR violations](https://en.cppreference.com/w/cpp/language/definition) should be caught by the linter tools explained in following sections
+
+### Using keyword
+The `using` keyword should not appear in headers. This should be caught by our linter tools, (i.e. `using namespace std;`, `using std::vector`).
+
+### Empty lines
+Definition blocks (i.e. classes/structs, enums, functions/methods) should be separated by a single empty line:
+```
+enum some_enum
+{
+    SOME_VAL1,
+    SOME_VAL2,
+    ...
+};
+
+// This comment doesn't count as an empty line
+void some_function()
+{
+}
+
+struct
+{
+    void some_method()
+    {
+        ...
+    }
+
+    void some_other_method()
+    {
+        ...
+    }
+};
+
+
+```
+
+### Spaces
+Leave spaces between around operators, but not unary operators:
+```
+int x = 4 + 5;
+int y = *some_pointer;
+++y;
+```
+
+Leave spaces between statements of a for loop's "head", unless the statement is empty:
+```
+for (int x = 0; x < 100; x++)
+{
+}
+
+for (;;)
+{
+}
+```
+
+Leave a space after a C-style cast:
+```
+float x = (float) 5;
+```
 
 
 
+
+# Style Tooling
+TODO clang-format, clang-tidy
+
+# Other Scripts
+TODO tidy_test_template.cpp
+
+# Configuration Options
 
 
 
@@ -80,26 +247,3 @@ i.e. "(float) 4" instead of "(float)4"
 
 (SpaceBeforeCpp11BracedList: false --> true) #224
 i.e. "new int[3] {1, 2, 3};" instead of "new int[3]{1, 2, 3};"
-
-
-
-============================================================
-
-Require "override" where applicable
-
-No "using" keyword in headers
-
-
-llvm-namespace-comment
-
-
-
-identifiers: lower_case
-macro: UPPER_CASE
-
-constexpr: UPPER_CASE
-
-private member (both field and method): prefix with "_"
-
-
-methods first, THEN fields later
