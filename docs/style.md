@@ -1,13 +1,13 @@
-# Style guide
+# Style Guide
 
 This document gives details about coding style for C++ files in this project, and tools relating to style.
 
 ## Sections
 - [Code Style](#code-style)
 - [Style Tooling](#style-tooling)
-- [Other Scripts](#other-scripts)
-- [Configuration Options](#configuration-options)
-
+- [Modifying Tooling Configs](modifying-tooling-configs)
+    - [Tidy Config Testing Script](tidy-config-testing-script)
+    - [Format Config Choices](format-config-choices)
 
 # Code Style
 This section describes the style used by C++ files in this project.
@@ -174,80 +174,133 @@ float x = (float) 5;
 ```
 
 # Style Tooling
-TODO clang-format, clang-tidy
+Two tools are used to help enforce style: `clang-tidy`, and `clang-format`. Clang-tidy does static analysis and will catch non-compliant identifier naming, missing `override` and `final` keywords on virtual methods implementations, definitions in headers causing possible ODR violations, and more, whereas clang-format mainly deals with formatting of whitespace. These tools are used separately, from several makefile targets described below. These targets all operate on default sets of source files, and you can override this by defining the `LINT_FILES` variable in your shell environment, i.e.:
+```
+LINT_FILES="src/some_file.cpp src/some_other_file.cpp" make format
+```
 
-# Other Scripts
-TODO tidy_test_template.cpp
+Before opening a pull request, contributors should first run these tools and fix any issues found.
 
-# Configuration Options
-This section explains some configuration options chosen 
+## clang-tidy targets
+3 targets are used to invoke clang-tidy:
+
+- tidy
+    - Run clang-tidy on all source files, using release compilation flags
+- tidy_release
+    - Run clang-tidy on only release source files (i.e. `MCGS` target), using release compilation flags
+- tidy_test
+    - Run clang-tidy on only test source files (i.e. `MCGS_test` target), using test compilation flags
+
+The result will be printed to the screen, and also saved in `tidy_result.txt`. Many thousands of warnings will be found and suppressed within included system headers, and problems within project code will be shown as errors instead of warnings. If errors are not mentioned in the output, then no problems were found in project code. Errors must be fixed manually, as automatically applying suggested changes will break code, i.e. renaming a virtual method in a base class will not rename the overriden method in derived classes.
+
+To disable clang-tidy for certain sections, see [Suppressing Undesired Diagnostics](https://clang.llvm.org/extra/clang-tidy/#suppressing-undesired-diagnostics).
+
+## clang-format targets
+3 targets are used to invoke clang-format:
+
+- format
+    - Run clang-format on all source files, generating new files with suffixes like `___transformed.cpp`, which are formatted versions of the original source files. Transformed files are omitted when identical to their original sources. Warnings will be printed for source/transformed pairs differing by more than just whitespace.
+- format_delete
+    - Delete transformed files
+- format_replace
+    - Replace source files with their transformed versions, if they exist
+ 
+A combined diff of all source/transformed pairs will be output to `format_result.txt`, and includes file names. For all of these targets, the paths specified within `LINT_FILES` can be either source files, or their transformed versions -- both will produce the same effect. 
+
+To disable clang-format for certain sections, see [Disabling Formatting on a Piece of Code](https://clang.llvm.org/docs/ClangFormatStyleOptions.html#disabling-formatting-on-a-piece-of-code). Alternatively, for complex conditionals spanning multiple lines, include comments at the end of each line to prevent collapse onto a single line:
+```
+if (a //
+    || (b && d) // these comments can be empty or non-empty
+    || (c && a)) //
+{
+    ...
+}
+```
+
+# Modifying Tooling Configs
+The following subsections are only relevant to those seeking to modify the Clang tooling configs, `.clang-tidy` and `.clang-format`.
+
+## Tidy Config Testing Script
+The files in this subsection are assumed to be in `utils/tidy_config_test`, unless stated otherwise.
+
+`run.sh` is used to test `.clang-tidy` (from the project's root directory) against an auto-generated sample input file. Through comments, `scripts/tidy_test_template.cpp` specifies which lines should produce clang-tidy errors, and which should not. This file is used to generate `temp/tidy_test.cpp` by renaming identifiers containing "check" or "CHECK" to some variant of "yeserror", "YESERROR", "noerror", and "NOERROR", based on capitalization, and with a unique numeric suffix. These numeric suffixes will show up in `temp/errors.txt` with the text "FALSE POSITIVE" or "MISSING ERROR" to indicate that a line produced an error when it shouldn't have, or produced no error when it should have. See `temp/tidy_test.cpp` to make sense of these numbers. When `temp/errors.txt` is empty, and the tool ran successfully, then the `.clang-tidy` config in the root directory produces the expected result.
+
+## Format Config Choices
+The `.clang-format` file was generated by first dumping the `microsoft` preset:
+```
+clang-format --style=microsoft --dump-config > .clang-format
+```
+and then modifying several options, explained below.
 
 
-
-(AccessModifierOffset: -2 --> -4) #3
+(AccessModifierOffset: -2 --> -4) line 3  
 "public", "private", "protected" not indented from brace level
 
 
-(AlignAfterOpenBracket: Align --> BlockIndent) #4
-When items between brackets don't fit on the line, add line break
-i.e.:
-    someLongFunction(
-        argument1, argument2
-    )
+(AlignAfterOpenBracket: Align --> BlockIndent) line 4  
+When items between brackets don't fit on the line, add line break:
+```
+someLongFunction(
+    argument1, argument2
+)
+```
 Other options seem to cause problems with initializer lists near the ends of function
 call parameters on long lines (the list gets put on the next line but indented
 too far to the right). Example:
+```
 test_strip<elephants>(".......X.....O..X.....O.......", {
                                                             ".......X.....O",
                                                             "X.....O.......",
                                                         });
+```
 
 
-(AllowShortFunctionsOnASingleLine: None --> Empty) #74
-Empty functions have braces on the same line i.e.:
-    cli_options::~cli_options() {}
+(AllowShortFunctionsOnASingleLine: None --> Empty) line 74  
+Empty functions have braces on the same line:
+```
+cli_options::~cli_options() {}
+```
 
-
-(BraceWrapping.AfterCaseLabel: false --> true) #86
+(BraceWrapping.AfterCaseLabel: false --> true) line 86  
 Brace on own line for case block
 
 
-(BraceWrapping.AfterUnion: false --> true) #95
+(BraceWrapping.AfterUnion: false --> true) line 95  
 Brace on own line for union
 
 
-(BraceWrapping.BeforeLambdaBody: false --> true) #98
+(BraceWrapping.BeforeLambdaBody: false --> true) line 98  
 Brace on own line for lambda function
 
 
-(BreakTemplateDeclarations: MultiLine --> Yes) #118
-"template <class T>" on its own line
+(BreakTemplateDeclarations: MultiLine --> Yes) line 118  
+`template <class T>` on its own line
 
 
-(EmptyLineBeforeAccessModifier: LogicalBlock --> Always) #128
+(EmptyLineBeforeAccessModifier: LogicalBlock --> Always) line 128  
 For access modifiers (i.e. "public" etc) other than the first, an empty line is
 included before. "LogicalBlock" is insufficient as it treats comments as empty lines
 
 
-(IndentCaseLabels: false --> true) #155
+(IndentCaseLabels: false --> true) line 155  
 Case label indented inside of switch braces
 
 
-(PointerAlignment: Right --> Left) #202
+(PointerAlignment: Right --> Left) line 202  
 Pointers on left side
 
 
-(SeparateDefinitionBlocks: Leave --> Always) #212
+(SeparateDefinitionBlocks: Leave --> Always) line 212  
 Empty lines between definitions for classes, structs, enums, and functions
 
 
-(SortIncludes: CaseSensitive --> Never) #215
+(SortIncludes: CaseSensitive --> Never) line 215  
 Don't change "#include" ordering
 
 
-(SpaceAfterCStyleCast: false --> true) #218
+(SpaceAfterCStyleCast: false --> true) line 218  
 i.e. "(float) 4" instead of "(float)4"
 
 
-(SpaceBeforeCpp11BracedList: false --> true) #224
+(SpaceBeforeCpp11BracedList: false --> true) line 224  
 i.e. "new int[3] {1, 2, 3};" instead of "new int[3]{1, 2, 3};"
