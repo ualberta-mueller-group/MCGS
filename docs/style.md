@@ -5,9 +5,9 @@ This document gives details about coding style for C++ files in this project, an
 ## Sections
 - [Code Style](#code-style)
 - [Style Tooling](#style-tooling)
-- [Modifying Tooling Configs](modifying-tooling-configs)
-    - [Tidy Config Testing Script](tidy-config-testing-script)
-    - [Format Config Choices](format-config-choices)
+- [Modifying Tooling Configs](#modifying-tooling-configs)
+    - [Tidy Config Testing Script](#tidy-config-testing-script)
+    - [Format Config Choices](#format-config-choices)
 
 # Code Style
 This section describes the style used by C++ files in this project.
