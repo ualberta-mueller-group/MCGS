@@ -1,14 +1,32 @@
 # BUGS
 - none known
 
+# User Comments and Notes
+Suggestions from talk given, or from MCGS users
+
+- implement general graph structure not just `strip``. E.g. play col or snort on an arbitrary graph, or on "triangular" graphs
+
+- check: does CGSuite OutcomeClass also rely on computing canonical form?
+
+- After `solve`, output a winning strategy
+    - Have a player that can play through a proof.
+    - Needs to handle all simplifications
+        - plays in pruned subgame
+        - plays in game that has been simplified in the solver
+        - need to keep a kind of parallel structure of the proven game and the real game
+            - play in pruned G + (-G), follow mirror strategy
+            - find and follow "at least as good" move when G has been simplified to G'
+            - similary when simple games have been combined, e.g. numbers have been added up, and opponent plays in some specific fraction
+            - Issue: optimal vs good enough play
+                - Solver can stop at a win, even if the winning move is not "optimal"`
+
 # Current tasks
 ## V1.0 (In progress)
 - V1 github release
-    - MIT license
     - write announcement
-    - put talk
+    - put talk onto webpage and add reference to README
     - announce on CGT list, other places?
-    - Grab a seminar spot to talk about MCGS and give a demo
+    - Grab a CGT seminar spot to talk about MCGS and give a demo
     - which URL? Add it to README?
     - add link from Martin's group home page
 
