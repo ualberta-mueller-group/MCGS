@@ -116,11 +116,6 @@ void file_token_iterator::cleanup()
 //////////////////////////////////////////////////////////// helper functions
 
 /*
-    TODO: a lookup table would be much faster
-        this function is slow in general...
-
-    [ ] ( ) { } /
-
     These characters can only appear in opening or closing tags
 */
 bool is_reserved_char(const char& c)
