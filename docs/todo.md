@@ -4,7 +4,7 @@
 # User Comments and Notes
 Suggestions from talk given, or from MCGS users
 
-- implement general graph structure not just `strip``. E.g. play col or snort on an arbitrary graph, or on "triangular" graphs
+- implement general graph structure not just `strip`. E.g. play col or snort on an arbitrary graph, or on "triangular" graphs
 
 - check: does CGSuite OutcomeClass also rely on computing canonical form?
 

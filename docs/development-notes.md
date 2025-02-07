@@ -1,5 +1,5 @@
 # Development notes
-This document includes more detailed information than `README.md`, including  design choices and tradeoffs, version history, and implementation details.
+This document includes more detailed information than `README.md`, including design choices and tradeoffs, version history, and implementation details.
 
 # Search and Solving a Game
 - Two classes implement game solving: `alternating_move_game`
