@@ -2,11 +2,12 @@
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
-Taylor Folkersen, Martin Müller and Henry Du, 2024-25
+Taylor Folkersen, [Martin Müller](https://webdocs.cs.ualberta.ca/~mmueller/) and Henry Du, 2024-25
 
 MCGS is an efficient minimax search-based solver for sums of combinatorial games. Given a sum of games and a first player, MCGS determines the winner. The code is modular and extensible, allowing users to easily add new types of games and benefit from existing game-independent optimizations. Future versions will include hooks for game-specific optimizations, and implement many general search optimizations.
 
-The overall approach and future plans will be described in a forthcoming document "The Design of MCGS: A Minimax Search-based Solver for Combinatorial Games".
+The overall approach and future plans will be described in a forthcoming document "The Design of MCGS: A Minimax Search-based Solver for Combinatorial Games". A brief high-level overview is given in the talk
+[A Search-based Approach for Solving Sum Games](https://webdocs.cs.ualberta.ca/~mmueller/cgt/talks/2025-CGTC-MCGS.pdf).
 
 
 ### Sections
