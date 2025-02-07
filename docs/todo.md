@@ -24,10 +24,8 @@ Suggestions from talk given, or from MCGS users
 ## V1.0 (In progress)
 - V1 github release
     - write announcement
-    - put talk onto webpage and add reference to README
     - announce on CGT list, other places?
     - Grab a CGT seminar spot to talk about MCGS and give a demo
-    - which URL? Add it to README?
     - add link from Martin's group home page
 
 # Future tasks
