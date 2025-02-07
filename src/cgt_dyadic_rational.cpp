@@ -9,10 +9,19 @@ void dyadic_rational::simplify()
 {
     assert(is_power_of_2(_q));
     // TODO naive loop. run Euclid??? bit-fiddling solution?
+
+    /*
     while(_p % 2 == 0 && _q % 2 == 0)
     {
         _p /= 2;
         _q /= 2;
+    }
+    */
+
+    while ((_p & 0x1) == 0 && (_q & 0x1) == 0)
+    {
+        _p >>= 1;
+        _q >>= 1;
     }
 }
 
