@@ -14,7 +14,7 @@ The overall approach and future plans will be described in a forthcoming documen
 - [Building MCGS](#building-mcgs)
 - [Using MCGS](#using-mcgs)
 - [Using the Testing Framework](#using-the-testing-framework)
-- [Extending MCGS](#extending-mcgs)
+- [Source Code and Extending MCGS](#source-code-and-extending-mcgs)
   - [MCGS Data Types](#mcgs-data-types)
   - [Implementing a New Game](#implementing-a-new-game)
   - [Implementing Game-Specific Optimizations](#implementing-game-specific-optimizations)
