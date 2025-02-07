@@ -10,6 +10,7 @@ and `sumgame`
 It is derived from `alternating_move_game`.
     - `sumgame::solve` is a basic boolean negamax search for sums
     - `sumgame::solve_with_timeout` can search with a time limit
+    - TODO `sumgame::solve_with_timeout` could use a macro to check if the result of a recursive call timed out
 
 ### "Logically const" interface for solving games
 - In both `alternating_move_game` and `sumgame`, the `solve` method is declared as const.
