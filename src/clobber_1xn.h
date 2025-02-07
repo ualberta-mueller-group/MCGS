@@ -6,11 +6,12 @@
 
 #include "cgt_basics.h"
 #include "strip.h"
+#include <vector>
 
 class clobber_1xn : public strip
 {
 public:
-    clobber_1xn(const vector<int>& board);
+    clobber_1xn(const std::vector<int>& board);
     clobber_1xn(std::string game_as_string);
     void play(const move& m, bw to_play) override;
     void undo_move() override;

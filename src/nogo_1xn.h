@@ -6,12 +6,13 @@
 
 #include "cgt_basics.h"
 #include "strip.h"
+#include <vector>
 
 class nogo_1xn : public strip
 {
 public:
     nogo_1xn(std::string game_as_string);
-    nogo_1xn(const vector<int>& board);
+    nogo_1xn(const std::vector<int>& board);
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 

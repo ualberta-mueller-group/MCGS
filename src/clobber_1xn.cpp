@@ -8,7 +8,7 @@
 #include "game.h"
 #include "strip.h"
 
-using std::string, std::pair;
+using std::string, std::pair, std::vector;
 
 clobber_1xn::clobber_1xn(const vector<int>& board) :
     strip(board)

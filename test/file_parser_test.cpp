@@ -7,6 +7,7 @@
 #include <sstream>
 
 using std::cout, std::endl, std::string, std::ifstream, std::stringstream;
+using std::vector;
 
 const string input_root_dir = "test/input/file_parser/";
 

@@ -6,6 +6,7 @@
 #include "cgt_basics.h"
 //---------------------------------------------------------------------------
 
+
 int clobber_char_to_color(char c)
 {
     if (c == 'X')
@@ -39,9 +40,9 @@ void assert_is_clobber_char(char c)
 
 
 
-vector<int> string_to_board(const std::string& game_as_string)
+std::vector<int> string_to_board(const std::string& game_as_string)
 {
-    vector<int> board;
+    std::vector<int> board;
     for(auto c: game_as_string)
     {
         assert_is_clobber_char(c);
@@ -50,7 +51,7 @@ vector<int> string_to_board(const std::string& game_as_string)
     return board;
 }
 
-std::string board_to_string(const vector<int>& board)
+std::string board_to_string(const std::vector<int>& board)
 {
     std::string result;
     for(int p: board)
@@ -61,7 +62,7 @@ std::string board_to_string(const vector<int>& board)
 } // namespace
 //---------------------------------------------------------------------------
 
-strip::strip(const vector<int>& board) :
+strip::strip(const std::vector<int>& board) :
     game(),
     _board(board)
 { }
@@ -75,9 +76,9 @@ std::string strip::board_as_string() const
     return board_to_string(_board);
 }
 
-vector<int> strip::inverse_board() const
+std::vector<int> strip::inverse_board() const
 {
-    vector<int> inv_board(_board);
+    std::vector<int> inv_board(_board);
     for (auto i = 0; i < size(); ++i)
     {
         inv_board[i] = ebw_opponent(_board[i]);

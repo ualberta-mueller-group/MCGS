@@ -2,9 +2,11 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "strip.h"
+#include <vector>
 
 
 using std::string, std::cout, std::endl, std::pair;
+using std::vector;
 
 int player_dir(bw to_play)
 {
@@ -15,12 +17,12 @@ int player_dir(bw to_play)
 
 //////////////////////////////////////// elephants
 
-elephants::elephants(const std::string& game_as_string)
+elephants::elephants(const string& game_as_string)
     : strip(game_as_string)
 { }
 
 
-elephants::elephants(const std::vector<int>& board)
+elephants::elephants(const vector<int>& board)
     : strip(board)
 { }
 

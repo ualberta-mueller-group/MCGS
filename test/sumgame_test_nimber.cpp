@@ -8,6 +8,8 @@
 #include <array>
 #include "test_utilities.h"
 
+using std::vector;
+
 namespace {
 
 void assert_nim_value(const sumgame& g, int value)

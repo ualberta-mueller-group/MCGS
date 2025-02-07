@@ -9,6 +9,7 @@
 #include <memory>
 
 using std::string, std::pair, std::unique_ptr;
+using std::vector;
 
 nogo_1xn::nogo_1xn(const vector<int>& board) :
     strip(board)
