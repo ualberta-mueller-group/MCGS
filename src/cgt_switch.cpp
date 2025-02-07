@@ -16,32 +16,31 @@ const int SWITCH_MOVE_CODE = 1;
 
 void switch_game::play(const move& m, bw to_play)
 {
-    if (_is_integer)
+    if (is_integer())
     {
         assert(m == INTEGER_MOVE_CODE);
-        _int_game.play(m, to_play);
+        _int_game->play(m, to_play);
     }
     else
     {
         assert(m == SWITCH_MOVE_CODE);
-        _is_integer = true;
-        _int_game.set_value(to_play == BLACK ? _left : _right);
+        _int_game.reset(new integer_game(to_play == BLACK ? _left : _right));
     }
     game::play(m, to_play);
 }
 
 void switch_game::undo_move()
 {
-    assert(_is_integer);
+    assert(is_integer());
     const int m = cgt_move::decode(last_move());
     if (m == SWITCH_MOVE_CODE) // back from integer to switch
     {
-        _is_integer = false;
+        _int_game.reset();
     }
     else
     {
         assert(m == INTEGER_MOVE_CODE);
-        _int_game.undo_move();
+        _int_game->undo_move();
     }
     game::undo_move();
 }
@@ -67,15 +66,14 @@ split_result switch_game::split_implementation() const
 game* switch_game::inverse() const
 {
     switch_game* inv = new switch_game(-_right, -_left);
-    inv->_is_integer = _is_integer;
-    if (_is_integer)
-        inv->_int_game.set_value(-_int_game.value());
+    if (is_integer())
+        inv->_int_game.reset(new integer_game(-_int_game->value()));
     return inv;
 }
 
 void switch_game::print(std::ostream& str) const
 {
-    if (_is_integer)
+    if (is_integer())
         str << "switch:integer:" << value();
     else
         str << "switch:{" << _left << " | " << _right << '}';
@@ -119,8 +117,8 @@ move switch_move_generator::gen_move() const
 //---------------------------------------------------------------------------
 move_generator* switch_game::create_move_generator(bw to_play) const
 {
-    if (_is_integer)
-        return _int_game.create_move_generator(to_play);
+    if (is_integer())
+        return _int_game->create_move_generator(to_play);
     else
         return new switch_move_generator(*this, to_play);
 }
