@@ -30,7 +30,7 @@ void assert_same_moves(const game& g, bw to_play, vector<move>& expected)
     // Sort both move sets
     auto compare = [](const move& m1, const move& m2) -> bool
     {
-        return m1 < m2; // TODO should change this
+        return m1 < m2;
     };
 
     std::sort(expected.begin(), expected.end(), compare);
