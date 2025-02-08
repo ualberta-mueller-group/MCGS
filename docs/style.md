@@ -110,7 +110,7 @@ Additionally:
 - Access specifiers aren't indented past the opening/closing brace level
 
 ### Override
-Implementations of virtual methods should use either the `override` or `final` keywords.
+Implementations of virtual methods should use either the `override` or `final` specifiers.
 
 ### Namespaces
 End namespace blocks with comments like "namespace your_namespace_name":
@@ -122,7 +122,7 @@ namespace cgt
 ```
 
 ### Implementations in headers
-Function/method definitions should generally go in `.cpp` files and not `.h` files, unless the function/method is both short and declared `inline`. Definitions possibly leading to [ODR violations](https://en.cppreference.com/w/cpp/language/definition) should be caught by the linter tools explained in following sections.
+Function/method definitions should generally go in `.cpp` files and not `.h` files, unless the function/method is both short and declared `inline`, or is a template. Definitions possibly leading to [ODR violations](https://en.cppreference.com/w/cpp/language/definition) should be caught by the linter tools explained in following sections.
 
 ### "using" keyword
 The `using` keyword should not appear in headers, i.e. `using namespace std;`, `using std::vector;`.
@@ -188,14 +188,25 @@ Two tools are used to help enforce style: `clang-tidy`, and `clang-format`. Clan
 LINT_FILES="src/some_file.cpp src/some_other_file.cpp" make format
 ```
 
-Before opening a pull request, contributors should first run these tools and fix any problems found. Not all problems will be caught by these tools, including but not limited to:
+Before opening a pull request, contributors should first run these tools and fix any problems found. Not all problems will be caught by these tools, including:
 - Methods not coming before fields within an access specifier block
-- Presence/absence of `_` prefix for static class members
+- Presence/absence of `_` prefix for static members of structs/classes
+- Using classes instead of structs for "plain data" structures
+- Using structs instead of classes for objects that aren't "plain data"
+
+These tools should catch:
+- Whitespace formatting problems
+- Missing comments at the ends of `namespace` blocks
+- Most identifier naming problems
+- Missing `override` or `final` specifiers for virtual function implementations
+- Functions in headers having more than 2 statements
+- `using` keyword in headers
+- Definitions in headers which could cause ODR violations
 
 You should use the following makefile targets before opening a pull request:
-    - `tidy`
-    - `tidy_header_functions`
-    - `format`
+- `tidy`
+- `tidy_header_functions`
+- `format`
 
 ## clang-tidy Targets
 4 targets are used to invoke clang-tidy:
@@ -207,7 +218,7 @@ You should use the following makefile targets before opening a pull request:
 - tidy_test
     - Run clang-tidy on only test source files (i.e. `MCGS_test` target), using test compilation flags
 - tidy_header_functions
-    - Special case which only checks for non-trivial functions in headers
+    - Special case which only checks for non-trivial functions in headers. Other targets do not check this
     - Run clang-tidy on all source files after excluding non `.h` files, using release compilation flags, and `.clang-tidy-headers`
 
 The result will be printed to the screen, and also saved in `tidy_result.txt`. Many thousands of warnings will be found and suppressed within included system headers, and problems within project code will be shown as errors instead of warnings. If errors are not mentioned in the output, then no problems were found in project code. Errors must be fixed manually, as automatically applying suggested changes will break code, i.e. renaming a virtual method in a base class will not rename the overriden method in derived classes.
