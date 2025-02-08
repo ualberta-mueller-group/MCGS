@@ -91,17 +91,16 @@ Within a struct/class, and within a given (possibly implicit) access specifier, 
 ```
 class some_class
 {
+    void _some_method1();
+    void _some_method2();
+
+    int _some_field1;
+    int _some_field2;
+
 public:
-    void some_method1();
-    void some_method2();
+    void some_method3();
 
-    int some_field1;
-    int some_field2;
-
-private:
-    void _some_method3();
-
-    int _some_field3;
+    int some_field3;
 };
 ```
 
@@ -183,7 +182,7 @@ float x = (float) 5;
 ```
 
 # Style Tooling
-Two tools are used to help enforce style: `clang-tidy`, and `clang-format`. Clang-tidy does static analysis and will catch non-compliant identifier naming, missing `override` and `final` keywords on virtual method implementations, definitions in headers causing possible ODR violations, and more, whereas clang-format mainly deals with formatting of whitespace. These tools are used separately, from several makefile targets described below. These targets all operate on default sets of source files, and you can override these by defining the `LINT_FILES` variable in your shell environment:
+Two tools are used to help enforce style: `clang-tidy`, and `clang-format`. Clang-tidy does static analysis to catch problems such as incorrect identifier naming, whereas clang-format mainly deals with formatting of whitespace. These tools are used separately, from several makefile targets described in following subsections. These targets all operate on default sets of source files, and you can override these by defining the `LINT_FILES` variable in your shell environment:
 ```
 LINT_FILES="src/some_file.cpp src/some_other_file.cpp" make format
 ```
@@ -237,7 +236,7 @@ void some_func(const T& some_t)
 3 targets are used for clang-format:
 
 - format
-    - Run clang-format on all source files, generating new files with suffixes like `___transformed.cpp`, which are formatted versions of the original source files. Transformed files are omitted when identical to their original sources. Warnings will be printed for source/transformed pairs differing by more than just whitespace
+    - Run clang-format on all source files, generating new files with suffixes like `___transformed.cpp` and `___transformed.h`, which are formatted versions of the original source files. Transformed files are omitted when identical to their original sources. Warnings will be printed for source/transformed pairs differing by more than just whitespace
 - format_delete
     - Delete transformed files
 - format_replace
@@ -327,7 +326,7 @@ Brace on own line for lambda function.
 
 
 (EmptyLineBeforeAccessModifier: LogicalBlock --> Always) line 128  
-For access modifiers (i.e. "public" etc) other than the first, an empty line is
+For access modifiers (i.e. "public" etc) which aren't the first thing in a block, an empty line is
 included before. "LogicalBlock" is insufficient as it treats comments as empty lines.
 <br><br>
 
