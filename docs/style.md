@@ -185,6 +185,7 @@ Before opening a pull request, contributors should first run these tools and fix
 - Methods not coming before fields within an access specifier block
 - Presence/absence of `_` prefix for static class members
 - Including large functions in `.h` files
+    - TODO: Could use `readability-function-size` check and then only run clang-tidy on `.h` files. Not sure how to do this in a clean way
 
 
 ## clang-tidy Targets
