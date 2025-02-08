@@ -182,8 +182,9 @@ LINT_FILES="src/some_file.cpp src/some_other_file.cpp" make format
 ```
 
 Before opening a pull request, contributors should first run these tools and fix any problems found. Not all problems will be caught by these tools, including but not limited to:
-- Methods coming before fields within an access specifier block
+- Methods not coming before fields within an access specifier block
 - Presence/absence of `_` prefix for static class members
+- Including large functions in `.h` files
 
 
 ## clang-tidy Targets
