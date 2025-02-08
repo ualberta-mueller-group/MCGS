@@ -1,0 +1,7 @@
+Checks: '-*,readability-function-size'
+WarningsAsErrors: 'readability-function-size'
+HeaderFilterRegex: .h
+SystemHeaders: false
+CheckOptions:
+  - { key: readability-function-size.StatementThreshold, value: 2 }
+

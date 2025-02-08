@@ -40,6 +40,7 @@ MCGS_TEST_DEPS := $(call OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.d)
 ALL_SRC_FILES := $(MCGS_SRC) $(MCGS_SRC_H) $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H) 
 ALL_SRC_FILES := $(sort $(ALL_SRC_FILES))
 TIDY_CONFIG := .clang-tidy
+TIDY_CONFIG_HEADERS := .clang-tidy-headers
 FORMAT_SCRIPT := utils/format-files.py
 
 
@@ -73,6 +74,12 @@ tidy_release:
 tidy_test:
 	$(eval LINT_FILES ?= $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H))
 	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+
+tidy_header_functions:
+	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
+	$(eval LINT_FILES := $(filter %.h, $(LINT_FILES)))
+	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+
 
 # Format targets
 format:

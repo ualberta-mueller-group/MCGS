@@ -2,6 +2,8 @@
 # Will create ./temp/errors.txt, which lists missing errors, and false positives
 # See ./scripts/tidy_test_template.cpp
 
+FLAGS=""
+
 rm -rf temp
 mkdir temp
 
@@ -11,7 +13,7 @@ python3 scripts/replace.py scripts/tidy_test_template.cpp temp/tidy_test.cpp
 cat temp/tidy_test.cpp | tr '[:upper:]' '[:lower:]' | grep -o -e 'yeserror_[0-9]\+' | grep -o -e '[0-9]\+' | sort -u -n > temp/expected_errors.txt
 
 # Get actual errors
-clang-tidy temp/tidy_test.cpp -- | tee temp/output.txt | tr '[:upper:]' '[:lower:]' | grep -o -e '_[0-9]\+' | tr -d '_' | sort -u -n > temp/got_errors.txt
+clang-tidy temp/tidy_test.cpp -- "$FLAGS" | tee temp/output.txt | tr '[:upper:]' '[:lower:]' | grep -o -e '_[0-9]\+' | tr -d '_' | sort -u -n > temp/got_errors.txt
 
 # Interpret result
 python3 scripts/interpret_errors.py temp/expected_errors.txt temp/got_errors.txt temp/errors.txt
