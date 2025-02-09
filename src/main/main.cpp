@@ -16,10 +16,15 @@
 
 #include "all_game_headers.h"
 
+#include "bounds.h"
+
 using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
 {
+    test_bounds();
+    return 0;
+
     cli_options opts = parse_cli_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
