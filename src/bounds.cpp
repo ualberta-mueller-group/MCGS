@@ -35,7 +35,8 @@ using namespace std;
 */
 
 
-const int RADIUS = 8;
+//const int RADIUS = 16000;
+const int RADIUS = 16000;
 const int MIN = -RADIUS;
 const int MAX = RADIUS;
 
@@ -47,20 +48,47 @@ enum relation
 {
     R_UNKNOWN = 0,
     R_LESS,
+    R_LE,
     R_GREATER,
+    R_GE,
     R_EQUAL,
     R_FUZZY,
 };
 
 
-const unordered_map<relation, string> rel_map {
+const unordered_map<relation, string> REL_MAP {
     {R_UNKNOWN, "_"},
     {R_LESS, "<"},
+    {R_LE, "<="},
     {R_GREATER, ">"},
+    {R_GE, ">="},
     {R_EQUAL, "="},
     {R_FUZZY, "?"},
 
 };
+
+const vector<string> GAME_PREFIXES {
+    "up_star:",
+    "dyadic_rational:",
+};
+
+void remove_game_prefixes(string& str)
+{
+    for (const string& prefix : GAME_PREFIXES)
+    {
+        size_t idx = str.find(prefix);
+
+        if (idx != string::npos)
+        {
+            assert(idx == 0);
+            str = str.substr(prefix.size());
+            break;
+        }
+
+    }
+
+}
+
 
 
 typedef pair<int, int> arena;
@@ -73,6 +101,7 @@ ostream& operator<<(ostream& os, const arena& x)
     os << "[" << x.first << " " << x.second << "]";
     return os;
 }
+
 
 
 
@@ -93,9 +122,24 @@ game* get_inverse_scale_game(int virtual_idx)
     return new up_star(-virtual_idx, true);
 }
 
+/*
+game* get_scale_game(int virtual_idx)
+{
+    return new dyadic_rational(virtual_idx, 8);
+}
+
+game* get_inverse_scale_game(int virtual_idx)
+{
+    return new dyadic_rational(-virtual_idx, 8);
+}
+*/
+
+
+
 void get_bounds(vector<game*>& games)
 {
     int check_count = 0;
+    int search_count = 0;
 
     relation grid[DIAMETER];
 
@@ -127,7 +171,7 @@ void get_bounds(vector<game*>& games)
         return (ar.first <= ar.second) && (ar.first >= MIN) && (ar.second <= MAX);
     };
 
-    auto step = [&games, &check_count, &grid, &virtual_to_real_idx, &valid_arena](arena& ar) -> arena
+    auto step = [&games, &check_count, &search_count, &grid, &virtual_to_real_idx, &valid_arena](arena& ar) -> arena
     {
         arena split_arena = ARENA_INVALID;
 
@@ -153,6 +197,8 @@ void get_bounds(vector<game*>& games)
 
         sum.add(inverse_scale_game);
 
+        /*
+        search_count += 2;
         bool black_first = sum.solve();
 
         sum.set_to_play(WHITE);
@@ -196,6 +242,48 @@ void get_bounds(vector<game*>& games)
             grid[real_i] = R_FUZZY;
             split_arena = {virtual_i + 1, high};
             high = virtual_i - 1;
+        }
+        */
+
+        search_count++;
+        bool black_first = sum.solve();
+
+        // 0 ?
+        // S - Gi <= 0
+        // S <= Gi
+        // Gi >= S
+        if (!black_first)
+        {
+            grid[real_i] = R_GE; 
+            high = virtual_i - 1;
+        } else
+        {
+
+            search_count++;
+            sum.set_to_play(WHITE);
+            bool white_first = sum.solve();
+
+            // 1 0
+            // S - Gi > 0
+            // S > Gi
+            // Gi < S
+            if (black_first && !white_first)
+            {
+                grid[real_i] = R_LESS;
+                low = virtual_i + 1;
+            }
+
+            // 1 1
+            // S - Gi ?= 0
+            // S ?= Gi
+            // Gi ?= S
+            if (black_first && white_first)
+            {
+                grid[real_i] = R_FUZZY;
+                split_arena = {virtual_i + 1, high};
+                high = virtual_i - 1;
+            }
+
         }
 
         delete inverse_scale_game;
@@ -243,44 +331,59 @@ void get_bounds(vector<game*>& games)
 
     const string sep = "\t";
 
-    for (int i = MIN; i <= MAX; i++)
+
+    const int ROW_COLS = 18;
+    const int N_ROWS = (DIAMETER / ROW_COLS) + ((DIAMETER % ROW_COLS) > 0);
+    //const int N_ROWS = 0;
+
+
+    for (int n = 0; n < N_ROWS; n++)
     {
-        cout << i << sep;
+        int min = MIN + n * ROW_COLS;
+
+        int max = min + ROW_COLS - 1;
+        max = max > MAX ? MAX : max;
+
+        for (int i = min; i <= max; i++)
+        {
+            cout << i << sep;
+        }
+        cout << endl;
+
+        for (int i = min; i <= max; i++)
+        {
+            game* scale_game = get_scale_game(i);
+
+            stringstream stream;
+            stream << *scale_game;
+            string str = stream.str();
+            remove_game_prefixes(str);
+
+            cout << str << sep;
+
+            delete scale_game;
+        }
+        cout << endl;
+
+        for (int i = min; i <= max; i++)
+        {
+            int real_i = virtual_to_real_idx(i);
+
+            relation r = grid[real_i];
+            auto it = REL_MAP.find(r);
+            assert(it != REL_MAP.end());
+            const string& text = it->second;
+
+            cout << text << sep;
+        }
+        cout << endl;
+        cout << endl;
+
     }
-    cout << endl;
-
-    for (int i = MIN; i <= MAX; i++)
-    {
-        game* scale_game = get_scale_game(i);
-
-        stringstream stream;
-        stream << *scale_game;
-        const size_t skip_chars = string("up_star:").size();
-        string str = stream.str().substr(skip_chars);
-
-        cout << str << sep;
-
-        delete scale_game;
-    }
-    cout << endl;
-
-    for (int i = MIN; i <= MAX; i++)
-    {
-        int real_i = virtual_to_real_idx(i);
-
-        relation r = grid[real_i];
-        auto it = rel_map.find(r);
-        assert(it != rel_map.end());
-        const string& text = it->second;
-
-        cout << text << sep;
-    }
-    cout << endl;
 
 
 
-
-    cout << "Did " << check_count << " checks (" << (2 * check_count) << " sumgames)" << endl;
+    cout << "Did " << check_count << " checks (" << search_count << " sumgames)" << endl;
 }
 
 
@@ -289,7 +392,7 @@ void test_bounds()
 
     vector<game*> games;
 
-    games.push_back(new clobber_1xn("XOXO.XO.XOXOXO"));
+    games.push_back(new clobber_1xn("XOXO.XO.XOXOXO.XXOOXO"));
 
     get_bounds(games);
 
