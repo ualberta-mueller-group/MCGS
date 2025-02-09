@@ -20,8 +20,8 @@ using namespace std;
 using filesystem::recursive_directory_iterator;
 
 // CSV separator
-inline constexpr const char* sep = ","; //NOLINT
-inline constexpr const char newline = '\n'; //NOLINT
+inline constexpr const char* sep = ",";
+inline constexpr const char newline = '\n';
 
 // convert game list to string
 string human_readable_game_string(const vector<game*>& games)

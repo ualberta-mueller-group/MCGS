@@ -2,6 +2,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "strip.h"
+#include <vector>
 
 
 using std::string, std::cout, std::endl, std::pair;
@@ -16,12 +17,12 @@ int player_dir(bw to_play)
 
 //////////////////////////////////////// elephants
 
-elephants::elephants(const std::string& game_as_string)
+elephants::elephants(const string& game_as_string)
     : strip(game_as_string)
 { }
 
 
-elephants::elephants(const std::vector<int>& board)
+elephants::elephants(const vector<int>& board)
     : strip(board)
 { }
 
@@ -60,7 +61,7 @@ void elephants::undo_move()
 }
 
 
-split_result elephants::_split_implementation() const
+split_result elephants::split_implementation() const
 {
     vector<pair<int, int>> subgame_ranges;
 
@@ -204,13 +205,13 @@ bool elephants_move_generator::is_move(int from, int to, bw to_play) const
         return false;
     }
 
-    int from_color = _game.at(from);
-    int to_color = _game.at(to);
+    int fromColor = _game.at(from);
+    int toColor = _game.at(to);
 
     if (
-        (from_color == to_play)
+        (fromColor == to_play)
         && is_black_white(to_play)
-        && (to_color == EMPTY)
+        && (toColor == EMPTY)
         && ((to - from) == player_dir(to_play))
     )
     {

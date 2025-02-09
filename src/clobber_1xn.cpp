@@ -14,7 +14,7 @@ clobber_1xn::clobber_1xn(const vector<int>& board) :
     strip(board)
 { }
 
-clobber_1xn::clobber_1xn(string game_as_string) :
+clobber_1xn::clobber_1xn(std::string game_as_string) :
     strip(game_as_string)
 { }
 
@@ -43,12 +43,12 @@ void clobber_1xn::undo_move()
     replace(to, opponent(player));
 }
 
-split_result clobber_1xn::_split_implementation() const
+split_result clobber_1xn::split_implementation() const
 {
     vector<pair<int, int>> chunk_ranges;
 
     string board = board_as_string();
-    const size_t N = board.size();
+    size_t N = board.size();
 
     //auto add_chunk = [&](int start, int len) -> void
     //{
@@ -131,15 +131,15 @@ class clobber_1xn_move_generator : public move_generator
 {
 public:
     clobber_1xn_move_generator(const clobber_1xn& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
+    void operator++();
+    operator bool() const;
+    move gen_move() const;
 private:
-    int _at(int p) const {return _game.at(p); }
-    bool _is_move(int p, int dir) const;
-    bool _has_move(int p) const;
+    int at(int p) const {return _game.at(p); }
+    bool is_move(int p, int dir) const;
+    bool has_move(int p) const;
 
-    void _find_next_move();
+    void find_next_move();
     const clobber_1xn& _game;
     int _current; // current stone location to test
     int _dir; // +-1
@@ -152,37 +152,37 @@ inline clobber_1xn_move_generator::clobber_1xn_move_generator(const clobber_1xn&
     _dir(1)
 {
     if (  _game.size() > 0
-     && ! _is_move(_current, _dir)
+     && ! is_move(_current, _dir)
        )
-        _find_next_move();
+        find_next_move();
 }
 
 void clobber_1xn_move_generator::operator++()
 {
-    _find_next_move();
+    find_next_move();
 }
 
-inline bool clobber_1xn_move_generator::_is_move(int p, int dir) const
+inline bool clobber_1xn_move_generator::is_move(int p, int dir) const
 {
-    return _at(p) == to_play()
+    return at(p) == to_play()
         && _game.checked_is_color(p + dir, opponent());
 }
 
-bool clobber_1xn_move_generator::_has_move(int p) const
+bool clobber_1xn_move_generator::has_move(int p) const
 {
-    assert(_at(p) == to_play());
-    return _is_move(p, 1) || _is_move(p, -1);
+    assert(at(p) == to_play());
+    return is_move(p, 1) || is_move(p, -1);
 }
 
-void clobber_1xn_move_generator::_find_next_move()
+void clobber_1xn_move_generator::find_next_move()
 {
     const int num = _game.size();
     
     // try same from, other dir first.
     if (      _dir == 1
            && _current < num
-           && _at(_current) == to_play()
-           && _is_move(_current, -1)
+           && at(_current) == to_play()
+           && is_move(_current, -1)
        )
        _dir = -1;
     
@@ -190,14 +190,14 @@ void clobber_1xn_move_generator::_find_next_move()
     {
         ++_current;
         while (   _current < num
-               && (  _at(_current) != to_play()
-                  || ! _has_move(_current)
+               && (  at(_current) != to_play()
+                  || ! has_move(_current)
                   )
               )
             ++_current;
         if (_current < num)
         {
-            if (_is_move(_current, 1))
+            if (is_move(_current, 1))
                _dir = 1;
             else
                _dir = -1;

@@ -24,7 +24,7 @@ simple_text_hash& simple_text_hash::operator=(simple_text_hash&& other) noexcept
 
 void simple_text_hash::clear()
 {
-    memset(buffer, 0, BUFFER_SIZE);
+    memset(buffer, 0, buffer_size);
     pos = 0;
     bytes_seen = 0;
     string_representation.clear();
@@ -41,10 +41,10 @@ void simple_text_hash::update(const string& data)
         const char& c = data[i];
         bytes_seen++;
 
-        assert(pos >= 0 && pos < BUFFER_SIZE);
+        assert(pos >= 0 && pos < buffer_size);
         buffer[pos] ^= c;
 
-        pos = (pos + 1) % BUFFER_SIZE;
+        pos = (pos + 1) % buffer_size;
     }
 }
 
@@ -57,14 +57,14 @@ const string& simple_text_hash::get_string()
 
     // Deal with common collision by adding bytes_seen into the hash buffer
     // This helps in the case where there's a repeating pattern that "wraps around" the buffer
-    assert(BUFFER_SIZE >= sizeof(bytes_seen));
+    assert(buffer_size >= sizeof(bytes_seen));
     for (size_t i = 0; i < sizeof(bytes_seen); i++)
     {
         buffer[i] ^= ((uint8_t *) (&bytes_seen))[i];
     }
 
     // convert each byte to hex characters
-    for (size_t i = 0; i < BUFFER_SIZE; i++)
+    for (size_t i = 0; i < buffer_size; i++)
     {
         const uint8_t& c = buffer[i];
 
@@ -84,7 +84,7 @@ const string& simple_text_hash::get_string()
 
 void simple_text_hash::_move_impl(simple_text_hash&& other) noexcept
 {
-    memcpy(buffer, other.buffer, BUFFER_SIZE);
+    memcpy(buffer, other.buffer, buffer_size);
     pos = std::move(other.pos);
     bytes_seen = std::move(other.bytes_seen);
     string_representation = std::move(other.string_representation);

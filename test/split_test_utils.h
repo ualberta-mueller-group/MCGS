@@ -1,6 +1,5 @@
 #pragma once
 #include "strip.h"
-#include <vector>
 
 void assert_strip_split_result(const strip* g, std::vector<std::string> expected);
 void assert_no_split(const game* g);

@@ -7,27 +7,27 @@
 using std::string;
 
 namespace {
-void test_1_nogo(const string& s, bool res_b, bool res_w)
+void test_1_nogo(const string& s, bool resB, bool resW)
 {
     nogo_1xn g(s);
-    test_one_game(g, res_b, res_w);
+    test_one_game(g, resB, resW);
 }
 
 void test_2_nogo(const string& s1, const string& s2, 
-                    bool res_b, bool res_w)
+                    bool resB, bool resW)
 {
     nogo_1xn g1(s1);
     nogo_1xn g2(s2);
-    test_two_games(g1, g2, res_b, res_w);
+    test_two_games(g1, g2, resB, resW);
 }
 
 void test_3_nogo(const string& s1, const string& s2, 
-                    const string& s3, bool res_b, bool res_w)
+                    const string& s3, bool resB, bool resW)
 {
     nogo_1xn g1(s1);
     nogo_1xn g2(s2);
     nogo_1xn g3(s3);
-    test_three_games(g1, g2, g3, res_b, res_w);
+    test_three_games(g1, g2, g3, resB, resW);
 }
 
 void sum_1()

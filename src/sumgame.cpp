@@ -27,13 +27,13 @@ public:
     sumgame_move_generator(const sumgame& game, bw to_play);
     ~sumgame_move_generator();
 
-    void operator++() override;
+    void operator++();
     void next_move(bool init);
-    operator bool() const override;
+    operator bool() const;
     sumgame_move gen_sum_move() const;
-    move gen_move() const override {assert(false);}
+    move gen_move() const {assert(false);}
 private:
-    const game* _current() const { return _game.subgame(_subgame_idx); }
+    const game* current() const { return _game.subgame(_subgame_idx); }
     const sumgame& _game;
     const int _num_subgames;
     int _subgame_idx;
@@ -101,7 +101,7 @@ void sumgame_move_generator::next_move(bool init)
     for (; _subgame_idx < _num_subgames; _subgame_idx++)
     {
         assert(_subgame_generator == nullptr);
-        const game* g = _current();
+        const game* g = current();
 
         // inactive game
         if (!g->is_active())
@@ -212,7 +212,7 @@ optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) c
     assert_restore_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
-    _should_stop = false;
+    should_stop = false;
 
     // spawn a thread, then wait with a timeout for it to complete
     std::promise<optional<solve_result>> promise;
@@ -237,7 +237,7 @@ optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) c
     if (timeout != 0 && status == std::future_status::timeout)
     {
         // Stop the thread
-        _should_stop = true;
+        should_stop = true;
     }
 
     future.wait();
@@ -249,7 +249,7 @@ optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) c
 
 optional<solve_result> sumgame::_solve_with_timeout()
 {
-    if (_over_time())
+    if (over_time())
     {
         return solve_result::invalid();
     }
@@ -289,7 +289,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
         undo_move();
 
-        if (_over_time())
+        if (over_time())
         {
             return solve_result::invalid();
         }
@@ -302,17 +302,17 @@ optional<solve_result> sumgame::_solve_with_timeout()
     return solve_result(false);
 }
 
-bool sumgame::_over_time() const
+bool sumgame::over_time() const
 {
-    return _should_stop;
+    return should_stop;
 };
 
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
 {
     play_record record(m);
 
-    const int subg = m.subgame_idx;
-    const move mv = m.m;
+    const int subg = m._subgame_idx;
+    const move mv = m._move;
 
     game* g = subgame(subg);
 
@@ -342,7 +342,7 @@ void sumgame::undo_move()
     const play_record& record = last_play_record();
 
     const sumgame_move m = record.move;
-    const int subg = m.subgame_idx;
+    const int subg = m._subgame_idx;
     game* s = subgame(subg);
 
     // undo split (if necessary)
@@ -366,12 +366,12 @@ void sumgame::undo_move()
 
     const move subm = cgt_move::decode(s->last_move());
 
-    if(!(m.m == subm))
+    if(!(m._move == subm))
     {
-        cout << subg << ' ' << m.m << ' ' << subm << endl;
+        cout << subg << ' ' << m._move << ' ' << subm << endl;
     }
 
-    assert(m.m == subm);
+    assert(m._move == subm);
     s->undo_move();
     alternating_move_game::undo_move();
     _play_record_stack.pop_back();

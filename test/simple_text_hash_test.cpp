@@ -32,7 +32,7 @@ namespace
         string input1 = "X";
 
         string input2 = input1;
-        for (int i = 0; i < simple_text_hash::BUFFER_SIZE; i++)
+        for (int i = 0; i < simple_text_hash::buffer_size; i++)
         {
             input2 += input1;
         }

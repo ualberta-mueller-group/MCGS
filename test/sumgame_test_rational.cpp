@@ -6,17 +6,17 @@
 
 namespace {
 
-void test_one_rational(dyadic_rational value, bool res_b, bool res_w)
+void test_one_rational(dyadic_rational value, bool resB, bool resW)
 {
     //std::cout << "test " << value << std::endl;
     dyadic_rational i1(value);
     sumgame g(BLACK);
     g.add(&i1);
-    assert_solve_sum(g, BLACK, res_b);
-    assert_solve_sum(g, WHITE, res_w);
+    assert_solve_sum(g, BLACK, resB);
+    assert_solve_sum(g, WHITE, resW);
 }
 
-void test_two_rationals(dyadic_rational value1, dyadic_rational value2, bool res_b, bool res_w)
+void test_two_rationals(dyadic_rational value1, dyadic_rational value2, bool resB, bool resW)
 {
     //std::cout << "test " << value1 << " + " << value2 << std::endl;
     dyadic_rational i1(value1);
@@ -24,13 +24,13 @@ void test_two_rationals(dyadic_rational value1, dyadic_rational value2, bool res
     sumgame g(BLACK);
     g.add(&i1);
     g.add(&i2);
-    assert_solve_sum(g, BLACK, res_b);
-    assert_solve_sum(g, WHITE, res_w);
+    assert_solve_sum(g, BLACK, resB);
+    assert_solve_sum(g, WHITE, resW);
 }
 
 void test_three_rationals(dyadic_rational value1, dyadic_rational value2, 
 dyadic_rational value3, 
-                         bool res_b, bool res_w)
+                         bool resB, bool resW)
 {
 //     std::cout << "test " << value1 << " + " << value2
 //               << " + " << value3 << std::endl;
@@ -41,8 +41,8 @@ dyadic_rational value3,
     g.add(&i1);
     g.add(&i2);
     g.add(&i3);
-    assert_solve_sum(g, BLACK, res_b);
-    assert_solve_sum(g, WHITE, res_w);
+    assert_solve_sum(g, BLACK, resB);
+    assert_solve_sum(g, WHITE, resW);
 }
 
 dyadic_rational r(int p, int q)

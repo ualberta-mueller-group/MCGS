@@ -12,6 +12,7 @@
 #include "cgt_move.h"
 //---------------------------------------------------------------------------
 
+//---------------------------------------------------------------------------
 
 class move_generator;
 class game;
@@ -51,7 +52,7 @@ public:
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
 
-    // calls _split_implementation() and filters out games having no moves
+    // calls split_implementation() and filters out games having no moves
     split_result split() const;
 
 protected:
@@ -72,7 +73,7 @@ protected:
         To create an absent split_result:
             split_result sr = split_result();
     */
-    virtual split_result _split_implementation() const;
+    virtual split_result split_implementation() const;
 
 public:
 
@@ -131,7 +132,7 @@ inline void game::undo_move()
 
 inline split_result game::split() const
 {
-    split_result sr = _split_implementation();
+    split_result sr = split_implementation();
 
     // no split happened
     if (!sr)
@@ -154,7 +155,7 @@ inline split_result game::split() const
     return result;
 }
 
-inline split_result game::_split_implementation() const
+inline split_result game::split_implementation() const
 {
     return split_result(); // no value
 }

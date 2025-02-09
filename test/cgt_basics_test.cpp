@@ -50,10 +50,10 @@ void test_in_range()
 
 void test_color_char()
 {
-    assert(COLOR_CODE[BLACK] == 'B');
-    assert(COLOR_CODE[WHITE] == 'W');
-    assert(COLOR_CODE[EMPTY] == '.');
-    assert(COLOR_CODE[BORDER] == 'X');
+    assert(color_code[BLACK] == 'B');
+    assert(color_code[WHITE] == 'W');
+    assert(color_code[EMPTY] == '.');
+    assert(color_code[BORDER] == 'X');
     
     assert(color_char(BLACK) == 'B');
     assert(color_char(WHITE) == 'W');

@@ -51,9 +51,9 @@ public:
     int line_number() const override;
 
 private:
-    void _cleanup();
+    void cleanup();
 
-    std::istream* _main_stream_ptr;
+    std::istream* __main_stream_ptr;
     bool _delete_stream; // do we own this stream?
 
     std::stringstream _line_stream;
@@ -157,22 +157,22 @@ private:
     // constructor should be private, user calls static constructor functions instead
     file_parser(std::istream* stream, bool delete_stream, bool do_version_check);
 
-    void _version_check(const std::string& version_string);
+    void version_check(const std::string& version_string);
 
     // registers a new game_token_parser, now owned by callee
-    static void _add_game_parser(const std::string& game_title, game_token_parser* gp);
+    static void add_game_parser(const std::string& game_title, game_token_parser* gp);
 
     // token-generating helper functions
-    bool _get_enclosed(const char& open, const char& close, bool allow_inner);
-    bool _match(const char& open, const char& close, const std::string& match_name, bool allow_inner);
+    bool get_enclosed(const char& open, const char& close, bool allow_inner);
+    bool match(const char& open, const char& close, const std::string& match_name, bool allow_inner);
 
     // functions to handle current token
-    bool _parse_game();
+    bool parse_game();
 
-    void _validate_command(const std::string& token_copy);
-    bool _parse_command();
+    void validate_command(const std::string& token_copy);
+    bool parse_command();
 
-    std::string _get_error_start();
+    std::string get_error_start();
 
 public:
     // Prevent accidental memory bugs
@@ -203,7 +203,7 @@ public:
 private:
     // initializes parsers for every game. Called automatically upon construction of first file_parser
     // this is where new game_token_parsers are registered
-    static void _init_game_parsers();
+    static void init_game_parsers();
 
     // maps section title to its game_token_parser
     static std::unordered_map<std::string, std::shared_ptr<game_token_parser>> _game_map;

@@ -8,7 +8,7 @@
 #include "test/test_utilities.h"
 #include <cassert>
 
-constexpr const char* EXEC_NAME = "./MCGS_test";
+constexpr const char* exec_name = "./MCGS_test";
 
 using namespace std;
 
@@ -32,7 +32,7 @@ cli_options call_parse(const vector<string>& args)
 // empty args gives correct options
 void cli_opts_test1()
 {
-    cli_options opts = call_parse({EXEC_NAME});
+    cli_options opts = call_parse({exec_name});
     assert(opts.parser.get() == nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == true);
@@ -42,14 +42,14 @@ void cli_opts_test1()
 void cli_opts_test2()
 {
     {
-        cli_options opts = call_parse({EXEC_NAME, "-h"});
+        cli_options opts = call_parse({exec_name, "-h"});
         assert(opts.parser.get() == nullptr);
         assert(opts.dry_run == false);
         assert(opts.should_exit == true);
     }
 
     {
-        cli_options opts = call_parse({EXEC_NAME, "--help"});
+        cli_options opts = call_parse({exec_name, "--help"});
         assert(opts.parser.get() == nullptr);
         assert(opts.dry_run == false);
         assert(opts.should_exit == true);
@@ -60,7 +60,7 @@ void cli_opts_test2()
 void cli_opts_test3()
 {
     {
-        cli_options opts = call_parse({EXEC_NAME, "--dry-run"});
+        cli_options opts = call_parse({exec_name, "--dry-run"});
         assert(opts.parser.get() == nullptr);
         assert(opts.dry_run == true);
         assert(opts.should_exit == false);
@@ -74,7 +74,7 @@ void cli_opts_test4()
 
     try
     {
-        cli_options opts = call_parse({EXEC_NAME, "--file", "not_a_real_file.test"});
+        cli_options opts = call_parse({exec_name, "--file", "not_a_real_file.test"});
     }
     catch (ios_base::failure& e)
     {
@@ -91,7 +91,7 @@ void cli_opts_test5()
 
     try
     {
-        cli_options opts = call_parse({EXEC_NAME, "--file"});
+        cli_options opts = call_parse({exec_name, "--file"});
     }
     catch (cli_options_exception& e)
     {
@@ -108,7 +108,7 @@ void cli_opts_test6()
 
     try
     {
-        cli_options opts = call_parse({EXEC_NAME, "--not-a-valid-flag"});
+        cli_options opts = call_parse({exec_name, "--not-a-valid-flag"});
     }
     catch (cli_options_exception& e)
     {
@@ -126,7 +126,7 @@ void cli_opts_test7()
 
     try
     {
-        cli_options opts = call_parse({EXEC_NAME, "[clobber_1xn]", "XOXO", "{B}"});
+        cli_options opts = call_parse({exec_name, "[clobber_1xn]", "XOXO", "{B}"});
     }
     catch (cli_options_exception& e)
     {
@@ -139,7 +139,7 @@ void cli_opts_test7()
 // args give correct games/parser
 void cli_opts_test8()
 {
-    cli_options opts = call_parse({EXEC_NAME, "[nogo_1xn] X..O X...O..X {B win}"});
+    cli_options opts = call_parse({exec_name, "[nogo_1xn] X..O X...O..X {B win}"});
     assert(opts.parser.get() != nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == false);
@@ -168,7 +168,7 @@ void cli_opts_test8()
 // --file gives correct file/parser
 void cli_opts_test9()
 {
-    cli_options opts = call_parse({EXEC_NAME, "--file", "test/input/file_parser/sumgames4.test"});
+    cli_options opts = call_parse({exec_name, "--file", "test/input/file_parser/sumgames4.test"});
     assert(opts.parser.get() != nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == false);
@@ -196,20 +196,20 @@ void cli_opts_test9()
 
 // --test-timeout
 void cli_opts_test10() {
-    cli_options opts = call_parse({EXEC_NAME, "--test-timeout", "42734"});
+    cli_options opts = call_parse({exec_name, "--test-timeout", "42734"});
     assert(opts.test_timeout == 42734);
 }
 
 
 // --out-file
 void cli_opts_test11() {
-    cli_options opts = call_parse({EXEC_NAME, "--out-file", "65432.csv"});
+    cli_options opts = call_parse({exec_name, "--out-file", "65432.csv"});
     assert(opts.outfile_name == "65432.csv");
 }
 
 // --test-dir
 void cli_opts_test12() {
-    cli_options opts = call_parse({EXEC_NAME, "--test-dir", "somedir462"});
+    cli_options opts = call_parse({exec_name, "--test-dir", "somedir462"});
     assert(opts.test_directory == "somedir462");
 }
 

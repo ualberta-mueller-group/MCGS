@@ -14,8 +14,8 @@ using namespace std;
 cli_options::cli_options(const string& test_directory) : parser(nullptr), dry_run(false),
     should_exit(false), run_tests(false),
     test_directory(test_directory),
-    outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
-    test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
+    outfile_name(cli_options::default_test_outfile),
+    test_timeout(cli_options::default_test_timeout)
 
 { }
 
@@ -58,16 +58,16 @@ with version command. Causes [input string] to be ignored.");
     cout << endl;
 
     print_flag("--run-tests", "Run all autotests. By default, reads tests from \""
-+ string(cli_options::DEFAULT_RELATIVE_TEST_PATH) + "\". Causes other input (i.e. from file, stdin etc) to be ignored.");
++ string(cli_options::default_relative_test_path) + "\". Causes other input (i.e. from file, stdin etc) to be ignored.");
 
     print_flag("--test-dir <directory name>", "Sets input directory for --run-tests. Default is \""
-+ string(cli_options::DEFAULT_RELATIVE_TEST_PATH) + "\".");
++ string(cli_options::default_relative_test_path) + "\".");
 
     print_flag("--out-file <file name>", "Name of CSV output file resulting from --run-tests. \
-Default is \"" + string(cli_options::DEFAULT_TEST_OUTFILE) + "\".");
+Default is \"" + string(cli_options::default_test_outfile) + "\".");
 
     print_flag("--test-timeout <timeout in ms>", "Set timeout duration for tests, in \
-milliseconds. Timeout of 0 means tests never time out. Default is " + to_string(cli_options::DEFAULT_TEST_TIMEOUT) + ".");
+milliseconds. Timeout of 0 means tests never time out. Default is " + to_string(cli_options::default_test_timeout) + ".");
 
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
@@ -76,16 +76,16 @@ milliseconds. Timeout of 0 means tests never time out. Default is " + to_string(
     print_flag("--parser-debug", "Print file_parser debug info.");
 }
 
-cli_options parse_cli_args(int argc, const char** argv, bool silent)
+cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 {
-    assert(argc >= 1);
+    assert(_argc >= 1);
     std::filesystem::path abs_exec_path = std::filesystem::canonical(argv[0]);
     std::filesystem::path parent_path = abs_exec_path.parent_path();
-    std::filesystem::path default_test_path = parent_path / cli_options::DEFAULT_RELATIVE_TEST_PATH;
+    std::filesystem::path default_test_path = parent_path / cli_options::default_relative_test_path;
 
     cli_options opts(default_test_path.string());
 
-    if (argc == 1)
+    if (_argc == 1)
     {
         if (!silent)
         {
@@ -98,12 +98,12 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
 
 
     vector<string> args;
-    for (int i = 0; i < argc; i++)
+    for (int i = 0; i < _argc; i++)
     {
         args.push_back(string(argv[i]));
     }
 
-    const int argn = args.size(); // more correct than using argc
+    const int argN = args.size(); // more correct than using argc
 
     /*
         TODO break this loop into functions. Maybe make them members of a class
@@ -111,10 +111,10 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
             from an unordered_map<string, function>.
     */
     int arg_idx = 0;
-    for (arg_idx = 1; arg_idx < argn; arg_idx++) // skip "./MCGS"
+    for (arg_idx = 1; arg_idx < argN; arg_idx++) // skip "./MCGS"
     {
         const string& arg = args[arg_idx];
-        const string& arg_next = (arg_idx + 1) < argn ? args[arg_idx + 1] : "";
+        const string& arg_next = (arg_idx + 1) < argN ? args[arg_idx + 1] : "";
 
         if (arg == "--stdin")
         {
@@ -223,7 +223,7 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
             // the rest of args is input to the file_parser
 
             // for now it should be quoted, so there should only be one arg at this point...
-            if (arg_idx != argn - 1)
+            if (arg_idx != argN - 1)
             {
                 string why = "Unexpected arg count: ";
                 why += "did you forget to quote game input passed as args?"; 

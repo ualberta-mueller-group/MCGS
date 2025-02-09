@@ -53,9 +53,9 @@ class integer_move_generator : public move_generator
 {
 public:
     integer_move_generator(const integer_game& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
+    void operator++();
+    operator bool() const;
+    move gen_move() const;
 private:
     bool _has_move;
 };

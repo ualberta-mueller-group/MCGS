@@ -22,7 +22,7 @@ public:
     void undo_move() override;
 
 protected:
-    split_result _split_implementation() const override;
+    split_result split_implementation() const override;
 
 public:
     game* inverse() const override;

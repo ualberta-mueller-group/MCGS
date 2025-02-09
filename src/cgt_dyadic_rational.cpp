@@ -9,10 +9,19 @@ void dyadic_rational::simplify()
 {
     assert(is_power_of_2(_q));
     // TODO naive loop. run Euclid??? bit-fiddling solution?
+
+    /*
     while(_p % 2 == 0 && _q % 2 == 0)
     {
         _p /= 2;
         _q /= 2;
+    }
+    */
+
+    while ((_p & 0x1) == 0 && (_q & 0x1) == 0)
+    {
+        _p >>= 1;
+        _q >>= 1;
     }
 }
 
@@ -45,7 +54,7 @@ void dyadic_rational::undo_move()
     game::undo_move();
 }
 
-split_result dyadic_rational::_split_implementation() const
+split_result dyadic_rational::split_implementation() const
 {
     if (_q != 1)
     {
@@ -73,9 +82,9 @@ class dyadic_rational_move_generator : public move_generator
 {
 public:
     dyadic_rational_move_generator(const dyadic_rational& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
+    void operator++();
+    operator bool() const;
+    move gen_move() const;
 private:
     const dyadic_rational& _game;
     bool _has_move;

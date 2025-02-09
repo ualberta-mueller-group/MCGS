@@ -54,7 +54,7 @@ void solve_1x6()
 
 void file()
 {
-    assert_solve_test_file(UNIT_TEST_INPUT_DIR + "nogo_1xn.test", 8);
+    assert_solve_test_file(unit_test_input_dir + "nogo_1xn.test", 8);
 }
 
 } // namespace nogo_test

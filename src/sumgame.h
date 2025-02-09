@@ -12,10 +12,10 @@
 
 struct sumgame_move
 {
-    sumgame_move(int subg, move m) : subgame_idx(subg), m(m) { }
+    sumgame_move(int subg, move m) : _subgame_idx(subg), _move(m) { }
 
-    int subgame_idx;
-    move m;
+    int _subgame_idx;
+    move _move;
 };
 
 struct play_record
@@ -58,10 +58,10 @@ public:
     ~sumgame();
     
     void play_sum(const sumgame_move& m, bw to_play);
-    void undo_move() override;
+    void undo_move();
     void add(game* g);
 
-    bool solve() const override;
+    bool solve() const;
 
     /*
         Timeout is in milliseconds. 0 means never timeout.
@@ -79,7 +79,7 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
-    bool _over_time() const;
+    bool over_time() const;
 
     /*
         mutable makes sense here? 
@@ -87,7 +87,7 @@ private:
         these values are used by _solve_with_timeout() and are here so they don't
             need to be passed as arguments to the function every time it's called
     */
-    mutable bool _should_stop;
+    mutable bool should_stop;
     std::optional<solve_result> _solve_with_timeout();
 
     std::vector<game*> _subgames; // sumgame owns these subgames

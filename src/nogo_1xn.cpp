@@ -42,7 +42,7 @@ string block_simplify(const string& board)
 {
     string result;
 
-    const int N = board.size();
+    int N = board.size();
 
     const char empty_char = color_to_clobber_char(EMPTY);
 
@@ -70,7 +70,7 @@ string block_simplify(const string& board)
    Henry's paper
 
 */
-split_result nogo_1xn::_split_implementation() const
+split_result nogo_1xn::split_implementation() const
 {
     // NOTE: don't use checked_is_color here -- it accesses the board before block simplification
 
@@ -78,7 +78,7 @@ split_result nogo_1xn::_split_implementation() const
     string board = board_as_string();
     board = block_simplify(board);
 
-    const int N = board.size();
+    int N = board.size();
 
     vector<pair<int, int>> subgame_ranges;
 
@@ -142,14 +142,14 @@ class nogo_1xn_move_generator : public move_generator
 {
 public:
     nogo_1xn_move_generator(const nogo_1xn& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
+    void operator++();
+    operator bool() const;
+    move gen_move() const;
 private:
-    int _at(int p) const {return _game.at(p); }
-    bool _is_legal(int p) const;
+    int at(int p) const {return _game.at(p); }
+    bool is_legal(int p) const;
 
-    void _find_next_move();
+    void find_next_move();
     const nogo_1xn& _game;
     int _current; // current stone location to test
 };
@@ -159,28 +159,28 @@ inline nogo_1xn_move_generator::nogo_1xn_move_generator(const nogo_1xn& game, bw
     _game(game),
     _current(0)
 {
-    if (_game.size() > 0 && !_is_legal(_current))
-        _find_next_move();
+    if (_game.size() > 0 && !is_legal(_current))
+        find_next_move();
 }
 
 void nogo_1xn_move_generator::operator++()
 {
-    _find_next_move();
+    find_next_move();
 }
 
-inline void nogo_1xn_move_generator::_find_next_move()
+inline void nogo_1xn_move_generator::find_next_move()
 {
     _current++;
 
     int num = (int)_game.size();
-    while (_current < num && !_is_legal(_current)) {
+    while (_current < num && !is_legal(_current)) {
         _current++;
     }
 }
 
-inline bool nogo_1xn_move_generator::_is_legal(int p) const
+inline bool nogo_1xn_move_generator::is_legal(int p) const
 {
-    if (_at(p) != EMPTY)
+    if (at(p) != EMPTY)
         return false;
 
     int num = _game.size();
