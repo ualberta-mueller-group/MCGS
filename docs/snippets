@@ -1,5 +1,0 @@
-    //cout << "play heap " << heap << " pebbles " << _heaps[heap] << " remove " << number << endl;
-
-    //cout << "undo " << _heaps[heap] << ' ' << number << endl;
-
-    //cout << "create_move_generator " << *this << endl;

@@ -1,27 +1,48 @@
 # BUGS
 - none known
 
+# User Comments and Notes
+Suggestions from talk given, or from MCGS users
+
+- implement general graph structure not just `strip`. E.g. play col or snort on an arbitrary graph, or on "triangular" graphs
+
+- check: does CGSuite OutcomeClass also rely on computing canonical form?
+
+- After `solve`, output a winning strategy
+    - Have a player that can play through a proof.
+    - Needs to handle all simplifications
+        - plays in pruned subgame
+        - plays in game that has been simplified in the solver
+        - need to keep a kind of parallel structure of the proven game and the real game
+            - play in pruned G + (-G), follow mirror strategy
+            - find and follow "at least as good" move when G has been simplified to G'
+            - similary when simple games have been combined, e.g. numbers have been added up, and opponent plays in some specific fraction
+            - Issue: optimal vs good enough play
+                - Solver can stop at a win, even if the winning move is not "optimal"`
+
 # Current tasks
 ## V1.0 (In progress)
 - V1 github release
-    - license?
-- Polish, document, test until Jan 25/31
-- Jan 28 public release on github?
-- Talk on Feb 1, announce V1 to world
+    - write announcement
+    - announce on CGT list, other places?
+    - Grab a CGT seminar spot to talk about MCGS and give a demo
+    - add link from Martin's group home page
 
 # Future tasks
-## Next steps? (V1.1? Multiple V1.X?)
-Tentative next steps/general improvements. TODO: this may need to be broken down into more versions, and expanded
+## Next steps for Versions 1.X
 
-### High priority (Probably important for V1.1):
+### V1.1
 - Add code linter
     - Resolve linter errors
-    - Summarize our style guide in some document somewhere?
+    - Summarise style guide in a document in `docs`
 
 - Use a proper unit testing framework?
     - Easier to change this now rather than later
 
-- Game simplification rules: see development-notes.md
+- Game simplification rules: see `development-notes.md`
+
+### V1.2
+- Database components and utilities as per development-notes.md, V1.2
 
 ### Medium priority (Important or good to have before V2):
 - Test framework improvements
@@ -35,19 +56,19 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
 
 - Write more .test files
     - Interesting cases (i.e. "BBW"^N Clobber, integer-like NoGo, other conjectures)
-    - Clobber: from class in `~/Projects/ualberta-mueller-group/combinatorial_game_solver/PriorWork`
+    - Clobber: from graduate course in `~/Projects/ualberta-mueller-group/combinatorial_game_solver/PriorWork`
     - Random test generation
         - Totally independent .py tool? Or partly built into MCGS?
-            - Could add "random_game()" function to game class?
-                - Size parameter? random_game(size)
+            - Could add `random_game()` function to game class?
+                - Size parameter? `random_game(size)`
         - Use other solvers to validate results with "adapter" functions/scripts
-            - clobber_1xn: Taylor Clobber solver
-            - nogo_1xn: Henry NoGo solver
-            - elephants: CGSuite
-            - simple games (integer_game, dyadic_rational, switch_game, up_star): CGSuite
-            - nimber: use nim sum
+            - `clobber_1xn`: Taylor Clobber solver
+            - `nogo_1xn`: Henry NoGo solver
+            - `elephants`: CGSuite
+            - simple games (`integer_game, dyadic_rational, switch_game, up_star`): CGSuite
             - Small sums of these: CGSuite
-        - Use MCGS to validate games (i.e. feed it a game as a CLI arg along with "--dry-run", check if it crashed)
+        - Use MCGS to validate game text representations
+            - feed it a game as a CLI arg along with "--dry-run", check if it crashed
     - Some way to scale tests? Just generate new batches of increasingly large random tests?
         - Other solvers may be unable to verify these (i.e. CGSuite)
 
@@ -67,9 +88,8 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
     - Good to know how much time is spent doing transposition table lookups, DB lookups, etc, before designing these
         - i.e. if in-memory DB lookups already dominate the run time, then adding disk reads may be especially costly
 
-- Database components and utilities as per development-notes.md, V1.2
 
-### Low priority (Consider doing if not behind):
+### Lower priority
 - Improve MCGS CLI args
     - Some arg combinations don't make sense and should maybe throw or print a warning?
         - i.e. "--test-timeout" without "--run-tests"
@@ -97,9 +117,9 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
         - "Current"/"Future" prefixes?
     - What does each version denote?
 - Discuss immediate next steps
-    - Tentative "Next steps" stuff listed above. Are these all important right now? Should some be deferred/skipped?
+    - Tentative "Next steps" listed above. Are these all important right now? Should some be deferred/skipped?
         - Use a proper unit test framework, maybe https://github.com/siu/minunit
-    - What discussion topics should be deferred, if any? (There's a lot of stuff in this section)
+    - What discussion topics should be deferred, if any? (There's a lot in this section)
         - Should these be assigned priorities?
 
 ## General design questions
@@ -110,12 +130,14 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
 - Make board implementations (char, int, bitset, list?) separate from game classes, with common interface - allow composition of different board implementations with game mechanics
 - `cgt_game` class - define game by left+right options, read from string
 - `rule_set` class as in CGSuite?
+- Should zero be its own type??
 
 ## Search features
 - Search stats: node count, leaf count, time, depth
     - Later: transposition hits, simplifications, zero removal, inverse removal
-- Simplify() hook for game
-    - Simplify nim - remove equal pairs
+- `simplify()` hook for game
+    - use cases? Use inverse()?
+    - Will become really important after we have database
 - Move ordering hook for game
     - Move ordering in nim? match other game value?
 - Replace a game (e.g. clobber position) by an equal game of simpler type
@@ -123,7 +145,7 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
     - Who manages the memory of the new and old games?
 
 # Future discussion topics
-## Database/next version stuff
+## Database/next version
 - What can be reused from previous solvers? What's game-specific?
 - Hashing for sum games
     - In general, similar to Taylor's and Henry's approach
@@ -147,59 +169,19 @@ Tentative next steps/general improvements. TODO: this may need to be broken down
     - What goals? Match game-specific performance in 1xn Clobber, Nogo? 
     - Get good performance on 2-D boards?
     
-# Code to do/finish for Martin
+# Impartial Games Support
 - New base class `impartial_game`
     - Knowledge of nimbers
     - In future: specialised search algorithms
         - Mex rule
         - Lemoine and Viennot, Nimbers are inevitable (2012)
-- From email:
-A few other things that I was planning to tackle myself, but we can also discuss them:
-    - Document sumgame and implementation choices.
-    - Semantics of game-in-sumgame. Does the sumgame become the owner (e.g. with unique_ptr)? Or should it copy the game?
+- Document semantics of game-in-sumgame. The sumgame become the owner. Make this explicit e.g. with unique_ptr. 
+    - Alternative: copy the game
     - Can we have multiple references to the same subgame in a sum? Probably not a good idea, then we should guard against that. 
         - E.g. sumgame s; game(of some sort) g; s.add(&g); s.add(&g); (add twice)
         - Write test cases and documentation for these.
 
-# Resolved?
-Things in this section can probably be deleted
-
-## Nim
-- random testing for nim 
+- random testing for nim sums 
     - increase size limit as program becomes better
     - generate 2nd player win game by adding nim sum
-
-## To discuss
-- Testing and documentation
-    - coding style, "simple C++"
-    - Use Google coding style document?
-        - https://google.github.io/styleguide/cppguide.html
-        - I looked at it several years back, and it was good then. 
-        Look at it again?
-    - documentation style. For now it is somewhat minimal
-- What are things we can adapt from previous clobber, Nogo solvers? What is general, what is game-specific?
-
-## V1 sumgame design questions
-- Should handle type conversion from game to option within a sum game
-
-## V1 todo other
-- rewrite `unused/nim` to use sumgame and nimbers classes
-- rewrite `unused/nim_test` and `unused/nim_random_test`
-
-## Code to do/finish for Martin
-- New nim implementation with sumgame and nimber
-- Re-use parts of old nim code
-    - read nim sums from file
-    - unit test cases
-- Remove old nim code
-
-## Todo Design and Naming Issues
-- Should zero be its own type??
-
-## Design questions
-- play() can change the type of game
-    - How to handle?
-    - What if a game such as clobber is equal to a simpler game such as up
-- `alternating_move_game` add constructor without game; 
-    - Add a `set_game` and assert there is a game before solving.
 

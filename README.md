@@ -2,11 +2,12 @@
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
-Taylor Folkersen, Martin Müller and Henry Du, 2024-25
+Taylor Folkersen, [Martin Müller](https://webdocs.cs.ualberta.ca/~mmueller/) and Henry Du, 2024-25
 
 MCGS is an efficient minimax search-based solver for sums of combinatorial games. Given a sum of games and a first player, MCGS determines the winner. The code is modular and extensible, allowing users to easily add new types of games and benefit from existing game-independent optimizations. Future versions will include hooks for game-specific optimizations, and implement many general search optimizations.
 
-The overall approach and future plans will be described in a forthcoming document "The Design of MCGS: A Minimax Search-based Solver for Combinatorial Games".
+The overall approach and future plans will be described in a forthcoming document "The Design of MCGS: A Minimax Search-based Solver for Combinatorial Games". A brief high-level overview is given in the talk
+[A Search-based Approach for Solving Sum Games](https://webdocs.cs.ualberta.ca/~mmueller/cgt/talks/2025-CGTC-MCGS.pdf).
 
 
 ### Sections
@@ -34,7 +35,7 @@ make test
 This will build and then run `./MCGS_test`, and on successful completion of unit tests, the text "SUCCESS" should appear. Running all tests can take several seconds, depending on your hardware.
 
 ### Using MCGS
-`MCGS` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. The example below solvies a linear clobber game `XOXOXO` twice, once with black playing first, and once with white playing first: 
+`MCGS` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. The example below solves a linear clobber game `XOXOXO` twice, once with black playing first, and once with white playing first: 
 ```
 ./MCGS "[clobber_1xn] XOXOXO {B, W}"
 ```
@@ -56,7 +57,7 @@ To show test results in a form suitable for viewing in a web browser, run:
 ```
 python3 create-table.py out.csv -o table.html
 ```
-This will generate a HTML file `table.html` with a table, with one row for each row in `out.csv`. The script `create-table.py` contains more functionality, such as comparing two CSV result files. For information on the options and an explanation of the HTML output run:
+This will generate a HTML file `table.html` with a table, with one row for each row in `out.csv`. The script `create-table.py` contains more functionality, such as comparing two CSV result files. For information on the options and an explanation of the HTML output, run:
 ```
 python3 create-table.py --help
 ```
@@ -83,10 +84,10 @@ The abstract base type for all combinatorial games supported by MCGS.
 An abstract game type derived from `game`, for games played on a "line" (1 dimensional board), consisting of black stones, white stones, and empty tiles. The games `clobber_1xn`, `nogo_1xn`, and `elephants` extend `strip` and can be used as examples for new implementations.
 
 #### move (cgt_move.h)
-Represents a move that can be played within a `game`. In this version, `move` is an integer with at least 32 bits. Each game defines the encoding of legal moves into `move`. The highest order bit is always used to encode the color of the player making the move, leaving 31 bits for the move itself. File `cgt_move.h` defines utility functions for packing and unpacking `move`s, to deal with the color bit and the "rest" of each `move`. This includies functions to encode and decode a `move` consisting of two smaller integers, for example to store a "from" and a "to" coordinate, or to encode a fraction.
+Represents a move that can be played within a `game`. In this version, `move` is an integer with at least 32 bits. Each game defines the encoding of legal moves into `move`. The highest order bit is always used to encode the color of the player making the move, leaving 31 bits for the move itself. File `cgt_move.h` defines utility functions for packing and unpacking `move`s, to deal with the color bit and the "rest" of each `move`. This includes functions to encode and decode a `move` consisting of two smaller integers, for example to store a "from" and a "to" coordinate, or to encode a fraction.
 
 #### move_generator (game.h)
-This abstract type defines the interface for an iterator over all legal moves in a  position derived from `game`, for a given player.
+This abstract type defines the interface for an iterator over all legal moves in a position derived from `game`, for a given player.
 
 #### split_result (game.h)
 Typedef of `std::optional<std::vector<game*>>`. The (possibly absent) result of splitting a `game` into subgames whose sum equals the `game` being split. During search, `game`s are split and replaced by their subgames. When `has_value()` is true and the vector is empty, the `game` being split is equal to 0. When `has_value()` is false, the vector is absent, and the split has no effect.
