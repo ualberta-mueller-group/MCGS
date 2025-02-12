@@ -16,6 +16,19 @@ using namespace std;
 int step_count = 0;
 int search_count = 0;
 
+int tie_break_inversions = 0;
+int tie_count = 0;
+vector<int> inversion_steps;
+
+enum tie_behavior_enum
+{
+    TB_PREDICT,
+    TB_NEG,
+    TB_POS,
+};
+
+tie_behavior_enum tie_behavior = TB_PREDICT;
+
 
 //              0 0 0   ?   0 0 0
 
@@ -46,7 +59,10 @@ enum optimization_level_enum
 
     OPT_ASSUME_NEG,
     OPT_ASSUME_POS,
+
     OPT_2_SIDE,
+    OPT_2_SIDE_NEG,
+    OPT_2_SIDE_POS,
 };
 
 
@@ -357,6 +373,16 @@ void get_bounds(vector<game*>& games)
         {
             static int tie_break_rule = -1;
 
+            if (tie_behavior == TB_NEG)
+            {
+                tie_break_rule = -1;
+            }
+
+            if (tie_behavior == TB_POS)
+            {
+                tie_break_rule = 1;
+            }
+
             search_result black_first = RESULT_UNKNOWN;
             search_result white_first = RESULT_UNKNOWN;
             
@@ -375,6 +401,9 @@ void get_bounds(vector<game*>& games)
             {
                 did_tie_break = false;
                 bound_side = virtual_i < mid ? -1 : 1;
+            } else
+            {
+                tie_count++;
             }
 
 
@@ -511,6 +540,8 @@ void get_bounds(vector<game*>& games)
             if (did_tie_break && conclusive && (local_search_count == 2))
             {
                 tie_break_rule *= -1;
+                tie_break_inversions++;
+                inversion_steps.push_back(step_count - 1);
             }
         }
 
@@ -662,30 +693,83 @@ void test_bounds()
     vector<game*> games;
 
     //games.push_back(new clobber_1xn("XOXO.XO.XOXOXO.XXOOXO"));
-    //games.push_back(new clobber_1xn("XOXOXOXO.XO.XXOO.OXXO"));
+    games.push_back(new clobber_1xn("XOXOXOXO.XO.XXOO.OXXO"));
     //games.push_back(new clobber_1xn("XXXXXXXO"));
-    games.push_back(new clobber_1xn("OOOOOOOX"));
+    //games.push_back(new clobber_1xn("OOOOOOOX"));
+
+    //games.push_back(new clobber_1xn("OOOXX.OXXOOX..XXOO.XOOXO"));
+    //games.push_back(new clobber_1xn("XXXOO.XOOXXO..OOXX.OXXOX"));
+
+
 
 
     vector<optimization_level_enum> opts {
         OPT_NONE,
-
         OPT_1_SIDE,
 
         OPT_2_SIDE,
+        OPT_2_SIDE_NEG,
+        OPT_2_SIDE_POS,
 
-        OPT_ASSUME_NEG,
-        OPT_ASSUME_POS,
     };
 
-    for (const optimization_level_enum& opt : opts)
+    for (optimization_level_enum opt : opts)
     {
         step_count = 0;
         search_count = 0;
 
+        tie_break_inversions = 0;
+        tie_count = 0;
+        inversion_steps.clear();
+
+        tie_behavior = TB_PREDICT;
+
+        if (opt == OPT_2_SIDE_NEG)
+        {
+            opt = OPT_2_SIDE;
+            tie_behavior = TB_NEG;
+        }
+
+        if (opt == OPT_2_SIDE_POS)
+        {
+            opt = OPT_2_SIDE;
+            tie_behavior = TB_POS;
+        }
+
+
         OPTIMIZATION_LEVEL = opt;
         get_bounds(games);
+
+        if (opt == OPT_2_SIDE)
+        {
+
+            cout << "Ties: " << tie_count << endl;
+            cout << "Inversions: " << tie_break_inversions << endl;
+
+            cout << "Inversion steps: ";
+            {
+                const size_t N = inversion_steps.size();
+
+                for (size_t i = 0; i < N; i++)
+                {
+                    cout << inversion_steps[i];
+
+                    if (i + 1 < N)
+                    {
+                        cout << " ";
+                    }
+                }
+
+                cout << endl;
+            }
+
+        }
+
+
+
+
     }
+
 
     for (game* g : games)
     {
