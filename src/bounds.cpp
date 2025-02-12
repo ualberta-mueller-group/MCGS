@@ -79,7 +79,7 @@ static_assert(RESULT_UNKNOWN != RESULT_FALSE);
 static_assert(RESULT_UNKNOWN != RESULT_TRUE);
 
 //const int RADIUS = 16000;
-const int RADIUS = 8000;
+const int RADIUS = 16000;
 optimization_level_enum OPTIMIZATION_LEVEL = OPT_NONE;
 
 const int MIN = -RADIUS;
@@ -561,7 +561,7 @@ void get_bounds(vector<game*>& games)
     {
         arenas_next.clear();
 
-        if (!silent || true)
+        if (!silent)
         {
             for (const arena& ar : arenas)
             {
@@ -619,7 +619,13 @@ void get_bounds(vector<game*>& games)
                     arenas_next.clear();
                     bound_low = 999999;
                     bound_high = -999999;
+                } else
+                {
+                    assert(false);
                 }
+            } else
+            {
+                assert(false);
             }
 
             delete inverse_scale_game;
@@ -736,7 +742,7 @@ void test_bounds()
     //games.push_back(new clobber_1xn("OOOOOOOX"));
 
     //games.push_back(new clobber_1xn("OOOXX.OXXOOX..XXOO.XOOXO"));
-    //games.push_back(new clobber_1xn("XXXOO.XOOXXO..OOXX.OXXOX"));
+    games.push_back(new clobber_1xn("XXXOO.XOOXXO..OOXX.OXXOX"));
 
     //games.push_back(new clobber_1xn(""));
 
@@ -748,7 +754,7 @@ void test_bounds()
 
 
     //games.push_back(new clobber_1xn("XXXXXXXXXXXXO"));
-    games.push_back(new up_star(16000, true));
+    //games.push_back(new up_star(16000, true));
 
     
     
@@ -756,12 +762,12 @@ void test_bounds()
 
 
     vector<optimization_level_enum> opts {
-        //OPT_NONE,
-        //OPT_1_SIDE,
+        OPT_NONE,
+        OPT_1_SIDE,
 
         OPT_2_SIDE,
-        //OPT_2_SIDE_NEG,
-        //OPT_2_SIDE_POS,
+        OPT_2_SIDE_NEG,
+        OPT_2_SIDE_POS,
 
     };
 
