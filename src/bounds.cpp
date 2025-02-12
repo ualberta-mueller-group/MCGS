@@ -239,6 +239,9 @@ void get_bounds(vector<game*>& games)
         {
             grid[real_i] = R_GREATER; 
             high = virtual_i - 1;
+
+            assert(bound_high == BOUND_UNDEFINED || virtual_i < bound_high);
+            bound_high = virtual_i;
         }
 
         // 1 0
@@ -249,6 +252,9 @@ void get_bounds(vector<game*>& games)
         {
             grid[real_i] = R_LESS;
             low = virtual_i + 1;
+
+            assert(bound_low == BOUND_UNDEFINED || virtual_i > bound_low);
+            bound_low = virtual_i;
         }
 
         // 1 1
@@ -435,6 +441,9 @@ void get_bounds(vector<game*>& games)
 
         if (!conclusive)
         {
+            assert(black_first == RESULT_TRUE);
+            assert(white_first == RESULT_TRUE);
+
             grid[real_i] = R_FUZZY;
             split_arena = {virtual_i + 1, high};
             high = virtual_i - 1;
@@ -540,7 +549,15 @@ void get_bounds(vector<game*>& games)
 
 
     /*
+        Clobber:
+        XOXO.XO.XOXOXO.XXOOXO
+
         bounds should be [-1 1]
+
+        basic approach:
+            radius      checks      sumgames
+            32          11          22
+            16000       27          54
 
         1-sided optimization:
             radius      checks      sumgames
