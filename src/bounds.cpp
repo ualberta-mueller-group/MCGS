@@ -5,6 +5,7 @@
 #include "all_game_headers.h"
 #include "cgt_up_star.h"
 #include "clobber_1xn.h"
+#include "nogo_1xn.h"
 #include "sumgame.h"
 #include "utilities.h"
 #include <iostream>
@@ -78,7 +79,7 @@ static_assert(RESULT_UNKNOWN != RESULT_FALSE);
 static_assert(RESULT_UNKNOWN != RESULT_TRUE);
 
 //const int RADIUS = 16000;
-const int RADIUS = 16000;
+const int RADIUS = 8000;
 optimization_level_enum OPTIMIZATION_LEVEL = OPT_NONE;
 
 const int MIN = -RADIUS;
@@ -560,7 +561,7 @@ void get_bounds(vector<game*>& games)
     {
         arenas_next.clear();
 
-        if (!silent)
+        if (!silent || true)
         {
             for (const arena& ar : arenas)
             {
@@ -585,6 +586,43 @@ void get_bounds(vector<game*>& games)
             {
                 arenas_next.push_back(split_arena);
             }
+
+        }
+
+
+
+        // check for fuzzy range extending to MIN or MAX
+        if (step_count >= 5 && (bound_low == BOUND_UNDEFINED || bound_high == BOUND_UNDEFINED))
+        {
+
+            sumgame sum(BLACK);
+
+            for (game* g : games)
+            {
+                sum.add(g);
+            }
+
+            game* inverse_scale_game = get_inverse_scale_game(bound_low == BOUND_UNDEFINED ? MIN : MAX);
+
+            sum.add(inverse_scale_game);
+
+            sum.set_to_play(BLACK);
+            bool black_first = sum.solve();
+
+            if (black_first)
+            {
+                sum.set_to_play(WHITE);
+                bool white_first = sum.solve();
+
+                if (white_first)
+                {
+                    arenas_next.clear();
+                    bound_low = 999999;
+                    bound_high = -999999;
+                }
+            }
+
+            delete inverse_scale_game;
 
         }
 
@@ -693,23 +731,37 @@ void test_bounds()
     vector<game*> games;
 
     //games.push_back(new clobber_1xn("XOXO.XO.XOXOXO.XXOOXO"));
-    games.push_back(new clobber_1xn("XOXOXOXO.XO.XXOO.OXXO"));
+    //games.push_back(new clobber_1xn("XOXOXOXO.XO.XXOO.OXXO"));
     //games.push_back(new clobber_1xn("XXXXXXXO"));
     //games.push_back(new clobber_1xn("OOOOOOOX"));
 
     //games.push_back(new clobber_1xn("OOOXX.OXXOOX..XXOO.XOOXO"));
     //games.push_back(new clobber_1xn("XXXOO.XOOXXO..OOXX.OXXOX"));
 
+    //games.push_back(new clobber_1xn(""));
+
+    //games.push_back(new clobber_1xn("OOXX.XXOO.XX.XO..XOOX.XXOOXOOO"));
+    //games.push_back(new clobber_1xn("XXOO.OOXX.OO.OX..OXXO.OOXXOXXX"));
+
+    //games.push_back(new nogo_1xn("..X."));
+
+
+
+    //games.push_back(new clobber_1xn("XXXXXXXXXXXXO"));
+    games.push_back(new up_star(16000, true));
+
+    
+    
 
 
 
     vector<optimization_level_enum> opts {
-        OPT_NONE,
-        OPT_1_SIDE,
+        //OPT_NONE,
+        //OPT_1_SIDE,
 
         OPT_2_SIDE,
-        OPT_2_SIDE_NEG,
-        OPT_2_SIDE_POS,
+        //OPT_2_SIDE_NEG,
+        //OPT_2_SIDE_POS,
 
     };
 
