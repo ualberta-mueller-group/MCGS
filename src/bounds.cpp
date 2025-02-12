@@ -1,4 +1,5 @@
 #include "bounds.h"
+#include <limits>
 #include <utility>
 #include <vector>
 #include "all_game_headers.h"
@@ -34,6 +35,16 @@ using namespace std;
 
 */
 
+
+enum search_result
+{
+    RESULT_FALSE = false,
+    RESULT_TRUE = true,
+    RESULT_UNKNOWN,
+};
+
+static_assert(RESULT_UNKNOWN != RESULT_FALSE);
+static_assert(RESULT_UNKNOWN != RESULT_TRUE);
 
 //const int RADIUS = 16000;
 const int RADIUS = 16000;
@@ -141,6 +152,11 @@ void get_bounds(vector<game*>& games)
     int check_count = 0;
     int search_count = 0;
 
+    const int BOUND_UNDEFINED = std::numeric_limits<int>::min();
+
+    int bound_low = BOUND_UNDEFINED;
+    int bound_high = BOUND_UNDEFINED;
+
     relation grid[DIAMETER];
 
     for (int i = 0; i < DIAMETER; i++)
@@ -171,7 +187,7 @@ void get_bounds(vector<game*>& games)
         return (ar.first <= ar.second) && (ar.first >= MIN) && (ar.second <= MAX);
     };
 
-    auto step = [&games, &check_count, &search_count, &grid, &virtual_to_real_idx, &valid_arena](arena& ar) -> arena
+    auto step = [&](arena& ar) -> arena
     {
         arena split_arena = ARENA_INVALID;
 
@@ -197,6 +213,8 @@ void get_bounds(vector<game*>& games)
 
         sum.add(inverse_scale_game);
 
+
+        // BASIC APPROACH
         /*
         search_count += 2;
         bool black_first = sum.solve();
@@ -245,6 +263,9 @@ void get_bounds(vector<game*>& games)
         }
         */
 
+
+        // 1 SIDED OPTIMIZATION
+        /*
         search_count++;
         bool black_first = sum.solve();
 
@@ -256,6 +277,9 @@ void get_bounds(vector<game*>& games)
         {
             grid[real_i] = R_GE; 
             high = virtual_i - 1;
+
+            assert(bound_high == BOUND_UNDEFINED || virtual_i < bound_high);
+            bound_high = virtual_i;
         } else
         {
 
@@ -271,6 +295,9 @@ void get_bounds(vector<game*>& games)
             {
                 grid[real_i] = R_LESS;
                 low = virtual_i + 1;
+
+                assert(bound_low == BOUND_UNDEFINED || virtual_i > bound_low);
+                bound_low = virtual_i;
             }
 
             // 1 1
@@ -285,6 +312,134 @@ void get_bounds(vector<game*>& games)
             }
 
         }
+        */
+
+        // 2 SIDED OPTIMIZATION
+        search_result black_first = RESULT_UNKNOWN;
+        search_result white_first = RESULT_UNKNOWN;
+        
+        // What side of the bound range are we on?
+        int bound_side = virtual_i <= 0 ? -1 : 1;
+
+        if (bound_low != BOUND_UNDEFINED && bound_high != BOUND_UNDEFINED)
+        {
+            int mid = (bound_low + bound_high) / 2;
+
+            bound_side = virtual_i <= mid ? -1 : 1;
+        }
+
+        assert(bound_side != 0);
+
+
+        // If we're on the lower side, assume that we'll be increasing the lower bound
+        // so check white first
+        // Otherwise check black first...
+
+
+        // First search
+        bool conclusive = false;
+
+        if (bound_side < 0)
+        {
+            sum.set_to_play(WHITE);
+            white_first = (search_result) sum.solve();
+            search_count++;
+
+            if (white_first == false)
+            {
+                conclusive = true;
+
+                // ? 0
+                // S - Gi >= 0
+                // S >= Gi
+                // Gi <= S
+                grid[real_i] = R_LE;
+                low = virtual_i + 1;
+                assert(bound_low == BOUND_UNDEFINED || virtual_i > bound_low);
+                bound_low = virtual_i;
+            }
+        } else
+        {
+            sum.set_to_play(BLACK);
+            black_first = (search_result) sum.solve();
+            search_count++;
+
+            if (black_first == false)
+            {
+                conclusive = true;
+
+                // 0 ?
+                // S - Gi <= 0
+                // S <= Gi
+                // Gi >= S
+                grid[real_i] = R_GE;
+                high = virtual_i - 1;
+
+                assert(bound_high == BOUND_UNDEFINED || virtual_i < bound_high);
+                bound_high = virtual_i;
+            }
+        }
+
+
+        if (!conclusive)
+        {
+            if (bound_side < 0)
+            {
+                assert(black_first == RESULT_UNKNOWN);
+                assert(white_first != RESULT_UNKNOWN);
+
+                sum.set_to_play(BLACK);
+                black_first = (search_result) sum.solve();
+                search_count++;
+
+                if (black_first == false)
+                {
+                    conclusive = true;
+
+                    // 0 1
+                    // S - Gi <= 0
+                    // S <= Gi
+                    // Gi >= S
+                    grid[real_i] = R_GE;
+                    high = virtual_i - 1;
+
+                    assert(bound_high == BOUND_UNDEFINED || virtual_i < bound_high);
+                    bound_high = virtual_i;
+                }
+            } else
+            {
+                assert(black_first != RESULT_UNKNOWN);
+                assert(white_first == RESULT_UNKNOWN);
+
+                sum.set_to_play(WHITE);
+                white_first = (search_result) sum.solve();
+                search_count++;
+
+                if (white_first == false)
+                {
+                    conclusive = true;
+
+                    // 1 0
+                    // S - Gi >= 0
+                    // S >= Gi
+                    // Gi <= S
+                    grid[real_i] = R_LE;
+                    low = virtual_i + 1;
+                    assert(bound_low == BOUND_UNDEFINED || virtual_i > bound_low);
+                    bound_low = virtual_i;
+                }
+            }
+        }
+
+        // If still inconclusive, we have "1 1"
+
+        if (!conclusive)
+        {
+            grid[real_i] = R_FUZZY;
+            split_arena = {virtual_i + 1, high};
+            high = virtual_i - 1;
+        }
+
 
         delete inverse_scale_game;
 
@@ -381,8 +536,24 @@ void get_bounds(vector<game*>& games)
 
     }
 
+    cout << "BOUNDS: [" << bound_low << " " << bound_high << "]" << endl; 
 
 
+    /*
+        bounds should be [-1 1]
+
+        1-sided optimization:
+            radius      checks      sumgames
+            32          11          17
+            16000       27          41
+
+        2-sided optimization:
+            radius      checks      sumgames
+            32          11          12
+            16000       27          29
+
+
+    */
     cout << "Did " << check_count << " checks (" << search_count << " sumgames)" << endl;
 }
 
