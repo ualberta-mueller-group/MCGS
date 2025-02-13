@@ -299,17 +299,16 @@ void bounds_finder::_step(vector<game*>& games, game_scale scale, search_region&
     int scale_idx = region.get_midpoint();
 
     // Get sum: S - Gi
-    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale));
-
     sumgame sum(BLACK);
 
-    // S
+    // add S
     for (game* g : games)
     {
         sum.add(g);
     }
 
     // add -Gi
+    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale));
     sum.add(inverse_scale_game.get());
 
  
