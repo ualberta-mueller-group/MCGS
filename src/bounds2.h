@@ -3,6 +3,7 @@
 #include <vector>
 #include "game.h"
 #include <ostream>
+#include <cstdint>
 
 
 // TODO figure out a better way to handle this. Maybe the outermost find_bounds() function can take a vector of radii?
@@ -17,25 +18,29 @@ enum game_scale
     GAME_SCALE_DYADIC_RATIONAL,
 };
 
+typedef int32_t bound_t;
+
 class game_bounds
 {
 public:
     game_bounds();
-    int get_midpoint();
-    void set_low(int low);
-    void set_high(int high);
-    bool both_valid();
 
-    int low;
+    bound_t get_midpoint() const;
+    void set_low(bound_t low);
+    void set_high(bound_t high);
+    bool both_valid() const;
+
+
+    bound_t low;
     bool low_valid;
     bool low_tight;
 
-    int high;
+    bound_t high;
     bool high_valid;
     bool high_tight;
 };
 
 std::ostream& operator<<(std::ostream& os, const game_bounds& gb);
 
-
+// TODO return vector<game_bounds> instead of vector<game_bounds*> ???
 std::vector<game_bounds*> find_bounds(std::vector<game*>& games, const std::vector<game_scale>& scales);

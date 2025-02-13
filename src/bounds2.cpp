@@ -1,5 +1,4 @@
 #include "bounds2.h"
-#include "clobber_1xn.h"
 #include "cgt_up_star.h"
 #include "cgt_dyadic_rational.h"
 #include "sumgame.h"
@@ -24,17 +23,16 @@ enum comparison_result
 class search_region
 {
 public:
-    search_region(int low, int high);
-    search_region split(int midpoint);
+    search_region(bound_t low, bound_t high);
+    search_region split(bound_t midpoint);
 
     bool valid();
     void invalidate();
-    int get_midpoint();
+    bound_t get_midpoint();
 
-    int low;
-    int high;
+    bound_t low;
+    bound_t high;
 };
-
 
 class bounds_finder
 {
@@ -43,22 +41,20 @@ public:
 
     vector<game_bounds*> find_bounds(vector<game*>& games, const vector<game_scale>& scales);
 
-    game* get_scale_game(int scale_idx, game_scale scale);
-    game* get_inverse_scale_game(int scale_idx, game_scale scale);
+    game* get_scale_game(bound_t scale_idx, game_scale scale) const;
+    game* get_inverse_scale_game(bound_t scale_idx, game_scale scale) const;
 
 private:
-    void _reset();
-
     game_bounds* _make_bounds(vector<game*>& games, game_scale scale);
 
-    comparison_result _compare_to_zero(sumgame& sum, bool assume_greater, int* sumgame_solve_count = nullptr);
-    void _step(search_region& region, game_bounds* bounds, vector<game*>& games, game_scale scale);
-    void _invert_tie_break_direction();
+    comparison_result _compare_to_zero(sumgame& sum, bool greater_first, int& sumgame_solve_count);
+    void _step(vector<game*>& games, game_scale scale, search_region& region, game_bounds& bounds);
+    void _flip_tie_break_rule();
 
-    // TODO search index type; can I hide it in the .cpp file?
+    void _reset();
 
 
-    int _tie_break_direction;
+    bool _tie_break_greater_first;
     int _step_count;
     int _search_count;
 
@@ -67,52 +63,44 @@ private:
     vector<search_region> _regions_next;
 };
 
-
-
-
-
-
 //////////////////////////////////////// game_bounds
 
 game_bounds::game_bounds(): 
-    low(numeric_limits<int>::max()), low_valid(false), low_tight(false),
-    high(numeric_limits<int>::min()), high_valid(false), high_tight(false)
+    low(numeric_limits<bound_t>::max()), low_valid(false), low_tight(false),
+    high(numeric_limits<bound_t>::min()), high_valid(false), high_tight(false)
 { }
 
-
-int game_bounds::get_midpoint()
+bound_t game_bounds::get_midpoint() const
 {
     assert(low_valid && high_valid);
+
+    // TODO Check for overflow?
     return (low + high) / 2;
 }
 
-void game_bounds::set_low(int low)
+void game_bounds::set_low(bound_t low)
 {
     this->low = low;
     low_valid = true;
 }
 
-void game_bounds::set_high(int high)
+void game_bounds::set_high(bound_t high)
 {
     this->high = high;
     high_valid = true;
 }
 
-
-bool game_bounds::both_valid()
+bool game_bounds::both_valid() const
 {
     return low_valid && high_valid;
 }
 
-
 //////////////////////////////////////// search_region
 
-
-search_region::search_region(int low, int high): low(low), high(high)
+search_region::search_region(bound_t low, bound_t high): low(low), high(high)
 { }
 
-
-search_region search_region::split(int midpoint)
+search_region search_region::split(bound_t midpoint)
 {
     // This object remains as the lower half, and returns a new search_region
     // representing the upper half
@@ -121,7 +109,7 @@ search_region search_region::split(int midpoint)
     assert(low <= midpoint);
     assert(midpoint <= high);
 
-    int old_high = high;
+    bound_t old_high = high;
     high = midpoint - 1;
 
     return search_region(midpoint + 1, old_high);
@@ -134,13 +122,15 @@ bool search_region::valid()
 
 void search_region::invalidate()
 {
-    low = numeric_limits<int>::max();
-    high = numeric_limits<int>::min();
+    low = numeric_limits<bound_t>::max();
+    high = numeric_limits<bound_t>::min();
 }
 
-int search_region::get_midpoint()
+bound_t search_region::get_midpoint()
 {
     assert(valid());
+
+    // TODO check for overflow?
     return (low + high) / 2;
 }
 
@@ -164,7 +154,7 @@ vector<game_bounds*> bounds_finder::find_bounds(vector<game*>& games, const vect
     return bounds_list;
 }
 
-game* bounds_finder::get_scale_game(int scale_idx, game_scale scale)
+game* bounds_finder::get_scale_game(bound_t scale_idx, game_scale scale) const
 {
     switch (scale)
     {
@@ -194,25 +184,15 @@ game* bounds_finder::get_scale_game(int scale_idx, game_scale scale)
     }
 }
 
-game* bounds_finder::get_inverse_scale_game(int scale_idx, game_scale scale)
+game* bounds_finder::get_inverse_scale_game(bound_t scale_idx, game_scale scale) const
 {
     return get_scale_game(-scale_idx, scale);
 }
 
-void bounds_finder::_reset()
-{
-    _tie_break_direction = -1;
-    _step_count = 0;
-    _search_count = 0;
-
-    _regions.clear();
-    _regions_next.clear();
-}
 
 game_bounds* bounds_finder::_make_bounds(vector<game*>& games, game_scale scale)
 {
     game_bounds* bounds = new game_bounds();
-
 
     _regions.push_back({BOUND_MIN, BOUND_MAX});
 
@@ -220,7 +200,7 @@ game_bounds* bounds_finder::_make_bounds(vector<game*>& games, game_scale scale)
     {
         _regions_next.clear();
 
-        for (search_region &sr : _regions)
+        for (search_region& sr : _regions)
         {
             if (!sr.valid())
             {
@@ -228,20 +208,16 @@ game_bounds* bounds_finder::_make_bounds(vector<game*>& games, game_scale scale)
             }
 
             // Do one step of binary search within the region
-            _step(sr, bounds, games, scale);
+            _step(games, scale, sr, *bounds);
         }
 
         swap(_regions, _regions_next);
     }
 
-
-
-
     return bounds;
 }
 
-
-comparison_result bounds_finder::_compare_to_zero(sumgame& sum, bool assume_greater, int* sumgame_solve_count)
+comparison_result bounds_finder::_compare_to_zero(sumgame& sum, bool greater_first, int& sumgame_solve_count)
 {
     bool did_black = false;
     bool black_result = false;
@@ -280,7 +256,7 @@ comparison_result bounds_finder::_compare_to_zero(sumgame& sum, bool assume_grea
         return (did_black && !black_result) || (did_white && !white_result);
     };
 
-    if (assume_greater)
+    if (greater_first)
     {
         test_ge();
         if (!is_conclusive())
@@ -295,10 +271,7 @@ comparison_result bounds_finder::_compare_to_zero(sumgame& sum, bool assume_grea
     // (<= or >=) or FUZZY; No EQUAL
     assert(is_conclusive() || (did_black && did_white));
 
-    if (sumgame_solve_count != nullptr)
-    {
-        *sumgame_solve_count = (int) did_black + (int) did_white;
-    }
+    sumgame_solve_count = (int) did_black + (int) did_white;
 
     // <=
     if (did_black && !black_result)
@@ -312,81 +285,81 @@ comparison_result bounds_finder::_compare_to_zero(sumgame& sum, bool assume_grea
         return COMP_GREATER_OR_EQUAL;
     }
 
+    // FUZZY
     assert((did_black && black_result) && (did_white && white_result));
     return COMP_FUZZY;
 }
 
 
-void bounds_finder::_step(search_region& region, game_bounds* bounds, vector<game*>& games, game_scale scale)
+void bounds_finder::_step(vector<game*>& games, game_scale scale, search_region& region, game_bounds& bounds)
 {
     _step_count++;
     assert(region.valid());
 
-
-    int idx = region.get_midpoint();
+    int scale_idx = region.get_midpoint();
 
     // Get sum: S - Gi
-    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(idx, scale));
+    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale));
 
     sumgame sum(BLACK);
 
+    // S
     for (game* g : games)
     {
         sum.add(g);
     }
 
+    // add -Gi
     sum.add(inverse_scale_game.get());
 
  
-    // What side of the bounds are we on?
-    int bounds_side = _tie_break_direction;
+    // Pick a test (>= or <=) to try first, based on what side of the bounds space
+    // "scale_idx" is on
+    bool greater_first = _tie_break_greater_first;
     bool did_tie_break = true;
 
     int midpoint = 0;
 
-    if (bounds->both_valid())
+    if (bounds.both_valid())
     {
-        midpoint = bounds->get_midpoint();
+        midpoint = bounds.get_midpoint();
     }
 
-    if (idx != midpoint)
+    if (scale_idx != midpoint)
     {
         did_tie_break = false;
-        bounds_side = idx < midpoint ? -1 : 1;
+        greater_first = scale_idx < midpoint;
     }
 
-    assert(bounds_side == -1 || bounds_side == 1);
-
-    bool assume_greater = bounds_side < 0;
 
     // S - Gi compared to 0
     int sumgame_solve_count = 0;
-    comparison_result relation = _compare_to_zero(sum, assume_greater, &sumgame_solve_count);
+    comparison_result relation = _compare_to_zero(sum, greater_first, sumgame_solve_count);
 
     if (did_tie_break && sumgame_solve_count > 1)
     {
-        _invert_tie_break_direction();
+        _flip_tie_break_rule();
     }
 
     switch (relation)
     {
         case COMP_LESS_OR_EQUAL:
         {
-            region.high = idx - 1;
-            bounds->set_high(idx);
+            region.high = scale_idx - 1;
+            bounds.set_high(scale_idx);
             break;
         }
 
         case COMP_GREATER_OR_EQUAL:
         {
-            region.low = idx + 1;
-            bounds->set_low(idx);
+            region.low = scale_idx + 1;
+            bounds.set_low(scale_idx);
             break;
         }
 
         case COMP_FUZZY:
         {
-            _regions_next.push_back(region.split(idx));
+            _regions_next.push_back(region.split(scale_idx));
             break;
         }
 
@@ -401,9 +374,19 @@ void bounds_finder::_step(search_region& region, game_bounds* bounds, vector<gam
 }
 
 
-void bounds_finder::_invert_tie_break_direction()
+void bounds_finder::_flip_tie_break_rule()
 {
-    _tie_break_direction *= -1;
+    _tie_break_greater_first = !_tie_break_greater_first;
+}
+
+void bounds_finder::_reset()
+{
+    _tie_break_greater_first = true;
+    _step_count = 0;
+    _search_count = 0;
+
+    _regions.clear();
+    _regions_next.clear();
 }
 
 ostream& operator<<(ostream& os, const game_bounds& gb)
