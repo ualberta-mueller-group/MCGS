@@ -150,6 +150,14 @@ void sumgame::add(game* g)
     //                      &_subgames.back()));
 }
 
+void sumgame::add_vec(std::vector<game*>& gs)
+{
+    for (game* g : gs)
+    {
+        add(g);
+    }
+}
+
 const bool PRINT_SUBGAMES = false;
 
 bool sumgame::solve() const

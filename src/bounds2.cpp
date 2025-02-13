@@ -39,12 +39,15 @@ class bounds_finder
 public:
     bounds_finder();
 
+
+    bool _validate_range(vector<game*>& games, game_scale scale, game_bounds& bounds, bound_t min, bound_t max);
     vector<game_bounds*> find_bounds(vector<game*>& games, const vector<game_scale>& scales);
 
     game* get_scale_game(bound_t scale_idx, game_scale scale) const;
     game* get_inverse_scale_game(bound_t scale_idx, game_scale scale) const;
 
 private:
+
     game_bounds* _make_bounds(vector<game*>& games, game_scale scale);
 
     comparison_result _compare_to_zero(sumgame& sum, bool greater_first, int& sumgame_solve_count);
@@ -191,12 +194,56 @@ game* bounds_finder::get_inverse_scale_game(bound_t scale_idx, game_scale scale)
     return get_scale_game(-scale_idx, scale);
 }
 
+bool bounds_finder::_validate_range(vector<game*>& games, game_scale scale, game_bounds& bounds, bound_t min, bound_t max)
+{
+    if (!bounds.low_valid)
+    {
+        sumgame sum(BLACK);
+        sum.add_vec(games);
+
+        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(min, scale));
+        sum.add(inverse_scale_game.get());
+        
+        int sumgame_solve_count;
+        comparison_result relation = _compare_to_zero(sum, false, sumgame_solve_count);
+
+        if (relation != COMP_GREATER_OR_EQUAL)
+        {
+            return false;
+        }
+    }
+
+    if (!bounds.high_valid)
+    {
+        sumgame sum(BLACK);
+        sum.add_vec(games);
+
+        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(max, scale));
+        sum.add(inverse_scale_game.get());
+        
+        int sumgame_solve_count;
+        comparison_result relation = _compare_to_zero(sum, true, sumgame_solve_count);
+
+        if (relation != COMP_LESS_OR_EQUAL)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
 game_bounds* bounds_finder::_make_bounds(vector<game*>& games, game_scale scale)
 {
     game_bounds* bounds = new game_bounds();
 
-    _regions.push_back({BOUND_MIN, BOUND_MAX});
+    const bound_t init_low = BOUND_MIN;
+    const bound_t init_high = BOUND_MAX;
+
+    _regions.push_back({init_low, init_high});
+    
+    bool validated_range = false;
 
     while (!_regions.empty())
     {
@@ -211,6 +258,16 @@ game_bounds* bounds_finder::_make_bounds(vector<game*>& games, game_scale scale)
 
             // Do one step of binary search within the region
             _step(games, scale, sr, *bounds);
+        }
+
+        if (!bounds->both_valid() && !validated_range && _step_count >= 3)
+        {
+            validated_range = true;
+
+            if (!_validate_range(games, scale, *bounds, init_low, init_high))
+            {
+                return bounds;
+            }
         }
 
         swap(_regions, _regions_next);
