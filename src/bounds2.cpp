@@ -41,14 +41,14 @@ public:
 
 
     bool _validate_range(vector<game*>& games, game_scale scale, game_bounds& bounds, bound_t min, bound_t max);
-    vector<game_bounds*> find_bounds(vector<game*>& games, const vector<game_scale>& scales);
+    vector<game_bounds*> find_bounds(vector<game*>& games, const vector<bounds_options>& options);
 
     game* get_scale_game(bound_t scale_idx, game_scale scale) const;
     game* get_inverse_scale_game(bound_t scale_idx, game_scale scale) const;
 
 private:
 
-    game_bounds* _make_bounds(vector<game*>& games, game_scale scale);
+    game_bounds* _make_bounds(vector<game*>& games, const bounds_options& opt);
 
     comparison_result _compare_to_zero(sumgame& sum, bool greater_first, int& sumgame_solve_count);
     void _step(vector<game*>& games, game_scale scale, search_region& region, game_bounds& bounds);
@@ -98,6 +98,29 @@ bool game_bounds::both_valid() const
     return low_valid && high_valid;
 }
 
+ostream& operator<<(ostream& os, const game_bounds& gb)
+{
+    os << (gb.low_tight ? '(' : '[');
+
+    if (gb.low_valid)
+        os << gb.low;
+    else
+        os << '?';
+
+    os << ' ';
+
+    if (gb.high_valid)
+        os << gb.high;
+    else
+        os << '?';
+
+    os << (gb.high_tight ? ')' : ']');
+
+    return os;
+}
+
+//////////////////////////////////////// bounds_options
+
 //////////////////////////////////////// search_region
 
 search_region::search_region(bound_t low, bound_t high): low(low), high(high)
@@ -142,15 +165,17 @@ bound_t search_region::get_midpoint()
 bounds_finder::bounds_finder()
 { }
 
-vector<game_bounds*> bounds_finder::find_bounds(vector<game*>& games, const vector<game_scale>& scales)
+vector<game_bounds*> bounds_finder::find_bounds(vector<game*>& games, const vector<bounds_options>& options)
 {
     vector<game_bounds*> bounds_list;
 
-    for (const game_scale& scale : scales)
+    for (const bounds_options& opts : options)
     {
         _reset();
 
-        game_bounds* gb = _make_bounds(games, scale);
+        assert(opts.min <= opts.max);
+
+        game_bounds* gb = _make_bounds(games, opts);
         bounds_list.push_back(gb);
 
         cout << "Searches: " << _search_count << endl;
@@ -234,14 +259,12 @@ bool bounds_finder::_validate_range(vector<game*>& games, game_scale scale, game
 }
 
 
-game_bounds* bounds_finder::_make_bounds(vector<game*>& games, game_scale scale)
+
+game_bounds* bounds_finder::_make_bounds(vector<game*>& games, const bounds_options& opt)
 {
     game_bounds* bounds = new game_bounds();
 
-    const bound_t init_low = BOUND_MIN;
-    const bound_t init_high = BOUND_MAX;
-
-    _regions.push_back({init_low, init_high});
+    _regions.push_back({opt.min, opt.max});
     
     bool validated_range = false;
 
@@ -257,14 +280,14 @@ game_bounds* bounds_finder::_make_bounds(vector<game*>& games, game_scale scale)
             }
 
             // Do one step of binary search within the region
-            _step(games, scale, sr, *bounds);
+            _step(games, opt.scale, sr, *bounds);
         }
 
         if (!bounds->both_valid() && !validated_range && _step_count >= 3)
         {
             validated_range = true;
 
-            if (!_validate_range(games, scale, *bounds, init_low, init_high))
+            if (!_validate_range(games, opt.scale, *bounds, opt.min, opt.max))
             {
                 return bounds;
             }
@@ -447,31 +470,14 @@ void bounds_finder::_reset()
     _regions_next.clear();
 }
 
-ostream& operator<<(ostream& os, const game_bounds& gb)
-{
-    os << (gb.low_tight ? '(' : '[');
-
-    if (gb.low_valid)
-        os << gb.low;
-    else
-        os << '?';
-
-    os << ' ';
-
-    if (gb.high_valid)
-        os << gb.high;
-    else
-        os << '?';
-
-    os << (gb.high_tight ? ')' : ']');
-
-    return os;
-}
 
 
-vector<game_bounds*> find_bounds(vector<game*>& games, const vector<game_scale>& scales)
+
+vector<game_bounds*> find_bounds(vector<game*>& games, const vector<bounds_options>& options)
 {
     bounds_finder bf;
-    return bf.find_bounds(games, scales);
+    return bf.find_bounds(games, options);
 }
+
+
 

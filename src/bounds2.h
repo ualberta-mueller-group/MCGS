@@ -42,5 +42,12 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const game_bounds& gb);
 
+struct bounds_options
+{
+    game_scale scale;
+    bound_t min;
+    bound_t max;
+};
+
 // TODO return vector<game_bounds> instead of vector<game_bounds*> ???
-std::vector<game_bounds*> find_bounds(std::vector<game*>& games, const std::vector<game_scale>& scales);
+std::vector<game_bounds*> find_bounds(std::vector<game*>& games, const std::vector<bounds_options>& options);
