@@ -8,6 +8,7 @@
 #include <string>
 #include "cgt_basics.h"
 #include "cli_options.h"
+#include "clobber_1xn.h"
 #include "file_parser.h"
 #include "sumgame.h"
 #include "cli_options.h"
@@ -16,13 +17,31 @@
 
 #include "all_game_headers.h"
 
-#include "bounds.h"
+//#include "bounds.h"
+#include "bounds2.h"
 
 using std::cout, std::endl, std::string;
 
+void test_bounds2()
+{
+    std::vector<game*> games;
+    games.push_back(new clobber_1xn("XXXOO.XOOXXO..OOXX.OXXOX"));
+
+    std::vector<game_bounds*> bounds_list = find_bounds(games, {GAME_SCALE_UP_STAR, GAME_SCALE_UP});
+
+
+    cout << "From main.cpp:" << endl;
+    for (game_bounds* gb : bounds_list)
+    {
+        cout << *gb << endl;
+    }
+
+
+}
+
 int main(int argc, char** argv)
 {
-    test_bounds();
+    test_bounds2();
     return 0;
 
     cli_options opts = parse_cli_args(argc, (const char**) argv, false);
