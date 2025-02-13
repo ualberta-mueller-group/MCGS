@@ -7,7 +7,7 @@
 
 
 // TODO figure out a better way to handle this. Maybe the outermost find_bounds() function can take a vector of radii?
-#define BOUND_RADIUS 16
+#define BOUND_RADIUS 100
 #define BOUND_MIN -BOUND_RADIUS
 #define BOUND_MAX BOUND_RADIUS
 

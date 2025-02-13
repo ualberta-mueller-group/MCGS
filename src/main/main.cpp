@@ -10,6 +10,7 @@
 #include "cli_options.h"
 #include "clobber_1xn.h"
 #include "file_parser.h"
+#include "nogo_1xn.h"
 #include "sumgame.h"
 #include "cli_options.h"
 #include "autotests.h"
@@ -25,9 +26,10 @@ using std::cout, std::endl, std::string;
 void test_bounds2()
 {
     std::vector<game*> games;
-    games.push_back(new clobber_1xn("XXXOO.XOOXXO..OOXX.OXXOX"));
+    //games.push_back(new clobber_1xn("XXXOO.XOOXXO..OOXX.OXXOX"));
+    games.push_back(new nogo_1xn("..O."));
 
-    std::vector<game_bounds*> bounds_list = find_bounds(games, {GAME_SCALE_UP_STAR, GAME_SCALE_UP});
+    std::vector<game_bounds*> bounds_list = find_bounds(games, {GAME_SCALE_UP_STAR, GAME_SCALE_UP, GAME_SCALE_DYADIC_RATIONAL});
 
 
     cout << "From main.cpp:" << endl;

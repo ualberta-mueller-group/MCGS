@@ -149,6 +149,8 @@ vector<game_bounds*> bounds_finder::find_bounds(vector<game*>& games, const vect
 
         game_bounds* gb = _make_bounds(games, scale);
         bounds_list.push_back(gb);
+
+        cout << "Searches: " << _search_count << endl;
     }
 
     return bounds_list;
@@ -391,11 +393,19 @@ void bounds_finder::_reset()
 ostream& operator<<(ostream& os, const game_bounds& gb)
 {
     os << (gb.low_tight ? '(' : '[');
-    os << (gb.low_valid ? gb.low : '?');
+
+    if (gb.low_valid)
+        os << gb.low;
+    else
+        os << '?';
 
     os << ' ';
 
-    os << (gb.high_valid ? gb.high : '?');
+    if (gb.high_valid)
+        os << gb.high;
+    else
+        os << '?';
+
     os << (gb.high_tight ? ')' : ']');
 
     return os;
