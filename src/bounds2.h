@@ -11,6 +11,17 @@
 #define BOUND_MIN -BOUND_RADIUS
 #define BOUND_MAX BOUND_RADIUS
 
+enum comparison_result 
+{
+    COMP_EQUAL = 0,
+    COMP_FUZZY,
+    COMP_LESS_OR_EQUAL,
+    COMP_LESS,
+    COMP_GREATER_OR_EQUAL,
+    COMP_GREATER,
+};
+
+
 enum game_scale
 {
     GAME_SCALE_UP_STAR,
@@ -33,11 +44,11 @@ public:
 
     bound_t low;
     bool low_valid;
-    bool low_tight;
+    comparison_result low_relation;
 
     bound_t high;
     bool high_valid;
-    bool high_tight;
+    comparison_result high_relation;
 };
 
 std::ostream& operator<<(std::ostream& os, const game_bounds& gb);

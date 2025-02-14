@@ -13,13 +13,6 @@ using namespace std;
 
 //////////////////////////////////////// Type declarations
 
-enum comparison_result 
-{
-    COMP_EQUAL,
-    COMP_FUZZY,
-    COMP_LESS_OR_EQUAL,
-    COMP_GREATER_OR_EQUAL,
-};
 
 class search_region
 {
@@ -48,7 +41,7 @@ public:
     game* get_inverse_scale_game(bound_t scale_idx, game_scale scale) const;
 
 private:
-
+    void _refine_bounds(vector<game*>& games, game_scale scale, game_bounds& bounds);
     game_bounds* _make_bounds(vector<game*>& games, const bounds_options& opt);
 
     comparison_result _compare_to_zero(sumgame& sum, bool greater_first, int& sumgame_solve_count);
@@ -72,8 +65,8 @@ private:
 //////////////////////////////////////// game_bounds
 
 game_bounds::game_bounds(): 
-    low(numeric_limits<bound_t>::max()), low_valid(false), low_tight(false),
-    high(numeric_limits<bound_t>::min()), high_valid(false), high_tight(false)
+    low(numeric_limits<bound_t>::max()), low_valid(false), low_relation(COMP_GREATER_OR_EQUAL),
+    high(numeric_limits<bound_t>::min()), high_valid(false), high_relation(COMP_LESS_OR_EQUAL)
 { }
 
 bound_t game_bounds::get_midpoint() const
@@ -103,7 +96,31 @@ bool game_bounds::both_valid() const
 
 ostream& operator<<(ostream& os, const game_bounds& gb)
 {
-    os << (gb.low_tight ? '(' : '[');
+    switch (gb.low_relation)
+    {
+        case COMP_GREATER_OR_EQUAL:
+        {
+            os << '[';
+            break;
+        }
+
+        case COMP_GREATER:
+        {
+            os << '(';
+            break;
+        }
+
+        case COMP_EQUAL:
+        {
+            os << "==";
+            break;
+        }
+
+        default:
+        {
+            assert(false);
+        }
+    }
 
     if (gb.low_valid)
         os << gb.low;
@@ -117,7 +134,31 @@ ostream& operator<<(ostream& os, const game_bounds& gb)
     else
         os << '?';
 
-    os << (gb.high_tight ? ')' : ']');
+    switch (gb.high_relation)
+    {
+        case COMP_LESS_OR_EQUAL:
+        {
+            os << ']';
+            break;
+        }
+
+        case COMP_LESS:
+        {
+            os << ')';
+            break;
+        }
+
+        case COMP_EQUAL:
+        {
+            os << "==";
+            break;
+        }
+
+        default:
+        {
+            assert(false);
+        }
+    }
 
     return os;
 }
@@ -235,9 +276,15 @@ bool bounds_finder::_validate_range(vector<game*>& games, game_scale scale, game
         int sumgame_solve_count;
         comparison_result relation = _compare_to_zero(sum, false, sumgame_solve_count);
 
-        if (relation != COMP_GREATER_OR_EQUAL)
+        // TODO "relation" class?
+        if (relation != COMP_GREATER_OR_EQUAL && relation != COMP_GREATER && relation != COMP_EQUAL)
         {
             return false;
+        } else
+        {
+            // TODO game_bounds should have setter functions to handle this...
+            bounds.set_low(min);
+            bounds.low_relation = relation;
         }
     }
 
@@ -252,15 +299,55 @@ bool bounds_finder::_validate_range(vector<game*>& games, game_scale scale, game
         int sumgame_solve_count;
         comparison_result relation = _compare_to_zero(sum, true, sumgame_solve_count);
 
-        if (relation != COMP_LESS_OR_EQUAL)
+        if (relation != COMP_LESS_OR_EQUAL && relation != COMP_LESS && relation != COMP_EQUAL)
         {
             return false;
+        } else
+        {
+            bounds.set_high(max);
+            bounds.high_relation = relation;
         }
     }
 
     return true;
 }
 
+
+void bounds_finder::_refine_bounds(vector<game*>& games, game_scale scale, game_bounds& bounds)
+{
+    if (bounds.low_valid && bounds.low_relation == COMP_GREATER_OR_EQUAL)
+    {
+        // ? 0
+        sumgame sum(BLACK);
+
+        sum.add_vec(games);
+
+        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(bounds.low, scale));
+        sum.add(inverse_scale_game.get());
+
+        bool black_first = sum.solve();
+        _search_count++;
+
+        bounds.low_relation = black_first ? COMP_GREATER : COMP_EQUAL;
+    }
+
+    if (bounds.high_valid && bounds.high_relation == COMP_LESS_OR_EQUAL)
+    {
+        // 0 ?
+        sumgame sum(WHITE);
+
+        sum.add_vec(games);
+
+        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(bounds.high, scale));
+        sum.add(inverse_scale_game.get());
+
+        bool white_first = sum.solve();
+        _search_count++;
+
+        bounds.high_relation = white_first ? COMP_LESS : COMP_EQUAL;
+    }
+
+}
 
 
 game_bounds* bounds_finder::_make_bounds(vector<game*>& games, const bounds_options& opt)
@@ -292,13 +379,15 @@ game_bounds* bounds_finder::_make_bounds(vector<game*>& games, const bounds_opti
 
             if (!_validate_range(games, opt.scale, *bounds, opt.min, opt.max))
             {
-                return bounds;
+                break;
             }
         }
 
         swap(_regions, _regions_next);
     }
 
+
+    _refine_bounds(games, opt.scale, *bounds);
     return bounds;
 }
 
@@ -358,6 +447,25 @@ comparison_result bounds_finder::_compare_to_zero(sumgame& sum, bool greater_fir
 
     sumgame_solve_count = (int) did_black + (int) did_white;
 
+    // ==
+    if ((did_black && did_white) && (!black_result && !white_result))
+    {
+        cout << "EQ" << endl;
+        return COMP_EQUAL;
+    }
+
+    // >
+    if ((did_black && did_white) && (black_result && !white_result))
+    {
+        return COMP_GREATER;
+    }
+
+    // <
+    if ((did_black && did_white) && (!black_result && white_result))
+    {
+        return COMP_LESS;
+    }
+
     // <=
     if (did_black && !black_result)
     {
@@ -416,8 +524,6 @@ void bounds_finder::_step(vector<game*>& games, game_scale scale, search_region&
     }
 
 
-
-
     // S - Gi compared to 0
     int sumgame_solve_count = 0;
     comparison_result relation = _compare_to_zero(sum, greater_first, sumgame_solve_count);
@@ -430,16 +536,20 @@ void bounds_finder::_step(vector<game*>& games, game_scale scale, search_region&
     switch (relation)
     {
         case COMP_LESS_OR_EQUAL:
+        case COMP_LESS:
         {
             region.high = scale_idx - 1;
             bounds.set_high(scale_idx);
+            bounds.high_relation = relation;
             break;
         }
 
         case COMP_GREATER_OR_EQUAL:
+        case COMP_GREATER:
         {
             region.low = scale_idx + 1;
             bounds.set_low(scale_idx);
+            bounds.low_relation = relation;
             break;
         }
 
@@ -447,6 +557,15 @@ void bounds_finder::_step(vector<game*>& games, game_scale scale, search_region&
         {
             _regions_next.push_back(region.split(scale_idx));
             break;
+        }
+
+        case COMP_EQUAL:
+        {
+            region.invalidate();
+            bounds.set_low(scale_idx);
+            bounds.set_high(scale_idx);
+            bounds.low_relation = COMP_EQUAL;
+            bounds.high_relation = COMP_EQUAL;
         }
 
         default:
@@ -491,7 +610,7 @@ vector<game_bounds*> find_bounds(vector<game*>& games, const vector<bounds_optio
 
 void test_bounds2()
 {
-    const vector<string> tests
+    vector<string> tests
     {
 
         ".OOXXO.X.XOXX.XXXOOXXOO.O",
@@ -579,7 +698,8 @@ void test_bounds2()
 
     };
 
-    const bound_t R = 16;
+
+    const bound_t R = 8;
 
 
     int total_searches = 0;
