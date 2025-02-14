@@ -591,6 +591,8 @@ void test_bounds2()
        predict: 760
        assume greater: 908
        assume less: 907
+
+       2022 Clobber: 1126
     */
     for (const string& str : tests)
     {
