@@ -23,29 +23,6 @@
 
 using std::cout, std::endl, std::string;
 
-void test_bounds2()
-{
-    std::vector<game*> games;
-    games.push_back(new clobber_1xn("XXXOO.XOOXXO..OOXX.OXXOX"));
-    //games.push_back(new nogo_1xn("..O."));
-
-
-    std::vector<game_bounds*> bounds_list = find_bounds(games, 
-    {
-            {GAME_SCALE_UP_STAR, -16, 16},
-            {GAME_SCALE_UP, -16, 16},
-            {GAME_SCALE_DYADIC_RATIONAL, -16, 16},
-    });
-
-    cout << "From main.cpp:" << endl;
-    for (game_bounds* gb : bounds_list)
-    {
-        cout << *gb << endl;
-    }
-
-
-}
-
 int main(int argc, char** argv)
 {
     test_bounds2();

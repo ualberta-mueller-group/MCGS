@@ -51,3 +51,5 @@ struct bounds_options
 
 // TODO return vector<game_bounds> instead of vector<game_bounds*> ???
 std::vector<game_bounds*> find_bounds(std::vector<game*>& games, const std::vector<bounds_options>& options);
+
+void test_bounds2();

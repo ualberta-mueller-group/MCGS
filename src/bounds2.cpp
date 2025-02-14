@@ -1,6 +1,7 @@
 #include "bounds2.h"
 #include "cgt_up_star.h"
 #include "cgt_dyadic_rational.h"
+#include "clobber_1xn.h"
 #include "sumgame.h"
 
 #include <iostream>
@@ -64,6 +65,8 @@ private:
     // TODO consider finding a better way to do this. Maybe this is fine though...
     vector<search_region> _regions;
     vector<search_region> _regions_next;
+
+    friend void test_bounds2();
 };
 
 //////////////////////////////////////// game_bounds
@@ -178,7 +181,7 @@ vector<game_bounds*> bounds_finder::find_bounds(vector<game*>& games, const vect
         game_bounds* gb = _make_bounds(games, opts);
         bounds_list.push_back(gb);
 
-        cout << "Searches: " << _search_count << endl;
+        //cout << "Searches: " << _search_count << endl;
     }
 
     return bounds_list;
@@ -413,6 +416,8 @@ void bounds_finder::_step(vector<game*>& games, game_scale scale, search_region&
     }
 
 
+
+
     // S - Gi compared to 0
     int sumgame_solve_count = 0;
     comparison_result relation = _compare_to_zero(sum, greater_first, sumgame_solve_count);
@@ -481,3 +486,139 @@ vector<game_bounds*> find_bounds(vector<game*>& games, const vector<bounds_optio
 
 
 
+
+////////////////////////////////////////
+
+void test_bounds2()
+{
+    const vector<string> tests
+    {
+
+        ".OOXXO.X.XOXX.XXXOOXXOO.O",
+"OOOXX.X.X.OOXXOOX.XX.XXOO",
+"XXOXXOOXXX...O.X.OXOXXOOO",
+"OO.XOXXOXXXXO.O.OXX..OXOX",
+"X.XXOXOOXX.OOXXXXO..OO.OX",
+"XX.OXOOXXOOXXX..XOOX.OXO.",
+"XO..XXOXOOX.OXXXX.OOXXO.O",
+"OXX...O.XXOXXO.OXXXXXOOOO",
+"OXOXXOXOO.OOXXX.X.XX.OOX.",
+"XXOX..OXXXOOOXOXX.OO.XOX.",
+"O.XOOOXO..XX.XXOOXX.OXXOX",
+"OXXO.XOOX..XXOOXX.OOX.XXO",
+"OXOOOX.XOOX.X.OXXXXO..XXO",
+"XOOXOXXOXXO.XXO..XXOXO..O",
+"OOO..XOXOO.XXXXXXXOX.O.XO",
+"XXX..OXOXXOXOOXXOOOX...XO",
+"OOXXXXXXOO.XXXXX.OO..OO.O",
+"XXOXXOOOX...OOXX.OOXX.XXO",
+".OXXOOXOOXXXOXO.XXO...OXX",
+"XX.O.XXX.OXOOXXXOXX.OOO.O",
+"OXXOOXOOX.X.O..XOX.OXXXXO",
+"X.XOO.OOOXXOX.XXXOXXO.O.X",
+".OOOXXOXO.XOX.XXXXOXO.OX.",
+"XOO.XO.XX.OXOO.OXX.XXOOXX",
+"X.OOXOOXXX...XXXXOXO.OOOX",
+"XOOXOO.X.OX.OOXXXOXX..OXX",
+"XXOX.XXOOOXOXX.XO..X.OOXO",
+"OOXXO.XXXXX.OXXO..OO.OXXO",
+".X..XOOXOX.XOXO.XOXXXOXOO",
+"X.OOOXOXOOXXX.OXXX..X.OXO",
+"XOXX.OXXXOO.OXOOXOXOX.X..",
+"OXXX..XXXXOOXOOXX..OOOX.O",
+".XOXXX.O..OOOOOXX.XXOOXXX",
+"XOXOXO..OO..XOXOXXOXXX.XO",
+"O..OX.OXOXXOXXXX..OXXOXOO",
+"XXOX.X..OOXOOXOOX.OX.XXXO",
+"O..OO.XXOOX.XOXXXX.OXOXXO",
+"O.XOO.XXOOO..OXX.XXXOOXXX",
+"X.XO.OXOXOXOO.X.XOXOXX.XO",
+"OXX.OOXOXOXX.X.OOXXOX.O.X",
+"O.OXX.X.XOX.OOXXOOXOOX.XX",
+"O.XO.XX..XXOXOO.OXXXXOOXO",
+".XXXXXOOO.OX.OOO.OX.XXXOX",
+"XXXXXOOOX.O.O.X.XO.XOOOXX",
+"OXOOOOXX...XXXXOXO.XXO.XO",
+"X.OXX.O.XOOXXXOOXOXOXXO..",
+"OXX.XXO.XOO..XOOOOX.XXOXX",
+".O...XOOXXXXOX.OXOOXXOOXX",
+"OOX...XOXOXOXXXOX.OOX.XOX",
+"XXXXO.OXOOOXOXX.OO.XXX..O",
+"XXOX.XOOXXO.OOXX.OX.X.OXO",
+"OX.XXOOOOOOOXX.XOXX.XXX..",
+".X.XXXOXXOOXX.OOX.OX.OOXO",
+"OXXOOXXO.XOX...XXOX.OXOOX",
+"X.OXXOXX.OOXO.OXOXXX.X.OO",
+"O.XX.O.XXOXOX.OO.XXOOXXXO",
+"OO..XXXX..XXOXX.XOOOOOOXX",
+"XXOOXO..XXOXO.XXXOX.OO.XO",
+"XO.X.XOXXOXOX.XOXXOOXO..O",
+"XOXO..XXXX.OOOOXXXOX..OOX",
+"OXXXO.OXXO.OOXX...XXOOXXO",
+"XO.OXOXX.XOXXXXOXO.OOOX..",
+"OO..XOXXXXX.XXXO.OXOXOO.O",
+"XXXO.XXOOXOXO.XO.XXO.XOO.",
+"X.O.X.XX.X.OOXOOOXXOOXXOX",
+".XX.OXXOOOX.XXOX.OO.XOOXX",
+"XOXXXOXXOXOOX...XOO.XO.XO",
+"XOXXXOOOOX.XOX.OO..XXXO.X",
+"..OOXOOX..XXX.OOXOXOXXOXX",
+"OXXXOXO.XOXOOX..XXXOO.O.X",
+"XXOO.OXXOX.X.X.XOOXXOXO.O",
+"XXX.OOXO..OOXXXXX.OXO.OOX",
+"OXXOXO..OXXO.X.O.XOXOXXXO",
+"O.O.OXOX..X.OXXXXOXOXXOOX",
+"XO.XXOOXOOXXXXXXO.O...XOO",
+"OXX.OOOO.X.X.XXXO.OXOXXXO",
+"XX.O.XOXOXXOXXOO.OXXOXO..",
+"XOOX.OXOXOXO..XXOO.OXXX.X",
+".OO.OXXOXO.OXXXXO.XOX.XOX",
+"XOX.XOXX.OXOX.OOXOXOX.X.O",
+
+
+
+    };
+
+    const bound_t R = 16;
+
+
+    int total_searches = 0;
+
+    /*
+       Clobber tests, UP_STAR
+
+       R = 16
+       predict: 760
+       assume greater: 908
+       assume less: 907
+    */
+    for (const string& str : tests)
+    {
+        vector<game*> games;
+
+        games.push_back(new clobber_1xn(str));
+
+
+        bounds_finder bf;
+        vector<game_bounds*> bounds_list = bf.find_bounds(games, {{GAME_SCALE_UP_STAR, -R, R}});
+
+        assert(bounds_list.size() == 1);
+        assert(bounds_list[0]->both_valid());
+
+        total_searches += bf._search_count;
+        cout << bf._search_count << " " << *bounds_list[0] << endl;
+
+        for (game* g : games)
+        {
+            delete g;
+        }
+
+        for (game_bounds* gb : bounds_list)
+        {
+            delete gb;
+        }
+    }
+
+    cout << "Total: " << total_searches << endl;
+
+}
