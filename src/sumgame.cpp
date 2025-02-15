@@ -255,6 +255,31 @@ optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) c
     return future.get();
 }
 
+bool sumgame::solve_with_games(std::vector<game*>& gs) const
+{
+    assert_restore_game ar(*this);
+
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+    for (game* g : gs)
+    {
+        sum.add(g);
+    }
+
+    bool result = solve();
+
+    const size_t N = gs.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        game* back = sum._pop_game();
+        game* g = gs[N - 1 - i];
+
+        assert(back == g);
+    }
+
+    return result;
+}
+
 optional<solve_result> sumgame::_solve_with_timeout()
 {
     if (over_time())
@@ -314,6 +339,16 @@ bool sumgame::over_time() const
 {
     return should_stop;
 };
+
+game* sumgame::_pop_game()
+{
+    assert(!_subgames.empty());
+
+    game* back = _subgames.back();
+    _subgames.pop_back();
+
+    return back;
+}
 
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
 {

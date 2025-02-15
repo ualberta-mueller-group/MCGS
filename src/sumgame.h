@@ -71,6 +71,8 @@ public:
     */
     std::optional<solve_result> solve_with_timeout(unsigned long long timeout) const;
 
+    bool solve_with_games(std::vector<game*>& gs) const;
+
     const play_record& last_play_record() const;
     int num_total_games() const;
     int num_active_games() const;
@@ -81,6 +83,8 @@ public:
     void print(std::ostream& str) const;
 private:
     bool over_time() const;
+    game* _pop_game();
+
 
     /*
         mutable makes sense here? 
