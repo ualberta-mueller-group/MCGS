@@ -52,7 +52,7 @@ private:
 
 
 
-    comparison_result _get_step_comparison(sumgame& sum, game* inverse_scale_game, bool below_midpoint, int* solve_count);
+    relation _get_step_comparison(sumgame& sum, game* inverse_scale_game, bool below_midpoint, int* solve_count);
 
     //void _step(vector<game*>& games, game_scale scale, search_region& region, game_bounds& bounds);
     void _step(search_region& region, game_scale scale, sumgame& sum, game_bounds& bounds);
@@ -76,18 +76,18 @@ private:
 //////////////////////////////////////// game_bounds
 
 game_bounds::game_bounds(): 
-    _lower(numeric_limits<bound_t>::max()), _lower_valid(false), _lower_relation(COMP_GREATER_OR_EQUAL),
-    _upper(numeric_limits<bound_t>::min()), _upper_valid(false), _upper_relation(COMP_LESS_OR_EQUAL)
+    _lower(numeric_limits<bound_t>::max()), _lower_valid(false), _lower_relation(REL_GREATER_OR_EQUAL),
+    _upper(numeric_limits<bound_t>::min()), _upper_valid(false), _upper_relation(REL_LESS_OR_EQUAL)
 { }
 
-void game_bounds::set_lower(bound_t lower, comparison_result lower_relation)
+void game_bounds::set_lower(bound_t lower, relation lower_relation)
 {
-    assert(lower_relation == COMP_LESS
-            || lower_relation == COMP_LESS_OR_EQUAL 
-            || lower_relation == COMP_EQUAL
+    assert(lower_relation == REL_LESS
+            || lower_relation == REL_LESS_OR_EQUAL 
+            || lower_relation == REL_EQUAL
     );
 
-    if (lower_relation == COMP_EQUAL)
+    if (lower_relation == REL_EQUAL)
     {
         set_equal(lower);
     }
@@ -97,14 +97,14 @@ void game_bounds::set_lower(bound_t lower, comparison_result lower_relation)
     _lower_valid = true;
 }
 
-void game_bounds::set_upper(bound_t upper, comparison_result upper_relation)
+void game_bounds::set_upper(bound_t upper, relation upper_relation)
 {
-    assert(upper_relation == COMP_GREATER
-            || upper_relation == COMP_GREATER_OR_EQUAL 
-            || upper_relation == COMP_EQUAL
+    assert(upper_relation == REL_GREATER
+            || upper_relation == REL_GREATER_OR_EQUAL 
+            || upper_relation == REL_EQUAL
     );
 
-    if (upper_relation == COMP_EQUAL)
+    if (upper_relation == REL_EQUAL)
     {
         set_equal(upper);
     }
@@ -116,8 +116,8 @@ void game_bounds::set_upper(bound_t upper, comparison_result upper_relation)
 
 void game_bounds::set_equal(bound_t lower_and_upper)
 {
-    set_lower(lower_and_upper, COMP_EQUAL);
-    set_upper(lower_and_upper, COMP_EQUAL);
+    set_lower(lower_and_upper, REL_EQUAL);
+    set_upper(lower_and_upper, REL_EQUAL);
 }
 
 bound_t game_bounds::get_midpoint() const
@@ -151,19 +151,19 @@ ostream& operator<<(ostream& os, const game_bounds& gb)
     {
         switch (gb.get_lower_relation())
         {
-            case COMP_LESS_OR_EQUAL:
+            case REL_LESS_OR_EQUAL:
 			{
                 os << '[';
 				break;
 			}
 
-            case COMP_LESS:
+            case REL_LESS:
 			{
                 os << '(';
 				break;
 			}
 
-            case COMP_EQUAL:
+            case REL_EQUAL:
 			{
                 os << "==";
 				break;
@@ -189,19 +189,19 @@ ostream& operator<<(ostream& os, const game_bounds& gb)
 
         switch (gb.get_upper_relation())
         {
-            case COMP_GREATER_OR_EQUAL:
+            case REL_GREATER_OR_EQUAL:
 			{
                 os << ']';
 				break;
 			}
 
-            case COMP_GREATER:
+            case REL_GREATER:
 			{
                 os << ')';
 				break;
 			}
 
-            case COMP_EQUAL:
+            case REL_EQUAL:
 			{
                 os << "==";
 				break;
@@ -326,14 +326,14 @@ bool bounds_finder::_validate_range(bound_t min, bound_t max,game_scale scale, s
     if (!bounds.lower_valid())
     {
         unique_ptr<game> inverse_scale_game(get_inverse_scale_game(min, scale));
-        comparison_result relation = _get_step_comparison(sum, inverse_scale_game.get(), true, nullptr);
+        relation rel = _get_step_comparison(sum, inverse_scale_game.get(), true, nullptr);
 
-        if (relation != COMP_GREATER_OR_EQUAL && relation != COMP_GREATER && relation != COMP_EQUAL)
+        if (rel != REL_GREATER_OR_EQUAL && rel != REL_GREATER && rel != REL_EQUAL)
         {
             return false;
         } else
         {
-            bounds.set_lower(min, relation);
+            bounds.set_lower(min, rel);
         }
     }
 
@@ -341,14 +341,14 @@ bool bounds_finder::_validate_range(bound_t min, bound_t max,game_scale scale, s
     {
 
         unique_ptr<game> inverse_scale_game(get_inverse_scale_game(max, scale));
-        comparison_result relation = _get_step_comparison(sum, inverse_scale_game.get(), false, nullptr);
+        relation rel = _get_step_comparison(sum, inverse_scale_game.get(), false, nullptr);
         
-        if (relation != COMP_LESS_OR_EQUAL && relation != COMP_LESS && relation != COMP_EQUAL)
+        if (rel != REL_LESS_OR_EQUAL && rel != REL_LESS && rel != REL_EQUAL)
         {
             return false;
         } else
         {
-            bounds.set_upper(max, relation);
+            bounds.set_upper(max, rel);
         }
     }
 
@@ -357,7 +357,7 @@ bool bounds_finder::_validate_range(bound_t min, bound_t max,game_scale scale, s
 
 void bounds_finder::_refine_bounds(game_scale scale, game_bounds& bounds, sumgame& sum)
 {
-    if (bounds.lower_valid() && bounds.get_lower_relation() == COMP_LESS_OR_EQUAL)
+    if (bounds.lower_valid() && bounds.get_lower_relation() == REL_LESS_OR_EQUAL)
     {
         const bound_t lower = bounds.get_lower();
 
@@ -365,11 +365,11 @@ void bounds_finder::_refine_bounds(game_scale scale, game_bounds& bounds, sumgam
 
         bool is_ge = _is_greater_or_equal_scale(sum, inverse_scale_game.get());
 
-        comparison_result relation = is_ge ? COMP_EQUAL : COMP_LESS;
-        bounds.set_lower(lower, relation);
+        relation rel = is_ge ? REL_EQUAL : REL_LESS;
+        bounds.set_lower(lower, rel);
     }
 
-    if (bounds.upper_valid() && bounds.get_upper_relation() == COMP_GREATER_OR_EQUAL)
+    if (bounds.upper_valid() && bounds.get_upper_relation() == REL_GREATER_OR_EQUAL)
     {
         const bound_t upper = bounds.get_upper();
 
@@ -377,8 +377,8 @@ void bounds_finder::_refine_bounds(game_scale scale, game_bounds& bounds, sumgam
 
         bool is_le = _is_less_or_equal_scale(sum, inverse_scale_game.get());
 
-        comparison_result relation = is_le ? COMP_EQUAL : COMP_GREATER;
-        bounds.set_upper(upper, relation);
+        relation rel = is_le ? REL_EQUAL : REL_GREATER;
+        bounds.set_upper(upper, rel);
     }
 }
 
@@ -438,20 +438,20 @@ bool bounds_finder::_is_greater_or_equal_scale(sumgame& sum, game* inverse_scale
     return !sum.solve_with_games(inverse_scale_game);
 }
 
-comparison_result get_comparison_result(bool le_known, bool is_le, bool ge_known, bool is_ge)
+relation get_relation_from_outcomes(bool le_known, bool is_le, bool ge_known, bool is_ge)
 {
     assert(le_known || ge_known);
 
     if (le_known && ge_known)
     {
         if (!is_le && !is_ge) // 0 0
-            return COMP_FUZZY;
+            return REL_FUZZY;
         if (!is_le && is_ge) // 0 1
-            return COMP_GREATER;
+            return REL_GREATER;
         if (is_le && !is_ge) // 1 0
-            return COMP_LESS;
+            return REL_LESS;
         if (is_le && is_ge) // 1 1
-            return COMP_EQUAL;
+            return REL_EQUAL;
 
         assert(false);
     }
@@ -459,34 +459,34 @@ comparison_result get_comparison_result(bool le_known, bool is_le, bool ge_known
     if (le_known && is_le)
     {
         assert(!ge_known);
-        return COMP_LESS_OR_EQUAL;
+        return REL_LESS_OR_EQUAL;
     }
 
     if (ge_known && is_ge)
     {
         assert(!le_known);
-        return COMP_GREATER_OR_EQUAL;
+        return REL_GREATER_OR_EQUAL;
     }
 
     assert(false);
 }
 
-comparison_result flip_comparison_result(comparison_result relation)
+relation flip_relation(relation rel)
 {
-    if (relation == COMP_LESS || relation == COMP_GREATER)
+    if (rel == REL_LESS || rel == REL_GREATER)
     {
-        return relation == COMP_LESS ? COMP_GREATER : COMP_LESS;
+        return rel == REL_LESS ? REL_GREATER : REL_LESS;
     }
 
-    if (relation == COMP_LESS_OR_EQUAL || relation == COMP_GREATER_OR_EQUAL)
+    if (rel == REL_LESS_OR_EQUAL || rel == REL_GREATER_OR_EQUAL)
     {
-        return relation == COMP_LESS_OR_EQUAL ? COMP_GREATER_OR_EQUAL : COMP_LESS_OR_EQUAL;
+        return rel == REL_LESS_OR_EQUAL ? REL_GREATER_OR_EQUAL : REL_LESS_OR_EQUAL;
     }
 
-    return relation;
+    return rel;
 }
 
-comparison_result bounds_finder::_get_step_comparison(sumgame& sum, game* inverse_scale_game, bool below_midpoint, int* solve_count)
+relation bounds_finder::_get_step_comparison(sumgame& sum, game* inverse_scale_game, bool below_midpoint, int* solve_count)
 {
     bool le_known = false;
     bool is_le = false;
@@ -534,7 +534,7 @@ comparison_result bounds_finder::_get_step_comparison(sumgame& sum, game* invers
         *solve_count = (int) le_known + (int) ge_known;
     }
 
-    return get_comparison_result(le_known, is_le, ge_known, is_ge);
+    return get_relation_from_outcomes(le_known, is_le, ge_known, is_ge);
 }
 
 
@@ -570,41 +570,41 @@ void bounds_finder::_step(search_region& region, game_scale scale, sumgame& sum,
     //comparison_result relation = _compare_to_zero(sum, greater_first, sumgame_solve_count);
 
     // S <relation> Gi
-    comparison_result relation = _get_step_comparison(sum, inverse_scale_game.get(), below_midpoint, &sumgame_solve_count);
+    relation rel = _get_step_comparison(sum, inverse_scale_game.get(), below_midpoint, &sumgame_solve_count);
 
     // Gi <relation> S
-    relation = flip_comparison_result(relation);
+    rel = flip_relation(rel);
 
     if (did_tie_break && sumgame_solve_count > 1)
     {
         _flip_tie_break_rule();
     }
 
-    switch (relation)
+    switch (rel)
     {
-        case COMP_GREATER_OR_EQUAL:
-        case COMP_GREATER:
+        case REL_GREATER_OR_EQUAL:
+        case REL_GREATER:
         {
             region.high = scale_idx - 1;
-            bounds.set_upper(scale_idx, relation);
+            bounds.set_upper(scale_idx, rel);
             break;
         }
 
-        case COMP_LESS_OR_EQUAL:
-        case COMP_LESS:
+        case REL_LESS_OR_EQUAL:
+        case REL_LESS:
         {
             region.low = scale_idx + 1;
-            bounds.set_lower(scale_idx, relation);
+            bounds.set_lower(scale_idx, rel);
             break;
         }
 
-        case COMP_FUZZY:
+        case REL_FUZZY:
         {
             _regions_next.push_back(region.split(scale_idx));
             break;
         }
 
-        case COMP_EQUAL:
+        case REL_EQUAL:
         {
             region.invalidate();
             bounds.set_equal(scale_idx);

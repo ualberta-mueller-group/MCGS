@@ -5,14 +5,14 @@
 #include <ostream>
 #include <cstdint>
 
-enum comparison_result 
+enum relation 
 {
-    COMP_EQUAL = 0,
-    COMP_FUZZY,
-    COMP_LESS_OR_EQUAL,
-    COMP_LESS,
-    COMP_GREATER_OR_EQUAL,
-    COMP_GREATER,
+    REL_EQUAL = 0,
+    REL_FUZZY,
+    REL_LESS_OR_EQUAL,
+    REL_LESS,
+    REL_GREATER_OR_EQUAL,
+    REL_GREATER,
 };
 
 enum game_scale
@@ -29,8 +29,8 @@ class game_bounds
 public:
     game_bounds();
 
-    void set_lower(bound_t lower, comparison_result lower_relation);
-    void set_upper(bound_t upper, comparison_result upper_relation);
+    void set_lower(bound_t lower, relation lower_relation);
+    void set_upper(bound_t upper, relation upper_relation);
     void set_equal(bound_t lower_and_upper);
 
     bound_t get_midpoint() const;
@@ -67,13 +67,13 @@ public:
         return _upper;
     }
 
-    inline comparison_result get_lower_relation() const
+    inline relation get_lower_relation() const
     {
         assert(_lower_valid);
         return _lower_relation;
     }
 
-    inline comparison_result get_upper_relation() const
+    inline relation get_upper_relation() const
     {
         assert(_upper_valid);
         return _upper_relation;
@@ -82,11 +82,11 @@ public:
 private:
     bound_t _lower;
     bool _lower_valid;
-    comparison_result _lower_relation;
+    relation _lower_relation;
 
     bound_t _upper;
     bool _upper_valid;
-    comparison_result _upper_relation;
+    relation _upper_relation;
 };
 
 std::ostream& operator<<(std::ostream& os, const game_bounds& gb);
