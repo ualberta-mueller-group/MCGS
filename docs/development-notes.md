@@ -2,6 +2,8 @@
 This document includes more detailed information than `README.md`, including design choices and tradeoffs, version history, and implementation details.
 
 # Bounds
+Bounds are represented by the `game_bounds` struct, which contains lower and upper bounds for a sumgame `S`. The struct includes `relation` enums for both bounds (i.e. `REL_LESS_OR_EQUAL`, `REL_GREATER`, etc.), and are interpreted as `S` being on the right hand side of the relation, and the bound game being on the left hand side, i.e. `lower_bound REL_LESS_OR_EQUAL S`.
+
 Bounds are generated through search against a scale of games, by the function `find_bounds()`. There are several game scales, and the caller of this function chooses which scale(s) to use, and specifies a search interval for each used scale. The following table shows some of the scales, and values for a few of their indices:
 
 | Scale | -2 | -1 | 0 | 1 | 2 |
@@ -10,9 +12,9 @@ Bounds are generated through search against a scale of games, by the function `f
 | up | vv | v | 0 | ^ | ^^ |
 | dyadic_rational | -2/8 | -1/8 | 0 | 1/8 | 2/8 |
 
-`find_bounds()` uses binary search to compute bounds for a sum of games `S` by using `sumgame::solve()` to compare `S` against games on the scale. For each comparison to a scale game `Gi`, `find_bounds()` predicts how `S` relates to `Gi`, to avoid unnecessary calls to `sumgame::solve()`, (non-strict inequalities i.e. `S <= Gi` instead of `S < Gi` are sufficient for pruning the search space). Fuzzy comparisons (when `S - Gi` is a first player win) cause the search space represented by the interval `[MIN, MAX]` to split into two intervals: `[MIN, i)` and `(i, MAX]`.
+`find_bounds()` uses binary search to compute bounds for a sum of games `S` by using `sumgame::solve()` to compare `S` against games on the scale. For each comparison to a scale game `Gi`, `find_bounds()` predicts how `Gi` relates to `S`, to avoid unnecessary calls to `sumgame::solve()`, (non-strict inequalities i.e. `Gi <= S` instead of `Gi < S` are sufficient for pruning the search space). Fuzzy comparisons (when `S - Gi` is a first player win) cause the search space represented by the interval `[MIN, MAX]` to split into two intervals: `[MIN, i)` and `(i, MAX]`.
 
-After finding bounds with non-strict inequalities, i.e. (`S >= lower_bound`), the relations are made strict (either `S > lower_bound` or `S == lower_bound`). Additionally, one or both of `S`'s bounds may be invalid, when they don't exist on the given scale and search interval.
+After finding bounds with non-strict inequalities, i.e. (`lower_bound <= S`), the relations are made strict (either `lower_bound < S` or `lower_bound == S`). Additionally, one or both of `S`'s bounds may be invalid, when they don't exist on the given scale and search interval.
 
 ## Related Scales
 (TODO) verify/tighten the bounds in the `up` optimization description
