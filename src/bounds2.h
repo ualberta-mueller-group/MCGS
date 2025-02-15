@@ -4,6 +4,7 @@
 #include "game.h"
 #include <ostream>
 #include <cstdint>
+#include "sumgame.h"
 
 enum relation 
 {
@@ -38,7 +39,6 @@ public:
     void invalidate_lower();
     void invalidate_upper();
     void invalidate_both();
-
 
     inline bool lower_valid() const
 	{
@@ -80,6 +80,9 @@ public:
     }
 
 private:
+    void _set_lower(bound_t lower, relation lower_relation);
+    void _set_upper(bound_t upper, relation upper_relation);
+
     bound_t _lower;
     bool _lower_valid;
     relation _lower_relation;
@@ -98,7 +101,8 @@ struct bounds_options
     bound_t max;
 };
 
-// TODO return vector<game_bounds> instead of vector<game_bounds*> ???
+std::vector<game_bounds*> find_bounds(sumgame& sum, const std::vector<bounds_options>& options);
 std::vector<game_bounds*> find_bounds(std::vector<game*>& games, const std::vector<bounds_options>& options);
+std::vector<game_bounds*> find_bounds(game* game, const std::vector<bounds_options>& options);
 
 void test_bounds2();
