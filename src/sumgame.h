@@ -72,6 +72,7 @@ public:
     std::optional<solve_result> solve_with_timeout(unsigned long long timeout) const;
 
     bool solve_with_games(std::vector<game*>& gs) const;
+    bool solve_with_games(game* g) const;
 
     const play_record& last_play_record() const;
     int num_total_games() const;

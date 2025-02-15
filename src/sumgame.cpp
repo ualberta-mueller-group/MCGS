@@ -280,6 +280,21 @@ bool sumgame::solve_with_games(std::vector<game*>& gs) const
     return result;
 }
 
+bool sumgame::solve_with_games(game* g) const
+{
+    assert_restore_game ar(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+    sum.add(g);
+
+    bool result = solve();
+
+    game* back = sum._pop_game();
+    assert(back == g);
+
+    return result;
+}
+
 optional<solve_result> sumgame::_solve_with_timeout()
 {
     if (over_time())

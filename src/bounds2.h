@@ -31,6 +31,7 @@ public:
 
     void set_lower(bound_t lower, comparison_result lower_relation);
     void set_upper(bound_t upper, comparison_result upper_relation);
+    void set_equal(bound_t lower_and_upper);
 
     bound_t get_midpoint() const;
 
