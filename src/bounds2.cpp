@@ -36,9 +36,6 @@ public:
 
     vector<game_bounds*> find_bounds(sumgame& sum, const vector<bounds_options>& options);
 
-    game* get_scale_game(bound_t scale_idx, game_scale scale) const;
-    game* get_inverse_scale_game(bound_t scale_idx, game_scale scale) const;
-
 private:
     void _reset();
     void _flip_tie_break_rule();
@@ -48,9 +45,12 @@ private:
     relation _get_step_comparison(sumgame& sum, game* inverse_scale_game, bool below_midpoint, int* solve_count);
 
     bool _is_less_or_equal_scale(sumgame& sum, game* inverse_scale_game);
-    bool _is_greater_or_equal_scale(sumgame& sum, game* inverse_scale_game);
+    bool _is_less_or_equal_scale(sumgame& sum, bound_t scale_idx, game_scale scale);
 
-    bool _validate_range(bound_t min, bound_t max,game_scale scale, sumgame& sum, game_bounds& bounds);
+    bool _is_greater_or_equal_scale(sumgame& sum, game* inverse_scale_game);
+    bool _is_greater_or_equal_scale(sumgame& sum, bound_t scale_idx, game_scale scale);
+
+    bool _validate_interval(bound_t min, bound_t max,game_scale scale, sumgame& sum, game_bounds& bounds);
     void _refine_bounds(game_scale scale, game_bounds& bounds, sumgame& sum);
 
 
@@ -111,6 +111,42 @@ relation flip_relation(relation rel)
     }
 
     return rel;
+}
+
+//////////////////////////////////////// game_scale functions
+game* get_scale_game(bound_t scale_idx, game_scale scale)
+{
+    switch (scale)
+    {
+        case GAME_SCALE_UP_STAR:
+        {
+            return new up_star(scale_idx, true);
+            break;
+        }
+
+        case GAME_SCALE_UP:
+        {
+            return new up_star(scale_idx, false);
+            break;
+        }
+
+        case GAME_SCALE_DYADIC_RATIONAL:
+        {
+            return new dyadic_rational(scale_idx, 8);
+            break;
+        }
+
+        default: 
+        {
+            assert(false);
+            break;
+        }
+    }
+}
+
+game* get_inverse_scale_game(bound_t scale_idx, game_scale scale)
+{
+    return get_scale_game(-scale_idx, scale);
 }
 
 //////////////////////////////////////// game_bounds
@@ -330,41 +366,6 @@ vector<game_bounds*> bounds_finder::find_bounds(sumgame& sum, const vector<bound
     return bounds_list;
 }
 
-game* bounds_finder::get_scale_game(bound_t scale_idx, game_scale scale) const
-{
-    switch (scale)
-    {
-        case GAME_SCALE_UP_STAR:
-        {
-            return new up_star(scale_idx, true);
-            break;
-        }
-
-        case GAME_SCALE_UP:
-        {
-            return new up_star(scale_idx, false);
-            break;
-        }
-
-        case GAME_SCALE_DYADIC_RATIONAL:
-        {
-            return new dyadic_rational(scale_idx, 8);
-            break;
-        }
-
-        default: 
-        {
-            assert(false);
-            break;
-        }
-    }
-}
-
-game* bounds_finder::get_inverse_scale_game(bound_t scale_idx, game_scale scale) const
-{
-    return get_scale_game(-scale_idx, scale);
-}
-
 void bounds_finder::_reset()
 {
     _assume_below_midpoint = true;
@@ -382,11 +383,32 @@ void bounds_finder::_flip_tie_break_rule()
 
 game_bounds* bounds_finder::_make_bounds(sumgame& sum, const bounds_options& opt)
 {
-    game_bounds* bounds = new game_bounds();
-
+    _regions.clear();
+    _regions_next.clear();
     _regions.push_back({opt.min, opt.max});
-    
-    bool validated_range = false;
+
+    game_bounds* bounds = new game_bounds();
+    bool validated_interval = false;
+
+    auto prune_region = [&](search_region& sr) -> bool
+    {
+        if (!sr.valid())
+        {
+            return true;
+        }
+
+        if (bounds->lower_valid() && (bounds->get_lower() > sr.high))
+        {
+            return true;
+        }
+
+        if (bounds->upper_valid() && (bounds->get_upper() < sr.low))
+        {
+            return true;
+        }
+
+        return false;
+    };
 
     while (!_regions.empty())
     {
@@ -394,20 +416,28 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum, const bounds_options& opt
 
         for (search_region& sr : _regions)
         {
-            if (!sr.valid())
+            if (prune_region(sr))
             {
                 continue;
+            }
+
+            // stop if no more work remaining
+            if (bounds->lower_valid() && bounds->get_lower_relation() == REL_EQUAL)
+            {
+                _regions_next.clear();
+                break;
             }
 
             // Do one step of binary search within the region
             _step(sr, opt.scale, sum, *bounds);
         }
 
-        if (!bounds->both_valid() && !validated_range && _step_count >= 3)
+        // TODO reduce threshold 3 --> 2? leave at 3?
+        if (!bounds->both_valid() && !validated_interval && _step_count >= 3)
         {
-            validated_range = true;
+            validated_interval = true;
 
-            if (!_validate_range(opt.min, opt.max, opt.scale, sum, *bounds))
+            if (!_validate_interval(opt.min, opt.max, opt.scale, sum, *bounds))
             {
                 break;
             }
@@ -416,19 +446,24 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum, const bounds_options& opt
         swap(_regions, _regions_next);
     }
 
+    if (bounds->both_valid())
+    {
+        _refine_bounds(opt.scale, *bounds, sum);
+    }
 
-    //_refine_bounds(games, opt.scale, *bounds);
-    _refine_bounds(opt.scale, *bounds, sum);
     return bounds;
 }
 
 void bounds_finder::_step(search_region& region, game_scale scale, sumgame& sum, game_bounds& bounds)
 {
+    // S refers to sumgame
+    // Gi refers to scale game
+
     _step_count++;
     assert(region.valid());
 
-    int scale_idx = region.get_midpoint();
-    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale));
+    int scale_idx = region.get_midpoint(); // i
+    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale)); // -Gi
  
     // Pick a test (>= or <=) to try first, based on what side of the bounds space
     // "scale_idx" is on
@@ -449,11 +484,8 @@ void bounds_finder::_step(search_region& region, game_scale scale, sumgame& sum,
     }
 
 
-    // S - Gi compared to 0
-    int sumgame_solve_count = 0;
-    //comparison_result relation = _compare_to_zero(sum, greater_first, sumgame_solve_count);
-
     // S <relation> Gi
+    int sumgame_solve_count = 0;
     relation rel = _get_step_comparison(sum, inverse_scale_game.get(), below_midpoint, &sumgame_solve_count);
 
     // Gi <relation> S
@@ -466,6 +498,7 @@ void bounds_finder::_step(search_region& region, game_scale scale, sumgame& sum,
 
     switch (rel)
     {
+        // Gi >= S
         case REL_GREATER_OR_EQUAL:
         case REL_GREATER:
         {
@@ -474,6 +507,7 @@ void bounds_finder::_step(search_region& region, game_scale scale, sumgame& sum,
             break;
         }
 
+        // Gi <= S
         case REL_LESS_OR_EQUAL:
         case REL_LESS:
         {
@@ -482,16 +516,19 @@ void bounds_finder::_step(search_region& region, game_scale scale, sumgame& sum,
             break;
         }
 
+        // Gi fuzzy with S
         case REL_FUZZY:
         {
             _regions_next.push_back(region.split(scale_idx));
             break;
         }
 
+        // Gi == S
         case REL_EQUAL:
         {
             region.invalidate();
             bounds.set_equal(scale_idx);
+            break;
         }
 
         default:
@@ -562,6 +599,12 @@ bool bounds_finder::_is_less_or_equal_scale(sumgame& sum, game* inverse_scale_ga
     return !sum.solve_with_games(inverse_scale_game);
 }
 
+bool bounds_finder::_is_less_or_equal_scale(sumgame& sum, bound_t scale_idx, game_scale scale)
+{
+    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale));
+    return _is_less_or_equal_scale(sum, inverse_scale_game.get());
+}
+
 bool bounds_finder::_is_greater_or_equal_scale(sumgame& sum, game* inverse_scale_game)
 {
     _search_count++;
@@ -569,14 +612,24 @@ bool bounds_finder::_is_greater_or_equal_scale(sumgame& sum, game* inverse_scale
     return !sum.solve_with_games(inverse_scale_game);
 }
 
-bool bounds_finder::_validate_range(bound_t min, bound_t max,game_scale scale, sumgame& sum, game_bounds& bounds)
+bool bounds_finder::_is_greater_or_equal_scale(sumgame& sum, bound_t scale_idx, game_scale scale)
+{
+    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale));
+    return _is_greater_or_equal_scale(sum, inverse_scale_game.get());
+}
+
+bool bounds_finder::_validate_interval(bound_t min, bound_t max, game_scale scale, sumgame& sum, game_bounds& bounds)
 {
     if (!bounds.lower_valid())
     {
-        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(min, scale));
+        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(min, scale)); // -Gmin
+        // S <relation> Gmin
         relation rel = _get_step_comparison(sum, inverse_scale_game.get(), true, nullptr);
 
-        if (rel != REL_GREATER_OR_EQUAL && rel != REL_GREATER && rel != REL_EQUAL)
+        // Gmin <relation> S
+        rel = flip_relation(rel);
+
+        if (rel != REL_LESS_OR_EQUAL && rel != REL_LESS && rel != REL_EQUAL)
         {
             return false;
         } else
@@ -587,11 +640,15 @@ bool bounds_finder::_validate_range(bound_t min, bound_t max,game_scale scale, s
 
     if (!bounds.upper_valid())
     {
-
-        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(max, scale));
+        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(max, scale)); // -Gmax
+        // S <relation> Gmax
         relation rel = _get_step_comparison(sum, inverse_scale_game.get(), false, nullptr);
+
+        // Gmax <relation> S
+        rel = flip_relation(rel);
+
         
-        if (rel != REL_LESS_OR_EQUAL && rel != REL_LESS && rel != REL_EQUAL)
+        if (rel != REL_GREATER_OR_EQUAL && rel != REL_GREATER && rel != REL_EQUAL)
         {
             return false;
         } else
@@ -605,27 +662,25 @@ bool bounds_finder::_validate_range(bound_t min, bound_t max,game_scale scale, s
 
 void bounds_finder::_refine_bounds(game_scale scale, game_bounds& bounds, sumgame& sum)
 {
-    if (bounds.lower_valid() && bounds.get_lower_relation() == REL_LESS_OR_EQUAL)
+    // Relations being in opposite directions makes this very confusing...
+
+    if (bounds.lower_valid() && bounds.get_lower_relation() == REL_LESS_OR_EQUAL) // G <relation> S
     {
         const bound_t lower = bounds.get_lower();
 
-        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(lower, scale));
+        bool is_le = _is_less_or_equal_scale(sum, lower, scale); // S <relation> G
+        relation rel = is_le ? REL_EQUAL : REL_LESS;
 
-        bool is_ge = _is_greater_or_equal_scale(sum, inverse_scale_game.get());
-
-        relation rel = is_ge ? REL_EQUAL : REL_LESS;
         bounds.set_lower(lower, rel);
     }
 
-    if (bounds.upper_valid() && bounds.get_upper_relation() == REL_GREATER_OR_EQUAL)
+    if (bounds.upper_valid() && bounds.get_upper_relation() == REL_GREATER_OR_EQUAL) // G <relation> S
     {
         const bound_t upper = bounds.get_upper();
 
-        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(upper, scale));
+        bool is_ge = _is_greater_or_equal_scale(sum, upper, scale); // S <relation> G
+        relation rel = is_ge ? REL_EQUAL : REL_GREATER;
 
-        bool is_le = _is_less_or_equal_scale(sum, inverse_scale_game.get());
-
-        relation rel = is_le ? REL_EQUAL : REL_GREATER;
         bounds.set_upper(upper, rel);
     }
 }
@@ -746,7 +801,8 @@ void test_bounds2()
     };
 
 
-    const bound_t R = 8;
+
+    const bound_t R = 16;
 
 
     int total_searches = 0;
@@ -763,13 +819,12 @@ void test_bounds2()
     */
     for (const string& str : tests)
     {
-        vector<game*> games;
-
-        games.push_back(new clobber_1xn(str));
+        game* g = new clobber_1xn(str);
 
         sumgame sum(BLACK);
+        sum.add(g);
 
-        sum.add_vec(games);
+        cout << *g << endl;
 
         bounds_finder bf;
         vector<game_bounds*> bounds_list = bf.find_bounds(sum, {{GAME_SCALE_UP_STAR, -R, R}});
@@ -780,10 +835,6 @@ void test_bounds2()
         total_searches += bf._search_count;
         cout << bf._search_count << " " << *bounds_list[0] << endl;
 
-        for (game* g : games)
-        {
-            delete g;
-        }
 
         for (game_bounds* gb : bounds_list)
         {

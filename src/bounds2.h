@@ -6,6 +6,8 @@
 #include <cstdint>
 #include "sumgame.h"
 
+typedef int32_t bound_t;
+
 enum relation 
 {
     REL_EQUAL = 0,
@@ -23,7 +25,8 @@ enum game_scale
     GAME_SCALE_DYADIC_RATIONAL,
 };
 
-typedef int32_t bound_t;
+game* get_scale_game(bound_t scale_idx, game_scale scale);
+game* get_inverse_scale_game(bound_t scale_idx, game_scale scale);
 
 class game_bounds
 {
