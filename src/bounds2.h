@@ -5,12 +5,6 @@
 #include <ostream>
 #include <cstdint>
 
-
-// TODO figure out a better way to handle this. Maybe the outermost find_bounds() function can take a vector of radii?
-#define BOUND_RADIUS 100
-#define BOUND_MIN -BOUND_RADIUS
-#define BOUND_MAX BOUND_RADIUS
-
 enum comparison_result 
 {
     COMP_EQUAL = 0,
@@ -20,7 +14,6 @@ enum comparison_result
     COMP_GREATER_OR_EQUAL,
     COMP_GREATER,
 };
-
 
 enum game_scale
 {
@@ -36,19 +29,63 @@ class game_bounds
 public:
     game_bounds();
 
+    void set_lower(bound_t lower, comparison_result lower_relation);
+    void set_upper(bound_t upper, comparison_result upper_relation);
+
     bound_t get_midpoint() const;
-    void set_low(bound_t low);
-    void set_high(bound_t high);
-    bool both_valid() const;
+
+    void invalidate_lower();
+    void invalidate_upper();
+    void invalidate_both();
 
 
-    bound_t low;
-    bool low_valid;
-    comparison_result low_relation;
+    inline bool lower_valid() const
+	{
+        return _lower_valid;
+	}
 
-    bound_t high;
-    bool high_valid;
-    comparison_result high_relation;
+    inline bool upper_valid() const
+	{
+        return _upper_valid;
+	}
+
+    inline bool both_valid() const
+	{
+        return _lower_valid && _upper_valid;
+	}
+
+    inline bound_t get_lower() const
+	{
+        assert(_lower_valid);
+        return _lower;
+	}
+
+    inline bound_t get_upper() const
+	{
+        assert(_upper_valid);
+        return _upper;
+    }
+
+    inline comparison_result get_lower_relation() const
+    {
+        assert(_lower_valid);
+        return _lower_relation;
+    }
+
+    inline comparison_result get_upper_relation() const
+    {
+        assert(_upper_valid);
+        return _upper_relation;
+    }
+
+private:
+    bound_t _lower;
+    bool _lower_valid;
+    comparison_result _lower_relation;
+
+    bound_t _upper;
+    bool _upper_valid;
+    comparison_result _upper_relation;
 };
 
 std::ostream& operator<<(std::ostream& os, const game_bounds& gb);

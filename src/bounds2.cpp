@@ -65,99 +65,131 @@ private:
 //////////////////////////////////////// game_bounds
 
 game_bounds::game_bounds(): 
-    low(numeric_limits<bound_t>::max()), low_valid(false), low_relation(COMP_GREATER_OR_EQUAL),
-    high(numeric_limits<bound_t>::min()), high_valid(false), high_relation(COMP_LESS_OR_EQUAL)
+    _lower(numeric_limits<bound_t>::max()), _lower_valid(false), _lower_relation(COMP_GREATER_OR_EQUAL),
+    _upper(numeric_limits<bound_t>::min()), _upper_valid(false), _upper_relation(COMP_LESS_OR_EQUAL)
 { }
+
+void game_bounds::set_lower(bound_t lower, comparison_result lower_relation)
+{
+    assert(lower_relation == COMP_LESS
+            || lower_relation == COMP_LESS_OR_EQUAL 
+            || lower_relation == COMP_EQUAL
+    );
+
+    _lower = lower;
+    _lower_relation = lower_relation;
+    _lower_valid = true;
+}
+
+void game_bounds::set_upper(bound_t upper, comparison_result upper_relation)
+{
+    assert(upper_relation == COMP_GREATER
+            || upper_relation == COMP_GREATER_OR_EQUAL 
+            || upper_relation == COMP_EQUAL
+    );
+
+    _upper = upper;
+    _upper_relation = upper_relation;
+    _upper_valid = true;
+}
 
 bound_t game_bounds::get_midpoint() const
 {
-    assert(low_valid && high_valid);
+    assert(both_valid());
 
     // TODO Check for overflow?
-    return (low + high) / 2;
+    return (_lower + _upper) / 2;
 }
 
-void game_bounds::set_low(bound_t low)
+void game_bounds::invalidate_lower()
 {
-    this->low = low;
-    low_valid = true;
+    _lower_valid = false;
 }
 
-void game_bounds::set_high(bound_t high)
+void game_bounds::invalidate_upper()
 {
-    this->high = high;
-    high_valid = true;
+    _upper_valid = false;
 }
 
-bool game_bounds::both_valid() const
+void game_bounds::invalidate_both()
 {
-    return low_valid && high_valid;
+    _lower_valid = false;
+    _upper_valid = false;
 }
 
 ostream& operator<<(ostream& os, const game_bounds& gb)
 {
-    switch (gb.low_relation)
+    // opening brace, lower bound
+    if (gb.lower_valid())
     {
-        case COMP_GREATER_OR_EQUAL:
+        switch (gb.get_lower_relation())
         {
-            os << '[';
-            break;
-        }
+            case COMP_LESS_OR_EQUAL:
+			{
+                os << '[';
+				break;
+			}
 
-        case COMP_GREATER:
-        {
-            os << '(';
-            break;
-        }
+            case COMP_LESS:
+			{
+                os << '(';
+				break;
+			}
 
-        case COMP_EQUAL:
-        {
-            os << "==";
-            break;
-        }
+            case COMP_EQUAL:
+			{
+                os << "==";
+				break;
+			}
 
-        default:
-        {
-            assert(false);
+            default:
+			{
+                assert(false);
+                os << "[?!";
+				break;
+			}
         }
+        os << gb.get_lower() << " ";
+    } else
+    {
+        os << "[? ";
     }
 
-    if (gb.low_valid)
-        os << gb.low;
-    else
-        os << '?';
-
-    os << ' ';
-
-    if (gb.high_valid)
-        os << gb.high;
-    else
-        os << '?';
-
-    switch (gb.high_relation)
+    // upper bound, closing brace
+    if (gb.upper_valid())
     {
-        case COMP_LESS_OR_EQUAL:
-        {
-            os << ']';
-            break;
-        }
+        os << gb.get_upper();
 
-        case COMP_LESS:
+        switch (gb.get_upper_relation())
         {
-            os << ')';
-            break;
-        }
+            case COMP_GREATER_OR_EQUAL:
+			{
+                os << ']';
+				break;
+			}
 
-        case COMP_EQUAL:
-        {
-            os << "==";
-            break;
-        }
+            case COMP_GREATER:
+			{
+                os << ')';
+				break;
+			}
 
-        default:
-        {
-            assert(false);
+            case COMP_EQUAL:
+			{
+                os << "==";
+				break;
+			}
+
+            default:
+			{
+                assert(false);
+                os << "?!]";
+				break;
+			}
         }
+    } else
+    {
+        os << "?]";
     }
 
     return os;
