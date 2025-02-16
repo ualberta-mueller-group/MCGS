@@ -24,6 +24,10 @@
 #include "cli_options_test.h"
 #include "simple_text_hash_test.h"
 
+#include "scale_test.h"
+#include "game_bounds_test.h"
+#include "find_bounds_test.h"
+
 using std::cout, std::endl, std::string;
 
 namespace
@@ -75,6 +79,17 @@ int main(int argc, const char** argv)
         return 0;
     }
 
+    scale_test_all();
+    game_bounds_test_all();
+    find_bounds_test_all();
+    cout << "TODO REMOVE RETURN" << endl;
+    return 0;
+
+    /*
+       TODO tests of private bounds stuff?
+    */
+
+
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
@@ -82,6 +97,7 @@ int main(int argc, const char** argv)
     cgt_nimber_test_all();
     cgt_switch_test_all();
     cgt_up_star_test_all();
+
 
     split_test_all();
 

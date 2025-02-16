@@ -1,837 +1,717 @@
 #include "bounds.h"
-#include <limits>
-#include <utility>
-#include <vector>
-#include "all_game_headers.h"
 #include "cgt_up_star.h"
+#include "cgt_dyadic_rational.h"
 #include "clobber_1xn.h"
-#include "nogo_1xn.h"
 #include "sumgame.h"
-#include "utilities.h"
+
 #include <iostream>
-#include <unordered_map>
-#include <sstream>
+#include <limits>
+#include <cassert>
+#include <memory>
 
 using namespace std;
 
-int step_count = 0;
-int search_count = 0;
-
-int tie_break_inversions = 0;
-int tie_count = 0;
-vector<int> inversion_steps;
-
-enum tie_behavior_enum
+//////////////////////////////////////// Type declarations
+class search_region
 {
-    TB_PREDICT,
-    TB_NEG,
-    TB_POS,
+public:
+    // inclusive interval
+    search_region(bound_t low, bound_t high);
+
+    // *this becomes lower half, returns upper half (both exclude midpoint)
+    search_region split(bound_t midpoint);
+
+    bool valid() const;
+    void invalidate();
+    bound_t get_midpoint() const;
+
+    bound_t low;
+    bound_t high;
 };
 
-tie_behavior_enum tie_behavior = TB_PREDICT;
-
-
-//              0 0 0   ?   0 0 0
-
-/*
-
-   LESS_OR_EQUAL
-   FUZZY
-   GREATER
-
-   Start by finding the lower bound
-
-   Find Gi such that 
-
-   Gi <= S < Gi+1
-
-   Gi <= S
-
-   Gi+1 > S
-
-
-*/
-
-enum optimization_level_enum
+class bounds_finder
 {
-    OPT_NONE,
+public:
+    bounds_finder();
 
-    OPT_1_SIDE,
+    vector<game_bounds*> find_bounds(sumgame& sum, const vector<bounds_options>& options);
 
-    OPT_ASSUME_NEG,
-    OPT_ASSUME_POS,
+private:
+    void _reset();
+    void _flip_tie_break_rule();
 
-    OPT_2_SIDE,
-    OPT_2_SIDE_NEG,
-    OPT_2_SIDE_POS,
+    game_bounds* _make_bounds(sumgame& sum, const bounds_options& opt);
+    void _step(search_region& region, game_scale scale, sumgame& sum, game_bounds& bounds);
+    relation _get_step_comparison(sumgame& sum, game* inverse_scale_game, bool below_midpoint, int* solve_count);
+
+    bool _g_less_or_equal_s(sumgame& sum, game* inverse_scale_game);
+    bool _g_less_or_equal_s(sumgame& sum, bound_t scale_idx, game_scale scale);
+
+    bool _g_greater_or_equal_s(sumgame& sum, game* inverse_scale_game);
+    bool _g_greater_or_equal_s(sumgame& sum, bound_t scale_idx, game_scale scale);
+
+    bool _validate_interval(bound_t min, bound_t max, game_scale scale, sumgame& sum, game_bounds& bounds);
+    void _refine_bounds(game_scale scale, game_bounds& bounds, sumgame& sum);
+
+
+    bool _assume_below_midpoint;
+    int _step_count;
+    int _search_count;
+
+    vector<search_region> _regions;
+    vector<search_region> _regions_next;
+
 };
 
-
-
-enum search_result
+//////////////////////////////////////// helper functions
+relation get_relation_from_outcomes(bool le_known, bool is_le, bool ge_known, bool is_ge)
 {
-    RESULT_FALSE = false,
-    RESULT_TRUE = true,
-    RESULT_UNKNOWN,
-};
+    // Only handles the cases that should occur during bounds search
 
-static_assert(RESULT_UNKNOWN != RESULT_FALSE);
-static_assert(RESULT_UNKNOWN != RESULT_TRUE);
+    assert(le_known || ge_known);
 
-//const int RADIUS = 16000;
-const int RADIUS = 16000;
-optimization_level_enum OPTIMIZATION_LEVEL = OPT_NONE;
-
-const int MIN = -RADIUS;
-const int MAX = RADIUS;
-
-const int DIAMETER = 2 * RADIUS + 1;
-
-
-
-enum relation
-{
-    R_UNKNOWN = 0,
-    R_LESS,
-    R_LE,
-    R_GREATER,
-    R_GE,
-    R_EQUAL,
-    R_FUZZY,
-};
-
-
-const unordered_map<relation, string> REL_MAP {
-    {R_UNKNOWN, "_"},
-    {R_LESS, "<"},
-    {R_LE, "<="},
-    {R_GREATER, ">"},
-    {R_GE, ">="},
-    {R_EQUAL, "="},
-    {R_FUZZY, "?"},
-
-};
-
-const vector<string> GAME_PREFIXES {
-    "up_star:",
-    "dyadic_rational:",
-};
-
-void remove_game_prefixes(string& str)
-{
-    for (const string& prefix : GAME_PREFIXES)
+    if (le_known && ge_known)
     {
-        size_t idx = str.find(prefix);
+        if (!is_le && !is_ge) // 0 0
+            return REL_FUZZY;
+        if (!is_le && is_ge) // 0 1
+            return REL_GREATER;
+        if (is_le && !is_ge) // 1 0
+            return REL_LESS;
+        if (is_le && is_ge) // 1 1
+            return REL_EQUAL;
 
-        if (idx != string::npos)
+        assert(false);
+    }
+
+    if (le_known && is_le)
+    {
+        assert(!ge_known);
+        return REL_LESS_OR_EQUAL;
+    }
+
+    if (ge_known && is_ge)
+    {
+        assert(!le_known);
+        return REL_GREATER_OR_EQUAL;
+    }
+
+    assert(false);
+}
+
+bool prune_region(const search_region& sr, const game_bounds& bounds)
+{
+    if (!sr.valid())
+    {
+        return true;
+    }
+
+    // regions don't overlap, so they shouldn't need to be "clipped";
+    // either the entire region is OK, or the entire region is outside the bounds
+
+    if (bounds.lower_valid() && (bounds.get_lower() > sr.high))
+    {
+        return true;
+    }
+
+    if (bounds.upper_valid() && (bounds.get_upper() < sr.low))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+//////////////////////////////////////// game_scale functions
+game* get_scale_game(bound_t scale_idx, game_scale scale)
+{
+    switch (scale)
+    {
+        case GAME_SCALE_UP_STAR:
         {
-            assert(idx == 0);
-            str = str.substr(prefix.size());
+            return new up_star(scale_idx, true);
             break;
         }
 
-    }
+        case GAME_SCALE_UP:
+        {
+            return new up_star(scale_idx, false);
+            break;
+        }
 
+        case GAME_SCALE_DYADIC_RATIONAL:
+        {
+            return new dyadic_rational(scale_idx, 8);
+            break;
+        }
+
+        default: 
+        {
+            assert(false);
+            return nullptr;
+            break;
+        }
+    }
 }
 
-
-
-typedef pair<int, int> arena;
-
-
-constexpr arena ARENA_INVALID {-2 * RADIUS, -3 * RADIUS};
-
-ostream& operator<<(ostream& os, const arena& x)
+game* get_inverse_scale_game(bound_t scale_idx, game_scale scale)
 {
-    os << "[" << x.first << " " << x.second << "]";
+    return get_scale_game(-scale_idx, scale);
+}
+
+//////////////////////////////////////// game_bounds
+game_bounds::game_bounds(): 
+    _lower(numeric_limits<bound_t>::max()), _lower_valid(false), _lower_relation(REL_FUZZY),
+    _upper(numeric_limits<bound_t>::min()), _upper_valid(false), _upper_relation(REL_FUZZY)
+{ }
+
+void game_bounds::set_lower(bound_t lower, relation lower_relation)
+{
+    assert(lower_relation == REL_LESS
+            || lower_relation == REL_LESS_OR_EQUAL 
+            || lower_relation == REL_EQUAL
+    );
+
+    _set_lower(lower, lower_relation);
+
+    if (lower_relation == REL_EQUAL)
+    {
+        _set_upper(lower, REL_EQUAL);
+    }
+
+    if (upper_valid())
+    {
+        assert(_lower <= _upper);
+    }
+}
+
+void game_bounds::set_upper(bound_t upper, relation upper_relation)
+{
+    assert(upper_relation == REL_GREATER
+            || upper_relation == REL_GREATER_OR_EQUAL 
+            || upper_relation == REL_EQUAL
+    );
+
+    _set_upper(upper, upper_relation);
+
+    if (upper_relation == REL_EQUAL)
+    {
+        _set_lower(upper, REL_EQUAL);
+    }
+
+    if (lower_valid())
+    {
+        assert(_lower <= _upper);
+    }
+}
+
+void game_bounds::set_equal(bound_t lower_and_upper)
+{
+    _set_lower(lower_and_upper, REL_EQUAL);
+    _set_upper(lower_and_upper, REL_EQUAL);
+
+    assert(_lower_valid && _upper_valid);
+    assert(_lower_relation == REL_EQUAL && _upper_relation == REL_EQUAL);
+    assert(_lower == _upper);
+}
+
+bound_t game_bounds::get_midpoint() const
+{
+    assert(both_valid());
+
+    // TODO Check for overflow?
+    return (_lower + _upper) / 2;
+}
+
+void game_bounds::invalidate_lower()
+{
+    _lower_valid = false;
+}
+
+void game_bounds::invalidate_upper()
+{
+    _upper_valid = false;
+}
+
+void game_bounds::invalidate_both()
+{
+    _lower_valid = false;
+    _upper_valid = false;
+}
+
+void game_bounds::_set_lower(bound_t lower, relation lower_relation)
+{
+    _lower = lower;
+    _lower_relation = lower_relation;
+    _lower_valid = true;
+}
+
+void game_bounds::_set_upper(bound_t upper, relation upper_relation)
+{
+    _upper = upper;
+    _upper_relation = upper_relation;
+    _upper_valid = true;
+}
+
+ostream& operator<<(ostream& os, const game_bounds& gb)
+{
+    // opening brace, lower bound
+    if (gb.lower_valid())
+    {
+        switch (gb.get_lower_relation())
+        {
+            case REL_LESS_OR_EQUAL:
+			{
+                os << '[';
+				break;
+			}
+
+            case REL_LESS:
+			{
+                os << '(';
+				break;
+			}
+
+            case REL_EQUAL:
+			{
+                os << "==";
+				break;
+			}
+
+            default:
+			{
+                assert(false);
+                os << "[?!";
+				break;
+			}
+        }
+        os << gb.get_lower() << " ";
+    } else
+    {
+        os << "[? ";
+    }
+
+    // upper bound, closing brace
+    if (gb.upper_valid())
+    {
+        os << gb.get_upper();
+
+        switch (gb.get_upper_relation())
+        {
+            case REL_GREATER_OR_EQUAL:
+			{
+                os << ']';
+				break;
+			}
+
+            case REL_GREATER:
+			{
+                os << ')';
+				break;
+			}
+
+            case REL_EQUAL:
+			{
+                os << "==";
+				break;
+			}
+
+            default:
+			{
+                assert(false);
+                os << "?!]";
+				break;
+			}
+        }
+    } else
+    {
+        os << "?]";
+    }
+
     return os;
 }
 
+//////////////////////////////////////// search_region
+search_region::search_region(bound_t low, bound_t high): low(low), high(high)
+{ }
 
-
-
-/*
-
-   -2 -1 0 1 2
-
-   0 1 2 3 4
-*/
-
-game* get_scale_game(int virtual_idx)
+search_region search_region::split(bound_t midpoint)
 {
-    return new up_star(virtual_idx, true);
+    assert(valid());
+    assert(low <= midpoint);
+    assert(midpoint <= high);
+
+    bound_t old_high = high;
+    high = midpoint - 1;
+
+    return search_region(midpoint + 1, old_high);
 }
 
-game* get_inverse_scale_game(int virtual_idx)
+bool search_region::valid() const
 {
-    return new up_star(-virtual_idx, true);
+    return low <= high;
 }
 
-/*
-game* get_scale_game(int virtual_idx)
+void search_region::invalidate()
 {
-    return new dyadic_rational(virtual_idx, 8);
+    low = numeric_limits<bound_t>::max();
+    high = numeric_limits<bound_t>::min();
 }
 
-game* get_inverse_scale_game(int virtual_idx)
+bound_t search_region::get_midpoint() const
 {
-    return new dyadic_rational(-virtual_idx, 8);
+    assert(valid());
+
+    // TODO check for overflow?
+    return (low + high) / 2;
 }
-*/
 
+//////////////////////////////////////// bounds_finder
+bounds_finder::bounds_finder()
+{ }
 
-const bool silent = true;
-
-
-void get_bounds(vector<game*>& games)
+vector<game_bounds*> bounds_finder::find_bounds(sumgame& sum, const vector<bounds_options>& options)
 {
-    const int BOUND_UNDEFINED = std::numeric_limits<int>::min();
+    vector<game_bounds*> bounds_list;
 
-    int bound_low = BOUND_UNDEFINED;
-    int bound_high = BOUND_UNDEFINED;
-
-   relation grid[DIAMETER];
-
-    for (int i = 0; i < DIAMETER; i++)
+    for (const bounds_options& opts : options)
     {
-        grid[i] = R_UNKNOWN;
+        assert(opts.min <= opts.max);
+
+        _reset();
+
+        game_bounds* gb = _make_bounds(sum, opts);
+        bounds_list.push_back(gb);
+    }
+
+    return bounds_list;
+}
+
+void bounds_finder::_reset()
+{
+    _assume_below_midpoint = true;
+    _step_count = 0;
+    _search_count = 0;
+
+    _regions.clear();
+    _regions_next.clear();
+}
+
+void bounds_finder::_flip_tie_break_rule()
+{
+    _assume_below_midpoint = !_assume_below_midpoint;
+}
+
+game_bounds* bounds_finder::_make_bounds(sumgame& sum, const bounds_options& opt)
+{
+    _regions.clear();
+    _regions_next.clear();
+    _regions.push_back({opt.min, opt.max});
+
+    game_bounds* bounds = new game_bounds();
+    bool validated_interval = false; // true when we've checked that Gmin <= S <= Gmax
+
+    while (!_regions.empty())
+    {
+        _regions_next.clear();
+
+        for (search_region& sr : _regions)
+        {
+            // Skip if this region is invalid or outside of bounds
+            if (prune_region(sr, *bounds))
+            {
+                continue;
+            }
+
+            // stop if no more work remaining
+            if (bounds->lower_valid() && bounds->get_lower_relation() == REL_EQUAL)
+            {
+                _regions_next.clear();
+                break;
+            }
+
+            // Do one step of binary search within the region
+            _step(sr, opt.scale, sum, *bounds);
+        }
+
+        // verify that Gmin <= S <= Gmax if this isn't known after a few steps
+        // TODO reduce threshold 3 --> 2? leave at 3?
+        if (!bounds->both_valid() && !validated_interval && _step_count >= 3)
+        {
+            validated_interval = true;
+
+            if (!_validate_interval(opt.min, opt.max, opt.scale, sum, *bounds))
+            {
+                break;
+            }
+        }
+
+        swap(_regions, _regions_next);
+    }
+
+    if (bounds->both_valid())
+    {
+        _refine_bounds(opt.scale, *bounds, sum);
+    }
+
+    return bounds;
+}
+
+void bounds_finder::_step(search_region& region, game_scale scale, sumgame& sum, game_bounds& bounds)
+{
+    // S refers to sumgame
+    // Gi refers to scale game
+
+    _step_count++;
+    assert(region.valid());
+
+    int scale_idx = region.get_midpoint(); // i
+    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale)); // -Gi
+ 
+    // Pick a test (>= or <=) to try first, based on what side of the bounds space
+    // "scale_idx" is on
+    bool below_midpoint = _assume_below_midpoint;
+    bool did_tie_break = true;
+
+    int midpoint = 0;
+
+    if (bounds.both_valid())
+    {
+        midpoint = bounds.get_midpoint();
+    }
+
+    if (scale_idx != midpoint)
+    {
+        did_tie_break = false;
+        below_midpoint = scale_idx < midpoint;
     }
 
 
-    vector<arena> arenas;
-    vector<arena> arenas_next;
+    // Gi <relation> S
+    int sumgame_solve_count = 0;
+    relation rel = _get_step_comparison(sum, inverse_scale_game.get(), below_midpoint, &sumgame_solve_count);
 
-
-    auto virtual_to_real_idx = [](const int& virtual_idx) -> int
+    if (did_tie_break && sumgame_solve_count > 1)
     {
-        assert(virtual_idx >= MIN);
-        assert(virtual_idx <= MAX);
-
-        int real_idx = virtual_idx + RADIUS;
-
-        assert(real_idx >= 0);
-        assert(real_idx < DIAMETER);
-
-        return real_idx;
-    };
-
-    auto valid_arena = [](const arena& ar) -> bool
-    {
-        return (ar.first <= ar.second) && (ar.first >= MIN) && (ar.second <= MAX);
-    };
-
-    auto step = [&](arena& ar) -> arena
-    {
-        step_count++;
-        arena split_arena = ARENA_INVALID;
-
-        int& low = ar.first;
-        int& high = ar.second;
-
-        assert(valid_arena(ar));
-
-        int virtual_i = (high + low) / 2;
-        int real_i = virtual_to_real_idx(virtual_i);
-
-        if (!silent)
-        {
-            cout << "Checking " << virtual_i << endl;
-        }
-
-        game* inverse_scale_game = get_inverse_scale_game(virtual_i);
-
-        sumgame sum(BLACK);
-    
-        for (game* g : games)
-        {
-            sum.add(g);
-        }
-
-        sum.add(inverse_scale_game);
-
-
-        // BASIC APPROACH
-        if (OPTIMIZATION_LEVEL == OPT_NONE)
-        {
-            search_count += 2;
-            bool black_first = sum.solve();
-
-            sum.set_to_play(WHITE);
-            bool white_first = sum.solve();
-
-            // 0 0
-            // S - Gi = 0
-            // S = Gi
-            // Gi = S
-            if (!black_first && !white_first)
-            {
-                grid[real_i] = R_EQUAL; 
-
-
-                assert(bound_high == BOUND_UNDEFINED || virtual_i < bound_high);
-                bound_high = virtual_i;
-
-                assert(bound_low == BOUND_UNDEFINED || virtual_i > bound_low);
-                bound_low = virtual_i;
-
-                low = virtual_i + 1;
-                high = virtual_i - 1;
-
-            }
-
-            // 0 1
-            // S - Gi < 0
-            // S < Gi
-            // Gi > S
-            if (!black_first && white_first)
-            {
-                grid[real_i] = R_GREATER; 
-                high = virtual_i - 1;
-
-                assert(bound_high == BOUND_UNDEFINED || virtual_i < bound_high);
-                bound_high = virtual_i;
-            }
-
-            // 1 0
-            // S - Gi > 0
-            // S > Gi
-            // Gi < S
-            if (black_first && !white_first)
-            {
-                grid[real_i] = R_LESS;
-                low = virtual_i + 1;
-
-                assert(bound_low == BOUND_UNDEFINED || virtual_i > bound_low);
-                bound_low = virtual_i;
-            }
-
-            // 1 1
-            // S - Gi ?= 0
-            // S ?= Gi
-            // Gi ?= S
-            if (black_first && white_first)
-            {
-                grid[real_i] = R_FUZZY;
-                split_arena = {virtual_i + 1, high};
-                high = virtual_i - 1;
-            }
-        }
-
-
-        // 1 SIDED OPTIMIZATION
-        if (OPTIMIZATION_LEVEL == OPT_1_SIDE)
-        {
-            search_count++;
-            bool black_first = sum.solve();
-
-            // 0 ?
-            // S - Gi <= 0
-            // S <= Gi
-            // Gi >= S
-            if (!black_first)
-            {
-                grid[real_i] = R_GE; 
-                high = virtual_i - 1;
-
-                assert(bound_high == BOUND_UNDEFINED || virtual_i < bound_high);
-                bound_high = virtual_i;
-            } else
-            {
-
-                search_count++;
-                sum.set_to_play(WHITE);
-                bool white_first = sum.solve();
-
-                // 1 0
-                // S - Gi > 0
-                // S > Gi
-                // Gi < S
-                if (black_first && !white_first)
-                {
-                    grid[real_i] = R_LESS;
-                    low = virtual_i + 1;
-
-                    assert(bound_low == BOUND_UNDEFINED || virtual_i > bound_low);
-                    bound_low = virtual_i;
-                }
-
-                // 1 1
-                // S - Gi ?= 0
-                // S ?= Gi
-                // Gi ?= S
-                if (black_first && white_first)
-                {
-                    grid[real_i] = R_FUZZY;
-                    split_arena = {virtual_i + 1, high};
-                    high = virtual_i - 1;
-                }
-
-            }
-        }
-
-        // 2 SIDED OPTIMIZATION
-        if (OPTIMIZATION_LEVEL == OPT_2_SIDE || OPTIMIZATION_LEVEL == OPT_ASSUME_NEG || OPTIMIZATION_LEVEL == OPT_ASSUME_POS)
-        {
-            static int tie_break_rule = -1;
-
-            if (tie_behavior == TB_NEG)
-            {
-                tie_break_rule = -1;
-            }
-
-            if (tie_behavior == TB_POS)
-            {
-                tie_break_rule = 1;
-            }
-
-            search_result black_first = RESULT_UNKNOWN;
-            search_result white_first = RESULT_UNKNOWN;
-            
-            // What side of the bound range are we on?
-            int mid = 0;
-
-            if (bound_low != BOUND_UNDEFINED && bound_high != BOUND_UNDEFINED)
-            {
-                mid = (bound_low + bound_high) / 2;
-            }
-
-            int bound_side = tie_break_rule;
-            bool did_tie_break = true;
-
-            if (virtual_i != mid)
-            {
-                did_tie_break = false;
-                bound_side = virtual_i < mid ? -1 : 1;
-            } else
-            {
-                tie_count++;
-            }
-
-
-            if (OPTIMIZATION_LEVEL == OPT_ASSUME_NEG)
-            {
-                bound_side = -1;
-            }
-
-            if (OPTIMIZATION_LEVEL == OPT_ASSUME_POS)
-            {
-                bound_side = 1;
-            }
-
-
-            assert(bound_side != 0);
-
-
-            // If we're on the lower side, assume that we'll be increasing the lower bound
-            // so check white first
-            // Otherwise check black first...
-
-
-            // First search
-            bool conclusive = false;
-
-            int local_search_count = 1;
-
-            if (bound_side < 0)
-            {
-                sum.set_to_play(WHITE);
-                white_first = (search_result) sum.solve();
-                search_count++;
-
-                if (white_first == false)
-                {
-                    conclusive = true;
-
-                    // ? 0
-                    // S - Gi >= 0
-                    // S >= Gi
-                    // Gi <= S
-                    grid[real_i] = R_LE;
-                    low = virtual_i + 1;
-                    assert(bound_low == BOUND_UNDEFINED || virtual_i > bound_low);
-                    bound_low = virtual_i;
-                }
-            } else
-            {
-                sum.set_to_play(BLACK);
-                black_first = (search_result) sum.solve();
-                search_count++;
-
-                if (black_first == false)
-                {
-                    conclusive = true;
-
-                    // 0 ?
-                    // S - Gi <= 0
-                    // S <= Gi
-                    // Gi >= S
-                    grid[real_i] = R_GE;
-                    high = virtual_i - 1;
-
-                    assert(bound_high == BOUND_UNDEFINED || virtual_i < bound_high);
-                    bound_high = virtual_i;
-                }
-            }
-
-
-            if (!conclusive)
-            {
-                local_search_count++;
-
-                if (bound_side < 0)
-                {
-                    assert(black_first == RESULT_UNKNOWN);
-                    assert(white_first != RESULT_UNKNOWN);
-
-                    sum.set_to_play(BLACK);
-                    black_first = (search_result) sum.solve();
-                    search_count++;
-
-                    if (black_first == false)
-                    {
-                        conclusive = true;
-
-                        // 0 1
-                        // S - Gi <= 0
-                        // S <= Gi
-                        // Gi >= S
-                        grid[real_i] = R_GE;
-                        high = virtual_i - 1;
-
-                        assert(bound_high == BOUND_UNDEFINED || virtual_i < bound_high);
-                        bound_high = virtual_i;
-                    }
-                } else
-                {
-                    assert(black_first != RESULT_UNKNOWN);
-                    assert(white_first == RESULT_UNKNOWN);
-
-                    sum.set_to_play(WHITE);
-                    white_first = (search_result) sum.solve();
-                    search_count++;
-
-                    if (white_first == false)
-                    {
-                        conclusive = true;
-
-                        // 1 0
-                        // S - Gi >= 0
-                        // S >= Gi
-                        // Gi <= S
-                        grid[real_i] = R_LE;
-                        low = virtual_i + 1;
-                        assert(bound_low == BOUND_UNDEFINED || virtual_i > bound_low);
-                        bound_low = virtual_i;
-                    }
-                }
-            }
-
-            // If still inconclusive, we have "1 1"
-
-            if (!conclusive)
-            {
-                assert(black_first == RESULT_TRUE);
-                assert(white_first == RESULT_TRUE);
-
-                grid[real_i] = R_FUZZY;
-                split_arena = {virtual_i + 1, high};
-                high = virtual_i - 1;
-            }
-
-            if (did_tie_break && conclusive && (local_search_count == 2))
-            {
-                tie_break_rule *= -1;
-                tie_break_inversions++;
-                inversion_steps.push_back(step_count - 1);
-            }
-        }
-
-
-
-        delete inverse_scale_game;
-
-        return split_arena;
-    };
-
-
-    arenas.push_back({MIN, MAX});
-
-
-    while (!arenas.empty())
-    {
-        arenas_next.clear();
-
-        if (!silent)
-        {
-            for (const arena& ar : arenas)
-            {
-                cout << ar << endl;
-            }
-            cout << endl;
-        }
-
-        for (size_t i = 0; i < arenas.size(); i++)
-        {
-            arena& ar = arenas[i];
-
-            // Do one step of binary search within "ar"
-            arena split_arena = step(ar);
-
-            if (valid_arena(ar))
-            {
-                arenas_next.push_back(ar);
-            }
-
-            if (valid_arena(split_arena))
-            {
-                arenas_next.push_back(split_arena);
-            }
-
-        }
-
-
-
-        // check for fuzzy range extending to MIN or MAX
-        if (step_count >= 5 && (bound_low == BOUND_UNDEFINED || bound_high == BOUND_UNDEFINED))
-        {
-
-            sumgame sum(BLACK);
-
-            for (game* g : games)
-            {
-                sum.add(g);
-            }
-
-            game* inverse_scale_game = get_inverse_scale_game(bound_low == BOUND_UNDEFINED ? MIN : MAX);
-
-            sum.add(inverse_scale_game);
-
-            sum.set_to_play(BLACK);
-            bool black_first = sum.solve();
-
-            if (black_first)
-            {
-                sum.set_to_play(WHITE);
-                bool white_first = sum.solve();
-
-                if (white_first)
-                {
-                    arenas_next.clear();
-                    bound_low = 999999;
-                    bound_high = -999999;
-                } else
-                {
-                    assert(false);
-                }
-            } else
-            {
-                assert(false);
-            }
-
-            delete inverse_scale_game;
-
-        }
-
-        arenas.clear();
-        swap(arenas, arenas_next);
+        _flip_tie_break_rule();
     }
 
-
-    const string sep = "\t";
-
-
-    const int ROW_COLS = 18;
-    const int N_ROWS = (DIAMETER / ROW_COLS) + ((DIAMETER % ROW_COLS) > 0);
-    //const int N_ROWS = 0;
-
-
-    if (!silent)
+    switch (rel)
     {
-        for (int n = 0; n < N_ROWS; n++)
+        // Gi >= S
+        case REL_GREATER_OR_EQUAL:
+        case REL_GREATER:
         {
-            int min = MIN + n * ROW_COLS;
-
-            int max = min + ROW_COLS - 1;
-            max = max > MAX ? MAX : max;
-
-            for (int i = min; i <= max; i++)
-            {
-                cout << i << sep;
-            }
-            cout << endl;
-
-            for (int i = min; i <= max; i++)
-            {
-                game* scale_game = get_scale_game(i);
-
-                stringstream stream;
-                stream << *scale_game;
-                string str = stream.str();
-                remove_game_prefixes(str);
-
-                cout << str << sep;
-
-                delete scale_game;
-            }
-            cout << endl;
-
-            for (int i = min; i <= max; i++)
-            {
-                int real_i = virtual_to_real_idx(i);
-
-                relation r = grid[real_i];
-                auto it = REL_MAP.find(r);
-                assert(it != REL_MAP.end());
-                const string& text = it->second;
-
-                cout << text << sep;
-            }
-            cout << endl;
-            cout << endl;
-
+            region.high = scale_idx - 1;
+            bounds.set_upper(scale_idx, rel);
+            break;
         }
+
+        // Gi <= S
+        case REL_LESS_OR_EQUAL:
+        case REL_LESS:
+        {
+            region.low = scale_idx + 1;
+            bounds.set_lower(scale_idx, rel);
+            break;
+        }
+
+        // Gi fuzzy with S
+        case REL_FUZZY:
+        {
+            _regions_next.push_back(region.split(scale_idx));
+            break;
+        }
+
+        // Gi == S
+        case REL_EQUAL:
+        {
+            region.invalidate();
+            bounds.set_equal(scale_idx);
+            break;
+        }
+
+        default:
+        {
+            assert(false);
+            break;
+        }
+    };
+
+    _regions_next.push_back(region);
+}
+
+relation bounds_finder::_get_step_comparison(sumgame& sum, game* inverse_scale_game, bool below_midpoint, int* solve_count)
+{
+    bool le_known = false;
+    bool is_le = false;
+
+    bool ge_known = false;
+    bool is_ge = false;
+
+
+    auto test_le = [&]() -> void
+    {
+        assert(!le_known);
+        le_known = true;
+        is_le = _g_less_or_equal_s(sum, inverse_scale_game);
+    };
+
+    auto test_ge = [&]() -> void
+    {
+        assert(!ge_known);
+        ge_known = true;
+        is_ge = _g_greater_or_equal_s(sum, inverse_scale_game);
+    };
+
+    auto is_conclusive = [&]() -> bool
+    {
+        return (le_known && is_le) || (ge_known && is_ge);
+    };
+
+    if (below_midpoint)
+    {
+        test_le();
+        if (!is_conclusive())
+            test_ge();
+    } else
+    {
+        test_ge();
+        if (!is_conclusive())
+            test_le();
     }
 
-    cout << "BOUNDS: [" << bound_low << " " << bound_high << "]" << endl; 
+    // (<= or >=) or FUZZY; No EQUAL
+    assert(is_conclusive() || (le_known && ge_known));
 
+    if (solve_count != nullptr)
+    {
+        *solve_count = (int) le_known + (int) ge_known;
+    }
 
+    return get_relation_from_outcomes(le_known, is_le, ge_known, is_ge);
+}
+
+bool bounds_finder::_g_less_or_equal_s(sumgame& sum, game* inverse_scale_game)
+{
     /*
-        Clobber:
-        XOXO.XO.XOXOXO.XXOOXO
+        B wins   W wins
+        ?        0
 
-        radius  NONE    1_SIDE  2_SIDE  NEG     POS
-        32      22      17      12      17      17
-        16000   54      41      29      41      41
-
-
-
-        Clobber:
-        XOXOXOXO.XO.XXOO.OXXO
-
-        radius  NONE    1_SIDE  2_SIDE  NEG     POS
-        32      22      18      14      18      18
-        16000   58      45      32      45      45
-
-
-        Clobber:
-        XXXXXXXO
-        radius  NONE    1_SIDE  2_SIDE  NEG     POS
-        32      10      9       8       9       9
-        16000   30      18      25      26      18
-
-
-
-
-
-
-
+        S - Gi >= 0
+        S >= Gi
+        Gi <= S
     */
-    cout << "Did " << step_count << " steps (" << search_count << " sumgames)" << endl;
+
+    _search_count++;
+    sum.set_to_play(WHITE);
+    return !sum.solve_with_games(inverse_scale_game);
 }
 
-
-void test_bounds()
+bool bounds_finder::_g_less_or_equal_s(sumgame& sum, bound_t scale_idx, game_scale scale)
 {
-     
-
-    vector<game*> games;
-
-    //games.push_back(new clobber_1xn("XOXO.XO.XOXOXO.XXOOXO"));
-    //games.push_back(new clobber_1xn("XOXOXOXO.XO.XXOO.OXXO"));
-    //games.push_back(new clobber_1xn("XXXXXXXO"));
-    //games.push_back(new clobber_1xn("OOOOOOOX"));
-
-    //games.push_back(new clobber_1xn("OOOXX.OXXOOX..XXOO.XOOXO"));
-    games.push_back(new clobber_1xn("XXXOO.XOOXXO..OOXX.OXXOX"));
-
-    //games.push_back(new clobber_1xn(""));
-
-    //games.push_back(new clobber_1xn("OOXX.XXOO.XX.XO..XOOX.XXOOXOOO"));
-    //games.push_back(new clobber_1xn("XXOO.OOXX.OO.OX..OXXO.OOXXOXXX"));
-
-    //games.push_back(new nogo_1xn("..X."));
-
-
-
-    //games.push_back(new clobber_1xn("XXXXXXXXXXXXO"));
-    //games.push_back(new up_star(16000, true));
-
-    
-    
-
-
-
-    vector<optimization_level_enum> opts {
-        OPT_NONE,
-        OPT_1_SIDE,
-
-        OPT_2_SIDE,
-        OPT_2_SIDE_NEG,
-        OPT_2_SIDE_POS,
-
-    };
-
-    for (optimization_level_enum opt : opts)
-    {
-        step_count = 0;
-        search_count = 0;
-
-        tie_break_inversions = 0;
-        tie_count = 0;
-        inversion_steps.clear();
-
-        tie_behavior = TB_PREDICT;
-
-        if (opt == OPT_2_SIDE_NEG)
-        {
-            opt = OPT_2_SIDE;
-            tie_behavior = TB_NEG;
-        }
-
-        if (opt == OPT_2_SIDE_POS)
-        {
-            opt = OPT_2_SIDE;
-            tie_behavior = TB_POS;
-        }
-
-
-        OPTIMIZATION_LEVEL = opt;
-        get_bounds(games);
-
-        if (opt == OPT_2_SIDE)
-        {
-
-            cout << "Ties: " << tie_count << endl;
-            cout << "Inversions: " << tie_break_inversions << endl;
-
-            cout << "Inversion steps: ";
-            {
-                const size_t N = inversion_steps.size();
-
-                for (size_t i = 0; i < N; i++)
-                {
-                    cout << inversion_steps[i];
-
-                    if (i + 1 < N)
-                    {
-                        cout << " ";
-                    }
-                }
-
-                cout << endl;
-            }
-
-        }
-
-
-
-
-    }
-
-
-    for (game* g : games)
-    {
-        delete g;
-    }
-
+    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale));
+    return _g_less_or_equal_s(sum, inverse_scale_game.get());
 }
+
+bool bounds_finder::_g_greater_or_equal_s(sumgame& sum, game* inverse_scale_game)
+{
+    /*
+        B wins   W wins
+        0        ?
+
+        S - Gi <= 0
+        S <= Gi
+        Gi >= S
+    */
+
+    _search_count++;
+    sum.set_to_play(BLACK);
+    return !sum.solve_with_games(inverse_scale_game);
+}
+
+bool bounds_finder::_g_greater_or_equal_s(sumgame& sum, bound_t scale_idx, game_scale scale)
+{
+    unique_ptr<game> inverse_scale_game(get_inverse_scale_game(scale_idx, scale));
+    return _g_greater_or_equal_s(sum, inverse_scale_game.get());
+}
+
+bool bounds_finder::_validate_interval(bound_t min, bound_t max, game_scale scale, sumgame& sum, game_bounds& bounds)
+{
+    if (!bounds.lower_valid())
+    {
+        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(min, scale)); // -Gmin
+        // Gmin <relation> S
+        relation rel = _get_step_comparison(sum, inverse_scale_game.get(), true, nullptr);
+
+        if (rel != REL_LESS_OR_EQUAL && rel != REL_LESS && rel != REL_EQUAL)
+        {
+            return false;
+        } else
+        {
+            bounds.set_lower(min, rel);
+        }
+    }
+
+    if (!bounds.upper_valid())
+    {
+        unique_ptr<game> inverse_scale_game(get_inverse_scale_game(max, scale)); // -Gmax
+        // Gmax <relation> S
+        relation rel = _get_step_comparison(sum, inverse_scale_game.get(), false, nullptr);
+        
+        if (rel != REL_GREATER_OR_EQUAL && rel != REL_GREATER && rel != REL_EQUAL)
+        {
+            return false;
+        } else
+        {
+            bounds.set_upper(max, rel);
+        }
+    }
+
+    return true;
+}
+
+void bounds_finder::_refine_bounds(game_scale scale, game_bounds& bounds, sumgame& sum)
+{
+    if (bounds.lower_valid() && bounds.get_lower_relation() == REL_LESS_OR_EQUAL)
+    {
+        const bound_t lower = bounds.get_lower();
+
+        bool is_ge = _g_greater_or_equal_s(sum, lower, scale);
+        relation rel = is_ge ? REL_EQUAL : REL_LESS;
+
+        bounds.set_lower(lower, rel);
+    }
+
+    if (bounds.upper_valid() && bounds.get_upper_relation() == REL_GREATER_OR_EQUAL)
+    {
+        const bound_t upper = bounds.get_upper();
+
+        bool is_le = _g_less_or_equal_s(sum, upper, scale);
+        relation rel = is_le ? REL_EQUAL : REL_GREATER;
+
+        bounds.set_upper(upper, rel);
+    }
+}
+
+////////////////////////////////////////
+inline vector<game_bounds*> find_bounds(sumgame& sum, const vector<bounds_options>& options)
+{
+    bounds_finder bf;
+    return bf.find_bounds(sum, options);
+}
+
+inline vector<game_bounds*> find_bounds(vector<game*>& games, const vector<bounds_options>& options)
+{
+    sumgame sum(BLACK);
+    sum.add(games);
+    return find_bounds(sum, options);
+}
+
+inline vector<game_bounds*> find_bounds(game* game, const vector<bounds_options>& options)
+{
+    sumgame sum(BLACK);
+    sum.add(game);
+    return find_bounds(sum, options);
+}
+
