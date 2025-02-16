@@ -96,11 +96,14 @@ For serializaton purposes, it may be better to encode data for each bound into o
 ## `find_bounds()` function
 `find_bounds()` computes both bounds for a `sumgame`, or `vector<game*>`, or `game*`. It takes a `vector` of one or more `bounds_options` structs, and returns a `vector` containing one `game_bounds` object for each `bounds_options`.
 
-`find_bounds()` implements binary search, and calls `sumgame::solve_with_games()` to compare `S` against games on the scale. For each comparison to a scale game `Gi`, `find_bounds()` predicts how `Gi` relates to `S`, to avoid unnecessary calls to `sumgame::solve_with_games()`, (non-strict inequalities i.e. `Gi <= S` instead of `Gi < S` are sufficient for pruning the search space). Fuzzy comparisons (when `S - Gi` is a first player win) cause the search space represented by the interval `[MIN, MAX]` to split into two intervals: `[MIN, i)` and `(i, MAX]`, and search continues on both new intervals.
+`find_bounds()` implements binary search, and calls `sumgame::solve_with_games()` to compare `S` against games on the scale. Fuzzy comparisons (when `S - Gi` is a first player win) cause the search space represented by the interval `[MIN, MAX]` to split into two intervals: `[MIN, i)` and `(i, MAX]`, and search continues on both new intervals.
 
 After finding the tightest possible bounds with non-strict inequalities, i.e. (`lower_bound <= S`), the relations are made strict (either `lower_bound < S` or `lower_bound == S`). When `S`'s bounds are not within the given scale and search interval, search is aborted after a few iterations, and the returned bounds will either be invalid or too loose to be useful.
 
 For serialization purposes, it may be better if `find_bounds()` returns a `vector<game_bounds>` instead of `vector<game_bounds*>`.
+
+### Search Heuristics
+At each binary search iteration, `find_bounds()` compares `S` to a scale game `Gi` at scale index `i`, by solving the sum `S - Gi` for either black or white to play first. Solving the sum for black tests whether `Gi >= S`, and solving the sum for white tests whether `Gi <= S`. At each search iteration, a guess is made as to which condition should be checked first, based on the assumption that if `i` is below the midpoint of the current tentative bounds, it's more likely that `Gi <= S`, and if `i` is above the midpoint, it's more likely that `Gi >= S`. When the current tentative bounds are not defined on both ends, 0 is used as the midpoint. When `i` is equal to the midpoint, a simple tie-breaking rule is used; always pick the same test to do first, and if the test is inconclusive, flip which test will come first at the next occurence of a tie.
 
 ### Related Scales
 Some scales are related, namely `up_star` and `up`, and knowing a game's bounds on one scale may be useful for computing its bounds on related scales. If a game has the bounds `[lower_bound, upper_bound]` on the scale `up_star`, its bounds along the scale `up` will lie within `[lower_bound - 2, upper_bound + 2]`. Currently there are no optimizations in place to handle this.
