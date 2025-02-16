@@ -75,7 +75,7 @@ and is stored in the move stack.
 # Bounds
 `bounds.h` and `bounds.cpp` define functions and types used for finding lower and upper bounds of games.
 
-- The `scale` enum represents a scale of games on which bounds are found.
+- The `game_scale` enum represents a scale of games on which bounds are found.
 - `bound_t` is a signed integral type representing an index along a game scale.
 - The functions `get_scale_game()` and `get_inverse_scale_game()` return a new `game` object for a given scale and index along the scale.
 - The `relation` enum denotes how two games are related (i.e. less than, equal to, etc).
@@ -91,14 +91,16 @@ Some scales and their games at select indices are shown in the following table:
 ## `game_bounds` class
 A pair of lower and upper bounds for a sumgame `S` is represented by the `game_bounds` class. Each bound within is represented by a `bound_t` indicating its location along a scale, a `bool` indicating whether it's valid or invalid, and a `relation` indicating its relation to `S`. The `relation` is interpreted with the bound game `G` being on the left hand side, i.e. `G REL_LESS_OR_EQUAL S`, or `G REL_GREATER S` etc.
 
-For serializaton purposes, it might be better to encode data for each bound into one `bound_t` using bitmasks, instead of having a `bound_t`, `bool`, and `relation`.
+For serializaton purposes, it may be better to encode data for each bound into one `bound_t` using bitmasks, instead of having a `bound_t`, `bool`, and `relation`.
 
 ## `find_bounds()` function
 `find_bounds()` computes both bounds for a `sumgame`, or `vector<game*>`, or `game*`. It takes a `vector` of one or more `bounds_options` structs, and returns a `vector` containing one `game_bounds` object for each `bounds_options`.
 
 `find_bounds()` implements binary search, and calls `sumgame::solve_with_games()` to compare `S` against games on the scale. For each comparison to a scale game `Gi`, `find_bounds()` predicts how `Gi` relates to `S`, to avoid unnecessary calls to `sumgame::solve_with_games()`, (non-strict inequalities i.e. `Gi <= S` instead of `Gi < S` are sufficient for pruning the search space). Fuzzy comparisons (when `S - Gi` is a first player win) cause the search space represented by the interval `[MIN, MAX]` to split into two intervals: `[MIN, i)` and `(i, MAX]`, and search continues on both new intervals.
 
-After finding the tightest bounds with non-strict inequalities, i.e. (`lower_bound <= S`), the relations are made strict (either `lower_bound < S` or `lower_bound == S`). When `S`'s bounds are not within the given scale and search interval, search is aborted after a few iterations, and the returned bounds will either be invalid or too loose to be useful.
+After finding the tightest possible bounds with non-strict inequalities, i.e. (`lower_bound <= S`), the relations are made strict (either `lower_bound < S` or `lower_bound == S`). When `S`'s bounds are not within the given scale and search interval, search is aborted after a few iterations, and the returned bounds will either be invalid or too loose to be useful.
+
+For serialization purposes, it may be better if `find_bounds()` returns a `vector<game_bounds>` instead of `vector<game_bounds*>`.
 
 ### Related Scales
 Some scales are related, namely `up_star` and `up`, and knowing a game's bounds on one scale may be useful for computing its bounds on related scales. If a game has the bounds `[lower_bound, upper_bound]` on the scale `up_star`, its bounds along the scale `up` will lie within `[lower_bound - 2, upper_bound + 2]`. Currently there are no optimizations in place to handle this.
@@ -120,10 +122,9 @@ The following table gives experimental data of the total number of `sumgame::sol
 Perhaps a more sophisticated version of "search around edges" would perform better?
 
 ### Search Interval Size
-Searching for bounds is faster within smaller intervals. When finding bounds for many sumgames, perhaps the caller of `find_bounds()` should dynamically adjust the search interval to be "close" to bounds found for previous games. When the chosen interval is too small to contain bounds, search is aborted after a small number of comparisons (~6 `sumgame::solve()` calls).
+Searching for bounds is faster within smaller intervals. When finding bounds for many sumgames, perhaps the caller of `find_bounds()` should dynamically adjust the search interval to be "close" to bounds found for previous games. When the chosen scale and interval don't contain bounds, search is aborted after a small number of comparisons (~6 `sumgame::solve()` calls).
 
 Maybe bound generation in the database should be done using a sliding window of statistics for the last `N` games to help size intervals appropriately.
-
 
 # Design Choices and Remaining Uglinesses
 ## A `move` must be implemented as an `int` 
