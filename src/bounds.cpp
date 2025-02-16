@@ -706,20 +706,20 @@ void bounds_finder::_refine_bounds(game_scale scale, game_bounds& bounds, sumgam
 }
 
 ////////////////////////////////////////
-inline vector<game_bounds*> find_bounds(sumgame& sum, const vector<bounds_options>& options)
+vector<game_bounds*> find_bounds(sumgame& sum, const vector<bounds_options>& options)
 {
     bounds_finder bf;
     return bf.find_bounds(sum, options);
 }
 
-inline vector<game_bounds*> find_bounds(vector<game*>& games, const vector<bounds_options>& options)
+vector<game_bounds*> find_bounds(vector<game*>& games, const vector<bounds_options>& options)
 {
     sumgame sum(BLACK);
     sum.add(games);
     return find_bounds(sum, options);
 }
 
-inline vector<game_bounds*> find_bounds(game* game, const vector<bounds_options>& options)
+vector<game_bounds*> find_bounds(game* game, const vector<bounds_options>& options)
 {
     sumgame sum(BLACK);
     sum.add(game);

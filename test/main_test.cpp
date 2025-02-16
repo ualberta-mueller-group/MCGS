@@ -79,17 +79,6 @@ int main(int argc, const char** argv)
         return 0;
     }
 
-    scale_test_all();
-    game_bounds_test_all();
-    find_bounds_test_all();
-    cout << "TODO REMOVE RETURN" << endl;
-    return 0;
-
-    /*
-       TODO tests of private bounds stuff?
-    */
-
-
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
@@ -112,6 +101,13 @@ int main(int argc, const char** argv)
     file_parser_test_all();
     cli_options_test_all();
     simple_text_hash_test_all();
+
+    scale_test_all();
+    game_bounds_test_all();
+    find_bounds_test_all();
+    /*
+        TODO: test private bounds stuff? helpers?
+    */
 
     cout << "SUCCESS" << endl;
 }
