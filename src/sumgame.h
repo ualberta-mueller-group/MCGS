@@ -60,7 +60,7 @@ public:
     void play_sum(const sumgame_move& m, bw to_play);
     void undo_move();
     void add(game* g);
-    void add_vec(std::vector<game*>& gs);
+    void add(std::vector<game*>& gs);
 
     bool solve() const;
 

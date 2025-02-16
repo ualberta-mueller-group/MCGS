@@ -150,7 +150,7 @@ void sumgame::add(game* g)
     //                      &_subgames.back()));
 }
 
-void sumgame::add_vec(std::vector<game*>& gs)
+void sumgame::add(std::vector<game*>& gs)
 {
     for (game* g : gs)
     {
