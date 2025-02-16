@@ -60,25 +60,25 @@ public:
 
     inline bound_t get_lower() const
 	{
-        assert(_lower_valid);
+        assert(lower_valid());
         return _lower;
 	}
 
     inline bound_t get_upper() const
 	{
-        assert(_upper_valid);
+        assert(upper_valid());
         return _upper;
     }
 
     inline relation get_lower_relation() const
     {
-        assert(_lower_valid);
+        assert(lower_valid());
         return _lower_relation;
     }
 
     inline relation get_upper_relation() const
     {
-        assert(_upper_valid);
+        assert(upper_valid());
         return _upper_relation;
     }
 
@@ -86,6 +86,7 @@ private:
     void _set_lower(bound_t lower, relation lower_relation);
     void _set_upper(bound_t upper, relation upper_relation);
 
+    // TODO make these nicer for serialization?
     bound_t _lower;
     bool _lower_valid;
     relation _lower_relation;
@@ -104,6 +105,7 @@ struct bounds_options
     bound_t max;
 };
 
+// TODO return vector<game_bounds> instead of vector<game_bounds*>?
 std::vector<game_bounds*> find_bounds(sumgame& sum, const std::vector<bounds_options>& options);
 std::vector<game_bounds*> find_bounds(std::vector<game*>& games, const std::vector<bounds_options>& options);
 std::vector<game_bounds*> find_bounds(game* game, const std::vector<bounds_options>& options);

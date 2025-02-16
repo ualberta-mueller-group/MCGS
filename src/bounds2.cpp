@@ -50,7 +50,7 @@ private:
     bool _g_greater_or_equal_s(sumgame& sum, game* inverse_scale_game);
     bool _g_greater_or_equal_s(sumgame& sum, bound_t scale_idx, game_scale scale);
 
-    bool _validate_interval(bound_t min, bound_t max,game_scale scale, sumgame& sum, game_bounds& bounds);
+    bool _validate_interval(bound_t min, bound_t max, game_scale scale, sumgame& sum, game_bounds& bounds);
     void _refine_bounds(game_scale scale, game_bounds& bounds, sumgame& sum);
 
 
@@ -100,6 +100,29 @@ relation get_relation_from_outcomes(bool le_known, bool is_le, bool ge_known, bo
     assert(false);
 }
 
+bool prune_region(const search_region& sr, const game_bounds& bounds)
+{
+    if (!sr.valid())
+    {
+        return true;
+    }
+
+    // regions don't overlap, so they shouldn't need to be "clipped";
+    // either the entire region is OK, or the entire region is outside the bounds
+
+    if (bounds.lower_valid() && (bounds.get_lower() > sr.high))
+    {
+        return true;
+    }
+
+    if (bounds.upper_valid() && (bounds.get_upper() < sr.low))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 //////////////////////////////////////// game_scale functions
 game* get_scale_game(bound_t scale_idx, game_scale scale)
 {
@@ -126,6 +149,7 @@ game* get_scale_game(bound_t scale_idx, game_scale scale)
         default: 
         {
             assert(false);
+            return nullptr;
             break;
         }
     }
@@ -155,6 +179,11 @@ void game_bounds::set_lower(bound_t lower, relation lower_relation)
     {
         _set_upper(lower, REL_EQUAL);
     }
+
+    if (upper_valid())
+    {
+        assert(_lower <= _upper);
+    }
 }
 
 void game_bounds::set_upper(bound_t upper, relation upper_relation)
@@ -170,11 +199,17 @@ void game_bounds::set_upper(bound_t upper, relation upper_relation)
     {
         _set_lower(upper, REL_EQUAL);
     }
+
+    if (lower_valid())
+    {
+        assert(_lower <= _upper);
+    }
 }
 
 void game_bounds::set_equal(bound_t lower_and_upper)
 {
-    set_lower(lower_and_upper, REL_EQUAL);
+    _set_lower(lower_and_upper, REL_EQUAL);
+    _set_upper(lower_and_upper, REL_EQUAL);
 
     assert(_lower_valid && _upper_valid);
     assert(_lower_relation == REL_EQUAL && _upper_relation == REL_EQUAL);
@@ -375,27 +410,7 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum, const bounds_options& opt
     _regions.push_back({opt.min, opt.max});
 
     game_bounds* bounds = new game_bounds();
-    bool validated_interval = false;
-
-    auto prune_region = [&](search_region& sr) -> bool
-    {
-        if (!sr.valid())
-        {
-            return true;
-        }
-
-        if (bounds->lower_valid() && (bounds->get_lower() > sr.high))
-        {
-            return true;
-        }
-
-        if (bounds->upper_valid() && (bounds->get_upper() < sr.low))
-        {
-            return true;
-        }
-
-        return false;
-    };
+    bool validated_interval = false; // true when we've checked that Gmin <= S <= Gmax
 
     while (!_regions.empty())
     {
@@ -403,7 +418,8 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum, const bounds_options& opt
 
         for (search_region& sr : _regions)
         {
-            if (prune_region(sr))
+            // Skip if this region is invalid or outside of bounds
+            if (prune_region(sr, *bounds))
             {
                 continue;
             }
@@ -419,6 +435,7 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum, const bounds_options& opt
             _step(sr, opt.scale, sum, *bounds);
         }
 
+        // verify that Gmin <= S <= Gmax if this isn't known after a few steps
         // TODO reduce threshold 3 --> 2? leave at 3?
         if (!bounds->both_valid() && !validated_interval && _step_count >= 3)
         {
