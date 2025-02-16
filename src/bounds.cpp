@@ -172,6 +172,11 @@ void game_bounds::set_lower(bound_t lower, relation lower_relation)
             || lower_relation == REL_EQUAL
     );
 
+    if (lower_valid())
+    {
+        assert(lower >= _lower);
+    }
+
     _set_lower(lower, lower_relation);
 
     if (lower_relation == REL_EQUAL)
@@ -191,6 +196,12 @@ void game_bounds::set_upper(bound_t upper, relation upper_relation)
             || upper_relation == REL_GREATER_OR_EQUAL 
             || upper_relation == REL_EQUAL
     );
+
+
+    if (upper_valid())
+    {
+        assert(upper <= _upper);
+    }
 
     _set_upper(upper, upper_relation);
 
