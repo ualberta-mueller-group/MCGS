@@ -22,12 +22,12 @@ void test_game(game* g, bound_scale scale, bound_t low, relation rel_low, bound_
     opt.min = -radius;
     opt.max = radius;
 
-    vector<game_bounds*> bounds_list = find_bounds(g, opts_list);
+    vector<game_bounds_ptr> bounds_list = find_bounds(g, opts_list);
 
     delete g;
 
     assert(bounds_list.size() == 1);
-    game_bounds* bounds = bounds_list.back();
+    game_bounds_ptr& bounds = bounds_list.back();
 
     assert(bounds->both_valid());
 
@@ -36,8 +36,6 @@ void test_game(game* g, bound_scale scale, bound_t low, relation rel_low, bound_
 
     assert(bounds->get_upper() == high);
     assert(bounds->get_upper_relation() == rel_high);
-
-    delete bounds;
 }
 
 void test_game_invalid(game* g, bound_scale scale, bound_t radius = 8)
@@ -50,16 +48,14 @@ void test_game_invalid(game* g, bound_scale scale, bound_t radius = 8)
     opt.min = -radius;
     opt.max = radius;
 
-    vector<game_bounds*> bounds_list = find_bounds(g, opts_list);
+    vector<game_bounds_ptr> bounds_list = find_bounds(g, opts_list);
 
     delete g;
 
     assert(bounds_list.size() == 1);
-    game_bounds* bounds = bounds_list.back();
+    game_bounds_ptr& bounds = bounds_list.back();
 
     assert(!bounds->both_valid());
-
-    delete bounds;
 }
 
 void test_clobber_1xn()

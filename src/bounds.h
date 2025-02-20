@@ -5,6 +5,7 @@
 #include <ostream>
 #include <cstdint>
 #include "sumgame.h"
+#include <memory>
 
 typedef int32_t bound_t;
 
@@ -96,9 +97,12 @@ struct bounds_options
     bound_t max;
 };
 
-// TODO return vector<game_bounds> instead of vector<game_bounds*>?
-std::vector<game_bounds*> find_bounds(sumgame& sum, const std::vector<bounds_options>& options);
-std::vector<game_bounds*> find_bounds(std::vector<game*>& games, const std::vector<bounds_options>& options);
-std::vector<game_bounds*> find_bounds(game* game, const std::vector<bounds_options>& options);
+// TODO return vector<game_bounds> instead of vector<game_bounds_ptr>?
+
+typedef std::shared_ptr<game_bounds> game_bounds_ptr;
+
+std::vector<game_bounds_ptr> find_bounds(sumgame& sum, const std::vector<bounds_options>& options);
+std::vector<game_bounds_ptr> find_bounds(std::vector<game*>& games, const std::vector<bounds_options>& options);
+std::vector<game_bounds_ptr> find_bounds(game* game, const std::vector<bounds_options>& options);
 
 void test_bounds();

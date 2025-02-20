@@ -37,7 +37,7 @@ class bounds_finder
 public:
     bounds_finder();
 
-    vector<game_bounds*> find_bounds(sumgame& sum, const vector<bounds_options>& options);
+    vector<game_bounds_ptr> find_bounds(sumgame& sum, const vector<bounds_options>& options);
 
 private:
     void _reset();
@@ -356,9 +356,9 @@ bound_t search_region::get_midpoint() const
 bounds_finder::bounds_finder()
 { }
 
-vector<game_bounds*> bounds_finder::find_bounds(sumgame& sum, const vector<bounds_options>& options)
+vector<game_bounds_ptr> bounds_finder::find_bounds(sumgame& sum, const vector<bounds_options>& options)
 {
-    vector<game_bounds*> bounds_list;
+    vector<game_bounds_ptr> bounds_list;
 
     for (const bounds_options& opts : options)
     {
@@ -367,7 +367,7 @@ vector<game_bounds*> bounds_finder::find_bounds(sumgame& sum, const vector<bound
         _reset();
 
         game_bounds* gb = _make_bounds(sum, opts);
-        bounds_list.push_back(gb);
+        bounds_list.push_back(game_bounds_ptr(gb));
     }
 
     return bounds_list;
@@ -684,25 +684,25 @@ void bounds_finder::_refine_bounds(bound_scale scale, game_bounds& bounds, sumga
 }
 
 ////////////////////////////////////////
-vector<game_bounds*> find_bounds(sumgame& sum, const vector<bounds_options>& options)
+vector<game_bounds_ptr> find_bounds(sumgame& sum, const vector<bounds_options>& options)
 {
     bw old_to_play = sum.to_play();
 
     bounds_finder bf;
-    vector<game_bounds*> bounds_list = bf.find_bounds(sum, options);
+    vector<game_bounds_ptr> bounds_list = bf.find_bounds(sum, options);
 
     sum.set_to_play(old_to_play);
     return bounds_list;
 }
 
-vector<game_bounds*> find_bounds(vector<game*>& games, const vector<bounds_options>& options)
+vector<game_bounds_ptr> find_bounds(vector<game*>& games, const vector<bounds_options>& options)
 {
     sumgame sum(BLACK);
     sum.add(games);
     return find_bounds(sum, options);
 }
 
-vector<game_bounds*> find_bounds(game* game, const vector<bounds_options>& options)
+vector<game_bounds_ptr> find_bounds(game* game, const vector<bounds_options>& options)
 {
     sumgame sum(BLACK);
     sum.add(game);
@@ -959,7 +959,7 @@ void test_bounds()
         cout << *g << endl;
 
         bounds_finder bf;
-        vector<game_bounds*> bounds_list = bf.find_bounds(sum, {{BOUND_SCALE_UP, -32, 32}});
+        vector<game_bounds_ptr> bounds_list = bf.find_bounds(sum, {{BOUND_SCALE_UP, -32, 32}});
         total += bf._step_count;
         cout << bf._step_count << endl;
         cout << endl;
