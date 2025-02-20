@@ -108,7 +108,9 @@ int main(int argc, const char** argv)
     game_bounds_test_all();
     find_bounds_test_all();
     /*
-        TODO: test private bounds stuff? helpers?
+        TODO:
+            test private bounds stuff? helpers?
+            game_bounds asserts?
     */
 
     cout << "SUCCESS" << endl;

@@ -1,10 +1,6 @@
+#include "all_game_headers.h"
 #include "find_bounds_test.h"
 #include "bounds.h"
-#include "cgt_integer_game.h"
-#include "clobber_1xn.h"
-#include "nogo_1xn.h"
-#include "elephants.h"
-#include "cgt_up_star.h"
 #include <string>
 #include <memory>
 
@@ -63,6 +59,10 @@ void test_clobber_1xn()
     test_game(new clobber_1xn("XXO.OXOX"), BOUND_SCALE_UP_STAR, 0, REL_LESS, 2, REL_GREATER);
     test_game(new clobber_1xn("XXO.OXOX"), BOUND_SCALE_UP, -1, REL_LESS, 3, REL_GREATER);
     test_game(new clobber_1xn("XXO.OXOX"), BOUND_SCALE_DYADIC_RATIONAL, -1, REL_LESS, 1, REL_GREATER);
+
+    test_game(new clobber_1xn("OXOXOXX..XOO.O.XXOOO..XX"), BOUND_SCALE_UP_STAR, -3, REL_LESS, 1, REL_GREATER);
+    test_game(new clobber_1xn("OXOXOXX..XOO.O.XXOOO..XX"), BOUND_SCALE_UP, -1, REL_LESS, 2, REL_GREATER);
+    test_game(new clobber_1xn("OXOXOXX..XOO.O.XXOOO..XX"), BOUND_SCALE_DYADIC_RATIONAL, -1, REL_LESS, 1, REL_GREATER);
 }
 
 void test_elephants()
@@ -87,6 +87,27 @@ void test_simple_games()
 
     test_game_invalid(new integer_game(10), BOUND_SCALE_DYADIC_RATIONAL, 8);
 
+    test_game_invalid(new dyadic_rational(1, 8), BOUND_SCALE_UP_STAR, 1000);
+    test_game_invalid(new dyadic_rational(1, 8), BOUND_SCALE_UP, 1000);
+    test_game(new dyadic_rational(1, 8), BOUND_SCALE_DYADIC_RATIONAL, 1, REL_EQUAL, 1, REL_EQUAL);
+
+    test_game(new dyadic_rational(1, 16), BOUND_SCALE_DYADIC_RATIONAL, 0, REL_LESS, 1, REL_GREATER);
+
+    test_game(new switch_game(4, -5), BOUND_SCALE_DYADIC_RATIONAL, -41, REL_LESS, 33, REL_GREATER, 100);
+    test_game_invalid(new switch_game(4, -5), BOUND_SCALE_UP_STAR, 1000);
+    test_game_invalid(new switch_game(4, -5), BOUND_SCALE_UP, 1000);
+
+    test_game(new nimber(5), BOUND_SCALE_DYADIC_RATIONAL, -1, REL_LESS, 1, REL_GREATER);
+    test_game(new nimber(5), BOUND_SCALE_UP_STAR, -1, REL_LESS, 1, REL_GREATER);
+    test_game(new nimber(5), BOUND_SCALE_UP, -1, REL_LESS, 1, REL_GREATER);
+
+    test_game(new nimber(0), BOUND_SCALE_DYADIC_RATIONAL, 0, REL_EQUAL, 0, REL_EQUAL);
+    test_game(new nimber(0), BOUND_SCALE_UP_STAR, -2, REL_LESS, 2, REL_GREATER);
+    test_game(new nimber(0), BOUND_SCALE_UP, 0, REL_EQUAL, 0, REL_EQUAL);
+
+    test_game(new nimber(1), BOUND_SCALE_DYADIC_RATIONAL, -1, REL_LESS, 1, REL_GREATER);
+    test_game(new nimber(1), BOUND_SCALE_UP_STAR, 0, REL_EQUAL, 0, REL_EQUAL);
+    test_game(new nimber(1), BOUND_SCALE_UP, -2, REL_LESS, 2, REL_GREATER);
 }
 
 } // namespace
