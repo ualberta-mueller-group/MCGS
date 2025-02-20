@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include "cgt_basics.h"
 
 // split string on whitespace
 std::vector<std::string> split_string(const std::string& str);
@@ -26,3 +27,4 @@ bool addition_wraps(const T& x, const T& y)
     return false;
 }
 
+relation relation_from_search_results(bool le_known, bool is_le, bool ge_known, bool is_ge);

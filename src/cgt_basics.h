@@ -20,7 +20,7 @@ typedef int bw; // black or white
 typedef int ebw; // empty, black or white
 
 
-/**
+/*
  The four outcome classes of a combinatorial game, plus unknown:
  P = previous player win = 2nd player win = 0
  N = next player win = first player win
@@ -29,6 +29,16 @@ typedef int ebw; // empty, black or white
  U = unknown - used when outcome is not computed (yet)
  */
 enum outcome_class { P, N, L, R, U };
+
+enum relation
+{
+    REL_EQUAL = 0,
+    REL_FUZZY,
+    REL_LESS_OR_EQUAL,
+    REL_LESS,
+    REL_GREATER_OR_EQUAL,
+    REL_GREATER,
+};
 
 //---------------------------------------------------------------------------
 // Utility for colors

@@ -8,25 +8,16 @@
 
 typedef int32_t bound_t;
 
-enum relation 
+
+enum bound_scale
 {
-    REL_EQUAL = 0,
-    REL_FUZZY,
-    REL_LESS_OR_EQUAL,
-    REL_LESS,
-    REL_GREATER_OR_EQUAL,
-    REL_GREATER,
+    BOUND_SCALE_UP_STAR,
+    BOUND_SCALE_UP,
+    BOUND_SCALE_DYADIC_RATIONAL,
 };
 
-enum game_scale
-{
-    GAME_SCALE_UP_STAR,
-    GAME_SCALE_UP,
-    GAME_SCALE_DYADIC_RATIONAL,
-};
-
-game* get_scale_game(bound_t scale_idx, game_scale scale);
-game* get_inverse_scale_game(bound_t scale_idx, game_scale scale);
+game* get_scale_game(bound_t scale_idx, bound_scale scale);
+game* get_inverse_scale_game(bound_t scale_idx, bound_scale scale);
 
 class game_bounds
 {
@@ -100,7 +91,7 @@ std::ostream& operator<<(std::ostream& os, const game_bounds& gb);
 
 struct bounds_options
 {
-    game_scale scale;
+    bound_scale scale;
     bound_t min;
     bound_t max;
 };

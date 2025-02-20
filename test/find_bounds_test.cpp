@@ -12,7 +12,7 @@ using namespace std;
 
 namespace {
 
-void test_game(game* g, game_scale scale, bound_t low, relation rel_low, bound_t high, relation rel_high, bound_t radius = 8)
+void test_game(game* g, bound_scale scale, bound_t low, relation rel_low, bound_t high, relation rel_high, bound_t radius = 8)
 {
     vector<bounds_options> opts_list;
     opts_list.push_back(bounds_options());
@@ -40,7 +40,7 @@ void test_game(game* g, game_scale scale, bound_t low, relation rel_low, bound_t
     delete bounds;
 }
 
-void test_game_invalid(game* g, game_scale scale, bound_t radius = 8)
+void test_game_invalid(game* g, bound_scale scale, bound_t radius = 8)
 {
     vector<bounds_options> opts_list;
     opts_list.push_back(bounds_options());
@@ -64,32 +64,32 @@ void test_game_invalid(game* g, game_scale scale, bound_t radius = 8)
 
 void test_clobber_1xn()
 {
-    test_game(new clobber_1xn("XXO.OXOX"), GAME_SCALE_UP_STAR, 0, REL_LESS, 2, REL_GREATER);
-    test_game(new clobber_1xn("XXO.OXOX"), GAME_SCALE_UP, -1, REL_LESS, 3, REL_GREATER);
-    test_game(new clobber_1xn("XXO.OXOX"), GAME_SCALE_DYADIC_RATIONAL, -1, REL_LESS, 1, REL_GREATER);
+    test_game(new clobber_1xn("XXO.OXOX"), BOUND_SCALE_UP_STAR, 0, REL_LESS, 2, REL_GREATER);
+    test_game(new clobber_1xn("XXO.OXOX"), BOUND_SCALE_UP, -1, REL_LESS, 3, REL_GREATER);
+    test_game(new clobber_1xn("XXO.OXOX"), BOUND_SCALE_DYADIC_RATIONAL, -1, REL_LESS, 1, REL_GREATER);
 }
 
 void test_elephants()
 {
-    test_game_invalid(new elephants("X.O.O"), GAME_SCALE_UP_STAR, 1000);
-    test_game_invalid(new elephants("X.O.O"), GAME_SCALE_UP, 1000);
-    test_game(new elephants("X.O.O"), GAME_SCALE_DYADIC_RATIONAL, -17, REL_LESS, -7, REL_GREATER, 32);
+    test_game_invalid(new elephants("X.O.O"), BOUND_SCALE_UP_STAR, 1000);
+    test_game_invalid(new elephants("X.O.O"), BOUND_SCALE_UP, 1000);
+    test_game(new elephants("X.O.O"), BOUND_SCALE_DYADIC_RATIONAL, -17, REL_LESS, -7, REL_GREATER, 32);
 }
 
 void test_nogo_1xn()
 {
-    test_game_invalid(new nogo_1xn("X.X.X.O"), GAME_SCALE_UP_STAR, 1000);
-    test_game_invalid(new nogo_1xn("X.X.X.O"), GAME_SCALE_UP, 1000);
-    test_game(new nogo_1xn("X.X.X.O"), GAME_SCALE_DYADIC_RATIONAL, 16, REL_EQUAL, 16, REL_EQUAL, 16);
+    test_game_invalid(new nogo_1xn("X.X.X.O"), BOUND_SCALE_UP_STAR, 1000);
+    test_game_invalid(new nogo_1xn("X.X.X.O"), BOUND_SCALE_UP, 1000);
+    test_game(new nogo_1xn("X.X.X.O"), BOUND_SCALE_DYADIC_RATIONAL, 16, REL_EQUAL, 16, REL_EQUAL, 16);
 }
 
 void test_simple_games()
 {
-    test_game(new up_star(5, true), GAME_SCALE_UP_STAR, 5, REL_EQUAL, 5, REL_EQUAL); 
+    test_game(new up_star(5, true), BOUND_SCALE_UP_STAR, 5, REL_EQUAL, 5, REL_EQUAL); 
 
-    test_game(new up_star(5, false), GAME_SCALE_UP_STAR, 3, REL_LESS, 7, REL_GREATER);
+    test_game(new up_star(5, false), BOUND_SCALE_UP_STAR, 3, REL_LESS, 7, REL_GREATER);
 
-    test_game_invalid(new integer_game(10), GAME_SCALE_DYADIC_RATIONAL, 8);
+    test_game_invalid(new integer_game(10), BOUND_SCALE_DYADIC_RATIONAL, 8);
 
 }
 

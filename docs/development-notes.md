@@ -75,7 +75,7 @@ and is stored in the move stack.
 # Bounds
 `bounds.h` and `bounds.cpp` define functions and types used for finding lower and upper bounds of games.
 
-- The `game_scale` enum represents a scale of games on which bounds are found.
+- The `bound_scale` enum represents a scale of games on which bounds are found.
 - `bound_t` is a signed integral type representing an index along a game scale.
 - The functions `get_scale_game()` and `get_inverse_scale_game()` return a new `game` object for a given scale and index along the scale.
 - The `relation` enum denotes how two games are related (i.e. less than, equal to, etc).
