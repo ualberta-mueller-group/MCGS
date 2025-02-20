@@ -48,10 +48,6 @@ bool is_int(const string& str)
 
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known, bool is_ge)
 {
-    // must resolve to a relation, can't be unknown
-
-    assert(le_known || ge_known);
-
     if (le_known && ge_known)
     {
         if (!is_le && !is_ge) // 0 0
@@ -68,16 +64,14 @@ relation relation_from_search_results(bool le_known, bool is_le, bool ge_known, 
 
     if (le_known && is_le)
     {
-        assert(!ge_known);
         return REL_LESS_OR_EQUAL;
     }
 
     if (ge_known && is_ge)
     {
-        assert(!le_known);
         return REL_GREATER_OR_EQUAL;
     }
 
-    assert(false);
+    return REL_UNKNOWN;
 }
 

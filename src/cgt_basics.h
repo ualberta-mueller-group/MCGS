@@ -38,6 +38,7 @@ enum relation
     REL_LESS,
     REL_GREATER_OR_EQUAL,
     REL_GREATER,
+    REL_UNKNOWN,
 };
 
 //---------------------------------------------------------------------------

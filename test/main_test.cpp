@@ -27,6 +27,7 @@
 #include "scale_test.h"
 #include "game_bounds_test.h"
 #include "find_bounds_test.h"
+#include "utilities_test.h"
 
 using std::cout, std::endl, std::string;
 
@@ -87,6 +88,7 @@ int main(int argc, const char** argv)
     cgt_switch_test_all();
     cgt_up_star_test_all();
 
+    utilities_test_all();
 
     split_test_all();
 

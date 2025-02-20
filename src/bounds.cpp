@@ -1,4 +1,5 @@
 #include "bounds.h"
+#include "cgt_basics.h"
 #include "cgt_up_star.h"
 #include "cgt_dyadic_rational.h"
 #include "clobber_1xn.h"
@@ -574,7 +575,10 @@ relation bounds_finder::_get_step_comparison(sumgame& sum, game* inverse_scale_g
         *solve_count = (int) le_known + (int) ge_known;
     }
 
-    return relation_from_search_results(le_known, is_le, ge_known, is_ge);
+    relation rel = relation_from_search_results(le_known, is_le, ge_known, is_ge);
+
+    assert(rel != REL_UNKNOWN);
+    return rel;
 }
 
 bool bounds_finder::_g_less_or_equal_s(sumgame& sum, game* inverse_scale_game)
