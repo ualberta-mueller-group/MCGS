@@ -110,4 +110,4 @@ std::vector<game_bounds*> find_bounds(sumgame& sum, const std::vector<bounds_opt
 std::vector<game_bounds*> find_bounds(std::vector<game*>& games, const std::vector<bounds_options>& options);
 std::vector<game_bounds*> find_bounds(game* game, const std::vector<bounds_options>& options);
 
-void test_bounds2();
+void test_bounds();
