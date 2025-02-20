@@ -74,6 +74,7 @@ The following sections are for programmers who wish to add functionality to MCGS
 The code is organized in a mostly "flat" way; most source code files are in the `./src` directory. The `main.cpp` file is in `./src/main` and all unit tests are in `./test`. In the following sections, all files mentioned by name are assumed to be in `./src` unless specified otherwise.
 
 For more information about ongoing development, see [development-notes.md](docs/development-notes.md).
+When contributing to this project, follow the style guide: [style.md](docs/style.md).
 
 ### MCGS data types
 #### game (game.h)

@@ -1,0 +1,69 @@
+Checks: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers'
+WarningsAsErrors: 'readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers'
+HeaderFilterRegex: .h
+SystemHeaders: false
+CheckOptions:
+
+
+  - { key: modernize-use-override.IgnoreDestructors, value: true }
+  - { key: modernize-use-override.AllowOverrideAndFinal, value: true }
+
+  - { key: readability-identifier-naming.PrivateMemberPrefix, value: _ }
+  - { key: readability-identifier-naming.PrivateMethodPrefix, value: _ }
+  - { key: readability-identifier-naming.ProtectedMemberPrefix, value: _ }
+  - { key: readability-identifier-naming.ProtectedMethodPrefix, value: _ }
+  - { key: readability-identifier-naming.LocalConstantIgnoredRegexp, value: '([^_][a-z_0-9]*|[^_][A-Z_0-9]*)' }
+  - { key: readability-identifier-naming.ClassCase, value: lower_case }
+  - { key: readability-identifier-naming.EnumCase, value: lower_case }
+  - { key: readability-identifier-naming.FunctionCase, value: lower_case }
+  - { key: readability-identifier-naming.InlineNamespaceCase, value: lower_case }
+  - { key: readability-identifier-naming.LocalConstantCase, value: lower_case }
+  - { key: readability-identifier-naming.MemberCase, value: lower_case }
+  - { key: readability-identifier-naming.MethodCase, value: lower_case }
+
+  - { key: readability-identifier-naming.PublicMethodCase, value: lower_case }
+  - { key: readability-identifier-naming.ProtectedMethodCase, value: lower_case }
+  - { key: readability-identifier-naming.PrivateMethodCase, value: lower_case }
+
+
+  - { key: readability-identifier-naming.PublicMemberCase, value: lower_case }
+  - { key: readability-identifier-naming.ProtectedMemberCase, value: lower_case }
+  - { key: readability-identifier-naming.PrivateMemberCase, value: lower_case }
+
+  - { key: readability-identifier-naming.NamespaceCase, value: lower_case }
+  - { key: readability-identifier-naming.ParameterCase, value: lower_case }
+  - { key: readability-identifier-naming.StructCase, value: lower_case }
+  - { key: readability-identifier-naming.TypeAliasCase, value: lower_case }
+  - { key: readability-identifier-naming.TypedefCase, value: lower_case }
+  - { key: readability-identifier-naming.UnionCase, value: lower_case }
+  - { key: readability-identifier-naming.VariableCase, value: lower_case }
+
+
+#  - { key: readability-identifier-naming.ConstexprVariableCase, value: lower_case }
+#  - { key: readability-identifier-naming.GlobalVariableCase, value: lower_case }
+#  - { key: readability-identifier-naming.LocalVariableCase, value: lower_case }
+#  - { key: readability-identifier-naming.StaticVariableCase, value: lower_case }
+
+
+  - { key: readability-identifier-naming.ConstexprFunctionCase, value: lower_case }
+  - { key: readability-identifier-naming.ConstexprMethodCase, value: lower_case }
+  - { key: readability-identifier-naming.ConstexprVariableCase, value: UPPER_CASE }
+
+
+  - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
+
+
+
+  - { key: readability-identifier-naming.ClassMemberIgnoredRegexp, value: "_?[a-z_0-9]+" }
+
+
+  - { key: readability-identifier-naming.StaticVariableCase, value: lower_case }
+
+  - { key: readability-identifier-naming.ClassConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.ClassConstantIgnoredRegexp, value: "_?[A-Z_0-9]+" }
+
+  - { key: readability-identifier-naming.EnumConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.GlobalConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.MacroDefinitionCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.ScopedEnumConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.StaticConstantCase, value: UPPER_CASE }
