@@ -67,7 +67,7 @@ void test_is_int()
     }
 }
 
-void test_addition_wraps()
+void test_addition_will_wrap()
 {
     const int32_t& min = numeric_limits<int32_t>::min();
     const int32_t& max = numeric_limits<int32_t>::max();
@@ -94,8 +94,8 @@ void test_addition_wraps()
         const int32_t& x2 = get<1>(test);
         const bool& expected = get<2>(test);
 
-        assert(addition_wraps(x1, x2) == expected);
-        assert(addition_wraps(x2, x1) == expected);
+        assert(addition_will_wrap(x1, x2) == expected);
+        assert(addition_will_wrap(x2, x1) == expected);
     }
 }
 
@@ -139,6 +139,6 @@ void utilities_test_all()
 {
     test_split_string();
     test_is_int();
-    test_addition_wraps();
+    test_addition_will_wrap();
     test_relation_from_search_results();
 }

@@ -8,9 +8,7 @@
 #include <string>
 #include "cgt_basics.h"
 #include "cli_options.h"
-#include "clobber_1xn.h"
 #include "file_parser.h"
-#include "nogo_1xn.h"
 #include "sumgame.h"
 #include "cli_options.h"
 #include "autotests.h"
@@ -18,15 +16,10 @@
 
 #include "all_game_headers.h"
 
-#include "bounds.h"
-
 using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
 {
-    test_bounds();
-    return 0;
-
     cli_options opts = parse_cli_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
