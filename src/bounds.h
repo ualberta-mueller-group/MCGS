@@ -9,7 +9,6 @@
 
 typedef int32_t bound_t;
 
-
 enum bound_scale
 {
     BOUND_SCALE_UP_STAR,
@@ -36,28 +35,28 @@ public:
     void invalidate_both();
 
     inline bool lower_valid() const
-	{
+    {
         return _lower_valid;
-	}
+    }
 
     inline bool upper_valid() const
-	{
+    {
         return _upper_valid;
-	}
+    }
 
     inline bool both_valid() const
-	{
+    {
         return _lower_valid && _upper_valid;
-	}
+    }
 
     inline bound_t get_lower() const
-	{
+    {
         assert(lower_valid());
         return _lower;
-	}
+    }
 
     inline bound_t get_upper() const
-	{
+    {
         assert(upper_valid());
         return _upper;
     }

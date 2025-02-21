@@ -8,7 +8,9 @@ using namespace std;
 
 namespace {
 
-void test_game(game* g, bound_scale scale, bound_t low, relation rel_low, bound_t high, relation rel_high, bound_t radius = 8)
+void test_game(
+    game* g, bound_scale scale, bound_t low, relation rel_low, bound_t high, relation rel_high, bound_t radius = 8
+)
 {
     vector<bounds_options> opts_list;
     opts_list.push_back(bounds_options());
@@ -81,7 +83,7 @@ void test_nogo_1xn()
 
 void test_simple_games()
 {
-    test_game(new up_star(5, true), BOUND_SCALE_UP_STAR, 5, REL_EQUAL, 5, REL_EQUAL); 
+    test_game(new up_star(5, true), BOUND_SCALE_UP_STAR, 5, REL_EQUAL, 5, REL_EQUAL);
 
     test_game(new up_star(5, false), BOUND_SCALE_UP_STAR, 3, REL_LESS, 7, REL_GREATER);
 

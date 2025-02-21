@@ -74,4 +74,3 @@ void scale_test_all()
     test_scale_up();
     test_scale_dyadic_rational();
 }
-

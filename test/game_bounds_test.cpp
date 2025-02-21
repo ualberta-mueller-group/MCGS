@@ -37,7 +37,6 @@ void test_setters_and_getters()
 
     gb.set_upper(5, REL_GREATER_OR_EQUAL);
 
-
     assert(gb.lower_valid());
     assert(gb.upper_valid());
     assert(gb.both_valid());
@@ -85,7 +84,6 @@ void test_invalidate()
     gb.invalidate_both();
     assert(!gb.both_valid());
 }
-
 
 } // namespace
 
