@@ -17,7 +17,9 @@ Look into these more before doing the big cleanup...
 
 ## Clang Format
 `test/utilities_test.cpp` on the `bounds` branch looks awful (because of `AlignAfterOpenBracket`)
+
 `AlignTrailingComments` --> "Leave" (or "Never")
+
 `BraceWrapping.AfterNamespace` --> false
 
 # Code Style
