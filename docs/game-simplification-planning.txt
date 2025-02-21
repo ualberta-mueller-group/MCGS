@@ -1,0 +1,129 @@
+-- sprints (whether large or small):
+    -- game simplification
+        <-- current. Remaining ones below aren't ordered
+
+    -- implement more games (2D? graphs?)
+    -- code style cleanup
+    -- hashing, TT, DB, etc
+
+-- game simplification
+    <-- The order of these simplification steps matters
+
+    -- generate simple .test files to validate each step. Might need a simple script for this under `./utils`
+    -- combine up_stars
+        <-- use this as first prototype. Need some way to undo the simplification
+                may need to generalize sumgame's "undo stack"
+
+    -- combine nimbers (using nim addition)
+    -- combine integers and rationals (into one rational)
+
+    -- switches ("Lessons in Play" p.124)
+        -- allow both integers and rationals
+            <-- need to change game_token_parser to support this. Just use comma to separate each endpoint?
+        -- handle left <= right
+            <-- no longer a switch, according to the definition
+                use "The simplest number": ("Lessons in Play" p.110)
+                Should probably do exercise 5.26 (p.112) before committing to using 
+                    "Number conversion algorithm" described later in this file
+        -- normalization: change to `a + {x | -x}` (both `a` and `x` are numbers)
+
+    -- remove pairs of inverses
+        -- normalized switch is its own inverse (2nd player plays on the other copy)
+        -- have virtual function on game class to check trivial cases? i.e. clobber_1xn inverted boards
+
+    <-- move ordering within sum of normalized switches: only play on the largest one
+            need some way to do move ordering...
+
+    -- allow toggling optimizations on/off
+        <-- for testing purposes just do this with a CLI arg until the end of this sprint
+
+    <-- Only DYADIC rationals are necessary for games with finite game trees (Lessons in Play p.106)
+            i.e. don't need 1/3 (also note CGSuite doesn't define `.Options` for non-dyadic rationals)
+
+
+
+Number conversion algorithm to find Z for Z = {X | Y}, where X, Y, and Z are numbers and X <= Y
+    1: If X < 0 and Y > 0, Z := 0
+    2: If X == Y, Z := X + *
+        <-- why? look at definition of CGT addition
+
+    3: WLOG: if X < 0, find solution for {-Y | -X} instead and negate Z later
+        <-- either (0 <= X < Y) or (X < Y <= 0)
+
+    4: Assert (0 <= X < Y)
+        <-- after flipping/negating
+
+    5: individually simplify X and Y as much as possible (this may already have been done)
+    6: bring X and Y to the same denominator by multiplying one of them if denominators aren't the same
+        <-- this is always possible because the denominators are powers of 2
+        <-- If the numerators differ by 1, multiply everything by 2 again
+    7: Assert X and Y have same denominator D
+        X' := X % D
+        W := X - X'
+        Y' := Y - W
+        Then the game is Z = W + {X' | Y'} with 0 <= X' < 1 (shifted toward 0 by whole number W)
+            <-- this modulus is fast becase D is a power of 2: `% D` is just `& (D - 1)`, even when D == 1
+    8: Iterate j=1 to infinity:
+        j=1 : D/D
+        j=2 : (D/2)/D
+        j=3 : (D/4)/D
+        until X' < RHS < Y'
+        Then this is the lowest j for which X' < i/2^j < Y'
+
+    <-- PROOFREAD THIS BEFORE IMPLEMENTING
+        Is there a simpler way? Are there edge cases? I think this is correct...
+
+{5/4 | 9/4}
+            == 2
+{5/16 | 13/32}
+            == 3/8
+{1/128 | 127/128}
+            == 1/2
+{9/1024 | 5/128}
+            == 1/32
+{1033/1024 | 133/128}
+            == 33/32
+{-6209/1024 | -3085/512}
+            == -97/16
+{97/32 | 98/32}
+            == 195/64
+{97/32 | 99/32}
+            == 49/16
+{97/32 | 100/32}
+            == 49/16
+{97/32 | 161/32}
+            == 4
+{5 | 6}
+            == 11/2
+
+
+
+-- implement more games
+    -- 2D games/abstractions
+        -- 2D Clobber
+            -- find another 2D Clobber solver to generate tests from
+        -- 2D NoGo
+            -- use SBHSolver to generate test cases?
+    -- graph games/abstractions
+        -- look at several graph games: what operations should our graphs have?
+        -- col/snort (see "Lessons in Play" p.313)
+        -- "Lessons in Play" rulesets appendix: cutthroat/cutthroat stars, geography, hackenbush
+
+
+-- smaller tasks
+    -- does CGSuite OutcomeClass rely on computing canonical form?
+
+-- computational cost model
+    <-- useful for utilizing bounds?
+
+-- code style cleanup
+    -- tweak linter configs a bit more (see docs/style.md on linter-revert branch)
+    -- resolve linter errors
+    -- proofread style.md
+
+-- migrate to proper unit testing framework
+    -- use google test framework?
+    -- show code coverage and number of tests run
+    -- allow "death tests" to test for asserts
+
+
