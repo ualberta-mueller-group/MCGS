@@ -60,38 +60,32 @@ Number conversion algorithm to find Z for Z = {X | Y}, where X, Y, and Z are num
     5: individually simplify X and Y as much as possible (this may already have been done)
 
     6: bring X and Y to the same denominator by multiplying one of them if denominators aren't the same
-        <-- this is always easy because the denominators are powers of 2, so they will divide without remainders
+        <-- this is always easy because the denominators are powers of 2, so they will divide without remainders.
+                In practice this is done with bit shifts
         <-- If the numerators now differ by 1, increase denominators by factor of 2 again
 
     7: Assert X and Y have same denominator D
         <-- Now everything has the same denominator, so we mostly operate on numerators from here onward. Subscript `n` refers to numerator
         The game is now Z = {Xn/D | Yn/D}
 
-    8: Extract whole number W (not necessary, could maybe skip to simplify algorithm)
-        Xn' := Xn % D    <-- fractional part of X
-        Wn := Xn - Xn'   <-- integral part of X
-        Yn' := Yn - Wn   <-- Y - integral part of X
-        Then the game is Z = Wn/D + {Xn'/D | Yn'/D} == W + {X' | Y'}, with 0 <= X' < 1 (shifted toward 0 by whole number W)
-            <-- this modulus is fast becase D is a power of 2: `% D` is just `& (D - 1)`, even when D == 1
+    8: For future step:
+        delta := Yn - Xn
 
-    9: For future step:
-        delta := Yn' - Xn'
-
-    10: Iterate j=0, j=1, ..., until Un == 1 or a solution is found
+    9: Iterate j=0, j=1, ..., until Un == 1 or a solution is found
         j=0, Un := D        <-- (U == 1)
         j=1, Un := D/2      <-- (U == 1/2)
         j=2, Un := D/4      <-- (U == 1/4)
         j=3, Un := D/8      <-- (U == 1/8)
         ...
-        <-- Here U == Un/D == 1/2^j and we are checking if a multiple of U occurs between X' and Y' and if so, we figure out which multiple it is
+        <-- Here U == Un/D == 1/2^j and we are checking if a multiple of U occurs between X and Y and if so, we figure out which multiple it is
 
         at each iteration, do:
-            Xn'' := Xn' % Un
-            Yn'' := Xn'' + delta
-        Now if Xn'' < Un < Yn'' , do:
-            offset := Un - Xn''
-            Vn := Xn' + offset
-            Z := W + Vn/D
+            Xn' := Xn % Un
+            Yn' := Xn' + delta
+        Now if Xn' < Un < Yn' , do:
+            offset := Un - Xn'
+            Vn := Xn + offset
+            Z := Vn/D
 
          Now Z is the value `i/2^j` for which X < i/2^j < Y having the lowest `j`, and note that `i` is unique (assuming j >= 1; j == 0 is explained later).
             If `i` were not unique, there would be another X < i'/2^j < Y where i and i' differ by 1,
@@ -100,10 +94,10 @@ Number conversion algorithm to find Z for Z = {X | Y}, where X, Y, and Z are num
         Note that for j=0, `i` may not be unique, meaning there's more than 1 integer between X and Y, but this algorithm will find the smallest `i`, corresponding
             to the integer with smallest absolute value
 
-    11: If the game was negated in step 3, do Z := -Z
+    10: If the game was negated in step 3, do Z := -Z
 
 
-    <-- PROOFREAD THIS BEFORE IMPLEMENTING.
+    <-- Rough implementation complete.
         Is there a simpler way? Are there edge cases? I think this is correct...
 
 {5/4 | 9/4}

@@ -11,6 +11,10 @@ using namespace std;
 /*
     TODO asserts for over/underflow
         Need one for multiplication
+
+    For actual implementation, either use dyadic_rational directly, or a simple
+        fraction struct. Passing around 4 ints is more error prone than passing around
+        2 fractions.
 */
 
 void simplify(int& numerator, int& denominator)
@@ -27,28 +31,24 @@ void simplify(int& numerator, int& denominator)
 
 void make_compatible(int& xn, int& xd, int& yn, int& yd)
 {
+    assert(xd > 0);
+    assert(yd > 0);
     assert(is_power_of_2(xd));
     assert(is_power_of_2(yd));
     // powers of 2 have no remainder when divided
 
     if (xd != yd)
     {
-        const int dmin = min(xd, yd);
-        const int dmax = max(xd, yd);
-
-        int scale_factor = dmax / dmin;
-
-        assert(scale_factor * dmin == dmax);
-
-        if (xd < yd)
+        while (xd < yd)
         {
-            xn *= scale_factor;
-            xd *= scale_factor;
-        } else
+            xd <<= 1;
+            xn <<= 1;
+        }
+
+        while (yd < xd)
         {
-            assert(xd > yd);
-            yn *= scale_factor;
-            yd *= scale_factor;
+            yd <<= 1;
+            yn <<= 1;
         }
     }
 
@@ -108,19 +108,19 @@ string convert_number(int xn, int xd, int yn, int yd)
     {
         swapped = true;
 
-        xn *= -1;
-        yn *= -1;
+        xn = -xn;
+        yn = -yn;
         swap(xn, yn);
     }
 
     // TODO simple special case?
     if (xn + 1 == yn)
     {
-        xn *= 2;
-        xd *= 2;
+        xn <<= 1;
+        xd <<= 1;
 
-        yn *= 2;
-        yd *= 2;
+        yn <<= 1;
+        yd <<= 1;
     }
 
     assert(xd == yd);
@@ -152,7 +152,7 @@ string convert_number(int xn, int xd, int yn, int yd)
 
             if (swapped)
             {
-                zn *= -1;
+                zn = -zn;
             }
 
             stringstream str;
