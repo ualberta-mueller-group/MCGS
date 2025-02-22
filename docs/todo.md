@@ -32,7 +32,11 @@ Suggestions from talk given, or from MCGS users
 ## Next steps for Versions 1.X
 
 ### V1.1
-- Update todo.md with small/medium sized tasks discussed on Feb 13
+- Game simplification rules: see `development-notes.md`
+    - Currently in progrss on branch `game-simplification`
+        - On that branch (not `v1.1-develop`), see `docs/game-simplification-planning.txt`
+    - Update todo.md with small/medium sized tasks discussed on Feb 13
+        - (after this planning is complete?)
 
 - Add code linter
     - Resolve linter errors
@@ -41,7 +45,6 @@ Suggestions from talk given, or from MCGS users
 - Use a proper unit testing framework?
     - Easier to change this now rather than later
 
-- Game simplification rules: see `development-notes.md`
 
 ### V1.2
 - Database components and utilities as per development-notes.md, V1.2
