@@ -32,6 +32,8 @@ Suggestions from talk given, or from MCGS users
 ## Next steps for Versions 1.X
 
 ### V1.1
+- Update todo.md with small/medium sized tasks discussed on Feb 13
+
 - Add code linter
     - Resolve linter errors
     - Summarise style guide in a document in `docs`
