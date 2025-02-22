@@ -151,6 +151,8 @@ Number conversion algorithm to find Z for Z = {X | Y}, where X, Y, and Z are num
 
     10: If the game was negated in step 3, do Z := -Z
 
+    <-- All of *, /, and % operators can be implemented with bit operations because we're working with
+            powers of 2. `% m` is just `& (m - 1)` for some power of 2 `m` (for all `m` >= 1).
 
     <-- Rough implementation complete.
         Is there a simpler way? Are there edge cases? I think this is correct...
