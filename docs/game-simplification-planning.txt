@@ -28,6 +28,8 @@
             <-- how to actually handle this? Should switches be constructed like this, and just implement this case internally?
                 Should it be required to split the switch and not play on it directly in this case?
         -- normalization: change to `a + {x | -x}` (both `a` and `x` are numbers)
+        -- switches with the same gap add up to an integer:
+            4|2 + -1|-3 = 1
 
     -- (#5) remove pairs of inverses
         -- normalized switch is its own inverse (2nd player plays on the other copy)
