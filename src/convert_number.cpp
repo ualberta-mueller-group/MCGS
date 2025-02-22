@@ -90,7 +90,7 @@ string convert_number(int xn, int xd, int yn, int yd)
     if (xn < 0 && yn > 0)
     {
         stringstream str;
-        str << "FOUND: 0 (x == y)";
+        str << "FOUND: 0 (x < 0, y > 0)";
         return str.str();
     }
 
