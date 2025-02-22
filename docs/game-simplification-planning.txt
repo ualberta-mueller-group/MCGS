@@ -146,8 +146,8 @@ Number conversion algorithm to find Z for Z = {X | Y}, where X, Y, and Z are num
             If `i` were not unique, there would be another X < i'/2^j < Y where i and i' differ by 1,
             then one of i and i' are divisible by 2, so this value would have been found for the previous j
 
-        Note that for j=0, `i` may not be unique, meaning there's more than 1 integer between X and Y, but this algorithm will find the smallest `i`, corresponding
-            to the integer with smallest absolute value
+        Note that for j=0, `i` may not be unique, meaning there's more than 1 integer between X and Y, but this algorithm will find the value corresponding
+            to the smallest `i`, which is the integer with smallest absolute value
 
     10: If the game was negated in step 3, do Z := -Z
 
