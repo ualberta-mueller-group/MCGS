@@ -9,6 +9,7 @@
 #include <chrono>
 #include <ctime>
 #include <limits>
+#include "obj_id.h"
 
 struct sumgame_move
 {
@@ -18,13 +19,18 @@ struct sumgame_move
     move _move;
 };
 
-struct play_record
+struct play_record: public i_obj_id // TODO move me to sumgame.cpp?
 {
     play_record(sumgame_move move) :
         did_split(false), move(move), new_games()
     { }
 
     inline void add_game(game* game) { new_games.push_back(game); }
+
+    obj_id_t get_obj_id() const override
+    {
+        return ::get_obj_id<play_record>();
+    }
 
     bool did_split;
     sumgame_move move;
@@ -74,7 +80,7 @@ public:
     bool solve_with_games(std::vector<game*>& gs) const;
     bool solve_with_games(game* g) const;
 
-    const play_record& last_play_record() const;
+    ///const play_record& last_play_record() const;
     int num_total_games() const;
     int num_active_games() const;
     const game* subgame_const(int i) const {return _subgames[i]; }
@@ -97,20 +103,23 @@ private:
     std::optional<solve_result> _solve_with_timeout();
 
     std::vector<game*> _subgames; // sumgame owns these subgames
-    std::vector<play_record> _play_record_stack;
+    ///std::vector<play_record> _play_record_stack;
+
+    multi_type_stack _undo_stack;
 };
 //---------------------------------------------------------------------------
 
 inline sumgame::sumgame(bw color) :
     alternating_move_game(color),
     _subgames(),
-    _play_record_stack()
+    _undo_stack()
+    ///_play_record_stack()
 { }
 
-inline const play_record& sumgame::last_play_record() const
-{
-    return _play_record_stack.back();
-}
+///inline const play_record& sumgame::last_play_record() const
+///{
+///    return _play_record_stack.back();
+///}
 
 inline int sumgame::num_total_games() const
 {

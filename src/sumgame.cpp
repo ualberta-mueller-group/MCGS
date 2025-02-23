@@ -2,6 +2,7 @@
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
 #include "sumgame.h"
+#include "obj_id.h"
 
 #include <chrono>
 #include <ctime>
@@ -139,7 +140,7 @@ sumgame_move sumgame_move_generator::gen_sum_move() const
 sumgame::~sumgame()
 {
 // todo delete subgames, or store in vector of std::unique_ptr
-    assert(_play_record_stack.empty());
+    ///assert(_play_record_stack.empty());
 }
 
 void sumgame::add(game* g)
@@ -302,6 +303,8 @@ optional<solve_result> sumgame::_solve_with_timeout()
         return solve_result::invalid();
     }
 
+    assert_restore_multi_type_stack ar_multi_stack(_undo_stack);
+
     if (PRINT_SUBGAMES)
     {
         cout << "solve sum ";
@@ -367,7 +370,7 @@ game* sumgame::_pop_game()
 
 void sumgame::play_sum(const sumgame_move& m, bw to_play)
 {
-    play_record record(m);
+    play_record* record = new play_record(m);
 
     const int subg = m._subgame_idx;
     const move mv = m._move;
@@ -379,7 +382,7 @@ void sumgame::play_sum(const sumgame_move& m, bw to_play)
 
     if (sr) // split changed the sum
     {
-        record.did_split = true;
+        record->did_split = true;
 
         // g is no longer part of the sum
         g->set_active(false);
@@ -387,30 +390,33 @@ void sumgame::play_sum(const sumgame_move& m, bw to_play)
         for (game* gp : *sr)
         {
             add(gp);
-            record.add_game(gp); // save these games in the record for debugging
+            record->add_game(gp); // save these games in the record for debugging
         }
     }
     
-    _play_record_stack.push_back(record);
+    ///_play_record_stack.push_back(record);
+    _undo_stack.push(record);
     alternating_move_game::play(mv);
 }
 
 void sumgame::undo_move()
 {
-    const play_record& record = last_play_record();
+    ///const play_record& record = last_play_record();
+    std::shared_ptr<play_record> record(_undo_stack.back<play_record>());
+    _undo_stack.pop();
 
-    const sumgame_move m = record.move;
+    const sumgame_move m = record->move;
     const int subg = m._subgame_idx;
     game* s = subgame(subg);
 
     // undo split (if necessary)
-    if (record.did_split)
+    if (record->did_split)
     {
         assert(!s->is_active()); // should have been deactivated on last split
 
         s->set_active(true);
 
-        for (auto it = record.new_games.rbegin(); it != record.new_games.rend(); it++)
+        for (auto it = record->new_games.rbegin(); it != record->new_games.rend(); it++)
         {
             game const* g = *it;
             assert(g == _subgames.back()); // we're deleting the same game
@@ -432,7 +438,7 @@ void sumgame::undo_move()
     assert(m._move == subm);
     s->undo_move();
     alternating_move_game::undo_move();
-    _play_record_stack.pop_back();
+    ///_play_record_stack.pop_back();
 }
 
 void sumgame::print(std::ostream& str) const
