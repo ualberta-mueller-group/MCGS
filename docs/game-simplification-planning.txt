@@ -44,6 +44,29 @@
     <-- Only DYADIC rationals are necessary for games with finite game trees (Lessons in Play p.106)
             i.e. don't need 1/3 (also note CGSuite doesn't define `.Options` for non-dyadic rationals)
 
+    -- Need to generalize "undo" stack of sumgame...
+        sumgame could keep vector<i_sumgame_undo*>
+        have a class `assert_restore_sumgame_stack` which pushes some value onto the stack. Have its destructor check that undo() was properly called
+
+        Generic `sumgame::undo<T>()` uses obj_id to check that we're undoing the right thing
+
+        Problem: some class implementing `void undo(sumgame& sum)` can't access sumgame's internals unless we keep declaring more friends, even if it implements
+            some interface that was declared a friend.
+
+            Most of the actions that will be done in sumgame probably need access to its internals; just have play_move(), simplify_sum() etc all be members of
+            sumgame. These functions should still create their own undo records (just simple structs) and push these onto the undo stack
+                
+
+        Types/functions of interest right now:
+
+            sumgame::play_sum()
+            sumgame::simplify_sum()
+
+            vector<shared_ptr<i_obj_id>> sumgame::undo_stack
+
+
+
+
     -- Need some type of runtime type information to do this
         <-- Ideally each class derived from `game` would have a unique const id accessible both as a public static field, and
             from a virtual function. But we can't use `virtual` and `static` together, so the solution is probably ugly in some way.
@@ -93,6 +116,7 @@
                 from every other game type, and equal to obj_id<T>() as expected.
 
                 Good because no template type inference to cause accidents, and still have both the virtual method, and an equivalent to const static field.
+
 
 
 
