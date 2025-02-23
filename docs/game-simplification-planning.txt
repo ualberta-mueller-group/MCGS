@@ -63,9 +63,25 @@
             sumgame::simplify_sum()
 
             vector<shared_ptr<i_obj_id>> sumgame::undo_stack
+        
+        IMPORTANT: multi_type_stack usage seems to slow the program down measurably. Should make a .test file with a few longer running cases to figure out why.
+            I think DNDEBUG isn't fully removing all asserts (i.e. assert_restore_multi_type_stack).
 
+            -- cache latency from storing undo records as pointers
+            -- having more assertion code
+            -- missing `inline` specifiers
+            -- something about obj_id usage (more likely than I think?)
+                -- cache latency of the type's obj_id_t
+                -- vtable lookup to retrieve id
 
+            Worst case solution:
+                Have sumgame store a separate vector for each undo record type (i.e. vector<play_record> instead of vector<play_record*>). Also store a
+                    vector<obj_id_t> which knows the sequence of undo record types that were pushed. Maybe encapsulate this all in a `sumgame_undo_stack` class.
+                    Each undo() function will query the stack with a template function back<T>() which still checks the type.
 
+                    Or easier/better: have vector<void*> instead of vector<obj_id_t>, to ensure both type correctness AND that the correct object was popped.
+
+                    With some clever templates, this could be a multi_type_stack<Ts...> which owns its types, but this isn't worth doing right now.
 
     -- Need some type of runtime type information to do this
         <-- Ideally each class derived from `game` would have a unique const id accessible both as a public static field, and
