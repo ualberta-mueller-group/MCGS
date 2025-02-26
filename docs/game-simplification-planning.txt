@@ -5,8 +5,9 @@ current tasks:
     <-- just implement these before doing any optimization. There's nothing to
             optimize yet so it's a waste of time
     xx simple input files, MCGS CLI flag for optimization
-    -- up_star
-    -- nimbers
+    xx up_star
+    xx nimbers
+    -- clean up the simplify() function
     -- integers and rationals
     -- switch game generalization
         -- rational endpoints
@@ -31,6 +32,7 @@ current tasks:
     -- for RTTI
     -- for switch game changes
     -- for simplification rules
+    -- nimber::nim_sum (vec variant)
 
 As we add functionality to sumgame::solve functions, undoing steps may become messy
     and make code less readable. Possible solution: put some object on the call stack at the start

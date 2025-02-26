@@ -16,7 +16,6 @@ outfile_name = sys.argv[1]
 
 outfile = open(outfile_name, "w")
 
-outfile.write("{version 1.0}\n[up_star]\n")
 
 
 def bool_to_star(star):
@@ -25,7 +24,11 @@ def bool_to_star(star):
     return ""
 
 
+#outfile.write("{version 1.0}\n[up_star]\n")
+outfile.write("{version 1.0}\n[nimber]\n")
+
 for i in range(CASE_COUNT):
+    """
     # generate random up_star
     case_ups = 0
     case_star = False
@@ -39,6 +42,15 @@ for i in range(CASE_COUNT):
         outfile.write(f"\t({local_ups} {bool_to_star(local_star)})\n")
 
     outfile.write(f"/{case_ups} {bool_to_star(case_star)}\\\n")
+    """
+    # generate random nimbers
+    sum = 0
+    for i in range(CASE_LEN):
+        x = randint(0, 6)
+
+        sum ^= x
+        outfile.write(f"\t{x}\n")
+    outfile.write(f"/*{sum}\\\n")
     outfile.write("{B}\n")
 
 outfile.close()

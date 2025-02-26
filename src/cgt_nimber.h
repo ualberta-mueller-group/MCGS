@@ -20,6 +20,7 @@ public:
     game* inverse() const;
     void print(std::ostream& str) const;
     static int nim_sum(const std::vector<int>& values); // uses Nim formula
+    static int nim_sum(const std::vector<nimber*>& values); // uses Nim formula
 
 private:
     int _value;

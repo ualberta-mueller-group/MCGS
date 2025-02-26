@@ -2,6 +2,7 @@
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
 #include "sumgame.h"
+#include "cgt_nimber.h"
 #include "obj_id.h"
 
 #include <algorithm>
@@ -439,7 +440,7 @@ void sumgame::simplify()
     _simplify_record_stack.push_back(simplify_record());
     simplify_record& record = _simplify_record_stack.back();
 
-    // Sort all games by type
+    // Sort all games by type <-- this should be one function
     std::unordered_map<obj_id_t, std::vector<game*>> game_map;
 
     const int N = num_total_games();
@@ -457,7 +458,51 @@ void sumgame::simplify()
         vec.push_back(g);
     }
 
-    // Sum together up_stars
+    // Sum together nimbers
+    {
+        auto it = game_map.find(get_obj_id<nimber>());
+
+        if (it != game_map.end() && it->second.size() >= 1)
+        {
+            std::vector<game*>& game_vec = it->second;
+            std::vector<int> heap_vec;
+
+            for (game* g : game_vec)
+            {
+                assert(g->is_active() && g->get_obj_id() == get_obj_id<nimber>());
+                assert(dynamic_cast<nimber*>(g) != nullptr);
+
+                nimber* g2 = reinterpret_cast<nimber*>(g);
+                heap_vec.push_back(g2->value());
+
+                g2->set_active(false);
+                record.deactivated_games.push_back(g2);
+            }
+
+            game_vec.clear();
+
+            int sum = nimber::nim_sum(heap_vec);
+            assert(sum >= 0);
+
+            // if 0 do nothing
+            if (sum == 1)
+            {
+                up_star* new_game = new up_star(0, true);
+                game_map[get_obj_id<up_star>()].push_back(new_game);
+                _subgames.push_back(new_game);
+                record.added_games.push_back(new_game);
+            } else if (sum > 1)
+            {
+                nimber* new_game = new nimber(sum);
+                game_map[get_obj_id<nimber>()].push_back(new_game);
+                _subgames.push_back(new_game);
+                record.added_games.push_back(new_game);
+            }
+        }
+
+    }
+
+    // Sum together up_stars <-- this should be one function (and should be less verbose)
     {
         auto it = game_map.find(get_obj_id<up_star>());
 
