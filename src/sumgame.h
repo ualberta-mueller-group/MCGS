@@ -6,41 +6,36 @@
 #include "alternating_move_game.h"
 #include "cgt_move.h"
 #include "game.h"
-#include <chrono>
 #include <ctime>
-#include <limits>
-#include "obj_id.h"
 
+//////////////////////////////////////// forward declarations
+class sumgame_move_generator;
+
+//////////////////////////////////////// sumgame_move
 struct sumgame_move
 {
-    sumgame_move(int subg, move m) : _subgame_idx(subg), _move(m) { }
+    sumgame_move(int subg, move m) : subgame_idx(subg), m(m) { }
 
-    int _subgame_idx;
-    move _move;
+    int subgame_idx;
+    move m;
 };
 
-struct play_record: public i_obj_id // TODO move me to sumgame.cpp?
+//////////////////////////////////////// play_record
+struct play_record
 {
-    play_record(sumgame_move move) :
-        did_split(false), move(move), new_games()
+    play_record(sumgame_move sm) :
+        did_split(false), sm(sm), new_games()
     { }
 
     inline void add_game(game* game) { new_games.push_back(game); }
 
-    obj_id_t get_obj_id() const override
-    {
-        return ::get_obj_id<play_record>();
-    }
-
     bool did_split;
-    sumgame_move move;
+    sumgame_move sm;
     std::vector<game const*> new_games; // doesn't own games, just stores them for debugging
 
 };
 
-class sumgame_move_generator;
-struct play_record;
-
+//////////////////////////////////////// solve_result
 struct solve_result
 {
     bool win;
@@ -57,18 +52,24 @@ struct solve_result
     }
 };
 
+//////////////////////////////////////// sumgame
 class sumgame : public alternating_move_game
 {
 public:
     sumgame(bw color);
     ~sumgame();
     
+    // TODO should these be public?
     void play_sum(const sumgame_move& m, bw to_play);
-    void undo_move();
+    void undo_move() override;
+    void simplify();
+    void undo_simplify();
+
+
     void add(game* g);
     void add(std::vector<game*>& gs);
 
-    bool solve() const;
+    bool solve() const override;
 
     /*
         Timeout is in milliseconds. 0 means never timeout.
@@ -80,7 +81,6 @@ public:
     bool solve_with_games(std::vector<game*>& gs) const;
     bool solve_with_games(game* g) const;
 
-    ///const play_record& last_play_record() const;
     int num_total_games() const;
     int num_active_games() const;
     const game* subgame_const(int i) const {return _subgames[i]; }
@@ -89,37 +89,20 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
-    bool over_time() const;
+    bool _over_time() const;
     game* _pop_game();
-
-
-    /*
-        mutable makes sense here? 
-
-        these values are used by _solve_with_timeout() and are here so they don't
-            need to be passed as arguments to the function every time it's called
-    */
-    mutable bool should_stop;
     std::optional<solve_result> _solve_with_timeout();
 
+    mutable bool _should_stop;
     std::vector<game*> _subgames; // sumgame owns these subgames
-    ///std::vector<play_record> _play_record_stack;
-
-    multi_type_stack _undo_stack;
+    std::vector<play_record> _play_record_stack;
 };
 //---------------------------------------------------------------------------
 
 inline sumgame::sumgame(bw color) :
     alternating_move_game(color),
-    _subgames(),
-    _undo_stack()
-    ///_play_record_stack()
+    _subgames()
 { }
-
-///inline const play_record& sumgame::last_play_record() const
-///{
-///    return _play_record_stack.back();
-///}
 
 inline int sumgame::num_total_games() const
 {

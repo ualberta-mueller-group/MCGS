@@ -1,25 +1,30 @@
 
 current tasks:
--- sumgame undo stack optimization
-    <-- It might be best for this to not be heap allocated.
-    -- extend test framework to show sums of times
-    -- make input file for for problematic cases
-    -- compare implementations: vector<T>, vector<T*> (dynamic cast), vector<T*> (obj_id)
 
 -- implement game simplification rules
-    -- simple input files, MCGS CLI flag for optimization
+    <-- just implement these before doing any optimization. There's nothing to
+            optimize yet so it's a waste of time
+    xx simple input files, MCGS CLI flag for optimization
     -- up_star
     -- nimbers
     -- integers and rationals
     -- switch game generalization
         -- rational endpoints
         -- left <= right
-            <-------------------------- try to be done up to here today...
     -- switch game
         -- actual switch case (left > right)
             <-- normalization
         -- other case (left <= right) use "simplest number" algorithm
     -- proper way to toggle optimizations
+
+-- sumgame undo stack optimization
+    <-- It might be best for this to not be heap allocated.
+    -> extend test framework to show sums of times
+        <-- do this later, it will take too long to get correct right now
+    -- make input file for for problematic cases
+    -- compare implementations: vector<T>, vector<T*> (dynamic cast), vector<T*> (obj_id)
+    -- clean up sumgame interface
+        <-- some functions should maybe not be public. Should simplification use public interface?
 
 -- unit tests
     -- for optimization toggling
@@ -27,10 +32,15 @@ current tasks:
     -- for switch game changes
     -- for simplification rules
 
+As we add functionality to sumgame::solve functions, undoing steps may become messy
+    and make code less readable. Possible solution: put some object on the call stack at the start
+    of the function, whose deconstructor will undo everything that was done
+
+Some optimizations (but not all), will also apply to alternating_move_game which has its own solve() function.
+    How do we handle this? Currently only sumgame is used by ./MCGS; I'm not sure where alternating_move_game will
+    be used, if ever
+
 ============================================================
-
-
-
 
 -- sprints (whether large or small):
     -- game simplification

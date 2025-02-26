@@ -8,6 +8,7 @@
 
 using namespace std;
 
+bool do_simplification = true;
 
 ////////////////////////////////////////////////// cli_options
 
@@ -74,6 +75,7 @@ milliseconds. Timeout of 0 means tests never time out. Default is " + to_string(
     print_flag("--dry-run", "Skip running games. Has no effect when using \"--run-tests\". Instead, set the test timeout low (i.e. 1).");
 
     print_flag("--parser-debug", "Print file_parser debug info.");
+    print_flag("--no-simplify", "Don't do simplification in sumgame::solve functions");
 }
 
 cli_options parse_cli_args(int _argc, const char** argv, bool silent)
@@ -215,6 +217,13 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 
             opts.test_timeout = atoi(arg_next.c_str());
 
+            continue;
+        }
+
+        if (arg == "--no-simplify")
+        {
+            arg_idx++;
+            do_simplification = false;
             continue;
         }
         

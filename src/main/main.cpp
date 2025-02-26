@@ -92,12 +92,12 @@ int main(int argc, char** argv)
                 }
                 cout << endl;
 
-                if (gc.comments.size() > 0)
-                {
-                    cout << "\"" << gc.comments << "\"" << endl;
-                }
-
             }
+            if (gc.comments.size() > 0)
+            {
+                cout << "\"" << gc.comments << "\"" << endl;
+            }
+
             gc.cleanup_games();
         }
     }

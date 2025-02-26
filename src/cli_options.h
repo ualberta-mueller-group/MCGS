@@ -3,6 +3,8 @@
 #include "file_parser.h"
 #include <memory>
 
+extern bool do_simplification;
+
 /*
     Variables resulting from command line options. "parser" may be nullptr
 */
