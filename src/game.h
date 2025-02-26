@@ -10,6 +10,8 @@
 #include <optional>
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "obj_id.h"
+
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
@@ -21,7 +23,7 @@ class game;
 typedef std::optional<std::vector<game*>> split_result;
 
 
-class game
+class game: public i_obj_id
 {
 public:
     game();

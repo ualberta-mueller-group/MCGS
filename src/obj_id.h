@@ -1,9 +1,12 @@
 #pragma once
 
 #include <type_traits>
+#include <typeinfo>
+#include <typeindex>
 #include <memory>
 #include <vector>
 #include <cassert>
+#include <unordered_map>
 
 /*
        TODO think more about naming...
@@ -13,8 +16,9 @@
    obj_id
 */
 
-typedef int obj_id_t;
+typedef unsigned int obj_id_t;
 
+/*
 class __obj_id_impl // NOLINT(readability-identifier-naming)
 {
 private:
@@ -37,8 +41,35 @@ class i_obj_id
 public:
     virtual obj_id_t get_obj_id() const = 0;
 };
+*/
+
+
+// TODO clean this up and optimize later, just get it working for now
+extern std::unordered_map<std::type_index, obj_id_t> __obj_id_map; // NOLINT
+extern obj_id_t __next_id; // NOLINT
+obj_id_t __get_obj_id(const std::type_index& ti); // NOLINT
+
+class i_obj_id
+{
+public:
+    virtual obj_id_t get_obj_id() const final
+    {
+        const std::type_index& idx = std::type_index(typeid(*this));
+        return __get_obj_id(idx);
+
+    }
+};
+
+template <class T>
+obj_id_t get_obj_id()
+{
+    static_assert(std::is_base_of_v<i_obj_id, T>);
+    return __get_obj_id(std::type_index(typeid(T)));
+}
 
 ////////////////////////////////////////
+
+/*
 class multi_type_stack
 {
 public:
@@ -95,3 +126,4 @@ private:
     const size_t _size;
     const i_obj_id* _back;
 };
+*/

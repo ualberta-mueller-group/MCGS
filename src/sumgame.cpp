@@ -4,6 +4,7 @@
 #include "sumgame.h"
 #include "obj_id.h"
 
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <iostream>
@@ -14,6 +15,9 @@
 #include <future>
 
 #include "cli_options.h"
+#include <unordered_map>
+
+#include "cgt_up_star.h"
 
 using std::cout;
 using std::endl;
@@ -282,6 +286,8 @@ optional<solve_result> sumgame::_solve_with_timeout()
     }
 
     simplify();
+    undo_simplify();
+    return solve_result(false);
 
     const bw toplay = to_play();
 
@@ -415,12 +421,82 @@ void sumgame::undo_move()
     _play_record_stack.pop_back();
 }
 
+/*
+    TODO this definitely needs to be split into multiple smaller functions...
+
+    there may be a tradeoff between readability and performance
+*/
 void sumgame::simplify()
 {
     if (!do_simplification)
     {
         return;
     }
+
+    cout << "Before simplify:" << endl;
+    cout << *this << endl;
+
+    _simplify_record_stack.push_back(simplify_record());
+    simplify_record& record = _simplify_record_stack.back();
+
+    // Sort all games by type
+    std::unordered_map<obj_id_t, std::vector<game*>> game_map;
+
+    const int N = num_total_games();
+    for (int i = 0; i < N; i++)
+    {
+        game* g = subgame(i);
+
+        if (!g->is_active())
+        {
+            continue;
+        }
+
+        const obj_id_t obj_id = g->get_obj_id();
+        std::vector<game*>& vec = game_map[obj_id];
+        vec.push_back(g);
+    }
+
+    // Sum together up_stars
+    {
+        auto it = game_map.find(get_obj_id<up_star>());
+
+        if (it != game_map.end() && it->second.size() >= 2)
+        {
+            std::vector<game*>& up_star_vec = it->second;
+
+            int ups = 0;
+            bool star = false;
+
+            for (game* g : up_star_vec)
+            {
+                assert(g->is_active() && g->get_obj_id() == get_obj_id<up_star>());
+                assert(dynamic_cast<up_star*>(g) != nullptr);
+
+                up_star* g2 = reinterpret_cast<up_star*>(g);
+
+                ups += g2->num_ups();
+                star ^= g2->has_star();
+
+                g2->set_active(false);
+                record.deactivated_games.push_back(g2);
+            }
+
+            up_star_vec.clear();
+
+            if (ups != 0 || star)
+            {
+                game* new_game = new up_star(ups, star);
+
+                record.added_games.push_back(new_game);
+                up_star_vec.push_back(new_game);
+                add(new_game);
+                cout << "ADDED " << *new_game << endl;
+            }
+
+        }
+    }
+
 
 }
 
@@ -430,6 +506,34 @@ void sumgame::undo_simplify()
     {
         return;
     }
+
+    cout << "After simplify:" << endl;
+    cout << *this << endl;
+
+    simplify_record& record = _simplify_record_stack.back();
+
+    for (auto it = record.added_games.rbegin(); it != record.added_games.rend(); it++)
+    {
+        game* g = *it;
+
+        assert(!_subgames.empty());
+        assert(g == _subgames.back());
+        assert(g->is_active());
+
+        delete g;
+        _subgames.pop_back();
+    }
+
+    for (game* g : record.deactivated_games)
+    {
+        assert(std::find(_subgames.begin(), _subgames.end(), g) != _subgames.end());
+        assert(!g->is_active());
+
+        g->set_active(true);
+    }
+
+    _simplify_record_stack.pop_back();
+
 
 }
 

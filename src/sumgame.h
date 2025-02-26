@@ -35,6 +35,13 @@ struct play_record
 
 };
 
+//////////////////////////////////////// simplify_record
+struct simplify_record
+{
+    std::vector<game*> added_games;
+    std::vector<game*> deactivated_games;
+};
+
 //////////////////////////////////////// solve_result
 struct solve_result
 {
@@ -96,6 +103,7 @@ private:
     mutable bool _should_stop;
     std::vector<game*> _subgames; // sumgame owns these subgames
     std::vector<play_record> _play_record_stack;
+    std::vector<simplify_record> _simplify_record_stack;
 };
 //---------------------------------------------------------------------------
 

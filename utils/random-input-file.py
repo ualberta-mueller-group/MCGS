@@ -39,6 +39,6 @@ for i in range(CASE_COUNT):
         outfile.write(f"\t({local_ups} {bool_to_star(local_star)})\n")
 
     outfile.write(f"/{case_ups} {bool_to_star(case_star)}\\\n")
-    outfile.write("{B, W}\n")
+    outfile.write("{B}\n")
 
 outfile.close()
