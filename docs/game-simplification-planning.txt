@@ -1,3 +1,37 @@
+
+current tasks:
+-- sumgame undo stack optimization
+    <-- It might be best for this to not be heap allocated.
+    -- extend test framework to show sums of times
+    -- make input file for for problematic cases
+    -- compare implementations: vector<T>, vector<T*> (dynamic cast), vector<T*> (obj_id)
+
+-- implement game simplification rules
+    -- simple input files, MCGS CLI flag for optimization
+    -- up_star
+    -- nimbers
+    -- integers and rationals
+    -- switch game generalization
+        -- rational endpoints
+        -- left <= right
+            <-------------------------- try to be done up to here today...
+    -- switch game
+        -- actual switch case (left > right)
+            <-- normalization
+        -- other case (left <= right) use "simplest number" algorithm
+    -- proper way to toggle optimizations
+
+-- unit tests
+    -- for optimization toggling
+    -- for RTTI
+    -- for switch game changes
+    -- for simplification rules
+
+============================================================
+
+
+
+
 -- sprints (whether large or small):
     -- game simplification
         <-- current. Remaining ones below aren't strictly ordered
@@ -5,6 +39,7 @@
     -- implement more games (2D? graphs?)
     -- code style cleanup
     -- hashing, TT, DB, etc
+
 
 -- game simplification
     <-- The order of these simplification steps matters. Ordering given at start of each list item below
