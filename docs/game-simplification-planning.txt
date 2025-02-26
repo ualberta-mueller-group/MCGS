@@ -32,6 +32,12 @@ current tasks:
                 map, game*, record
 
             Just make a reasonable public interface and hide the ugliness in a .cpp file?
+        <-- Rewrite using lambdas, and just make it simple. Write each step as an isolated block.
+            Have an enum for different records: SUMGAME_RECORD_SIMPLIFY_ALL, SUMGAME_RECORD_SIMPLIFY_ONE.
+            Share the undo_simplify() for all the simplification functions?
+
+            Just make this work, it will not be perfect. If testing each step is important, use a bit vector.
+            Rename to "simplify_cgt_games()" so the size of the bit vector won't be a problem
 
             
     -- integers and rationals
