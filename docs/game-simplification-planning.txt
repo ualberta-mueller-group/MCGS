@@ -8,6 +8,32 @@ current tasks:
     xx up_star
     xx nimbers
     -- clean up the simplify() function
+        <-- This is very difficult to design properly. Each simplification step should be testable on its own,
+            but also shares a map<type, vec<game*>> with each other step. There is no good solution
+
+            Two operations: deactivate game, add game
+            Assuming: simplify_record& record, game* g
+
+            Deactivate game* g:
+                g->set_active(false);
+                record.deactivated_games.push_back(g);
+
+            Add game* g:
+                game* g = new ...;
+                add(g);
+                record.added_games.push_back(g);
+
+            Ideally there should be just an add_game() and deactivate_game() function. But 
+            `sumgame` owns `simplify_record`, and the `map` isn't really owned by anyone
+
+            _add_game();
+                map, game*, record
+            _deactivate_game();
+                map, game*, record
+
+            Just make a reasonable public interface and hide the ugliness in a .cpp file?
+
+            
     -- integers and rationals
     -- switch game generalization
         -- rational endpoints
