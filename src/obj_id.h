@@ -60,12 +60,15 @@ public:
     }
 };
 
+// TODO make this case not a function (this makes code ugly)
 template <class T>
 obj_id_t get_obj_id()
 {
     static_assert(std::is_base_of_v<i_obj_id, T>);
     return __get_obj_id(std::type_index(typeid(T)));
 }
+
+
 
 ////////////////////////////////////////
 
