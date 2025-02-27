@@ -59,6 +59,10 @@ current tasks:
             or my fraction code should be changed to use dyadic_rationals somehow. Maybe it's best to leave dyadic_rational
             as is.
 
+            Shouldn't throw; just skip this step. I can freely mutate the fractions even in a fail state. Only deactivate games at the very end
+            once the result is known and no overflow occurred.
+            Should we do partial simplification in this case?
+
     -- switch game generalization
         -- rational endpoints
         -- left <= right
