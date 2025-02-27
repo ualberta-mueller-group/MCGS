@@ -7,9 +7,21 @@
 #include "cgt_move.h"
 #include "game.h"
 #include <ctime>
+#include "sumgame_change_record.h"
 
 //////////////////////////////////////// forward declarations
 class sumgame_move_generator;
+
+namespace sumgame_impl {
+    class change_record;
+};
+
+enum sumgame_undo_enum
+{
+    SUMGAME_UNDO_STACK_FRAME,
+    SUMGAME_UNDO_PLAY,
+    SUMGAME_UNDO_SIMPLIFY_BASIC,
+};
 
 //////////////////////////////////////// sumgame_move
 struct sumgame_move
@@ -33,13 +45,6 @@ struct play_record
     sumgame_move sm;
     std::vector<game const*> new_games; // doesn't own games, just stores them for debugging
 
-};
-
-//////////////////////////////////////// simplify_record
-struct simplify_record
-{
-    std::vector<game*> added_games;
-    std::vector<game*> deactivated_games;
 };
 
 //////////////////////////////////////// solve_result
@@ -69,12 +74,13 @@ public:
     // TODO should these be public?
     void play_sum(const sumgame_move& m, bw to_play);
     void undo_move() override;
-    void simplify();
-    void undo_simplify();
+    void simplify_basic();
+    void undo_simplify_basic();
 
 
     void add(game* g);
     void add(std::vector<game*>& gs);
+    void pop(game* g);
 
     bool solve() const override;
 
@@ -96,14 +102,17 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
+
     bool _over_time() const;
     game* _pop_game();
     std::optional<solve_result> _solve_with_timeout();
 
     mutable bool _should_stop;
     std::vector<game*> _subgames; // sumgame owns these subgames
+
+    std::vector<sumgame_undo_enum> _undo_enum_stack;
     std::vector<play_record> _play_record_stack;
-    std::vector<simplify_record> _simplify_record_stack;
+    std::vector<sumgame_impl::change_record> _change_record_stack;
 };
 //---------------------------------------------------------------------------
 

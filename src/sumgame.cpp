@@ -23,6 +23,8 @@
 using std::cout;
 using std::endl;
 using std::optional;
+using sumgame_impl::change_record;
+
 
 
 //---------------------------------------------------------------------------
@@ -166,6 +168,13 @@ void sumgame::add(std::vector<game*>& gs)
     }
 }
 
+void sumgame::pop(game* g)
+{
+    assert(!_subgames.empty());
+    assert(_subgames.back() == g);
+    _subgames.pop_back();
+}
+
 const bool PRINT_SUBGAMES = false;
 
 // Solve combinatorial game - find winner
@@ -286,8 +295,8 @@ optional<solve_result> sumgame::_solve_with_timeout()
         print(cout);
     }
 
-    simplify();
-    undo_simplify();
+    simplify_basic();
+    undo_simplify_basic();
     return solve_result(false);
 
     const bw toplay = to_play();
@@ -321,18 +330,18 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
         if (_over_time())
         {
-            undo_simplify();
+            undo_simplify_basic();
             return solve_result::invalid();
         }
 
         if (result.win)
         {
-            undo_simplify();
+            undo_simplify_basic();
             return result;
         }
     }
 
-    undo_simplify();
+    undo_simplify_basic();
     return solve_result(false);
 }
 
@@ -427,7 +436,7 @@ void sumgame::undo_move()
 
     there may be a tradeoff between readability and performance
 */
-void sumgame::simplify()
+void sumgame::simplify_basic()
 {
     if (!do_simplification)
     {
@@ -437,115 +446,13 @@ void sumgame::simplify()
     cout << "Before simplify:" << endl;
     cout << *this << endl;
 
-    _simplify_record_stack.push_back(simplify_record());
-    simplify_record& record = _simplify_record_stack.back();
+    _change_record_stack.push_back(change_record());
+    change_record& record = _change_record_stack.back();
 
-    // Sort all games by type <-- this should be one function
-    std::unordered_map<obj_id_t, std::vector<game*>> game_map;
-
-    const int N = num_total_games();
-    for (int i = 0; i < N; i++)
-    {
-        game* g = subgame(i);
-
-        if (!g->is_active())
-        {
-            continue;
-        }
-
-        const obj_id_t obj_id = g->get_obj_id();
-        std::vector<game*>& vec = game_map[obj_id];
-        vec.push_back(g);
-    }
-
-    // Sum together nimbers
-    {
-        auto it = game_map.find(get_obj_id<nimber>());
-
-        if (it != game_map.end() && it->second.size() >= 1)
-        {
-            std::vector<game*>& game_vec = it->second;
-            std::vector<int> heap_vec;
-
-            for (game* g : game_vec)
-            {
-                assert(g->is_active() && g->get_obj_id() == get_obj_id<nimber>());
-                assert(dynamic_cast<nimber*>(g) != nullptr);
-
-                nimber* g2 = reinterpret_cast<nimber*>(g);
-                heap_vec.push_back(g2->value());
-
-                g2->set_active(false);
-                record.deactivated_games.push_back(g2);
-            }
-
-            game_vec.clear();
-
-            int sum = nimber::nim_sum(heap_vec);
-            assert(sum >= 0);
-
-            // if 0 do nothing
-            if (sum == 1)
-            {
-                up_star* new_game = new up_star(0, true);
-                game_map[get_obj_id<up_star>()].push_back(new_game);
-                _subgames.push_back(new_game);
-                record.added_games.push_back(new_game);
-            } else if (sum > 1)
-            {
-                nimber* new_game = new nimber(sum);
-                game_map[get_obj_id<nimber>()].push_back(new_game);
-                _subgames.push_back(new_game);
-                record.added_games.push_back(new_game);
-            }
-        }
-
-    }
-
-    // Sum together up_stars <-- this should be one function (and should be less verbose)
-    {
-        auto it = game_map.find(get_obj_id<up_star>());
-
-        if (it != game_map.end() && it->second.size() >= 2)
-        {
-            std::vector<game*>& up_star_vec = it->second;
-
-            int ups = 0;
-            bool star = false;
-
-            for (game* g : up_star_vec)
-            {
-                assert(g->is_active() && g->get_obj_id() == get_obj_id<up_star>());
-                assert(dynamic_cast<up_star*>(g) != nullptr);
-
-                up_star* g2 = reinterpret_cast<up_star*>(g);
-
-                ups += g2->num_ups();
-                star ^= g2->has_star();
-
-                g2->set_active(false);
-                record.deactivated_games.push_back(g2);
-            }
-
-            up_star_vec.clear();
-
-            if (ups != 0 || star)
-            {
-                game* new_game = new up_star(ups, star);
-
-                record.added_games.push_back(new_game);
-                up_star_vec.push_back(new_game);
-                add(new_game);
-                cout << "ADDED " << *new_game << endl;
-            }
-
-        }
-    }
-
-
+    record.simplify_basic(*this);
 }
 
-void sumgame::undo_simplify()
+void sumgame::undo_simplify_basic()
 {
     if (!do_simplification)
     {
@@ -555,31 +462,9 @@ void sumgame::undo_simplify()
     cout << "After simplify:" << endl;
     cout << *this << endl;
 
-    simplify_record& record = _simplify_record_stack.back();
-
-    for (auto it = record.added_games.rbegin(); it != record.added_games.rend(); it++)
-    {
-        game* g = *it;
-
-        assert(!_subgames.empty());
-        assert(g == _subgames.back());
-        assert(g->is_active());
-
-        delete g;
-        _subgames.pop_back();
-    }
-
-    for (game* g : record.deactivated_games)
-    {
-        assert(std::find(_subgames.begin(), _subgames.end(), g) != _subgames.end());
-        assert(!g->is_active());
-
-        g->set_active(true);
-    }
-
-    _simplify_record_stack.pop_back();
-
-
+    assert(!_change_record_stack.empty());
+    change_record& record = _change_record_stack.back();
+    record.undo_simplify_basic(*this);
 }
 
 void sumgame::print(std::ostream& str) const
