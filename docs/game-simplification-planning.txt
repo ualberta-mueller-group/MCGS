@@ -53,6 +53,8 @@ current tasks:
             and keeps the view synchronized so long as mutations only happen through the map view
 
     -- integers and rationals
+        -- change sumgame_map_view::add_game() to use a template to figure out the obj_id_t of the game based on the pointer
+
         <-- almost done, need a `fraction` class 
 
             Should pay attention to >> operator. It works differently for signed types. Fractions should be cleaned up
