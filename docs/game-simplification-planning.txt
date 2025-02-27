@@ -7,7 +7,7 @@ current tasks:
     xx simple input files, MCGS CLI flag for optimization
     xx up_star
     xx nimbers
-    -- clean up the simplify() function
+    xx clean up the simplify() function
         <-- This is very difficult to design properly. Each simplification step should be testable on its own,
             but also shares a map<type, vec<game*>> with each other step. There is no good solution
 
@@ -39,8 +39,26 @@ current tasks:
             Just make this work, it will not be perfect. If testing each step is important, use a bit vector.
             Rename to "simplify_cgt_games()" so the size of the bit vector won't be a problem
 
-            
+        <-- I have a solution to this which is OK:
+                namespace sumgame_impl
+                class sumgame_impl::change_record
+
+            These are visible to anyone using sumgame, but with a namespace I think it's OK.
+            sumgame then stores a stack of change_records, and calls these methods:
+                change_record::simplify_basic(sumgame& sum)
+                change_record::undo_simplify_basic(sumgame& sum)
+
+            In the .cpp file, a class sumgame_map_view is constructed with both sumgame& and change_record&
+            and sorts sumgame's games by type. This class mutates both the sumgame and change_record,
+            and keeps the view synchronized so long as mutations only happen through the map view
+
     -- integers and rationals
+        <-- almost done, need a `fraction` class 
+
+            Should pay attention to >> operator. It works differently for signed types. Fractions should be cleaned up
+            or my fraction code should be changed to use dyadic_rationals somehow. Maybe it's best to leave dyadic_rational
+            as is.
+
     -- switch game generalization
         -- rational endpoints
         -- left <= right

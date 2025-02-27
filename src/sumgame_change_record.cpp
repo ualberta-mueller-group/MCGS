@@ -1,11 +1,18 @@
 #include "sumgame_change_record.h"
+#include "cgt_dyadic_rational.h"
+#include "cgt_integer_game.h"
+#include "file_parser.h"
 #include "obj_id.h"
+#include <climits>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
 
 #include "cgt_nimber.h"
 #include "cgt_up_star.h"
+#include "utilities.h"
 
 using namespace std;
 
@@ -32,6 +39,7 @@ private:
 
 void simplify_basic_nimber(sumgame_map_view& map_view);
 void simplify_basic_up_star(sumgame_map_view& map_view);
+void simplify_basic_integers_rationals(sumgame_map_view& map_view);
 
 ////////////////////////////////////////
 sumgame_map_view::sumgame_map_view(sumgame& sum, sumgame_impl::change_record& record): _sum(sum), _record(record)
@@ -93,7 +101,6 @@ vector<game*>& sumgame_map_view::get_games(obj_id_t obj_id)
     return _map[obj_id];
 }
 
-
 void sumgame_map_view::deactivate_game(game* g)
 {
     assert(g->is_active());
@@ -103,10 +110,11 @@ void sumgame_map_view::deactivate_game(game* g)
 
 void sumgame_map_view::deactivate_games(vector<game*>& games)
 {
-
+    for (game* g : games)
+    {
+        deactivate_game(g);
+    }
 }
-
-
 
 void sumgame_map_view::add_game(game* g, obj_id_t obj_id)
 {
@@ -138,6 +146,7 @@ void change_record::simplify_basic(sumgame& sum)
     sumgame_map_view map_view(sum, *this);
     simplify_basic_nimber(map_view);
     simplify_basic_up_star(map_view);
+    simplify_basic_integers_rationals(map_view);
 }
 
 void change_record::undo_simplify_basic(sumgame& sum)
@@ -267,6 +276,229 @@ void simplify_basic_up_star(sumgame_map_view& map_view)
     {
         up_star* new_game = new up_star(ups, star);
         obj_id_t obj_id = get_obj_id<up_star>();
+
+        map_view.add_game(new_game, obj_id);
+    }
+}
+
+struct fraction
+{
+    int numerator;
+    int denominator;
+};
+
+void simplify_fraction(fraction& f)
+{
+    assert(f.denominator >= 1);
+    assert(is_power_of_2(f.denominator));
+
+    while ((f.numerator & 0x1) == 0 && (f.denominator & 0x1) == 0)
+    {
+        f.numerator >>= 1;
+        f.denominator >>= 1;
+    }
+}
+
+template <class T>
+void print_bits(ostream& os, const T& x)
+{
+    static_assert(is_integral_v<T>);
+
+    const int n_bits = sizeof(T) * CHAR_BIT;
+
+    // T could be signed, so we can't iteratively shift right from 
+    // the most significant bit
+    const T mask = T(1);
+
+    for (int i = 0; i < n_bits; i++)
+    {
+        os << (((mask << (n_bits - 1 - i)) & x) != 0);
+    }
+}
+
+void make_compatible(vector<fraction>& fracs)
+{
+    // find max
+    int max_denominator = 1;
+
+    for (fraction& f : fracs)
+    {
+        const int& d = f.denominator;
+
+        assert(is_power_of_2(d));
+        assert(d >= 1);
+
+        max_denominator = max(max_denominator, d);
+    }
+
+    // i.e. 11000...0 (2 bits to avoid changing sign)
+    int mask = int(-1);
+    mask <<= (sizeof(int) * CHAR_BIT - 2);
+
+    cout << "BITS: ";
+    print_bits(cout, mask);
+    cout << endl;
+
+    auto safe_shift = [&mask](fraction& f) -> bool
+    {
+        bool flipped = false; // TODO this is jank
+
+        static_assert(numeric_limits<int>::min() < -numeric_limits<int>::max());
+
+        if (f.numerator == numeric_limits<int>::min())
+        {
+            return false;
+        }
+
+        if (f.numerator < 0)
+        {
+            flipped = true;
+            f.numerator = -f.numerator;
+        }
+
+        if ((mask & f.numerator) != 0 || (mask & f.denominator) != 0)
+        {
+            return false;
+        }
+
+        f.numerator <<= 1;
+        f.denominator <<= 1;
+
+        if (flipped)
+        {
+            f.numerator = -f.numerator;
+        }
+
+        return true;
+    };
+
+    // multiply each fraction
+    for (fraction& f : fracs)
+    {
+        while (f.denominator < max_denominator)
+        {
+            if (!safe_shift(f))
+            {
+                throw overflow_error("Fraction shift will overflow");
+            }
+        }
+
+        assert(f.denominator == max_denominator);
+    }
+}
+
+fraction sum_fractions(vector<fraction>& fracs)
+{
+    assert(!fracs.empty());
+
+    fraction result = {0, 1};
+
+    make_compatible(fracs);
+
+    result.denominator = fracs.back().denominator;
+
+    for (fraction& f : fracs)
+    {
+        assert(result.denominator == f.denominator);
+
+        if (addition_will_wrap(result.numerator, f.numerator))
+        {
+            throw overflow_error("Fraction addition will overflow");
+        }
+
+        result.numerator += f.numerator;
+    }
+
+    simplify_fraction(result);
+
+    return result;
+}
+
+
+void simplify_basic_integers_rationals(sumgame_map_view& map_view)
+{
+    vector<game*>* integers = map_view.get_games_nullable(get_obj_id<integer_game>());
+    vector<game*>* rationals = map_view.get_games_nullable(get_obj_id<dyadic_rational>());
+
+    size_t game_count = 0;
+
+    if (integers != nullptr)
+    {
+        game_count += integers->size();
+    }
+
+    if (rationals != nullptr)
+    {
+        game_count += rationals->size();
+    }
+
+    if (game_count <= 1)
+    {
+        return;
+    }
+
+    // sum integers
+    int int_sum = 0;
+    if (integers != nullptr)
+    {
+        for (game* g : *integers)
+        {
+            integer_game* g_integer = cast_game<integer_game*>(g);
+            int val = g_integer->value();
+
+            map_view.deactivate_game(g_integer);
+
+            if (addition_will_wrap(int_sum, val))
+            {
+                throw overflow_error("Addition will wrap: " + to_string(int_sum) + " " + to_string(val));
+            }
+
+            int_sum += val;
+        }
+    }
+
+    // sum rationals
+    fraction rational_sum = {0, 1};
+
+    if (rationals != nullptr && !rationals->empty())
+    {
+        vector<fraction> fracs;
+
+        for (game* g : *rationals)
+        {
+            dyadic_rational* g_rational = cast_game<dyadic_rational*>(g);
+            const int& numerator = g_rational->p();
+            const int& denominator = g_rational->q();
+
+            fracs.push_back({numerator, denominator});
+
+            map_view.deactivate_game(g);
+        }
+
+        rational_sum = sum_fractions(fracs);
+    }
+
+    vector<fraction> final_fracs;
+    final_fracs.push_back({int_sum, 1});
+    final_fracs.push_back(rational_sum);
+
+    fraction final_sum = sum_fractions(final_fracs);
+
+    if (final_sum.numerator == 0)
+    {
+        return;
+    }
+
+    if (final_sum.denominator == 1)
+    {
+        integer_game* new_game = new integer_game(final_sum.numerator);
+        obj_id_t obj_id = get_obj_id<integer_game>();
+
+        map_view.add_game(new_game, obj_id);
+    } else
+    {
+        dyadic_rational* new_game = new dyadic_rational(final_sum.numerator, final_sum.denominator);
+        obj_id_t obj_id = get_obj_id<dyadic_rational>();
 
         map_view.add_game(new_game, obj_id);
     }

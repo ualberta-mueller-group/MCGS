@@ -7,6 +7,7 @@ switch
 
 import sys
 from random import randint
+from fractions import Fraction
 
 CASE_COUNT = 10
 CASE_LEN = 5
@@ -24,8 +25,10 @@ def bool_to_star(star):
     return ""
 
 
+
 #outfile.write("{version 1.0}\n[up_star]\n")
-outfile.write("{version 1.0}\n[nimber]\n")
+#outfile.write("{version 1.0}\n[nimber]\n")
+outfile.write("{version 1.0}\n")
 
 for i in range(CASE_COUNT):
     """
@@ -43,6 +46,8 @@ for i in range(CASE_COUNT):
 
     outfile.write(f"/{case_ups} {bool_to_star(case_star)}\\\n")
     """
+
+    """
     # generate random nimbers
     sum = 0
     for i in range(CASE_LEN):
@@ -52,5 +57,23 @@ for i in range(CASE_COUNT):
         outfile.write(f"\t{x}\n")
     outfile.write(f"/*{sum}\\\n")
     outfile.write("{B}\n")
+    """
+
+    # generate random integers and rationals
+    sum = 0
+    for i in range(CASE_LEN):
+        if randint(0, 100) < 50:
+            # int
+            x = randint(-10, 10)
+            sum += x
+            outfile.write(f"\t[integer_game] {x}\n")
+        else:
+            # rational
+            x = Fraction(randint(-100, 100), (1 << randint(1, 10)))
+            sum += x
+            outfile.write(f"\t[dyadic_rational] ({x.numerator} {x.denominator})\n")
+    outfile.write(f"/{sum}\\\n")
+    outfile.write("{B}\n")
+
 
 outfile.close()

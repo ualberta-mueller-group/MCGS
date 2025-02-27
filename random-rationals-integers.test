@@ -1,0 +1,71 @@
+{version 1.0}
+	[dyadic_rational] (-13 256)
+	[integer_game] -5
+	[integer_game] 4
+	[integer_game] -1
+	[dyadic_rational] (41 64)
+/-361/256\
+{B}
+	[integer_game] 9
+	[integer_game] 9
+	[dyadic_rational] (-17 256)
+	[integer_game] -4
+	[integer_game] 8
+/5615/256\
+{B}
+	[integer_game] -6
+	[integer_game] -10
+	[dyadic_rational] (-17 1)
+	[dyadic_rational] (15 512)
+	[integer_game] 0
+/-16881/512\
+{B}
+	[dyadic_rational] (-63 128)
+	[integer_game] -8
+	[dyadic_rational] (-81 2)
+	[integer_game] -5
+	[integer_game] 6
+/-6143/128\
+{B}
+	[integer_game] 10
+	[integer_game] -6
+	[integer_game] -6
+	[integer_game] 7
+	[integer_game] -9
+/-4\
+{B}
+	[integer_game] 4
+	[integer_game] 2
+	[dyadic_rational] (-15 512)
+	[dyadic_rational] (77 8)
+	[dyadic_rational] (-37 2)
+/-1487/512\
+{B}
+	[integer_game] -5
+	[dyadic_rational] (-51 32)
+	[integer_game] 0
+	[integer_game] 0
+	[dyadic_rational] (8 1)
+/45/32\
+{B}
+	[integer_game] 1
+	[integer_game] 9
+	[integer_game] 3
+	[dyadic_rational] (5 4)
+	[integer_game] 1
+/61/4\
+{B}
+	[integer_game] 0
+	[dyadic_rational] (-25 2)
+	[integer_game] -6
+	[integer_game] 7
+	[integer_game] 4
+/-15/2\
+{B}
+	[integer_game] 4
+	[integer_game] 10
+	[integer_game] 2
+	[dyadic_rational] (-37 32)
+	[dyadic_rational] (-65 2)
+/-565/32\
+{B}
