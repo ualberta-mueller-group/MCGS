@@ -29,12 +29,24 @@ change_record::~change_record()
     assert(added_games.empty());
 }
 
+change_record::change_record(change_record&& other) noexcept
+{
+    _move_impl(std::forward<change_record>(other));
+}
+
+change_record& change_record::operator=(change_record&& other) noexcept
+{
+    _move_impl(std::forward<change_record>(other));
+    return *this;
+}
+
 void change_record::simplify_basic(sumgame& sum)
 {
     sumgame_map_view map_view(sum, *this);
     simplify_basic_nimber(map_view);
     simplify_basic_up_star(map_view);
     simplify_basic_integers_rationals(map_view);
+    return;
 }
 
 void change_record::undo_simplify_basic(sumgame& sum)
@@ -65,6 +77,16 @@ void change_record::_clear()
     deactivated_games.clear();
     added_games.clear();
 }
+
+
+void change_record::_move_impl(change_record&& other) noexcept
+{
+    deactivated_games = std::move(other.deactivated_games);
+    added_games = std::move(other.added_games);
+
+    other._clear();
+}
+
 
 } // namespace sumgame_impl
 

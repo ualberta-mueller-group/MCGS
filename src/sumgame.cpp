@@ -295,7 +295,9 @@ optional<solve_result> sumgame::_solve_with_timeout()
         print(cout);
     }
 
+    cout << "BEFORE SIMPLIFY:" << endl << *this;
     simplify_basic();
+    cout << "AFTER SIMPLIFY:" << endl << *this;
     undo_simplify_basic();
     return solve_result(false);
 
@@ -438,10 +440,10 @@ void sumgame::simplify_basic()
         return;
     }
 
-    cout << "Before simplify:" << endl;
-    cout << *this << endl;
+    //cout << "Before simplify:" << endl;
+    //cout << *this << endl;
 
-    _change_record_stack.push_back(change_record());
+    _change_record_stack.emplace_back();
     change_record& record = _change_record_stack.back();
 
     record.simplify_basic(*this);
@@ -454,12 +456,14 @@ void sumgame::undo_simplify_basic()
         return;
     }
 
-    cout << "After simplify:" << endl;
-    cout << *this << endl;
+    //cout << "After simplify:" << endl;
+    //cout << *this << endl;
 
     assert(!_change_record_stack.empty());
     change_record& record = _change_record_stack.back();
     record.undo_simplify_basic(*this);
+
+    _change_record_stack.pop_back();
 }
 
 void sumgame::print(std::ostream& str) const

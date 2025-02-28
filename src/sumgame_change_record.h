@@ -16,7 +16,11 @@ namespace sumgame_impl {
 class change_record
 {
 public:
+    change_record() {};
     ~change_record();
+
+    change_record(change_record&& other) noexcept;
+    change_record& operator=(change_record&& other) noexcept;
 
     void simplify_basic(sumgame& sum);
     void undo_simplify_basic(sumgame& sum);
@@ -26,6 +30,7 @@ public:
 
 private:
     void _clear();
+    void _move_impl(change_record&& other) noexcept;
 };
 
 } // namespace sumgame_impl
