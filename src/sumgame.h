@@ -13,8 +13,8 @@
 class sumgame_move_generator;
 
 namespace sumgame_impl {
-    class change_record;
-};
+class change_record;
+}
 
 enum sumgame_undo_enum
 {

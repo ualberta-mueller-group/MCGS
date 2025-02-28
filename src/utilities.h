@@ -66,4 +66,24 @@ bool left_shift_will_wrap(const T1& shiftee, const T2& shift_amount)
 }
 
 
+
+template <class T>
+void print_bits(std::ostream& os, const T& x)
+{
+    static_assert(std::is_integral_v<T>);
+
+    const int n_bits = sizeof(T) * CHAR_BIT;
+
+    // T could be signed, so we can't iteratively shift right from 
+    // the most significant bit
+    const T mask = T(1);
+
+    for (int i = 0; i < n_bits; i++)
+    {
+        os << (((mask << (n_bits - 1 - i)) & x) != 0);
+    }
+}
+
+
+
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known, bool is_ge);

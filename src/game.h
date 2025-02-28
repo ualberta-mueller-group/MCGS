@@ -197,3 +197,24 @@ inline move_generator::move_generator(bw to_play) :
 std::ostream& operator<<(std::ostream& os, const split_result& split);
 
 
+/*
+    Convert game pointer types, after doing a few asserts.
+
+    NOTE: This cast is generally unsafe. Only use in place of reinterpret_cast, not dynamic_cast
+*/
+template <class T_ptr>
+inline T_ptr cast_game(game* g)
+{
+    static_assert(std::is_pointer_v<T_ptr>);
+    using T = typename std::remove_pointer<T_ptr>::type; // NOLINT
+
+    static_assert(std::is_base_of_v<game, T>);
+    static_assert(!std::is_abstract_v<T>);
+
+    assert(g != nullptr);
+    assert(g->is_active());
+    assert(g->get_obj_id() == get_obj_id<T>());
+
+    return reinterpret_cast<T_ptr>(g);
+}
+

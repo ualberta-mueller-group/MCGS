@@ -3,11 +3,10 @@
 #include "cgt_integer_game.h"
 #include "obj_id.h"
 #include <climits>
-#include <stdexcept>
-#include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
+#include "sumgame_map_view.h"
+#include "fraction.h"
 
 #include "cgt_nimber.h"
 #include "cgt_up_star.h"
@@ -16,185 +15,9 @@
 using namespace std;
 
 //////////////////////////////////////// declarations
-struct fraction
-{
-    inline fraction(int top, int bottom): top(top), bottom(bottom)
-    {
-        assert(bottom > 0);
-        assert(is_power_of_2(bottom));
-    }
-
-    int top;
-    int bottom;
-};
-
-ostream& operator<<(ostream& os, const fraction& f)
-{
-    os << f.top << "/" << f.bottom;
-    return os;
-}
-
 void simplify_basic_nimber(sumgame_map_view& map_view);
 void simplify_basic_up_star(sumgame_map_view& map_view);
 void simplify_basic_integers_rationals(sumgame_map_view& map_view);
-
-//////////////////////////////////////// sumgame_map_view
-sumgame_map_view::sumgame_map_view(sumgame& sum, sumgame_impl::change_record& record): _sum(sum), _record(record)
-{
-    // build game map
-    const int N = sum.num_total_games();
-
-    for (int i = 0; i < N; i++)
-    {
-        game* g = sum.subgame(i);
-
-        if (g->is_active())
-        {
-            obj_id_t obj_id = g->get_obj_id();
-            _map[obj_id].push_back(g);
-        }
-    }
-}
-
-vector<game*>* sumgame_map_view::get_games_nullable(obj_id_t obj_id)
-{
-    auto it = _map.find(obj_id);
-
-    if (it == _map.end())
-    {
-        return nullptr;
-    }
-
-    vector<game*>& map_games = it->second;
-    vector<game*> active_games;
-
-    for (game* g : map_games)
-    {
-        if (g->is_active())
-        {
-            active_games.push_back(g);
-        }
-    }
-
-    swap(map_games, active_games);
-
-    if (map_games.empty())
-    {
-        return nullptr;
-    }
-
-    return &map_games;
-}
-
-vector<game*>& sumgame_map_view::get_games(obj_id_t obj_id)
-{
-    return _map[obj_id];
-}
-
-void sumgame_map_view::deactivate_game(game* g)
-{
-    assert(g->is_active());
-    g->set_active(false);
-    _record.deactivated_games.push_back(g);
-}
-
-void sumgame_map_view::deactivate_games(vector<game*>& games)
-{
-    for (game* g : games)
-    {
-        deactivate_game(g);
-    }
-}
-
-//////////////////////////////////////// fraction
-static_assert(int32_t(-1) == int32_t(0xFFFFFFFF), "Not two's complement");
-static_assert(numeric_limits<int>::min() < 0);
-
-void simplify_fraction(fraction& f) // handles all error cases
-{
-    assert(f.bottom >= 1);
-    assert(is_power_of_2(f.bottom));
-
-    // right shift OK because operands are signed
-    static_assert(is_integral_v<decltype(f.top)> && is_signed_v<decltype(f.top)>);
-    static_assert(is_integral_v<decltype(f.bottom)> && is_signed_v<decltype(f.bottom)>);
-
-    while ((f.top & 0x1) == 0 && (f.bottom & 0x1) == 0)
-    {
-        f.top >>= 1;
-        f.bottom >>= 1;
-    }
-}
-
-// TODO should have a static_assert to check that abs(INT_MIN) == INT_MAX + 1
-bool raise_denominator(fraction& frac, int target_bottom)
-{
-    assert(target_bottom >= frac.bottom);
-
-    assert(frac.bottom > 0);
-    assert(is_power_of_2(frac.bottom));
-
-    assert(target_bottom > 0);
-    assert(is_power_of_2(target_bottom));
-
-    if (frac.top == std::numeric_limits<int>::min())
-    {
-        return false;
-    }
-
-    // i.e. 11000...0 (2 bits to avoid changing sign)
-    const int mask = int(0x3) << (sizeof(int) * CHAR_BIT - 2);
-
-    cout << "BITS: ";
-    print_bits(cout, mask);
-    cout << endl;
-
-    auto left_shift_safe = [](fraction& f) -> bool
-    {
-        if ((mask & f.top) != 0 || (mask & f.bottom) != 0)
-        {
-            return false;
-        }
-
-        f.top <<= 1;
-        f.bottom <<= 1;
-
-        return true;
-    };
-
-    const int frac_top_copy = frac.top;
-    const int frac_bottom_copy = frac.bottom;
-
-    bool flip_sign = false;
-
-    if (frac.top < 0)
-    {
-        flip_sign = true;
-
-        assert(abs(frac.top) == abs(-frac.top));
-        frac.top = -frac.top;
-    }
-
-    while (frac.bottom < target_bottom && left_shift_safe(frac))
-    { }
-
-    assert(frac.bottom <= target_bottom);
-
-    if (flip_sign)
-    {
-        assert(abs(frac.top) == abs(-frac.top));
-        frac.top = -frac.top;
-    }
-
-    if (frac.bottom == target_bottom)
-    {
-        return true;
-    }
-
-    frac.top = frac_top_copy;
-    frac.bottom = frac_bottom_copy;
-    return false;
-}
 
 //////////////////////////////////////// change_record
 namespace sumgame_impl {
@@ -247,7 +70,7 @@ void change_record::_clear()
 
 //////////////////////////////////////// helper functions
 
-void simplify_basic_nimber(sumgame_map_view& map_view) // handles all error cases
+void simplify_basic_nimber(sumgame_map_view& map_view)
 {
     vector<game*>* nimbers = map_view.get_games_nullable(get_obj_id<nimber>());
 
@@ -289,7 +112,7 @@ void simplify_basic_nimber(sumgame_map_view& map_view) // handles all error case
 
 }
 
-void simplify_basic_up_star(sumgame_map_view& map_view) // handles all error cases
+void simplify_basic_up_star(sumgame_map_view& map_view)
 {
     vector<game*>* up_stars = map_view.get_games_nullable(get_obj_id<up_star>());
 
@@ -330,28 +153,6 @@ void simplify_basic_up_star(sumgame_map_view& map_view) // handles all error cas
     }
 }
 
-bool safe_add_fraction(fraction& x, fraction& y)
-{
-    simplify_fraction(x);
-    simplify_fraction(y);
-
-    int target_bottom = max(x.bottom, y.bottom);
-
-    if (!raise_denominator(x, target_bottom) || !raise_denominator(y, target_bottom))
-    {
-        return false;
-    }
-
-    assert(x.bottom == y.bottom);
-
-    if (addition_will_wrap(x.top, y.top))
-    {
-        return false;
-    }
-
-    x.top += y.top;
-    return true;
-}
 
 void simplify_basic_integers_rationals(sumgame_map_view& map_view)
 {
