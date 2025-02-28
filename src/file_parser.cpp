@@ -1,5 +1,6 @@
 #include "file_parser.h"
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -138,48 +139,26 @@ bool is_reserved_char(const char& c)
 }
 
 /*
-    Check if token is of the format:
-        <open>...<close>
-
-        With reserved characters only at the ends
-
-        allow_inner allows reserved characters inside (i.e. for comments)
-
-        i.e. for open = '(' and close = ')'
-
-            ( this is a valid string )
-            ( this is not { a valid string )
-            (( this is also not valid ))
-            
+    Check if reserved characters occur in the token outside of "open" and "close"
 */
-bool is_enclosed_format(const string& token, const char& open, const char& close, bool allow_inner)
+bool invalid_reserved_chars(const string& token, const string& open, const string& close)
 {
-    if (token.size() < 2)
-    {
-        return false;
-    }
+    assert(token.size() >= open.size() + close.size());
 
-    if (token[0] != open || token.back() != close)
-    {
-        return false;
-    }
+    const size_t N = token.size();
+    assert(N >= close.size()); // no underflow
 
-    if (!allow_inner)
+    for (size_t i = open.size(); i < N - close.size(); i++)
     {
-        int N = token.size();
-        for (int i = 1; i < N - 1; i++)
+        const char& c = token[i];
+
+        if (is_reserved_char(c))
         {
-            const char& c = token[i];
-
-            if (is_reserved_char(c))
-            {
-                return false;
-            }
+            return true;
         }
-
     }
 
-    return true;
+    return false;
 }
 
 // remove first and last characters
@@ -320,18 +299,61 @@ void file_parser::add_game_parser(const string& game_title, game_token_parser* g
     (1 5 3)[clobber_1xn]
     which doesn't match
 */
-bool file_parser::get_enclosed(const char& open, const char& close, bool allow_inner)
+bool file_parser::get_enclosed(const string& open, const string& close, bool allow_inner)
 {
     token_iterator& iterator = _iterator;
 
-    if (_token[0] != open)
+    enum match_state_enum
+    {
+        MATCH_UNKNOWN,
+        MATCH_START,
+        MATCH_FULL,
+        MATCH_IMPOSSIBLE,
+    } match_state = MATCH_UNKNOWN;
+
+    const size_t n_enclosing_chars = open.size() + close.size();
+
+    std::function<void()> update_match_state = [&]() -> void
+    {
+        if (match_state == MATCH_UNKNOWN)
+        {
+            if (_token.size() < open.size())
+            {
+                return;
+            }
+            match_state = string_starts_with(_token, open) ? MATCH_START : MATCH_IMPOSSIBLE;
+
+            if (match_state == MATCH_START)
+            {
+                update_match_state(); // could have full match now...
+            }
+
+            return;
+        }
+
+        if (match_state == MATCH_START)
+        {
+            if (_token.size() >= n_enclosing_chars && string_ends_with(_token, close))
+            {
+                match_state = MATCH_FULL;
+            }
+
+            return;
+        }
+
+        assert(false);
+    };
+
+
+    update_match_state();
+    if (match_state == MATCH_IMPOSSIBLE)
     {
         return false;
     }
 
-    if (is_enclosed_format(_token, open, close, allow_inner))
+    if (match_state == MATCH_FULL)
     {
-        return true;
+        return !invalid_reserved_chars(_token, open, close);
     }
 
     string new_token;
@@ -339,11 +361,20 @@ bool file_parser::get_enclosed(const char& open, const char& close, bool allow_i
     {
         _token += " " + new_token;
 
-        if (is_enclosed_format(_token, open, close, allow_inner))
+        update_match_state();
+        if (match_state == MATCH_IMPOSSIBLE)
         {
-            return true;
+            return false;
         }
 
+        if (match_state == MATCH_FULL)
+        {
+            if (!allow_inner)
+            {
+                return !invalid_reserved_chars(_token, open, close);
+            }
+            return true;
+        }
     }
 
     return false;
@@ -356,14 +387,9 @@ bool file_parser::get_enclosed(const char& open, const char& close, bool allow_i
     returns false if no match, true if match, and throws on
         illegal input (i.e. match should happen but doesn't due to bad user input)
 */
-bool file_parser::match(const char& open, const char& close, const string& match_name, bool allow_inner)
+bool file_parser::match(const string& open, const string& close, const string& match_name, bool allow_inner)
 {
     assert(_token.size() > 0);
-
-    if (_token[0] != open)
-    {
-        return false;
-    }
 
     bool success = get_enclosed(open, close, allow_inner);
 
@@ -691,7 +717,7 @@ bool file_parser::parse_chunk(game_case& gc)
         if (_do_version_check)
         {
             //bool success = get_enclosed('{', '}', false);
-            bool success = match('{', '}', "command", false);
+            bool success = match("{", "}", "command", false);
 
             if (!success || _token.find("version") != 0)
             {
@@ -708,7 +734,7 @@ bool file_parser::parse_chunk(game_case& gc)
         }
 
         // Match command
-        if (match('{', '}', "command", false))
+        if (match("{", "}", "command", false))
         {
             if (_token.find("version") == 0)
             {
@@ -731,21 +757,21 @@ bool file_parser::parse_chunk(game_case& gc)
         }
 
         // Match title
-        if (match('[', ']', "section title", false))
+        if (match("[", "]", "section title", false))
         {
             _section_title = _token;
             continue;
         }
 
         // Match brackets
-        if (match('(', ')', "bracket token", false))
+        if (match("(", ")", "bracket token", false))
         {
             parse_game();
             continue;
         }
 
-        // Match comment
-        if (match('/', '\\', "comment", true))
+        // Match co/mment
+        if (match("/", "\\", "comment", true))
         {
             static_assert(FILE_PARSER_MAX_CASES < 10); // next lines assume the case number is 1 digit
 

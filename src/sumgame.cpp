@@ -295,11 +295,12 @@ optional<solve_result> sumgame::_solve_with_timeout()
         print(cout);
     }
 
-    cout << "BEFORE SIMPLIFY:" << endl << *this;
+    //cout << "BEFORE SIMPLIFY:" << endl << *this;
+    do_simplification = false;
     simplify_basic();
-    cout << "AFTER SIMPLIFY:" << endl << *this;
-    undo_simplify_basic();
-    return solve_result(false);
+    //cout << "AFTER SIMPLIFY:" << endl << *this;
+    //undo_simplify_basic();
+    //return solve_result(false);
 
     const bw toplay = to_play();
 

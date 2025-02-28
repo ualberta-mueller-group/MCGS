@@ -163,8 +163,8 @@ private:
     static void add_game_parser(const std::string& game_title, game_token_parser* gp);
 
     // token-generating helper functions
-    bool get_enclosed(const char& open, const char& close, bool allow_inner);
-    bool match(const char& open, const char& close, const std::string& match_name, bool allow_inner);
+    bool get_enclosed(const std::string& open, const std::string& close, bool allow_inner);
+    bool match(const std::string& open, const std::string& close, const std::string& match_name, bool allow_inner);
 
     // functions to handle current token
     bool parse_game();
