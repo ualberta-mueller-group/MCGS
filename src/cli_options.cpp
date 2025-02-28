@@ -222,7 +222,6 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 
         if (arg == "--no-simplify")
         {
-            arg_idx++;
             do_simplification = false;
             continue;
         }
