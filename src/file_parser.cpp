@@ -23,6 +23,7 @@
 
 using namespace std;
 
+using namespace file_parser_impl;
 
 //////////////////////////////////////////////////////////// static members
 bool file_parser::debug_printing = false;
@@ -33,7 +34,7 @@ unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 //////////////////////////////////////////////////////////// file_token_iterator
 
 file_token_iterator::file_token_iterator(istream* stream, bool delete_stream)
-    : __main_stream_ptr(stream), _delete_stream(delete_stream), _line_number(-1)
+    : __main_stream_ptr(stream), _delete_stream(delete_stream), _line_number(-1), _token_buffer(), _token_idx(0)
 {
 }
 
@@ -50,7 +51,38 @@ int file_token_iterator::line_number() const
     return _line_number;
 }
 
+
 bool file_token_iterator::get_token(string& token)
+{
+    token.clear();
+
+    // Check if token buffer has data
+    if (_token_idx < _token_buffer.size())
+    {
+        const token_info& ti = _token_buffer[_token_idx];
+        _token_idx++;
+
+        _line_number = ti.line_number;
+        token = ti.token_string;
+
+        return true;
+    }
+
+    // Check if stream has more tokens
+    if (_get_token_from_stream(token))
+    {
+        _token_buffer.emplace_back(token, _line_number);
+        _token_idx++;
+
+        assert(_token_idx == _token_buffer.size());
+
+        return true;
+    }
+
+    return false;
+}
+
+bool file_token_iterator::_get_token_from_stream(string& token)
 {
     assert(__main_stream_ptr != nullptr);
     token.clear();
@@ -95,6 +127,26 @@ bool file_token_iterator::get_token(string& token)
     return false;
 }
 
+void file_token_iterator::consume()
+{
+    vector<token_info> new_buffer;
+    new_buffer.reserve(_token_buffer.size() - _token_idx);
+
+    for (size_t i = _token_idx; i < _token_buffer.size(); i++)
+    {
+        new_buffer.push_back(_token_buffer[i]);
+    }
+
+    _token_buffer.clear();
+    swap(_token_buffer, new_buffer);
+    _token_idx = 0;
+}
+
+void file_token_iterator::rewind()
+{
+    _token_idx = 0;
+}
+
 void file_token_iterator::cleanup()
 {
     if (_delete_stream && __main_stream_ptr != nullptr)
@@ -114,7 +166,12 @@ void file_token_iterator::cleanup()
 }
 
 
+
 //////////////////////////////////////////////////////////// helper functions
+inline bool match_state_conclusive(match_state state)
+{
+    return state == MATCH_NOT_FOUND || state == MATCH_FULL || state == MATCH_ILLEGAL;
+};
 
 /*
     These characters can only appear in opening or closing tags
@@ -277,8 +334,7 @@ void file_parser::add_game_parser(const string& game_title, game_token_parser* g
 }
 
 /*
-   Expand given token using the token iterator until it is formatted according
-       to is_enclosed_format(). Return false if match not found
+   Expand given token using the token iterator until it matches <open>...<close> or no match is possible.
 
     i.e. given open = '(' and close = ')', and the input:
 
@@ -299,31 +355,25 @@ void file_parser::add_game_parser(const string& game_title, game_token_parser* g
     (1 5 3)[clobber_1xn]
     which doesn't match
 */
-bool file_parser::get_enclosed(const string& open, const string& close, bool allow_inner)
+match_state file_parser::get_enclosed(const string& open, const string& close, bool allow_inner)
 {
     token_iterator& iterator = _iterator;
-
-    enum match_state_enum
-    {
-        MATCH_UNKNOWN,
-        MATCH_START,
-        MATCH_FULL,
-        MATCH_IMPOSSIBLE,
-    } match_state = MATCH_UNKNOWN;
-
+    match_state state = MATCH_UNKNOWN;
     const size_t n_enclosing_chars = open.size() + close.size();
 
     std::function<void()> update_match_state = [&]() -> void
     {
-        if (match_state == MATCH_UNKNOWN)
+        assert(!match_state_conclusive(state));
+
+        if (state == MATCH_UNKNOWN)
         {
             if (_token.size() < open.size())
             {
                 return;
             }
-            match_state = string_starts_with(_token, open) ? MATCH_START : MATCH_IMPOSSIBLE;
+            state = string_starts_with(_token, open) ? MATCH_START : MATCH_NOT_FOUND;
 
-            if (match_state == MATCH_START)
+            if (state == MATCH_START)
             {
                 update_match_state(); // could have full match now...
             }
@@ -331,11 +381,16 @@ bool file_parser::get_enclosed(const string& open, const string& close, bool all
             return;
         }
 
-        if (match_state == MATCH_START)
+        if (state == MATCH_START)
         {
             if (_token.size() >= n_enclosing_chars && string_ends_with(_token, close))
             {
-                match_state = MATCH_FULL;
+                state = MATCH_FULL;
+
+                if (!allow_inner && invalid_reserved_chars(_token, open, close))
+                {
+                    state = MATCH_ILLEGAL;
+                }
             }
 
             return;
@@ -344,40 +399,34 @@ bool file_parser::get_enclosed(const string& open, const string& close, bool all
         assert(false);
     };
 
-
     update_match_state();
-    if (match_state == MATCH_IMPOSSIBLE)
+    if (match_state_conclusive(state))
     {
-        return false;
-    }
-
-    if (match_state == MATCH_FULL)
-    {
-        return !invalid_reserved_chars(_token, open, close);
+        return state;
     }
 
     string new_token;
     while (iterator.get_token(new_token))
     {
+        assert(!match_state_conclusive(state));
+
         _token += " " + new_token;
 
         update_match_state();
-        if (match_state == MATCH_IMPOSSIBLE)
+        if (match_state_conclusive(state))
         {
-            return false;
-        }
-
-        if (match_state == MATCH_FULL)
-        {
-            if (!allow_inner)
-            {
-                return !invalid_reserved_chars(_token, open, close);
-            }
-            return true;
+            return state;
         }
     }
 
-    return false;
+    assert(state == MATCH_START || state == MATCH_UNKNOWN);
+
+    if (state == MATCH_START)
+    {
+        return MATCH_ILLEGAL;
+    }
+
+    return MATCH_NOT_FOUND;
 }
 
 /*
@@ -391,18 +440,30 @@ bool file_parser::match(const string& open, const string& close, const string& m
 {
     assert(_token.size() > 0);
 
-    bool success = get_enclosed(open, close, allow_inner);
+    string token_copy = _token;
 
-    if (success)
+    match_state state = get_enclosed(open, close, allow_inner);
+    assert(match_state_conclusive(state));
+
+    if (state == MATCH_FULL)
     {
         if (file_parser::debug_printing)
         {
             cout << "Got " << match_name << ": " << _token << endl;
         }
         strip_enclosing(_token);
+
+        _iterator.consume();
         return true;
     }
-    
+
+    if (state == MATCH_NOT_FOUND)
+    {
+        _iterator.rewind();
+        _token = token_copy;
+        return false;
+    }
+
     string why = get_error_start() + "failed to match " + match_name;
     throw parser_exception(why, FAILED_MATCH);
 
@@ -712,6 +773,7 @@ bool file_parser::parse_chunk(game_case& gc)
     while (iterator.get_token(_token))
     {
         _line_number = iterator.line_number();
+        iterator.consume();
 
         // Check version (for file)
         if (_do_version_check)

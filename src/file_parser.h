@@ -33,6 +33,12 @@ public:
 
     // line number of previous token returned by get_token()
     virtual int line_number() const = 0;
+
+    // caller consumes all previously returned tokens
+    virtual void consume() = 0;
+
+    // rewind to first previously unconsumed token
+    virtual void rewind() = 0;
 };
 
 class file_token_iterator : public token_iterator
@@ -50,8 +56,23 @@ public:
     bool get_token(std::string& token) override;
     int line_number() const override;
 
+    void consume() override;
+    void rewind() override;
+
+
 private:
+    struct token_info
+    {
+        token_info(const std::string& token_string, int line_number)
+            : token_string(token_string), line_number(line_number)
+        {}
+
+        std::string token_string;
+        int line_number;
+    };
+
     void cleanup();
+    bool _get_token_from_stream(std::string& token);
 
     std::istream* __main_stream_ptr;
     bool _delete_stream; // do we own this stream?
@@ -59,6 +80,9 @@ private:
     std::stringstream _line_stream;
 
     int _line_number;
+    
+    std::vector<token_info> _token_buffer;
+    size_t _token_idx;
 };
 
 
@@ -144,6 +168,20 @@ private:
 
 ////////////////////////////////////////////////// file_parser
 
+namespace file_parser_impl {
+
+enum match_state
+{
+    MATCH_UNKNOWN, // default "0" state
+    MATCH_START, // token matches opening string
+    MATCH_FULL, // token matches both opening and closing strings, and has no illegal chars
+    MATCH_ILLEGAL, // token has illegal chars, or matches opening string but not closing string
+    MATCH_NOT_FOUND, // token not found (not an error state)
+};
+
+} // namespace file_parser_impl
+
+
 /*
     file_parser:
         reads input from stdin, string, or file. Use static constructor functions
@@ -163,7 +201,7 @@ private:
     static void add_game_parser(const std::string& game_title, game_token_parser* gp);
 
     // token-generating helper functions
-    bool get_enclosed(const std::string& open, const std::string& close, bool allow_inner);
+    file_parser_impl::match_state get_enclosed(const std::string& open, const std::string& close, bool allow_inner);
     bool match(const std::string& open, const std::string& close, const std::string& match_name, bool allow_inner);
 
     // functions to handle current token
