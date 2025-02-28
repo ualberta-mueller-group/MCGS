@@ -4,12 +4,18 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include "cgt_dyadic_rational.h"
 #include "utilities.h"
 
 using namespace std;
 
 static_assert(int32_t(-1) == int32_t(0xFFFFFFFF), "Not two's complement");
 static_assert(numeric_limits<int>::min() < 0);
+
+dyadic_rational* fraction::make_dyadic_rational() // owned by caller
+{
+    return new dyadic_rational(top, bottom);
+}
 
 void fraction::simplify()
 {
@@ -45,10 +51,6 @@ bool fraction::raise_denominator(int target_bottom)
 
     // i.e. 11000...0 (2 bits to avoid changing sign)
     const int mask = int(0x3) << (sizeof(int) * CHAR_BIT - 2);
-
-    cout << "BITS: ";
-    print_bits(cout, mask);
-    cout << endl;
 
     auto left_shift_safe = [&]() -> bool
     {
@@ -97,6 +99,16 @@ bool fraction::raise_denominator(int target_bottom)
     return false;
 }
 
+
+void fraction::_init(int top, int bottom)
+{
+    assert(bottom > 0);
+    assert(is_power_of_2(bottom));
+
+    this->top = top;
+    this->bottom = bottom;
+}
+
 bool safe_add_fraction(fraction& x, fraction& y)
 {
     x.simplify();
@@ -119,4 +131,6 @@ bool safe_add_fraction(fraction& x, fraction& y)
     x.top += y.top;
     return true;
 }
+
+
 

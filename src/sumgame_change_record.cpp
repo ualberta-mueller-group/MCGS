@@ -153,7 +153,6 @@ void simplify_basic_up_star(sumgame_map_view& map_view)
     }
 }
 
-
 void simplify_basic_integers_rationals(sumgame_map_view& map_view)
 {
     vector<game*>* integers = map_view.get_games_nullable(get_obj_id<integer_game>());
@@ -195,10 +194,7 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
         for (game* g : *rationals)
         {
             dyadic_rational* g_rational = cast_game<dyadic_rational*>(g);
-
-            const int top = g_rational->p();
-            const int bottom = g_rational->q();
-            fraction f(top, bottom);
+            fraction f(*g_rational);
 
             if (!safe_add_fraction(rational_sum, f))
             {
@@ -207,6 +203,60 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
 
             consumed_rationals.push_back(g_rational);
         }
+    }
+
+    size_t n_consumed_games = consumed_integers.size() + consumed_rationals.size();
+
+    if (n_consumed_games < 2)
+    {
+        return;
+    }
+
+    fraction final_sum(int_sum, 1);
+    bool final_sum_valid = safe_add_fraction(final_sum, rational_sum);
+
+    auto insert_game = [&](int top, int bottom) -> void
+    {
+        assert(bottom > 0);
+
+        if (top == 0)
+        {
+            return;
+        }
+
+        if (bottom == 1)
+        {
+            integer_game* new_game = new integer_game(top);
+            map_view.add_game(new_game);
+            return;
+        }
+
+        dyadic_rational* new_game = new dyadic_rational(top, bottom);
+        map_view.add_game(new_game);
+    };
+
+
+    // now commit only useful cases
+    assert(n_consumed_games >= 2);
+
+    if (final_sum_valid)
+    {
+        map_view.deactivate_games(consumed_integers);
+        map_view.deactivate_games(consumed_rationals);
+        insert_game(final_sum.top, final_sum.bottom);
+        return;
+    }
+
+    if (consumed_integers.size() > 1)
+    {
+        map_view.deactivate_games(consumed_integers);
+        insert_game(int_sum, 1);
+    }
+
+    if (consumed_rationals.size() > 1)
+    {
+        map_view.deactivate_games(consumed_rationals);
+        insert_game(rational_sum.top, rational_sum.bottom);
     }
 }
 

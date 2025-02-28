@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <string>
+#include <type_traits>
 #include <vector>
 #include <optional>
 #include "cgt_basics.h"
@@ -197,6 +198,10 @@ inline move_generator::move_generator(bw to_play) :
 std::ostream& operator<<(std::ostream& os, const split_result& split);
 
 
+template <class T>
+constexpr bool is_concrete_game_v = !std::is_abstract_v<T> && std::is_base_of_v<game, T>; // NOLINT
+
+
 /*
     Convert game pointer types, after doing a few asserts.
 
@@ -208,8 +213,7 @@ inline T_ptr cast_game(game* g)
     static_assert(std::is_pointer_v<T_ptr>);
     using T = typename std::remove_pointer<T_ptr>::type; // NOLINT
 
-    static_assert(std::is_base_of_v<game, T>);
-    static_assert(!std::is_abstract_v<T>);
+    static_assert(is_concrete_game_v<T>);
 
     assert(g != nullptr);
     assert(g->is_active());
