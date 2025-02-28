@@ -87,3 +87,6 @@ void print_bits(std::ostream& os, const T& x)
 
 
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known, bool is_ge);
+
+bool string_starts_with(const std::string& str, const std::string& word);
+bool string_ends_with(const std::string& str, const std::string& word);

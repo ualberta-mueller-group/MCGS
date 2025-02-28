@@ -75,3 +75,47 @@ relation relation_from_search_results(bool le_known, bool is_le, bool ge_known, 
     return REL_UNKNOWN;
 }
 
+bool string_starts_with(const std::string& str, const std::string& word)
+{
+    if (word.size() > str.size())
+    {
+        return false;
+    }
+
+    assert(str.size() >= word.size());
+
+    const size_t word_len = word.size();
+    for (size_t i = 0; i < word_len; i++)
+    {
+        if (str[i] != word[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool string_ends_with(const std::string& str, const std::string& word)
+{
+    if (word.size() > str.size())
+    {
+        return false;
+    }
+
+    assert(str.size() >= word.size());
+
+    const size_t word_len = word.size();
+    const size_t str_len = str.size();
+
+    for (size_t i = 0; i < word_len; i++)
+    {
+        if (str[str_len - 1 - i] != word[word_len - 1 - i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
