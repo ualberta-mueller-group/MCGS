@@ -431,11 +431,6 @@ void sumgame::undo_move()
     _play_record_stack.pop_back();
 }
 
-/*
-    TODO this definitely needs to be split into multiple smaller functions...
-
-    there may be a tradeoff between readability and performance
-*/
 void sumgame::simplify_basic()
 {
     if (!do_simplification)

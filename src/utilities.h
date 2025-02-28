@@ -29,6 +29,20 @@ bool addition_will_wrap(const T& x, const T& y)
     return false;
 }
 
+template <class T>
+inline bool safe_add(T& x, const T& y)
+{
+    static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+
+    if (addition_will_wrap(x, y))
+    {
+        return false;
+    }
+
+    x += y;
+    return true;
+}
+
 // TODO is there a faster way to do this? Also should remove signedness?
 template <class T1, class T2>
 bool left_shift_will_wrap(const T1& shiftee, const T2& shift_amount)

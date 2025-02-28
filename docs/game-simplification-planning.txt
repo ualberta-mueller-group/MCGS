@@ -236,6 +236,15 @@ Some optimizations (but not all), will also apply to alternating_move_game which
 
                 Good because no template type inference to cause accidents, and still have both the virtual method, and an equivalent to const static field.
 
+            It may be possible to remove the virtual function from our RTTI implementation by having something like:
+            class i_obj_id                          <-- defines non-virtual get_obj_id() and protected field _obj_id storing the id (uint16_t ??)
+            class game: public i_obj_id             <-- defines game interface
+            class game<T>: public game              <-- constructor sets _obj_id by calling an inline template function get_obj_id<T>()
+            class clobber: public game<clobber>
+
+            Maybe confusing to have two "game" classes but it makes RTTI easy, mostly invisible, and possibly faster (??)
+
+
 
 
 

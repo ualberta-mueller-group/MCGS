@@ -1,7 +1,6 @@
 #include "sumgame_change_record.h"
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
-#include "file_parser.h"
 #include "obj_id.h"
 #include <climits>
 #include <stdexcept>
@@ -16,32 +15,30 @@
 
 using namespace std;
 
-////////////////////////////////////////
-
-class sumgame_map_view
+//////////////////////////////////////// declarations
+struct fraction
 {
-public:
-    sumgame_map_view(sumgame& sum, sumgame_impl::change_record& record);
+    inline fraction(int top, int bottom): top(top), bottom(bottom)
+    {
+        assert(bottom > 0);
+        assert(is_power_of_2(bottom));
+    }
 
-    vector<game*>* get_games_nullable(obj_id_t obj_id);
-    vector<game*>& get_games(obj_id_t obj_id);
-
-    void deactivate_game(game* g);
-    void deactivate_games(vector<game*>& games);
-    void add_game(game* g, obj_id_t obj_id);
-
-private:
-    sumgame& _sum;
-    sumgame_impl::change_record& _record;
-
-    unordered_map<obj_id_t, vector<game*>> _map;
+    int top;
+    int bottom;
 };
+
+ostream& operator<<(ostream& os, const fraction& f)
+{
+    os << f.top << "/" << f.bottom;
+    return os;
+}
 
 void simplify_basic_nimber(sumgame_map_view& map_view);
 void simplify_basic_up_star(sumgame_map_view& map_view);
 void simplify_basic_integers_rationals(sumgame_map_view& map_view);
 
-////////////////////////////////////////
+//////////////////////////////////////// sumgame_map_view
 sumgame_map_view::sumgame_map_view(sumgame& sum, sumgame_impl::change_record& record): _sum(sum), _record(record)
 {
     // build game map
@@ -68,10 +65,10 @@ vector<game*>* sumgame_map_view::get_games_nullable(obj_id_t obj_id)
         return nullptr;
     }
 
-    vector<game*>& games = it->second;
+    vector<game*>& map_games = it->second;
     vector<game*> active_games;
 
-    for (game* g : games)
+    for (game* g : map_games)
     {
         if (g->is_active())
         {
@@ -79,25 +76,18 @@ vector<game*>* sumgame_map_view::get_games_nullable(obj_id_t obj_id)
         }
     }
 
-    if (!active_games.empty())
+    swap(map_games, active_games);
+
+    if (map_games.empty())
     {
-        swap(games, active_games);
-        return &games;
+        return nullptr;
     }
 
-    _map.erase(it);
-    return nullptr;
+    return &map_games;
 }
 
 vector<game*>& sumgame_map_view::get_games(obj_id_t obj_id)
 {
-    vector<game*>* ptr = get_games_nullable(obj_id);
-
-    if (ptr != nullptr)
-    {
-        return *ptr;
-    }
-
     return _map[obj_id];
 }
 
@@ -116,22 +106,97 @@ void sumgame_map_view::deactivate_games(vector<game*>& games)
     }
 }
 
-void sumgame_map_view::add_game(game* g, obj_id_t obj_id)
+//////////////////////////////////////// fraction
+static_assert(int32_t(-1) == int32_t(0xFFFFFFFF), "Not two's complement");
+static_assert(numeric_limits<int>::min() < 0);
+
+void simplify_fraction(fraction& f) // handles all error cases
 {
-    assert(g != nullptr);
-    assert(g->is_active());
-    assert(g->get_obj_id() == obj_id);
+    assert(f.bottom >= 1);
+    assert(is_power_of_2(f.bottom));
 
-    vector<game*>& vec = _map[obj_id];
+    // right shift OK because operands are signed
+    static_assert(is_integral_v<decltype(f.top)> && is_signed_v<decltype(f.top)>);
+    static_assert(is_integral_v<decltype(f.bottom)> && is_signed_v<decltype(f.bottom)>);
 
-    _record.added_games.push_back(g);
-    _sum.add(g);
-    vec.push_back(g);
+    while ((f.top & 0x1) == 0 && (f.bottom & 0x1) == 0)
+    {
+        f.top >>= 1;
+        f.bottom >>= 1;
+    }
 }
 
+// TODO should have a static_assert to check that abs(INT_MIN) == INT_MAX + 1
+bool raise_denominator(fraction& frac, int target_bottom)
+{
+    assert(target_bottom >= frac.bottom);
 
-////////////////////////////////////////
+    assert(frac.bottom > 0);
+    assert(is_power_of_2(frac.bottom));
 
+    assert(target_bottom > 0);
+    assert(is_power_of_2(target_bottom));
+
+    if (frac.top == std::numeric_limits<int>::min())
+    {
+        return false;
+    }
+
+    // i.e. 11000...0 (2 bits to avoid changing sign)
+    const int mask = int(0x3) << (sizeof(int) * CHAR_BIT - 2);
+
+    cout << "BITS: ";
+    print_bits(cout, mask);
+    cout << endl;
+
+    auto left_shift_safe = [](fraction& f) -> bool
+    {
+        if ((mask & f.top) != 0 || (mask & f.bottom) != 0)
+        {
+            return false;
+        }
+
+        f.top <<= 1;
+        f.bottom <<= 1;
+
+        return true;
+    };
+
+    const int frac_top_copy = frac.top;
+    const int frac_bottom_copy = frac.bottom;
+
+    bool flip_sign = false;
+
+    if (frac.top < 0)
+    {
+        flip_sign = true;
+
+        assert(abs(frac.top) == abs(-frac.top));
+        frac.top = -frac.top;
+    }
+
+    while (frac.bottom < target_bottom && left_shift_safe(frac))
+    { }
+
+    assert(frac.bottom <= target_bottom);
+
+    if (flip_sign)
+    {
+        assert(abs(frac.top) == abs(-frac.top));
+        frac.top = -frac.top;
+    }
+
+    if (frac.bottom == target_bottom)
+    {
+        return true;
+    }
+
+    frac.top = frac_top_copy;
+    frac.bottom = frac_bottom_copy;
+    return false;
+}
+
+//////////////////////////////////////// change_record
 namespace sumgame_impl {
 
 change_record::~change_record()
@@ -172,7 +237,6 @@ void change_record::undo_simplify_basic(sumgame& sum)
     _clear();
 }
 
-
 void change_record::_clear()
 {
     deactivated_games.clear();
@@ -181,30 +245,9 @@ void change_record::_clear()
 
 } // namespace sumgame_impl
 
-////////////////////////////////////////
+//////////////////////////////////////// helper functions
 
-/*
-    Convert game pointer types, after doing a few asserts.
-
-    NOTE: This cast is generally unsafe. Only use in place of reinterpret_cast, not dynamic_cast
-*/
-template <class T_ptr>
-inline T_ptr cast_game(game* g)
-{
-    static_assert(is_pointer_v<T_ptr>);
-    using T = typename remove_pointer<T_ptr>::type; // NOLINT
-
-    static_assert(is_base_of_v<game, T>);
-    static_assert(!is_abstract_v<T>);
-
-    assert(g != nullptr);
-    assert(g->is_active());
-    assert(g->get_obj_id() == get_obj_id<T>());
-
-    return reinterpret_cast<T_ptr>(g);
-}
-
-void simplify_basic_nimber(sumgame_map_view& map_view)
+void simplify_basic_nimber(sumgame_map_view& map_view) // handles all error cases
 {
     vector<game*>* nimbers = map_view.get_games_nullable(get_obj_id<nimber>());
 
@@ -231,26 +274,22 @@ void simplify_basic_nimber(sumgame_map_view& map_view)
         assert(sum >= 0);
     
         // 0: add nothing
+
         if (sum == 1) // 1: star
         {
             up_star* new_game = new up_star(0, true);
-            obj_id_t obj_id = get_obj_id<up_star>();
-
-            map_view.add_game(new_game, obj_id);
-        } else if (sum >= 2)
+            map_view.add_game(new_game);
+        } 
+        else if (sum >= 2) // >= 2: nimber
         {
-            assert(sum >= 2); // >= 2: nimber
-
             nimber* new_game = new nimber(sum);
-            obj_id_t obj_id = get_obj_id<nimber>();
-
-            map_view.add_game(new_game, obj_id);
+            map_view.add_game(new_game);
         }
     }
 
 }
 
-void simplify_basic_up_star(sumgame_map_view& map_view)
+void simplify_basic_up_star(sumgame_map_view& map_view) // handles all error cases
 {
     vector<game*>* up_stars = map_view.get_games_nullable(get_obj_id<up_star>());
 
@@ -262,158 +301,57 @@ void simplify_basic_up_star(sumgame_map_view& map_view)
     int ups = 0;
     bool star = false;
 
+    vector<game*> consumed_games; // if an addition will overflow, not all up_stars will be consumed
+
     for (game* g : *up_stars)
     {
         up_star* g_up_star = cast_game<up_star*>(g);
 
-        ups += g_up_star->num_ups();
-        star ^= g_up_star->has_star();
+        if (!safe_add(ups, g_up_star->num_ups()))
+        {
+            break;
+        }
 
-        map_view.deactivate_game(g);
+        star ^= g_up_star->has_star();
+        consumed_games.push_back(g_up_star);
     }
+
+    if (consumed_games.size() < 2)
+    {
+        return;
+    }
+
+    map_view.deactivate_games(consumed_games);
 
     if (ups != 0 || star != false)
     {
         up_star* new_game = new up_star(ups, star);
-        obj_id_t obj_id = get_obj_id<up_star>();
-
-        map_view.add_game(new_game, obj_id);
+        map_view.add_game(new_game);
     }
 }
 
-struct fraction
+bool safe_add_fraction(fraction& x, fraction& y)
 {
-    int numerator;
-    int denominator;
-};
+    simplify_fraction(x);
+    simplify_fraction(y);
 
-void simplify_fraction(fraction& f)
-{
-    assert(f.denominator >= 1);
-    assert(is_power_of_2(f.denominator));
+    int target_bottom = max(x.bottom, y.bottom);
 
-    while ((f.numerator & 0x1) == 0 && (f.denominator & 0x1) == 0)
+    if (!raise_denominator(x, target_bottom) || !raise_denominator(y, target_bottom))
     {
-        f.numerator >>= 1;
-        f.denominator >>= 1;
+        return false;
     }
+
+    assert(x.bottom == y.bottom);
+
+    if (addition_will_wrap(x.top, y.top))
+    {
+        return false;
+    }
+
+    x.top += y.top;
+    return true;
 }
-
-template <class T>
-void print_bits(ostream& os, const T& x)
-{
-    static_assert(is_integral_v<T>);
-
-    const int n_bits = sizeof(T) * CHAR_BIT;
-
-    // T could be signed, so we can't iteratively shift right from 
-    // the most significant bit
-    const T mask = T(1);
-
-    for (int i = 0; i < n_bits; i++)
-    {
-        os << (((mask << (n_bits - 1 - i)) & x) != 0);
-    }
-}
-
-void make_compatible(vector<fraction>& fracs)
-{
-    // find max
-    int max_denominator = 1;
-
-    for (fraction& f : fracs)
-    {
-        const int& d = f.denominator;
-
-        assert(is_power_of_2(d));
-        assert(d >= 1);
-
-        max_denominator = max(max_denominator, d);
-    }
-
-    // i.e. 11000...0 (2 bits to avoid changing sign)
-    int mask = int(-1);
-    mask <<= (sizeof(int) * CHAR_BIT - 2);
-
-    cout << "BITS: ";
-    print_bits(cout, mask);
-    cout << endl;
-
-    auto safe_shift = [&mask](fraction& f) -> bool
-    {
-        bool flipped = false; // TODO this is jank
-
-        static_assert(numeric_limits<int>::min() < -numeric_limits<int>::max());
-
-        if (f.numerator == numeric_limits<int>::min())
-        {
-            return false;
-        }
-
-        if (f.numerator < 0)
-        {
-            flipped = true;
-            f.numerator = -f.numerator;
-        }
-
-        if ((mask & f.numerator) != 0 || (mask & f.denominator) != 0)
-        {
-            return false;
-        }
-
-        f.numerator <<= 1;
-        f.denominator <<= 1;
-
-        if (flipped)
-        {
-            f.numerator = -f.numerator;
-        }
-
-        return true;
-    };
-
-    // multiply each fraction
-    for (fraction& f : fracs)
-    {
-        while (f.denominator < max_denominator)
-        {
-            if (!safe_shift(f))
-            {
-                throw overflow_error("Fraction shift will overflow");
-            }
-        }
-
-        assert(f.denominator == max_denominator);
-    }
-}
-
-fraction sum_fractions(vector<fraction>& fracs)
-{
-    assert(!fracs.empty());
-
-    fraction result = {0, 1};
-
-    make_compatible(fracs);
-
-    result.denominator = fracs.back().denominator;
-
-    for (fraction& f : fracs)
-    {
-        assert(result.denominator == f.denominator);
-
-        if (addition_will_wrap(result.numerator, f.numerator))
-        {
-            throw overflow_error("Fraction addition will overflow");
-        }
-
-        result.numerator += f.numerator;
-    }
-
-    simplify_fraction(result);
-
-    return result;
-}
-
 
 void simplify_basic_integers_rationals(sumgame_map_view& map_view)
 {
@@ -421,86 +359,53 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
     vector<game*>* rationals = map_view.get_games_nullable(get_obj_id<dyadic_rational>());
 
     size_t game_count = 0;
-
-    if (integers != nullptr)
-    {
-        game_count += integers->size();
-    }
-
-    if (rationals != nullptr)
-    {
-        game_count += rationals->size();
-    }
+    game_count += (integers == nullptr) ? 0 : integers->size();
+    game_count += (rationals == nullptr) ? 0 : rationals->size();
 
     if (game_count <= 1)
     {
         return;
     }
 
-    // sum integers
+    vector<game*> consumed_integers;
+    vector<game*> consumed_rationals;
+
+    // add up integers
     int int_sum = 0;
     if (integers != nullptr)
     {
         for (game* g : *integers)
         {
             integer_game* g_integer = cast_game<integer_game*>(g);
-            int val = g_integer->value();
 
-            map_view.deactivate_game(g_integer);
-
-            if (addition_will_wrap(int_sum, val))
+            if (!safe_add(int_sum, g_integer->value()))
             {
-                throw overflow_error("Addition will wrap: " + to_string(int_sum) + " " + to_string(val));
+                break;
             }
 
-            int_sum += val;
+            consumed_integers.push_back(g_integer);
         }
     }
 
-    // sum rationals
-    fraction rational_sum = {0, 1};
-
-    if (rationals != nullptr && !rationals->empty())
+    // add up rationals
+    fraction rational_sum(0, 1);
+    if (rationals != nullptr)
     {
-        vector<fraction> fracs;
-
         for (game* g : *rationals)
         {
             dyadic_rational* g_rational = cast_game<dyadic_rational*>(g);
-            const int& numerator = g_rational->p();
-            const int& denominator = g_rational->q();
 
-            fracs.push_back({numerator, denominator});
+            const int top = g_rational->p();
+            const int bottom = g_rational->q();
+            fraction f(top, bottom);
 
-            map_view.deactivate_game(g);
+            if (!safe_add_fraction(rational_sum, f))
+            {
+                break;
+            }
+
+            consumed_rationals.push_back(g_rational);
         }
-
-        rational_sum = sum_fractions(fracs);
-    }
-
-    vector<fraction> final_fracs;
-    final_fracs.push_back({int_sum, 1});
-    final_fracs.push_back(rational_sum);
-
-    fraction final_sum = sum_fractions(final_fracs);
-
-    if (final_sum.numerator == 0)
-    {
-        return;
-    }
-
-    if (final_sum.denominator == 1)
-    {
-        integer_game* new_game = new integer_game(final_sum.numerator);
-        obj_id_t obj_id = get_obj_id<integer_game>();
-
-        map_view.add_game(new_game, obj_id);
-    } else
-    {
-        dyadic_rational* new_game = new dyadic_rational(final_sum.numerator, final_sum.denominator);
-        obj_id_t obj_id = get_obj_id<dyadic_rational>();
-
-        map_view.add_game(new_game, obj_id);
     }
 }
 
