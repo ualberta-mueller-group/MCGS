@@ -55,6 +55,10 @@ void compute_integral_part(const fraction& frac, int& int_simplified, int& int_c
 
 ////////////////////////////////////////
 
+fraction::fraction(const dyadic_rational& rational)
+{
+    _init(rational.p(), rational.q());
+}
 
 dyadic_rational* fraction::make_dyadic_rational() // owned by caller
 {

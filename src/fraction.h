@@ -20,10 +20,8 @@ public:
         _init(top, 1);
     }
 
-    inline fraction(const dyadic_rational& rational)
-    {
-        _init(rational.p(), rational.q());
-    }
+    fraction(const dyadic_rational& rational);
+
 
     dyadic_rational* make_dyadic_rational(); // owned by caller
 
