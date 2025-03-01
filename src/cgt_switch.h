@@ -5,6 +5,7 @@
 
 #include "cgt_basics.h"
 #include "cgt_integer_game.h"
+#include "cgt_dyadic_rational.h"
 #include "game.h"
 #include <memory>
 
@@ -14,6 +15,7 @@ class switch_game : public game
 {
 public:
     switch_game(int left, int right);
+    switch_game(dyadic_rational* left, dyadic_rational* right);
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 

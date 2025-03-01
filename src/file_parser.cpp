@@ -955,7 +955,8 @@ void file_parser::init_game_parsers()
     add_game_parser("nimber",           new int_parser<nimber>());
 
     add_game_parser("dyadic_rational",  new int2_parser<dyadic_rational>());
-    add_game_parser("switch_game",      new int2_parser<switch_game>());
+    //add_game_parser("switch_game",      new int2_parser<switch_game>());
+    add_game_parser("switch_game",      new switch_game_parser());
 
     add_game_parser("up_star",          new up_star_parser());
 }

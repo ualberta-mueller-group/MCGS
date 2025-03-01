@@ -14,6 +14,19 @@ using std::endl;
 
 const int SWITCH_MOVE_CODE = 1;
 
+
+switch_game::switch_game(dyadic_rational* left, dyadic_rational* right): _left(left->p()), _right(right->p())
+{
+    cout << "NEW SWITCH: ";
+    cout << *left << " " << *right << endl;
+
+    assert(left->q() == 1);
+    assert(right->q() == 1);
+
+    delete left;
+    delete right;
+}
+
 void switch_game::play(const move& m, bw to_play)
 {
     if (is_integer())
