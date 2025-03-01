@@ -149,7 +149,7 @@ bool fraction::raise_denominator(int target_bottom)
 
 void fraction::negate()
 {
-    assert(top != std::numeric_limits<int>::min());
+    assert(top != std::numeric_limits<decltype(top)>::min());
     top = -top;
 }
 
