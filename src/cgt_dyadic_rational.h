@@ -6,6 +6,9 @@
 
 #include "cgt_basics.h"
 #include "game.h"
+#include "fraction.h"
+
+class fraction;
 
 //---------------------------------------------------------------------------
 
@@ -17,6 +20,10 @@ class dyadic_rational : public game
 {
 public:
     dyadic_rational(int p, int q);
+    dyadic_rational(const fraction& frac);
+
+    fraction get_fraction() const;
+
     // The move argument is the OLD value that must be restored.
     void play(const move& m, bw to_play) override;
     void undo_move() override;

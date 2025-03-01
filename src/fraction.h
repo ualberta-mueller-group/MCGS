@@ -3,6 +3,9 @@
 #include <cassert>
 #include <ostream>
 
+class dyadic_rational;
+
+////////////////////////////////////////
 class fraction
 {
 public:

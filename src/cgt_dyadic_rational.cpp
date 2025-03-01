@@ -31,6 +31,17 @@ dyadic_rational::dyadic_rational(int p, int q) : _p(p), _q(q)
     simplify();
 }
 
+dyadic_rational::dyadic_rational(const fraction& frac): _p(frac.top), _q(frac.bottom)
+{
+    assert(_q > 0);
+    simplify();
+}
+
+fraction dyadic_rational::get_fraction() const
+{
+    return fraction(_p, _q);
+}
+
 void dyadic_rational::play(const move& m, bw to_play)
 {
     assert(m == cgt_move::two_part_move(_p, _q));
