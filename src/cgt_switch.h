@@ -15,7 +15,11 @@ class switch_game : public game
 {
 public:
     switch_game(int left, int right);
-    switch_game(dyadic_rational* left, dyadic_rational* right);
+    switch_game(int left, const fraction& right);
+    switch_game(const fraction& left, int right);
+    switch_game(const fraction& left, const fraction& right);
+
+
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
@@ -26,29 +30,54 @@ public:
     move_generator* create_move_generator(bw to_play) const override;
     game* inverse() const override;
     
-    int left() const { return _left;}
-    int right() const { return _right;}
-    inline bool is_integer() const { return _int_game.get() != nullptr;}
-    int value() const
+    const fraction& left() const { return _left;}
+    const fraction& right() const { return _right;}
+    inline bool is_rational() const { return _rational_game.get() != nullptr;}
+    fraction value() const
     {
-        assert(is_integer());
-        return _int_game->value();
+        assert(is_rational());
+        return _rational_game->get_fraction();
     }
     void print(std::ostream& str) const override;
 
 private:
-    const int _left, _right;
+    const fraction _left, _right;
 
     // nullptr if absent
-    std::unique_ptr<integer_game> _int_game;
+    std::unique_ptr<dyadic_rational> _rational_game;
 };
 
 inline switch_game::switch_game(int left, int right) : 
     _left(left), 
     _right(right),
-    _int_game(nullptr)
+    _rational_game(nullptr)
 {
-    assert(left > right);
+    assert(_left > _right);
+}
+
+inline switch_game::switch_game(int left, const fraction& right) :
+    _left(left), 
+    _right(right),
+    _rational_game(nullptr)
+{
+    assert(_left > _right);
+}
+
+inline switch_game::switch_game(const fraction& left, int right) :
+    _left(left), 
+    _right(right),
+    _rational_game(nullptr)
+{
+    assert(_left > _right);
+}
+
+inline switch_game::switch_game(const fraction& left, const fraction& right) :
+    _left(left), 
+    _right(right),
+    _rational_game(nullptr)
+{
+    assert(_left > _right);
 }
 
 //---------------------------------------------------------------------------
+

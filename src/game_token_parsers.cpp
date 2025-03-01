@@ -74,7 +74,7 @@ game* switch_game_parser::parse_game(const std::string& game_token) const
     const size_t N = strs.size();
     size_t idx = 0;
 
-    std::vector<dyadic_rational*> rationals;
+    std::vector<fraction> fracs;
 
     auto is_comma = [](const std::string& str) -> bool
     {
@@ -100,7 +100,7 @@ game* switch_game_parser::parse_game(const std::string& game_token) const
         int top = std::stoi(str1);
         int bottom = std::stoi(str3);
 
-        rationals.push_back(new dyadic_rational(top, bottom));
+        fracs.emplace_back(top, bottom);
 
         idx += 3;
         return true;
@@ -116,37 +116,31 @@ game* switch_game_parser::parse_game(const std::string& game_token) const
         int top = std::stoi(strs[idx]);
         int bottom = 1;
 
-        rationals.push_back(new dyadic_rational(top, bottom));
+        fracs.emplace_back(top, bottom);
 
         idx += 1;
         return true;
-    };
-
-    auto delete_games = [&]() -> void
-    {
-        for (dyadic_rational* g : rationals)
-        {
-            delete g;
-        }
-        rationals.clear();
     };
 
     while (idx < N)
     {
         if (!get_fraction() && !get_int())
         {
-            delete_games();
             return nullptr;
         }
     }
 
     assert(idx == N);
 
-    if (rationals.size() != 2)
+    if (fracs.size() != 2)
     {
-        delete_games();
         return nullptr;
     }
 
-    return new switch_game(rationals[0], rationals[1]);
+    for (fraction& f : fracs)
+    {
+        f.simplify();
+    }
+
+    return new switch_game(fracs[0], fracs[1]);
 }

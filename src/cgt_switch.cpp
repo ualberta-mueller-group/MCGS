@@ -4,6 +4,8 @@
 //---------------------------------------------------------------------------
 #include "cgt_switch.h"
 
+#include "cgt_basics.h"
+#include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
 #include "cgt_move.h"
 
@@ -12,46 +14,33 @@
 using std::cout;
 using std::endl;
 
-
-switch_game::switch_game(dyadic_rational* left, dyadic_rational* right): _left(left->p()), _right(right->p())
-{
-    cout << "NEW SWITCH: ";
-    cout << *left << " " << *right << endl;
-
-    assert(left->q() == 1);
-    assert(right->q() == 1);
-
-    delete left;
-    delete right;
-}
-
 void switch_game::play(const move& m, bw to_play)
 {
-    if (is_integer())
+    if (is_rational())
     {
-        assert(m == INTEGER_MOVE_CODE);
-        _int_game->play(m, to_play);
+        assert(m == DYADIC_RATIONAL_MOVE_CODE);
+        _rational_game->play(m, to_play);
     }
     else
     {
         assert(m == SWITCH_MOVE_CODE);
-        _int_game.reset(new integer_game(to_play == BLACK ? _left : _right));
+        _rational_game.reset(new dyadic_rational(to_play == BLACK ? _left : _right));
     }
     game::play(m, to_play);
 }
 
 void switch_game::undo_move()
 {
-    assert(is_integer());
+    assert(is_rational());
     const int m = cgt_move::decode(last_move());
     if (m == SWITCH_MOVE_CODE) // back from integer to switch
     {
-        _int_game.reset();
+        _rational_game.reset();
     }
     else
     {
-        assert(m == INTEGER_MOVE_CODE);
-        _int_game->undo_move();
+        assert(m == DYADIC_RATIONAL_MOVE_CODE);
+        _rational_game->undo_move();
     }
     game::undo_move();
 }
@@ -59,7 +48,7 @@ void switch_game::undo_move()
 
 split_result switch_game::split_implementation() const
 {
-    if (!is_integer())
+    if (!is_rational())
     {
         return split_result();
     } else
@@ -70,24 +59,43 @@ split_result switch_game::split_implementation() const
             maybe ok; not much memory wasted, and switch_game should function
                 when split() is disabled by global options
         */
-        return split_result({new integer_game(value())});
+        return split_result({new dyadic_rational(value())});
     }
 }
 
 game* switch_game::inverse() const
 {
     switch_game* inv = new switch_game(-_right, -_left);
-    if (is_integer())
-        inv->_int_game.reset(new integer_game(-_int_game->value()));
+    if (is_rational())
+        inv->_rational_game.reset(new dyadic_rational(-_rational_game->get_fraction()));
     return inv;
 }
 
 void switch_game::print(std::ostream& str) const
 {
-    if (is_integer())
-        str << "switch:integer:" << value();
+    if (is_rational())
+        str << "switch:rational:" << value();
     else
-        str << "switch:{" << _left << " | " << _right << '}';
+    {
+        // Ensure compatibility with old .CSV data:
+        //str << "switch:{" << _left << " | " << _right << '}';
+
+        str << "switch:{";
+
+        if (_left.bottom == 1)
+            str << _left.top;
+        else
+            str << _left;
+
+        str << " | ";
+
+        if (_right.bottom == 1)
+            str << _right.top;
+        else
+            str << _right;
+
+        str << '}';
+    }
 }
 
 //---------------------------------------------------------------------------
@@ -106,7 +114,7 @@ switch_move_generator::switch_move_generator(const switch_game& game, bw to_play
     : move_generator(to_play),
       _generated(false)
 { 
-    assert(!game.is_integer());
+    assert(!game.is_rational());
 }
 
 void switch_move_generator::operator++()
@@ -128,8 +136,8 @@ move switch_move_generator::gen_move() const
 //---------------------------------------------------------------------------
 move_generator* switch_game::create_move_generator(bw to_play) const
 {
-    if (is_integer())
-        return _int_game->create_move_generator(to_play);
+    if (is_rational())
+        return _rational_game->create_move_generator(to_play);
     else
         return new switch_move_generator(*this, to_play);
 }

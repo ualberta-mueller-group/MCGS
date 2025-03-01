@@ -28,14 +28,19 @@ public:
     void simplify();
     bool raise_denominator(int target_bottom);
 
+    void negate();
+    fraction operator-() const;
+
     int remove_integral_part();
     int get_integral_part() const;
+
 
     bool operator<(const fraction& rhs) const;
     bool operator>(const fraction& rhs) const;
     bool operator==(const fraction& rhs) const;
     bool operator<=(const fraction& rhs) const;
     bool operator>=(const fraction& rhs) const;
+
 
     static bool make_compatible(fraction& f1, fraction& f2);
 

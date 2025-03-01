@@ -147,6 +147,19 @@ bool fraction::raise_denominator(int target_bottom)
     return false;
 }
 
+void fraction::negate()
+{
+    assert(top != std::numeric_limits<int>::min());
+    top = -top;
+}
+
+fraction fraction::operator-() const
+{
+    fraction f(*this);
+    f.negate();
+    return f;
+}
+
 int fraction::remove_integral_part()
 {
     int int_simplified;
