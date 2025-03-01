@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 #include "cgt_dyadic_rational.h"
 #include "utilities.h"
 
@@ -11,6 +12,49 @@ using namespace std;
 
 static_assert(int32_t(-1) == int32_t(0xFFFFFFFF), "Not two's complement");
 static_assert(numeric_limits<int>::min() < 0);
+
+//////////////////////////////////////// helper functions
+
+namespace {
+bool less_than(const fraction& lhs, const fraction& rhs, bool or_equal)
+{
+    fraction f1 = lhs;
+    fraction f2 = rhs;
+
+    int int1 = f1.remove_integral_part();
+    int int2 = f2.remove_integral_part();
+
+    if (int1 < int2)
+    {
+        return true;
+    }
+    if (int1 > int2)
+    {
+        return false;
+    }
+
+    // should always be possible because we removed the integral part
+    bool compatible = fraction::make_compatible(f1, f2);
+    assert(compatible && f1.bottom == f2.bottom);
+
+    return (f1.top < f2.top) || (or_equal && f1.top == f2.top);
+}
+
+void compute_integral_part(const fraction& frac, int& int_simplified, int& int_compatible)
+{
+    int remainder_compatible = pow2_mod(frac.top, frac.bottom);
+
+    int_compatible = frac.top - remainder_compatible;
+
+    fraction integral(int_compatible, frac.bottom);
+    integral.simplify();
+    assert(integral.bottom == 1);
+    int_simplified = integral.top;
+}
+} // namespace
+
+////////////////////////////////////////
+
 
 dyadic_rational* fraction::make_dyadic_rational() // owned by caller
 {
@@ -99,6 +143,75 @@ bool fraction::raise_denominator(int target_bottom)
     return false;
 }
 
+int fraction::remove_integral_part()
+{
+    int int_simplified;
+    int int_compatible;
+    compute_integral_part(*this, int_simplified, int_compatible);
+
+    top -= int_compatible;
+    return int_simplified;
+}
+
+int fraction::get_integral_part() const
+{
+    int int_simplified;
+    int int_compatible;
+    compute_integral_part(*this, int_simplified, int_compatible);
+
+    return int_simplified;
+}
+
+bool fraction::operator<(const fraction& rhs) const
+{
+    return less_than(*this, rhs, false);
+}
+
+bool fraction::operator>(const fraction& rhs) const
+{
+    return less_than(rhs, *this, false);
+}
+
+bool fraction::operator==(const fraction& rhs) const
+{
+    fraction f1 = *this;
+    fraction f2 = rhs;
+
+    if (!make_compatible(f1, f2))
+    {
+        return false;
+    }
+
+    assert(f1.bottom == f2.bottom);
+
+    return f1.top == f2.top;
+}
+
+bool fraction::operator<=(const fraction& rhs) const
+{
+    return less_than(*this, rhs, true);
+}
+
+bool fraction::operator>=(const fraction& rhs) const
+{
+    return less_than(rhs, *this, true);
+
+}
+
+bool fraction::make_compatible(fraction& f1, fraction& f2)
+{
+    f1.simplify();
+    f2.simplify();
+
+    int target = max(f1.bottom, f2.bottom);
+
+    if (!f1.raise_denominator(target) || !f2.raise_denominator(target))
+    {
+        return false;
+    }
+
+    return true;
+}
 
 void fraction::_init(int top, int bottom)
 {
@@ -111,12 +224,7 @@ void fraction::_init(int top, int bottom)
 
 bool safe_add_fraction(fraction& x, fraction& y)
 {
-    x.simplify();
-    y.simplify();
-
-    int target_bottom = max(x.bottom, y.bottom);
-
-    if (!x.raise_denominator(target_bottom) || !y.raise_denominator(target_bottom))
+    if (!fraction::make_compatible(x, y))
     {
         return false;
     }

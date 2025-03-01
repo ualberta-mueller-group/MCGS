@@ -65,8 +65,6 @@ bool left_shift_will_wrap(const T1& shiftee, const T2& shift_amount)
     return (mask & shiftee) != T1(0);
 }
 
-
-
 template <class T>
 void print_bits(std::ostream& os, const T& x)
 {
@@ -85,6 +83,30 @@ void print_bits(std::ostream& os, const T& x)
 }
 
 
+static_assert(int32_t(-1) == int32_t(0xFFFFFFFF), "Not two's complement");
+
+template <class T>
+inline bool is_power_of_2(const T& n)
+{
+    static_assert(std::is_integral_v<T>);
+    return n > 0 && !(n & (n - 1));
+}
+
+template <class T>
+T pow2_mod(const T& x, const T& mod)
+{
+    static_assert(std::is_integral_v<T>);
+    assert(mod > 0);
+    assert(is_power_of_2(mod));
+
+    if (x >= 0)
+    {
+        return x & (mod - 1);
+    }
+
+    assert(x != std::numeric_limits<T>::min());
+    return -((-x) & (mod - 1));
+}
 
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known, bool is_ge);
 
