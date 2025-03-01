@@ -6,10 +6,6 @@
 #include "cgt_basics.h"
 #include "game.h"
 
-// A move encoding any move in an integer_game.
-// This is also used by other simple games, e.g. switch_game
-const int INTEGER_MOVE_CODE = 0;
-
 // This is needed for undo_move in the case when _value has reached 0
 class integer_game : public game
 {

@@ -41,6 +41,14 @@ enum relation
     REL_UNKNOWN,
 };
 
+// A move encoding any move in some simple CGT games.
+enum simple_cgt_move_code
+{
+    INTEGER_MOVE_CODE = 0,
+    DYADIC_RATIONAL_MOVE_CODE,
+    SWITCH_MOVE_CODE,
+};
+
 //---------------------------------------------------------------------------
 // Utility for colors
 

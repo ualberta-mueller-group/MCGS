@@ -12,8 +12,6 @@
 using std::cout;
 using std::endl;
 
-const int SWITCH_MOVE_CODE = 1;
-
 
 switch_game::switch_game(dyadic_rational* left, dyadic_rational* right): _left(left->p()), _right(right->p())
 {
