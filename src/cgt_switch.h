@@ -9,6 +9,7 @@
 #include "game.h"
 #include <memory>
 
+const bool ALLOW_GENERAL_SWITCHES = true;
 //---------------------------------------------------------------------------
 
 class switch_game : public game
@@ -52,7 +53,7 @@ inline switch_game::switch_game(int left, int right) :
     _right(right),
     _rational_game(nullptr)
 {
-    assert(_left > _right);
+    assert(ALLOW_GENERAL_SWITCHES || _left > _right);
 }
 
 inline switch_game::switch_game(int left, const fraction& right) :
@@ -60,7 +61,7 @@ inline switch_game::switch_game(int left, const fraction& right) :
     _right(right),
     _rational_game(nullptr)
 {
-    assert(_left > _right);
+    assert(ALLOW_GENERAL_SWITCHES || _left > _right);
 }
 
 inline switch_game::switch_game(const fraction& left, int right) :
@@ -68,7 +69,7 @@ inline switch_game::switch_game(const fraction& left, int right) :
     _right(right),
     _rational_game(nullptr)
 {
-    assert(_left > _right);
+    assert(ALLOW_GENERAL_SWITCHES || _left > _right);
 }
 
 inline switch_game::switch_game(const fraction& left, const fraction& right) :
@@ -76,7 +77,7 @@ inline switch_game::switch_game(const fraction& left, const fraction& right) :
     _right(right),
     _rational_game(nullptr)
 {
-    assert(_left > _right);
+    assert(ALLOW_GENERAL_SWITCHES || _left > _right);
 }
 
 //---------------------------------------------------------------------------
