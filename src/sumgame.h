@@ -16,11 +16,11 @@ namespace sumgame_impl {
 class change_record;
 }
 
-enum sumgame_undo_enum
+enum sumgame_undo_code
 {
-    SUMGAME_UNDO_STACK_FRAME,
-    SUMGAME_UNDO_PLAY,
+    SUMGAME_UNDO_STACK_FRAME = 0,
     SUMGAME_UNDO_SIMPLIFY_BASIC,
+    SUMGAME_UNDO_PLAY,
 };
 
 //////////////////////////////////////// sumgame_move
@@ -102,15 +102,18 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 private:
+    class undo_stack_unwinder;
 
     bool _over_time() const;
     game* _pop_game();
     std::optional<solve_result> _solve_with_timeout();
+    void _push_undo_code(sumgame_undo_code code);
+    void _pop_undo_code(sumgame_undo_code code);
 
     mutable bool _should_stop;
     std::vector<game*> _subgames; // sumgame owns these subgames
 
-    std::vector<sumgame_undo_enum> _undo_enum_stack;
+    std::vector<sumgame_undo_code> _undo_code_stack;
     std::vector<play_record> _play_record_stack;
     std::vector<sumgame_impl::change_record> _change_record_stack;
 };

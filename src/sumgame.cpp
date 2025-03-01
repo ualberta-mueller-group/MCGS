@@ -20,6 +20,8 @@
 
 #include "cgt_up_star.h"
 
+#include "sumgame_undo_stack_unwinder.h"
+
 using std::cout;
 using std::endl;
 using std::optional;
@@ -284,6 +286,8 @@ bool sumgame::solve_with_games(game* g) const
 
 optional<solve_result> sumgame::_solve_with_timeout()
 {
+    undo_stack_unwinder stack_unwinder(*this); // TODO does this hurt performance?
+
     if (_over_time())
     {
         return solve_result::invalid();
@@ -296,7 +300,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
     }
 
     //cout << "BEFORE SIMPLIFY:" << endl << *this;
-    do_simplification = false;
+    //do_simplification = false;
     simplify_basic();
     //cout << "AFTER SIMPLIFY:" << endl << *this;
     //undo_simplify_basic();
@@ -333,19 +337,31 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
         if (_over_time())
         {
-            undo_simplify_basic();
+            ///undo_simplify_basic();
             return solve_result::invalid();
         }
 
         if (result.win)
         {
-            undo_simplify_basic();
+            ///undo_simplify_basic();
             return result;
         }
     }
 
-    undo_simplify_basic();
+    ///undo_simplify_basic();
     return solve_result(false);
+}
+
+void sumgame::_push_undo_code(sumgame_undo_code code)
+{
+    _undo_code_stack.push_back(code);
+}
+
+void sumgame::_pop_undo_code(sumgame_undo_code code)
+{
+    assert(!_undo_code_stack.empty());
+    assert(_undo_code_stack.back() == code);
+    _undo_code_stack.pop_back();
 }
 
 bool sumgame::_over_time() const
@@ -365,6 +381,8 @@ game* sumgame::_pop_game()
 
 void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 {
+    _push_undo_code(SUMGAME_UNDO_PLAY);
+
     _play_record_stack.push_back(play_record(sm));
     play_record& record = _play_record_stack.back();
 
@@ -395,6 +413,8 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 
 void sumgame::undo_move()
 {
+    _pop_undo_code(SUMGAME_UNDO_PLAY);
+
     play_record& record = _play_record_stack.back();
 
     const sumgame_move sm = record.sm;
@@ -436,6 +456,8 @@ void sumgame::undo_move()
 
 void sumgame::simplify_basic()
 {
+    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
+
     if (!do_simplification)
     {
         return;
@@ -452,6 +474,8 @@ void sumgame::simplify_basic()
 
 void sumgame::undo_simplify_basic()
 {
+    _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
+
     if (!do_simplification)
     {
         return;
