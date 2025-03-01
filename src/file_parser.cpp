@@ -846,7 +846,7 @@ bool file_parser::parse_chunk(game_case& gc)
             continue;
         }
 
-        // Match co/mment
+        // Match comment
         if (match("/", "\\", "comment", true))
         {
             static_assert(FILE_PARSER_MAX_CASES < 10); // next lines assume the case number is 1 digit
@@ -955,7 +955,6 @@ void file_parser::init_game_parsers()
     add_game_parser("nimber",           new int_parser<nimber>());
 
     add_game_parser("dyadic_rational",  new int2_parser<dyadic_rational>());
-    //add_game_parser("switch_game",      new int2_parser<switch_game>());
     add_game_parser("switch_game",      new switch_game_parser());
 
     add_game_parser("up_star",          new up_star_parser());
