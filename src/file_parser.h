@@ -176,7 +176,7 @@ enum match_state
     MATCH_START, // token matches opening string
     MATCH_FULL, // token matches both opening and closing strings, and has no illegal chars
     MATCH_ILLEGAL, // token has illegal chars, or matches opening string but not closing string
-    MATCH_NOT_FOUND, // token not found (not an error state)
+    MATCH_NOT_FOUND, // token not found (not an error state; the requested match doesn't occur)
 };
 
 } // namespace file_parser_impl

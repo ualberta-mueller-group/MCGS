@@ -36,6 +36,7 @@ unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 file_token_iterator::file_token_iterator(istream* stream, bool delete_stream)
     : __main_stream_ptr(stream), _delete_stream(delete_stream), _line_number(-1), _token_buffer(), _token_idx(0)
 {
+    _token_buffer.reserve(8);
 }
 
 file_token_iterator::~file_token_iterator()
@@ -138,7 +139,7 @@ void file_token_iterator::consume()
     }
 
     _token_buffer.clear();
-    swap(_token_buffer, new_buffer);
+    _token_buffer = std::move(new_buffer);
     _token_idx = 0;
 }
 
@@ -176,17 +177,17 @@ inline bool match_state_conclusive(match_state state)
 /*
     These characters can only appear in opening or closing tags
 */
-bool is_reserved_char(const char& c)
-{
+bool is_reserved_char(const char& c1, const char& c2)
+{   
     if (
-        c == '[' ||
-        c == ']' ||
-        c == '(' ||
-        c == ')' ||
-        c == '{' ||
-        c == '}' ||
-        c == '/' ||
-        c == '\\'
+        c1 == '[' ||
+        c1 == ']' ||
+        c1 == '(' ||
+        c1 == ')' ||
+        c1 == '{' ||
+        c1 == '}' ||
+        c1 == '/' ||
+        c1 == '\\'
         )
     {
         return true;
@@ -200,16 +201,21 @@ bool is_reserved_char(const char& c)
 */
 bool invalid_reserved_chars(const string& token, const string& open, const string& close)
 {
-    assert(token.size() >= open.size() + close.size());
-
     const size_t N = token.size();
-    assert(N >= close.size()); // no underflow
+    const size_t open_size = open.size();
+    const size_t close_size = close.size();
 
-    for (size_t i = open.size(); i < N - close.size(); i++)
+    assert(N >= open_size + close_size); // token has enough chars
+
+    assert(N >= close_size); // no subtraction underflow
+
+    for (size_t i = open_size; i < N - close_size; i++)
     {
-        const char& c = token[i];
+        // NOTE: if we change the input format, we may need 2 or more lookahead chars
+        const char& c1 = token[i];
+        const char& c2 = i + 1 < N - close_size ? token[i + 1] : 0;
 
-        if (is_reserved_char(c))
+        if (is_reserved_char(c1, c2))
         {
             return true;
         }
@@ -219,12 +225,14 @@ bool invalid_reserved_chars(const string& token, const string& open, const strin
 }
 
 // remove first and last characters
-void strip_enclosing(string& str)
+void strip_enclosing(string& str, const string& open, const string& close)
 {
-    assert(str.size() >= 2);
+    const size_t str_size = str.size();
+    const size_t open_size = open.size();
+    const size_t close_size = close.size();
+    assert(str.size() >= open_size + close_size);
 
-    str.pop_back();
-    str = str.substr(1);
+    str = str.substr(open_size, str_size - open_size - close_size);
 }
 
 
@@ -419,6 +427,7 @@ match_state file_parser::get_enclosed(const string& open, const string& close, b
         }
     }
 
+    // Now handle EOF
     assert(state == MATCH_START || state == MATCH_UNKNOWN);
 
     if (state == MATCH_START)
@@ -430,11 +439,14 @@ match_state file_parser::get_enclosed(const string& open, const string& close, b
 }
 
 /*
-    Try to match the current token to specified "enclosed format". Strips enclosing
-        characters
+    Expand current token to match the format: <open><content><close>
 
-    returns false if no match, true if match, and throws on
-        illegal input (i.e. match should happen but doesn't due to bad user input)
+    On success: Returns true, consumes file tokens used, and
+        assigns _token to <content> (i.e. strips enclosing characters)
+
+    On failure: If illegal input, throws an exception. If no illegal input and match
+        doesn't occur, returns false, rewinds the token stream, and leaves _token
+        as it was before
 */
 bool file_parser::match(const string& open, const string& close, const string& match_name, bool allow_inner)
 {
@@ -451,7 +463,7 @@ bool file_parser::match(const string& open, const string& close, const string& m
         {
             cout << "Got " << match_name << ": " << _token << endl;
         }
-        strip_enclosing(_token);
+        strip_enclosing(_token, open, close);
 
         _iterator.consume();
         return true;
@@ -463,6 +475,8 @@ bool file_parser::match(const string& open, const string& close, const string& m
         _token = token_copy;
         return false;
     }
+
+    assert(state == MATCH_ILLEGAL);
 
     string why = get_error_start() + "failed to match " + match_name;
     throw parser_exception(why, FAILED_MATCH);
