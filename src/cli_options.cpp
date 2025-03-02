@@ -8,7 +8,8 @@
 
 using namespace std;
 
-bool do_simplification = true;
+bool cli_options_global::do_simplification = true;
+
 
 ////////////////////////////////////////////////// cli_options
 
@@ -53,6 +54,13 @@ with version command. Causes [input string] to be ignored.");
 
     print_flag("--stdin", "Read input from stdin. Causes [input string] to be ignored.");
 
+    cout << "Optimization flags:" << endl;
+    cout << endl;
+    cout << "\tThese flags toggle optimizations on/off." << endl;
+    cout << endl;
+
+    print_flag("--no-simplify", "Don't simplify basic CGT games (switch_game, integer_game, etc).");
+
     cout << "Testing framework flags:" << endl;
     cout << endl;
     cout << "\tThese flags only have an effect when using \"--run-tests\"." << endl;
@@ -75,7 +83,6 @@ milliseconds. Timeout of 0 means tests never time out. Default is " + to_string(
     print_flag("--dry-run", "Skip running games. Has no effect when using \"--run-tests\". Instead, set the test timeout low (i.e. 1).");
 
     print_flag("--parser-debug", "Print file_parser debug info.");
-    print_flag("--no-simplify", "Don't do simplification in sumgame::solve functions");
 }
 
 cli_options parse_cli_args(int _argc, const char** argv, bool silent)
@@ -222,7 +229,7 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 
         if (arg == "--no-simplify")
         {
-            do_simplification = false;
+            cli_options_global::do_simplification = false;
             continue;
         }
         

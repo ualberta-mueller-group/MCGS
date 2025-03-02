@@ -458,7 +458,7 @@ void sumgame::simplify_basic()
 {
     _push_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
 
-    if (!do_simplification)
+    if (!cli_options_global::do_simplification)
     {
         return;
     }
@@ -476,7 +476,7 @@ void sumgame::undo_simplify_basic()
 {
     _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
 
-    if (!do_simplification)
+    if (!cli_options_global::do_simplification)
     {
         return;
     }
