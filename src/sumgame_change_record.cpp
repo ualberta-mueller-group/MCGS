@@ -241,6 +241,7 @@ void simplify_basic_switch(sumgame_map_view& map_view)
                 number_switches.push_back(g_switch);
             }
             case SWITCH_KIND_RATIONAL:
+            case SWITCH_KIND_PROPER_SWITCH_NORMALIZED:
             {
                 continue;
             }

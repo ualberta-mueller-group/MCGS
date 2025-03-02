@@ -5,6 +5,7 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
 #include "utilities.h"
 
@@ -16,29 +17,6 @@ static_assert(numeric_limits<int>::min() < 0);
 //////////////////////////////////////// helper functions
 
 namespace {
-bool less_than(const fraction& lhs, const fraction& rhs, bool or_equal)
-{
-    fraction f1 = lhs;
-    fraction f2 = rhs;
-
-    int int1 = f1.remove_integral_part();
-    int int2 = f2.remove_integral_part();
-
-    if (int1 < int2)
-    {
-        return true;
-    }
-    if (int1 > int2)
-    {
-        return false;
-    }
-
-    // should always be possible because we removed the integral part
-    bool compatible = fraction::make_compatible(f1, f2);
-    assert(compatible && f1.bottom == f2.bottom);
-
-    return (f1.top < f2.top) || (or_equal && f1.top == f2.top);
-}
 
 void compute_integral_part(const fraction& frac, int& int_simplified, int& int_compatible)
 {
@@ -171,37 +149,34 @@ int fraction::get_integral_part() const
 
 bool fraction::operator<(const fraction& rhs) const
 {
-    return less_than(*this, rhs, false);
+    return get_relation(*this, rhs) == REL_LESS;
 }
 
 bool fraction::operator>(const fraction& rhs) const
 {
-    return less_than(rhs, *this, false);
+    return get_relation(*this, rhs) == REL_GREATER;
 }
 
 bool fraction::operator==(const fraction& rhs) const
 {
-    fraction f1 = *this;
-    fraction f2 = rhs;
-
-    if (!make_compatible(f1, f2))
-    {
-        return false;
-    }
-
-    assert(f1.bottom == f2.bottom);
-
-    return f1.top == f2.top;
+    return get_relation(*this, rhs) == REL_EQUAL;
 }
 
 bool fraction::operator<=(const fraction& rhs) const
 {
-    return less_than(*this, rhs, true);
+    const relation rel = get_relation(*this, rhs);
+    return rel == REL_LESS || rel == REL_EQUAL;
 }
 
 bool fraction::operator>=(const fraction& rhs) const
 {
-    return less_than(rhs, *this, true);
+    const relation rel = get_relation(*this, rhs);
+    return rel == REL_GREATER || rel == REL_EQUAL;
+}
+
+bool fraction::is_simplified() const
+{
+    return (top & 0x1) != 0 || (bottom & 0x1) != 0;
 }
 
 bool fraction::make_compatible(fraction& f1, fraction& f2)
@@ -218,6 +193,41 @@ bool fraction::make_compatible(fraction& f1, fraction& f2)
 
     return true;
 }
+
+relation fraction::get_relation(const fraction& lhs, const fraction& rhs)
+{
+    fraction f1 = lhs;
+    fraction f2 = rhs;
+
+    int int1 = f1.remove_integral_part();
+    int int2 = f2.remove_integral_part();
+
+    if (int1 < int2)
+    {
+        return REL_LESS;
+    }
+    if (int1 > int2)
+    {
+        return REL_GREATER;
+    }
+
+    // should always be possible because we removed the integral part
+    bool compatible = fraction::make_compatible(f1, f2);
+    assert(compatible && f1.bottom == f2.bottom);
+
+    if (f1.top < f2.top)
+    {
+        return REL_LESS;
+    }
+
+    if (f1.top > f2.top)
+    {
+        return REL_GREATER;
+    }
+
+    return REL_EQUAL;
+}
+
 
 void fraction::_init(int top, int bottom)
 {

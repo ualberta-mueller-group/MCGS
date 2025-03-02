@@ -25,6 +25,20 @@ checking that the state is restored
     - TODO it probably is broken for sumgame, since it uses a different stack
     - TODO this check will be made functional after hash codes are implemented
 
+# Utility Functions (utilities.h)
+Defines various utility functions. Many are templates.
+- Check if `string`'s text represents an `int`
+- Print bits of an integral type
+- Check for arithmetic operation overflow/underflow
+- Various arithmetic operations, which will return false if the operation would overflow/underflow. These all return `bool`
+    - safe_add(T& x, const T& y)
+    - safe_left_shift(T& x, const T& shift_amount)
+    - safe_negate(T& x)
+    - safe_mul2_shift(T& x, const T& shift_amount)
+        - Fast positive multiply by power of 2, which will neither overflow nor change the sign of `x`
+        - Avoids undefined behaviour of left shifting negative value, by negating `x` if necessary
+- And more
+
 # More on data types
 
 ## `sumgame_move` struct (sumgame.h)
@@ -39,6 +53,26 @@ Represents a move made in a `sumgame`
     - whether or not the move resulted in a split
     - which subgames were created from the split
 
+## `sumgame_impl::change_record` class (sumgame_change_record.h)
+- Similar to `play_record`; used to track changes to `sumgame` made by game simplification steps
+    - Holds 2 `vector<game*>`s: one for deactivated games, and one for added games
+    - Undo operation reactivates games, then pops games from `sumgame` and deletes them
+- Simplifications are implemented as `change_record` methods
+    - i.e. `change_record::simplify_basic(sumgame&)` which sums together basic CGT games such as `integer_game`, `dyadic_rational`, `switch_game` etc
+
+## `sumgame_map_view` class (sumgame_map_view.h)
+- Sorts all `game` objects contained by a `sumgame` using RTTI (run-time type information), acting as a map from game type to `vector<game*>&`
+- Has public methods to mutate underlying `sumgame` while keeping it synchronized with the map view
+    - These mutations are stored in a `change_record`
+    - i.e. `sumgame_map_view::deactivate_game(game*)`, `sumgame_map_view::add_game(game*)`
+- Only games with `is_active() == true` are kept in the map
+
+## `sumgame::undo_stack_unwinder` class (sumgame_undo_stack_unwinder.h)
+- Private inner class of `sumgame`
+- Created as local variable at the start of `sumgame::_solve_with_timeout()`
+    - Constructor pushes a marker onto `sumgame`'s undo stack
+    - Destructor iteratively pops undo stack, calling undo functions (i.e. `sumgame::undo_move()`, `sumgame::undo_simplify_basic()`) until it sees the marker
+
 ## `sumgame` class (sumgame.h)
 A `sumgame` represents a (possibly empty) set of subgames. 
 It derives from `alternating_move_game` and reimplements the
@@ -50,6 +84,26 @@ It derives from `alternating_move_game` and reimplements the
     - It uses `sumgame_move`
     - It keeps its own `_play_record_stack` with sum-level info
     - Subgames keep their own stacks with local moves as well
+
+## `fraction` class (fraction.h)
+- Simple and lightweight fraction type whose denominator must be a positive power of 2
+    - Consists only of 2 public `int`s: `top` and `bottom`, making copying fast
+    - Has comparison operators (`<`, `<=`, `==`, `!=`, `>=`, `>`)
+        - These will never fail, but are significantly more expensive than `int` comparisons due to needing to make operands compatible (have the same denominator)
+        - `fraction(1, 2) == fraction(2, 4)`
+    - Has safe operations which may fail and return false, but will not underflow or overflow
+        - On failure, `fraction` operands may be left more (or less) simplified, but will still be equivalent to before the operation (i.e. according to `==`)
+        - `safe_add_fraction(fraction& x, fraction& y)` and `safe_substract_fraction(fraction& x, fraction& y)`
+            - If safe, do `x = x + y` or `x = x - y`
+        - Make `fraction`s compatible
+        - Negate
+        - Raise denominator
+            - To target value
+            - By number of left bit shifts
+    - Has operations which will not fail
+        - Simplify
+        - Get (and optionally remove) integral part as an `int` (whose denominator is 1)
+
 
 ## More on Extending the `game` Class
 - In every game implementation:
@@ -128,6 +182,57 @@ Perhaps a more sophisticated version of "search around edges" would perform bett
 Searching for bounds is faster within smaller intervals. When finding bounds for many sumgames, perhaps the caller of `find_bounds()` should dynamically adjust the search interval to be "close" to bounds found for previous games. When the chosen scale and interval don't contain bounds, `find_bounds()` aborts search after a small number of comparisons (~6 `sumgame::solve_with_games()` calls).
 
 Maybe bound generation in the database should be done using a sliding window of statistics for the last `N` games to help size intervals appropriately.
+
+# Game Simplification
+`sumgame::simplify_basic()` sums together basic CGT games to simplify the sum (and `sumgame::undo_simplify_basic()` undoes this). At each step, all games of a type are handled. Run-time type information is used to distinguish game types. To ensure that new games produced by a previous step may be included in the next step, steps happen in the following order:
+
+1. `nimber`
+2. `switch_game`
+3. `integer_game` and `dyadic_rational`
+4. `up_star`
+
+Steps producing no useful simplification (i.e. only summing up a single game) will not modify the `sumgame`. i.e. if the `sumgame` has only one non-zero `up_star` game, the game will be left alone, rather than duplicated with one inactive copy. 
+
+## `nimber` Simplification
+- All `nimber`s are summed together using `nimber::nim_sum()`
+- This step only has an effect if the sum contains at least 2 nimbers, or contains 1 nimber with `value() <= 1`
+- May add 1 `nimber`, or 1 star (as `up_star`), or nothing
+- Overflow is not a concern, as nimber addition is an XOR operation
+
+## `switch_game` Simplification
+`switch_game`s are of the form `{X | Y}` for some rationals `X` and `Y`.
+
+First, all `switch_game`s are sorted based on their `switch_kind`. Only `SWITCH_KIND_PROPER_SWITCH` and `SWITCH_KIND_NUMBER_AS_SWITCH` are used. `SWITCH_KIND_RATIONAL` and `SWITCH_KIND_PROPER_SWITCH_NORMALIZED` are left alone. There are two major cases (with some subcases), described in the next subsections.
+
+Note that operations involve the `fraction` class, and when arithmetic overflow occurs during simplification of a given `switch_game` object, this particular object is skipped and left untouched.
+
+#### Proper Switch
+Proper switches are `switch_game`s where `X > Y`. These games are normalized to be of the form `M + {A | -A}`, for rationals `M` and `A`, where `M` is the mean of `X` and `Y`, and `A = X - M`.
+
+#### Number As Switch
+Switches representing numbers are `switch_game`s where `X <= Y`. Several subcases occur:
+
+- If `X < 0` and `Y > 0`, the game is 0 (so it is just deactivated)
+- If `X == Y`, the game is replaced with `X + *` (a `dyadic_rational` and `up_star`)
+- Otherwise the game is replaced by the "simplest" rational `U`, `X < U < Y`
+
+The simplest such value is the unique rational `U = i/2^j` for some integers `i` and `j`, `j >= 0`, having minimal `j`, or if `j == 0`, having `i` with smallest absolute value. This value is found by iteratively increasing `j` and checking if `U` occurs for the current iteration of `j`.
+
+
+## `integer_game` and `dyadic_rational` Simplification
+All `integer_game`s are summed together, then all `dyadic_rational`s are summed together. The two resulting sums are then summed. Within each of these 3 summations, the first summand which would result in overflow causes the summation to stop. For example:
+```
+INT_MAX + -1 + 2 + -50
+```
+will only use the first 2 values.
+
+
+
+## `up_star` Simplification
+`up_star`s are summed together similarly to `integer_game`s and `dyadic_rational`s. The first summand which would cause overflow causes the summation to stop.
+
+
+
 
 # Design Choices and Remaining Uglinesses
 ## A `move` must be implemented as an `int` 

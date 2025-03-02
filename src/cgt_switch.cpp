@@ -100,19 +100,36 @@ void switch_game::print(std::ostream& str) const
 
 switch_kind switch_game::kind() const
 {
-    assert(_rel == REL_GREATER || _rel == REL_LESS_OR_EQUAL);
-
     if (is_rational())
     {
         return SWITCH_KIND_RATIONAL;
     }
 
-    return _rel == REL_GREATER ? SWITCH_KIND_PROPER_SWITCH : SWITCH_KIND_NUMBER_AS_SWITCH;
+    return _kind;
 }
 
-relation switch_game::_init_relation()
+relation switch_game::_init_relation() const
 {
-    return _left > _right ? REL_GREATER : REL_LESS_OR_EQUAL;
+    relation rel = fraction::get_relation(_left, _right);
+    assert(rel == REL_EQUAL || rel == REL_LESS || rel == REL_GREATER);
+    return rel;
+}
+
+switch_kind switch_game::_init_kind() const
+{
+    assert(_left.is_simplified() && _right.is_simplified());
+
+    if (_rel == REL_GREATER || _rel == REL_EQUAL)
+    {
+        return SWITCH_KIND_NUMBER_AS_SWITCH;
+    }
+
+    if (_left.bottom == _right.bottom && _left.top == -_right.top)
+    {
+        return SWITCH_KIND_PROPER_SWITCH_NORMALIZED;
+    }
+
+    return SWITCH_KIND_PROPER_SWITCH;
 }
 
 //---------------------------------------------------------------------------

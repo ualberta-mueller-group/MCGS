@@ -35,16 +35,16 @@ public:
     int remove_integral_part();
     int get_integral_part() const;
 
-
     bool operator<(const fraction& rhs) const;
     bool operator>(const fraction& rhs) const;
     bool operator==(const fraction& rhs) const;
     bool operator<=(const fraction& rhs) const;
     bool operator>=(const fraction& rhs) const;
 
-
+    bool is_simplified() const;
 
     static bool make_compatible(fraction& f1, fraction& f2);
+    static relation get_relation(const fraction& f1, const fraction& f2);
 
     int top;
     int bottom;
