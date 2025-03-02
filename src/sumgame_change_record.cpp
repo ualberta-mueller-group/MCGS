@@ -1,6 +1,8 @@
 #include "sumgame_change_record.h"
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
+#include "cgt_switch.h"
+#include "game.h"
 #include "obj_id.h"
 #include <climits>
 #include <type_traits>
@@ -16,6 +18,7 @@ using namespace std;
 
 //////////////////////////////////////// declarations
 void simplify_basic_nimber(sumgame_map_view& map_view);
+void simplify_basic_switch(sumgame_map_view& map_view);
 void simplify_basic_up_star(sumgame_map_view& map_view);
 void simplify_basic_integers_rationals(sumgame_map_view& map_view);
 
@@ -43,9 +46,10 @@ change_record& change_record::operator=(change_record&& other) noexcept
 void change_record::simplify_basic(sumgame& sum)
 {
     sumgame_map_view map_view(sum, *this);
-    simplify_basic_nimber(map_view);
-    simplify_basic_up_star(map_view);
-    simplify_basic_integers_rationals(map_view);
+    //simplify_basic_nimber(map_view);
+    simplify_basic_switch(map_view);
+    //simplify_basic_up_star(map_view);
+    //simplify_basic_integers_rationals(map_view);
     return;
 }
 
@@ -130,6 +134,70 @@ void simplify_basic_nimber(sumgame_map_view& map_view)
             nimber* new_game = new nimber(sum);
             map_view.add_game(new_game);
         }
+    }
+
+}
+
+void simplify_basic_switch(sumgame_map_view& map_view)
+{
+    vector<game*>* switch_games = map_view.get_games_nullable(get_obj_id<switch_game>());
+
+    if (switch_games == nullptr)
+    {
+        return;
+    }
+
+    // Sort the switches by kind
+    vector<switch_game*> proper_switches;
+    vector<switch_game*> number_switches;
+
+    vector<switch_game*> consumed_switches;
+
+    for (game* g : *switch_games)
+    {
+        switch_game* g_switch = cast_game<switch_game*>(g);
+        switch (g_switch->kind())
+        {
+            case SWITCH_KIND_PROPER_SWITCH:
+            {
+                proper_switches.push_back(g_switch);
+                break;
+            }
+            case SWITCH_KIND_NUMBER_AS_SWITCH:
+            {
+                number_switches.push_back(g_switch);
+            }
+            case SWITCH_KIND_RATIONAL:
+            {
+                continue;
+            }
+        }
+    }
+
+
+    // Normalize proper switches
+    for (switch_game* g_switch : proper_switches)
+    {
+        assert(g_switch->kind() == SWITCH_KIND_PROPER_SWITCH);
+
+        fraction f1 = g_switch->left();
+        fraction f2 = g_switch->right();
+
+        // Compute mean, then subtract it
+        fraction mean = f1;
+        if (                                      //
+            !safe_add_fraction(mean, f2)       || // mean = (f1 + f2)
+            !safe_mul2_shift(mean.bottom, 1)   || // mean = (f1 + f2) / 2
+            !safe_subtract_fraction(f1, mean)  || // f1 = f1 - mean
+            !safe_subtract_fraction(f2, mean)     // f2 = f2 - mean
+        )                                         //
+            continue;
+
+        mean.simplify();
+        f1.simplify();
+        f2.simplify();
+
+        cout << mean << " " << f1 << " " << f2 << endl;
     }
 
 }

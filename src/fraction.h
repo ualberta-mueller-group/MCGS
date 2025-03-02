@@ -27,6 +27,7 @@ public:
 
     void simplify();
     bool raise_denominator(int target_bottom);
+    bool raise_denominator_by_pow2(int exponent);
 
     void negate();
     fraction operator-() const;
@@ -40,6 +41,7 @@ public:
     bool operator==(const fraction& rhs) const;
     bool operator<=(const fraction& rhs) const;
     bool operator>=(const fraction& rhs) const;
+
 
 
     static bool make_compatible(fraction& f1, fraction& f2);
@@ -59,5 +61,6 @@ inline std::ostream& operator<<(std::ostream& os, const fraction& f)
 }
 
 bool safe_add_fraction(fraction& x, fraction& y);
+bool safe_subtract_fraction(fraction& x, fraction& y);
 
 

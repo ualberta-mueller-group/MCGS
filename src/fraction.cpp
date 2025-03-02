@@ -81,6 +81,7 @@ void fraction::simplify()
     }
 }
 
+
 // TODO should have a static_assert to check that abs(INT_MIN) == INT_MAX + 1
 bool fraction::raise_denominator(int target_bottom)
 {
@@ -92,59 +93,48 @@ bool fraction::raise_denominator(int target_bottom)
     assert(target_bottom > 0);
     assert(is_power_of_2(target_bottom));
 
-    if (top == std::numeric_limits<int>::min())
+    int exponent = 0;
+
+    {
+        int target_bottom_copy = target_bottom;
+
+        while (target_bottom_copy > bottom)
+        {
+            assert((target_bottom_copy & 0x1) == 0);
+            target_bottom_copy >>= 1;
+            exponent += 1;
+        }
+
+        assert(target_bottom_copy == bottom);
+    }
+
+    int top_copy = top;
+    int bottom_copy = bottom;
+
+    if (!safe_mul2_shift(top_copy, exponent) || !safe_mul2_shift(bottom_copy, exponent))
     {
         return false;
     }
 
-    // i.e. 11000...0 (2 bits to avoid changing sign)
-    const int mask = int(0x3) << (sizeof(int) * CHAR_BIT - 2);
-
-    auto left_shift_safe = [&]() -> bool
-    {
-        if ((mask & top) != 0 || (mask & bottom) != 0)
-        {
-            return false;
-        }
-
-        top <<= 1;
-        bottom <<= 1;
-
-        return true;
-    };
-
-    const int top_copy = top;
-    const int bottom_copy = bottom;
-
-    bool flip_sign = false;
-
-    if (top < 0)
-    {
-        flip_sign = true;
-
-        assert(abs(top) == abs(-top));
-        top = -top;
-    }
-
-    while (bottom < target_bottom && left_shift_safe())
-    { }
-
-    assert(bottom <= target_bottom);
-
-    if (flip_sign)
-    {
-        assert(abs(top) == abs(-top));
-        top = -top;
-    }
-
-    if (bottom == target_bottom)
-    {
-        return true;
-    }
+    assert(bottom_copy == target_bottom);
 
     top = top_copy;
     bottom = bottom_copy;
-    return false;
+
+    return true;
+}
+
+bool fraction::raise_denominator_by_pow2(int exponent)
+{
+    int target = bottom;
+
+    if (left_shift_will_wrap(target, exponent))
+    {
+        return false;
+    }
+
+    target <<= exponent;
+    return raise_denominator(target);
 }
 
 void fraction::negate()
@@ -212,7 +202,6 @@ bool fraction::operator<=(const fraction& rhs) const
 bool fraction::operator>=(const fraction& rhs) const
 {
     return less_than(rhs, *this, true);
-
 }
 
 bool fraction::make_compatible(fraction& f1, fraction& f2)
@@ -259,3 +248,12 @@ bool safe_add_fraction(fraction& x, fraction& y)
 
 
 
+bool safe_subtract_fraction(fraction& x, fraction& y)
+{
+    fraction y_negative = y;
+
+    if (!safe_negate(y_negative.top))
+        return false;
+
+    return safe_add_fraction(x, y_negative);
+}
