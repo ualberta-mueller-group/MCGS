@@ -12,6 +12,13 @@
 const bool ALLOW_GENERAL_SWITCHES = true;
 //---------------------------------------------------------------------------
 
+enum switch_kind
+{
+    SWITCH_KIND_PROPER_SWITCH = 0,
+    SWITCH_KIND_RATIONAL,
+    SWITCH_KIND_NUMBER_AS_SWITCH,
+};
+
 class switch_game : public game
 {
 public:
@@ -40,9 +47,13 @@ public:
         return _rational_game->get_fraction();
     }
     void print(std::ostream& str) const override;
+    switch_kind kind() const;
 
 private:
+    relation _init_relation();
+
     const fraction _left, _right;
+    const relation _rel;
 
     // nullptr if absent
     std::unique_ptr<dyadic_rational> _rational_game;
@@ -51,33 +62,37 @@ private:
 inline switch_game::switch_game(int left, int right) : 
     _left(left), 
     _right(right),
+    _rel(_init_relation()),
     _rational_game(nullptr)
 {
-    assert(ALLOW_GENERAL_SWITCHES || _left > _right);
+    assert(ALLOW_GENERAL_SWITCHES || _rel == REL_GREATER);
 }
 
 inline switch_game::switch_game(int left, const fraction& right) :
     _left(left), 
     _right(right),
+    _rel(_init_relation()),
     _rational_game(nullptr)
 {
-    assert(ALLOW_GENERAL_SWITCHES || _left > _right);
+    assert(ALLOW_GENERAL_SWITCHES || _rel == REL_GREATER);
 }
 
 inline switch_game::switch_game(const fraction& left, int right) :
     _left(left), 
     _right(right),
+    _rel(_init_relation()),
     _rational_game(nullptr)
 {
-    assert(ALLOW_GENERAL_SWITCHES || _left > _right);
+    assert(ALLOW_GENERAL_SWITCHES || _rel == REL_GREATER);
 }
 
 inline switch_game::switch_game(const fraction& left, const fraction& right) :
     _left(left), 
     _right(right),
+    _rel(_init_relation()),
     _rational_game(nullptr)
 {
-    assert(ALLOW_GENERAL_SWITCHES || _left > _right);
+    assert(ALLOW_GENERAL_SWITCHES || _rel == REL_GREATER);
 }
 
 //---------------------------------------------------------------------------

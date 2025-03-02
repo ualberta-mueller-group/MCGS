@@ -98,6 +98,23 @@ void switch_game::print(std::ostream& str) const
     }
 }
 
+switch_kind switch_game::kind() const
+{
+    assert(_rel == REL_GREATER || _rel == REL_LESS_OR_EQUAL);
+
+    if (is_rational())
+    {
+        return SWITCH_KIND_RATIONAL;
+    }
+
+    return _rel == REL_GREATER ? SWITCH_KIND_PROPER_SWITCH : SWITCH_KIND_NUMBER_AS_SWITCH;
+}
+
+relation switch_game::_init_relation()
+{
+    return _left > _right ? REL_GREATER : REL_LESS_OR_EQUAL;
+}
+
 //---------------------------------------------------------------------------
 class switch_move_generator : public move_generator
 {
