@@ -92,9 +92,82 @@ void change_record::_move_impl(change_record&& other) noexcept
 }
 
 
+
 } // namespace sumgame_impl
 
 //////////////////////////////////////// helper functions
+
+bool convert_number_switch(fraction x1, fraction y2, sumgame_map_view& map_view)
+{
+    if (!fraction::make_compatible(x1, y2))
+        return false;
+    assert(x1.bottom == y2.bottom);
+    assert(x1.top <= y2.top);
+
+    // 0 case
+    if (x1.top < 0 && y2.top > 0)
+    {
+        return true;
+    }
+
+    // equal case
+    if (x1.top == y2.top)
+    {
+        map_view.add_game(new dyadic_rational(x1));
+        map_view.add_game(new up_star(0, true));
+        return true;
+    }
+
+    // now (x1 < y2 <= 0) OR (0 <= x1 < y2), and we want case 2
+    bool swapped = false;
+    if (x1.top < 0)
+    {
+        swapped = true;
+        if (!safe_negate(x1.top) || !safe_negate(y2.top))
+            return false;
+        swap(x1.top, y2.top);
+    }
+
+    assert(0 <= x1.top && x1.top < y2.top);
+
+    if ((x1.top + 1 == y2.top) && (
+        !x1.raise_denominator_by_pow2(1) ||
+        !y2.raise_denominator_by_pow2(1)
+    ))
+        return false;
+
+    const int denominator = x1.bottom;
+    const int delta = y2.top - x1.top;
+    assert(delta > 1);
+
+    int u = denominator;
+    for (int j = 0; ; j++)
+    {
+        assert(is_power_of_2(u));
+
+        const int xn2 = pow2_mod(x1.top, u);
+        const int yn2 = xn2 + delta;
+
+        if (xn2 < u && u < yn2)
+        {
+            const int offset = u - xn2;
+
+            int zn = x1.top + offset;
+            int zd = denominator;
+            fraction z(zn, zd);
+            z.simplify();
+
+            if (swapped && !safe_negate(z.top))
+                return false;
+
+            map_view.add_game(new dyadic_rational(z));
+            return true;
+        }
+
+        assert((u & 0x1) == 0);
+        u >>= 1;
+    }
+}
 
 void simplify_basic_nimber(sumgame_map_view& map_view)
 {
@@ -151,7 +224,7 @@ void simplify_basic_switch(sumgame_map_view& map_view)
     vector<switch_game*> proper_switches;
     vector<switch_game*> number_switches;
 
-    vector<switch_game*> consumed_switches;
+    vector<game*> consumed_switches;
 
     for (game* g : *switch_games)
     {
@@ -173,7 +246,6 @@ void simplify_basic_switch(sumgame_map_view& map_view)
             }
         }
     }
-
 
     // Normalize proper switches
     for (switch_game* g_switch : proper_switches)
@@ -197,9 +269,32 @@ void simplify_basic_switch(sumgame_map_view& map_view)
         f1.simplify();
         f2.simplify();
 
+        consumed_switches.push_back(g_switch);
+        if (mean.top != 0)
+        {
+            dyadic_rational* new_rational = new dyadic_rational(mean);
+            map_view.add_game(new_rational);
+        }
+
+        switch_game* new_switch = new switch_game(f1, f2);
+        map_view.add_game(new_switch);
+
         cout << mean << " " << f1 << " " << f2 << endl;
     }
 
+    // Convert number switches
+    for (switch_game* g_switch : number_switches)
+    {
+        assert(g_switch->kind() == SWITCH_KIND_NUMBER_AS_SWITCH);
+
+        const fraction& f1 = g_switch->left();
+        const fraction& f2 = g_switch->right();
+
+        if (convert_number_switch(f1, f2, map_view))
+            consumed_switches.push_back(g_switch);
+    }
+
+    map_view.deactivate_games(consumed_switches);
 }
 
 void simplify_basic_up_star(sumgame_map_view& map_view)

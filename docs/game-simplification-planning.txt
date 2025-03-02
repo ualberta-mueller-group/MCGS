@@ -52,8 +52,8 @@ current tasks:
             and sorts sumgame's games by type. This class mutates both the sumgame and change_record,
             and keeps the view synchronized so long as mutations only happen through the map view
 
-    -- integers and rationals
-        -- change sumgame_map_view::add_game() to use a template to figure out the obj_id_t of the game based on the pointer
+    xx integers and rationals
+        xx change sumgame_map_view::add_game() to use a template to figure out the obj_id_t of the game based on the pointer
 
         <-- almost done, need a `fraction` class 
 
@@ -65,14 +65,19 @@ current tasks:
             once the result is known and no overflow occurred.
             Should we do partial simplification in this case?
 
-    -- switch game generalization
-        -- rational endpoints
-        -- left <= right
-    -- switch game
-        -- actual switch case (left > right)
+    xx switch game generalization
+        xx rational endpoints
+        xx left <= right
+    xx switch game
+        xx actual switch case (left > right)
             <-- normalization
-        -- other case (left <= right) use "simplest number" algorithm
+        xx other case (left <= right) use "simplest number" algorithm
     -- proper way to toggle optimizations
+        <-- just allow disabling simplify for now
+    -- write docs
+    -- proofread, clean up, find testable things
+    -- performance tweaking
+    -- write unit tests
 
 -- sumgame undo stack optimization
     <-- It might be best for this to not be heap allocated.
