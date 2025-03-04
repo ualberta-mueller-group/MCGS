@@ -119,7 +119,7 @@ switch_kind switch_game::_init_kind() const
 {
     assert(_left.is_simplified() && _right.is_simplified());
 
-    if (_rel == REL_GREATER || _rel == REL_EQUAL)
+    if (_rel == REL_LESS || _rel == REL_EQUAL)
     {
         return SWITCH_KIND_NUMBER_AS_SWITCH;
     }
