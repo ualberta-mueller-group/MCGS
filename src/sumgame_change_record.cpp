@@ -302,8 +302,6 @@ void simplify_basic_switch(sumgame_map_view& map_view)
 
         switch_game* new_switch = new switch_game(f1, f2);
         map_view.add_game(new_switch);
-
-        cout << mean << " " << f1 << " " << f2 << endl;
     }
 
     // Convert number switches
