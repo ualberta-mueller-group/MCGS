@@ -9,15 +9,14 @@
 #include "game.h"
 #include <memory>
 
-const bool ALLOW_GENERAL_SWITCHES = true;
 //---------------------------------------------------------------------------
 
 enum switch_kind
 {
-    SWITCH_KIND_PROPER_SWITCH = 0,
-    SWITCH_KIND_PROPER_SWITCH_NORMALIZED,
+    SWITCH_KIND_PROPER = 0,
+    SWITCH_KIND_PROPER_NORMALIZED,
     SWITCH_KIND_RATIONAL,
-    SWITCH_KIND_NUMBER_AS_SWITCH,
+    SWITCH_KIND_CONVERTABLE_NUMBER,
 };
 
 class switch_game : public game
@@ -27,7 +26,6 @@ public:
     switch_game(int left, const fraction& right);
     switch_game(const fraction& left, int right);
     switch_game(const fraction& left, const fraction& right);
-
 
     void play(const move& m, bw to_play) override;
     void undo_move() override;
@@ -69,7 +67,7 @@ inline switch_game::switch_game(int left, int right) :
     _kind(_init_kind()),
     _rational_game(nullptr)
 {
-    assert(ALLOW_GENERAL_SWITCHES || _rel == REL_GREATER);
+    assert(_left.is_simplified() && _right.is_simplified());
 }
 
 inline switch_game::switch_game(int left, const fraction& right) :
@@ -79,7 +77,7 @@ inline switch_game::switch_game(int left, const fraction& right) :
     _kind(_init_kind()),
     _rational_game(nullptr)
 {
-    assert(ALLOW_GENERAL_SWITCHES || _rel == REL_GREATER);
+    assert(_left.is_simplified() && _right.is_simplified());
 }
 
 inline switch_game::switch_game(const fraction& left, int right) :
@@ -89,7 +87,7 @@ inline switch_game::switch_game(const fraction& left, int right) :
     _kind(_init_kind()),
     _rational_game(nullptr)
 {
-    assert(ALLOW_GENERAL_SWITCHES || _rel == REL_GREATER);
+    assert(_left.is_simplified() && _right.is_simplified());
 }
 
 inline switch_game::switch_game(const fraction& left, const fraction& right) :
@@ -99,7 +97,7 @@ inline switch_game::switch_game(const fraction& left, const fraction& right) :
     _kind(_init_kind()),
     _rational_game(nullptr)
 {
-    assert(ALLOW_GENERAL_SWITCHES || _rel == REL_GREATER);
+    assert(_left.is_simplified() && _right.is_simplified());
 }
 
 //---------------------------------------------------------------------------

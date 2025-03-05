@@ -1,150 +1,107 @@
 #include "fraction.h"
 
 #include <climits>
-#include <cstdint>
-#include <iostream>
-#include <limits>
-#include <stdexcept>
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
 #include "utilities.h"
+#include "safe_arithmetic.h"
 
 using namespace std;
 
-static_assert(int32_t(-1) == int32_t(0xFFFFFFFF), "Not two's complement");
-static_assert(numeric_limits<int>::min() < 0);
-
 //////////////////////////////////////// helper functions
-
 namespace {
 
-void compute_integral_part(const fraction& frac, int& int_simplified, int& int_compatible)
+inline void compute_integral_part(const fraction& frac, int& int_simplified, int& int_compatible)
 {
-    int remainder_compatible = pow2_mod(frac.top, frac.bottom);
+    assert(frac.is_legal());
 
-    int_compatible = frac.top - remainder_compatible;
+    int remainder_compatible = frac.top();
+    bool success = safe_pow2_mod(remainder_compatible, frac.bottom());
+    assert(success);
 
-    fraction integral(int_compatible, frac.bottom);
+    int_compatible = frac.top() - remainder_compatible;
+
+    fraction integral(int_compatible, frac.bottom());
     integral.simplify();
-    assert(integral.bottom == 1);
-    int_simplified = integral.top;
+    assert(integral.is_simplified());
+    int_simplified = integral.top();
 }
+
+// common part of two fraction methods
+inline bool raise_denominator_common(fraction& frac, int exponent)
+{
+    assert(frac.is_legal());
+    assert(exponent >= 0);
+
+    int top_copy = frac.top();
+    int bottom_copy = frac.bottom();
+
+    if (!safe_mul2_shift(top_copy, exponent) || !safe_mul2_shift(bottom_copy, exponent))
+        return false;
+
+    frac.set(top_copy, bottom_copy);
+
+    return true;
+}
+
 } // namespace
 
-////////////////////////////////////////
-
+//////////////////////////////////////// fraction methods
 fraction::fraction(const dyadic_rational& rational)
 {
     _init(rational.p(), rational.q());
 }
 
-dyadic_rational* fraction::make_dyadic_rational() // owned by caller
+dyadic_rational* fraction::make_dyadic_rational() const
 {
-    return new dyadic_rational(top, bottom);
+    return new dyadic_rational(_top, _bottom);
+}
+
+bool fraction::is_simplified() const
+{
+    return (_top & 0x1) != 0 || (_bottom & 0x1) != 0;
 }
 
 void fraction::simplify()
 {
-    assert(bottom >= 1);
-    assert(is_power_of_2(bottom));
+    assert(is_legal());
 
-    // right shift OK because operands are signed
-    static_assert(is_integral_v<decltype(top)> && is_signed_v<decltype(top)>);
-    static_assert(is_integral_v<decltype(bottom)> && is_signed_v<decltype(bottom)>);
+    static_assert(is_integral_v<decltype(_top)> && is_signed_v<decltype(_top)>);
+    static_assert(is_integral_v<decltype(_bottom)> && is_signed_v<decltype(_bottom)>);
 
-    while ((top & 0x1) == 0 && (bottom & 0x1) == 0)
+    while (!is_simplified())
     {
-        top >>= 1;
-        bottom >>= 1;
+        _top >>= 1;
+        _bottom >>= 1;
     }
-}
-
-
-// TODO should have a static_assert to check that abs(INT_MIN) == INT_MAX + 1
-bool fraction::raise_denominator(int target_bottom)
-{
-    assert(target_bottom >= bottom);
-
-    assert(bottom > 0);
-    assert(is_power_of_2(bottom));
-
-    assert(target_bottom > 0);
-    assert(is_power_of_2(target_bottom));
-
-    int exponent = 0;
-
-    {
-        int target_bottom_copy = target_bottom;
-
-        while (target_bottom_copy > bottom)
-        {
-            assert((target_bottom_copy & 0x1) == 0);
-            target_bottom_copy >>= 1;
-            exponent += 1;
-        }
-
-        assert(target_bottom_copy == bottom);
-    }
-
-    int top_copy = top;
-    int bottom_copy = bottom;
-
-    if (!safe_mul2_shift(top_copy, exponent) || !safe_mul2_shift(bottom_copy, exponent))
-    {
-        return false;
-    }
-
-    assert(bottom_copy == target_bottom);
-
-    top = top_copy;
-    bottom = bottom_copy;
-
-    return true;
-}
-
-bool fraction::raise_denominator_by_pow2(int exponent)
-{
-    int target = bottom;
-
-    if (left_shift_will_wrap(target, exponent))
-    {
-        return false;
-    }
-
-    target <<= exponent;
-    return raise_denominator(target);
-}
-
-void fraction::negate()
-{
-    assert(top != std::numeric_limits<decltype(top)>::min());
-    top = -top;
-}
-
-fraction fraction::operator-() const
-{
-    fraction f(*this);
-    f.negate();
-    return f;
-}
-
-int fraction::remove_integral_part()
-{
-    int int_simplified;
-    int int_compatible;
-    compute_integral_part(*this, int_simplified, int_compatible);
-
-    top -= int_compatible;
-    return int_simplified;
 }
 
 int fraction::get_integral_part() const
 {
+    assert(is_legal());
+
     int int_simplified;
     int int_compatible;
     compute_integral_part(*this, int_simplified, int_compatible);
 
     return int_simplified;
+}
+
+int fraction::remove_integral_part()
+{
+    assert(is_legal());
+
+    int int_simplified;
+    int int_compatible;
+    compute_integral_part(*this, int_simplified, int_compatible);
+
+    set_top(top() - int_compatible);
+    return int_simplified;
+}
+
+bool fraction::is_legal() const
+{
+    return (_bottom > 0) && is_power_of_2(_bottom) && !negate_will_wrap(_top);
 }
 
 bool fraction::operator<(const fraction& rhs) const
@@ -162,6 +119,12 @@ bool fraction::operator==(const fraction& rhs) const
     return get_relation(*this, rhs) == REL_EQUAL;
 }
 
+bool fraction::operator!=(const fraction& rhs) const
+{
+    relation rel = get_relation(*this, rhs);
+    return rel == REL_LESS || rel == REL_GREATER;
+}
+
 bool fraction::operator<=(const fraction& rhs) const
 {
     const relation rel = get_relation(*this, rhs);
@@ -174,30 +137,12 @@ bool fraction::operator>=(const fraction& rhs) const
     return rel == REL_GREATER || rel == REL_EQUAL;
 }
 
-bool fraction::is_simplified() const
-{
-    return (top & 0x1) != 0 || (bottom & 0x1) != 0;
-}
-
-bool fraction::make_compatible(fraction& f1, fraction& f2)
-{
-    f1.simplify();
-    f2.simplify();
-
-    int target = max(f1.bottom, f2.bottom);
-
-    if (!f1.raise_denominator(target) || !f2.raise_denominator(target))
-    {
-        return false;
-    }
-
-    return true;
-}
-
 relation fraction::get_relation(const fraction& lhs, const fraction& rhs)
 {
     fraction f1 = lhs;
     fraction f2 = rhs;
+
+    assert(f1.is_legal() && f2.is_legal());
 
     int int1 = f1.remove_integral_part();
     int int2 = f2.remove_integral_part();
@@ -213,14 +158,14 @@ relation fraction::get_relation(const fraction& lhs, const fraction& rhs)
 
     // should always be possible because we removed the integral part
     bool compatible = fraction::make_compatible(f1, f2);
-    assert(compatible && f1.bottom == f2.bottom);
+    assert(compatible && f1.bottom() == f2.bottom());
 
-    if (f1.top < f2.top)
+    if (f1.top() < f2.top())
     {
         return REL_LESS;
     }
 
-    if (f1.top > f2.top)
+    if (f1.top() > f2.top())
     {
         return REL_GREATER;
     }
@@ -228,42 +173,97 @@ relation fraction::get_relation(const fraction& lhs, const fraction& rhs)
     return REL_EQUAL;
 }
 
-
-void fraction::_init(int top, int bottom)
+fraction fraction::operator-() const
 {
-    assert(bottom > 0);
-    assert(is_power_of_2(bottom));
-
-    this->top = top;
-    this->bottom = bottom;
+    fraction f(*this);
+    f.negate();
+    return f;
 }
 
-bool safe_add_fraction(fraction& x, fraction& y)
+void fraction::negate()
 {
-    if (!fraction::make_compatible(x, y))
-    {
+    assert(is_legal());
+    _top = -_top;
+}
+
+bool fraction::raise_denominator_to(int target_bottom)
+{
+    assert(is_legal());
+
+    if (target_bottom < bottom() || !is_power_of_2(target_bottom))
         return false;
+
+    int exponent = 0;
+
+    // Find distance to target bottom
+    {
+        int target_bottom_copy = target_bottom;
+
+        while (target_bottom_copy > bottom())
+        {
+            assert((target_bottom_copy & 0x1) == 0);
+            target_bottom_copy >>= 1;
+            exponent += 1;
+        }
+
+        assert(target_bottom_copy == bottom());
     }
 
-    assert(x.bottom == y.bottom);
+    bool success = raise_denominator_common(*this, exponent);
+    assert(!success || bottom() == target_bottom);
 
-    if (addition_will_wrap(x.top, y.top))
-    {
+    return success;
+}
+
+bool fraction::raise_denominator_by_pow2(int exponent)
+{
+    assert(is_legal());
+
+    if (exponent < 0)
         return false;
-    }
 
-    x.top += y.top;
+    return raise_denominator_common(*this, exponent);
+}
+
+bool fraction::make_compatible(fraction& f1, fraction& f2)
+{
+    assert(f1.is_legal() && f2.is_legal());
+
+    f1.simplify();
+    f2.simplify();
+
+    int target = max(f1.bottom(), f2.bottom());
+
+    if (!f1.raise_denominator_to(target) || !f2.raise_denominator_to(target))
+        return false;
+
     return true;
 }
 
-
-
-bool safe_subtract_fraction(fraction& x, fraction& y)
+bool fraction::safe_add_fraction(fraction& x, fraction& y)
 {
-    fraction y_negative = y;
-
-    if (!safe_negate(y_negative.top))
+    if (!fraction::make_compatible(x, y))
         return false;
 
-    return safe_add_fraction(x, y_negative);
+    assert(x.bottom() == y.bottom());
+
+    return safe_add_negatable(x._top, y._top);
+}
+
+bool fraction::safe_subtract_fraction(fraction& x, fraction& y)
+{
+    if (!fraction::make_compatible(x, y))
+        return false;
+
+    assert(x._bottom == y._bottom);
+
+    return safe_subtract_negatable(x._top, y._top);
+}
+
+void fraction::_init(int top, int bottom)
+{
+    this->_top = top;
+    this->_bottom = bottom;
+
+    assert(is_legal());
 }

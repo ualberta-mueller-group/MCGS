@@ -31,7 +31,7 @@ dyadic_rational::dyadic_rational(int p, int q) : _p(p), _q(q)
     simplify();
 }
 
-dyadic_rational::dyadic_rational(const fraction& frac): _p(frac.top), _q(frac.bottom)
+dyadic_rational::dyadic_rational(const fraction& frac): _p(frac.top()), _q(frac.bottom())
 {
     assert(_q > 0);
     simplify();

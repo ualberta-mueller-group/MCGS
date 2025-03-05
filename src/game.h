@@ -221,4 +221,3 @@ inline T_ptr cast_game(game* g)
 
     return reinterpret_cast<T_ptr>(g);
 }
-

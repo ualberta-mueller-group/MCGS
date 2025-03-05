@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 // Simple combinatorial games - switches
-// Games of the for { l | r }, with integers l > r.
+// Games of the form { l | r }, with rationals l and r
 //---------------------------------------------------------------------------
 #include "cgt_switch.h"
 
@@ -8,6 +8,7 @@
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
 #include "cgt_move.h"
+#include "safe_arithmetic.h"
 
 
 #include <iostream>
@@ -82,15 +83,15 @@ void switch_game::print(std::ostream& str) const
 
         str << "switch:{";
 
-        if (_left.bottom == 1)
-            str << _left.top;
+        if (_left.bottom() == 1)
+            str << _left.top();
         else
             str << _left;
 
         str << " | ";
 
-        if (_right.bottom == 1)
-            str << _right.top;
+        if (_right.bottom() == 1)
+            str << _right.top();
         else
             str << _right;
 
@@ -121,15 +122,17 @@ switch_kind switch_game::_init_kind() const
 
     if (_rel == REL_LESS || _rel == REL_EQUAL)
     {
-        return SWITCH_KIND_NUMBER_AS_SWITCH;
+        return SWITCH_KIND_CONVERTABLE_NUMBER;
     }
 
-    if (_left.bottom == _right.bottom && _left.top == -_right.top)
+    assert(!negate_will_wrap(_right.top()));
+    if (_left.bottom() == _right.bottom() && _left.top() == -_right.top())
     {
-        return SWITCH_KIND_PROPER_SWITCH_NORMALIZED;
+        return SWITCH_KIND_PROPER_NORMALIZED;
     }
 
-    return SWITCH_KIND_PROPER_SWITCH;
+    assert(_rel == REL_GREATER);
+    return SWITCH_KIND_PROPER;
 }
 
 //---------------------------------------------------------------------------
