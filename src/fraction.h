@@ -40,7 +40,6 @@ public:
     bool operator<=(const fraction& rhs) const;
     bool operator>=(const fraction& rhs) const;
     static relation get_relation(const fraction& f1, const fraction& f2);
-
     fraction operator-() const;
     void negate();
 

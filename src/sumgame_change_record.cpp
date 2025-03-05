@@ -129,49 +129,65 @@ bool convert_number_switch(fraction x, fraction y, sumgame_map_view& map_view)
 
         swap(x, y);
     }
-
     assert(0 <= x.top() && x.top() < y.top());
 
-    if ((x.top() + 1 == y.top()) && (
+    if ((x.top() + 1 == y.top()) && ( // this addition is safe because x.top() < y.top()
         !x.raise_denominator_by_pow2(1) ||
         !y.raise_denominator_by_pow2(1)
     ))
         return false;
 
-    const int denominator = x.bottom();
-    const int delta = y.top() - x.top();
-    assert(delta > 1);
+    /*
+        find u = i/2^j such that x < u < y, iteratively increasing j
 
-    int u = denominator;
+        Here we work with numerators and assume that x, y, and u all have the same
+            denominator D. Then, x = xn/D, y = yn/D, u = un/D
+
+        j = 0 --> un = D     --> u = 1
+        j = 1 --> un = D/2   --> u = 1/2
+        j = 2 --> un = D/4   --> u = 1/4
+        j = 3 --> un = D/8   --> u = 1/8
+        j = 4 --> un = D/16  --> u = 1/16
+        ...
+
+        Note that we must find the unique "simplest" u:
+            lowest j, or if j == 0, the u with lowest absolute value
+    */
+    const int denominator = x.bottom();
+    const int width = y.top() - x.top();
+    assert(width > 1);
+    int un = denominator;
+
     for (int j = 0; ; j++)
     {
-        assert(is_power_of_2(u));
+        assert(is_power_of_2(un));
 
+        // Check if u exists at this j by testing if un occurs between (xn % un) and ((xn % un) + width)
         int xn2 = x.top();
         {
-            bool success = safe_pow2_mod(xn2, u);
+            bool success = safe_pow2_mod(xn2, un);
             assert(success);
         }
-        int yn2 = xn2 + delta;
+        int yn2 = xn2 + width;
 
-        if (xn2 < u && u < yn2)
+        if (xn2 < un && un < yn2) // found j
         {
-            const int offset = u - xn2;
+            const int relative = un - xn2;
 
-            int zn = x.top() + offset;
+            int zn = x.top() + relative;
             int zd = denominator;
             fraction z(zn, zd);
             z.simplify();
 
-            if (swapped && !safe_negate(z.top()))
-                return false;
+            if (swapped)
+                z.negate();
 
             map_view.add_game(new dyadic_rational(z));
             return true;
         }
 
-        assert((u & 0x1) == 0);
-        u >>= 1;
+        assert((un & 0x1) == 0);
+        un >>= 1;
     }
 }
 
@@ -242,7 +258,7 @@ void simplify_basic_switch(sumgame_map_view& map_view)
                 proper_switches.push_back(g_switch);
                 break;
             }
-            case SWITCH_KIND_CONVERTABLE_NUMBER:
+            case SWITCH_KIND_CONVERTIBLE_NUMBER:
             {
                 number_switches.push_back(g_switch);
             }
@@ -264,12 +280,12 @@ void simplify_basic_switch(sumgame_map_view& map_view)
 
         // Compute mean, then subtract it
         fraction mean = f1;
-        if (                                      //
+        if (                                                //
             !fraction::safe_add_fraction(mean, f2)       || // mean = (f1 + f2)
             !mean.mul2_bottom(1)                         || // mean = (f1 + f2) / 2
             !fraction::safe_subtract_fraction(f1, mean)  || // f1 = f1 - mean
             !fraction::safe_subtract_fraction(f2, mean)     // f2 = f2 - mean
-        )                                         //
+        )                                                   //
             continue;
 
         mean.simplify();
@@ -292,7 +308,7 @@ void simplify_basic_switch(sumgame_map_view& map_view)
     // Convert number switches
     for (switch_game* g_switch : number_switches)
     {
-        assert(g_switch->kind() == SWITCH_KIND_NUMBER_AS_SWITCH);
+        assert(g_switch->kind() == SWITCH_KIND_CONVERTIBLE_NUMBER);
 
         const fraction& f1 = g_switch->left();
         const fraction& f2 = g_switch->right();
@@ -322,7 +338,7 @@ void simplify_basic_up_star(sumgame_map_view& map_view)
     {
         up_star* g_up_star = cast_game<up_star*>(g);
 
-        if (!safe_add(ups, g_up_star->num_ups()))
+        if (!safe_add_negatable(ups, g_up_star->num_ups()))
         {
             break;
         }
@@ -370,7 +386,7 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
         {
             integer_game* g_integer = cast_game<integer_game*>(g);
 
-            if (!safe_add(int_sum, g_integer->value()))
+            if (!safe_add_negatable(int_sum, g_integer->value()))
             {
                 break;
             }
@@ -388,7 +404,7 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
             dyadic_rational* g_rational = cast_game<dyadic_rational*>(g);
             fraction f(*g_rational);
 
-            if (!safe_add_fraction(rational_sum, f))
+            if (!fraction::safe_add_fraction(rational_sum, f))
             {
                 break;
             }
@@ -405,7 +421,7 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
     }
 
     fraction final_sum(int_sum, 1);
-    bool final_sum_valid = safe_add_fraction(final_sum, rational_sum);
+    bool final_sum_valid = fraction::safe_add_fraction(final_sum, rational_sum);
 
     auto insert_game = [&](int top, int bottom) -> void
     {
@@ -435,7 +451,7 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
     {
         map_view.deactivate_games(consumed_integers);
         map_view.deactivate_games(consumed_rationals);
-        insert_game(final_sum.top, final_sum.bottom);
+        insert_game(final_sum.top(), final_sum.bottom());
         return;
     }
 
@@ -448,7 +464,7 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
     if (consumed_rationals.size() > 1)
     {
         map_view.deactivate_games(consumed_rationals);
-        insert_game(rational_sum.top, rational_sum.bottom);
+        insert_game(rational_sum.top(), rational_sum.bottom());
     }
 }
 

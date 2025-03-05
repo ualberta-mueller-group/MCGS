@@ -122,7 +122,7 @@ switch_kind switch_game::_init_kind() const
 
     if (_rel == REL_LESS || _rel == REL_EQUAL)
     {
-        return SWITCH_KIND_CONVERTABLE_NUMBER;
+        return SWITCH_KIND_CONVERTIBLE_NUMBER;
     }
 
     assert(!negate_will_wrap(_right.top()));
