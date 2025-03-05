@@ -2,6 +2,7 @@
 #include "cgt_basics.h"
 #include "utilities.h"
 #include "limits"
+#include "safe_arithmetic.h"
 
 #include <iostream>
 using namespace std;
@@ -139,6 +140,6 @@ void utilities_test_all()
 {
     test_split_string();
     test_is_int();
-    test_addition_will_wrap();
+    test_add_will_wrap();
     test_relation_from_search_results();
 }

@@ -4,6 +4,7 @@
 #include "cgt_dyadic_rational.h"
 #include "sumgame.h"
 #include "utilities.h"
+#include "safe_arithmetic.h"
 
 #include <iostream>
 #include <limits>
@@ -200,7 +201,7 @@ bound_t game_bounds::get_midpoint() const
 {
     assert(both_valid());
 
-    assert(!addition_will_wrap(_lower, _upper));
+    assert(!add_will_wrap(_lower, _upper));
     return (_lower + _upper) / 2;
 }
 
@@ -343,7 +344,7 @@ bound_t search_region::get_midpoint() const
 {
     assert(valid());
 
-    assert(!addition_will_wrap(low, high));
+    assert(!add_will_wrap(low, high));
     return (low + high) / 2;
 }
 

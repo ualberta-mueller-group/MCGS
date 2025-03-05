@@ -98,6 +98,7 @@ void change_record::_move_impl(change_record&& other) noexcept
 
 //////////////////////////////////////// helper functions
 
+namespace {
 bool convert_number_switch(fraction x, fraction y, sumgame_map_view& map_view)
 {
     if (!fraction::make_compatible(x, y))
@@ -467,4 +468,6 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
         insert_game(rational_sum.top(), rational_sum.bottom());
     }
 }
+
+} // namespace
 

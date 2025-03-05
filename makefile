@@ -1,4 +1,4 @@
-CC = c++
+CC = clang++
 NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3
 TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g
 # Valgrind is too slow for even short computations. Instead add: -fsanitize=leak
