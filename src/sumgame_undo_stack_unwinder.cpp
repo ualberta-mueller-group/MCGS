@@ -1,6 +1,5 @@
 #include "sumgame_undo_stack_unwinder.h"
 #include "sumgame.h"
-#include <iostream>
 
 using namespace std;
 
@@ -41,4 +40,3 @@ sumgame::undo_stack_unwinder::~undo_stack_unwinder()
 
     assert(false);
 }
-

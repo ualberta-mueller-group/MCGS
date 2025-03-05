@@ -54,20 +54,23 @@ game* up_star_parser::parse_game(const std::string& game_token) const
 game* switch_game_parser::parse_game(const std::string& game_token) const
 {
     std::string token;
-    token.reserve(game_token.size());
+    token.reserve(game_token.size() + 2 * 2); // space for 2 commas
 
-    for (size_t i = 0; i < game_token.size(); i++)
     {
-        const char& c = game_token[i];
-
-        if (c == ',')
+        const size_t N = game_token.size();
+        for (size_t i = 0; i < N; i++)
         {
-            token.push_back(' ');
+            const char& c = game_token[i];
+
+            if (c == ',')
+            {
+                token.push_back(' ');
+                token.push_back(c);
+                token.push_back(' ');
+                continue;
+            }
             token.push_back(c);
-            token.push_back(' ');
-            continue;
         }
-        token.push_back(c);
     }
 
     std::vector<std::string> strs = split_string(token);
@@ -83,6 +86,7 @@ game* switch_game_parser::parse_game(const std::string& game_token) const
 
     auto get_fraction = [&]() -> bool
     {
+        // 3 tokens wide, middle is comma
         if (!(idx + 2 < N && is_comma(strs[idx + 1])))
         {
             return false;
@@ -108,6 +112,7 @@ game* switch_game_parser::parse_game(const std::string& game_token) const
 
     auto get_int = [&]() -> bool
     {
+        // 1 token wide
         if (!(idx < N && is_int(strs[idx])))
         {
             return false;
@@ -130,7 +135,11 @@ game* switch_game_parser::parse_game(const std::string& game_token) const
         }
     }
 
-    assert(idx == N);
+    if (idx != N)
+    {
+        assert(false);
+        return nullptr;
+    }
 
     if (fracs.size() != 2)
     {

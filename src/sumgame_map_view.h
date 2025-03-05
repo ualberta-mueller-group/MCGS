@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include "game.h"
 #include "sumgame.h"
 
 class sumgame_map_view
@@ -19,8 +20,7 @@ public:
     template <class T>
     void add_game(T* game_ptr)
     {
-        static_assert(std::is_base_of_v<game, T>);
-        static_assert(!std::is_abstract_v<T>);
+        static_assert(is_concrete_game_v<T>);
         assert(game_ptr != nullptr);
         assert(game_ptr->is_active());
 

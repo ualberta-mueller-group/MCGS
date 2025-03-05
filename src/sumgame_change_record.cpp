@@ -9,6 +9,7 @@
 #include <vector>
 #include "sumgame_map_view.h"
 #include "fraction.h"
+#include "safe_arithmetic.h"
 
 #include "cgt_nimber.h"
 #include "cgt_up_star.h"
@@ -17,10 +18,12 @@
 using namespace std;
 
 //////////////////////////////////////// declarations
+namespace {
 void simplify_basic_nimber(sumgame_map_view& map_view);
 void simplify_basic_switch(sumgame_map_view& map_view);
 void simplify_basic_up_star(sumgame_map_view& map_view);
 void simplify_basic_integers_rationals(sumgame_map_view& map_view);
+} // namespace
 
 //////////////////////////////////////// change_record
 namespace sumgame_impl {
@@ -46,10 +49,10 @@ change_record& change_record::operator=(change_record&& other) noexcept
 void change_record::simplify_basic(sumgame& sum)
 {
     sumgame_map_view map_view(sum, *this);
-    //simplify_basic_nimber(map_view);
+    simplify_basic_nimber(map_view);
     simplify_basic_switch(map_view);
-    //simplify_basic_up_star(map_view);
-    //simplify_basic_integers_rationals(map_view);
+    simplify_basic_up_star(map_view);
+    simplify_basic_integers_rationals(map_view);
     return;
 }
 
@@ -82,7 +85,6 @@ void change_record::_clear()
     added_games.clear();
 }
 
-
 void change_record::_move_impl(change_record&& other) noexcept
 {
     deactivated_games = std::move(other.deactivated_games);
@@ -92,52 +94,52 @@ void change_record::_move_impl(change_record&& other) noexcept
 }
 
 
-
 } // namespace sumgame_impl
 
 //////////////////////////////////////// helper functions
 
-bool convert_number_switch(fraction x1, fraction y2, sumgame_map_view& map_view)
+bool convert_number_switch(fraction x, fraction y, sumgame_map_view& map_view)
 {
-    if (!fraction::make_compatible(x1, y2))
+    if (!fraction::make_compatible(x, y))
         return false;
-    assert(x1.bottom == y2.bottom);
-    assert(x1.top <= y2.top);
+    assert(x.bottom() == y.bottom());
+    assert(x.top() <= y.top());
 
     // 0 case
-    if (x1.top < 0 && y2.top > 0)
+    if (x.top() < 0 && y.top() > 0)
     {
         return true;
     }
 
     // equal case
-    if (x1.top == y2.top)
+    if (x.top() == y.top())
     {
-        map_view.add_game(new dyadic_rational(x1));
+        map_view.add_game(new dyadic_rational(x));
         map_view.add_game(new up_star(0, true));
         return true;
     }
 
-    // now (x1 < y2 <= 0) OR (0 <= x1 < y2), and we want case 2
+    // now (x < y <= 0) OR (0 <= x < y), and we want case 2
     bool swapped = false;
-    if (x1.top < 0)
+    if (x.top() < 0)
     {
         swapped = true;
-        if (!safe_negate(x1.top) || !safe_negate(y2.top))
-            return false;
-        swap(x1.top, y2.top);
+        x.negate();
+        y.negate();
+
+        swap(x, y);
     }
 
-    assert(0 <= x1.top && x1.top < y2.top);
+    assert(0 <= x.top() && x.top() < y.top());
 
-    if ((x1.top + 1 == y2.top) && (
-        !x1.raise_denominator_by_pow2(1) ||
-        !y2.raise_denominator_by_pow2(1)
+    if ((x.top() + 1 == y.top()) && (
+        !x.raise_denominator_by_pow2(1) ||
+        !y.raise_denominator_by_pow2(1)
     ))
         return false;
 
-    const int denominator = x1.bottom;
-    const int delta = y2.top - x1.top;
+    const int denominator = x.bottom();
+    const int delta = y.top() - x.top();
     assert(delta > 1);
 
     int u = denominator;
@@ -145,19 +147,23 @@ bool convert_number_switch(fraction x1, fraction y2, sumgame_map_view& map_view)
     {
         assert(is_power_of_2(u));
 
-        const int xn2 = pow2_mod(x1.top, u);
-        const int yn2 = xn2 + delta;
+        int xn2 = x.top();
+        {
+            bool success = safe_pow2_mod(xn2, u);
+            assert(success);
+        }
+        int yn2 = xn2 + delta;
 
         if (xn2 < u && u < yn2)
         {
             const int offset = u - xn2;
 
-            int zn = x1.top + offset;
+            int zn = x.top() + offset;
             int zd = denominator;
             fraction z(zn, zd);
             z.simplify();
 
-            if (swapped && !safe_negate(z.top))
+            if (swapped && !safe_negate(z.top()))
                 return false;
 
             map_view.add_game(new dyadic_rational(z));
@@ -231,17 +237,17 @@ void simplify_basic_switch(sumgame_map_view& map_view)
         switch_game* g_switch = cast_game<switch_game*>(g);
         switch (g_switch->kind())
         {
-            case SWITCH_KIND_PROPER_SWITCH:
+            case SWITCH_KIND_PROPER:
             {
                 proper_switches.push_back(g_switch);
                 break;
             }
-            case SWITCH_KIND_NUMBER_AS_SWITCH:
+            case SWITCH_KIND_CONVERTABLE_NUMBER:
             {
                 number_switches.push_back(g_switch);
             }
             case SWITCH_KIND_RATIONAL:
-            case SWITCH_KIND_PROPER_SWITCH_NORMALIZED:
+            case SWITCH_KIND_PROPER_NORMALIZED:
             {
                 continue;
             }
@@ -251,7 +257,7 @@ void simplify_basic_switch(sumgame_map_view& map_view)
     // Normalize proper switches
     for (switch_game* g_switch : proper_switches)
     {
-        assert(g_switch->kind() == SWITCH_KIND_PROPER_SWITCH);
+        assert(g_switch->kind() == SWITCH_KIND_PROPER);
 
         fraction f1 = g_switch->left();
         fraction f2 = g_switch->right();
@@ -259,10 +265,10 @@ void simplify_basic_switch(sumgame_map_view& map_view)
         // Compute mean, then subtract it
         fraction mean = f1;
         if (                                      //
-            !safe_add_fraction(mean, f2)       || // mean = (f1 + f2)
-            !safe_mul2_shift(mean.bottom, 1)   || // mean = (f1 + f2) / 2
-            !safe_subtract_fraction(f1, mean)  || // f1 = f1 - mean
-            !safe_subtract_fraction(f2, mean)     // f2 = f2 - mean
+            !fraction::safe_add_fraction(mean, f2)       || // mean = (f1 + f2)
+            !mean.mul2_bottom(1)                         || // mean = (f1 + f2) / 2
+            !fraction::safe_subtract_fraction(f1, mean)  || // f1 = f1 - mean
+            !fraction::safe_subtract_fraction(f2, mean)     // f2 = f2 - mean
         )                                         //
             continue;
 
@@ -271,7 +277,7 @@ void simplify_basic_switch(sumgame_map_view& map_view)
         f2.simplify();
 
         consumed_switches.push_back(g_switch);
-        if (mean.top != 0)
+        if (mean.top() != 0)
         {
             dyadic_rational* new_rational = new dyadic_rational(mean);
             map_view.add_game(new_rational);

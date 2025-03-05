@@ -50,6 +50,7 @@ public:
     */
     bool raise_denominator_to(int target_bottom);
     bool raise_denominator_by_pow2(int exponent);
+    bool mul2_bottom(int exponent);
     static bool make_compatible(fraction& f1, fraction& f2);
     static bool safe_add_fraction(fraction& x, fraction& y);
     static bool safe_subtract_fraction(fraction& x, fraction& y);

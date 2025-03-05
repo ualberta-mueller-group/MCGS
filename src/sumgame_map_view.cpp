@@ -39,7 +39,7 @@ vector<game*>* sumgame_map_view::get_games_nullable(obj_id_t obj_id)
         }
     }
 
-    swap(map_games, active_games);
+    map_games = std::move(active_games);
 
     if (map_games.empty())
     {

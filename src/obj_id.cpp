@@ -6,7 +6,6 @@ obj_id_t __next_id = 0; // NOLINT
 obj_id_t __get_obj_id(const std::type_index& ti) // NOLINT
 {
     auto it = __obj_id_map.find(ti);
-    
     obj_id_t obj_id = 0;
 
     if (it == __obj_id_map.end())

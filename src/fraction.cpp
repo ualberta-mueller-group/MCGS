@@ -229,6 +229,13 @@ bool fraction::raise_denominator_by_pow2(int exponent)
     return raise_denominator_common(*this, exponent);
 }
 
+
+bool fraction::mul2_bottom(int exponent)
+{
+    assert(is_legal());
+    return safe_mul2_shift(_bottom, exponent);
+}
+
 bool fraction::make_compatible(fraction& f1, fraction& f2)
 {
     assert(f1.is_legal() && f2.is_legal());

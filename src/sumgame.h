@@ -77,7 +77,6 @@ public:
     void simplify_basic();
     void undo_simplify_basic();
 
-
     void add(game* g);
     void add(std::vector<game*>& gs);
     void pop(game* g);

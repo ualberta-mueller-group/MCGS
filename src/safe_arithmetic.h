@@ -5,7 +5,10 @@
 
 // Some functions in this file assume two's complement (i.e. for bit shifts)
 static_assert(int32_t(-1) == int32_t(0xFFFFFFFF), "Not two's complement");
+
 static_assert(std::numeric_limits<int>::min() < 0);
+static_assert(std::numeric_limits<int>::max() > 0);
+static_assert(std::numeric_limits<int>::min() + 1 == -std::numeric_limits<int>::max());
 
 //////////////////////////////////////// arithmetic wrapping checks
 template <class T>

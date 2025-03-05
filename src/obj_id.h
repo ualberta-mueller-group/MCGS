@@ -56,7 +56,6 @@ public:
     {
         const std::type_index& idx = std::type_index(typeid(*this));
         return __get_obj_id(idx);
-
     }
 };
 
