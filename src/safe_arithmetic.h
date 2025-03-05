@@ -187,8 +187,8 @@ bool safe_pow2_mod(T& x, const T& mod)
 {
     static_assert(std::is_integral_v<T>);
 
-    const int MIN = std::numeric_limits<int>::min();
-    const int MAX = std::numeric_limits<int>::max();
+    const T MIN = std::numeric_limits<T>::min();
+    const T MAX = std::numeric_limits<T>::max();
     static_assert(MIN < 0 && MAX > 0 && MIN < -MAX);
 
     if (mod <= 0 || !is_power_of_2(mod))
