@@ -101,7 +101,11 @@ int fraction::remove_integral_part()
 
 bool fraction::is_legal() const
 {
-    return (_bottom > 0) && is_power_of_2(_bottom) && !negate_will_wrap(_top);
+    return (                                     //
+            (_bottom > 0)                     && //
+            is_power_of_2(_bottom)            && //
+            (TOP_MIN <= _top && _top <= TOP_MAX) //
+    );                                           //
 }
 
 bool fraction::operator<(const fraction& rhs) const

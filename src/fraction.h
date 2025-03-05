@@ -80,6 +80,7 @@ public:
     static const int TOP_MAX = std::numeric_limits<int>::max();
     static_assert(TOP_MIN == -TOP_MAX);
 
+
 private:
     int _top;
     int _bottom;
