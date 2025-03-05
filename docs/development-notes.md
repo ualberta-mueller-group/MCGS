@@ -25,19 +25,44 @@ checking that the state is restored
     - TODO it probably is broken for sumgame, since it uses a different stack
     - TODO this check will be made functional after hash codes are implemented
 
-# Utility Functions (utilities.h)
-Defines various utility functions. Many are templates.
-- Check if `string`'s text represents an `int`
-- Print bits of an integral type
-- Check for arithmetic operation overflow/underflow
-- Various arithmetic operations, which will return false if the operation would overflow/underflow. These all return `bool`
-    - safe_add(T& x, const T& y)
-    - safe_left_shift(T& x, const T& shift_amount)
-    - safe_negate(T& x)
-    - safe_mul2_shift(T& x, const T& shift_amount)
-        - Fast positive multiply by power of 2, which will neither overflow nor change the sign of `x`
-        - Avoids undefined behaviour of left shifting negative value, by negating `x` if necessary
-- And more
+# Safe arithmetic functions (safe_arithmetic.h)
+This section uses the term "wrapping" to mean either underflow or overflow.
+
+- Defines template functions to do arithmetic without wrapping
+- Assumes underlying machine uses two's complement to represent integers
+- All functions return a `bool`
+    - When `true`, the operation was completed without wrapping
+    - When `false`, the operation would have wrapped. No operands were changed
+        - Also returned on invalid arguments, i.e. negative bit shift amounts
+- Some functions accept either integer types or floating point types, some accept only integer types
+    - The lists below use `num` to refer to either, and `int` to refer to integer types. All operands must have the same type.
+
+These functions test whether an operation would wrap, without doing the operation:
+- `add_will_wrap(const num x, const num y)`
+    - `true` iff `x + y` would wrap
+- `subtract_will_wrap(const num x, const num y)`
+    - `true` iff `x - y` would wrap
+- `negate_will_wrap(const num x)`
+    - `true` iff `-x` would wrap
+
+These functions perform operations, and will only change the operands on success:
+- `safe_add(num& x, const num y)`
+    - `x := x + y`
+- `safe_add_negatable(num& x, const num y)`
+    - `x := x + y`, also fails if negating the resulting `x` would wrap (i.e. `-x`)
+- `safe_subtract(num&, const num)`
+    - `x := x - y`
+- `safe_subtract_negatable(num&, const num)`
+    - `x := x - y` also fails if negating the resulting `x` would wrap
+- `safe_negate(num&)`
+    - `x := -x`
+- `safe_mul2_shift(int& x, const int exponent)`
+    - `x := x * 2^exponent` (implemented as left shift)
+    - Negative values of `x` are allowed
+    - also `false` when the result would flip the sign
+- `safe_pow2_mod(int& x, const int pow2)`
+    - `x := x % pow2` (implemented as bitwise `&`)
+    - `false` if `pow2` is not a power of 2, or `pow2 <= 0`
 
 # More on data types
 
