@@ -18,14 +18,34 @@ bool add_will_wrap(const T& x, const T& y)
 
     if (x > 0 && y > 0)
     {
-        return y > (max - x);
+        return x > (max - y); // (x + y) > max
     } else if (x < 0 && y < 0)
     {
-        return y < (min - x);
+        return x < (min - y); // (x + y) < min
     }
 
     return false;
 }
+
+template <class T>
+bool subtract_will_wrap(const T& x, const T& y)
+{
+    static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+
+    const T& min = std::numeric_limits<T>::min();
+    const T& max = std::numeric_limits<T>::max();
+
+    if (y > 0)
+    {
+        return x < (min + y); // (x - y) < min
+    } else if (y < 0)
+    {
+        return x > (max + y); // (x - y) > max
+    }
+
+    return false;
+}
+
 
 template <class T>
 inline bool negate_will_wrap(const T& x)
@@ -71,11 +91,10 @@ inline bool safe_subtract(T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
-    T y_copy(y);
-
-    if (!safe_negate(y_copy) || !safe_add(x, y_copy))
+    if (subtract_will_wrap(x, y))
         return false;
 
+    x -= y;
     return true;
 }
 
@@ -84,11 +103,15 @@ inline bool safe_subtract_negatable(T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
-    T y_copy(y);
-
-    if (!safe_negate(y_copy) || !safe_add_negatable(x, y_copy))
+    if (subtract_will_wrap(x, y))
         return false;
 
+    T result = x - y;
+
+    if (negate_will_wrap(result))
+        return false;
+
+    x = result;
     return true;
 }
 
