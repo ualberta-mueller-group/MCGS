@@ -28,6 +28,7 @@
 #include "game_bounds_test.h"
 #include "find_bounds_test.h"
 #include "utilities_test.h"
+#include "safe_arithmetic_test.h"
 
 using std::cout, std::endl, std::string;
 
@@ -89,6 +90,7 @@ int main(int argc, const char** argv)
     cgt_up_star_test_all();
 
     utilities_test_all();
+    safe_arithmetic_test_all();
 
     split_test_all();
 

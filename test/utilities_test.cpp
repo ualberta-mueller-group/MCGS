@@ -68,38 +68,6 @@ void test_is_int()
     }
 }
 
-void test_add_will_wrap()
-{
-    const int32_t& min = numeric_limits<int32_t>::min();
-    const int32_t& max = numeric_limits<int32_t>::max();
-
-    vector<tuple<int32_t, int32_t, bool>> test_cases
-    {
-        {min, -1, true},
-        {min, 0, false},
-        {min, 1, false},
-
-        {max, -1, false},
-        {max, 0, false},
-        {max, 1, true},
-
-        {max / 2, max / 2, false},
-        {min / 2, min / 2, false},
-
-        {min, max, false},
-    };
-
-    for (const tuple<int32_t, int32_t, bool>& test : test_cases)
-    {
-        const int32_t& x1 = get<0>(test);
-        const int32_t& x2 = get<1>(test);
-        const bool& expected = get<2>(test);
-
-        assert(add_will_wrap(x1, x2) == expected);
-        assert(add_will_wrap(x2, x1) == expected);
-    }
-}
-
 void test_relation_from_search_results()
 {
     vector<tuple<bool, bool, bool, bool, relation>> test_cases
@@ -140,6 +108,5 @@ void utilities_test_all()
 {
     test_split_string();
     test_is_int();
-    test_add_will_wrap();
     test_relation_from_search_results();
 }
