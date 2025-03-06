@@ -58,6 +58,7 @@ private:
 
     // nullptr if absent
     std::unique_ptr<dyadic_rational> _rational_game;
+    size_t _move_depth;
 };
 
 inline switch_game::switch_game(int left, int right) : 
@@ -65,7 +66,8 @@ inline switch_game::switch_game(int left, int right) :
     _right(right),
     _rel(_init_relation()),
     _kind(_init_kind()),
-    _rational_game(nullptr)
+    _rational_game(nullptr),
+    _move_depth(0)
 {
     assert(_left.is_simplified() && _right.is_simplified());
 }
@@ -75,7 +77,8 @@ inline switch_game::switch_game(int left, const fraction& right) :
     _right(right),
     _rel(_init_relation()),
     _kind(_init_kind()),
-    _rational_game(nullptr)
+    _rational_game(nullptr),
+    _move_depth(0)
 {
     assert(_left.is_simplified() && _right.is_simplified());
 }
@@ -85,7 +88,8 @@ inline switch_game::switch_game(const fraction& left, int right) :
     _right(right),
     _rel(_init_relation()),
     _kind(_init_kind()),
-    _rational_game(nullptr)
+    _rational_game(nullptr),
+    _move_depth(0)
 {
     assert(_left.is_simplified() && _right.is_simplified());
 }
@@ -95,7 +99,8 @@ inline switch_game::switch_game(const fraction& left, const fraction& right) :
     _right(right),
     _rel(_init_relation()),
     _kind(_init_kind()),
-    _rational_game(nullptr)
+    _rational_game(nullptr),
+    _move_depth(0)
 {
     assert(_left.is_simplified() && _right.is_simplified());
 }

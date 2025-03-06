@@ -7,7 +7,7 @@
 using std::unique_ptr;
 
 
-void test_switch_generic(int l, int r)
+void test_switch_generic(const fraction& l, const fraction& r)
 {
     switch_game pos(l, r);
 
@@ -16,23 +16,24 @@ void test_switch_generic(int l, int r)
 
     // Play black move, check split
     {
-        unique_ptr<move_generator> mgb(pos.create_move_generator(BLACK));
-        assert(mgb);
-        move mb = mgb->gen_move();
+        unique_ptr<move_generator> mgp(pos.create_move_generator(BLACK));
+        move_generator& gen = *mgp;
+
+        move mb = gen.gen_move();
         pos.play(mb, BLACK);
-        assert(pos.is_integer());
+        assert(pos.is_rational());
         assert(pos.value() == l);
 
-        split_result srb = pos.split();
+        split_result sr = pos.split();
 
-        assert(srb);
-        assert(srb->size() == 1);
+        assert(sr);
+        assert(sr->size() == 1);
 
-        integer_game* igb = dynamic_cast<integer_game*>(srb->back());
-        assert(igb != nullptr);
-        assert(igb->value() == l);
+        dyadic_rational* dr = dynamic_cast<dyadic_rational*>(sr->back());
+        assert(dr != nullptr);
+        assert(dr->get_fraction() == l);
 
-        for (game* g : *srb)
+        for (game* g : *sr)
         {
             delete g;
         }
@@ -44,23 +45,24 @@ void test_switch_generic(int l, int r)
 
     // Play white move, check split
     {
-        unique_ptr<move_generator> mgw(pos.create_move_generator(WHITE));
-        assert(mgw);
-        move mw = mgw->gen_move();
+        unique_ptr<move_generator> mgp(pos.create_move_generator(WHITE));
+        move_generator& gen = *mgp;
+
+        move mw = gen.gen_move();
         pos.play(mw, WHITE);
-        assert(pos.is_integer());
+        assert(pos.is_rational());
         assert(pos.value() == r);
 
-        split_result srw = pos.split();
+        split_result sr = pos.split();
 
-        assert(srw);
-        assert(srw->size() == 1);
+        assert(sr);
+        assert(sr->size() == 1);
 
-        integer_game* igw = dynamic_cast<integer_game*>(srw->back());
-        assert(igw != nullptr);
-        assert(igw->value() == r);
+        dyadic_rational* dr = dynamic_cast<dyadic_rational*>(sr->back());
+        assert(dr != nullptr);
+        assert(dr->get_fraction() == r);
 
-        for (game* g : *srw)
+        for (game* g : *sr)
         {
             delete g;
         }
@@ -71,7 +73,6 @@ void test_switch_generic(int l, int r)
 void switch_game1()
 {
     test_switch_generic(7, 5);
-
 }
 
 void switch_game2()
@@ -85,9 +86,15 @@ void switch_game3()
     test_switch_generic(-21, -90);
 }
 
+void switch_game4()
+{
+    test_switch_generic(fraction(21, 4), fraction(201, 512));
+}
+
 void split_test_switch_game_all()
 {
     switch_game1();
     switch_game2();
     switch_game3();
+    switch_game4();
 }

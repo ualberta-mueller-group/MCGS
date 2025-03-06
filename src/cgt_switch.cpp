@@ -17,32 +17,40 @@ using std::endl;
 
 void switch_game::play(const move& m, bw to_play)
 {
+
     if (is_rational())
     {
-        assert(m == DYADIC_RATIONAL_MOVE_CODE);
+        assert(_move_depth > 0);
         _rational_game->play(m, to_play);
     }
     else
     {
+        assert(_move_depth == 0);
         assert(m == SWITCH_MOVE_CODE);
         _rational_game.reset(new dyadic_rational(to_play == BLACK ? _left : _right));
     }
+
+    _move_depth++;
     game::play(m, to_play);
 }
 
 void switch_game::undo_move()
 {
     assert(is_rational());
+    assert(_move_depth >= 1);
+
     const int m = cgt_move::decode(last_move());
-    if (m == SWITCH_MOVE_CODE) // back from integer to switch
+    if (_move_depth == 1) // back from integer to switch
     {
+        assert(m == SWITCH_MOVE_CODE);
         _rational_game.reset();
     }
     else
     {
-        assert(m == DYADIC_RATIONAL_MOVE_CODE);
         _rational_game->undo_move();
     }
+
+    _move_depth--;
     game::undo_move();
 }
 

@@ -45,7 +45,6 @@ enum relation
 enum simple_cgt_move_code
 {
     INTEGER_MOVE_CODE = 0,
-    DYADIC_RATIONAL_MOVE_CODE,
     SWITCH_MOVE_CODE,
 };
 
