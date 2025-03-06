@@ -109,6 +109,9 @@ private:
     void _push_undo_code(sumgame_undo_code code);
     void _pop_undo_code(sumgame_undo_code code);
 
+    void _debug_extra() const;
+    void _assert_games_unique() const;
+
     mutable bool _should_stop;
     std::vector<game*> _subgames; // sumgame owns these subgames
 

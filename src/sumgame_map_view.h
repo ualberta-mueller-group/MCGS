@@ -33,6 +33,8 @@ public:
     }
 
 private:
+    void _filter_inactive(std::vector<game*>& games);
+
     sumgame& _sum;
     sumgame_impl::change_record& _record;
 

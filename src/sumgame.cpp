@@ -17,6 +17,7 @@
 
 #include "cli_options.h"
 #include <unordered_map>
+#include <unordered_set>
 
 #include "cgt_up_star.h"
 
@@ -286,6 +287,10 @@ bool sumgame::solve_with_games(game* g) const
 
 optional<solve_result> sumgame::_solve_with_timeout()
 {
+#ifdef SUMGAME_DEBUG_EXTRA
+    _debug_extra();
+#endif
+
     undo_stack_unwinder stack_unwinder(*this); // TODO does this hurt performance?
 
     if (_over_time())
@@ -362,6 +367,25 @@ void sumgame::_pop_undo_code(sumgame_undo_code code)
     assert(!_undo_code_stack.empty());
     assert(_undo_code_stack.back() == code);
     _undo_code_stack.pop_back();
+}
+
+void sumgame::_debug_extra() const
+{
+    _assert_games_unique();
+}
+
+void sumgame::_assert_games_unique() const
+{
+    std::unordered_set<game*> game_set;
+
+    const size_t n_games = num_total_games();
+    for (size_t i = 0; i < n_games; i++)
+    {
+        game* g = subgame(i);
+        auto it = game_set.insert(g);
+        assert(it.second == true);
+    }
+
 }
 
 bool sumgame::_over_time() const

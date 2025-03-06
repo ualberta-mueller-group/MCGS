@@ -29,17 +29,7 @@ vector<game*>* sumgame_map_view::get_games_nullable(obj_id_t obj_id)
     }
 
     vector<game*>& map_games = it->second;
-    vector<game*> active_games;
-
-    for (game* g : map_games)
-    {
-        if (g->is_active())
-        {
-            active_games.push_back(g);
-        }
-    }
-
-    map_games = std::move(active_games);
+    _filter_inactive(map_games);
 
     if (map_games.empty())
     {
@@ -51,7 +41,9 @@ vector<game*>* sumgame_map_view::get_games_nullable(obj_id_t obj_id)
 
 vector<game*>& sumgame_map_view::get_games(obj_id_t obj_id)
 {
-    return _map[obj_id];
+    vector<game*>& games = _map[obj_id];
+    _filter_inactive(games);
+    return games;
 }
 
 void sumgame_map_view::deactivate_game(game* g)
@@ -67,5 +59,21 @@ void sumgame_map_view::deactivate_games(vector<game*>& games)
     {
         deactivate_game(g);
     }
+}
+
+
+void sumgame_map_view::_filter_inactive(std::vector<game*>& games)
+{
+    vector<game*> active_games;
+
+    for (game* g : games)
+    {
+        if (g->is_active())
+        {
+            active_games.push_back(g);
+        }
+    }
+
+    games = std::move(active_games);
 }
 

@@ -68,13 +68,16 @@ void sumgame_test_integer_all()
 {
     test_empty();
     test_inverses();
-    integer_game zero(0);
+    // can't add same game object to sumgame twice
+    integer_game zero1(0);
+    integer_game zero2(0);
+    integer_game zero3(0);
     integer_game one(1);
     integer_game minus_one(-1);
-    test_zero_1(zero);
-    test_zero_2(zero, zero);
-    test_zero_3(zero, zero, zero);
-    test_inverse(zero, zero);
+    test_zero_1(zero1);
+    test_zero_2(zero1, zero2);
+    test_zero_3(zero1, zero2, zero3);
+    test_inverse(zero1, zero2);
     test_inverse(minus_one, one);
     test_one_integer(1, true, false);
     test_one_integer(-1, false, true);
