@@ -20,6 +20,10 @@ public:
         _init(top, 1);
     }
 
+    /*
+       Functions below here will never cause overflow. They are
+       always successful.
+    */
     fraction(const dyadic_rational& rational);
 
     dyadic_rational* make_dyadic_rational() const; // owned by caller
@@ -32,7 +36,6 @@ public:
 
     bool is_legal() const;
 
-    // These functions will not cause overflow
     bool operator<(const fraction& rhs) const;
     bool operator>(const fraction& rhs) const;
     bool operator==(const fraction& rhs) const;
@@ -42,17 +45,6 @@ public:
     static relation get_relation(const fraction& f1, const fraction& f2);
     fraction operator-() const;
     void negate();
-
-    /*
-        These functions return false if they fail (due to overflow).
-            When false, may leave operands more simplified or less simplified
-    */
-    bool raise_denominator_to(int target_bottom);
-    bool raise_denominator_by_pow2(int exponent);
-    bool mul2_bottom(int exponent);
-    static bool make_compatible(fraction& f1, fraction& f2);
-    static bool safe_add_fraction(fraction& x, fraction& y);
-    static bool safe_subtract_fraction(fraction& x, fraction& y);
 
     inline const int& top() const {return _top;}
     inline const int& bottom() const {return _bottom;}
@@ -76,10 +68,20 @@ public:
         assert(is_legal());
     }
 
+    /*
+        Functions below here may fail and return false (due to overflow).
+            When false, may leave operands more simplified or less simplified
+    */
+    bool raise_denominator_to(int target_bottom);
+    bool raise_denominator_by_pow2(int exponent);
+    bool mul2_bottom(int exponent);
+    static bool make_compatible(fraction& f1, fraction& f2);
+    static bool safe_add_fraction(fraction& x, fraction& y);
+    static bool safe_subtract_fraction(fraction& x, fraction& y);
+
     static const int TOP_MIN = std::numeric_limits<int>::min() + 1;
     static const int TOP_MAX = std::numeric_limits<int>::max();
     static_assert(TOP_MIN == -TOP_MAX);
-
 
 private:
     int _top;
@@ -87,7 +89,6 @@ private:
 
     void _init(int top, int bottom);
 };
-
 
 inline std::ostream& operator<<(std::ostream& os, const fraction& f)
 {

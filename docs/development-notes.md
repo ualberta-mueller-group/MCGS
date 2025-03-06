@@ -29,13 +29,14 @@ checking that the state is restored
 This section uses the term "wrapping" to mean either underflow or overflow.
 
 - Defines template functions to do arithmetic without wrapping
-- Assumes underlying machine uses two's complement to represent integers
+- Assumes underlying machine uses two's complement to represent integers (there's a `static_assert` to check this)
 - All functions return a `bool`
     - When `true`, the operation was completed without wrapping
     - When `false`, the operation would have wrapped. No operands were changed
         - Also returned on invalid arguments, i.e. negative bit shift amounts
 - Some functions accept either integer types or floating point types, some accept only integer types
     - The lists below use `num` to refer to either, and `int` to refer to integer types. All operands must have the same type.
+- All functions accept both signed and unsigned types
 
 These functions test whether an operation would wrap, without doing the operation:
 - `add_will_wrap(const num x, const num y)`
@@ -59,10 +60,79 @@ These functions perform operations, and will only change the operands on success
 - `safe_mul2_shift(int& x, const int exponent)`
     - `x := x * 2^exponent` (implemented as left shift)
     - Negative values of `x` are allowed
-    - also `false` when the result would flip the sign
+    - also `false` when the operation would flip the sign
+    - On success, the resulting `x` is also negatable
 - `safe_pow2_mod(int& x, const int pow2)`
     - `x := x % pow2` (implemented as bitwise `&`)
     - `false` if `pow2` is not a power of 2, or `pow2 <= 0`
+
+## safe_int<T> (future work?)
+Currently, the user of these functions must check if they succeeded, and must be careful to only operate on values in a safe way. The user must ensure that errors don't go undetected. If handling overflow becomes a persistent theme in new code, we could make a `safe_int<T>` template class which wraps integer types, and implements safe arithmetic operations. Operations which cause wrapping would set an "error" bit in the `safe_int`, and operations having one or more operands in the error state would return another `safe_int` also in an error state. Users of this type could do arithmetic as if it were a normal integral type, but attempting to use the underlying integer value would throw an exception if the error bit is set; `<`, `<=`, `==`, `!=`, `>`, `>=`, `.value()` and `operator bool()` would all throw in the error state. This would ensure that all errors are caught.
+
+We may not need this if safe arithmetic isn't needed in much future code.
+
+The range of a `safe_int<T>` should be `[T_MIN + 1, T_MAX]`, assuming `T_MIN + 1 == -T_MAX`, because the value should be negatable (i.e. for use by `game::inverse()`). Currently it is possible to construct `integer_game`, `dyadic_rational`, `switch_game`, and `up_star` using `INT_MIN`, causing their `inverse()` to be incorrect, though moves cannot be played on these games because of the limitations of `move` being an `int`.
+
+These operations would be significantly slower, but would ensure correctness.
+
+We could also have a macro `#define CHECK_SAFE_INT(x, code) {if (!x.ok()) {code}}`, with `code` being a lambda function and/or return statement, as a way to do clean up before aborting the function. A user of this class should use this macro to detect errors instead of catching exceptions, as that is likely to be much slower.
+
+For most binary operators, 3 operations need to be defined: `safe_int<T> OP safe_int<T>`, `safe_int<T> OP T`, and `T OP safe_int<T>`.
+
+Operations we would need to define:
+- binary +, -, <<, >>
+- maybe binary * and /, though I'm not sure how to best do this...
+- binary pow2_mod
+- +=, -=
+- pre/post increment/decrement
+- binary &, |, ^
+- unary -, ~
+
+# "RTTI": Run-time type information (obj_id.h)
+- Defines interface class `i_obj_id` with virtual method `obj_id_t get_obj_id()`
+    - `obj_id_t` is an integral type with a unique value for every class inherting `class i_obj_id`
+    - Also defines a template function `obj_id_t get_obj_id<T>()` to get the `obj_id_t` for a type without needing an instance of the type
+    - Currently the implementation is provided by the interface class, using `unordered_map<std::type_index, obj_id_t>`
+
+TODO: tweak this before next release to ensure performance is OK
+
+Two possibly better solutions, both defined in terms of a template function `obj_id_t get_obj_id<T>()` which has variable `static obj_id_t my_id = __next_id++` (this removes the need for a map):
+
+1. Interface declares pure abstract method `get_obj_id()`. Games manually call the template version `get_obj_id<T>()` to implement the method:
+```
+class clobber: public game
+{
+    obj_id_t get_obj_id() const override
+    {
+        return get_obj_id<clobber>();
+    }
+};
+
+```
+
+2. Interface declares variable `protected obj_id_t my_id`, and implements non-virtual `obj_id_t get_obj_id()` which checks if `my_id` was initialized, then returns it. Games inherit a template class which initialize the value:
+```
+template <class T>
+class obj_id_impl<T>
+{
+    static_assert(is_base_of_v(i_obj_id, T));
+
+    obj_id_impl()
+    {
+        my_id = get_obj_id<T>();
+    }
+}
+
+...
+
+class clobber: public game, private obj_id_impl<clobber>
+{
+    // No other work needed to implement the function here
+}
+```
+
+Solution 2 gets rid of a virtual method call, and may be simpler, but the `obj_id_impl<T>` could be missed by a programmer
+
 
 # More on data types
 
@@ -79,10 +149,10 @@ Represents a move made in a `sumgame`
     - which subgames were created from the split
 
 ## `sumgame_impl::change_record` class (sumgame_change_record.h)
-- Similar to `play_record`; used to track changes to `sumgame` made by game simplification steps
+- Similar to `play_record`; used to track changes to `sumgame` (i.e. by sumgame simplification steps), to allow undoing of changes
     - Holds 2 `vector<game*>`s: one for deactivated games, and one for added games
-    - Undo operation reactivates games, then pops games from `sumgame` and deletes them
-- Simplifications are implemented as `change_record` methods
+    - Undo operation first reactivates games, then pops games from `sumgame` and deletes them
+- Simplification code is implemented in `cgt_game_simplification.h`, and is called by `change_record` methods
     - i.e. `change_record::simplify_basic(sumgame&)` which sums together basic CGT games such as `integer_game`, `dyadic_rational`, `switch_game` etc
 
 ## `sumgame_map_view` class (sumgame_map_view.h)
@@ -91,6 +161,7 @@ Represents a move made in a `sumgame`
     - These mutations are stored in a `change_record`
     - i.e. `sumgame_map_view::deactivate_game(game*)`, `sumgame_map_view::add_game(game*)`
 - Only games with `is_active() == true` are kept in the map
+- The map view remains valid only while the programmer interacts with the underlying `sumgame` through `sumgame_map_view`'s interface
 
 ## `sumgame::undo_stack_unwinder` class (sumgame_undo_stack_unwinder.h)
 - Private inner class of `sumgame`
@@ -109,26 +180,56 @@ It derives from `alternating_move_game` and reimplements the
     - It uses `sumgame_move`
     - It keeps its own `_play_record_stack` with sum-level info
     - Subgames keep their own stacks with local moves as well
+- Has an "undo stack" consisting of multiple vectors
+    - `vector<sumgame_undo_code>`
+        - Stack of enum type indicating which undo functions need to be called before returning from the current minimax search step
+        - Contains markers, `SUMGAME_UNDO_STACK_FRAME`, pushed at the start of each minimax search step
+    - `vector<play_record>`
+        - To undo moves played in a sumgame
+    - `vector<sumgame_impl::change_record>`
+        - To undo other mutations to the `sumgame` i.e. by game simplification steps
+    - These are stored as vector<T> instead of vector<T*> with the aim of reducing CPU cache misses
+        - TODO: explore this before next release
 
 ## `fraction` class (fraction.h)
 - Simple and lightweight fraction type whose denominator must be a positive power of 2
-    - Consists only of 2 public `int`s: `top` and `bottom`, making copying fast
-    - Has comparison operators (`<`, `<=`, `==`, `!=`, `>=`, `>`)
+    - Consists only of 2 private `int`s: `_top` and `_bottom`, making copying fast
+        - These `int`s must be within the interval `[INT_MIN + 1, INT_MAX]`, ensuring values are negatable without overflow
+    - Has comparison operators (`<`, `<=`, `==`, `!=`, `>=`, `>`, `fraction::get_relation()`)
         - These will never fail, but are significantly more expensive than `int` comparisons due to needing to make operands compatible (have the same denominator)
         - `fraction(1, 2) == fraction(2, 4)`
-    - Has safe operations which may fail and return false, but will not underflow or overflow
-        - On failure, `fraction` operands may be left more (or less) simplified, but will still be equivalent to before the operation (i.e. according to `==`)
-        - `safe_add_fraction(fraction& x, fraction& y)` and `safe_substract_fraction(fraction& x, fraction& y)`
-            - If safe, do `x = x + y` or `x = x - y`
-        - Make `fraction`s compatible
+    - Has operations which will never fail
         - Negate
+        - Simplify
+        - Get (and optionally remove) integral part as an `int` (whose denominator is assumed to be 1)
+    - Has safe operations which may fail and return false, if they would underflow or overflow (similar to `safe_arithmetic.h`)
+        - On failure, `fraction` operands may be left more (or less) simplified, but will still be equivalent to before the operation (i.e. according to `==`)
+        - `fraction::safe_add_fraction(fraction& x, fraction& y)` and `fraction::safe_substract_fraction(fraction& x, fraction& y)`
+            - If safe, do `x := x + y` or `x := x - y`
+        - Make `fraction`s compatible
         - Raise denominator
             - To target value
             - By number of left bit shifts
-    - Has operations which will not fail
-        - Simplify
-        - Get (and optionally remove) integral part as an `int` (whose denominator is 1)
+        - Multiply bottom by power of 2
 
+`fraction`s are more likely than integers to encounter arithmetic overflow, as raising the denominator by a factor of 2 halves the magnitude of representable values. `fraction`s don't store separate integral and fractional components, as this would complicate implementation: `mul2_bottom()` (effectively a division by a power of 2) would also need to operate on the integral component, which may not be divisible by 2.
+
+## `switch_game` class (cgt_switch.h)
+- Represents a game `g`, `g = {X | Y}` where `X` and `Y` are fractions
+    - `X` and `Y` are represented by the `fraction` class
+- Has 4 "kinds" represented by an enum, accessible by `switch_game::kind()`
+    - `SWITCH_KIND_PROPER`
+        - A true switch (i.e. `X > Y`)
+    - `SWITCH_KIND_PROPER_NORMALIZED`
+        - A true switch, also normalized (i.e. `g = {A | -A}`, where `A` is a fraction and `A` > `-A`)
+    - `SWITCH_KIND_RATIONAL`
+        - A `switch_game` after a move has been played by either player
+        - After a move has been played, the underlying kind is inaccessible
+    - `SWITCH_KIND_CONVERTIBLE_NUMBER`
+        - A `switch_game` for which `X <= Y`
+        - Here `g` is equal to a number -- a `dyadic_rational` and possibly a star (as an `up_star`)
+- Kinds are computed during construction using `fraction::get_relation()`
+    - TODO: perhaps we should evaluate this lazily?
 
 ## More on Extending the `game` Class
 - In every game implementation:
@@ -208,15 +309,15 @@ Searching for bounds is faster within smaller intervals. When finding bounds for
 
 Maybe bound generation in the database should be done using a sliding window of statistics for the last `N` games to help size intervals appropriately.
 
-# Game Simplification
-`sumgame::simplify_basic()` sums together basic CGT games to simplify the sum (and `sumgame::undo_simplify_basic()` undoes this). At each step, all games of a type are handled. Run-time type information is used to distinguish game types. To ensure that new games produced by a previous step may be included in the next step, steps happen in the following order:
+# Sumgame Simplification
+`sumgame::simplify_basic()` simplifies the sumgame by summing together basic CGT games and simplifying switches, (and `sumgame::undo_simplify_basic()` undoes this). Each step handles a different game type. Run-time type information is used to distinguish game types. To ensure that new games produced by a previous step may be included in the next step, steps happen in the following order:
 
 1. `nimber`
 2. `switch_game`
-3. `integer_game` and `dyadic_rational`
-4. `up_star`
+3. `up_star`
+4. `integer_game` and `dyadic_rational` together
 
-Steps producing no useful simplification (i.e. only summing up a single game) will not modify the `sumgame`. i.e. if the `sumgame` has only one non-zero `up_star` game, the game will be left alone, rather than duplicated with one inactive copy. 
+Steps producing no useful simplification will not modify the `sumgame`. i.e. if the `sumgame` has only one non-zero `up_star` game, the game will be left alone, rather than duplicated with one inactive copy.
 
 ## `nimber` Simplification
 - All `nimber`s are summed together using `nimber::nim_sum()`
@@ -227,37 +328,31 @@ Steps producing no useful simplification (i.e. only summing up a single game) wi
 ## `switch_game` Simplification
 `switch_game`s are of the form `{X | Y}` for some rationals `X` and `Y`.
 
-First, all `switch_game`s are sorted based on their `switch_kind`. Only `SWITCH_KIND_PROPER_SWITCH` and `SWITCH_KIND_NUMBER_AS_SWITCH` are used. `SWITCH_KIND_RATIONAL` and `SWITCH_KIND_PROPER_SWITCH_NORMALIZED` are left alone. There are two major cases (with some subcases), described in the next subsections.
+First, all `switch_game`s are separated based on their `switch_kind`. Only `SWITCH_KIND_PROPER` and `SWITCH_KIND_CONVERTIBLE_NUMBER` are used. `SWITCH_KIND_RATIONAL` and `SWITCH_KIND_PROPER_NORMALIZED` are left alone. There are two major cases (with some subcases), described in the next subsections.
 
-Note that operations involve the `fraction` class, and when arithmetic overflow occurs during simplification of a given `switch_game` object, this particular object is skipped and left untouched.
+Note that operations involve the `fraction` class, and when arithmetic overflow would have occurred during simplification of a given `switch_game` object, this particular `switch_game` object is skipped and left untouched.
 
-#### Proper Switch
-Proper switches are `switch_game`s where `X > Y`. These games are normalized to be of the form `M + {A | -A}`, for rationals `M` and `A`, where `M` is the mean of `X` and `Y`, and `A = X - M`.
+#### Proper switch
+Proper switches are `switch_game`s where `X > Y`. These games are normalized to produce a sum `M + {A | -A}`, for fractions `M` and `A`, where `M` is the mean of `X` and `Y`, and `A > -A`. `M` is added to the `sumgame` as a `dyadic_rational`, and `{A | -A}` is added to the `sumgame` as a `switch_game`.
 
-#### Number As Switch
+#### Convertible number
 Switches representing numbers are `switch_game`s where `X <= Y`. Several subcases occur:
 
 - If `X < 0` and `Y > 0`, the game is 0 (so it is just deactivated)
 - If `X == Y`, the game is replaced with `X + *` (a `dyadic_rational` and `up_star`)
-- Otherwise the game is replaced by the "simplest" rational `U`, `X < U < Y`
+- Otherwise the game is replaced by the "simplest" `dyadic_rational` `U`, `X < U < Y`
 
-The simplest such value is the unique rational `U = i/2^j` for some integers `i` and `j`, `j >= 0`, having minimal `j`, or if `j == 0`, having `i` with smallest absolute value. This value is found by iteratively increasing `j` and checking if `U` occurs for the current iteration of `j`.
-
+The simplest such value is the unique rational `U = i/2^j` for some integers `i` and `j`, `j >= 0`, having minimal `j`, or if `j == 0`, having `i` with smallest absolute value. This value is found by iteratively increasing `j` and checking if some multiple of `1/2^j` occurs between `X` and `Y`, and if it does, the specific multiple representing `U` is then found.
 
 ## `integer_game` and `dyadic_rational` Simplification
-All `integer_game`s are summed together, then all `dyadic_rational`s are summed together. The two resulting sums are then summed. Within each of these 3 summations, the first summand which would result in overflow causes the summation to stop. For example:
-```
-INT_MAX + -1 + 2 + -50
-```
-will only use the first 2 values.
+All `integer_game`s are summed together, then all `dyadic_rational`s are summed together. The two resulting sums are then summed into a combined sum. Within each of these 3 summations, summands which would cause overflow are skipped.
 
-
+For each sum, no useful work was done if the sum is the result of less than 2 games, and the sum is non-zero. Otherwise the sum is useful.
+- If the combined sum is useful, it replaces all games used to produce the sum
+- Otherwise, the integer and rational sums individually replace the games used to produce them (only when the sums are useful)
 
 ## `up_star` Simplification
-`up_star`s are summed together similarly to `integer_game`s and `dyadic_rational`s. The first summand which would cause overflow causes the summation to stop.
-
-
-
+`up_star`s are summed together similarly to `integer_game`s and `dyadic_rational`s, and the resulting sum replaces the games used to produce it, only when the sum is useful (as explained in the previous subsection).
 
 # Design Choices and Remaining Uglinesses
 ## A `move` must be implemented as an `int` 
