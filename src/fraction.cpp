@@ -1,6 +1,8 @@
 #include "fraction.h"
 
 #include <climits>
+#include <stdexcept>
+#include <string>
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
 #include "utilities.h"
@@ -13,8 +15,6 @@ namespace {
 
 inline void compute_integral_part(const fraction& frac, int& int_simplified, int& int_compatible)
 {
-    assert(frac.is_legal());
-
     int remainder_compatible = frac.top();
     bool success = safe_pow2_mod(remainder_compatible, frac.bottom());
     assert(success);
@@ -30,7 +30,6 @@ inline void compute_integral_part(const fraction& frac, int& int_simplified, int
 // common part of two fraction methods
 inline bool raise_denominator_common(fraction& frac, int exponent)
 {
-    assert(frac.is_legal());
     assert(exponent >= 0);
 
     int top_copy = frac.top();
@@ -64,7 +63,7 @@ bool fraction::is_simplified() const
 
 void fraction::simplify()
 {
-    assert(is_legal());
+    _check_legal();
 
     static_assert(is_integral_v<decltype(_top)> && is_signed_v<decltype(_top)>);
     static_assert(is_integral_v<decltype(_bottom)> && is_signed_v<decltype(_bottom)>);
@@ -78,7 +77,7 @@ void fraction::simplify()
 
 int fraction::get_integral_part() const
 {
-    assert(is_legal());
+    _check_legal();
 
     int int_simplified;
     int int_compatible;
@@ -89,7 +88,7 @@ int fraction::get_integral_part() const
 
 int fraction::remove_integral_part()
 {
-    assert(is_legal());
+    _check_legal();
 
     int int_simplified;
     int int_compatible;
@@ -99,23 +98,15 @@ int fraction::remove_integral_part()
     return int_simplified;
 }
 
-bool fraction::is_legal() const
-{
-    return (                                     //
-            (_bottom > 0)                     && //
-            is_power_of_2(_bottom)            && //
-            (TOP_MIN <= _top && _top <= TOP_MAX) //
-    );                                           //
-}
-
 bool fraction::operator<(const fraction& rhs) const
 {
     return get_relation(*this, rhs) == REL_LESS;
 }
 
-bool fraction::operator>(const fraction& rhs) const
+bool fraction::operator<=(const fraction& rhs) const
 {
-    return get_relation(*this, rhs) == REL_GREATER;
+    const relation rel = get_relation(*this, rhs);
+    return rel == REL_LESS || rel == REL_EQUAL;
 }
 
 bool fraction::operator==(const fraction& rhs) const
@@ -129,10 +120,9 @@ bool fraction::operator!=(const fraction& rhs) const
     return rel == REL_LESS || rel == REL_GREATER;
 }
 
-bool fraction::operator<=(const fraction& rhs) const
+bool fraction::operator>(const fraction& rhs) const
 {
-    const relation rel = get_relation(*this, rhs);
-    return rel == REL_LESS || rel == REL_EQUAL;
+    return get_relation(*this, rhs) == REL_GREATER;
 }
 
 bool fraction::operator>=(const fraction& rhs) const
@@ -146,7 +136,8 @@ relation fraction::get_relation(const fraction& lhs, const fraction& rhs)
     fraction f1 = lhs;
     fraction f2 = rhs;
 
-    assert(f1.is_legal() && f2.is_legal());
+    f1._check_legal();
+    f2._check_legal();
 
     int int1 = f1.remove_integral_part();
     int int2 = f2.remove_integral_part();
@@ -186,13 +177,13 @@ fraction fraction::operator-() const
 
 void fraction::negate()
 {
-    assert(is_legal());
+    _check_legal();
     _top = -_top;
 }
 
 bool fraction::raise_denominator_to(int target_bottom)
 {
-    assert(is_legal());
+    _check_legal();
 
     if (target_bottom < bottom() || !is_power_of_2(target_bottom))
         return false;
@@ -221,7 +212,7 @@ bool fraction::raise_denominator_to(int target_bottom)
 
 bool fraction::raise_denominator_by_pow2(int exponent)
 {
-    assert(is_legal());
+    _check_legal();
 
     if (exponent < 0)
         return false;
@@ -229,16 +220,16 @@ bool fraction::raise_denominator_by_pow2(int exponent)
     return raise_denominator_common(*this, exponent);
 }
 
-
 bool fraction::mul2_bottom(int exponent)
 {
-    assert(is_legal());
+    _check_legal();
     return safe_mul2_shift(_bottom, exponent);
 }
 
 bool fraction::make_compatible(fraction& f1, fraction& f2)
 {
-    assert(f1.is_legal() && f2.is_legal());
+    f1._check_legal();
+    f2._check_legal();
 
     f1.simplify();
     f2.simplify();
@@ -276,5 +267,16 @@ void fraction::_init(int top, int bottom)
     this->_top = top;
     this->_bottom = bottom;
 
-    assert(is_legal());
+    _check_legal();
 }
+
+void fraction::_check_legal() const
+{
+    if (!(
+            (_bottom > 0)                     && //
+            is_power_of_2(_bottom)            && //
+            (TOP_MIN <= _top && _top <= TOP_MAX) //
+    ))
+        throw range_error("Illegal fraction: " + to_string(_top) + "/" + to_string(_bottom));
+}
+

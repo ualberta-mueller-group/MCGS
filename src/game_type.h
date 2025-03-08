@@ -26,7 +26,9 @@ public:
 
 private:
     virtual void __make_poly() const final // NOLINT ensure the type is polymorphic
-    {}
+    {
+        assert(false); // method shouldn't be called
+    }
 };
 
 template <class T>

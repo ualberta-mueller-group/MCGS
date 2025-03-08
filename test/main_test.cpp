@@ -3,6 +3,8 @@
 // Imports all unit tests
 //---------------------------------------------------------------------------
 
+const bool RUN_OVERRIDE_TESTS = true;
+
 #include <cassert>
 #include <string>
 #include <iostream>
@@ -29,6 +31,7 @@
 #include "find_bounds_test.h"
 #include "utilities_test.h"
 #include "safe_arithmetic_test.h"
+#include "fraction_test.h"
 
 using std::cout, std::endl, std::string;
 
@@ -54,8 +57,20 @@ void print_usage(const char* exec_name)
     print_flag("-h, --help", "Print this message and exit.");
 }
 
+void override_tests()
+{
+    fraction_test_all();
+}
+
 int main(int argc, const char** argv)
 {
+    if (RUN_OVERRIDE_TESTS)
+    {
+        override_tests();
+        cout << "DONE. Remember to disable override tests (at top of main_test.cpp)" << endl;
+        return 0;
+    }
+
     bool do_slow_tests = true;
 
     // arg parse loop
@@ -91,6 +106,7 @@ int main(int argc, const char** argv)
 
     utilities_test_all();
     safe_arithmetic_test_all();
+    fraction_test_all();
 
     split_test_all();
 

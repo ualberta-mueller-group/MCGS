@@ -34,13 +34,12 @@ public:
     int get_integral_part() const;
     int remove_integral_part();
 
-    bool is_legal() const;
 
     bool operator<(const fraction& rhs) const;
-    bool operator>(const fraction& rhs) const;
+    bool operator<=(const fraction& rhs) const;
     bool operator==(const fraction& rhs) const;
     bool operator!=(const fraction& rhs) const;
-    bool operator<=(const fraction& rhs) const;
+    bool operator>(const fraction& rhs) const;
     bool operator>=(const fraction& rhs) const;
     static relation get_relation(const fraction& f1, const fraction& f2);
     fraction operator-() const;
@@ -52,20 +51,20 @@ public:
     inline void set_top(const int& top)
     {
         _top = top;
-        assert(is_legal());
+        _check_legal();
     }
 
     inline void set_bottom(const int& bottom)
     {
         _bottom = bottom;
-        assert(is_legal());
+        _check_legal();
     }
 
     inline void set(const int& top, const int& bottom)
     {
         _top = top;
         _bottom = bottom;
-        assert(is_legal());
+        _check_legal();
     }
 
     /*
@@ -84,6 +83,8 @@ public:
     static_assert(TOP_MIN == -TOP_MAX);
 
 private:
+    void _check_legal() const;
+
     int _top;
     int _bottom;
 
