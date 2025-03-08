@@ -10,8 +10,8 @@ class sumgame_map_view
 public:
     sumgame_map_view(sumgame& sum, sumgame_impl::change_record& record);
 
-    std::vector<game*>* get_games_nullable(game_type gt);
-    std::vector<game*>& get_games(game_type gt);
+    std::vector<game*>* get_games_nullable(game_type_t gt);
+    std::vector<game*>& get_games(game_type_t gt);
 
     void deactivate_game(game* g);
     void deactivate_games(std::vector<game*>& games);
@@ -24,7 +24,7 @@ public:
         assert(game_ptr != nullptr);
         assert(game_ptr->is_active());
 
-        game_type gt = get_game_type<T>();
+        game_type_t gt = game_type<T>();
         std::vector<game*>& vec = _map[gt];
 
         vec.push_back(game_ptr);
@@ -38,6 +38,6 @@ private:
     sumgame& _sum;
     sumgame_impl::change_record& _record;
 
-    std::unordered_map<game_type, std::vector<game*>> _map;
+    std::unordered_map<game_type_t, std::vector<game*>> _map;
 };
 

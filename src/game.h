@@ -217,7 +217,7 @@ inline T_ptr cast_game(game* g)
 
     assert(g != nullptr);
     assert(g->is_active());
-    assert(g->get_game_type() == get_game_type<T>());
+    assert(g->game_type() == game_type<T>());
 
     return reinterpret_cast<T_ptr>(g);
 }

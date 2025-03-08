@@ -14,8 +14,6 @@
 #include "autotests.h"
 #include <chrono>
 
-#include "all_game_headers.h"
-#include "convert_number.h"
 
 using std::cout, std::endl, std::string;
 
