@@ -15,6 +15,7 @@ template <class T>
 bool add_will_wrap(const T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+    static_assert(std::is_signed_v<T>);
 
     const T& min = std::numeric_limits<T>::min();
     const T& max = std::numeric_limits<T>::max();
@@ -34,6 +35,7 @@ template <class T>
 bool subtract_will_wrap(const T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+    static_assert(std::is_signed_v<T>);
 
     const T& min = std::numeric_limits<T>::min();
     const T& max = std::numeric_limits<T>::max();
@@ -64,6 +66,7 @@ template <class T>
 inline bool safe_add(T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+    static_assert(std::is_signed_v<T>);
 
     if (add_will_wrap(x, y))
         return false;
@@ -76,6 +79,7 @@ template <class T>
 inline bool safe_add_negatable(T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+    static_assert(std::is_signed_v<T>);
 
     if (add_will_wrap(x, y))
         return false;
@@ -93,6 +97,7 @@ template <class T>
 inline bool safe_subtract(T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+    static_assert(std::is_signed_v<T>);
 
     if (subtract_will_wrap(x, y))
         return false;
@@ -105,6 +110,7 @@ template <class T>
 inline bool safe_subtract_negatable(T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+    static_assert(std::is_signed_v<T>);
 
     if (subtract_will_wrap(x, y))
         return false;
@@ -138,12 +144,14 @@ template <class T1, class T2>
 bool safe_mul2_shift(T1& shiftee, const T2& exponent)
 {
     static_assert(std::is_integral_v<T1> && std::is_integral_v<T2>);
+    static_assert(std::is_signed_v<T1>);
+
     const T2 n_bits = size_in_bits<T1>();
 
-    if (exponent == 0)
-        return true;
     if (exponent >= n_bits || exponent < 0 || negate_will_wrap(shiftee))
         return false;
+    if (exponent == 0)
+        return true;
 
     T1 x = shiftee;
     bool flipped = false;
@@ -186,6 +194,7 @@ template <class T>
 bool safe_pow2_mod(T& x, const T& mod)
 {
     static_assert(std::is_integral_v<T>);
+    static_assert(std::is_signed_v<T>);
 
     const T MIN = std::numeric_limits<T>::min();
     const T MAX = std::numeric_limits<T>::max();
