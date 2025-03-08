@@ -13,15 +13,15 @@ sumgame_map_view::sumgame_map_view(sumgame& sum, sumgame_impl::change_record& re
 
         if (g->is_active())
         {
-            obj_id_t obj_id = g->get_obj_id();
-            _map[obj_id].push_back(g);
+            game_type gt = g->get_game_type();
+            _map[gt].push_back(g);
         }
     }
 }
 
-vector<game*>* sumgame_map_view::get_games_nullable(obj_id_t obj_id)
+vector<game*>* sumgame_map_view::get_games_nullable(game_type gt)
 {
-    auto it = _map.find(obj_id);
+    auto it = _map.find(gt);
 
     if (it == _map.end())
     {
@@ -39,9 +39,9 @@ vector<game*>* sumgame_map_view::get_games_nullable(obj_id_t obj_id)
     return &map_games;
 }
 
-vector<game*>& sumgame_map_view::get_games(obj_id_t obj_id)
+vector<game*>& sumgame_map_view::get_games(game_type gt)
 {
-    vector<game*>& games = _map[obj_id];
+    vector<game*>& games = _map[gt];
     _filter_inactive(games);
     return games;
 }

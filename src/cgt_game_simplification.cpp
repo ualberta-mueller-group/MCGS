@@ -2,7 +2,7 @@
 
 #include "fraction.h"
 #include "safe_arithmetic.h"
-#include "obj_id.h"
+#include "game_type.h"
 
 #include "cgt_nimber.h"
 #include "cgt_up_star.h"
@@ -109,7 +109,7 @@ bool convert_number_switch(fraction x, fraction y, sumgame_map_view& map_view)
 ////////////////////////////////////////
 void simplify_basic_nimber(sumgame_map_view& map_view)
 {
-    vector<game*>* nimbers = map_view.get_games_nullable(get_obj_id<nimber>());
+    vector<game*>* nimbers = map_view.get_games_nullable(get_game_type<nimber>());
 
     if (nimbers == nullptr)
     {
@@ -151,7 +151,7 @@ void simplify_basic_nimber(sumgame_map_view& map_view)
 
 void simplify_basic_switch(sumgame_map_view& map_view)
 {
-    vector<game*>* switch_games = map_view.get_games_nullable(get_obj_id<switch_game>());
+    vector<game*>* switch_games = map_view.get_games_nullable(get_game_type<switch_game>());
 
     if (switch_games == nullptr)
     {
@@ -236,7 +236,7 @@ void simplify_basic_switch(sumgame_map_view& map_view)
 
 void simplify_basic_up_star(sumgame_map_view& map_view)
 {
-    vector<game*>* up_stars = map_view.get_games_nullable(get_obj_id<up_star>());
+    vector<game*>* up_stars = map_view.get_games_nullable(get_game_type<up_star>());
 
     if (up_stars == nullptr)
     {
@@ -277,8 +277,8 @@ void simplify_basic_up_star(sumgame_map_view& map_view)
 
 void simplify_basic_integers_rationals(sumgame_map_view& map_view)
 {
-    vector<game*>* integers = map_view.get_games_nullable(get_obj_id<integer_game>());
-    vector<game*>* rationals = map_view.get_games_nullable(get_obj_id<dyadic_rational>());
+    vector<game*>* integers = map_view.get_games_nullable(get_game_type<integer_game>());
+    vector<game*>* rationals = map_view.get_games_nullable(get_game_type<dyadic_rational>());
 
     vector<game*> consumed_integers;
     vector<game*> consumed_rationals;

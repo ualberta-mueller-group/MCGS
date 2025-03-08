@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------
 #include "sumgame.h"
 #include "cgt_nimber.h"
-#include "obj_id.h"
+#include "game_type.h"
 
 #include <algorithm>
 #include <chrono>

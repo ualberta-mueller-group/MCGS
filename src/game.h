@@ -11,7 +11,7 @@
 #include <optional>
 #include "cgt_basics.h"
 #include "cgt_move.h"
-#include "obj_id.h"
+#include "game_type.h"
 
 //---------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ class game;
 typedef std::optional<std::vector<game*>> split_result;
 
 
-class game: public i_obj_id
+class game: public i_game_type
 {
 public:
     game();
@@ -217,7 +217,7 @@ inline T_ptr cast_game(game* g)
 
     assert(g != nullptr);
     assert(g->is_active());
-    assert(g->get_obj_id() == get_obj_id<T>());
+    assert(g->get_game_type() == get_game_type<T>());
 
     return reinterpret_cast<T_ptr>(g);
 }

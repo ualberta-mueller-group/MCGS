@@ -21,9 +21,6 @@ using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
 {
-    //test_convert_number();
-    //return 0;
-
     cli_options opts = parse_cli_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
