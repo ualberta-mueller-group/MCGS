@@ -1,5 +1,6 @@
 #pragma once
 #include "cgt_dyadic_rational.h"
+#include "safe_arithmetic.h"
 #include <cassert>
 #include <limits>
 #include <ostream>
@@ -86,6 +87,8 @@ public:
     static const int TOP_MIN = std::numeric_limits<int>::min() + 1;
     static const int TOP_MAX = std::numeric_limits<int>::max();
     static_assert(TOP_MIN == -TOP_MAX);
+    static_assert(!negate_will_wrap(TOP_MIN));
+    static_assert(!negate_will_wrap(TOP_MAX));
 
 private:
     void _check_legal() const;

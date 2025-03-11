@@ -48,7 +48,7 @@ bool string_ends_with(const std::string& str, const std::string& word);
 
 //////////////////////////////////////// arithmetic operations
 template <class T>
-inline bool is_power_of_2(const T& n)
+inline constexpr bool is_power_of_2(const T& n)
 {
     static_assert(std::is_integral_v<T>);
     return n > 0 && !(n & (n - 1));

@@ -12,7 +12,7 @@ static_assert(std::numeric_limits<int>::min() + 1 == -std::numeric_limits<int>::
 
 //////////////////////////////////////// arithmetic wrapping checks
 template <class T>
-bool add_will_wrap(const T& x, const T& y) // NUMERIC
+constexpr bool add_will_wrap(const T& x, const T& y) // NUMERIC
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -31,7 +31,7 @@ bool add_will_wrap(const T& x, const T& y) // NUMERIC
 }
 
 template <class T>
-bool subtract_will_wrap(const T& x, const T& y) // NUMERIC
+constexpr bool subtract_will_wrap(const T& x, const T& y) // NUMERIC
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -51,7 +51,7 @@ bool subtract_will_wrap(const T& x, const T& y) // NUMERIC
 
 
 template <class T>
-inline bool negate_will_wrap(const T& x) // SIGNED INTEGRAL
+inline constexpr bool negate_will_wrap(const T& x) // SIGNED INTEGRAL
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
@@ -62,7 +62,7 @@ inline bool negate_will_wrap(const T& x) // SIGNED INTEGRAL
 // These should all be safe even with invalid arguments
 
 template <class T>
-inline bool safe_add(T& x, const T& y) // NUMERIC
+inline constexpr bool safe_add(T& x, const T& y) // NUMERIC
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -74,7 +74,7 @@ inline bool safe_add(T& x, const T& y) // NUMERIC
 }
 
 template <class T>
-inline bool safe_add_negatable(T& x, const T& y) // SIGNED INTEGRAL
+inline constexpr bool safe_add_negatable(T& x, const T& y) // SIGNED INTEGRAL
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
@@ -92,7 +92,7 @@ inline bool safe_add_negatable(T& x, const T& y) // SIGNED INTEGRAL
 }
 
 template <class T>
-inline bool safe_subtract(T& x, const T& y) // NUMERIC
+inline constexpr bool safe_subtract(T& x, const T& y) // NUMERIC
 { 
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -104,7 +104,7 @@ inline bool safe_subtract(T& x, const T& y) // NUMERIC
 }
 
 template <class T>
-inline bool safe_subtract_negatable(T& x, const T& y) // SIGNED INTEGRAL
+inline constexpr bool safe_subtract_negatable(T& x, const T& y) // SIGNED INTEGRAL
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
@@ -122,7 +122,7 @@ inline bool safe_subtract_negatable(T& x, const T& y) // SIGNED INTEGRAL
 }
 
 template <class T>
-bool safe_negate(T& x) // SIGNED INTEGRAL
+constexpr bool safe_negate(T& x) // SIGNED INTEGRAL
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
@@ -139,7 +139,7 @@ bool safe_negate(T& x) // SIGNED INTEGRAL
 
 // if successful, result is negatable
 template <class T1, class T2>
-bool safe_mul2_shift(T1& shiftee, const T2& exponent) // SIGNED INTEGRAL and INTEGRAL
+constexpr bool safe_mul2_shift(T1& shiftee, const T2& exponent) // SIGNED INTEGRAL and INTEGRAL
 {
     static_assert(std::is_integral_v<T1> && std::is_integral_v<T2>);
     static_assert(std::is_signed_v<T1>);
@@ -189,7 +189,7 @@ bool safe_mul2_shift(T1& shiftee, const T2& exponent) // SIGNED INTEGRAL and INT
 }
 
 template <class T>
-bool safe_pow2_mod(T& x, const T& mod) // SIGNED INTEGRAL
+constexpr bool safe_pow2_mod(T& x, const T& mod) // SIGNED INTEGRAL
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
