@@ -45,7 +45,7 @@ public:
     fraction operator-() const;
     void negate();
 
-    inline bool equals_verbatim(const fraction& rhs)
+    inline bool equals_verbatim(const fraction& rhs) const
     {
         return (top() == rhs.top()) && (bottom() == rhs.bottom());
     }

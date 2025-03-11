@@ -117,6 +117,13 @@ switch_kind switch_game::kind() const
     return _kind;
 }
 
+fraction switch_game::_init_fraction(const fraction& f) const
+{
+    fraction f_simplified(f);
+    f_simplified.simplify();
+    return f_simplified;
+}
+
 relation switch_game::_init_relation() const
 {
     relation rel = fraction::get_relation(_left, _right);

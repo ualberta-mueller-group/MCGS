@@ -3,7 +3,7 @@
 // Imports all unit tests
 //---------------------------------------------------------------------------
 
-const bool RUN_OVERRIDE_TESTS = false;
+const bool RUN_OVERRIDE_TESTS = true;
 
 #include <cassert>
 #include <string>
@@ -59,7 +59,7 @@ void print_usage(const char* exec_name)
 
 void override_tests()
 {
-    fraction_test_all();
+    cgt_switch_test_all();
 }
 
 int main(int argc, const char** argv)

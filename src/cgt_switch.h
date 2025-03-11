@@ -49,6 +49,7 @@ public:
     switch_kind kind() const;
 
 private:
+    fraction _init_fraction(const fraction& f) const;
     relation _init_relation() const;
     switch_kind _init_kind() const;
 
@@ -62,8 +63,8 @@ private:
 };
 
 inline switch_game::switch_game(int left, int right) : 
-    _left(left), 
-    _right(right),
+    _left(_init_fraction(left)), 
+    _right(_init_fraction(right)),
     _rel(_init_relation()),
     _kind(_init_kind()),
     _rational_game(nullptr),
@@ -73,8 +74,8 @@ inline switch_game::switch_game(int left, int right) :
 }
 
 inline switch_game::switch_game(int left, const fraction& right) :
-    _left(left), 
-    _right(right),
+    _left(_init_fraction(left)), 
+    _right(_init_fraction(right)),
     _rel(_init_relation()),
     _kind(_init_kind()),
     _rational_game(nullptr),
@@ -84,8 +85,8 @@ inline switch_game::switch_game(int left, const fraction& right) :
 }
 
 inline switch_game::switch_game(const fraction& left, int right) :
-    _left(left), 
-    _right(right),
+    _left(_init_fraction(left)), 
+    _right(_init_fraction(right)),
     _rel(_init_relation()),
     _kind(_init_kind()),
     _rational_game(nullptr),
@@ -95,8 +96,8 @@ inline switch_game::switch_game(const fraction& left, int right) :
 }
 
 inline switch_game::switch_game(const fraction& left, const fraction& right) :
-    _left(left), 
-    _right(right),
+    _left(_init_fraction(left)), 
+    _right(_init_fraction(right)),
     _rel(_init_relation()),
     _kind(_init_kind()),
     _rational_game(nullptr),
