@@ -30,6 +30,7 @@ void test_constructor1()
     dyadic_rational g(1, 2);
     assert_equal(g.p(), 1);
     assert_equal(g.q(), 2);
+    assert(fraction(1, 2).equals_verbatim(g.get_fraction()));
 }
 
 void test_constructor2()
@@ -37,6 +38,7 @@ void test_constructor2()
     dyadic_rational g(2, 4);
     assert_equal(g.p(), 1);
     assert_equal(g.q(), 2);
+    assert(fraction(1, 2).equals_verbatim(g.get_fraction()));
 }
 
 void test_constructor3()
@@ -44,6 +46,7 @@ void test_constructor3()
     dyadic_rational g(-1, 4);
     assert_equal(g.p(), -1);
     assert_equal(g.q(), 4);
+    assert(fraction(-1, 4).equals_verbatim(g.get_fraction()));
 }
 
 void test_constructor4()
@@ -51,6 +54,7 @@ void test_constructor4()
     dyadic_rational g(-28, 1024);
     assert_equal(g.p(), -7);
     assert_equal(g.q(), 256);
+    assert(fraction(-7, 256).equals_verbatim(g.get_fraction()));
 }
 
 void test_constructor5()
@@ -58,6 +62,7 @@ void test_constructor5()
     dyadic_rational g(0, 1);
     assert_equal(g.p(), 0);
     assert_equal(g.q(), 1);
+    assert(fraction(0, 1).equals_verbatim(g.get_fraction()));
 }
 
 void test_constructor6()
@@ -65,6 +70,7 @@ void test_constructor6()
     dyadic_rational g(0, 2);
     assert_equal(g.p(), 0);
     assert_equal(g.q(), 1);
+    assert(fraction(0, 1).equals_verbatim(g.get_fraction()));
 }
 
 void test_constructor7()
@@ -72,6 +78,7 @@ void test_constructor7()
     dyadic_rational g(0, 64);
     assert_equal(g.p(), 0);
     assert_equal(g.q(), 1);
+    assert(fraction(0, 1).equals_verbatim(g.get_fraction()));
 }
 
 
