@@ -33,11 +33,16 @@ const bool RUN_OVERRIDE_TESTS = true;
 #include "game_type_test.h"
 #include "safe_arithmetic_test.h"
 #include "fraction_test.h"
+#include "sumgame_map_view_test.h"
 
 using std::cout, std::endl, std::string;
 
+#include "game_compare_test_utils.h"
 void override_tests()
 {
+    game_compare_test_main();
+
+    sumgame_map_view_test_all();
 }
 
 namespace
@@ -131,6 +136,8 @@ int main(int argc, const char** argv)
             test private bounds stuff? helpers?
             game_bounds asserts?
     */
+
+    sumgame_map_view_test_all();
 
     cout << "SUCCESS" << endl;
 }
