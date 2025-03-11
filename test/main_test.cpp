@@ -30,10 +30,17 @@ const bool RUN_OVERRIDE_TESTS = true;
 #include "game_bounds_test.h"
 #include "find_bounds_test.h"
 #include "utilities_test.h"
+#include "game_type_test.h"
 #include "safe_arithmetic_test.h"
 #include "fraction_test.h"
 
 using std::cout, std::endl, std::string;
+
+void override_tests()
+{
+    utilities_test_all();
+    test_game_type_all();
+}
 
 namespace
 {
@@ -55,11 +62,6 @@ void print_usage(const char* exec_name)
     cout << "Flags:" << endl;
     print_flag("--no-slow-tests", "Skip running tests which take longer.");
     print_flag("-h, --help", "Print this message and exit.");
-}
-
-void override_tests()
-{
-    cgt_switch_test_all();
 }
 
 int main(int argc, const char** argv)
@@ -105,6 +107,7 @@ int main(int argc, const char** argv)
     cgt_up_star_test_all();
 
     utilities_test_all();
+    test_game_type_all();
     safe_arithmetic_test_all();
     fraction_test_all();
 
