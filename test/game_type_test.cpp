@@ -53,7 +53,7 @@ void test_games(Ts... game_ptrs)
 }
 } // namespace
 
-void test_game_type_all()
+void game_type_test_all()
 {
     // no need for cleanup, extract_type() will delete
     test_games(

@@ -38,8 +38,6 @@ using std::cout, std::endl, std::string;
 
 void override_tests()
 {
-    utilities_test_all();
-    test_game_type_all();
 }
 
 namespace
@@ -107,7 +105,7 @@ int main(int argc, const char** argv)
     cgt_up_star_test_all();
 
     utilities_test_all();
-    test_game_type_all();
+    game_type_test_all();
     safe_arithmetic_test_all();
     fraction_test_all();
 

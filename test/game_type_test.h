@@ -1,2 +1,3 @@
 #pragma once
-void test_game_type_all();
+
+void game_type_test_all();
