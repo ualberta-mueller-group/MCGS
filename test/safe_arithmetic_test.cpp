@@ -3,53 +3,11 @@
 #include <limits>
 #include <cstdint>
 #include <iostream>
+#include <optional>
 
 using namespace std;
 
 namespace {
-
-/*
-    Use to simplify writing unit tests for functions which may sometimes not
-        return a value.
-
-    Example usage for a function accepting an int32_t, and optionally 
-        returning a string:
-
-
-    typedef exp_result_impl<string> exp_t;
-    typedef tuple<int32_t, exp_t> test_case_t;
-
-    vector<test_case_t> test_cases
-    {
-        {10, {"10"}}, // expected result is "10"
-        {-6, {}}, // expected to not return a result
-    };
-*/
-template <class T>
-class exp_result_impl
-{
-public:
-    exp_result_impl(const T& val): _has_val(true), _val(val)
-    { }
-
-    exp_result_impl(): _has_val(false), _val(0)
-    { }
-
-    bool has_value() const
-    {
-        return _has_val;
-    }
-
-    const T& value() const
-    {
-        assert(_has_val);
-        return _val;
-    }
-
-private:
-    bool _has_val;
-    T _val;
-};
 
 //////////////////////////////////////// helper functions
 template <class T>
@@ -59,14 +17,14 @@ void test_add_will_wrap(const T& x, const T& y, bool exp)
 }
 
 template <class T>
-void test_safe_add(T x, T y, const exp_result_impl<T>& exp)
+void test_safe_add(T x, T y, const optional<T>& exp)
 {
     assert(safe_add(x, y) == exp.has_value());
     assert(!exp.has_value() || x == exp.value());
 }
 
 template <class T>
-void test_safe_add_negatable(T x, T y, const exp_result_impl<T>& exp)
+void test_safe_add_negatable(T x, T y, const optional<T>& exp)
 {
     assert(safe_add_negatable(x, y) == exp.has_value());
     assert(!exp.has_value() || x == exp.value());
@@ -79,14 +37,14 @@ void test_subtract_will_wrap(const T& x, const T& y, bool exp)
 }
 
 template <class T>
-void test_safe_subtract(T x, T y, const exp_result_impl<T>& exp)
+void test_safe_subtract(T x, T y, const optional<T>& exp)
 {
     assert(safe_subtract(x, y) == exp.has_value());
     assert(!exp.has_value() || x == exp.value());
 }
 
 template <class T>
-void test_safe_subtract_negatable(T x, T y, const exp_result_impl<T>& exp)
+void test_safe_subtract_negatable(T x, T y, const optional<T>& exp)
 {
     assert(safe_subtract_negatable(x, y) == exp.has_value());
     assert(!exp.has_value() || x == exp.value());
@@ -98,7 +56,7 @@ void test_addition_like()
     const int32_t& min = numeric_limits<int32_t>::min();
     const int32_t& max = numeric_limits<int32_t>::max();
 
-    typedef exp_result_impl<int32_t> exp_t;
+    typedef optional<int32_t> exp_t;
     typedef tuple<int32_t, int32_t, exp_t, exp_t, exp_t, exp_t, exp_t, exp_t> test_case_t;
     /*
        Each line in this comment represents one expected result in the test_case_t
@@ -208,7 +166,7 @@ void test_mul2_shift()
     const int32_t& min = numeric_limits<int32_t>::min();
     const int32_t& max = numeric_limits<int32_t>::max();
 
-    typedef exp_result_impl<int32_t> exp_t;
+    typedef optional<int32_t> exp_t;
     typedef tuple<int32_t, int16_t, exp_t> test_case_t;
     /*
         safe_mul2_shift(x, y)
@@ -279,7 +237,7 @@ void test_mod()
     const int32_t& min = numeric_limits<int32_t>::min();
     const int32_t& max = numeric_limits<int32_t>::max();
 
-    typedef exp_result_impl<int32_t> exp_t;
+    typedef optional<int32_t> exp_t;
     typedef tuple<int32_t, int32_t, exp_t> test_case_t;
     /*
         safe_pow2_mod(x, y)

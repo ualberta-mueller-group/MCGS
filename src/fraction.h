@@ -34,7 +34,6 @@ public:
     int get_integral_part() const;
     int remove_integral_part();
 
-
     bool operator<(const fraction& rhs) const;
     bool operator<=(const fraction& rhs) const;
     bool operator==(const fraction& rhs) const;
@@ -42,8 +41,14 @@ public:
     bool operator>(const fraction& rhs) const;
     bool operator>=(const fraction& rhs) const;
     static relation get_relation(const fraction& f1, const fraction& f2);
+
     fraction operator-() const;
     void negate();
+
+    inline bool equals_verbatim(const fraction& rhs)
+    {
+        return (top() == rhs.top()) && (bottom() == rhs.bottom());
+    }
 
     inline const int& top() const {return _top;}
     inline const int& bottom() const {return _bottom;}

@@ -5,7 +5,6 @@
 #include <string>
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
-#include "utilities.h"
 #include "safe_arithmetic.h"
 
 using namespace std;
@@ -249,7 +248,17 @@ bool fraction::safe_add_fraction(fraction& x, fraction& y)
 
     assert(x.bottom() == y.bottom());
 
-    return safe_add_negatable(x._top, y._top);
+    int xtop = x.top();
+    int ytop = y.top();
+
+    bool success = safe_add(xtop, ytop) && (TOP_MIN <= xtop) && (xtop <= TOP_MAX);
+
+    if (success)
+    {
+        x.set_top(xtop);
+    }
+
+    return success;
 }
 
 bool fraction::safe_subtract_fraction(fraction& x, fraction& y)
@@ -257,9 +266,19 @@ bool fraction::safe_subtract_fraction(fraction& x, fraction& y)
     if (!fraction::make_compatible(x, y))
         return false;
 
-    assert(x._bottom == y._bottom);
+    assert(x.bottom() == y.bottom());
 
-    return safe_subtract_negatable(x._top, y._top);
+    int xtop = x.top();
+    int ytop = y.top();
+
+    bool success = safe_subtract(xtop, ytop) && (TOP_MIN <= xtop) && (xtop <= TOP_MAX);
+
+    if (success)
+    {
+        x.set_top(xtop);
+    }
+
+    return success;
 }
 
 void fraction::_init(int top, int bottom)
