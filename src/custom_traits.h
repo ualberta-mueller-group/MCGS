@@ -1,28 +1,50 @@
 #pragma once
+#include <algorithm>
 #include <memory>
 #include <type_traits>
 #include "game.h"
 
+static_assert(std::is_pointer_v<int*>);
+static_assert(!std::is_pointer_v<std::shared_ptr<int>>);
+
 namespace custom_traits {
 // NOLINTBEGIN
 
-//////////////////////////////////////// is_smart_ptr<T>
+//////////////////////////////////////// __type_valid<T>
+/*
+    Always true; used as a hack with std::enable_if to enable template specializations
+        whenever T is valid
+*/
 template <class T>
+struct __type_valid
+{
+    constexpr static bool value = true;
+};
+
+template <class T>
+constexpr bool __type_valid_v = __type_valid<T>::value;
+
+//////////////////////////////////////// is_smart_ptr<T>
+/*
+   True iff T is a smart pointer. False for raw pointers
+*/
+template <class T, typename Enable = void>
 struct is_smart_ptr
 {
     constexpr static bool value = false;
 };
 
+// Specialization for when T is some pointer (when pointer_traits<T>::element_type is valid)
 template <class T>
-struct is_smart_ptr<std::shared_ptr<T>>
+struct is_smart_ptr<
+    T,
+    std::enable_if_t<
+        __type_valid_v<typename std::pointer_traits<T>::element_type>,
+        void
+    >
+>
 {
-    constexpr static bool value = true;
-};
-
-template <class T>
-struct is_smart_ptr<std::unique_ptr<T>>
-{
-    constexpr static bool value = true;
+    constexpr static bool value = !std::is_pointer_v<T>; // not raw pointer
 };
 
 template <class T>
@@ -47,7 +69,7 @@ struct is_some_game_ptr
 
 // Specialization for pointer types
 template <class T>
-struct is_some_game_ptr<T, typename std::enable_if<is_some_ptr_v<T>, void>::type>
+struct is_some_game_ptr<T, typename std::enable_if_t<is_some_ptr_v<T>, void>>
 {
     using Element = typename std::pointer_traits<T>::element_type;
 

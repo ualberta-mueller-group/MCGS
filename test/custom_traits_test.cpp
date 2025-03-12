@@ -1,10 +1,10 @@
 #include "custom_traits_test.h"
 #include "custom_traits.h"
 #include "all_game_headers.h"
+#include <type_traits>
 
 using namespace custom_traits;
 using namespace std;
-
 
 /*
     NOTE: this test runs at compile time and not run time
