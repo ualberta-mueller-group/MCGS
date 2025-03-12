@@ -47,7 +47,7 @@ struct is_some_game_ptr
 
 // Specialization for pointer types
 template <class T>
-struct is_some_game_ptr<T, typename std::enable_if<is_some_ptr_v<T>>::type>
+struct is_some_game_ptr<T, typename std::enable_if<is_some_ptr_v<T>, void>::type>
 {
     using Element = typename std::pointer_traits<T>::element_type;
 

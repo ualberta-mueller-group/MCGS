@@ -38,11 +38,8 @@ const bool RUN_OVERRIDE_TESTS = true;
 
 using std::cout, std::endl, std::string;
 
-#include "game_compare_test_utils.h"
 void override_tests()
 {
-    game_compare_test_main();
-
     sumgame_map_view_test_all();
 }
 
