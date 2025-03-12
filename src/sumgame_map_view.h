@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include <vector>
 #include <unordered_map>
 #include "game.h"
@@ -20,11 +21,17 @@ public:
     template <class T>
     void add_game(T* game_ptr)
     {
-        static_assert(is_concrete_game_v<T>);
+        static_assert(std::is_base_of_v<game, T>);
         assert(game_ptr != nullptr);
         assert(game_ptr->is_active());
 
-        game_type_t gt = game_type<T>();
+        game_type_t gt;
+        if constexpr (is_concrete_game_v<T>) // constexpr needed because game_type<T>() is invalid if T is abstract
+            gt = game_type<T>(); // preferred; no vtable lookup
+        else
+            gt = game_ptr->game_type();
+
+
         std::vector<game*>& vec = _map[gt];
 
         vec.push_back(game_ptr);
