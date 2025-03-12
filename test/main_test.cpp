@@ -35,12 +35,13 @@ const bool RUN_OVERRIDE_TESTS = true;
 #include "fraction_test.h"
 #include "sumgame_map_view_test.h"
 #include "custom_traits_test.h"
+#include "cgt_game_simplification_test.h"
 
 using std::cout, std::endl, std::string;
 
 void override_tests()
 {
-    sumgame_map_view_test_all();
+    cgt_game_simplification_test_all();
 }
 
 namespace
@@ -137,6 +138,7 @@ int main(int argc, const char** argv)
 
     sumgame_map_view_test_all();
     custom_traits_test_all(); // NOTE: this test runs at compile time, not run time
+    cgt_game_simplification_test_all();
 
     cout << "SUCCESS" << endl;
 }
