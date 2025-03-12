@@ -34,6 +34,7 @@ const bool RUN_OVERRIDE_TESTS = true;
 #include "safe_arithmetic_test.h"
 #include "fraction_test.h"
 #include "sumgame_map_view_test.h"
+#include "custom_traits_test.h"
 
 using std::cout, std::endl, std::string;
 
@@ -138,6 +139,7 @@ int main(int argc, const char** argv)
     */
 
     sumgame_map_view_test_all();
+    custom_traits_test_all(); // NOTE: this test runs at compile time, not run time
 
     cout << "SUCCESS" << endl;
 }
