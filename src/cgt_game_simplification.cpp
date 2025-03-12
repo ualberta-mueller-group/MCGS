@@ -107,6 +107,15 @@ bool convert_number_switch(fraction x, fraction y, sumgame_map_view& map_view)
 } // namespace
 
 ////////////////////////////////////////
+
+void simplify_basic_all(sumgame_map_view& map_view)
+{
+    simplify_basic_nimber(map_view);
+    simplify_basic_switch(map_view);
+    simplify_basic_up_star(map_view);
+    simplify_basic_integers_rationals(map_view);
+};
+
 void simplify_basic_nimber(sumgame_map_view& map_view)
 {
     vector<game*>* nimbers = map_view.get_games_nullable(game_type<nimber>());

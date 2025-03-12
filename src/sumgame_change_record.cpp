@@ -31,10 +31,7 @@ change_record& change_record::operator=(change_record&& other) noexcept
 void change_record::simplify_basic(sumgame& sum)
 {
     sumgame_map_view map_view(sum, *this);
-    simplify_basic_nimber(map_view);
-    simplify_basic_switch(map_view);
-    simplify_basic_up_star(map_view);
-    simplify_basic_integers_rationals(map_view);
+    simplify_basic_all(map_view);
     return;
 }
 
