@@ -51,13 +51,13 @@ bool same_games(const std::vector<GamePtr1>& games1, const std::vector<GamePtr2>
     for (const GamePtr1& ptr : games1)
     {
         if (!omit_inactive || ptr->is_active())
-            set1.insert(__game_info(*ptr));
+            set1.emplace(__game_info(*ptr));
     }
 
     for (const GamePtr2& ptr : games2)
     {
         if (!omit_inactive || ptr->is_active())
-            set2.insert(__game_info(*ptr));
+            set2.emplace(__game_info(*ptr));
     }
 
     return set1 == set2;
