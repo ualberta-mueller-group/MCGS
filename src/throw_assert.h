@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 // NOLINTBEGIN
 #define _GET_THROW_MESSAGE(cond) (std::string(__FILE__) + ":" + std::to_string(__LINE__) + ": Condition `" + std::string(#cond) + "' failed.")

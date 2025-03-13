@@ -3,11 +3,6 @@
 #include "file_parser.h"
 #include <memory>
 
-namespace cli_options_global {
-
-extern bool do_simplification;
-} // namespace cli_options_global 
-
 /*
     Variables resulting from command line options. "parser" may be nullptr
 */

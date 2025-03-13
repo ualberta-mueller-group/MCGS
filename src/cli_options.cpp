@@ -5,16 +5,18 @@
 #include <iostream>
 #include "file_parser.h"
 #include "utilities.h"
+#include "optimization_options.h"
 
 using namespace std;
-
-bool cli_options_global::do_simplification = true;
 
 
 ////////////////////////////////////////////////// cli_options
 
-cli_options::cli_options(const string& test_directory) : parser(nullptr), dry_run(false),
-    should_exit(false), run_tests(false),
+cli_options::cli_options(const string& test_directory) : 
+    parser(nullptr), 
+    dry_run(false),
+    should_exit(false),
+    run_tests(false),
     test_directory(test_directory),
     outfile_name(cli_options::default_test_outfile),
     test_timeout(cli_options::default_test_timeout)
@@ -59,7 +61,7 @@ with version command. Causes [input string] to be ignored.");
     cout << "\tThese flags toggle optimizations on/off." << endl;
     cout << endl;
 
-    print_flag("--no-simplify", "Don't simplify basic CGT games (switch_game, integer_game, etc).");
+    print_flag("--no-simplify-basic-cgt-games", "Don't simplify basic CGT games (switch_game, integer_game, etc).");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -81,12 +83,15 @@ milliseconds. Timeout of 0 means tests never time out. Default is " + to_string(
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
     print_flag("--dry-run", "Skip running games. Has no effect when using \"--run-tests\". Instead, set the test timeout low (i.e. 1).");
+    print_flag("--print-optimizations", "Print optimization summary to stdout, then quit.");
 
     print_flag("--parser-debug", "Print file_parser debug info.");
 }
 
 cli_options parse_cli_args(int _argc, const char** argv, bool silent)
 {
+    bool print_optimizations = false;
+
     assert(_argc >= 1);
     std::filesystem::path abs_exec_path = std::filesystem::canonical(argv[0]);
     std::filesystem::path parent_path = abs_exec_path.parent_path();
@@ -170,6 +175,13 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == "--print-optimizations")
+        {
+            print_optimizations = true;
+            opts.should_exit = true;
+            continue;
+        }
+
         if (arg == "--parser-debug")
         {
             file_parser::debug_printing = true;
@@ -227,9 +239,9 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg == "--no-simplify")
+        if (arg == "--no-simplify-basic-cgt-games")
         {
-            cli_options_global::do_simplification = false;
+            optimization_options::set_simplify_basic_cgt_games(false);
             continue;
         }
         
@@ -264,6 +276,11 @@ cli_options parse_cli_args(int _argc, const char** argv, bool silent)
             throw cli_options_exception(why);
         }
         
+    }
+
+    if (print_optimizations)
+    {
+        cout << optimization_options::get_summary() << endl;
     }
 
     return opts;
