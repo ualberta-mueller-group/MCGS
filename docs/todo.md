@@ -18,7 +18,7 @@ Suggestions from talk given, or from MCGS users
             - find and follow "at least as good" move when G has been simplified to G'
             - similary when simple games have been combined, e.g. numbers have been added up, and opponent plays in some specific fraction
             - Issue: optimal vs good enough play
-                - Solver can stop at a win, even if the winning move is not "optimal"`
+                - Solver can stop at a win, even if the winning move is not "optimal"
 
 # Current tasks
 ## V1.0 (In progress)
