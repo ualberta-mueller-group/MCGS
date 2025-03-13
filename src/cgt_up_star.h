@@ -17,13 +17,13 @@ public:
     // m encodes the change in value and star for undo
     // m is a two part move where the second part is the star change
     // encoded as 0/1
-    void play(const move& m, bw to_play);
-    void undo_move();
-    game* inverse() const;
-    move_generator* create_move_generator(bw to_play) const;
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
+    game* inverse() const override;
+    move_generator* create_move_generator(bw to_play) const override;
     int num_ups() const { return _value;}
     bool has_star() const { return _star;}
-    void print(std::ostream& str) const;
+    void print(std::ostream& str) const override;
 private:
     int _value;
     bool _star;

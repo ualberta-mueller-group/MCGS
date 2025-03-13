@@ -22,9 +22,9 @@ struct cli_options
     unsigned long long test_timeout; // ms
 
 
-    static constexpr const char* default_relative_test_path = "input/autotests";
-    static constexpr const char* default_test_outfile = "out.csv";
-    static constexpr const unsigned long long default_test_timeout = 500;
+    static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";
+    static constexpr const char* DEFAULT_TEST_OUTFILE = "out.csv";
+    static constexpr const unsigned long long DEFAULT_TEST_TIMEOUT = 500;
 };
 
 
@@ -33,7 +33,7 @@ struct cli_options
 
     When "silent" is true, dont print to stdout (useful for unit testing)
 */
-cli_options parse_cli_args(int _argc, const char** argv, bool silent = false);
+cli_options parse_cli_args(int argc, const char** argv, bool silent = false);
 
 // Thrown on bad input
 class cli_options_exception : public std::exception

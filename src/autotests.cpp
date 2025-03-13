@@ -20,8 +20,8 @@ using namespace std;
 using filesystem::recursive_directory_iterator;
 
 // CSV separator
-inline constexpr const char* sep = ",";
-inline constexpr const char newline = '\n';
+inline constexpr const char* SEP = ",";
+inline constexpr const char NEWLINE = '\n';
 
 // convert game list to string
 string human_readable_game_string(const vector<game*>& games)
@@ -83,7 +83,7 @@ void append_field(ostream& os, const string& field, bool include_separator)
     os << "\"" << sanitized_field << "\"";
     if (include_separator)
     {
-        os << sep;
+        os << SEP;
     }
 }
 
@@ -122,7 +122,7 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
     append_field(outfile, "Status", true);
     append_field(outfile, "Comments", true);
     append_field(outfile, "Input hash", false);
-    outfile << newline;
+    outfile << NEWLINE;
 
 
     // iterate over autotests directory
@@ -199,7 +199,7 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
             append_field(outfile, status_string, true);
             append_field(outfile, gc.comments, true);
             append_field(outfile, gc.hash.get_string(), false);
-            outfile << newline;
+            outfile << NEWLINE;
 
             gc.cleanup_games();
             case_number++;

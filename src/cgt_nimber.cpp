@@ -38,9 +38,9 @@ class nimber_move_generator : public move_generator
 {
 public:
     nimber_move_generator(const nimber& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
 private:
     const nimber& _game;
     int _current_number;

@@ -1,5 +1,4 @@
 #pragma once
-#include <array>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -71,10 +70,10 @@ private:
         int line_number;
     };
 
-    void cleanup();
+    void _cleanup();
     bool _get_token_from_stream(std::string& token);
 
-    std::istream* __main_stream_ptr;
+    std::istream* _main_stream_ptr;
     bool _delete_stream; // do we own this stream?
 
     std::stringstream _line_stream;
@@ -195,22 +194,22 @@ private:
     // constructor should be private, user calls static constructor functions instead
     file_parser(std::istream* stream, bool delete_stream, bool do_version_check);
 
-    void version_check(const std::string& version_string);
+    void _version_check(const std::string& version_string);
 
     // registers a new game_token_parser, now owned by callee
-    static void add_game_parser(const std::string& game_title, game_token_parser* gp);
+    static void _add_game_parser(const std::string& game_title, game_token_parser* gp);
 
     // token-generating helper functions
-    file_parser_impl::match_state get_enclosed(const std::string& open, const std::string& close, bool allow_inner);
-    bool match(const std::string& open, const std::string& close, const std::string& match_name, bool allow_inner);
+    file_parser_impl::match_state _get_enclosed(const std::string& open, const std::string& close, bool allow_inner);
+    bool _match(const std::string& open, const std::string& close, const std::string& match_name, bool allow_inner);
 
     // functions to handle current token
-    bool parse_game();
+    bool _parse_game();
 
-    void validate_command(const std::string& token_copy);
-    bool parse_command();
+    void _validate_command(const std::string& token_copy);
+    bool _parse_command();
 
-    std::string get_error_start();
+    std::string _get_error_start();
 
 public:
     // Prevent accidental memory bugs
@@ -241,7 +240,7 @@ public:
 private:
     // initializes parsers for every game. Called automatically upon construction of first file_parser
     // this is where new game_token_parsers are registered
-    static void init_game_parsers();
+    static void _init_game_parsers();
 
     // maps section title to its game_token_parser
     static std::unordered_map<std::string, std::shared_ptr<game_token_parser>> _game_map;

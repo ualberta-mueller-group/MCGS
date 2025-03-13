@@ -24,37 +24,37 @@ void assert_solve_sum(sumgame& g, bw to_play,
     assert(result == expected_result);
 }
 
-void test_sum(sumgame& sum, bool resB, bool resW)
+void test_sum(sumgame& sum, bool res_b, bool res_w)
 {
-    assert_solve_sum(sum, BLACK, resB);
-    assert_solve_sum(sum, WHITE, resW);
+    assert_solve_sum(sum, BLACK, res_b);
+    assert_solve_sum(sum, WHITE, res_w);
 }
 
-void test_one_game(game& g, bool resB, bool resW)
+void test_one_game(game& g, bool res_b, bool res_w)
 {
 //     std::cout << "test " << g << std::endl;
     sumgame sum(BLACK);
     sum.add(&g);
-    test_sum(sum, resB, resW);
+    test_sum(sum, res_b, res_w);
 }
 
-void test_two_games(game& g1, game& g2, bool resB, bool resW)
+void test_two_games(game& g1, game& g2, bool res_b, bool res_w)
 {
 //     std::cout << "test " << g1 << " + " << g2 << std::endl;
     sumgame sum(BLACK);
     sum.add(&g1);
     sum.add(&g2);
-    test_sum(sum, resB, resW);
+    test_sum(sum, res_b, res_w);
 }
 
-void test_three_games(game& g1, game& g2, game& g3, bool resB, bool resW)
+void test_three_games(game& g1, game& g2, game& g3, bool res_b, bool res_w)
 {
 //     std::cout << "test " << g1 << " + " << g2 << " + " << g3 << std::endl;
     sumgame sum(BLACK);
     sum.add(&g1);
     sum.add(&g2);
     sum.add(&g3);
-    test_sum(sum, resB, resW);
+    test_sum(sum, res_b, res_w);
 }
 
 

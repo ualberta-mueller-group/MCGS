@@ -61,7 +61,7 @@ void elephants::undo_move()
 }
 
 
-split_result elephants::split_implementation() const
+split_result elephants::_split_implementation() const
 {
     vector<pair<int, int>> subgame_ranges;
 
@@ -190,13 +190,13 @@ bool elephants_move_generator::is_move(int from, int to, bw to_play) const
         return false;
     }
 
-    int fromColor = _game.at(from);
-    int toColor = _game.at(to);
+    int from_color = _game.at(from);
+    int to_color = _game.at(to);
 
     if (
-        (fromColor == to_play)
+        (from_color == to_play)
         && is_black_white(to_play)
-        && (toColor == EMPTY)
+        && (to_color == EMPTY)
         && ((to - from) == player_dir(to_play))
     )
     {

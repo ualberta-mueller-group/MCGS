@@ -55,7 +55,7 @@ void switch_game::undo_move()
 }
 
 
-split_result switch_game::split_implementation() const
+split_result switch_game::_split_implementation() const
 {
     if (!is_rational())
     {
@@ -155,9 +155,9 @@ class switch_move_generator : public move_generator
 {
 public:
     switch_move_generator(const switch_game& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
 private:
     bool _generated;
 };

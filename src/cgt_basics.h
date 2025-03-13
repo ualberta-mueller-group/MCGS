@@ -104,7 +104,7 @@ inline void assert_range(int value, int low, int high)
 
 //---------------------------------------------------------------------------
 // Mapping from colors to char, X for BORDER
-const char color_code[] = {'B', 'W', '.', 'X'};
+const char COLOR_CODE[] = {'B', 'W', '.', 'X'};
 
 inline int char_to_color(char c)
 {
@@ -114,7 +114,7 @@ inline int char_to_color(char c)
 inline char color_char(int color)
 {
     assert_range(color, 0, 4);
-    return color_code[color];
+    return COLOR_CODE[color];
 }
 
 inline bool is_black_white_char(char c)

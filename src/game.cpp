@@ -14,7 +14,7 @@ std::ostream& operator<<(std::ostream& os, const split_result& split)
         os << "<NO SPLIT>";
     } else
     {
-        size_t N = split->size();
+        const size_t N = split->size();
         assert(N < std::numeric_limits<size_t>::max());
 
         for (size_t i = 0; i < N; i++)
