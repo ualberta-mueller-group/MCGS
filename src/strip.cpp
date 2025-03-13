@@ -85,9 +85,11 @@ void strip::_check_legal() const
 std::vector<int> strip::inverse_board() const
 {
     std::vector<int> inv_board(_board);
-    for (auto i = 0; i < size(); ++i)
+
+    const auto N = size();
+    for (auto i = 0; i < N; ++i)
     {
-        inv_board[i] = ebw_opponent(_board[i]);
+        inv_board[i] = ebw_opponent(_board[N - 1 - i]);
     }
     return inv_board;
 }
