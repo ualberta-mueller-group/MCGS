@@ -313,6 +313,4 @@ void cgt_game_simplification_test_all()
     up_star_test();
     integers_rationals_test();
     all_test();
-        
-    std::cout << "CGT SIMPLIFY TEST" << std::endl;
 }
