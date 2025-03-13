@@ -7,6 +7,7 @@
 #include "cgt_integer_game.h"
 #include "cgt_dyadic_rational.h"
 #include "game.h"
+#include "safe_arithmetic.h"
 #include <memory>
 
 //---------------------------------------------------------------------------
@@ -52,6 +53,12 @@ private:
     fraction _init_fraction(const fraction& f) const;
     relation _init_relation() const;
     switch_kind _init_kind() const;
+    inline void _check_legal() const
+    {
+        THROW_ASSERT(_left.is_simplified() && _right.is_simplified());
+        THROW_ASSERT(!negate_will_wrap(_left.top()));
+        THROW_ASSERT(!negate_will_wrap(_right.top()));
+    }
 
     const fraction _left, _right;
     const relation _rel;

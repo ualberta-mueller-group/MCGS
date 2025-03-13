@@ -7,6 +7,7 @@
 #include <vector>
 #include "cgt_basics.h"
 #include "game.h"
+#include "throw_assert.h"
 //---------------------------------------------------------------------------
 
 class nimber : public game
@@ -30,5 +31,7 @@ inline game* nimber::inverse() const
 { return new nimber(_value); }
 
 inline nimber::nimber(int value) : _value(value)
-{ }
+{
+    THROW_ASSERT(_value >= 0);
+}
 //---------------------------------------------------------------------------

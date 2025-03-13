@@ -33,6 +33,8 @@ public:
     std::string board_as_string() const;
     //void print(std::ostream& str) const { str << board_as_string();}
 private:
+    void _check_legal() const;
+
     std::vector<int> _board; // todo try char as well.
 };
 

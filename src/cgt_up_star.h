@@ -5,6 +5,8 @@
 
 #include "cgt_basics.h"
 #include "game.h"
+#include "safe_arithmetic.h"
+#include "throw_assert.h"
 
 //---------------------------------------------------------------------------
 
@@ -29,5 +31,7 @@ private:
 
 inline up_star::up_star(int value, bool star) :
     _value(value), _star(star)
-{ }
+{ 
+    THROW_ASSERT(!negate_will_wrap(_value));
+}
 //---------------------------------------------------------------------------

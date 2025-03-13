@@ -3,6 +3,8 @@
 //---------------------------------------------------------------------------
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
+#include "safe_arithmetic.h"
+#include "utilities.h"
 
 //---------------------------------------------------------------------------
 void dyadic_rational::simplify()
@@ -27,13 +29,13 @@ void dyadic_rational::simplify()
 
 dyadic_rational::dyadic_rational(int p, int q) : _p(p), _q(q)
 {
-    assert(q > 0);
+    _check_legal();
     simplify();
 }
 
 dyadic_rational::dyadic_rational(const fraction& frac): _p(frac.top()), _q(frac.bottom())
 {
-    assert(_q > 0);
+    _check_legal();
     simplify();
 }
 
@@ -86,6 +88,13 @@ void dyadic_rational::print(std::ostream& str) const
 {
     str << "dyadic_rational:"<< _p << '/' << _q;
 }
+
+
+void dyadic_rational::_check_legal() const
+{
+    THROW_ASSERT(_q > 0 && is_power_of_2(_q) && !negate_will_wrap(_p));
+}
+
 
 //---------------------------------------------------------------------------
 
