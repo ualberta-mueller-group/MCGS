@@ -23,15 +23,18 @@ Suggestions from talk given, or from MCGS users
 # Current tasks
 ## V1.0 (In progress)
 - V1 github release
-    - write announcement
-    - announce on CGT list, other places?
     - Grab a CGT seminar spot to talk about MCGS and give a demo
-    - add link from Martin's group home page
 
 # Future tasks
 ## Next steps for Versions 1.X
 
 ### V1.1
+- Game simplification rules: see `development-notes.md`
+    - Currently in progrss on branch `game-simplification`
+        - On that branch (not `v1.1-develop`), see `docs/game-simplification-planning.txt`
+    - Update todo.md with small/medium sized tasks discussed on Feb 13
+        - (after this planning is complete?)
+
 - Add code linter
     - Resolve linter errors
     - Summarise style guide in a document in `docs`
@@ -39,7 +42,6 @@ Suggestions from talk given, or from MCGS users
 - Use a proper unit testing framework?
     - Easier to change this now rather than later
 
-- Game simplification rules: see `development-notes.md`
 
 ### V1.2
 - Database components and utilities as per development-notes.md, V1.2
@@ -122,6 +124,12 @@ Suggestions from talk given, or from MCGS users
     - What discussion topics should be deferred, if any? (There's a lot in this section)
         - Should these be assigned priorities?
 
+- Document semantics of game-in-sumgame. The sumgame become the owner. Make this explicit e.g. with `unique_ptr`. 
+    - Alternative: copy the game
+    - Can we have multiple references to the same subgame in a sum? Probably not a good idea, then we should guard against that. 
+        - E.g. sumgame s; game(of some sort) g; s.add(&g); s.add(&g); (add twice)
+        - Write test cases and documentation for these.
+
 ## General design questions
 - Should we allow fractions in `switch_game`? e.g. 1/2 | -3/4
 - Rename `x_1xn` to `x_strip` ?
@@ -161,7 +169,7 @@ Suggestions from talk given, or from MCGS users
     - E.g. clobber: multiples of up, up-star
     - Binary search to find confusion interval
 
-# Publications
+## Publications
 - Clobber paper, based on 701 report
     - Where to publish?
     - What work needs to be done to turn report into paper?
@@ -169,17 +177,12 @@ Suggestions from talk given, or from MCGS users
     - What goals? Match game-specific performance in 1xn Clobber, Nogo? 
     - Get good performance on 2-D boards?
     
-# Impartial Games Support
+## Impartial Games Support
 - New base class `impartial_game`
     - Knowledge of nimbers
     - In future: specialised search algorithms
         - Mex rule
         - Lemoine and Viennot, Nimbers are inevitable (2012)
-- Document semantics of game-in-sumgame. The sumgame become the owner. Make this explicit e.g. with unique_ptr. 
-    - Alternative: copy the game
-    - Can we have multiple references to the same subgame in a sum? Probably not a good idea, then we should guard against that. 
-        - E.g. sumgame s; game(of some sort) g; s.add(&g); s.add(&g); (add twice)
-        - Write test cases and documentation for these.
 
 - random testing for nim sums 
     - increase size limit as program becomes better

@@ -1,0 +1,142 @@
+
+
+============================== Database stuff ==============================
+
+Main database problems:
+-- DB data structure/search algorithm
+-- DB entry contents
+    -- outcome class, bounds, dominated moves, complexity metric, link
+    -- sum representation
+    -- how to handle varying width types (i.e. boards/strings)?
+-- serialization method
+-- DB generation
+-- DB usage (to speed up MCGS search)
+
+TODO:
+        [Planning]
+-- write more detailed requirements
+    <-- bullet point list with reasoning. Maybe in "db-design.md" file. Easy to discuss later. Can prioritize requirements by importance (some can be ultra low)
+    -- cross-machine compatibility
+        -- "network" types vs native types + reformat tool
+    -- possibility of dynamic loading/unloading in the future
+    -- briefly describe possible related tools (diff, generate, reformat, merge)
+    -- should game types be able to "specialize" the data structure or search in some way? (games with "perfect" representations i.e. Linear Clobber)
+        <-- could keep this as a consideration and come back to it once we have some DB design
+    -- thread safety, or ease of ensuring thread safety?
+    -- should DB generation ever be multithreaded, or just possibly the solver?
+    -- quick rejection for sums which definitely aren't in the database
+    -- "flatness" of DB entry struct? (easy serialization)
+
+        [Design] (Consider spending a good chunk of time on this. Implementing a good design is easier)
+<-- consider throwaway prototyping for some of these (don't need to worry about code quality)
+-- how to represent variable-width data in general?
+-- design a DB data structure
+    <-- maybe make more than one design. Consider "shape index" idea or allowing specialization
+-- implement DB structure, test performance of search in toy example (Clobber?)
+    <-- spend time tuning this
+-- design core DB generation algorithm
+    <-- indirection to allow links to be trivially replaced with higher quality links as they're found (shouldn't need to pre-compute all bounds before finding any links)
+    <-- pseudocode/high level plan including creation order of DB entry fields. How to handle negatives
+    <-- Before moving on: are there other possible improvements to DB generation? Do we need to be able to unload chunks as we generate them?
+
+        [Implementation]
+-- implement/clean up DB structure and have it support all games
+    <-- this could be reimplementing stuff from previous prototyping, or carrying some of it over and possibly refactoring it
+-- DB generation
+    -- expand/generate entry contents
+    -- explore which bound scales are best (i.e. "1/8", "^", "^*")
+
+        [Finishing touches, polish] (this stuff is less clear for now)
+-- better serialization?
+    <-- trivial loads (?), endianness and other machine/compiler-specific stuff
+-- DB tools?
+-- DB usage
+    -- outcome class static evaluation rules
+    -- dominated move pruning
+    -- game deletion trick
+    -- sum substitution
+    -- move ordering (?)
+    -- alpha-beta-like pruning (?)
+-- generalization of DB search() function (general "knowledge" hook to inject knowledge from theorems, possibly giving a partial DB entry)
+    <-- this could include dynamically-generated DB stuff like outcome class (this could also be contingent on the estimated cost of computing this information)
+-- add "DB lookup" command to input language
+
+
+
+Need to figure out requirements
+
+For now let's mostly ignore the serialization problem, and instead work on the DB data structure/search. Just assume the entire DB can be read into memory for now. Don't worry about endianness. Just call ofstream::write() and ifstream::read() once for each field.
+
+From looking at 2022 Clobber performance:
+    -- Simplification seems to take up a good fraction of the time. A lot of time is spent trying to simplify the sum and replace games
+        -- Use bit vector to mark groups of already-substituted games, to skip them. Skip in the outermost loop
+        -- During substitution, need a quick way to reject sums that are too big to be in DB
+
+
+============================== DB Serialization ==============================
+
+Does the disk format need to be compatible across machines? If DB generation takes a long time, there should be a way to use DB files created on other machines.
+
+How long will MCGS searches run? Weeks? Months? How long might DB generation take? Hours? Days?
+    <-- Probably best to assume long computations, and support cross-machine DB file compatibility now rather than later
+
+Does deserializing data need to be trivial (i.e. just load from disk), or can it call constructors? If DB segments are dynamically loaded, it might be important to have trivial deserialization. Do some simple testing on this before writing any DB code
+
+Maybe have trivial deserialization, and have serializable structs write layout information into a separate DB section. On opening a DB file, the program should verify the layout and possibly quit, requiring the user to run some "reformatting" tool to create a DB file compatible with their machine/compiler. The reformatting tool should be able to automatically do this conversion without much input from the user
+
+Possible differences between machines/compilers:
+    -- endianness
+    -- struct padding (internal? between contiguous structs in an array?)
+    -- struct member field order (does field1 always come before field2?)
+    -- different sizes of the same data type (an int may not be 4 bytes)
+        <-- only use uint8_t, uint16_t, uint32_t, uint64_t, etc?
+    -- float/double representations?
+        -- different widths for mantissa, exponent, etc?
+        <-- just assume IEEE 754?
+
+Can serializable types ever contain other serializable types as members? Is the compiler guaranteed to store the nested type's members in some "nice" way?
+
+We probably shouldn't ignore byte alignment or force struct packing.
+    Bad for ARM and other RISC architectures:
+        https://devblogs.microsoft.com/oldnewthing/20200103-00/?p=103290
+    Will malloc correctly align stuff, or do we need to use operator new[]?
+
+This article might be helpful: https://isocpp.org/wiki/faq/serialization
+    -- define a "machine.h" header with standardized "network" types: fixed width integers with specific endianness. Have some machine-specific conversion functions?
+    -- remember to use std::ios::binary for files
+
+2022 Linear Clobber program uses 46 byte entries, only stores 866,924 games, and only uses 39 MB on disk.
+
+A 1 GB database with 128 byte entries would store ~7.8 million entries, not accounting for other data structures.
+
+Toy example writing and reading struct to disk:
+    48 byte struct with 11 fields of random data, array of 8 million structs. Times in milliseconds (includes flush + close):
+        Write simple: 300.955
+        Read simple: 115.265
+
+        Write abstract: 1073.39
+        Read abstract: 939.3
+
+For strings: some kind of "string pool" -- blocks of contiguous string contents for all strings in the section, defragment it when saving back to disk? separate defragment tool?
+
+============================== DB Search ==============================
+
+Clobber program call graph data (using gprof):
+    %       function
+
+    50.8    Solver::simplify
+        25.1    Database::get
+            24.2    Database::getIdx
+    24.5    Solver::getEntryPtr
+
+
+"%" is how much time is spent in this function and its children
+"simplify()" does substitutions, and calls "get()". "getIdx()" just finds the DB entry in memory
+"getEntryPtr()" is a TT lookup
+
+This data is suspicious: look more closely at "Flat profile" 
+
+Maybe make some kind of benchmark/simulation for DB lookups, and iterate on traversal algorithm designs until good enough. Could compare new implementation's performance in getIdx() to Clobber solver's performance, on some input sequence (just the time to find an entry in memory, given a sum)
+
+
+
