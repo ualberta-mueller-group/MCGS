@@ -3,6 +3,7 @@
 This document gives details about coding style for C++ files in this project, and tools relating to style.
 
 ## Sections
+- [Linter Problems](#linter-problems)
 - [Code Style](#code-style)
 - [Style Tooling](#style-tooling)
     - [clang-tidy Targets](#clang-tidy-targets)
@@ -10,6 +11,16 @@ This document gives details about coding style for C++ files in this project, an
 - [Modifying Tooling Configs](#modifying-tooling-configs)
     - [Tidy Config Testing Script](#tidy-config-testing-script)
     - [Format Config Choices](#format-config-choices)
+
+# Linter Problems
+Look into these more before doing the big cleanup...
+
+## Clang Format
+`test/utilities_test.cpp` on the `bounds` branch looks awful (because of `AlignAfterOpenBracket`)
+
+`AlignTrailingComments` --> "Leave" (or "Never")
+
+`BraceWrapping.AfterNamespace` --> false
 
 # Code Style
 This section describes the style used by C++ files in this project.
