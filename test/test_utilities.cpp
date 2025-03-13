@@ -57,15 +57,14 @@ void test_three_games(game& g1, game& g2, game& g3, bool resB, bool resW)
     test_sum(sum, resB, resW);
 }
 
-//////////////////////////////////////////////////////////// game_factory tests
 
 
-void assert_player_sum_outcome(int player, bool expected_outcome, vector<game*> games, bool _delete_games)
+void assert_player_sum_outcome(int player, bool expected_outcome, vector<game*>&& games, bool delete_games)
 {
-    _assert_player_sum_outcome(player, expected_outcome, games, _delete_games);
+    assert_player_sum_outcome(player, expected_outcome, games, delete_games);
 }
 
-void _assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*>& games, bool _delete_games)
+void assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*>& games, bool delete_games)
 {
     assert_black_white(player);
 
@@ -80,7 +79,7 @@ void _assert_player_sum_outcome(int player, bool expected_outcome, std::vector<g
 
     assert(outcome == expected_outcome);
 
-    if (_delete_games)
+    if (delete_games)
     {
         for (game* g : games)
         {
@@ -90,17 +89,17 @@ void _assert_player_sum_outcome(int player, bool expected_outcome, std::vector<g
     }
 }
 
-void _assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*>& games)
+void assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*>& games)
 {
 
-    _assert_player_sum_outcome(BLACK, black_outcome, games, false);
-    _assert_player_sum_outcome(WHITE, white_outcome, games, true);
+    assert_player_sum_outcome(BLACK, black_outcome, games, false);
+    assert_player_sum_outcome(WHITE, white_outcome, games, true);
 }
 
 
-void assert_sum_outcomes(bool black_outcome, bool white_outcome, vector<game*> games)
+void assert_sum_outcomes(bool black_outcome, bool white_outcome, vector<game*>&& games)
 {
-    _assert_sum_outcomes(black_outcome, white_outcome, games);
+    assert_sum_outcomes(black_outcome, white_outcome, games);
 }
 
 void assert_inverse_sum_zero(game* g)
@@ -125,7 +124,7 @@ void assert_inverse_sum_zero(game* g)
     delete g;
 }
 
-void assert_file_parser_output(file_parser* parser, vector<game_case *>& expected_cases)
+void assert_file_parser_output(file_parser* parser, vector<game_case*>& expected_cases)
 {
     game_case gc;
     size_t case_idx = 0;
@@ -168,7 +167,7 @@ void assert_file_parser_output(file_parser* parser, vector<game_case *>& expecte
     assert(case_idx == expected_cases.size());
 }
 
-void assert_file_parser_output_file(const string& file_name, vector<game_case *>& expected_cases)
+void assert_file_parser_output_file(const string& file_name, vector<game_case*>& expected_cases)
 {
     file_parser* parser = file_parser::from_file(file_name);
     assert_file_parser_output(parser, expected_cases);

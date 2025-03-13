@@ -72,16 +72,13 @@ inline void test_inverse(game& g1, game& g2) // g1+g2 == 0
 
 
 // These functions take ownership of the games passed to them
-void assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*> games, bool _delete_games = true);
-void _assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*>& games, bool _delete_games = true);
+void assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*>&& games, bool delete_games = true);
+void assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*>& games, bool delete_games = true);
 
-void assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*> games);
-void _assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*>& games);
+void assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*>&& games);
+void assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*>& games);
 
 void assert_inverse_sum_zero(game* g);
-
-
-
 
 void assert_file_parser_output(file_parser* parser, std::vector<game_case *>& expected_cases);
 void assert_file_parser_output_file(const std::string& file_name, std::vector<game_case *>& expected_cases);
