@@ -93,12 +93,13 @@ string format_duration(double duration)
     const char* format = "%.2f";
 
     int size = snprintf(nullptr, 0, format, duration) + 1;
-    char buffer[size];
+    //char buffer[size]; // variable length arrays are not part of the C++ standard
+    vector<char> buffer(size);
 
-    int got_size = snprintf(buffer, size, format, duration);
+    int got_size = snprintf(buffer.data(), size, format, duration);
     assert(size == got_size + 1);
 
-    return string(buffer);
+    return string(buffer.data());
 }
 
 void run_autotests(const string& test_directory, const string& outfile_name, unsigned long long test_timeout)

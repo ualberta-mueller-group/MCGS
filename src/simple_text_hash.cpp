@@ -1,6 +1,7 @@
 #include "simple_text_hash.h"
 #include <cstring>
 #include <cassert>
+#include <vector>
 
 
 using namespace std;
@@ -69,13 +70,15 @@ const string& simple_text_hash::get_string()
         const uint8_t& c = buffer[i];
 
         size_t conversion_space = 3;
-        char converted_byte[conversion_space];
+        //char converted_byte[conversion_space];
+        vector<char> converted_byte(conversion_space);
+
         // snprintf won't overflow the buffer
-        size_t used = snprintf(converted_byte, conversion_space, "%02X", (int) c);
+        size_t used = snprintf(converted_byte.data(), conversion_space, "%02X", (int) c);
 
         assert(used + 1 == conversion_space);
 
-        string_representation += converted_byte;
+        string_representation += converted_byte.data();
     }
 
 

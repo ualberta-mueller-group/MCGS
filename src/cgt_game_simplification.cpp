@@ -7,6 +7,7 @@
 #include "cgt_nimber.h"
 #include "cgt_up_star.h"
 #include "cgt_switch.h"
+#include "throw_assert.h"
 
 using namespace std;
 
@@ -72,7 +73,7 @@ bool convert_number_switch(fraction x, fraction y, sumgame_map_view& map_view)
     assert(width > 1);
     int un = denominator;
 
-    for (int j = 0; ; j++)
+    for (; ;)
     {
         assert(is_power_of_2(un));
 
@@ -100,7 +101,7 @@ bool convert_number_switch(fraction x, fraction y, sumgame_map_view& map_view)
             return true;
         }
 
-        assert((un & 0x1) == 0);
+        THROW_ASSERT((un & 0x1) == 0);
         un >>= 1;
     }
 }
