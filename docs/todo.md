@@ -18,35 +18,29 @@ Suggestions from talk given, or from MCGS users
             - find and follow "at least as good" move when G has been simplified to G'
             - similary when simple games have been combined, e.g. numbers have been added up, and opponent plays in some specific fraction
             - Issue: optimal vs good enough play
-                - Solver can stop at a win, even if the winning move is not "optimal"`
+                - Solver can stop at a win, even if the winning move is not "optimal"
 
 # Current tasks
-## V1.0 (In progress)
-- V1 github release
-    - Grab a CGT seminar spot to talk about MCGS and give a demo
 
-# Future tasks
-## Next steps for Versions 1.X
-
-### V1.1
+## V1.1 completed
 - Game simplification rules: see `development-notes.md`
-    - Currently in progrss on branch `game-simplification`
-        - On that branch (not `v1.1-develop`), see `docs/game-simplification-planning.txt`
-    - Update todo.md with small/medium sized tasks discussed on Feb 13
-        - (after this planning is complete?)
+- linter - Summarise style guide in a document in `docs`
+- Database components and utilities as per development-notes.md, V1.1
 
+## V1.1 todo
+- TODO: deal with `docs/game-simplification-planning.txt`
 - Add code linter
     - Resolve linter errors
-    - Summarise style guide in a document in `docs`
 
+# Future tasks
+## V1.2
+- hashing
+
+## Next steps for Versions 1.X
 - Use a proper unit testing framework?
     - Easier to change this now rather than later
 
-
-### V1.2
-- Database components and utilities as per development-notes.md, V1.2
-
-### Medium priority (Important or good to have before V2):
+## Medium priority (Important or good to have before V2):
 - Test framework improvements
     - More detailed timeouts
         - Per file? Per test?
@@ -91,7 +85,7 @@ Suggestions from talk given, or from MCGS users
         - i.e. if in-memory DB lookups already dominate the run time, then adding disk reads may be especially costly
 
 
-### Lower priority
+## Lower priority
 - Improve MCGS CLI args
     - Some arg combinations don't make sense and should maybe throw or print a warning?
         - i.e. "--test-timeout" without "--run-tests"
@@ -99,6 +93,7 @@ Suggestions from talk given, or from MCGS users
     - Unify "--help" page styles across scripts/executables
 
 ## V2 and beyond
+- Grab a CGT seminar spot to talk about MCGS and give a demo
 - Databases
     - "Hierarchical hash buckets" default case?
     - Only in memory, or dynamic loading of "chunks" from disk?
@@ -118,8 +113,6 @@ Suggestions from talk given, or from MCGS users
     - "Tasks" and "Discussion topics" sections?
         - "Current"/"Future" prefixes?
     - What does each version denote?
-- Discuss immediate next steps
-    - Tentative "Next steps" listed above. Are these all important right now? Should some be deferred/skipped?
         - Use a proper unit test framework, maybe https://github.com/siu/minunit
     - What discussion topics should be deferred, if any? (There's a lot in this section)
         - Should these be assigned priorities?
@@ -127,7 +120,8 @@ Suggestions from talk given, or from MCGS users
 - Document semantics of game-in-sumgame. The sumgame become the owner. Make this explicit e.g. with `unique_ptr`. 
     - Alternative: copy the game
     - Can we have multiple references to the same subgame in a sum? Probably not a good idea, then we should guard against that. 
-        - E.g. sumgame s; game(of some sort) g; s.add(&g); s.add(&g); (add twice)
+        - E.g. `sumgame s; game(of some sort) g; s.add(&g); s.add(&g);`
+            - currently there is an assert against adding twice
         - Write test cases and documentation for these.
 
 ## General design questions

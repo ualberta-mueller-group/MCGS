@@ -398,26 +398,27 @@ a move generator in a `std::unique_ptr`
 - removed `nim` class and moved functionality such as nim sum to `nimber`
 - implemented `game::inverse()` for all game types
 
+
+### Version 1.1 completed parts 
+- More cleanup and Tools and Components for Database
+    - Code formatting tools and checks, "lint"-like
+    - `scale` S such as multiples of up, or up+star, or integers
+        - binary search to find upper/lower bounds for a game G on scale S
+        - simplify `game` G in `sumgame` S
+            - compare G with a simpler game H, replace in S if equal
+            - compare G1+G2 with a simpler H, replace in S if equal
+
+            - change read from string functions to directly create sumgame
+            - compare with/without subgame split
+
 ## Future: Smaller Step Versions 1.x to Prepare for Version 2
 
-### Version 1.1 - More cleanup and Tools and Components for Database
-- Code formatting tools and checks, "lint"-like
-- `scale` S such as multiples of up, or up+star, or integers
-    - binary search to find upper/lower bounds for a game G on scale S
-
-### Version 1.2 - simplification rules for `game` and `sumgame`
-    - simplify `game` G in `sumgame` S
-        - compare G with a simpler game H, replace in S if equal
-        - compare G1+G2 with a simpler H, replace in S if equal
-        - simplify games of same type in S, e.g.
-            - add up integers/rationals
-            - add ups+stars
-            - add nimbers
-        - general sum simplifications
-            - remove/deactivate 0
-            - find inverse pairs and deactivate
-
-        - change read from string functions to directly create sumgame
-        - compare with/without subgame split
-
+### Version 2
+- simplify games of same type in S, e.g.
+    - add up integers/rationals
+    - add ups+stars
+    - add nimbers
+- general sum simplifications
+    - remove/deactivate 0
+    - find inverse pairs and deactivate
 
