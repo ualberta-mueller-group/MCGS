@@ -58,13 +58,17 @@ print(command)
 proc = run_command(command)
 print(proc.stdout)
 
+assert not exists("format_stdout.txt")
+f = open("format_stdout.txt", "w")
+f.write(proc.stdout)
+f.close()
 
-vim_files = ""
+vim_files=""
 for f in chunk:
     ft = get_transformed(f)
     vim_files += f"tabnew {f} | "
     if exists(ft):
         vim_files += f"vsplit {ft} | "
 
-vim_command = ["nvim", f"+{vim_files}tabnext"]
+vim_command = ["nvim", "format_stdout.txt", f"+{vim_files}tabnext"]
 subprocess.call(vim_command)
