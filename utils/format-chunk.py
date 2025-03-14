@@ -1,5 +1,19 @@
 import subprocess
 import os
+import sys
+
+
+use_vim = False
+chunk_no = -1
+
+args = sys.argv
+for arg in sys.argv[1 : ]:
+    if arg == "vim":
+        use_vim = True
+        continue
+    if arg[0] == "-":
+        chunk_no = int(arg[1 : ])
+        continue
 
 
 def run_command(cmd):
@@ -37,7 +51,6 @@ for i in range(len(files_list)):
     chunks[-1].append(f)
 
 
-chunk_no = -1
 while not chunk_no in range(len(chunks)):
     chunk_no = int(input(f"Pick a chunk [0 - {len(chunks)}): "))
 
@@ -59,19 +72,19 @@ proc = run_command(command)
 print(proc.stdout)
 
 summary_file = "format_stdout.txt"
-assert not exists(summary_file)
 f = open(summary_file, "w")
 f.write(proc.stdout)
 f.close()
 
-vim_files=""
-for f in chunk:
-    ft = get_transformed(f)
-    vim_files += f"tabnew {f} | "
-    if exists(ft):
-        vim_files += f"vsplit {ft} | "
+if use_vim:
+    vim_files=""
+    for f in chunk:
+        ft = get_transformed(f)
+        vim_files += f"tabnew {f} | "
+        if exists(ft):
+            vim_files += f"vsplit {ft} | "
 
-vim_command = ["nvim", "format_stdout.txt", f"+{vim_files}tabnext"]
-subprocess.call(vim_command)
+    vim_command = ["nvim", "format_stdout.txt", f"+{vim_files}tabnext"]
+    subprocess.call(vim_command)
 
-os.remove(summary_file)
+    os.remove(summary_file)
