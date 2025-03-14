@@ -58,8 +58,9 @@ print(command)
 proc = run_command(command)
 print(proc.stdout)
 
-assert not exists("format_stdout.txt")
-f = open("format_stdout.txt", "w")
+summary_file = "format_stdout.txt"
+assert not exists(summary_file)
+f = open(summary_file, "w")
 f.write(proc.stdout)
 f.close()
 
@@ -72,3 +73,5 @@ for f in chunk:
 
 vim_command = ["nvim", "format_stdout.txt", f"+{vim_files}tabnext"]
 subprocess.call(vim_command)
+
+os.remove(summary_file)
