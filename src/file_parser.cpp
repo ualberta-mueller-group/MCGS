@@ -88,7 +88,7 @@ bool file_token_iterator::_get_token_from_stream(string& token)
     assert(_main_stream_ptr != nullptr);
     token.clear();
 
-    istream& _main_stream = *_main_stream_ptr;
+    istream& main_stream = *_main_stream_ptr;
 
     // Check if current line has more tokens
     if (_line_stream && _line_stream >> token)
@@ -103,7 +103,7 @@ bool file_token_iterator::_get_token_from_stream(string& token)
 
     // Scroll through the file's lines until we get a token
     string next_line;
-    while (_main_stream && getline(_main_stream, next_line) && !_main_stream.fail())
+    while (main_stream && getline(main_stream, next_line) && !main_stream.fail())
     {
         _line_number++;
         _line_stream = stringstream(next_line);
@@ -119,7 +119,7 @@ bool file_token_iterator::_get_token_from_stream(string& token)
         }
     }
 
-    if (_main_stream.fail() && !_main_stream.eof())
+    if (main_stream.fail() && !main_stream.eof())
     {
         throw ios_base::failure("file_token_iterator operator++ file IO error");
     }

@@ -1,6 +1,5 @@
 #include "sumgame.h"
 #include "cgt_integer_game.h"
-#include <iostream>
 #include <cassert>
 #include "test_utilities.h"
 
@@ -13,17 +12,17 @@ void test_empty()
     assert_solve_sum(g, WHITE, false);
 }
 
-void test_one_integer(int value, bool resB, bool resW)
+void test_one_integer(int value, bool res_b, bool res_w)
 {
     //std::cout << "test " << value << std::endl;
     integer_game i1(value);
     sumgame g(BLACK);
     g.add(&i1);
-    assert_solve_sum(g, BLACK, resB);
-    assert_solve_sum(g, WHITE, resW);
+    assert_solve_sum(g, BLACK, res_b);
+    assert_solve_sum(g, WHITE, res_w);
 }
 
-void test_two_integers(int value1, int value2, bool resB, bool resW)
+void test_two_integers(int value1, int value2, bool res_b, bool res_w)
 {
     //std::cout << "test " << value1 << " + " << value2 << std::endl;
     integer_game i1(value1);
@@ -31,12 +30,12 @@ void test_two_integers(int value1, int value2, bool resB, bool resW)
     sumgame g(BLACK);
     g.add(&i1);
     g.add(&i2);
-    assert_solve_sum(g, BLACK, resB);
-    assert_solve_sum(g, WHITE, resW);
+    assert_solve_sum(g, BLACK, res_b);
+    assert_solve_sum(g, WHITE, res_w);
 }
 
 void test_three_integers(int value1, int value2, int value3, 
-                         bool resB, bool resW)
+                         bool res_b, bool res_w)
 {
 //     std::cout << "test " << value1 << " + " << value2
 //               << " + " << value3 << std::endl;
@@ -47,8 +46,8 @@ void test_three_integers(int value1, int value2, int value3,
     g.add(&i1);
     g.add(&i2);
     g.add(&i3);
-    assert_solve_sum(g, BLACK, resB);
-    assert_solve_sum(g, WHITE, resW);
+    assert_solve_sum(g, BLACK, res_b);
+    assert_solve_sum(g, WHITE, res_w);
 }
 
 void test_inverses()

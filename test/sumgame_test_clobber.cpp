@@ -1,6 +1,4 @@
-#include "sumgame.h"
 #include "clobber_1xn.h"
-#include <iostream>
 #include <cassert>
 #include "test_utilities.h"
 
@@ -8,27 +6,27 @@ using std::string;
 
 namespace {
 
-void test_1_clobber(const string& s, bool resB, bool resW)
+void test_1_clobber(const string& s, bool res_b, bool res_w)
 {
     clobber_1xn g(s);
-    test_one_game(g, resB, resW);
+    test_one_game(g, res_b, res_w);
 }
 
 void test_2_clobber(const string& s1, const string& s2, 
-                    bool resB, bool resW)
+                    bool res_b, bool res_w)
 {
     clobber_1xn g1(s1);
     clobber_1xn g2(s2);
-    test_two_games(g1, g2, resB, resW);
+    test_two_games(g1, g2, res_b, res_w);
 }
 
 void test_3_clobber(const string& s1, const string& s2, 
-                    const string& s3, bool resB, bool resW)
+                    const string& s3, bool res_b, bool res_w)
 {
     clobber_1xn g1(s1);
     clobber_1xn g2(s2);
     clobber_1xn g3(s3);
-    test_three_games(g1, g2, g3, resB, resW);
+    test_three_games(g1, g2, g3, res_b, res_w);
 }
 
 void sum_1()
