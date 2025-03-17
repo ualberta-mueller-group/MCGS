@@ -100,9 +100,12 @@ struct bounds_options
 
 typedef std::shared_ptr<game_bounds> game_bounds_ptr;
 
-std::vector<game_bounds_ptr> find_bounds(sumgame& sum, const std::vector<bounds_options>& options);
+std::vector<game_bounds_ptr> find_bounds(sumgame& sum, const std::vector<bounds_options>& op);
+
 std::vector<game_bounds_ptr> find_bounds(std::vector<game*>& games, const std::vector<bounds_options>& options);
+
 std::vector<game_bounds_ptr> find_bounds(game* game, const std::vector<bounds_options>& options, int x, std::string asdasd);
+
 void test_bounds();
 
 /*
@@ -127,6 +130,18 @@ void test_bounds();
 
     TODO: verify these again, then make choices
 
+*/
+
+/*
+    Option 1 (Chromium-like):
+        args: bin pack, allow all on next line
+        params: no bin pack, disallow all on next line
+        align after open: align
+
+    Option 2 (easier to format correctly when writing)
+        args: no bin pack, allow all on next line
+        params: no bin pack, allow all on next line
+        align after open: don't align
 */
 
 std::vector<int> find_asdasd(std::vector<int> asd, int asd2, std::string sfdoijsdf, std::vector<float>, std::string ashdasdiuhasdiuhasd, double asdasd);
