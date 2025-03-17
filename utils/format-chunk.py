@@ -75,6 +75,7 @@ print(proc.stdout)
 
 summary_file = "format_stdout.txt"
 f = open(summary_file, "w")
+f.write(f"Chunk number: {chunk_no}\n")
 f.write(proc.stdout)
 f.close()
 
