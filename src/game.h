@@ -207,11 +207,11 @@ constexpr bool is_concrete_game_v = !std::is_abstract_v<T> && std::is_base_of_v<
 
     NOTE: This cast is generally unsafe. Only use in place of reinterpret_cast, not dynamic_cast
 */
-template <class T_ptr>
-inline T_ptr cast_game(game* g)
+template <class T_Ptr>
+inline T_Ptr cast_game(game* g)
 {
-    static_assert(std::is_pointer_v<T_ptr>);
-    using T = typename std::remove_pointer<T_ptr>::type; // NOLINT
+    static_assert(std::is_pointer_v<T_Ptr>);
+    using T = typename std::remove_pointer<T_Ptr>::type; // NOLINT
 
     static_assert(is_concrete_game_v<T>);
 
@@ -219,5 +219,5 @@ inline T_ptr cast_game(game* g)
     assert(g->is_active());
     assert(g->game_type() == game_type<T>());
 
-    return reinterpret_cast<T_ptr>(g);
+    return reinterpret_cast<T_Ptr>(g);
 }
