@@ -23,7 +23,9 @@ def run_command(cmd):
 def get_files():
     h_regex = "\\(.*\\.h$\\)"
     cpp_regex = "\\(.*\\.cpp$\\)"
-    proc = run_command(f"find -regex '{h_regex}\\|{cpp_regex}'")
+    ext_regex = f"\\({h_regex}\\|{cpp_regex}\\)"
+    dir_regex = "\\./\\(\\(src\\)\\|\\(test\\)\\)"
+    proc = run_command(f"find -regex '{dir_regex}{ext_regex}'")
     assert proc.returncode == 0
     files = [x for x in proc.stdout.split() if "___transformed" not in x]
     return files
