@@ -42,7 +42,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
-    cgt_game_simplification_test_all();
+    file_parser_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
