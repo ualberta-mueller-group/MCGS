@@ -10,7 +10,7 @@
 #include "simple_text_hash.h"
 
 // file_parser checks for a version command when reading from file or stdin
-#define FILE_PARSER_VERSION_STRING "version 1.0"
+#define FILE_PARSER_VERSION_STRING "version 1.1"
 
 // How many game_cases can be created by a single "run" command, i.e.
 // "{B win, W loss}"

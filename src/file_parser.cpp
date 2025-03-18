@@ -183,16 +183,16 @@ inline bool match_state_conclusive(match_state state)
 */
 bool is_reserved_char(const char& c1, const char& c2)
 {
-    if (             //
-        c1 == '[' || //
-        c1 == ']' || //
-        c1 == '(' || //
-        c1 == ')' || //
-        c1 == '{' || //
-        c1 == '}' || //
-        c1 == '/' || //
-        c1 == '\\'   //
-        )            //
+    if (                            //
+        c1 == '[' ||                //
+        c1 == ']' ||                //
+        c1 == '(' ||                //
+        c1 == ')' ||                //
+        c1 == '{' ||                //
+        c1 == '}' ||                //
+        (c1 == '/' && c2 == '*') || //
+        (c1 == '*' && c2 == '/')    //
+        )                           //
     {
         return true;
     }
@@ -243,7 +243,6 @@ void strip_enclosing(string& str, const string& open, const string& close)
 }
 
 } // namespace
-
 
 //////////////////////////////////////////////////////////// game_case
 
@@ -877,7 +876,7 @@ bool file_parser::parse_chunk(game_case& gc)
         }
 
         // Match comment
-        if (_match("/", "\\", "comment", true))
+        if (_match("/*", "*/", "comment", true))
         {
             // next lines assume the case number is 1 digit
             static_assert(FILE_PARSER_MAX_CASES < 10);
@@ -985,7 +984,7 @@ void file_parser::_init_game_parsers()
     _add_game_parser("integer_game", new int_parser<integer_game>());
     _add_game_parser("nimber", new int_parser<nimber>());
 
-    _add_game_parser("dyadic_rational", new int2_parser<dyadic_rational>());
+    _add_game_parser("dyadic_rational", new dyadic_rational_parser());
     _add_game_parser("switch_game", new switch_game_parser());
 
     _add_game_parser("up_star", new up_star_parser());

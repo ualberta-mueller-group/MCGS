@@ -105,3 +105,9 @@ class switch_game_parser : public game_token_parser
 public:
     game* parse_game(const std::string& game_token) const override;
 };
+
+class dyadic_rational_parser : public game_token_parser
+{
+public:
+    game* parse_game(const std::string& game_token) const override;
+};
