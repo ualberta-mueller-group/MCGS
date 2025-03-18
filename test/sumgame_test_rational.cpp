@@ -1,3 +1,4 @@
+#include "sumgame_test_rational.h"
 #include "sumgame.h"
 #include "cgt_dyadic_rational.h"
 #include <cassert>

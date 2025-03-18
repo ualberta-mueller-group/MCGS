@@ -1,3 +1,4 @@
+#include "sumgame_random_test_nimber.h"
 #include "cgt_nimber.h"
 #include "sumgame.h"
 #include "sum_of_nimbers.h"

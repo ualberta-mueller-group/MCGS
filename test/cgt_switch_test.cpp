@@ -1,3 +1,4 @@
+#include "cgt_switch_test.h"
 #include "cgt_switch.h"
 #include "cgt_move.h"
 
@@ -7,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+namespace {
 namespace cgt_switch_test {
 
 void play_on(switch_game& g, bw player)
@@ -190,6 +192,7 @@ void test4()
     assert_num_moves(g, WHITE, 1);
 }
 } // namespace cgt_switch_move_generator_test
+} // namespace
 
 //---------------------------------------------------------------------------
 

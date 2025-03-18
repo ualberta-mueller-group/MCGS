@@ -1,7 +1,9 @@
+#include "cgt_integer_game_test.h"
 #include "cgt_integer_game.h"
 #include <cassert>
 #include "test_utilities.h"
 
+namespace {
 namespace cgt_integer_game_test {
 
 void test1()
@@ -47,6 +49,7 @@ void test4()
 }
 
 } // namespace cgt_integer_move_generator_test
+} // namespace
 
 void cgt_integer_game_test_all()
 {

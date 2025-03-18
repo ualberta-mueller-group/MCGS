@@ -1,5 +1,7 @@
+#include "cgt_basics_test.h"
 #include "cgt_basics.h"
 
+namespace {
 namespace cgt_basics_test {
 
 void test_colors()
@@ -67,6 +69,7 @@ void test_color_char()
 }
 
 } // namespace cgt_basics_test
+} // namespace
 
 void cgt_basics_test_all()
 {

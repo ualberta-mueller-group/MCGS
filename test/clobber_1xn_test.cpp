@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 // Unit tests for the game of clobber
 //---------------------------------------------------------------------------
+#include "clobber_1xn_test.h"
 #include "clobber_1xn.h"
 
 #include <cassert>
@@ -11,6 +12,7 @@
 using std::cout;
 using std::endl;
 
+namespace {
 namespace clobber_1xn_test {
 
 void zero()
@@ -200,6 +202,7 @@ void file()
 }
 
 } // namespace clobber_1xn_string_test
+} // namespace
 
 void clobber_1xn_test_all()
 {

@@ -1,8 +1,10 @@
+#include "cgt_nimber_test.h"
 #include "cgt_nimber.h"
 
 #include <cassert>
 #include "test_utilities.h"
 
+namespace {
 namespace cgt_nimber_test {
 
 void test1()
@@ -38,6 +40,7 @@ void test2()
 }
 
 } // namespace cgt_nimber_move_generator_test
+} // namespace
 
 //---------------------------------------------------------------------------
 

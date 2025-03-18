@@ -1,7 +1,9 @@
+#include "cgt_up_star_test.h"
 #include "cgt_up_star.h"
 #include <cassert>
 #include "test_utilities.h"
 
+namespace {
 namespace cgt_up_star_test {
 
 void test_zero()
@@ -148,6 +150,7 @@ void test_2down_star()
     assert_num_moves(g, WHITE, 1);
 }
 } // namespace cgt_up_star_move_generator_test
+} // namespace
 
 //---------------------------------------------------------------------------
 

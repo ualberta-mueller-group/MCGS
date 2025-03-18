@@ -4,10 +4,12 @@
 #include <unordered_map>
 #include <typeindex>
 
-namespace __game_type_impl { // NOLINT
+namespace {
 std::unordered_map<std::type_index, game_type_t> game_type_map;
 game_type_t next_id = 0;
+} // namespace
 
+namespace __game_type_impl { // NOLINT
 game_type_t __get_game_type(const std::type_info& info) // NOLINT
 {
     const std::type_index& idx = std::type_index(info);

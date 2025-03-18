@@ -1,3 +1,4 @@
+#include "sumgame_test_integer.h"
 #include "sumgame.h"
 #include "cgt_integer_game.h"
 #include <cassert>

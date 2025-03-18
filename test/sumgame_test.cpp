@@ -1,3 +1,5 @@
+#include "sumgame_test.h"
+
 #include "sumgame_test_integer.h"
 #include "sumgame_test_rational.h"
 #include "sumgame_test_nimber.h"

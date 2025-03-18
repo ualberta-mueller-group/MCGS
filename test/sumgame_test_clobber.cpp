@@ -1,3 +1,4 @@
+#include "sumgame_test_clobber.h"
 #include "clobber_1xn.h"
 #include <cassert>
 #include "test_utilities.h"

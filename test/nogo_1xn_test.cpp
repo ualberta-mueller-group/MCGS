@@ -1,11 +1,13 @@
 //---------------------------------------------------------------------------
 // Unit tests for the game of nogo 1xn
 //---------------------------------------------------------------------------
+#include "nogo_1xn_test.h"
 #include "nogo_1xn.h"
 
 #include <cassert>
 #include "test_utilities.h"
 
+namespace {
 namespace nogo_1xn_test {
 
 void solve_1x1()
@@ -56,6 +58,7 @@ void file()
 }
 
 } // namespace nogo_1xn_test
+} // namespace
 
 void nogo_1xn_test_all()
 {

@@ -1,9 +1,11 @@
+#include "cgt_dyadic_rational_test.h"
 #include "cgt_dyadic_rational.h"
 #include "cgt_move.h"
 
 #include <cassert>
 #include "test_utilities.h"
 
+namespace {
 namespace cgt_dyadic_rational_test {
 void is_power_of_2_test()
 {
@@ -182,6 +184,7 @@ void test5()
 }
 
 } // namespace cgt_dyadic_rational_move_generator_test
+} // namespace
 
 void cgt_dyadic_rational_test_all()
 {

@@ -1,4 +1,4 @@
-#include "simple_text_hash.h"
+#include "simple_text_hash_test.h"
 
 #include <string>
 #include <cassert>

@@ -1,3 +1,4 @@
+#include "sumgame_test_nogo.h"
 #include "nogo_1xn.h"
 #include <cassert>
 #include "test_utilities.h"

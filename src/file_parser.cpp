@@ -230,7 +230,6 @@ bool invalid_reserved_chars(const string& token, const string& open,
 
     return false;
 }
-} // namespace
 
 // remove first and last characters
 void strip_enclosing(string& str, const string& open, const string& close)
@@ -242,6 +241,9 @@ void strip_enclosing(string& str, const string& open, const string& close)
 
     str = str.substr(open_size, str_size - open_size - close_size);
 }
+
+} // namespace
+
 
 //////////////////////////////////////////////////////////// game_case
 

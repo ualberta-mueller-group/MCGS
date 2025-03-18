@@ -1,3 +1,4 @@
+#include "cgt_game_test.h"
 #include "cgt_game.h"
 #include "cgt_move.h"
 
@@ -5,6 +6,7 @@
 #include <iostream>
 #include "test_utilities.h"
 
+namespace {
 namespace cgt_game_test {
 
 void test1()
@@ -13,6 +15,7 @@ void test1()
 }
 
 } // namespace cgt_game_test
+} // namespace
 
 //---------------------------------------------------------------------------
 
