@@ -103,6 +103,8 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
                "Print optimization summary to stdout, then quit.");
 
     print_flag("--parser-debug", "Print file_parser debug info.");
+
+    print_flag("--assert-correct-version", "Quit if a file version is found which doesn't match.");
 }
 
 } // namespace
@@ -208,6 +210,12 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
         if (arg == "--parser-debug")
         {
             file_parser::debug_printing = true;
+            continue;
+        }
+
+        if (arg == "--assert-correct-version")
+        {
+            file_parser::override_assert_correct_version = true;
             continue;
         }
 

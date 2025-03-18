@@ -28,6 +28,8 @@ using namespace file_parser_impl;
 //////////////////////////////////////////////////////////// static members
 bool file_parser::debug_printing = false;
 bool file_parser::silence_warnings = false;
+bool file_parser::override_assert_correct_version = false;
+
 unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 
 //////////////////////////////////////////////////////////// file_token_iterator
@@ -337,6 +339,11 @@ void file_parser::_version_check(const string& version_string)
             cerr << version_string << "\"" << endl;
         }
         _warned_wrong_version = true;
+
+        if (override_assert_correct_version)
+        {
+            throw parser_exception("Wrong version", WRONG_VERSION_COMMAND);
+        }
     }
 }
 

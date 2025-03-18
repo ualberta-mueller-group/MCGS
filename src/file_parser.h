@@ -245,6 +245,7 @@ public:
     // When true, file_parser prints info to stdout as it parses the input
     static bool debug_printing;
     static bool silence_warnings;
+    static bool override_assert_correct_version;
 
 private:
     // initializes parsers for every game. Called automatically upon
@@ -283,7 +284,8 @@ private:
 enum parser_exception_code
 {
     PARSER_OK = 0,
-    // WRONG_VERSION_COMMAND = 1, // Wrong version just prints warning
+    // Wrong version just prints warning, unless a CLI flag is set
+    WRONG_VERSION_COMMAND = 1,
     MISSING_VERSION_COMMAND,
     MISSING_SECTION_TITLE,
     MISSING_SECTION_PARSER,
