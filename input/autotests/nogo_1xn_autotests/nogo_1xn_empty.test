@@ -1,53 +1,53 @@
-{version 1.0}
+{version 1.1}
 [nogo_1xn]
 
-/1 space\
+/* 1 space */
 . {B, W}
 
-/2 spaces\
+/* 2 spaces */
 .. {B, W}
 
-/3 spaces\
+/* 3 spaces */
 ... {B, W}
 
-/4 spaces\
+/* 4 spaces */
 .... {B, W}
 
-/5 spaces\
+/* 5 spaces */
 ..... {B, W}
 
-/6 spaces\
+/* 6 spaces */
 ...... {B, W}
 
-/7 spaces\
+/* 7 spaces */
 ....... {B, W}
 
-/8 spaces\
+/* 8 spaces */
 ........ {B, W}
 
-/9 spaces\
+/* 9 spaces */
 ......... {B, W}
 
-/10 spaces\
+/* 10 spaces */
 .......... {B, W}
 
-/11 spaces\
+/* 11 spaces */
 ........... {B, W}
 
-/12 spaces\
+/* 12 spaces */
 ............ {B, W}
 
-/13 spaces\
+/* 13 spaces */
 ............. {B, W}
 
-/14 spaces\
+/* 14 spaces */
 .............. {B, W}
 
-/15 spaces\
+/* 15 spaces */
 ............... {B, W}
 
-/16 spaces\
+/* 16 spaces */
 ................ {B, W}
 
-/17 spaces\
+/* 17 spaces */
 ................. {B, W}

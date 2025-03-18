@@ -1,46 +1,46 @@
-{version 1.0}
-/These results only validated by the late November 2022 Linear Clobber solver \
+{version 1.1}
+/* These results only validated by the late November 2022 Linear Clobber solver */
 [clobber_1xn]
 
-/15.83 ms\
+/* 15.83 ms */
 XOXOXOXOXOXOXOXOXOXOXO {B win}
 
-/16.47 ms\
+/* 16.47 ms */
 XOXOXOXOXOXOXOXOXOXOXO {W win}
 
-/16.80 ms\
+/* 16.80 ms */
 XOO.OXOXO.OX.XXXOOOXOOXX.XOOXXO.XOOOO.OOX.OXXX.XOOOXXOOOXXXO {B loss}
 
-/17.16 ms\
+/* 17.16 ms */
 XOO.OXOXO.OX.XXXOOOXOOXX.XOOXXO.XOOOO.OOX.OXXX.XOOOXXOOOXXXO {W win}
 
-/20.54 ms\
+/* 20.54 ms */
 OXXXOX.OX.OXX.OOOXOOO.OXXXOOOXXOXXOXXXXXO.XOXOXXOX {B win}
 
-/21.14 ms\
+/* 21.14 ms */
 OXXXOX.OX.OXX.OOOXOOO.OXXXOOOXXOXXOXXXXXO.XOXOXXOX {W loss}
 
-/24.23 ms\
+/* 24.23 ms */
 XXOXXOXXOXXOXXOXXOXXOXXOXXOXXOXXO {B win}
 
-/24.06 ms\
+/* 24.06 ms */
 XXOXXOXXOXXOXXOXXOXXOXXOXXOXXOXXO {W loss}
 
-/16.95 ms\
+/* 16.95 ms */
 OXOXOXOXOXOXOXOXOXOXOX {B win}
 
-/16.55 ms\
+/* 16.55 ms */
 OXOXOXOXOXOXOXOXOXOXOX {W win}
 
-/19.81 ms\
+/* 19.81 ms */
 XOXOXOXOXOXOXOXOXOXOXOX {B loss}
 
-/16.47 ms\
+/* 16.47 ms */
 XOXOXOXOXOXOXOXOXOXOXOX {W win}
 
-/16.20 ms\
+/* 16.20 ms */
 OOXX.OOXXOO.OOOXOXOOXOX.OX.XO.OX.XXOXOOOX.XXOOOX.XO.OOOX.XO {B loss}
 
-/16.23 ms\
+/* 16.23 ms */
 OOXX.OOXXOO.OOOXOXOOXOX.OX.XO.OX.XXOXOOOX.XXOOOX.XO.OOOX.XO {W win}
 
