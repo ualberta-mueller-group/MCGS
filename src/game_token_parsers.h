@@ -28,8 +28,7 @@ public:
     virtual game* parse_game(const std::string& game_token) const = 0;
 };
 
-//////////////////////////////////////////////////////////// implementations
-///below
+//////////////////////////////////////// implementations
 
 // forwards the string as-is to the game constructor
 template <class T>
