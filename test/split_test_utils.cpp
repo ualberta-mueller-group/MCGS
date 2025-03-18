@@ -1,5 +1,4 @@
 #include "split_test_utils.h"
-
 #include <algorithm>
 
 using std::string;
@@ -39,6 +38,3 @@ void assert_no_split(const game* g)
 {
     assert(!g->split().has_value());
 }
-
-
-

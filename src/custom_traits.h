@@ -8,6 +8,7 @@ static_assert(!std::is_pointer_v<std::shared_ptr<int>>);
 
 namespace custom_traits {
 // NOLINTBEGIN
+// clang-format off
 
 //////////////////////////////////////// __type_valid<T>
 /*
@@ -78,6 +79,6 @@ struct is_some_game_ptr<T, typename std::enable_if_t<is_some_ptr_v<T>, void>>
 template <class T>
 constexpr bool is_some_game_ptr_v = is_some_game_ptr<T>::value;
 
-
+// clang-format on
 // NOLINTEND
-} // namespace custom_type_traits 
+} // namespace custom_traits

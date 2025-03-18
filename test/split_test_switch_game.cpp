@@ -1,12 +1,11 @@
 #include "split_test_switch_game.h"
 #include "cgt_switch.h"
-#include "split_test_utils.h"
 
 #include <memory>
 
 using std::unique_ptr;
 
-
+namespace {
 void test_switch_generic(const fraction& l, const fraction& r)
 {
     switch_game pos(l, r);
@@ -67,7 +66,6 @@ void test_switch_generic(const fraction& l, const fraction& r)
             delete g;
         }
     }
-
 }
 
 void switch_game1()
@@ -78,7 +76,6 @@ void switch_game1()
 void switch_game2()
 {
     test_switch_generic(400, -300);
-
 }
 
 void switch_game3()
@@ -90,6 +87,8 @@ void switch_game4()
 {
     test_switch_generic(fraction(21, 4), fraction(201, 512));
 }
+
+} // namespace
 
 void split_test_switch_game_all()
 {

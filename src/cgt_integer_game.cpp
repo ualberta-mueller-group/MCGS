@@ -56,16 +56,19 @@ public:
     void operator++() override;
     operator bool() const override;
     move gen_move() const override;
+
 private:
     bool _has_move;
 };
 
-integer_move_generator::integer_move_generator(const integer_game& game, bw to_play)
-    : move_generator(to_play),
-      _has_move(true)
+integer_move_generator::integer_move_generator(const integer_game& game,
+                                               bw to_play)
+    : move_generator(to_play), _has_move(true)
 {
-    if (((to_play == BLACK) && (game.value() <= 0))
-     || ((to_play == WHITE) && (game.value() >= 0)))
+    if (                                               //
+        ((to_play == BLACK) && (game.value() <= 0))    //
+        || ((to_play == WHITE) && (game.value() >= 0)) //
+        )                                              //
         _has_move = false;
 }
 

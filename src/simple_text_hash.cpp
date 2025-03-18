@@ -3,9 +3,7 @@
 #include <cassert>
 #include <vector>
 
-
 using namespace std;
-
 
 simple_text_hash::simple_text_hash()
 {
@@ -57,11 +55,12 @@ const string& simple_text_hash::get_string()
     }
 
     // Deal with common collision by adding bytes_seen into the hash buffer
-    // This helps in the case where there's a repeating pattern that "wraps around" the buffer
+    // This helps in the case where there's a repeating pattern that "wraps
+    // around" the buffer
     assert(BUFFER_SIZE >= sizeof(bytes_seen));
     for (size_t i = 0; i < sizeof(bytes_seen); i++)
     {
-        buffer[i] ^= ((uint8_t *) (&bytes_seen))[i];
+        buffer[i] ^= ((uint8_t*) (&bytes_seen))[i];
     }
 
     // convert each byte to hex characters
@@ -70,17 +69,17 @@ const string& simple_text_hash::get_string()
         const uint8_t& c = buffer[i];
 
         size_t conversion_space = 3;
-        //char converted_byte[conversion_space];
+        // char converted_byte[conversion_space];
         vector<char> converted_byte(conversion_space);
 
         // snprintf won't overflow the buffer
-        size_t used = snprintf(converted_byte.data(), conversion_space, "%02X", (int) c);
+        size_t used =
+            snprintf(converted_byte.data(), conversion_space, "%02X", (int) c);
 
         assert(used + 1 == conversion_space);
 
         string_representation += converted_byte.data();
     }
-
 
     return string_representation;
 }
@@ -94,4 +93,3 @@ void simple_text_hash::_move_impl(simple_text_hash&& other) noexcept
 
     other.clear();
 }
-

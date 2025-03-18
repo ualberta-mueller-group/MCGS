@@ -11,15 +11,9 @@ class dyadic_rational;
 class fraction
 {
 public:
-    inline fraction(int top, int bottom)
-    {
-        _init(top, bottom);
-    }
+    inline fraction(int top, int bottom) { _init(top, bottom); }
 
-    inline fraction(int top)
-    {
-        _init(top, 1);
-    }
+    inline fraction(int top) { _init(top, 1); }
 
     /*
        Functions below here will never cause overflow. They are
@@ -51,8 +45,9 @@ public:
         return (top() == rhs.top()) && (bottom() == rhs.bottom());
     }
 
-    inline const int& top() const {return _top;}
-    inline const int& bottom() const {return _bottom;}
+    inline const int& top() const { return _top; }
+
+    inline const int& bottom() const { return _bottom; }
 
     inline void set_top(const int& top)
     {
@@ -92,11 +87,10 @@ public:
 
 private:
     void _check_legal() const;
+    void _init(int top, int bottom);
 
     int _top;
     int _bottom;
-
-    void _init(int top, int bottom);
 };
 
 inline std::ostream& operator<<(std::ostream& os, const fraction& f)

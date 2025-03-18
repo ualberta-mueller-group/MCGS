@@ -6,7 +6,7 @@
 namespace {
 void test_empty()
 {
-    //std::cout << "test empty sum" << std::endl;
+    // std::cout << "test empty sum" << std::endl;
     sumgame g(BLACK);
     assert_solve_sum(g, BLACK, false);
     assert_solve_sum(g, WHITE, false);
@@ -14,7 +14,7 @@ void test_empty()
 
 void test_one_integer(int value, bool res_b, bool res_w)
 {
-    //std::cout << "test " << value << std::endl;
+    // std::cout << "test " << value << std::endl;
     integer_game i1(value);
     sumgame g(BLACK);
     g.add(&i1);
@@ -24,7 +24,7 @@ void test_one_integer(int value, bool res_b, bool res_w)
 
 void test_two_integers(int value1, int value2, bool res_b, bool res_w)
 {
-    //std::cout << "test " << value1 << " + " << value2 << std::endl;
+    // std::cout << "test " << value1 << " + " << value2 << std::endl;
     integer_game i1(value1);
     integer_game i2(value2);
     sumgame g(BLACK);
@@ -34,11 +34,11 @@ void test_two_integers(int value1, int value2, bool res_b, bool res_w)
     assert_solve_sum(g, WHITE, res_w);
 }
 
-void test_three_integers(int value1, int value2, int value3, 
-                         bool res_b, bool res_w)
+void test_three_integers(int value1, int value2, int value3, bool res_b,
+                         bool res_w)
 {
-//     std::cout << "test " << value1 << " + " << value2
-//               << " + " << value3 << std::endl;
+    //     std::cout << "test " << value1 << " + " << value2
+    //               << " + " << value3 << std::endl;
     integer_game i1(value1);
     integer_game i2(value2);
     integer_game i3(value3);
@@ -53,7 +53,7 @@ void test_three_integers(int value1, int value2, int value3,
 void test_inverses()
 {
     auto ints = {0, 1, -1, 2, 16, -3, 57, 8};
-    for (auto i: ints)
+    for (auto i : ints)
     {
         integer_game ig(i);
         std::unique_ptr<game> inv(ig.inverse());

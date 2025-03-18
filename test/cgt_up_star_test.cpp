@@ -1,11 +1,8 @@
 #include "cgt_up_star.h"
-#include "cgt_move.h"
-
 #include <cassert>
-#include <iostream>
 #include "test_utilities.h"
 
-namespace cgt_up_star_test{
+namespace cgt_up_star_test {
 
 void test_zero()
 {
@@ -79,7 +76,7 @@ void test_2down_star()
 
 } // namespace cgt_up_star_test
 
-namespace cgt_up_star_move_generator{
+namespace cgt_up_star_move_generator {
 
 void test_zero()
 {
@@ -177,6 +174,6 @@ void cgt_up_star_test_all()
     cgt_up_star_move_generator::test_down_star();
     cgt_up_star_move_generator::test_2down();
     cgt_up_star_move_generator::test_2down_star();
-
 }
+
 //---------------------------------------------------------------------------

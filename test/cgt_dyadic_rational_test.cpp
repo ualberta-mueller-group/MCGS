@@ -2,7 +2,6 @@
 #include "cgt_move.h"
 
 #include <cassert>
-#include <iostream>
 #include "test_utilities.h"
 
 void is_power_of_2_test()
@@ -23,7 +22,7 @@ void is_power_of_2_test()
     assert(!is_power_of_2(24));
 }
 
-namespace cgt_dyadic_rational{
+namespace cgt_dyadic_rational {
 
 void test_constructor1()
 {
@@ -80,7 +79,6 @@ void test_constructor7()
     assert_equal(g.q(), 1);
     assert(fraction(0, 1).equals_verbatim(g.get_fraction()));
 }
-
 
 void test_play(int p, int q, bw color, int p2, int q2)
 {
@@ -149,7 +147,7 @@ void test_solve3()
 
 } // namespace cgt_dyadic_rational
 
-namespace cgt_dyadic_rational_move_generator{
+namespace cgt_dyadic_rational_move_generator {
 
 void test1()
 {

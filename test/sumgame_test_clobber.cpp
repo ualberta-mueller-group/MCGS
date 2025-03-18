@@ -12,16 +12,15 @@ void test_1_clobber(const string& s, bool res_b, bool res_w)
     test_one_game(g, res_b, res_w);
 }
 
-void test_2_clobber(const string& s1, const string& s2, 
-                    bool res_b, bool res_w)
+void test_2_clobber(const string& s1, const string& s2, bool res_b, bool res_w)
 {
     clobber_1xn g1(s1);
     clobber_1xn g2(s2);
     test_two_games(g1, g2, res_b, res_w);
 }
 
-void test_3_clobber(const string& s1, const string& s2, 
-                    const string& s3, bool res_b, bool res_w)
+void test_3_clobber(const string& s1, const string& s2, const string& s3,
+                    bool res_b, bool res_w)
 {
     clobber_1xn g1(s1);
     clobber_1xn g2(s2);
@@ -63,7 +62,7 @@ void sum_6()
 void test_inverses()
 {
     auto games = {"X", "XO", "OXO", "XOOOOO", "XOXOXO"};
-    for (auto gs: games)
+    for (auto gs : games)
     {
         clobber_1xn g(gs);
         std::unique_ptr<game> inv(g.inverse());

@@ -112,18 +112,18 @@ namespace clobber_1xn_move_generator {
 void test_1()
 {
     clobber_1xn g("XXX.OOO");
-    
-    std::unique_ptr<move_generator>mgp(g.create_move_generator(BLACK));
+
+    std::unique_ptr<move_generator> mgp(g.create_move_generator(BLACK));
     move_generator& mg(*mgp);
-    
+
     assert(!mg);
 }
 
 void test_2()
 {
     clobber_1xn g("XO");
-    
-    std::unique_ptr<move_generator>mgp(g.create_move_generator(BLACK));
+
+    std::unique_ptr<move_generator> mgp(g.create_move_generator(BLACK));
     move_generator& mg(*mgp);
     assert(mg);
     assert_two_part_move(mg, 0, 1);
@@ -134,8 +134,8 @@ void test_2()
 void test_3()
 {
     clobber_1xn g("OXOX");
-    
-    std::unique_ptr<move_generator>mgp(g.create_move_generator(BLACK));
+
+    std::unique_ptr<move_generator> mgp(g.create_move_generator(BLACK));
     move_generator& mg(*mgp);
     assert(mg);
     assert_two_part_move(mg, 1, 2);
@@ -152,8 +152,8 @@ void test_3()
 void test_4()
 {
     clobber_1xn g("OXOX");
-    
-    std::unique_ptr<move_generator>mgp(g.create_move_generator(WHITE));
+
+    std::unique_ptr<move_generator> mgp(g.create_move_generator(WHITE));
     move_generator& mg(*mgp);
     assert(mg);
     assert_two_part_move(mg, 0, 1);
@@ -199,7 +199,7 @@ void file()
     assert_solve_test_file(UNIT_TEST_INPUT_DIR + "/clobber_1xn.test", 14);
 }
 
-} // namespace clobber_1xn_string
+} // namespace clobber_1xn_string_test
 
 void clobber_1xn_test_all()
 {

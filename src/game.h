@@ -5,7 +5,6 @@
 #pragma once
 
 #include <iostream>
-#include <string>
 #include <type_traits>
 #include <vector>
 #include <optional>
@@ -15,37 +14,37 @@
 
 //---------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------
-
 class move_generator;
 class game;
 //---------------------------------------------------------------------------
-
 typedef std::optional<std::vector<game*>> split_result;
 
-
-class game: public i_game_type
+class game : public i_game_type
 {
 public:
     game();
-    virtual ~game() { }
+
+    virtual ~game() {}
+
     bool is_active() const;
     void set_active(bool status);
     move last_move() const;
     // Used to verify that game is restored after search
     int moves_hash() const; // TODO do a proper implementation
     bool has_moves() const;
-    
+
     /*
-        When overriding play() and undo_move(), the derived type's function should
-        first call these functions.
+        When overriding play() and undo_move(), the derived type's
+        function should first call these functions.
 
         i.e. in derived type's play():
-            // pushes move onto move stack for later, after encoding player color into it
+            // pushes move onto move stack for later,
+            // after encoding player color into it
             game::play(m, to_play);
 
         and in derived type's undo_move():
-            move m_encoded = game::last_move(); // get back the move we remembered
+            // get back the move we remembered
+            move m_encoded = game::last_move();
             game::undo_move(); // pop it off the stack
             // now decode the move
             bw to_play = cgt_move::get_color(m_encoded);
@@ -59,27 +58,26 @@ public:
     split_result split() const;
 
 protected:
-
     /*
-        Return list of games to replace current game. Empty list means game is 0.
-        No value means split didn't occur. See std::optional. The games
-        within the list should be new objects, and not a pointer to the 
-        game object returning the list.
+        Return list of games to replace current game. Empty list means game is
+       0. No value means split didn't occur. See std::optional. The games within
+       the list should be new objects, and not a pointer to the game object
+       returning the list.
 
-        In the case where a game doesn't split into subgames, return an absent split result.
+        In the case where a game doesn't split into subgames, return an absent
+       split result.
 
         The returned games are owned by the caller.
 
         To create an empty but present split_result:
             split_result sr = split_result(vector<game*>());
-        
+
         To create an absent split_result:
             split_result sr = split_result();
     */
     virtual split_result _split_implementation() const;
 
 public:
-
     virtual move_generator* create_move_generator(bw to_play) const = 0;
 
     /*
@@ -97,12 +95,11 @@ public:
 private:
     std::vector<move> _move_stack;
     bool _is_active;
-}; // game
+}; // class game
 
-inline game::game() :
-    _move_stack(),
-    _is_active(true)
-{ }
+inline game::game() : _move_stack(), _is_active(true)
+{
+}
 
 inline bool game::is_active() const
 {
@@ -124,8 +121,8 @@ inline void game::play(const move& m, int to_play)
     assert(cgt_move::get_color(m) == 0);
     const move mc = cgt_move::encode(m, to_play);
     _move_stack.push_back(mc);
-//     std::cout << "move "<< cgt_move::print(m) << "\n";
-//     std::cout << "move + color "<< cgt_move::print(mc) << std::endl;
+    //     std::cout << "move "<< cgt_move::print(m) << "\n";
+    //     std::cout << "move + color "<< cgt_move::print(mc) << std::endl;
 }
 
 inline void game::undo_move()
@@ -179,33 +176,38 @@ class move_generator
 {
 public:
     move_generator(bw to_play);
-    virtual ~move_generator() { }
+
+    virtual ~move_generator() {}
+
     int to_play() const { return _to_play; }
+
     int opponent() const { return ::opponent(_to_play); }
 
     virtual void operator++() = 0;
     virtual operator bool() const = 0;
     virtual move gen_move() const = 0;
+
 private:
     const bw _to_play;
-}; // move_generator
+}; // class move_generator
 
-inline move_generator::move_generator(bw to_play) :
-    _to_play(to_play)
-{ }
+inline move_generator::move_generator(bw to_play) : _to_play(to_play)
+{
+}
+
 //---------------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& os, const split_result& split);
 
-
-template <class T>
-constexpr bool is_concrete_game_v = !std::is_abstract_v<T> && std::is_base_of_v<game, T>; // NOLINT
-
+template <class T> // NOLINTNEXTLINE
+constexpr bool is_concrete_game_v =
+    !std::is_abstract_v<T> && std::is_base_of_v<game, T>;
 
 /*
     Convert game pointer types, after doing a few asserts.
 
-    NOTE: This cast is generally unsafe. Only use in place of reinterpret_cast, not dynamic_cast
+    NOTE: This cast is generally unsafe. Only use in place of reinterpret_cast,
+   not dynamic_cast
 */
 template <class T_Ptr>
 inline T_Ptr cast_game(game* g)

@@ -11,16 +11,15 @@ void test_1_nogo(const string& s, bool res_b, bool res_w)
     test_one_game(g, res_b, res_w);
 }
 
-void test_2_nogo(const string& s1, const string& s2, 
-                    bool res_b, bool res_w)
+void test_2_nogo(const string& s1, const string& s2, bool res_b, bool res_w)
 {
     nogo_1xn g1(s1);
     nogo_1xn g2(s2);
     test_two_games(g1, g2, res_b, res_w);
 }
 
-void test_3_nogo(const string& s1, const string& s2, 
-                    const string& s3, bool res_b, bool res_w)
+void test_3_nogo(const string& s1, const string& s2, const string& s3,
+                 bool res_b, bool res_w)
 {
     nogo_1xn g1(s1);
     nogo_1xn g2(s2);
@@ -63,7 +62,7 @@ void sum_6()
 void test_inverses()
 {
     auto games = {".", "..", "..O", "X.X..", "X..O.O"};
-    for (auto gs: games)
+    for (auto gs : games)
     {
         nogo_1xn g(gs);
         std::unique_ptr<game> inv(g.inverse());

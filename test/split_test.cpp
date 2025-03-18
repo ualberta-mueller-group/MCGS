@@ -9,7 +9,6 @@
 #include "split_test_nimber.h"
 #include "split_test_up_star.h"
 
-
 void split_test_all()
 {
     split_test_elephants_all();

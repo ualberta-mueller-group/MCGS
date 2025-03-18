@@ -5,8 +5,8 @@
 
 #include "cgt_basics.h"
 #include "throw_assert.h"
-//---------------------------------------------------------------------------
 
+//---------------------------------------------------------------------------
 
 int clobber_char_to_color(char c)
 {
@@ -16,7 +16,8 @@ int clobber_char_to_color(char c)
         return WHITE;
     else if (c == '.')
         return EMPTY;
-    else assert(false);
+    else
+        assert(false);
 
     exit(-1);
     return -1;
@@ -25,11 +26,10 @@ int clobber_char_to_color(char c)
 char color_to_clobber_char(int color)
 {
     static char clobber_char[] = {'X', 'O', '.'};
-    
+
     assert_range(color, BLACK, EMPTY + 1);
     return clobber_char[color];
 }
-
 
 namespace {
 
@@ -41,7 +41,7 @@ void check_is_clobber_char(char c)
 std::vector<int> string_to_board(const std::string& game_as_string)
 {
     std::vector<int> board;
-    for(auto c: game_as_string)
+    for (auto c : game_as_string)
     {
         check_is_clobber_char(c);
         board.push_back(clobber_char_to_color(c));
@@ -52,24 +52,24 @@ std::vector<int> string_to_board(const std::string& game_as_string)
 std::string board_to_string(const std::vector<int>& board)
 {
     std::string result;
-    for(int p: board)
+    for (int p : board)
         result += color_to_clobber_char(p);
     return result;
 }
 
 } // namespace
+
 //---------------------------------------------------------------------------
 
-strip::strip(const std::vector<int>& board) :
-    game(),
-    _board(board)
+strip::strip(const std::vector<int>& board) : game(), _board(board)
 {
     _check_legal();
 }
 
-strip::strip(const std::string& game_as_string) :
-    strip(string_to_board(game_as_string))
-{ }
+strip::strip(const std::string& game_as_string)
+    : strip(string_to_board(game_as_string))
+{
+}
 
 std::string strip::board_as_string() const
 {

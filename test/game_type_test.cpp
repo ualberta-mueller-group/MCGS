@@ -30,14 +30,14 @@ void get_types(vector<game_type_t>& types, T* game_ptr)
 }
 
 // recursive case
-template <class T, class ...Ts>
+template <class T, class... Ts>
 void get_types(vector<game_type_t>& types, T* game_ptr, Ts... game_ptrs)
 {
     extract_type(types, game_ptr);
     get_types(types, game_ptrs...);
 }
 
-template <class ...Ts>
+template <class... Ts>
 void test_games(Ts... game_ptrs)
 {
     vector<game_type_t> types;
@@ -56,14 +56,15 @@ void test_games(Ts... game_ptrs)
 void game_type_test_all()
 {
     // no need for cleanup, extract_type() will delete
-    test_games(
-        new dyadic_rational(4, 8),
-        new integer_game(1),
-        new nimber(5),
-        new switch_game(5, 3),
-        new up_star(4, true),
-        new clobber_1xn("XO"),
-        new elephants("X...O"),
-        new nogo_1xn("X..O")
-    );
+
+    test_games(                    //
+        new dyadic_rational(4, 8), //
+        new integer_game(1),       //
+        new nimber(5),             //
+        new switch_game(5, 3),     //
+        new up_star(4, true),      //
+        new clobber_1xn("XO"),     //
+        new elephants("X...O"),    //
+        new nogo_1xn("X..O")       //
+    );                             //
 }

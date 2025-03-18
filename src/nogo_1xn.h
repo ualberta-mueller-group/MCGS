@@ -22,8 +22,11 @@ protected:
 public:
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;
-    void print(std::ostream& str) const override { str << "nogo_1xn:" << board_as_string();}
+
+    void print(std::ostream& str) const override
+    {
+        str << "nogo_1xn:" << board_as_string();
+    }
 };
 
 std::ostream& operator<<(std::ostream& out, const nogo_1xn& g);
-

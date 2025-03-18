@@ -1,7 +1,6 @@
 #include "autotests.h"
 
 #include <cstdio>
-#include <iomanip>
 #include <ios>
 #include <iostream>
 #include <filesystem>
@@ -48,7 +47,8 @@ string human_readable_game_string(const vector<game*>& games)
 // Print column contents to CSV file
 void append_field(ostream& os, const string& field, bool include_separator)
 {
-    // Remove leading/trailing whitespace, replace double quotes with 2 single quotes
+    // Remove leading/trailing whitespace, replace double quotes with 2 single
+    // quotes
     string sanitized_field;
 
     bool past_left_whitespace = false;
@@ -61,7 +61,8 @@ void append_field(ostream& os, const string& field, bool include_separator)
         if (!past_left_whitespace && c == ' ')
         {
             continue;
-        } else
+        }
+        else
         {
             past_left_whitespace = true;
         }
@@ -69,7 +70,8 @@ void append_field(ostream& os, const string& field, bool include_separator)
         if (c == '\"')
         {
             sanitized_field += "''";
-        } else
+        }
+        else
         {
             sanitized_field.push_back(c);
         }
@@ -79,7 +81,7 @@ void append_field(ostream& os, const string& field, bool include_separator)
     {
         sanitized_field.pop_back();
     }
-    
+
     os << "\"" << sanitized_field << "\"";
     if (include_separator)
     {
@@ -93,7 +95,8 @@ string format_duration(double duration)
     const char* format = "%.2f";
 
     int size = snprintf(nullptr, 0, format, duration) + 1;
-    //char buffer[size]; // variable length arrays are not part of the C++ standard
+    // char buffer[size]; // variable length arrays are not part of the C++
+    // standard
     vector<char> buffer(size);
 
     int got_size = snprintf(buffer.data(), size, format, duration);
@@ -102,13 +105,15 @@ string format_duration(double duration)
     return string(buffer.data());
 }
 
-void run_autotests(const string& test_directory, const string& outfile_name, unsigned long long test_timeout)
+void run_autotests(const string& test_directory, const string& outfile_name,
+                   unsigned long long test_timeout)
 {
     ofstream outfile(outfile_name); // CSV file
 
     if (!outfile.is_open())
     {
-        throw ios_base::failure("Couldn't open file for writing: \"" + outfile_name +  "\"");
+        throw ios_base::failure("Couldn't open file for writing: \"" +
+                                outfile_name + "\"");
     }
 
     // print format as first row to file
@@ -124,9 +129,9 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
     append_field(outfile, "Input hash", false);
     outfile << NEWLINE;
 
-
     // iterate over autotests directory
-    for (const filesystem::directory_entry& entry : recursive_directory_iterator(test_directory))
+    for (const filesystem::directory_entry& entry :
+         recursive_directory_iterator(test_directory))
     {
         // Skip directories and non ".test" files
         if (!entry.is_regular_file())
@@ -146,10 +151,12 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
         cout << "New file: " << file_name << endl;
 
         // Path relative to test directory (this string is printed to CSV file)
-        filesystem::path relative_file_path = filesystem::relative(file_path, filesystem::path(test_directory));
+        filesystem::path relative_file_path =
+            filesystem::relative(file_path, filesystem::path(test_directory));
 
         // Open test file
-        unique_ptr<file_parser> parser = unique_ptr<file_parser>(file_parser::from_file(file_name));
+        unique_ptr<file_parser> parser =
+            unique_ptr<file_parser>(file_parser::from_file(file_name));
         game_case gc;
 
         int case_number = 0;
@@ -164,7 +171,8 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
             }
 
             chrono::time_point start = chrono::high_resolution_clock::now();
-            optional<solve_result> result = sum.solve_with_timeout(test_timeout);
+            optional<solve_result> result =
+                sum.solve_with_timeout(test_timeout);
             chrono::time_point end = chrono::high_resolution_clock::now();
 
             chrono::duration<double, std::milli> duration = end - start;
@@ -173,8 +181,9 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
 
             if (result.has_value())
             {
-                result_string = result.value().win ? test_result_to_string(TEST_RESULT_WIN)
-                    : test_result_to_string(TEST_RESULT_LOSS);
+                result_string = result.value().win
+                                    ? test_result_to_string(TEST_RESULT_WIN)
+                                    : test_result_to_string(TEST_RESULT_LOSS);
             }
 
             string status_string = "TIMEOUT";
@@ -183,9 +192,12 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
                 if (gc.expected_outcome == TEST_RESULT_UNSPECIFIED)
                 {
                     status_string = "COMPLETED";
-                } else
+                }
+                else
                 {
-                    status_string = (result.value().win == gc.expected_outcome) ? "PASS" : "FAIL";
+                    status_string = (result.value().win == gc.expected_outcome)
+                                        ? "PASS"
+                                        : "FAIL";
                 }
             }
 
@@ -193,7 +205,8 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
             append_field(outfile, to_string(case_number), true);
             append_field(outfile, human_readable_game_string(gc.games), true);
             append_field(outfile, string(1, color_char(gc.to_play)), true);
-            append_field(outfile, test_result_to_string(gc.expected_outcome), true);
+            append_field(outfile, test_result_to_string(gc.expected_outcome),
+                         true);
             append_field(outfile, result_string, true);
             append_field(outfile, format_duration(duration.count()), true);
             append_field(outfile, status_string, true);
@@ -204,7 +217,6 @@ void run_autotests(const string& test_directory, const string& outfile_name, uns
             gc.cleanup_games();
             case_number++;
         }
-
     }
 
     outfile.close();

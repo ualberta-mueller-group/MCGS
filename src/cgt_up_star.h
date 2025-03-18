@@ -21,17 +21,21 @@ public:
     void undo_move() override;
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;
-    int num_ups() const { return _value;}
-    bool has_star() const { return _star;}
+
+    int num_ups() const { return _value; }
+
+    bool has_star() const { return _star; }
+
     void print(std::ostream& str) const override;
+
 private:
     int _value;
     bool _star;
 };
 
-inline up_star::up_star(int value, bool star) :
-    _value(value), _star(star)
-{ 
+inline up_star::up_star(int value, bool star) : _value(value), _star(star)
+{
     THROW_ASSERT(!negate_will_wrap(_value));
 }
+
 //---------------------------------------------------------------------------

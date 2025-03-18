@@ -2,7 +2,9 @@
 
 using namespace std;
 
-sumgame_map_view::sumgame_map_view(sumgame& sum, sumgame_impl::change_record& record): _sum(sum), _record(record)
+sumgame_map_view::sumgame_map_view(sumgame& sum,
+                                   sumgame_impl::change_record& record)
+    : _sum(sum), _record(record)
 {
     // build game map
     const int N = sum.num_total_games();
@@ -61,7 +63,6 @@ void sumgame_map_view::deactivate_games(vector<game*>& games)
     }
 }
 
-
 void sumgame_map_view::_filter_inactive(std::vector<game*>& games)
 {
     vector<game*> active_games;
@@ -76,4 +77,3 @@ void sumgame_map_view::_filter_inactive(std::vector<game*>& games)
 
     games = std::move(active_games);
 }
-

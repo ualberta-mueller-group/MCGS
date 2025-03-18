@@ -4,8 +4,7 @@
 #include "cgt_dyadic_rational.h"
 #include "cgt_switch.h"
 
-
-game* up_star_parser::parse_game(const std::string& game_token) const 
+game* up_star_parser::parse_game(const std::string& game_token) const
 {
     std::vector<std::string> strs = split_string(game_token);
 
@@ -50,7 +49,6 @@ game* up_star_parser::parse_game(const std::string& game_token) const
     return new up_star(ups, star);
 }
 
-
 game* switch_game_parser::parse_game(const std::string& game_token) const
 {
     std::string token;
@@ -80,9 +78,7 @@ game* switch_game_parser::parse_game(const std::string& game_token) const
     std::vector<fraction> fracs;
 
     auto is_comma = [](const std::string& str) -> bool
-    {
-        return str.size() == 1 && str.back() == ',';
-    };
+    { return str.size() == 1 && str.back() == ','; };
 
     auto get_fraction = [&]() -> bool
     {

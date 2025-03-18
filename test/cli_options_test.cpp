@@ -1,6 +1,5 @@
 #include "cli_options_test.h"
 
-
 #include "all_game_headers.h"
 #include "cli_options.h"
 #include "clobber_1xn.h"
@@ -15,12 +14,12 @@ using namespace std;
 cli_options call_parse(const vector<string>& args)
 {
     /*
-        don't allocate memory here; exceptions will be thrown and 
+        don't allocate memory here; exceptions will be thrown and
             should be caught by the caller
     */
     int argc = args.size();
     vector<const char*> argv(argc);
-    //const char* argv[argc];
+    // const char* argv[argc];
 
     for (int i = 0; i < argc; i++)
     {
@@ -75,7 +74,8 @@ void cli_opts_test4()
 
     try
     {
-        cli_options opts = call_parse({EXEC_NAME, "--file", "not_a_real_file.test"});
+        cli_options opts =
+            call_parse({EXEC_NAME, "--file", "not_a_real_file.test"});
     }
     catch (ios_base::failure& e)
     {
@@ -119,7 +119,6 @@ void cli_opts_test6()
     assert(did_throw);
 }
 
-
 // wrong number of args (unquoted game) throws opts exception
 void cli_opts_test7()
 {
@@ -127,7 +126,8 @@ void cli_opts_test7()
 
     try
     {
-        cli_options opts = call_parse({EXEC_NAME, "[clobber_1xn]", "XOXO", "{B}"});
+        cli_options opts =
+            call_parse({EXEC_NAME, "[clobber_1xn]", "XOXO", "{B}"});
     }
     catch (cli_options_exception& e)
     {
@@ -140,12 +140,13 @@ void cli_opts_test7()
 // args give correct games/parser
 void cli_opts_test8()
 {
-    cli_options opts = call_parse({EXEC_NAME, "[nogo_1xn] X..O X...O..X {B win}"});
+    cli_options opts =
+        call_parse({EXEC_NAME, "[nogo_1xn] X..O X...O..X {B win}"});
     assert(opts.parser.get() != nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == false);
 
-    vector<game_case *> cases;
+    vector<game_case*> cases;
 
     {
         game_case* gc = new game_case();
@@ -169,12 +170,13 @@ void cli_opts_test8()
 // --file gives correct file/parser
 void cli_opts_test9()
 {
-    cli_options opts = call_parse({EXEC_NAME, "--file", "test/input/file_parser/sumgames4.test"});
+    cli_options opts = call_parse(
+        {EXEC_NAME, "--file", "test/input/file_parser/sumgames4.test"});
     assert(opts.parser.get() != nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == false);
 
-    vector<game_case *> cases;
+    vector<game_case*> cases;
 
     {
         game_case* gc = new game_case();
@@ -192,24 +194,25 @@ void cli_opts_test9()
         gc->cleanup_games();
         delete gc;
     }
-
 }
 
 // --test-timeout
-void cli_opts_test10() {
+void cli_opts_test10()
+{
     cli_options opts = call_parse({EXEC_NAME, "--test-timeout", "42734"});
     assert(opts.test_timeout == 42734);
 }
 
-
 // --out-file
-void cli_opts_test11() {
+void cli_opts_test11()
+{
     cli_options opts = call_parse({EXEC_NAME, "--out-file", "65432.csv"});
     assert(opts.outfile_name == "65432.csv");
 }
 
 // --test-dir
-void cli_opts_test12() {
+void cli_opts_test12()
+{
     cli_options opts = call_parse({EXEC_NAME, "--test-dir", "somedir462"});
     assert(opts.test_directory == "somedir462");
 }
@@ -225,7 +228,6 @@ void cli_options_test_all()
     cli_opts_test7();
     cli_opts_test8();
     cli_opts_test9();
-
 
     cli_opts_test10();
     cli_opts_test11();

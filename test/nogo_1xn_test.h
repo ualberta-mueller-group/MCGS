@@ -4,4 +4,3 @@
 #pragma once
 
 void nogo_1xn_test_all();
-

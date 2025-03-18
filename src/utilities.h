@@ -3,10 +3,7 @@
 #include <type_traits>
 #include <vector>
 #include <string>
-#include <limits>
 #include "cgt_basics.h"
-
-
 
 //////////////////////////////////////// general utility functions
 template <class T>
@@ -28,7 +25,7 @@ void print_bits(std::ostream& os, const T& x)
 
     const size_t n_bits = size_in_bits<T>();
 
-    // T could be signed, so we can't iteratively shift right from 
+    // T could be signed, so we can't iteratively shift right from
     // the most significant bit
     const T mask = T(1);
 
@@ -55,5 +52,5 @@ inline constexpr bool is_power_of_2(const T& n)
 }
 
 ////////////////////////////////////////
-relation relation_from_search_results(bool le_known, bool is_le, bool ge_known, bool is_ge);
-
+relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,
+                                      bool is_ge);

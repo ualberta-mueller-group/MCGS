@@ -4,8 +4,6 @@
 #include "nogo_1xn.h"
 
 #include <cassert>
-#include <iostream>
-#include "cgt_move.h"
 #include "test_utilities.h"
 
 namespace nogo_test {

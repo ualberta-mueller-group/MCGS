@@ -6,8 +6,7 @@
 
 using std::vector, std::string, std::stringstream;
 
-void assert_solve(game& pos, bw to_play,
-                  const bool expected_result)
+void assert_solve(game& pos, bw to_play, const bool expected_result)
 {
     assert_black_white(to_play);
     alternating_move_game g(pos, to_play);
@@ -15,8 +14,7 @@ void assert_solve(game& pos, bw to_play,
     assert(result == expected_result);
 }
 
-void assert_solve_sum(sumgame& g, bw to_play,
-                      const bool expected_result)
+void assert_solve_sum(sumgame& g, bw to_play, const bool expected_result)
 {
     assert_black_white(to_play);
     g.set_to_play(to_play);
@@ -32,7 +30,7 @@ void test_sum(sumgame& sum, bool res_b, bool res_w)
 
 void test_one_game(game& g, bool res_b, bool res_w)
 {
-//     std::cout << "test " << g << std::endl;
+    //     std::cout << "test " << g << std::endl;
     sumgame sum(BLACK);
     sum.add(&g);
     test_sum(sum, res_b, res_w);
@@ -40,7 +38,7 @@ void test_one_game(game& g, bool res_b, bool res_w)
 
 void test_two_games(game& g1, game& g2, bool res_b, bool res_w)
 {
-//     std::cout << "test " << g1 << " + " << g2 << std::endl;
+    //     std::cout << "test " << g1 << " + " << g2 << std::endl;
     sumgame sum(BLACK);
     sum.add(&g1);
     sum.add(&g2);
@@ -49,7 +47,8 @@ void test_two_games(game& g1, game& g2, bool res_b, bool res_w)
 
 void test_three_games(game& g1, game& g2, game& g3, bool res_b, bool res_w)
 {
-//     std::cout << "test " << g1 << " + " << g2 << " + " << g3 << std::endl;
+    //     std::cout << "test " << g1 << " + " << g2 << " + " << g3 <<
+    //     std::endl;
     sumgame sum(BLACK);
     sum.add(&g1);
     sum.add(&g2);
@@ -57,14 +56,14 @@ void test_three_games(game& g1, game& g2, game& g3, bool res_b, bool res_w)
     test_sum(sum, res_b, res_w);
 }
 
-
-
-void assert_player_sum_outcome(int player, bool expected_outcome, vector<game*>&& games, bool delete_games)
+void assert_player_sum_outcome(int player, bool expected_outcome,
+                               vector<game*>&& games, bool delete_games)
 {
     assert_player_sum_outcome(player, expected_outcome, games, delete_games);
 }
 
-void assert_player_sum_outcome(int player, bool expected_outcome, std::vector<game*>& games, bool delete_games)
+void assert_player_sum_outcome(int player, bool expected_outcome,
+                               std::vector<game*>& games, bool delete_games)
 {
     assert_black_white(player);
 
@@ -89,15 +88,16 @@ void assert_player_sum_outcome(int player, bool expected_outcome, std::vector<ga
     }
 }
 
-void assert_sum_outcomes(bool black_outcome, bool white_outcome, std::vector<game*>& games)
+void assert_sum_outcomes(bool black_outcome, bool white_outcome,
+                         std::vector<game*>& games)
 {
 
     assert_player_sum_outcome(BLACK, black_outcome, games, false);
     assert_player_sum_outcome(WHITE, white_outcome, games, true);
 }
 
-
-void assert_sum_outcomes(bool black_outcome, bool white_outcome, vector<game*>&& games)
+void assert_sum_outcomes(bool black_outcome, bool white_outcome,
+                         vector<game*>&& games)
 {
     assert_sum_outcomes(black_outcome, white_outcome, games);
 }
@@ -124,7 +124,8 @@ void assert_inverse_sum_zero(game* g)
     delete g;
 }
 
-void assert_file_parser_output(file_parser* parser, vector<game_case*>& expected_cases)
+void assert_file_parser_output(file_parser* parser,
+                               vector<game_case*>& expected_cases)
 {
     game_case gc;
     size_t case_idx = 0;
@@ -158,7 +159,6 @@ void assert_file_parser_output(file_parser* parser, vector<game_case*>& expected
             }
 
             assert(str_got == str_expected);
-
         }
 
         gc.cleanup_games();
@@ -167,19 +167,21 @@ void assert_file_parser_output(file_parser* parser, vector<game_case*>& expected
     assert(case_idx == expected_cases.size());
 }
 
-void assert_file_parser_output_file(const string& file_name, vector<game_case*>& expected_cases)
+void assert_file_parser_output_file(const string& file_name,
+                                    vector<game_case*>& expected_cases)
 {
     file_parser* parser = file_parser::from_file(file_name);
     assert_file_parser_output(parser, expected_cases);
     delete parser;
 }
 
-
-void assert_solve_test_file(const std::string& file_name, int expected_case_count)
+void assert_solve_test_file(const std::string& file_name,
+                            int expected_case_count)
 {
     assert(expected_case_count >= 0);
 
-    std::unique_ptr<file_parser> fp = std::unique_ptr<file_parser>(file_parser::from_file(file_name));
+    std::unique_ptr<file_parser> fp =
+        std::unique_ptr<file_parser>(file_parser::from_file(file_name));
 
     int case_count = 0;
     game_case gc;

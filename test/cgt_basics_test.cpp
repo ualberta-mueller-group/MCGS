@@ -1,7 +1,4 @@
 #include "cgt_basics.h"
-#include "cgt_move.h"
-
-#include "test_utilities.h"
 
 namespace cgt_basics {
 
@@ -11,7 +8,7 @@ void test_colors()
     assert(WHITE == 1);
     assert(EMPTY == 2);
     assert(BORDER == 3);
-    
+
     assert(LEFT == 0);
     assert(RIGHT == 1);
 }
@@ -54,12 +51,12 @@ void test_color_char()
     assert(COLOR_CODE[WHITE] == 'W');
     assert(COLOR_CODE[EMPTY] == '.');
     assert(COLOR_CODE[BORDER] == 'X');
-    
+
     assert(color_char(BLACK) == 'B');
     assert(color_char(WHITE) == 'W');
     assert(color_char(EMPTY) == '.');
     assert(color_char(BORDER) == 'X');
- 
+
     assert(char_to_color('B') == BLACK);
     assert(char_to_color('W') == WHITE);
 

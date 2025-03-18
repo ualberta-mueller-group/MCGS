@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 // Basic cgt and game constants and utilities
-// Players, colors, ranges, outcome_class, 
+// Players, colors, ranges, outcome_class,
 // conversion color to char and back
 //---------------------------------------------------------------------------
 
@@ -16,9 +16,8 @@ const int BORDER = 3; // outside of board
 const int LEFT = BLACK;
 const int RIGHT = WHITE;
 
-typedef int bw; // black or white
+typedef int bw;  // black or white
 typedef int ebw; // empty, black or white
-
 
 /*
  The four outcome classes of a combinatorial game, plus unknown:
@@ -28,7 +27,14 @@ typedef int ebw; // empty, black or white
  R = right wins = white wins = O wins, no matter who goes first
  U = unknown - used when outcome is not computed (yet)
  */
-enum outcome_class { P, N, L, R, U };
+enum outcome_class
+{
+    P,
+    N,
+    L,
+    R,
+    U
+};
 
 enum relation
 {
@@ -91,8 +97,8 @@ inline int ebw_opponent(int c)
 // range includes low but excludes high
 inline bool in_range(int value, int low, int high)
 {
-    return value >= low
-        && value < high;
+    return value >= low     //
+           && value < high; //
 }
 
 // range includes low but excludes high
@@ -121,11 +127,13 @@ inline bool is_black_white_char(char c)
 {
     return c == 'B' || c == 'W';
 }
+
 //---------------------------------------------------------------------------
 // Utilities for assertions
 
 inline void assert_equal(int a, int b)
-{ 
+{
     assert(a == b);
 }
+
 //---------------------------------------------------------------------------

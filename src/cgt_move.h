@@ -8,9 +8,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include "cgt_basics.h"
-
 
 // Currently all moves must be encoded as int, and decoded from int
 // There is no abstract move class here.
@@ -23,8 +21,8 @@ const int BITS_PER_MOVE_PART = 15;
 const int COLOR_BIT = 31;
 const int SIGN_BIT = 30;
 const unsigned int WHITE_MASK = (1 << COLOR_BIT); // color bit 31 is set
-const unsigned int SIGN_MASK = (1 << SIGN_BIT); // sign bit 30 is set
-const int MOVE_MASK = WHITE_MASK - 1; // bits 0..30 are set
+const unsigned int SIGN_MASK = (1 << SIGN_BIT);   // sign bit 30 is set
+const int MOVE_MASK = WHITE_MASK - 1;             // bits 0..30 are set
 const int MOVE_MAX_SIZE = (1 << BITS_PER_MOVE_PART);
 const int MOVE_BITS = MOVE_MAX_SIZE - 1;
 static_assert(sizeof(int) >= 4);
@@ -51,8 +49,7 @@ inline move encode(move m, bw color) // add color bit
     static_assert(sizeof(m) == sizeof(const unsigned int));
     const unsigned int& m_unsigned = reinterpret_cast<const unsigned int&>(m);
 
-
-    //assert(m < WHITE_MASK);
+    // assert(m < WHITE_MASK);
     assert(m_unsigned < WHITE_MASK);
     assert_black_white(color);
     return m + color * WHITE_MASK;
@@ -105,4 +102,3 @@ inline move encode3(int first, int second, bw color)
 
 std::string print(const move& m);
 } // namespace cgt_move
-

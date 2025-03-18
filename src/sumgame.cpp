@@ -22,11 +22,6 @@ using std::endl;
 using std::optional;
 using sumgame_impl::change_record;
 
-
-
-//---------------------------------------------------------------------------
-
-
 //---------------------------------------------------------------------------
 class sumgame_move_generator : public move_generator
 {
@@ -38,9 +33,12 @@ public:
     void next_move(bool init);
     operator bool() const override;
     sumgame_move gen_sum_move() const;
-    move gen_move() const override {assert(false);}
+
+    move gen_move() const override { assert(false); }
+
 private:
     const game* _current() const { return _game.subgame(_subgame_idx); }
+
     const sumgame& _game;
     const int _num_subgames;
     int _subgame_idx;
@@ -56,7 +54,6 @@ sumgame_move_generator::sumgame_move_generator(const sumgame& game, bw to_play)
 {
     // scroll to first move
     next_move(true);
-
 }
 
 sumgame_move_generator::~sumgame_move_generator()
@@ -67,11 +64,6 @@ sumgame_move_generator::~sumgame_move_generator()
         _subgame_generator = nullptr;
     }
 }
-
-//void sumgame_move_generator::skip_no_move_subgames()
-//{
-//    assert(_subgame_generator);
-//}
 
 void sumgame_move_generator::operator++()
 {
@@ -100,7 +92,6 @@ void sumgame_move_generator::next_move(bool init)
         _subgame_generator = nullptr;
     }
 
-
     // scroll until we have an active subgame AND its generator has a move
     _subgame_idx = init ? 0 : _subgame_idx + 1;
 
@@ -122,7 +113,8 @@ void sumgame_move_generator::next_move(bool init)
         {
             // found move
             return;
-        } else
+        }
+        else
         {
             delete _subgame_generator;
             _subgame_generator = nullptr;
@@ -141,20 +133,19 @@ sumgame_move sumgame_move_generator::gen_sum_move() const
     assert(_subgame_generator);
     return sumgame_move(_subgame_idx, _subgame_generator->gen_move());
 }
+
 //---------------------------------------------------------------------------
 
 sumgame::~sumgame()
 {
-// todo delete subgames, or store in vector of std::unique_ptr
-    ///assert(_play_record_stack.empty());
+    // todo delete subgames, or store in vector of std::unique_ptr
+    // assert(_play_record_stack.empty());
 }
 
 void sumgame::add(game* g)
 {
     _subgames.push_back(g);
     assert(g->is_active());
-    //_game_record.push_back(make_pair(ADD_MARKER, 
-    //                      &_subgames.back()));
 }
 
 void sumgame::add(std::vector<game*>& gs)
@@ -180,8 +171,7 @@ const bool PRINT_SUBGAMES = false;
 bool sumgame::solve() const
 {
     assert_restore_game ar(*this);
-    sumgame& sum = 
-        const_cast<sumgame&>(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
 
     optional<solve_result> result = sum.solve_with_timeout(0);
     assert(result.has_value());
@@ -199,7 +189,8 @@ bool sumgame::solve() const
         ~4s with clock(), and ~11s with chrono...
 
 */
-optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) const
+optional<solve_result> sumgame::solve_with_timeout(
+    unsigned long long timeout) const
 {
     assert_restore_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
@@ -210,18 +201,20 @@ optional<solve_result> sumgame::solve_with_timeout(unsigned long long timeout) c
     std::promise<optional<solve_result>> promise;
     std::future<optional<solve_result>> future = promise.get_future();
 
-    std::thread thr([&]() -> void
-    {
-        optional<solve_result> result = sum._solve_with_timeout();
-        promise.set_value(result);
-    });
+    std::thread thr(
+        [&]() -> void
+        {
+            optional<solve_result> result = sum._solve_with_timeout();
+            promise.set_value(result);
+        });
 
     std::future_status status = std::future_status::ready;
 
     if (timeout == 0)
     {
         future.wait();
-    } else
+    }
+    else
     {
         status = future.wait_for(std::chrono::milliseconds(timeout));
     }
@@ -285,7 +278,8 @@ optional<solve_result> sumgame::_solve_with_timeout()
     _debug_extra();
 #endif
 
-    undo_stack_unwinder stack_unwinder(*this); // TODO does this hurt performance?
+    // TODO does this hurt performance?
+    undo_stack_unwinder stack_unwinder(*this);
 
     if (_over_time())
     {
@@ -298,19 +292,15 @@ optional<solve_result> sumgame::_solve_with_timeout()
         print(cout);
     }
 
-    //cout << "BEFORE SIMPLIFY:" << endl << *this;
     simplify_basic();
-    //cout << "AFTER SIMPLIFY:" << endl << *this;
-    //undo_simplify_basic();
-    //return solve_result(false);
 
     const bw toplay = to_play();
 
-    std::unique_ptr<sumgame_move_generator>
-      mgp(create_sum_move_generator(toplay));
+    std::unique_ptr<sumgame_move_generator> mgp(
+        create_sum_move_generator(toplay));
 
     sumgame_move_generator& mg = *mgp;
-    
+
     for (; mg; ++mg)
     {
         const sumgame_move m = mg.gen_sum_move();
@@ -320,7 +310,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
         bool found = find_static_winner(result.win);
 
-        if (! found)
+        if (!found)
         {
             optional<solve_result> child_result = _solve_with_timeout();
 
@@ -335,18 +325,18 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
         if (_over_time())
         {
-            ///undo_simplify_basic();
+            /// undo_simplify_basic();
             return solve_result::invalid();
         }
 
         if (result.win)
         {
-            ///undo_simplify_basic();
+            /// undo_simplify_basic();
             return result;
         }
     }
 
-    ///undo_simplify_basic();
+    /// undo_simplify_basic();
     return solve_result(false);
 }
 
@@ -378,7 +368,6 @@ void sumgame::_assert_games_unique() const
         auto it = game_set.insert(g);
         assert(it.second == true);
     }
-
 }
 
 bool sumgame::_over_time() const
@@ -424,7 +413,7 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
             record.add_game(gp); // save these games in the record for debugging
         }
     }
-    
+
     alternating_move_game::play(mv);
 }
 
@@ -445,21 +434,23 @@ void sumgame::undo_move()
 
         s->set_active(true);
 
-        for (auto it = record.new_games.rbegin(); it != record.new_games.rend(); it++)
+        for (auto it = record.new_games.rbegin(); it != record.new_games.rend();
+             it++)
         {
             game const* g = *it;
-            assert(g == _subgames.back()); // we're deleting the same game
-            assert(_subgames.back()->is_active()); // a previous undo should have reactivated g 
+            // ensure we're deleting the same game that was added earlier
+            assert(g == _subgames.back());
+            // a previous undo should have reactivated g
+            assert(_subgames.back()->is_active());
 
             delete _subgames.back();
             _subgames.pop_back();
         }
     }
 
-
     const move subm = cgt_move::decode(s->last_move());
 
-    if(!(sm.m == subm))
+    if (!(sm.m == subm))
     {
         cout << subg << ' ' << sm.m << ' ' << subm << endl;
     }
@@ -480,9 +471,6 @@ void sumgame::simplify_basic()
         return;
     }
 
-    //cout << "Before simplify:" << endl;
-    //cout << *this << endl;
-
     _change_record_stack.emplace_back();
     change_record& record = _change_record_stack.back();
 
@@ -498,9 +486,6 @@ void sumgame::undo_simplify_basic()
         return;
     }
 
-    //cout << "After simplify:" << endl;
-    //cout << *this << endl;
-
     assert(!_change_record_stack.empty());
     change_record& record = _change_record_stack.back();
     record.undo_simplify_basic(*this);
@@ -510,11 +495,10 @@ void sumgame::undo_simplify_basic()
 
 void sumgame::print(std::ostream& str) const
 {
-    str << "sumgame: " 
-        << num_total_games() << " total "
-        << num_active_games() << " active: ";
+    str << "sumgame: " << num_total_games() << " total " << num_active_games()
+        << " active: ";
     bool first = true;
-    for (auto g: _subgames)
+    for (auto g : _subgames)
         if (g->is_active())
         {
             if (first)

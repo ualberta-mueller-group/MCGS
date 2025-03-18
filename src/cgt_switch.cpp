@@ -6,10 +6,8 @@
 
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
-#include "cgt_integer_game.h"
 #include "cgt_move.h"
 #include "safe_arithmetic.h"
-
 
 #include <iostream>
 using std::cout;
@@ -27,7 +25,8 @@ void switch_game::play(const move& m, bw to_play)
     {
         assert(_move_depth == 0);
         assert(m == SWITCH_MOVE_CODE);
-        _rational_game.reset(new dyadic_rational(to_play == BLACK ? _left : _right));
+        _rational_game.reset(
+            new dyadic_rational(to_play == BLACK ? _left : _right));
     }
 
     _move_depth++;
@@ -54,13 +53,13 @@ void switch_game::undo_move()
     game::undo_move();
 }
 
-
 split_result switch_game::_split_implementation() const
 {
     if (!is_rational())
     {
         return split_result();
-    } else
+    }
+    else
     {
         /*
             TODO this returns a new integer_game though we already have one
@@ -76,7 +75,8 @@ game* switch_game::inverse() const
 {
     switch_game* inv = new switch_game(-_right, -_left);
     if (is_rational())
-        inv->_rational_game.reset(new dyadic_rational(-_rational_game->get_fraction()));
+        inv->_rational_game.reset(
+            new dyadic_rational(-_rational_game->get_fraction()));
     return inv;
 }
 
@@ -87,7 +87,7 @@ void switch_game::print(std::ostream& str) const
     else
     {
         // Ensure compatibility with old .CSV data:
-        //str << "switch:{" << _left << " | " << _right << '}';
+        // str << "switch:{" << _left << " | " << _right << '}';
 
         str << "switch:{";
 
@@ -158,14 +158,15 @@ public:
     void operator++() override;
     operator bool() const override;
     move gen_move() const override;
+
 private:
     bool _generated;
 };
 
-switch_move_generator::switch_move_generator(const switch_game& game, bw to_play)
-    : move_generator(to_play),
-      _generated(false)
-{ 
+switch_move_generator::switch_move_generator(const switch_game& game,
+                                             bw to_play)
+    : move_generator(to_play), _generated(false)
+{
     assert(!game.is_rational());
 }
 
@@ -193,6 +194,5 @@ move_generator* switch_game::create_move_generator(bw to_play) const
     else
         return new switch_move_generator(*this, to_play);
 }
+
 //---------------------------------------------------------------------------
-
-

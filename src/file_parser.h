@@ -12,9 +12,9 @@
 // file_parser checks for a version command when reading from file or stdin
 #define FILE_PARSER_VERSION_STRING "version 1.0"
 
-// How many game_cases can be created by a single "run" command, i.e. "{B win, W loss}"
+// How many game_cases can be created by a single "run" command, i.e.
+// "{B win, W loss}"
 #define FILE_PARSER_MAX_CASES 2
-
 
 //////////////////////////////////////// token_iterator
 
@@ -43,11 +43,11 @@ public:
 class file_token_iterator : public token_iterator
 {
 public:
-
     /*
-        if delete_stream is true, the stream is owned by the file_token_iterator;
-            i.e. stream might be std::cin and delete_stream will be false,
-            or stream might be some std::ifstream and delete_stream will be true
+        if delete_stream is true, the stream is owned by the
+       file_token_iterator; i.e. stream might be std::cin and delete_stream will
+       be false, or stream might be some std::ifstream and delete_stream will be
+       true
     */
     file_token_iterator(std::istream* stream, bool delete_stream);
     ~file_token_iterator();
@@ -58,13 +58,13 @@ public:
     void consume() override;
     void rewind() override;
 
-
 private:
     struct token_info
     {
         token_info(const std::string& token_string, int line_number)
             : token_string(token_string), line_number(line_number)
-        {}
+        {
+        }
 
         std::string token_string;
         int line_number;
@@ -79,11 +79,10 @@ private:
     std::stringstream _line_stream;
 
     int _line_number;
-    
+
     std::vector<token_info> _token_buffer;
     size_t _token_idx;
 };
-
 
 ////////////////////////////////////////////////// game_case
 
@@ -94,7 +93,6 @@ enum test_result
     TEST_RESULT_WIN = (int) true,
     TEST_RESULT_LOSS = (int) false,
 };
-
 
 inline std::string test_result_to_string(const test_result& outcome)
 {
@@ -124,46 +122,44 @@ inline std::string test_result_to_string(const test_result& outcome)
             std::cerr << outcome << std::endl;
             exit(-1); // exit instead of assert (could be due to bad file input)
         }
-
     }
 
-    
-    std::cerr << "This string should not appear: see test_result_to_string()" << std::endl;
+    std::cerr << "This string should not appear: see test_result_to_string()"
+              << std::endl;
     exit(-1);
 }
 
 /*
-    game_case: 
+    game_case:
         Games and other data returned from parsing input with file_parser.
         Games and data within are owned by the caller
 
-    Moveable, not copyable. Caller must call cleanup_games() or release_games() before
-        destructing. This is to prevent memory bugs, due to game ownership
+    Moveable, not copyable. Caller must call cleanup_games() or release_games()
+   before destructing. This is to prevent memory bugs, due to game ownership
         being unclear right now
 */
 struct game_case
 {
-    ebw to_play;
-    test_result expected_outcome;
-    std::vector<game*> games;
-    std::string comments;
-    simple_text_hash hash;
-
-
     game_case();
     ~game_case();
 
     // move constructor and move assignment operator
     game_case(game_case&& other) noexcept;
     game_case& operator=(game_case&& other) noexcept;
-    
+
     void cleanup_games(); // delete all games
-    void release_games(); // release ownership of games, and reset self to default values
+    void release_games(); // release ownership of games, and reset self to
+                          // default values
+
+    ebw to_play;
+    test_result expected_outcome;
+    std::vector<game*> games;
+    std::string comments;
+    simple_text_hash hash;
 
 private:
     void _move_impl(game_case&& other) noexcept;
 };
-
 
 ////////////////////////////////////////////////// file_parser
 
@@ -171,37 +167,51 @@ namespace file_parser_impl {
 
 enum match_state
 {
-    MATCH_UNKNOWN, // default "0" state
-    MATCH_START, // token matches opening string
-    MATCH_FULL, // token matches both opening and closing strings, and has no illegal chars
-    MATCH_ILLEGAL, // token has illegal chars, or matches opening string but not closing string
-    MATCH_NOT_FOUND, // token not found (not an error state; the requested match doesn't occur)
+    // default "0" state
+    MATCH_UNKNOWN,
+
+    // token matches opening string
+    MATCH_START,
+
+    // token matches both opening and closing strings, and has no illegal chars
+    MATCH_FULL,
+
+    // token has illegal chars, or matches opening string but not closing string
+    MATCH_ILLEGAL,
+
+    // token not found (not an error state; the requested match doesn't occur)
+    MATCH_NOT_FOUND,
 };
-
 } // namespace file_parser_impl
-
 
 /*
     file_parser:
-        reads input from stdin, string, or file. Use static constructor functions
-        to create a file_parser i.e. from_stdin()
+        reads input from stdin, string, or file. Use static constructor
+   functions to create a file_parser i.e. from_stdin()
 
         call parse_chunk() to get next game_case
 */
 class file_parser
 {
 private:
-    // constructor should be private, user calls static constructor functions instead
-    file_parser(std::istream* stream, bool delete_stream, bool do_version_check);
+    // constructor should be private, user calls static constructor functions
+    // instead
+    file_parser(std::istream* stream, bool delete_stream,
+                bool do_version_check);
 
     void _version_check(const std::string& version_string);
 
     // registers a new game_token_parser, now owned by callee
-    static void _add_game_parser(const std::string& game_title, game_token_parser* gp);
+    static void _add_game_parser(const std::string& game_title,
+                                 game_token_parser* gp);
 
     // token-generating helper functions
-    file_parser_impl::match_state _get_enclosed(const std::string& open, const std::string& close, bool allow_inner);
-    bool _match(const std::string& open, const std::string& close, const std::string& match_name, bool allow_inner);
+    file_parser_impl::match_state _get_enclosed(const std::string& open,
+                                                const std::string& close,
+                                                bool allow_inner);
+
+    bool _match(const std::string& open, const std::string& close,
+                const std::string& match_name, bool allow_inner);
 
     // functions to handle current token
     bool _parse_game();
@@ -236,15 +246,16 @@ public:
     static bool debug_printing;
     static bool silence_warnings;
 
-
 private:
-    // initializes parsers for every game. Called automatically upon construction of first file_parser
-    // this is where new game_token_parsers are registered
+    // initializes parsers for every game. Called automatically upon
+    // construction of first file_parser this is where new game_token_parsers
+    // are registered
     static void _init_game_parsers();
 
     // maps section title to its game_token_parser
-    static std::unordered_map<std::string, std::shared_ptr<game_token_parser>> _game_map;
-    
+    static std::unordered_map<std::string, std::shared_ptr<game_token_parser>>
+        _game_map;
+
     // input source
     file_token_iterator _iterator;
 
@@ -269,11 +280,10 @@ private:
     bool _warned_wrong_version;
 };
 
-
 enum parser_exception_code
 {
     PARSER_OK = 0,
-    //WRONG_VERSION_COMMAND = 1, // Wrong version just prints warning
+    // WRONG_VERSION_COMMAND = 1, // Wrong version just prints warning
     MISSING_VERSION_COMMAND,
     MISSING_SECTION_TITLE,
     MISSING_SECTION_PARSER,
@@ -292,25 +302,17 @@ enum parser_exception_code
 class parser_exception : public std::exception
 {
 public:
-    parser_exception(const std::string& why, parser_exception_code code) 
-        : _why(why + " (Parser exception code " + std::to_string(code) + ")"), _code(code)
-    { };
+    parser_exception(const std::string& why, parser_exception_code code)
+        : _why(why + " (Parser exception code " + std::to_string(code) + ")"),
+          _code(code) {};
 
     ~parser_exception() {}
 
-    const char* what() const noexcept override
-    {
-        return _why.c_str();
-    }
+    const char* what() const noexcept override { return _why.c_str(); }
 
-    parser_exception_code code() const noexcept
-    {
-        return _code;
-    }
+    parser_exception_code code() const noexcept { return _code; }
 
 private:
     std::string _why;
     parser_exception_code _code;
-    //parser_exception_code code;
 };
-

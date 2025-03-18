@@ -26,11 +26,12 @@ public:
         assert(game_ptr->is_active());
 
         game_type_t gt;
-        if constexpr (is_concrete_game_v<T>) // constexpr needed because game_type<T>() is invalid if T is abstract
-            gt = game_type<T>(); // preferred; no vtable lookup
+        if constexpr (is_concrete_game_v<T>) // constexpr needed because
+                                             // game_type<T>() is invalid if T
+                                             // is abstract
+            gt = game_type<T>();             // preferred; no vtable lookup
         else
             gt = game_ptr->game_type();
-
 
         std::vector<game*>& vec = _map[gt];
 
@@ -47,4 +48,3 @@ private:
 
     std::unordered_map<game_type_t, std::vector<game*>> _map;
 };
-
