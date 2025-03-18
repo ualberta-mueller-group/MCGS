@@ -138,7 +138,7 @@ move_generator* elephants::create_move_generator(bw to_play) const
 
 game* elephants::inverse() const
 {
-    return new elephants(inverse_board());
+    return new elephants(inverse_mirror_board());
 }
 
 //////////////////////////////////////// elephants_move_generator

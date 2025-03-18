@@ -30,6 +30,7 @@ public:
     // Less checking than play_stone or remove_stone
     void replace(int p, int color);
     std::vector<int> inverse_board() const;
+    std::vector<int> inverse_mirror_board() const;
     std::string board_as_string() const;
     // void print(std::ostream& str) const { str << board_as_string();}
 

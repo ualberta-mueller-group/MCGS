@@ -57,6 +57,28 @@ std::string board_to_string(const std::vector<int>& board)
     return result;
 }
 
+template <const bool mirror>
+inline std::vector<int> inverse_board_impl(const std::vector<int>& original_board)
+{
+    std::vector<int> new_board(original_board.size());
+
+    const size_t N = original_board.size();
+    assert(new_board.size() == N);
+
+    for (size_t i = 0; i < N; i++)
+    {
+        int x;
+        if constexpr (mirror)
+            x = original_board[N - 1 - i];
+        else
+            x = original_board[i];
+
+        new_board[i] = ebw_opponent(x);
+    }
+
+    return new_board;
+}
+
 } // namespace
 
 //---------------------------------------------------------------------------
@@ -84,12 +106,11 @@ void strip::_check_legal() const
 
 std::vector<int> strip::inverse_board() const
 {
-    std::vector<int> inv_board(_board);
-
-    const auto N = size();
-    for (auto i = 0; i < N; ++i)
-    {
-        inv_board[i] = ebw_opponent(_board[N - 1 - i]);
-    }
-    return inv_board;
+    return inverse_board_impl<false>(_board);
 }
+
+std::vector<int> strip::inverse_mirror_board() const
+{
+    return inverse_board_impl<true>(_board);
+}
+

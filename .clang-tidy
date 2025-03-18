@@ -1,5 +1,5 @@
 Checks: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers,misc-use-internal-linkage'
-WarningsAsErrors: '*'
+WarningsAsErrors: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers,misc-use-internal-linkage'
 HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:
