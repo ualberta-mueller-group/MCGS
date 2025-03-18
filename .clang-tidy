@@ -1,8 +1,11 @@
-Checks: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers'
-WarningsAsErrors: 'readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers'
+Checks: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers,misc-use-internal-linkage'
+WarningsAsErrors: '*'
 HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:
+
+  - { key: misc-use-internal-linkage.FixMode, value: None }
+
   - { key: modernize-use-override.IgnoreDestructors, value: true }
   - { key: modernize-use-override.AllowOverrideAndFinal, value: true }
 
