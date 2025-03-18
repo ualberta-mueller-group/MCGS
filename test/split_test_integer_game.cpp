@@ -5,6 +5,7 @@
 
 using std::unique_ptr;
 
+namespace {
 void integer_game1()
 {
     integer_game pos(21);
@@ -38,6 +39,7 @@ void integer_game4()
     assert(pos.value() == 5);
     assert_no_split(&pos);
 }
+} // namespace
 
 void split_test_integer_game_all()
 {

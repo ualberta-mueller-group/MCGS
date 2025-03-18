@@ -11,6 +11,7 @@ constexpr const char* EXEC_NAME = "./MCGS_test";
 
 using namespace std;
 
+namespace {
 cli_options call_parse(const vector<string>& args)
 {
     /*
@@ -216,6 +217,7 @@ void cli_opts_test12()
     cli_options opts = call_parse({EXEC_NAME, "--test-dir", "somedir462"});
     assert(opts.test_directory == "somedir462");
 }
+} // namespace
 
 void cli_options_test_all()
 {

@@ -3,6 +3,23 @@
 //---------------------------------------------------------------------------
 #include "cgt_up_star.h"
 
+
+
+//////////////////////////////////////// helper functions
+namespace {
+inline bool is_same_player(int ups, bw to_play)
+{
+    return (ups > 0) == (to_play == BLACK);
+}
+
+inline int sign(int value)
+{
+    assert(value != 0);
+    return (value > 0) ? 1 : -1;
+}
+
+} // namespace
+
 //---------------------------------------------------------------------------
 // special cases if -1 <= _value <= 1
 void up_star::play(const move& m, bw to_play)
@@ -106,17 +123,6 @@ int up_star_move_generator::_compute_num_moves(const up_star& game,
         return 2;
     else
         return 1;
-}
-
-inline bool is_same_player(int ups, bw to_play)
-{
-    return (ups > 0) == (to_play == BLACK);
-}
-
-inline int sign(int value)
-{
-    assert(value != 0);
-    return (value > 0) ? 1 : -1;
 }
 
 // value 0: 0, *

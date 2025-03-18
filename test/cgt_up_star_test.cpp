@@ -76,7 +76,7 @@ void test_2down_star()
 
 } // namespace cgt_up_star_test
 
-namespace cgt_up_star_move_generator {
+namespace cgt_up_star_move_generator_test {
 
 void test_zero()
 {
@@ -147,7 +147,7 @@ void test_2down_star()
     assert_num_moves(g, BLACK, 1);
     assert_num_moves(g, WHITE, 1);
 }
-} // namespace cgt_up_star_move_generator
+} // namespace cgt_up_star_move_generator_test
 
 //---------------------------------------------------------------------------
 
@@ -164,16 +164,16 @@ void cgt_up_star_test_all()
     cgt_up_star_test::test_2down();
     cgt_up_star_test::test_2down_star();
 
-    cgt_up_star_move_generator::test_zero();
-    cgt_up_star_move_generator::test_star();
-    cgt_up_star_move_generator::test_up();
-    cgt_up_star_move_generator::test_up_star();
-    cgt_up_star_move_generator::test_2up();
-    cgt_up_star_move_generator::test_2up_star();
-    cgt_up_star_move_generator::test_down();
-    cgt_up_star_move_generator::test_down_star();
-    cgt_up_star_move_generator::test_2down();
-    cgt_up_star_move_generator::test_2down_star();
+    cgt_up_star_move_generator_test::test_zero();
+    cgt_up_star_move_generator_test::test_star();
+    cgt_up_star_move_generator_test::test_up();
+    cgt_up_star_move_generator_test::test_up_star();
+    cgt_up_star_move_generator_test::test_2up();
+    cgt_up_star_move_generator_test::test_2up_star();
+    cgt_up_star_move_generator_test::test_down();
+    cgt_up_star_move_generator_test::test_down_star();
+    cgt_up_star_move_generator_test::test_2down();
+    cgt_up_star_move_generator_test::test_2down_star();
 }
 
 //---------------------------------------------------------------------------

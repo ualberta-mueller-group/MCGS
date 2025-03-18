@@ -72,9 +72,7 @@ private:
 };
 
 //////////////////////////////////////// helper functions
-
 namespace {
-
 bool prune_region(const search_region& sr, const game_bounds& bounds)
 {
     if (!sr.valid())

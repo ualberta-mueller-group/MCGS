@@ -21,7 +21,7 @@ void test2()
 
 } // namespace cgt_nimber_test
 
-namespace cgt_nimber_move_generator {
+namespace cgt_nimber_move_generator_test {
 
 void test1()
 {
@@ -37,7 +37,7 @@ void test2()
     assert_num_moves(g, WHITE, 12);
 }
 
-} // namespace cgt_nimber_move_generator
+} // namespace cgt_nimber_move_generator_test
 
 //---------------------------------------------------------------------------
 
@@ -45,8 +45,8 @@ void cgt_nimber_test_all()
 {
     cgt_nimber_test::test1();
     cgt_nimber_test::test2();
-    cgt_nimber_move_generator::test1();
-    cgt_nimber_move_generator::test2();
+    cgt_nimber_move_generator_test::test1();
+    cgt_nimber_move_generator_test::test2();
 }
 
 //---------------------------------------------------------------------------

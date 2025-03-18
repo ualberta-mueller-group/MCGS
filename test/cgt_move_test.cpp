@@ -1,7 +1,9 @@
 #include "cgt_move.h"
 #include <cassert>
 
-namespace cgt_move {
+using namespace cgt_move;
+
+namespace cgt_move_test {
 
 void test_two_part_move()
 {
@@ -73,13 +75,13 @@ void test_encode_decode4()
     assert(decode(m3) == m);
     assert(get_color(m3) == WHITE);
 }
-} // namespace cgt_move
+} // namespace cgt_move_test
 
 void cgt_move_test_all()
 {
-    cgt_move::test_two_part_move();
-    cgt_move::test_encode_decode();
-    cgt_move::test_encode_decode2();
-    cgt_move::test_encode_decode3();
-    cgt_move::test_encode_decode4();
+    cgt_move_test::test_two_part_move();
+    cgt_move_test::test_encode_decode();
+    cgt_move_test::test_encode_decode2();
+    cgt_move_test::test_encode_decode3();
+    cgt_move_test::test_encode_decode4();
 }

@@ -2,7 +2,7 @@
 #include <cassert>
 #include "test_utilities.h"
 
-namespace cgt_integer_game {
+namespace cgt_integer_game_test {
 
 void test1()
 {
@@ -18,9 +18,9 @@ void test2()
     assert_solve(g, WHITE, true);
 }
 
-} // namespace cgt_integer_game
+} // namespace cgt_integer_game_test
 
-namespace cgt_integer_move_generator {
+namespace cgt_integer_move_generator_test {
 
 void test1()
 {
@@ -46,16 +46,16 @@ void test4()
     assert_num_moves(g, WHITE, 1);
 }
 
-} // namespace cgt_integer_move_generator
+} // namespace cgt_integer_move_generator_test
 
 void cgt_integer_game_test_all()
 {
-    cgt_integer_game::test1();
-    cgt_integer_game::test2();
-    cgt_integer_move_generator::test1();
-    cgt_integer_move_generator::test2();
-    cgt_integer_move_generator::test3();
-    cgt_integer_move_generator::test4();
+    cgt_integer_game_test::test1();
+    cgt_integer_game_test::test2();
+    cgt_integer_move_generator_test::test1();
+    cgt_integer_move_generator_test::test2();
+    cgt_integer_move_generator_test::test3();
+    cgt_integer_move_generator_test::test4();
 }
 
 //---------------------------------------------------------------------------

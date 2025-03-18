@@ -25,8 +25,8 @@ cli_options::~cli_options()
 {
 }
 
-////////////////////////////////////////////////// functions
-
+////////////////////////////////////////////////// helper functions
+namespace {
 // Format explanation of options, i.e. when using --help
 void print_flag(const string& flag_string, const string& flag_description)
 {
@@ -105,6 +105,9 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     print_flag("--parser-debug", "Print file_parser debug info.");
 }
 
+} // namespace
+
+//////////////////////////////////////// exported functions
 cli_options parse_cli_args(int argc, const char** argv, bool silent)
 {
     bool print_optimizations = false;

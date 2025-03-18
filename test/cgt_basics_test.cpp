@@ -1,6 +1,6 @@
 #include "cgt_basics.h"
 
-namespace cgt_basics {
+namespace cgt_basics_test {
 
 void test_colors()
 {
@@ -66,14 +66,14 @@ void test_color_char()
     assert(!is_black_white_char('X'));
 }
 
-} // namespace cgt_basics
+} // namespace cgt_basics_test
 
 void cgt_basics_test_all()
 {
-    cgt_basics::test_colors();
-    cgt_basics::test_color_char();
-    cgt_basics::test_in_range();
-    cgt_basics::test_is_black_white();
-    cgt_basics::test_is_empty_black_white();
-    cgt_basics::test_opponent();
+    cgt_basics_test::test_colors();
+    cgt_basics_test::test_color_char();
+    cgt_basics_test::test_in_range();
+    cgt_basics_test::test_is_black_white();
+    cgt_basics_test::test_is_empty_black_white();
+    cgt_basics_test::test_opponent();
 }

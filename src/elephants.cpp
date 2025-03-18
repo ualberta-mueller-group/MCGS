@@ -7,11 +7,14 @@
 using std::string, std::cout, std::endl, std::pair;
 using std::vector;
 
+//////////////////////////////////////// helper functions
+namespace {
 int player_dir(bw to_play)
 {
     assert(is_black_white(to_play));
     return (to_play == BLACK) ? 1 : -1;
 }
+} // namespace
 
 //////////////////////////////////////// elephants
 elephants::elephants(const string& game_as_string) : strip(game_as_string)

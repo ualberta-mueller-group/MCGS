@@ -11,6 +11,32 @@
 using std::string, std::pair, std::unique_ptr;
 using std::vector;
 
+//////////////////////////////////////// helper functions
+namespace {
+string block_simplify(const string& board)
+{
+    string result;
+    const int N = board.size();
+    const char empty_char = color_to_clobber_char(EMPTY);
+    char prev_tile = empty_char;
+
+    for (int i = 0; i < N; i++)
+    {
+        const char tile = board[i];
+
+        if (tile == empty_char || tile != prev_tile)
+        {
+            result.push_back(tile);
+        }
+
+        prev_tile = tile;
+    }
+
+    return result;
+}
+} // namespace
+
+//////////////////////////////////////// nogo_1xn
 nogo_1xn::nogo_1xn(const vector<int>& board) : strip(board)
 {
 }
@@ -35,28 +61,6 @@ void nogo_1xn::undo_move()
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
     replace(to, EMPTY);
-}
-
-string block_simplify(const string& board)
-{
-    string result;
-    const int N = board.size();
-    const char empty_char = color_to_clobber_char(EMPTY);
-    char prev_tile = empty_char;
-
-    for (int i = 0; i < N; i++)
-    {
-        const char tile = board[i];
-
-        if (tile == empty_char || tile != prev_tile)
-        {
-            result.push_back(tile);
-        }
-
-        prev_tile = tile;
-    }
-
-    return result;
 }
 
 /*

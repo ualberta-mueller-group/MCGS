@@ -171,6 +171,7 @@ void file_token_iterator::_cleanup()
 }
 
 //////////////////////////////////////////////////////////// helper functions
+namespace {
 inline bool match_state_conclusive(match_state state)
 {
     return state == MATCH_NOT_FOUND || state == MATCH_FULL ||
@@ -229,6 +230,7 @@ bool invalid_reserved_chars(const string& token, const string& open,
 
     return false;
 }
+} // namespace
 
 // remove first and last characters
 void strip_enclosing(string& str, const string& open, const string& close)

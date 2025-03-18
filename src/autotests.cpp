@@ -22,6 +22,8 @@ using filesystem::recursive_directory_iterator;
 inline constexpr const char* SEP = ",";
 inline constexpr const char NEWLINE = '\n';
 
+//////////////////////////////////////// helper functions
+namespace {
 // convert game list to string
 string human_readable_game_string(const vector<game*>& games)
 {
@@ -104,7 +106,9 @@ string format_duration(double duration)
 
     return string(buffer.data());
 }
+} // namespace
 
+//////////////////////////////////////// exported functions
 void run_autotests(const string& test_directory, const string& outfile_name,
                    unsigned long long test_timeout)
 {

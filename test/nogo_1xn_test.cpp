@@ -6,7 +6,7 @@
 #include <cassert>
 #include "test_utilities.h"
 
-namespace nogo_test {
+namespace nogo_1xn_test {
 
 void solve_1x1()
 {
@@ -55,15 +55,15 @@ void file()
     assert_solve_test_file(UNIT_TEST_INPUT_DIR + "nogo_1xn.test", 8);
 }
 
-} // namespace nogo_test
+} // namespace nogo_1xn_test
 
 void nogo_1xn_test_all()
 {
-    nogo_test::solve_1x1();
-    nogo_test::solve_1x2();
-    nogo_test::solve_1x3();
-    nogo_test::solve_1x4();
-    nogo_test::solve_1x5();
-    nogo_test::solve_1x6();
-    nogo_test::file();
+    nogo_1xn_test::solve_1x1();
+    nogo_1xn_test::solve_1x2();
+    nogo_1xn_test::solve_1x3();
+    nogo_1xn_test::solve_1x4();
+    nogo_1xn_test::solve_1x5();
+    nogo_1xn_test::solve_1x6();
+    nogo_1xn_test::file();
 }

@@ -4,8 +4,6 @@
 using std::string;
 using std::vector;
 
-//////////////////////////////////////// helper functions
-
 void assert_strip_split_result(const strip* g, vector<string> expected)
 {
     split_result result = g->split();

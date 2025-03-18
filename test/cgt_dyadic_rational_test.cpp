@@ -4,6 +4,7 @@
 #include <cassert>
 #include "test_utilities.h"
 
+namespace cgt_dyadic_rational_test {
 void is_power_of_2_test()
 {
     assert(is_power_of_2(1));
@@ -21,8 +22,6 @@ void is_power_of_2_test()
     assert(!is_power_of_2(32767));
     assert(!is_power_of_2(24));
 }
-
-namespace cgt_dyadic_rational {
 
 void test_constructor1()
 {
@@ -145,9 +144,9 @@ void test_solve3()
     assert_solve(g, WHITE, false);
 }
 
-} // namespace cgt_dyadic_rational
+} // namespace cgt_dyadic_rational_test
 
-namespace cgt_dyadic_rational_move_generator {
+namespace cgt_dyadic_rational_move_generator_test {
 
 void test1()
 {
@@ -182,30 +181,30 @@ void test5()
     assert_num_moves(g, WHITE, 0);
 }
 
-} // namespace cgt_dyadic_rational_move_generator
+} // namespace cgt_dyadic_rational_move_generator_test
 
 void cgt_dyadic_rational_test_all()
 {
-    is_power_of_2_test();
-    cgt_dyadic_rational::test_constructor1();
-    cgt_dyadic_rational::test_constructor2();
-    cgt_dyadic_rational::test_constructor3();
-    cgt_dyadic_rational::test_constructor4();
-    cgt_dyadic_rational::test_constructor5();
-    cgt_dyadic_rational::test_constructor6();
-    cgt_dyadic_rational::test_constructor7();
-    cgt_dyadic_rational::test_play1();
-    cgt_dyadic_rational::test_play2();
-    cgt_dyadic_rational::test_play3();
-    cgt_dyadic_rational::test_play4();
-    cgt_dyadic_rational::test_play5();
-    cgt_dyadic_rational::test_play6();
-    cgt_dyadic_rational::test_solve1();
-    cgt_dyadic_rational::test_solve2();
-    cgt_dyadic_rational::test_solve3();
-    cgt_dyadic_rational_move_generator::test1();
-    cgt_dyadic_rational_move_generator::test2();
-    cgt_dyadic_rational_move_generator::test3();
-    cgt_dyadic_rational_move_generator::test4();
-    cgt_dyadic_rational_move_generator::test5();
+    cgt_dyadic_rational_test::is_power_of_2_test();
+    cgt_dyadic_rational_test::test_constructor1();
+    cgt_dyadic_rational_test::test_constructor2();
+    cgt_dyadic_rational_test::test_constructor3();
+    cgt_dyadic_rational_test::test_constructor4();
+    cgt_dyadic_rational_test::test_constructor5();
+    cgt_dyadic_rational_test::test_constructor6();
+    cgt_dyadic_rational_test::test_constructor7();
+    cgt_dyadic_rational_test::test_play1();
+    cgt_dyadic_rational_test::test_play2();
+    cgt_dyadic_rational_test::test_play3();
+    cgt_dyadic_rational_test::test_play4();
+    cgt_dyadic_rational_test::test_play5();
+    cgt_dyadic_rational_test::test_play6();
+    cgt_dyadic_rational_test::test_solve1();
+    cgt_dyadic_rational_test::test_solve2();
+    cgt_dyadic_rational_test::test_solve3();
+    cgt_dyadic_rational_move_generator_test::test1();
+    cgt_dyadic_rational_move_generator_test::test2();
+    cgt_dyadic_rational_move_generator_test::test3();
+    cgt_dyadic_rational_move_generator_test::test4();
+    cgt_dyadic_rational_move_generator_test::test5();
 }

@@ -39,19 +39,18 @@ const bool RUN_OVERRIDE_TESTS = false;
 
 using std::cout, std::endl, std::string;
 
+namespace {
 void override_tests()
 {
     cgt_game_simplification_test_all();
 }
 
-namespace {
 void print_flag(const string& flag_string, const string& flag_description)
 {
     cout << "\t" << flag_string << endl;
     cout << "\t\t" << flag_description << endl;
     cout << endl;
 }
-} // namespace
 
 void print_usage(const char* exec_name)
 {
@@ -65,6 +64,7 @@ void print_usage(const char* exec_name)
     print_flag("--no-slow-tests", "Skip running tests which take longer.");
     print_flag("-h, --help", "Print this message and exit.");
 }
+} // namespace
 
 int main(int argc, const char** argv)
 {

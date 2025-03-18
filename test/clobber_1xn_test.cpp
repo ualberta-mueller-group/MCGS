@@ -107,7 +107,7 @@ void play_two_white_moves()
 
 } // namespace clobber_1xn_test
 
-namespace clobber_1xn_move_generator {
+namespace clobber_1xn_move_generator_test {
 
 void test_1()
 {
@@ -166,7 +166,7 @@ void test_4()
     ++mg;
     assert(!mg);
 }
-} // namespace clobber_1xn_move_generator
+} // namespace clobber_1xn_move_generator_test
 
 namespace clobber_1xn_string_test {
 
@@ -217,10 +217,10 @@ void clobber_1xn_test_all()
     clobber_1xn_test::sum_5();
     clobber_1xn_test::sum_6();
     clobber_1xn_test::play_two_white_moves();
-    clobber_1xn_move_generator::test_1();
-    clobber_1xn_move_generator::test_2();
-    clobber_1xn_move_generator::test_3();
-    clobber_1xn_move_generator::test_4();
+    clobber_1xn_move_generator_test::test_1();
+    clobber_1xn_move_generator_test::test_2();
+    clobber_1xn_move_generator_test::test_3();
+    clobber_1xn_move_generator_test::test_4();
     clobber_1xn_string_test::oxox();
     clobber_1xn_string_test::string_12();
     clobber_1xn_string_test::empty();
