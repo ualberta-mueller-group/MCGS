@@ -3,6 +3,7 @@
 #include "utilities.h"
 #include "cgt_dyadic_rational.h"
 #include "cgt_switch.h"
+#include <algorithm>
 #include <string>
 
 
@@ -10,6 +11,33 @@ using namespace std;
 
 ////////////////////////////////////////////////// helper functions
 namespace {
+vector<string> get_string_tokens(const string& line, const vector<char>& special_chars)
+{
+    string new_line;
+    new_line.reserve(line.size() * 2);
+
+    {
+        const size_t N = line.size();
+        for (size_t i = 0; i < N; i++)
+        {
+            const char& c = line[i];
+            
+            if (find(special_chars.begin(), special_chars.end(), c) != special_chars.end())
+            {
+                new_line.push_back(' ');
+                new_line.push_back(c);
+                new_line.push_back(' ');
+            }
+            else
+            {
+                new_line.push_back(c);
+            }
+        }
+    }
+
+    return split_string(new_line);
+}
+
 inline bool is_comma(const string& str)
 {
     return str == ",";
@@ -18,6 +46,20 @@ inline bool is_comma(const string& str)
 inline bool is_slash(const string& str)
 {
     return str == "/";
+}
+
+bool get_star(const vector<string>& string_tokens, size_t& idx, bool& val)
+{
+    assert(idx < string_tokens.size());
+    if (string_tokens[idx] != "*")
+    {
+        val = false;
+        return false;
+    }
+
+    val = true;
+    idx++;
+    return true;
 }
 
 bool get_int(const vector<string>& string_tokens, size_t& idx, int& val)
@@ -71,30 +113,30 @@ bool get_fraction(const vector<string>& string_tokens, size_t& idx, vector<fract
     return make_fraction();
 }
 
+bool consume_optional_comma(const vector<string>& string_tokens, size_t& idx)
+{
+    // end of input OK
+    if (!(idx < string_tokens.size()))
+        return true;
+
+    const string& token = string_tokens[idx];
+    
+    // non-comma OK
+    if (!is_comma(token))
+        return true;
+
+    // consume comma and expect something after
+    idx++;
+    return idx < string_tokens.size();
+}
+
 bool get_fraction_list(const string& line, vector<fraction>& fracs)
 {
     assert(fracs.size() == 0);
 
-    string new_line;
-    new_line.reserve(line.capacity() + 1);
-
-    {
-        const size_t N = line.size();
-        for (size_t i = 0; i < N; i++)
-        {
-            const char& c = line[i];
-
-            if (c == '/')
-                new_line += " / ";
-            else if (c == ',')
-                new_line += " , ";
-            else
-                new_line.push_back(c);
-        }
-    }
-
-    vector<string> string_tokens = split_string(new_line);
+    vector<string> string_tokens = get_string_tokens(line, {'/', ','});
     const size_t N = string_tokens.size();
+
     if (N == 0)
         return true;
 
@@ -105,15 +147,8 @@ bool get_fraction_list(const string& line, vector<fraction>& fracs)
         if (!get_fraction(string_tokens, i, fracs))
             return false;
 
-        // optional comma
-        if (i < N && is_comma(string_tokens[i]))
-        {
-            i++;
-
-            // must have fraction after comma
-            if (!(i < N))
-                return false;
-        }
+        if (!consume_optional_comma(string_tokens, i))
+            return false;
     }
 
     assert(fracs.size() > 0);
@@ -124,48 +159,54 @@ bool get_fraction_list(const string& line, vector<fraction>& fracs)
 
 
 //////////////////////////////////////////////////
-
 game* up_star_parser::parse_game(const string& game_token) const
 {
-    vector<string> strs = split_string(game_token);
+    vector<string> string_tokens = get_string_tokens(game_token, {','});
+    const size_t N = string_tokens.size();
+    size_t idx = 0;
 
-    if (strs.size() > 2 || strs.size() == 0)
-    {
-        return nullptr;
-    }
-
-    int int_count = 0;
-    int star_count = 0;
+    int n_ints = 0;
+    int n_stars = 0;
 
     int ups = 0;
     bool star = false;
 
-    for (size_t i = 0; i < strs.size(); i++)
+    auto get_up_or_star = [&]() -> bool
     {
-        const string& chunk = strs[i];
+        assert(idx < N);
 
-        if (chunk == "*")
+        int int_val;
+        if (get_int(string_tokens, idx, int_val))
         {
-            star_count++;
-            star = !star;
-            continue;
+            n_ints++;
+            ups += int_val;
+            return true;
         }
 
-        if (is_int(chunk))
+        bool star_val;
+        if (get_star(string_tokens, idx, star_val))
         {
-            int_count++;
-            ups = stoi(chunk);
-            continue;
+            n_stars++;
+            star ^= star_val;
+            return true;
         }
 
-        // got chunk that isn't star or integer
-        return nullptr;
+        return false;
+    };
+
+    while (idx < N)
+    {
+        if (!get_up_or_star())
+            return nullptr;
+        if (!consume_optional_comma(string_tokens, idx))
+            return nullptr;
     }
 
-    if (star_count > 1 || int_count > 1)
-    {
+    assert(idx == N);
+    assert(n_ints > 0 || n_stars > 0);
+
+    if (n_ints > 1 || n_stars > 1)
         return nullptr;
-    }
 
     return new up_star(ups, star);
 }
