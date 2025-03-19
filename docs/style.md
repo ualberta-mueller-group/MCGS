@@ -100,13 +100,13 @@ void some_func(const Some_Type& x)
 ### Exceptions for naming
 It is acceptable to disable linter checks where reasonable.
 
-Generally, when implementation details must be exposed in a header and are not to be used by consumers of the header, prefix the identifiers with 1 or 2 underscores `_`, and disable clang-tidy checks as necessary. More details on bypassing linter checks will be given in following sections. Example:
+Generally, when implementation details must be exposed in a header and are not to be used by consumers of the header, prefix the identifiers with 1 or 2 underscores `_`, and disable clang-tidy relevant checks as necessary. More details on bypassing linter checks will be given in following sections. Example:
 ```
-// NOLINTBEGIN
+// NOLINTBEGIN(readability-identifier-naming)
 #define __MUL2_IMPL(x) (x + x)
 
 #define MUL2(x) __MUL2_IMPL(x)
-// NOLINTEND
+// NOLINTEND(readability-identifier-naming)
 ```
 
 Another use case is when defining type traits, in order to make the `value` member consistent with standard library type traits:
@@ -114,7 +114,7 @@ Another use case is when defining type traits, in order to make the `value` memb
 template <class T>
 struct my_is_integral
 {
-    static constexpr bool value = std::is_integral<T>::value; // NOLINT
+    static constexpr bool value = std::is_integral<T>::value; // NOLINT(readability-identifier-naming)
 };
 ```
 
