@@ -88,12 +88,7 @@ public:
     }
 };
 
-/*
-    special case for up_star game
-
-    Allows up to 1 int and 1 "*" in any order. Empty input is invalid
-        and will return nullptr
-*/
+////////////////////////////////////////////////// special cases
 class up_star_parser : public game_token_parser
 {
 public:
