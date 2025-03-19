@@ -22,7 +22,7 @@ if (true)
 ```
 
 ## Namespaces
-End namespace blocks with comments like `namespace your_namespace_name` The opening brace of a namespace doesn't get its own line:
+End namespace blocks with comments like `// namespace your_namespace_name`. The opening brace of a namespace doesn't get its own line:
 ```
 namespace cgt {
 ...
@@ -42,7 +42,7 @@ Identifiers should be lower case, with underscores separating words, with the fo
 - Local constants can be either lower or upper case
 - Template typename arguments should be in `Camel_Snake_Case`
 
-Additionally, private and protected member methods/fields should start with a `_`. Other identifiers should not.
+Additionally, private and protected members should start with a `_`. Other identifiers should not.
 
 Example:
 ```
@@ -67,7 +67,7 @@ public:
     static const int FIELD3;
 
 private:
-    void _method2();
+    void _method2(const int param2);
 
     int _field4;
     const int _field5;
@@ -96,6 +96,7 @@ void some_func(const Some_Type& x)
     ...
 }
 ```
+
 ### Exceptions for naming
 It is acceptable to disable linter checks where reasonable.
 
@@ -118,11 +119,13 @@ struct my_is_integral
 ```
 
 ## Column limit
-Lines should be at most 80 characters. Past 80 chracters, content should be on the next line, aligned with opening braces. If it's not possible to align like this, indent once from the line's indent level:
+Lines should be at most 80 characters. Past 80 characters, content should spill onto the next line, aligned with opening braces. If it's not possible to align like this, indent once from the line's indent level:
 ```
 void some_really_long_function_name(vector<int> a, unsigned long long b, int c,
                                     int d);
 
+// Some of these variables can't be aligned with the opening brace without
+// going past 80 characters
 void some_other_really_long_function_name_abcdefghijklmnop(
     vector<int> a, unsigned long long b, int c, int d, unsigned long long e,
     vector<unsigned long long> f);
@@ -258,7 +261,7 @@ Before opening a pull request, contributors should first run these tools and fix
 
 These tools should catch:
 - Whitespace formatting problems
-- Missing comments at the ends of `namespace` blocks
+- Missing or incorrect comments at the ends of `namespace` blocks
 - Most identifier naming problems
 - Missing `override` or `final` specifiers for virtual function implementations
 - Functions in headers having more than 2 statements
@@ -271,8 +274,10 @@ You should use the following makefile targets before opening a pull request:
 - `tidy_header_functions`
 - `format`
 
+When files are formatted correctly according to the `clang-format` config, the `format` target probably shouldn't leave files other than `format_result.txt` after completion.
+
 ## clang-tidy Targets
-4 targets are used to invoke clang-tidy:
+4 targets are used to invoke clang-tidy, using `.clang-tidy` as the config file unless stated otherwise:
 
 - tidy
     - Run clang-tidy on all `.cpp` files, using release compilation flags
@@ -282,7 +287,7 @@ You should use the following makefile targets before opening a pull request:
     - Run clang-tidy on only test `.cpp` files (i.e. `MCGS_test` target), using test compilation flags
 - tidy_header_functions
     - Special case which only checks for non-trivial functions in headers. Other targets do not check this
-    - Run clang-tidy on all source files after excluding non `.h` files, using release compilation flags, and `.clang-tidy-headers`
+    - Run clang-tidy on all `.h` files, using release compilation flags, and `.clang-tidy-headers` as the config file
 
 The result will be printed to the screen, and also saved in `tidy_result.txt`. Many thousands of warnings will be found and suppressed within included system headers, and problems within project code will be shown as errors instead of warnings. If errors are not mentioned in the output, then no problems were found in project code. Errors must be fixed manually, as automatically applying suggested changes will break code, i.e. renaming a virtual method in a base class will not rename the overriden method in derived classes.
 
@@ -297,7 +302,7 @@ void some_func(const T& some_t)
 ```
 
 ## clang-format Targets
-3 targets are used to invoke clang-format:
+3 targets are used to invoke clang-format, using `.clang-format` as the config file:
 
 - format
     - Run clang-format on all source files, generating new files with suffixes like `___transformed.cpp` and `___transformed.h`, which are formatted versions of the original source files. Transformed files are omitted when identical to their original sources. Warnings will be printed for source/transformed pairs differing by more than just whitespace
