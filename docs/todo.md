@@ -27,11 +27,22 @@ Suggestions from talk given, or from MCGS users
 - Game simplification rules: see `development-notes.md`
 - linter - Summarise style guide in a document in `docs`
 - Database components and utilities as per development-notes.md, V1.1
-
-## V1.1 todo
 - TODO: deal with `docs/game-simplification-planning.txt`
 - Add code linter
     - Resolve linter errors
+
+## V1.1 todo
+- clean up documentation
+    - prune/shorten parts of dev notes?
+        - safe_int<T>
+            - keep as 1 paragraph?
+        - RTTI
+            - put this in `optimizations` section and shorten it
+        - Put large sections into separate files linked by main file?
+    - `docs/temp` directory?
+        - `clobber-solver-algorithm.txt`
+        - `db-planning.txt`
+    - prune todos
 
 # Future tasks
 ## V1.2
