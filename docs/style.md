@@ -1,31 +1,18 @@
 # Style Guide
-
 This document gives details about coding style for C++ files in this project, and tools relating to style.
 
 ## Sections
-- [Linter Problems](#linter-problems)
 - [Code Style](#code-style)
 - [Style Tooling](#style-tooling)
     - [clang-tidy Targets](#clang-tidy-targets)
     - [clang-format Targets](#clang-format-targets)
 - [Modifying Tooling Configs](#modifying-tooling-configs)
     - [Tidy Config Testing Script](#tidy-config-testing-script)
-    - [Format Config Choices](#format-config-choices)
-
-# Linter Problems
-Look into these more before doing the big cleanup...
-
-## Clang Format
-`test/utilities_test.cpp` on the `bounds` branch looks awful (because of `AlignAfterOpenBracket`)
-
-`AlignTrailingComments` --> "Leave" (or "Never")
-
-`BraceWrapping.AfterNamespace` --> false
 
 # Code Style
 This section describes the style used by C++ files in this project.
 
-### Brace wrapping
+## Brace wrapping
 Braces get their own lines:
 ```
 if (true)
@@ -34,17 +21,26 @@ if (true)
 }
 ```
 
-### Pointer/reference symbols
+## Namespaces
+End namespace blocks with comments like `namespace your_namespace_name` The opening brace of a namespace doesn't get its own line:
+```
+namespace cgt {
+...
+} // namespace cgt
+```
+
+## Pointer/reference symbols
 Pointer/reference symbols go on the left:
 ```
 int* x;
 int& y;
 ```
 
-### Identifier naming
+## Identifier naming
 Identifiers should be lower case, with underscores separating words, with the following exceptions:
-- Global/static/enum constants, macros, and constexpr variables should be upper case
+- Constants (global/static/enum constants, macros, and constexpr variables) should be upper case
 - Local constants can be either lower or upper case
+- Template typename arguments should be in `Camel_Snake_Case`
 
 Additionally, private and protected member methods/fields should start with a `_`. Other identifiers should not.
 
@@ -93,9 +89,48 @@ int main()
 
     ...
 }
+
+template <class Some_Type>
+void some_func(const Some_Type& x)
+{
+    ...
+}
+```
+### Exceptions for naming
+It is acceptable to disable linter checks where reasonable.
+
+Generally, when implementation details must be exposed in a header and are not to be used by consumers of the header, prefix the identifiers with 1 or 2 underscores `_`, and disable clang-tidy checks as necessary. More details on bypassing linter checks will be given in following sections. Example:
+```
+// NOLINTBEGIN
+#define __MUL2_IMPL(x) (x + x)
+
+#define MUL2(x) __MUL2_IMPL(x)
+// NOLINTEND
 ```
 
-### Structs/classes
+Another use case is when defining type traits, in order to make the `value` member consistent with standard library type traits:
+```
+template <class T>
+struct my_is_integral
+{
+    static constexpr bool value = std::is_integral<T>::value; // NOLINT
+};
+```
+
+## Column limit
+Lines should be at most 80 characters. Past 80 chracters, content should be on the next line, aligned with opening braces. If it's not possible to align like this, indent once from the line's indent level:
+```
+void some_really_long_function_name(vector<int> a, unsigned long long b, int c,
+                                    int d);
+
+void some_other_really_long_function_name_abcdefghijklmnop(
+    vector<int> a, unsigned long long b, int c, int d, unsigned long long e,
+    vector<unsigned long long> f);
+```
+
+clang-format will do this automatically when it is ran.
+
+## Structs/classes
 Generally, use structs for plain data structures, and classes for objects with more complicated semantics (i.e. methods, private/protected specifiers, non-trivial constructors, etc.).
 
 Within a struct/class, and within a given (possibly implicit) access specifier, methods should come before fields:
@@ -119,25 +154,16 @@ Additionally:
 - Include 1 empty line above access specifiers (i.e. public/protected/private), unless the access specifier comes immediately after the opening brace
 - Access specifiers aren't indented past the opening/closing brace level
 
-### Override
+## Override
 Implementations of virtual methods should use either the `override` or `final` specifiers.
 
-### Namespaces
-End namespace blocks with comments like "namespace your_namespace_name":
-```
-namespace cgt
-{
-...
-} // namespace cgt
-```
-
-### Implementations in headers
+## Implementations in headers
 Function/method definitions should generally go in `.cpp` files and not `.h` files, unless the function/method is both short and declared `inline`, or is a template. Definitions possibly leading to [ODR violations](https://en.cppreference.com/w/cpp/language/definition) should be caught by the linter tools explained in following sections.
 
-### "using" keyword
+## "using" keyword
 The `using` keyword should not appear in headers, i.e. `using namespace std;`, `using std::vector;`.
 
-### Empty lines
+## Empty lines
 Definition blocks (i.e. classes/structs, enums, functions/methods) should be separated by a single empty line:
 ```
 enum some_enum
@@ -167,7 +193,7 @@ public:
 };
 ```
 
-### Spaces
+## Spaces
 Leave spaces around binary operators, but not unary operators:
 ```
 int x = 4 + 5;
@@ -192,6 +218,32 @@ Leave a space after a C-style cast:
 float x = (float) 5;
 ```
 
+## Linkage
+Names not exposed through headers should not have external linkage. The following will cause a linker error when trying to link `file1.o` and `file2.o`:
+
+```
+// in file1.cpp
+int x = 0;
+
+void y()
+{
+    cout << "Hello from file1.cpp" << endl;
+}
+
+// in file2.cpp
+int x = 0;
+
+void y()
+{
+    cout << "Hello from file2.cpp" << endl;
+}
+```
+
+One way to avoid this is by putting `x` and `y` into unnamed namespaces within their respective files. See [cppreference: Linkage](https://en.cppreference.com/w/cpp/language/storage_duration#Linkage) for more details.
+
+## Implementation files include headers
+A `.cpp` file defining names declared within a header should include that header to avoid false positives by the linter tools when they check for external linkage.
+
 # Style Tooling
 Two tools are used to help enforce style: `clang-tidy`, and `clang-format`. Clang-tidy does static analysis to catch problems such as incorrect identifier naming, whereas clang-format mainly deals with formatting of whitespace. These tools are used separately, from several makefile targets described in following subsections. These targets all operate on default sets of source files, and you can override these by defining the `LINT_FILES` variable in your shell environment:
 ```
@@ -212,6 +264,7 @@ These tools should catch:
 - Functions in headers having more than 2 statements
 - `using` keyword in headers
 - Definitions in headers which could cause ODR violations
+- Names within `.cpp` files having external linkage, who are not declared in an `#include`d header
 
 You should use the following makefile targets before opening a pull request:
 - `tidy`
@@ -222,11 +275,11 @@ You should use the following makefile targets before opening a pull request:
 4 targets are used to invoke clang-tidy:
 
 - tidy
-    - Run clang-tidy on all source files, using release compilation flags
+    - Run clang-tidy on all `.cpp` files, using release compilation flags
 - tidy_release
-    - Run clang-tidy on only release source files (i.e. `MCGS` target), using release compilation flags
+    - Run clang-tidy on only release `.cpp` files (i.e. `MCGS` target), using release compilation flags
 - tidy_test
-    - Run clang-tidy on only test source files (i.e. `MCGS_test` target), using test compilation flags
+    - Run clang-tidy on only test `.cpp` files (i.e. `MCGS_test` target), using test compilation flags
 - tidy_header_functions
     - Special case which only checks for non-trivial functions in headers. Other targets do not check this
     - Run clang-tidy on all source files after excluding non `.h` files, using release compilation flags, and `.clang-tidy-headers`
@@ -244,7 +297,7 @@ void some_func(const T& some_t)
 ```
 
 ## clang-format Targets
-3 targets are used for clang-format:
+3 targets are used to invoke clang-format:
 
 - format
     - Run clang-format on all source files, generating new files with suffixes like `___transformed.cpp` and `___transformed.h`, which are formatted versions of the original source files. Transformed files are omitted when identical to their original sources. Warnings will be printed for source/transformed pairs differing by more than just whitespace
@@ -274,106 +327,3 @@ The files in this subsection are assumed to be in `utils/tidy_config_test`, unle
 `run.sh` is used to test `.clang-tidy` (from the project's root directory) against an auto-generated sample input file. Through comments, `scripts/tidy_test_template.cpp` specifies which lines should produce clang-tidy errors, and which should not. This file is used to generate `temp/tidy_test.cpp` by renaming identifiers containing "check" or "CHECK" to some variant of "yeserror", "YESERROR", "noerror", and "NOERROR", based on capitalization, and adding a unique numeric suffix. These numeric suffixes will show up in `temp/errors.txt` with the text "FALSE POSITIVE" or "MISSING ERROR" to indicate that a line produced an error when it shouldn't have, or produced no error when it should have. See `temp/tidy_test.cpp` to make sense of these numbers. When `temp/errors.txt` is empty, and the tool ran successfully, then the `.clang-tidy` config in the root directory produces the expected result.
 
 If `temp/errors.txt` has false positives, check the clang-tidy output in `temp/output.txt` to see what's causing them.
-
-## Format Config Choices
-The `.clang-format` file was generated by first dumping the `microsoft` preset:
-```
-clang-format --style=microsoft --dump-config > .clang-format
-```
-and then modifying several options, explained below.
-<br><br>
-
-
-(AccessModifierOffset: -2 --> -4) line 3  
-"public", "private", "protected" not indented from brace level.
-<br><br>
-
-
-(AlignAfterOpenBracket: Align --> BlockIndent) line 4  
-When items between brackets don't fit on the line, add line break:
-```
-someLongFunction(
-    argument1, argument2
-)
-```
-Other options seem to cause problems with initializer lists near the ends of function
-call parameters on long lines (the list gets put on the next line but indented
-too far to the right). Example:
-```
-test_strip<elephants>(".......X.....O..X.....O.......", {
-                                                            ".......X.....O",
-                                                            "X.....O.......",
-                                                        });
-```
-<br>
-
-
-(AllowShortFunctionsOnASingleLine: None --> Empty) line 74  
-Empty functions have braces on the same line:
-```
-cli_options::~cli_options() {}
-```
-<br>
-
-
-(BraceWrapping.AfterCaseLabel: false --> true) line 86  
-Brace on own line for case block.
-<br><br>
-
-
-(BraceWrapping.AfterUnion: false --> true) line 95  
-Brace on own line for union.
-<br><br>
-
-
-(BraceWrapping.BeforeLambdaBody: false --> true) line 98  
-Brace on own line for lambda function.
-<br><br>
-
-
-(BreakTemplateDeclarations: MultiLine --> Yes) line 118  
-`template <class T>` on its own line.
-<br><br>
-
-
-(EmptyLineBeforeAccessModifier: LogicalBlock --> Always) line 128  
-For access modifiers (i.e. "public" etc) which aren't the first thing in a block, an empty line is
-included before. "LogicalBlock" is insufficient as it treats comments as empty lines.
-<br><br>
-
-
-(IndentCaseLabels: false --> true) line 155  
-Case label indented inside of switch braces.
-<br><br>
-
-
-(PointerAlignment: Right --> Left) line 202  
-Pointers on left side.
-<br><br>
-
-
-(SeparateDefinitionBlocks: Leave --> Always) line 212  
-Empty lines between definitions for classes, structs, enums, and functions.
-<br><br>
-
-
-(SortIncludes: CaseSensitive --> Never) line 215  
-Don't change "#include" ordering.
-<br><br>
-
-
-(SpaceAfterCStyleCast: false --> true) line 218:
-```
-(float) 4
-// instead of:
-(float)4
-```
-<br>
-
-
-(SpaceBeforeCpp11BracedList: false --> true) line 224:
-```
-new int[3] {1, 2, 3};
-// instead of
-new int[3]{1, 2, 3};
-```
