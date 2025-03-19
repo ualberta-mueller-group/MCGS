@@ -20,7 +20,7 @@
 namespace compare_games_by_print {
 
 //////////////////////////////////////// internal helper classes
-class __game_info // NOLINT
+class __game_info // NOLINT(readability-identifier-naming)
 {
 public:
     game_type_t type;
@@ -30,14 +30,14 @@ public:
     bool operator==(const __game_info& rhs) const;
 };
 
-class __game_info_hash // NOLINT
+class __game_info_hash // NOLINT(readability-identifier-naming)
 {
 public:
     uint64_t operator()(const __game_info& info) const;
 };
 
 typedef std::unordered_multiset<__game_info, __game_info_hash>
-    __game_info_set; // NOLINT
+    __game_info_set; // NOLINT(readability-identifier-naming)
 
 //////////////////////////////////////// useful function templates
 template <class Game_Ptr1, class Game_Ptr2>

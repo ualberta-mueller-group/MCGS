@@ -10,8 +10,8 @@ class game;
 
 typedef unsigned int game_type_t;
 
-namespace __game_type_impl {                             // NOLINT
-game_type_t __get_game_type(const std::type_info& info); // NOLINT
+namespace __game_type_impl {                             // NOLINT(readability-identifier-naming)
+game_type_t __get_game_type(const std::type_info& info); // NOLINT(readability-identifier-naming)
 } // namespace __game_type_impl
 
 class i_game_type
@@ -26,7 +26,7 @@ public:
 
 private:
     // ensure the type is polymorphic
-    virtual void __make_poly() const final // NOLINT
+    virtual void __make_poly() const final // NOLINT(readability-identifier-naming)
     {
         assert(false); // method shouldn't be called
     }

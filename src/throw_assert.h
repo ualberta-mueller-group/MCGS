@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-// NOLINTBEGIN
+// NOLINTBEGIN(readability-identifier-naming)
 #define _GET_THROW_MESSAGE(cond)                                               \
     (std::string(__FILE__) + ":" + std::to_string(__LINE__) +                  \
      ": Condition `" + std::string(#cond) + "' failed.")
@@ -15,7 +15,7 @@
     throw exception
 
 #define _THROW_ASSERT_SELECTOR(arg1, arg2, arg3, ...) arg3
-// NOLINTEND
+// NOLINTEND(readability-identifier-naming)
 
 /*
    THROW_ASSERT(condition);

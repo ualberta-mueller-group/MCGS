@@ -199,7 +199,7 @@ inline move_generator::move_generator(bw to_play) : _to_play(to_play)
 
 std::ostream& operator<<(std::ostream& os, const split_result& split);
 
-template <class T> // NOLINTNEXTLINE
+template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
 constexpr bool is_concrete_game_v =
     !std::is_abstract_v<T> && std::is_base_of_v<game, T>;
 
@@ -213,7 +213,7 @@ template <class T_Ptr>
 inline T_Ptr cast_game(game* g)
 {
     static_assert(std::is_pointer_v<T_Ptr>);
-    using T = typename std::remove_pointer<T_Ptr>::type; // NOLINT
+    using T = typename std::remove_pointer<T_Ptr>::type; // NOLINT(readability-identifier-naming)
 
     static_assert(is_concrete_game_v<T>);
 

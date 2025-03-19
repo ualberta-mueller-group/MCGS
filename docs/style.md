@@ -300,6 +300,7 @@ void some_func(const T& some_t)
     ...
 }
 ```
+Specify checks to disable to avoid disabling all of them.
 
 ## clang-format Targets
 3 targets are used to invoke clang-format, using `.clang-format` as the config file:
