@@ -132,11 +132,6 @@ int main(int argc, const char** argv)
     scale_test_all();
     game_bounds_test_all();
     find_bounds_test_all();
-    /*
-        TODO:
-            test private bounds stuff? helpers?
-            game_bounds asserts?
-    */
 
     sumgame_map_view_test_all();
 

@@ -69,7 +69,6 @@ public:
     sumgame(bw color);
     ~sumgame();
 
-    // TODO should these be public?
     void play_sum(const sumgame_move& m, bw to_play);
     void undo_move() override;
     void simplify_basic();

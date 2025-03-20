@@ -8,8 +8,7 @@
     New games must have a corresponding call to file_parser::add_game_parser()
    in file_parser::init_game_parsers()
 
-
-    TODO: It's tempting to rewrite int_parser<T>, int2_parser<T> etc into
+   It's tempting to rewrite int_parser<T>, int2_parser<T> etc into
    int_parser<T, N> -- probably a bad idea?
 */
 

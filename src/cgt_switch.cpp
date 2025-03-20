@@ -61,12 +61,6 @@ split_result switch_game::_split_implementation() const
     }
     else
     {
-        /*
-            TODO this returns a new integer_game though we already have one
-
-            maybe ok; not much memory wasted, and switch_game should function
-                when split() is disabled by global options
-        */
         return split_result({new dyadic_rational(value())});
     }
 }
