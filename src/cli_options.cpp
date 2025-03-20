@@ -62,6 +62,8 @@ void print_help_message(const string& exec_name)
     cout << "\tThese flags toggle optimizations on/off." << endl;
     cout << endl;
 
+    print_flag("--no-subgame-split", "Don't split subgames after playing moves in them");
+
     print_flag(
         "--no-simplify-basic-cgt-games",
         "Don't simplify basic CGT games (switch_game, integer_game, etc).");
@@ -271,6 +273,14 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
 
             opts.test_timeout = atoi(arg_next.c_str());
 
+            continue;
+        }
+
+        // OPTIMIZATION TOGGLES
+
+        if (arg == "--no-subgame-split")
+        {
+            optimization_options::set_subgame_split(false);
             continue;
         }
 

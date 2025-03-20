@@ -112,7 +112,7 @@ To implement a new game `x`:
 The `test/input` directory contains input files used by unit tests. Add your new tests there.
 
 ### Implementing Game-Specific Optimizations
-Currently there are two game-specific optimizations. More will be added in future versions
+Currently there are two game-specific optimizations. More will be added in future versions. Optimizations are enabled by default, and can be toggled off (see `./MCGS --help` for details on disabling optimizations).
 
 #### Splitting Into Subgames
 In your game `x`, override and implement `game::split_implementation()`. See `game.h` for important implementation details, and add unit tests.
