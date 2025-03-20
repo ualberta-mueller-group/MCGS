@@ -5,6 +5,7 @@
 Suggestions from talk given, or from MCGS users
 
 - implement general graph structure not just `strip`. E.g. play col or snort on an arbitrary graph, or on "triangular" graphs
+    - col/snort: "Lessons in Play" p.313
 
 - check: does CGSuite OutcomeClass also rely on computing canonical form?
 
@@ -26,11 +27,22 @@ Suggestions from talk given, or from MCGS users
 - Game simplification rules: see `development-notes.md`
 - linter - Summarise style guide in a document in `docs`
 - Database components and utilities as per development-notes.md, V1.1
-
-## V1.1 todo
 - TODO: deal with `docs/game-simplification-planning.txt`
 - Add code linter
     - Resolve linter errors
+
+## V1.1 todo
+- clean up documentation
+    - prune/shorten parts of dev notes?
+        - safe_int<T>
+            - keep as 1 paragraph?
+        - RTTI
+            - put this in `optimizations` section and shorten it
+        - Put large sections into separate files linked by main file?
+    - `docs/temp` directory?
+        - `clobber-solver-algorithm.txt`
+        - `db-planning.txt`
+    - prune todos
 
 # Future tasks
 ## V1.2
@@ -39,6 +51,7 @@ Suggestions from talk given, or from MCGS users
 ## Next steps for Versions 1.X
 - Use a proper unit testing framework?
     - Easier to change this now rather than later
+    - Could possibly show code coverage and number of tests run
 
 ## Medium priority (Important or good to have before V2):
 - Test framework improvements
@@ -107,6 +120,8 @@ Suggestions from talk given, or from MCGS users
     - Iterative deepening approach from Clobber solver?
     - Heuristic functions?
         - Opponent's number of moves (as in Clobber solver)?
+- Computational cost model
+    - Can help determine when it may be beneficial to find bounds during search
 
 # Current discussion topics
 - todo.md organization 

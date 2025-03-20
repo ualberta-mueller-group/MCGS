@@ -1,8 +1,8 @@
+#include "sumgame_test_nimber.h"
 #include "cgt_basics.h"
 #include "sumgame.h"
 #include "sum_of_nimbers.h"
 #include "cgt_nimber.h"
-#include <iostream>
 #include <cassert>
 #include <array>
 #include "test_utilities.h"
@@ -46,130 +46,151 @@ void test_nimbers(bool expected_result, int nim_sum, vector<nimber*> nimbers)
 
 void sumgame_test_nimber_all()
 {
-    test_nimbers(false, 0, {
-        new nimber(0),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(0),
+                 });
 
-    test_nimbers(true, 1, {
-        new nimber(1),
-    });
+    test_nimbers(true, 1,
+                 {
+                     new nimber(1),
+                 });
 
-    test_nimbers(true, 2, {
-        new nimber(2),
-    });
+    test_nimbers(true, 2,
+                 {
+                     new nimber(2),
+                 });
 
-    test_nimbers(true, 7, {
-        new nimber(7),
-    });
+    test_nimbers(true, 7,
+                 {
+                     new nimber(7),
+                 });
 
-    test_nimbers(true, 10, {
-        new nimber(10),
-    });
+    test_nimbers(true, 10,
+                 {
+                     new nimber(10),
+                 });
 
-    test_nimbers(false, 0, {
-        new nimber(0),
-        new nimber(0),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(0),
+                     new nimber(0),
+                 });
 
-    test_nimbers(true, 1, {
-        new nimber(1),
-        new nimber(0),
-    });
+    test_nimbers(true, 1,
+                 {
+                     new nimber(1),
+                     new nimber(0),
+                 });
 
-    test_nimbers(false, 0, {
-        new nimber(1),
-        new nimber(1),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(1),
+                     new nimber(1),
+                 });
 
-    test_nimbers(false, 0, {
-        new nimber(2),
-        new nimber(2),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(2),
+                     new nimber(2),
+                 });
 
-    test_nimbers(true, 3, {
-        new nimber(2),
-        new nimber(1),
-    });
+    test_nimbers(true, 3,
+                 {
+                     new nimber(2),
+                     new nimber(1),
+                 });
 
-    test_nimbers(false, 0, {
-        new nimber(5),
-        new nimber(5),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(5),
+                     new nimber(5),
+                 });
 
-    test_nimbers(true, 1, {
-        new nimber(5),
-        new nimber(4),
-    });
+    test_nimbers(true, 1,
+                 {
+                     new nimber(5),
+                     new nimber(4),
+                 });
 
-    test_nimbers(false, 0, {
-        new nimber(0),
-        new nimber(0),
-        new nimber(0),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(0),
+                     new nimber(0),
+                     new nimber(0),
+                 });
 
-    test_nimbers(false, 0, {
-        new nimber(1),
-        new nimber(0),
-        new nimber(1),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(1),
+                     new nimber(0),
+                     new nimber(1),
+                 });
 
-    test_nimbers(false, 0, {
-        new nimber(1),
-        new nimber(2),
-        new nimber(3),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(1),
+                     new nimber(2),
+                     new nimber(3),
+                 });
 
-    test_nimbers(true, 1, {
-        new nimber(0),
-        new nimber(0),
-        new nimber(1),
-    });
+    test_nimbers(true, 1,
+                 {
+                     new nimber(0),
+                     new nimber(0),
+                     new nimber(1),
+                 });
 
-    test_nimbers(true, 3, {
-        new nimber(1),
-        new nimber(2),
-        new nimber(0),
-    });
+    test_nimbers(true, 3,
+                 {
+                     new nimber(1),
+                     new nimber(2),
+                     new nimber(0),
+                 });
 
-    test_nimbers(true, 5, {
-        new nimber(2),
-        new nimber(3),
-        new nimber(4),
-    });
+    test_nimbers(true, 5,
+                 {
+                     new nimber(2),
+                     new nimber(3),
+                     new nimber(4),
+                 });
 
-    test_nimbers(true, 1, {
-        new nimber(1),
-        new nimber(1),
-        new nimber(1),
-    });
+    test_nimbers(true, 1,
+                 {
+                     new nimber(1),
+                     new nimber(1),
+                     new nimber(1),
+                 });
 
     // test("3 4 5 6", true, 4);
-    test_nimbers(true, 4, {
-        new nimber(3),
-        new nimber(4),
-        new nimber(5),
-        new nimber(6),
-    });
+    test_nimbers(true, 4,
+                 {
+                     new nimber(3),
+                     new nimber(4),
+                     new nimber(5),
+                     new nimber(6),
+                 });
 
     // test("3 4 5 2, false, 0);
-    test_nimbers(false, 0, {
-        new nimber(3),
-        new nimber(4),
-        new nimber(5),
-        new nimber(2),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(3),
+                     new nimber(4),
+                     new nimber(5),
+                     new nimber(2),
+                 });
 
     // test("12 11 3 11 12 1 2", false, 0);
-    test_nimbers(false, 0, {
-        new nimber(12),
-        new nimber(11),
-        new nimber(3),
-        new nimber(11),
-        new nimber(12),
-        new nimber(1),
-        new nimber(2),
-    });
+    test_nimbers(false, 0,
+                 {
+                     new nimber(12),
+                     new nimber(11),
+                     new nimber(3),
+                     new nimber(11),
+                     new nimber(12),
+                     new nimber(1),
+                     new nimber(2),
+                 });
 
-    assert_solve_test_file(unit_test_input_dir + "nimber.test", 22);
+    assert_solve_test_file(UNIT_TEST_INPUT_DIR + "nimber.test", 22);
 }
-

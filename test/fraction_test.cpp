@@ -1,5 +1,4 @@
 #include "fraction_test.h"
-#include <iostream>
 #include <memory>
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
@@ -11,18 +10,18 @@
 
 using namespace std;
 
+namespace {
 const int TOP_MIN = fraction::TOP_MIN;
 const int TOP_MAX = fraction::TOP_MAX;
 
 const int BOTTOM_MAX = (int(1) << (size_in_bits<int>() - 2));
 
-namespace {
 void test_basic()
 {
     fraction f1(-7, 8);
     assert(f1.top() == -7);
     assert(f1.bottom() == 8);
-    
+
     f1.set_top(4);
     assert(f1.top() == 4);
     assert(f1.bottom() == 8);
@@ -46,7 +45,9 @@ void test_basic()
 
 void test_comparison()
 {
-    typedef tuple<fraction, fraction, relation, bool, bool, bool, bool, bool, bool> test_case_t;
+    typedef tuple<fraction, fraction, relation, bool, bool, bool, bool, bool,
+                  bool>
+        test_case_t;
     /*
            One bool per line:
        <
@@ -57,6 +58,7 @@ void test_comparison()
        >=
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{4, 2}, {2}, REL_EQUAL, false, true, true, false, false, true},
@@ -72,6 +74,7 @@ void test_comparison()
 		{{-2000}, {-25}, REL_LESS, true, true, false, true, false, false},
 		{{21, 8}, {5376, 2048}, REL_EQUAL, false, true, true, false, false, true},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -94,7 +97,8 @@ void test_make_dyadic_rational()
     auto assert_same_by_text = [](const fraction& frac) -> void
     {
         unique_ptr<dyadic_rational> g1(frac.make_dyadic_rational());
-        unique_ptr<dyadic_rational> g2(new dyadic_rational(frac.top(), frac.bottom()));
+        unique_ptr<dyadic_rational> g2(
+            new dyadic_rational(frac.top(), frac.bottom()));
 
         stringstream str1;
         stringstream str2;
@@ -162,6 +166,7 @@ void test_simplification()
 
 void test_negation()
 {
+    // clang-format off
     vector<fraction> fractions
     {
         {5},
@@ -172,6 +177,7 @@ void test_negation()
         {0},
         {0, 8},
     };
+    // clang-format on
 
     for (const fraction& frac : fractions)
     {
@@ -195,6 +201,7 @@ void test_integral_part()
        after
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{5}, 5, {0}},
@@ -206,8 +213,10 @@ void test_integral_part()
         {{0, 2048}, 0, {0, 512}},
         {{917, 256}, 3, {149, 256}},
     };
+    // clang-format on
 
-    auto do_test = [](const fraction& before, const int& integral, const fraction& after) -> void
+    auto do_test = [](const fraction& before, const int& integral,
+                      const fraction& after) -> void
     {
         assert(before.get_integral_part() == integral);
         fraction f = before;
@@ -240,6 +249,7 @@ void test_add_sub()
         result
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{1, 2}, fraction(0), fraction(0), fraction(1, 2)},
@@ -259,6 +269,7 @@ void test_add_sub()
         {{7, 32}, fraction(7, 4), fraction(-7, 4), fraction(63, 32)},
         {{64, 512}, fraction(4, 32), fraction(-4, 32), fraction(2, 8)},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -339,6 +350,7 @@ void test_raise_denominator()
         expected result
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{TOP_MAX, 1}, 1, 2, {}},
@@ -352,6 +364,7 @@ void test_raise_denominator()
         {{7}, 0, 1, fraction(7, 1)},
         {{0}, 3, 8, fraction(0, 8)},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -374,7 +387,7 @@ void test_raise_denominator()
         {
             fraction f(before);
             bool success = f.raise_denominator_to(raise_to.value());
-            
+
             assert(success == exp.has_value());
             if (success)
                 assert(f.equals_verbatim(exp.value()));
@@ -393,6 +406,7 @@ void test_mul2_bottom()
        expected result
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{1}, 1, fraction(1, 2)},
@@ -407,6 +421,7 @@ void test_mul2_bottom()
         {{42}, size_in_bits<int>() - 2, fraction(42, BOTTOM_MAX)},
         {{6, 8}, 0, fraction(6, 8)},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -426,6 +441,7 @@ void test_illegal()
 {
     typedef tuple<int, int, bool> test_case_t;
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {0, 1, false},
@@ -435,12 +451,11 @@ void test_illegal()
         {-3, 3, true},
         {0, 3, true},
     };
+    // clang-format on
 
     // helper functions which may throw
     function<void(int, int)> throw1 = [](int top, int bottom) -> void
-    {
-        fraction f(top, bottom);
-    };
+    { fraction f(top, bottom); };
 
     function<void(int, int)> throw2 = [](int top, int bottom) -> void
     {
@@ -455,7 +470,8 @@ void test_illegal()
         f.set(top, bottom);
     };
 
-    auto test_throw = [](function<void(int, int)>& fn, int top, int bottom, bool should_throw) -> void
+    auto test_throw = [](function<void(int, int)>& fn, int top, int bottom,
+                         bool should_throw) -> void
     {
         bool did_throw = false;
 

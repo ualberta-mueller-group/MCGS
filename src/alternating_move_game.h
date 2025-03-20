@@ -18,28 +18,40 @@ public:
     bw opponent() const;
     void set_to_play(bw color);
     virtual bool solve() const;
-    game& game_pos() { assert(_game); return *_game; }
-    const game& game_pos() const { assert(_game); return *_game; }
+
+    game& game_pos()
+    {
+        assert(_game);
+        return *_game;
+    }
+
+    const game& game_pos() const
+    {
+        assert(_game);
+        return *_game;
+    }
+
     int game_hash() const;
 
     // Default just returns false, a specific game may override
     virtual bool find_static_winner(bool& success) const;
     virtual void play(const move& m);
     virtual void undo_move();
+
 private:
     bool _solve();
+
     game* _game;
     bw _to_play;
-}; // alternating_move_game
+}; // class alternating_move_game
 
-inline alternating_move_game::alternating_move_game(bw color) :
-    _game(0),
-    _to_play(color)
-{ }
+inline alternating_move_game::alternating_move_game(bw color)
+    : _game(0), _to_play(color)
+{
+}
 
-inline alternating_move_game::alternating_move_game(game& game, bw to_play) :
-    _game(&game),
-    _to_play(to_play)
+inline alternating_move_game::alternating_move_game(game& game, bw to_play)
+    : _game(&game), _to_play(to_play)
 {
     assert_black_white(to_play);
 }
@@ -93,6 +105,7 @@ class assert_restore_game
 public:
     assert_restore_game(const alternating_move_game& game);
     ~assert_restore_game();
+
 private:
     const alternating_move_game& _game;
     const int _game_hash;

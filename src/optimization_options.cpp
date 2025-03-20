@@ -12,7 +12,5 @@ string optimization_options::get_summary()
 
     str << "simplify_basic_cgt_games " << _simplify_basic_cgt_games;
 
-
-
     return str.str();
 }

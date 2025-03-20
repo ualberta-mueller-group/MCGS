@@ -2,15 +2,6 @@
 #include "bounds.h"
 
 namespace {
-/*
-    constructor
-
-    setters, getters
-
-    midpoint
-    invalidate
-
-*/
 
 void test_constructor()
 {

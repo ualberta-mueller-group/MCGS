@@ -1,14 +1,9 @@
 #include "game_compare_utils.h"
 
-
-#include "custom_traits.h"
 #include "game.h"
-#include "sumgame.h"
 #include <sstream>
-#include <unordered_set>
-#include <vector>
 
-using namespace compare_games_by_print;
+namespace compare_games_by_print {
 
 __game_info::__game_info(const game& g)
 {
@@ -24,7 +19,6 @@ bool __game_info::operator==(const __game_info& rhs) const
     return (type == rhs.type) && (printed == rhs.printed);
 }
 
-
 uint64_t __game_info_hash::operator()(const __game_info& info) const
 {
     static std::hash<game_type_t> hasher1;
@@ -32,4 +26,4 @@ uint64_t __game_info_hash::operator()(const __game_info& info) const
 
     return hasher1(info.type) ^ hasher2(info.printed);
 }
-
+} // namespace compare_games_by_print

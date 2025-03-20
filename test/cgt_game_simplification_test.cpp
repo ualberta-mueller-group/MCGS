@@ -1,7 +1,6 @@
 #include "cgt_game_simplification_test.h"
 #include <climits>
 #include <functional>
-#include <iostream>
 #include "cgt_dyadic_rational.h"
 #include "cgt_game_simplification.h"
 #include "game.h"
@@ -46,6 +45,7 @@ void do_all_tests(vector<test_case_t>& test_cases, simplify_function& fn)
 
 void nimber_test()
 {
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{ // INPUT
@@ -89,16 +89,16 @@ void nimber_test()
             make_shared<integer_game>(3),
         },}, // END
     };
+    // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    {
-        simplify_basic_nimber(map_view);
-    };
+    { simplify_basic_nimber(map_view); };
     do_all_tests(test_cases, f);
 }
 
 void switch_test()
 {
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{ // INPUT
@@ -138,16 +138,16 @@ void switch_test()
                 make_shared<dyadic_rational>(fraction(-89, 8)),
         },}, // END
     };
+    // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    {
-        simplify_basic_switch(map_view);
-    };
+    { simplify_basic_switch(map_view); };
     do_all_tests(test_cases, f);
 }
 
 void up_star_test()
 {
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{ // INPUT
@@ -178,16 +178,16 @@ void up_star_test()
                 make_shared<up_star>(6, false),
         },}, // END
     };
+    // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    {
-        simplify_basic_up_star(map_view);
-    };
+    { simplify_basic_up_star(map_view); };
     do_all_tests(test_cases, f);
 }
 
 void integers_rationals_test()
 {
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{ // INPUT
@@ -232,16 +232,16 @@ void integers_rationals_test()
         },{ // EXPECTED
         },}, // END
     };
+    // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    {
-        simplify_basic_integers_rationals(map_view);
-    };
+    { simplify_basic_integers_rationals(map_view); };
     do_all_tests(test_cases, f);
 }
 
 void all_test()
 {
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {{ // INPUT
@@ -296,11 +296,10 @@ void all_test()
             make_shared<dyadic_rational>(195, 16),
         },}, // END
     };
+    // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    {
-        simplify_basic_all(map_view);
-    };
+    { simplify_basic_all(map_view); };
     do_all_tests(test_cases, f);
 }
 

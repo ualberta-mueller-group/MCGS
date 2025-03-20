@@ -1,6 +1,5 @@
-#include "sumgame.h"
+#include "sumgame_test_up_star.h"
 #include "cgt_up_star.h"
-#include <iostream>
 #include <cassert>
 #include "test_utilities.h"
 
@@ -46,7 +45,7 @@ void test_up_stars()
 void test_inverses()
 {
     auto games = {0, 1, -1, 2, -3, 16, 8};
-    for (auto up: games)
+    for (auto up : games)
     {
         up_star g1(up, false);
         std::unique_ptr<game> inv1(g1.inverse());

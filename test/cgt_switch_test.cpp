@@ -1,13 +1,14 @@
+#include "cgt_switch_test.h"
 #include "cgt_switch.h"
 #include "cgt_move.h"
 
 #include <cassert>
-#include <iostream>
 #include "game.h"
 #include "test_utilities.h"
 #include <memory>
 #include <vector>
 
+namespace {
 namespace cgt_switch_test {
 
 void play_on(switch_game& g, bw player)
@@ -120,6 +121,7 @@ void test_kind()
 {
     typedef std::tuple<fraction, fraction, switch_kind> test_case_t;
 
+    // clang-format off
     std::vector<test_case_t> test_cases
     {
         {{5, 2}, {-4, 32}, SWITCH_KIND_PROPER},
@@ -135,6 +137,7 @@ void test_kind()
         {{-4}, {-2}, SWITCH_KIND_CONVERTIBLE_NUMBER},
         {{4, 2}, {9, 4}, SWITCH_KIND_CONVERTIBLE_NUMBER}
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -159,7 +162,7 @@ void test_kind()
 
 } // namespace cgt_switch_test
 
-namespace cgt_switch_move_generator{
+namespace cgt_switch_move_generator_test {
 
 void test1()
 {
@@ -188,8 +191,8 @@ void test4()
     assert_num_moves(g, BLACK, 1);
     assert_num_moves(g, WHITE, 1);
 }
-} // namespace cgt_switch_move_generator
-
+} // namespace cgt_switch_move_generator_test
+} // namespace
 
 //---------------------------------------------------------------------------
 
@@ -204,9 +207,10 @@ void cgt_switch_test_all()
     cgt_switch_test::test4();
     cgt_switch_test::test_kind();
 
-    cgt_switch_move_generator::test1();
-    cgt_switch_move_generator::test2();
-    cgt_switch_move_generator::test3();
-    cgt_switch_move_generator::test4();
+    cgt_switch_move_generator_test::test1();
+    cgt_switch_move_generator_test::test2();
+    cgt_switch_move_generator_test::test3();
+    cgt_switch_move_generator_test::test4();
 }
+
 //---------------------------------------------------------------------------

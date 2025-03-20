@@ -3,6 +3,7 @@
 #include "fraction.h"
 #include "safe_arithmetic.h"
 #include "game_type.h"
+#include "cgt_integer_game.h"
 
 #include "cgt_nimber.h"
 #include "cgt_up_star.h"
@@ -46,17 +47,20 @@ bool convert_number_switch(fraction x, fraction y, sumgame_map_view& map_view)
     }
     assert(0 <= x.top() && x.top() < y.top());
 
-    if ((x.top() + 1 == y.top()) && ( // this addition is safe because x.top() < y.top()
-        !x.raise_denominator_by_pow2(1) ||
-        !y.raise_denominator_by_pow2(1)
-    ))
+    // this addition is safe because x.top() < y.top()
+    if ((x.top() + 1 == y.top()) &&            //
+        (                                      //
+            !x.raise_denominator_by_pow2(1) || //
+            !y.raise_denominator_by_pow2(1)    //
+            )                                  //
+        )                                      //
         return false;
 
     /*
         find u = i/2^j such that x < u < y, iteratively increasing j
 
-        Here we work with numerators and assume that x, y, and u all have the same
-            denominator D. Then, x = xn/D, y = yn/D, u = un/D
+        Here we work with numerators and assume that x, y, and u all have the
+       same denominator D. Then, x = xn/D, y = yn/D, u = un/D
 
         j = 0 --> un = D     --> u = 1
         j = 1 --> un = D/2   --> u = 1/2
@@ -73,11 +77,12 @@ bool convert_number_switch(fraction x, fraction y, sumgame_map_view& map_view)
     assert(width > 1);
     int un = denominator;
 
-    for (; ;)
+    for (;;)
     {
         assert(is_power_of_2(un));
 
-        // Check if u exists at this j by testing if un occurs between (xn % un) and ((xn % un) + width)
+        // Check if u exists at this j by testing if un occurs between (xn % un)
+        // and ((xn % un) + width)
         int xn2 = x.top();
         {
             bool success = safe_pow2_mod(xn2, un);
@@ -125,7 +130,7 @@ void simplify_basic_nimber(sumgame_map_view& map_view)
     {
         return;
     }
-        
+
     vector<int> heap_vec;
 
     for (game* g : *nimbers)
@@ -142,26 +147,26 @@ void simplify_basic_nimber(sumgame_map_view& map_view)
 
         int sum = nimber::nim_sum(heap_vec);
         assert(sum >= 0);
-    
+
         // 0: add nothing
 
         if (sum == 1) // 1: star
         {
             up_star* new_game = new up_star(0, true);
             map_view.add_game(new_game);
-        } 
+        }
         else if (sum >= 2) // >= 2: nimber
         {
             nimber* new_game = new nimber(sum);
             map_view.add_game(new_game);
         }
     }
-
 }
 
 void simplify_basic_switch(sumgame_map_view& map_view)
 {
-    vector<game*>* switch_games = map_view.get_games_nullable(game_type<switch_game>());
+    vector<game*>* switch_games =
+        map_view.get_games_nullable(game_type<switch_game>());
 
     if (switch_games == nullptr)
     {
@@ -206,12 +211,12 @@ void simplify_basic_switch(sumgame_map_view& map_view)
 
         // Compute mean, then subtract it
         fraction mean = f1;
-        if (                                                //
-            !fraction::safe_add_fraction(mean, f2)       || // mean = (f1 + f2)
-            !mean.mul2_bottom(1)                         || // mean = (f1 + f2) / 2
-            !fraction::safe_subtract_fraction(f1, mean)  || // f1 = f1 - mean
-            !fraction::safe_subtract_fraction(f2, mean)     // f2 = f2 - mean
-        )                                                   //
+        if (                                          //
+            !fraction::safe_add_fraction(mean, f2) || // mean = (f1 + f2)
+            !mean.mul2_bottom(1) ||                   // mean = (f1 + f2) / 2
+            !fraction::safe_subtract_fraction(f1, mean) || // f1 = f1 - mean
+            !fraction::safe_subtract_fraction(f2, mean)    // f2 = f2 - mean
+            )                                              //
             continue;
 
         mean.simplify();
@@ -256,7 +261,8 @@ void simplify_basic_up_star(sumgame_map_view& map_view)
     int ups = 0;
     bool star = false;
 
-    vector<game*> consumed_games; // if an addition will overflow, not all up_stars will be consumed
+    vector<game*> consumed_games; // if an addition will overflow, not all
+                                  // up_stars will be consumed
 
     for (game* g : *up_stars)
     {
@@ -287,8 +293,10 @@ void simplify_basic_up_star(sumgame_map_view& map_view)
 
 void simplify_basic_integers_rationals(sumgame_map_view& map_view)
 {
-    vector<game*>* integers = map_view.get_games_nullable(game_type<integer_game>());
-    vector<game*>* rationals = map_view.get_games_nullable(game_type<dyadic_rational>());
+    vector<game*>* integers =
+        map_view.get_games_nullable(game_type<integer_game>());
+    vector<game*>* rationals =
+        map_view.get_games_nullable(game_type<dyadic_rational>());
 
     vector<game*> consumed_integers;
     vector<game*> consumed_rationals;
@@ -328,15 +336,17 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
         }
     }
 
-    size_t n_consumed_games = consumed_integers.size() + consumed_rationals.size();
+    size_t n_consumed_games =
+        consumed_integers.size() + consumed_rationals.size();
 
     fraction final_sum(int_sum, 1);
     bool final_sum_valid = fraction::safe_add_fraction(final_sum, rational_sum);
 
     bool integer_sum_useless = (consumed_integers.size() < 2 && int_sum != 0);
-    bool rational_sum_useless = (consumed_rationals.size() < 2 && rational_sum.top() != 0);
-    bool final_sum_useless = !final_sum_valid || (n_consumed_games < 2 && final_sum.top() != 0);
-
+    bool rational_sum_useless =
+        (consumed_rationals.size() < 2 && rational_sum.top() != 0);
+    bool final_sum_useless =
+        !final_sum_valid || (n_consumed_games < 2 && final_sum.top() != 0);
 
     auto insert_game = [&](int top, int bottom) -> void
     {
@@ -357,7 +367,6 @@ void simplify_basic_integers_rationals(sumgame_map_view& map_view)
         dyadic_rational* new_game = new dyadic_rational(top, bottom);
         map_view.add_game(new_game);
     };
-
 
     // now commit only useful cases
     if (!final_sum_useless)

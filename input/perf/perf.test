@@ -1,27 +1,27 @@
 {version 1.1}
-/_ For testing performance \
+/* _ For testing performance  */
 
-    /Long running test\
+    /* Long running test */
 [clobber_1xn]
 XOXOXOXOXOXOXOXOXOXOXOXO
 {B win, W win}
 
-    /Long running test\
+    /* Long running test */
 [nogo_1xn]
 ..................
 {B win, W win}
 
-    /Shorter test\
+    /* Shorter test */
 [clobber_1xn]
 XOXOXOXOXOXOXO
 {B win, W win}
 
-    /Shorter test\
+    /* Shorter test */
 [nogo_1xn]
 ...........
 {B, W}
 
-    /Really short test\
+    /* Really short test */
 [integer_game]
 5
 2
@@ -33,13 +33,13 @@ XOXOXOXOXOXOXO
 -29
 
 [switch_game]
-(91,2 -43,4)
+(91/2 -43/4)
 (4 9)
 [clobber_1xn]
 XO
 {B win, W win}
 
-    /Really short test\
+    /* Really short test */
 [clobber_1xn]
 XOXO
 {B win, W win}

@@ -8,7 +8,7 @@
 std::vector<int> get_nim_heaps(const sumgame& s)
 {
     std::vector<int> heaps;
-    for(auto nim: s.subgames())
+    for (auto nim : s.subgames())
     {
         const nimber* n = dynamic_cast<nimber*>(nim);
         assert(n);

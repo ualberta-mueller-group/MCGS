@@ -1,31 +1,33 @@
-{version 1.0}
-/ This is a comment\
+{version 1.1}
+/* This is a comment */
 
-/_ This file is valid input to MCGS, and describes the input syntax.
+/*_ This file is valid input to MCGS, and describes the input syntax. You can
+run it with:
+    ./MCGS --file <path to this file>
 
 There are 5 types of 'things' that appear in input: 
+   Comments
+        Enclosed by '/*' and '*/', text inside a comment is used by humans
+        reading input files, and may be included in output from MCGS's testing
+        framework. More on this later.
+
     Section titles
         Enclosed by '[' and ']', text inside a section title defines what type
         of game to interpret subsequent text as. Sections persist until
         a new section title is encountered.
 
         i.e. '[clobber_1xn]'
-
-    Comments
-        Enclosed by '/' and '\', text inside a comment is used by humans
-        reading input files, and may be included in output from MCGS's testing
-        framework. More on this later.
-
+ 
     Commands
         Enclosed by '{' and '}', commands are used to solve sums of games for 
         one or more players, optionally defining an expected result (win/loss).
         Commands are also used to specify what version of the input language
         is used by a file. The version command must be present in files, but
         can be omitted from input read from stdin or passed as a command line
-        argument to MCGS. The current version is 1.0.
+        argument to MCGS. The current version is 1.1.
             i.e.
             Version command:
-                {version 1.0}
+                {version 1.1}
 
             Solve the current game sum for black, without expecting a particular
             result:
@@ -56,11 +58,11 @@ There are 5 types of 'things' that appear in input:
         defines a single game within the current section. The type of game
         depends on the section.
 
-    i.e.
-    define two games, 'XO.X' and 'XO':
-        XO.X XO
-    define one game, '5':
-        5
+        i.e.
+        define two games, 'XO.X' and 'XO':
+            XO.X XO
+        define one game, '5':
+            5
 
 
     The following example solves a sum of
@@ -68,38 +70,87 @@ There are 5 types of 'things' that appear in input:
         2 integer_game games
         2 more clobber_1xn games
         1 dyadic_rational game
+        3 switch_game games
     Twice: once for black, then white. Then it solves an 
     empty sum for black, expecting a loss.
-\
+*/
 
 
 [clobber_1xn] XOXO OXX
 [integer_game] 4
-/ Comments can go here too. \
+/* Comments can go here too. */
 -5
 [clobber_1xn]
 XOXOO...XO
 (XO)
 [dyadic_rational]
-(3 4) / Dyadic rational games are defined by 2 ints, so they must be
-defined in brackets. \
+3/4
+[switch_game] /*_ These are all equivalent */
+(21, 7/8)
+(21 7/8)
+21,7/8
 {B, W}
 
-/Now the current game sum is empty. The next line solves an empty sum\
+/*Now the current game sum is empty. The next line solves an empty sum*/
 {B loss}
 
 
-/
+/*_
+        Game syntax
+    This section defines the syntax for each game supported by MCGS.
+
+    Definitions:
+        'int':
+            A sequence of 1 or more numeric digits, possibly 
+            preceded by a '-'. No spaces allowed.
+
+        'fraction':
+            Either an int, or two ints separated by a '/'. Denominator
+            must be a positive power of 2. Spaces between each component
+            are allowed, and optional. i.e:
+                '1/4'
+                '1'
+
+        'star':
+            The character '*'.
+
+        'list':
+            A sequence of 1 or more items. Items can be separated by
+            commas and/or spaces. Commas are not allowed at the
+            end of the list. The following are all equivalent:
+                '1, -1/2, 3, 4'
+                '1,-1/2,3,4'
+                '1 -1/2 3 4'
+                '  1  -1  /  2   3  ,  4  '
+
+    Game syntax:
+        [clobber_1xn], [nogo_1xn], and [elephants]:
+            Contiguous sequence of '.', 'X', and 'O'.
+
+        [integer_game], and [nimber]:
+            A single int.
+
+        [dyadic_rational]:
+            A single fraction. i.e. '1/4', '-3 / 8', '-3'
+
+        [switch_game]:
+            A list of 2 fractions.
+
+        [up_star]:
+            A non-empty list of at most one star, and at most one int.
+*/
+
+/*_
         More on syntax:
 
-    Comments by default belong to all (sum, player) pairs solved by the next
+    Comments by default belong to all '(sum, player)' pairs solved by the next
     'solve' command. These will be included in output from
     MCGS's testing framework.
 
     If a comment starts with '_', it will not be included in output.
 
     If a comment starts with '#0' or '#1', it will only be included in 
-    output for the 1st or 2nd (sum, player) pair solved by the
+    output for the 1st or 2nd '(sum, player)' pair corresponding to the
     next 'solve' command.
 
 
@@ -112,4 +163,4 @@ defined in brackets. \
 
     Names of sections, i.e. [clobber_1xn] are defined by the
     add_game_parser() function of the file_parser class in file_parser.h
-\
+*/

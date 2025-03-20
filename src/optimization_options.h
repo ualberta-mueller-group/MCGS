@@ -19,4 +19,3 @@ public:
 private:
     static bool _simplify_basic_cgt_games;
 };
-

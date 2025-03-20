@@ -1,11 +1,11 @@
+#include "cgt_nimber_test.h"
 #include "cgt_nimber.h"
-#include "cgt_move.h"
 
 #include <cassert>
-#include <iostream>
 #include "test_utilities.h"
 
-namespace cgt_nimber_test{
+namespace {
+namespace cgt_nimber_test {
 
 void test1()
 {
@@ -23,7 +23,7 @@ void test2()
 
 } // namespace cgt_nimber_test
 
-namespace cgt_nimber_move_generator{
+namespace cgt_nimber_move_generator_test {
 
 void test1()
 {
@@ -39,7 +39,8 @@ void test2()
     assert_num_moves(g, WHITE, 12);
 }
 
-} // namespace cgt_nimber_move_generator
+} // namespace cgt_nimber_move_generator_test
+} // namespace
 
 //---------------------------------------------------------------------------
 
@@ -47,7 +48,8 @@ void cgt_nimber_test_all()
 {
     cgt_nimber_test::test1();
     cgt_nimber_test::test2();
-    cgt_nimber_move_generator::test1();
-    cgt_nimber_move_generator::test2();
+    cgt_nimber_move_generator_test::test1();
+    cgt_nimber_move_generator_test::test2();
 }
+
 //---------------------------------------------------------------------------

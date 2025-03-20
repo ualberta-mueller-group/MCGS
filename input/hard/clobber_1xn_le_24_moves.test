@@ -1,34 +1,34 @@
-{version 1.0}
-/These results only validated by the late November 2022 Linear Clobber solver \
+{version 1.1}
+/* These results only validated by the late November 2022 Linear Clobber solver */
 [clobber_1xn]
 
-/20.56 ms\
+/* 20.56 ms */
 XOXOXOXOXOXOXOXOXOXOXOXO {B win}
 
-/20.11 ms\
+/* 20.11 ms */
 XOXOXOXOXOXOXOXOXOXOXOXO {W win}
 
-/22.62 ms\
+/* 22.62 ms */
 OXXXOX.OX.OXX.OOOXOOO.OXXXOOOXXOXXOXXXXXO.XOXOXXOXOOX {B win}
 
-/26.39 ms\
+/* 26.39 ms */
 OXXXOX.OX.OXX.OOOXOOO.OXXXOOOXXOXXOXXXXXO.XOXOXXOXOOX {W loss}
 
-/23.80 ms\
+/* 23.80 ms */
 XXOXXOXXOXXOXXOXXOXXOXXOXXOXXOXXOXXO {B win}
 
-/27.48 ms\
+/* 27.48 ms */
 XXOXXOXXOXXOXXOXXOXXOXXOXXOXXOXXOXXO {W loss}
 
-/22.89 ms\
+/* 22.89 ms */
 OXOXOXOXOXOXOXOXOXOXOXOX {B win}
 
-/23.44 ms\
+/* 23.44 ms */
 OXOXOXOXOXOXOXOXOXOXOXOX {W win}
 
-/23.42 ms\
+/* 23.42 ms */
 XOXOXOXOXOXOXOXOXOXOXOXOX {B loss}
 
-/18.62 ms\
+/* 18.62 ms */
 XOXOXOXOXOXOXOXOXOXOXOXOX {W win}
 

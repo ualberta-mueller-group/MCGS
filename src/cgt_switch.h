@@ -4,10 +4,10 @@
 #pragma once
 
 #include "cgt_basics.h"
-#include "cgt_integer_game.h"
 #include "cgt_dyadic_rational.h"
 #include "game.h"
 #include "safe_arithmetic.h"
+#include "throw_assert.h"
 #include <memory>
 
 //---------------------------------------------------------------------------
@@ -32,20 +32,24 @@ public:
     void undo_move() override;
 
 protected:
-    split_result split_implementation() const override;
+    split_result _split_implementation() const override;
 
 public:
     move_generator* create_move_generator(bw to_play) const override;
     game* inverse() const override;
-    
-    const fraction& left() const { return _left;}
-    const fraction& right() const { return _right;}
-    inline bool is_rational() const { return _rational_game.get() != nullptr;}
+
+    const fraction& left() const { return _left; }
+
+    const fraction& right() const { return _right; }
+
+    inline bool is_rational() const { return _rational_game.get() != nullptr; }
+
     fraction value() const
     {
         assert(is_rational());
         return _rational_game->get_fraction();
     }
+
     void print(std::ostream& str) const override;
     switch_kind kind() const;
 
@@ -53,6 +57,7 @@ private:
     fraction _init_fraction(const fraction& f) const;
     relation _init_relation() const;
     switch_kind _init_kind() const;
+
     inline void _check_legal() const
     {
         THROW_ASSERT(_left.is_simplified() && _right.is_simplified());
@@ -69,49 +74,48 @@ private:
     size_t _move_depth;
 };
 
-inline switch_game::switch_game(int left, int right) : 
-    _left(_init_fraction(left)), 
-    _right(_init_fraction(right)),
-    _rel(_init_relation()),
-    _kind(_init_kind()),
-    _rational_game(nullptr),
-    _move_depth(0)
+inline switch_game::switch_game(int left, int right)
+    : _left(_init_fraction(left)),
+      _right(_init_fraction(right)),
+      _rel(_init_relation()),
+      _kind(_init_kind()),
+      _rational_game(nullptr),
+      _move_depth(0)
 {
     assert(_left.is_simplified() && _right.is_simplified());
 }
 
-inline switch_game::switch_game(int left, const fraction& right) :
-    _left(_init_fraction(left)), 
-    _right(_init_fraction(right)),
-    _rel(_init_relation()),
-    _kind(_init_kind()),
-    _rational_game(nullptr),
-    _move_depth(0)
+inline switch_game::switch_game(int left, const fraction& right)
+    : _left(_init_fraction(left)),
+      _right(_init_fraction(right)),
+      _rel(_init_relation()),
+      _kind(_init_kind()),
+      _rational_game(nullptr),
+      _move_depth(0)
 {
     assert(_left.is_simplified() && _right.is_simplified());
 }
 
-inline switch_game::switch_game(const fraction& left, int right) :
-    _left(_init_fraction(left)), 
-    _right(_init_fraction(right)),
-    _rel(_init_relation()),
-    _kind(_init_kind()),
-    _rational_game(nullptr),
-    _move_depth(0)
+inline switch_game::switch_game(const fraction& left, int right)
+    : _left(_init_fraction(left)),
+      _right(_init_fraction(right)),
+      _rel(_init_relation()),
+      _kind(_init_kind()),
+      _rational_game(nullptr),
+      _move_depth(0)
 {
     assert(_left.is_simplified() && _right.is_simplified());
 }
 
-inline switch_game::switch_game(const fraction& left, const fraction& right) :
-    _left(_init_fraction(left)), 
-    _right(_init_fraction(right)),
-    _rel(_init_relation()),
-    _kind(_init_kind()),
-    _rational_game(nullptr),
-    _move_depth(0)
+inline switch_game::switch_game(const fraction& left, const fraction& right)
+    : _left(_init_fraction(left)),
+      _right(_init_fraction(right)),
+      _rel(_init_relation()),
+      _kind(_init_kind()),
+      _rational_game(nullptr),
+      _move_depth(0)
 {
     assert(_left.is_simplified() && _right.is_simplified());
 }
 
 //---------------------------------------------------------------------------
-

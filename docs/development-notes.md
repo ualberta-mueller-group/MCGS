@@ -2,7 +2,6 @@
 This document includes more detailed information than `README.md`, including design choices and tradeoffs, version history, and implementation details.
 
 
-
 # Search and Solving a Game
 - Two classes implement game solving: `alternating_move_game`
 and `sumgame`
@@ -34,35 +33,36 @@ This section uses the term "wrapping" to mean either underflow or overflow.
     - When `true`, the operation was completed without wrapping
     - When `false`, the operation would have wrapped. No operands were changed
         - Also returned on invalid arguments, i.e. negative bit shift amounts
-- Some functions accept either integer types or floating point types, some accept only integer types
-    - The lists below use `num` to refer to either, and `int` to refer to integer types. All operands must have the same type.
-- All functions accept both signed and unsigned types
+- Functions accept different types
+    - `int` denotes any integral type
+    - `num` denotes any integral or floating point type
+    - Assume both unsigned and signed types unless stated otherwise
 
 These functions test whether an operation would wrap, without doing the operation:
 - `add_will_wrap(const num x, const num y)`
     - `true` iff `x + y` would wrap
 - `subtract_will_wrap(const num x, const num y)`
     - `true` iff `x - y` would wrap
-- `negate_will_wrap(const num x)`
+- `negate_will_wrap(const signed int x)`
     - `true` iff `-x` would wrap
 
 These functions perform operations, and will only change the operands on success:
 - `safe_add(num& x, const num y)`
     - `x := x + y`
-- `safe_add_negatable(num& x, const num y)`
+- `safe_add_negatable(signed int& x, const signed int y)`
     - `x := x + y`, also fails if negating the resulting `x` would wrap (i.e. `-x`)
-- `safe_subtract(num&, const num)`
+- `safe_subtract(num& x, const num y)`
     - `x := x - y`
-- `safe_subtract_negatable(num&, const num)`
+- `safe_subtract_negatable(signed int& x, const signed int y)`
     - `x := x - y` also fails if negating the resulting `x` would wrap
-- `safe_negate(num&)`
+- `safe_negate(signed int& x)`
     - `x := -x`
-- `safe_mul2_shift(int& x, const int exponent)`
+- `safe_mul2_shift(signed int& x, const int exponent)`
     - `x := x * 2^exponent` (implemented as left shift)
     - Negative values of `x` are allowed
     - also `false` when the operation would flip the sign
     - On success, the resulting `x` is also negatable
-- `safe_pow2_mod(int& x, const int pow2)`
+- `safe_pow2_mod(signed int& x, const signed int pow2)`
     - `x := x % pow2` (implemented as bitwise `&`)
     - `false` if `pow2` is not a power of 2, or `pow2 <= 0`
 

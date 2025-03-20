@@ -1,9 +1,8 @@
+#include "cgt_basics_test.h"
 #include "cgt_basics.h"
-#include "cgt_move.h"
 
-#include "test_utilities.h"
-
-namespace cgt_basics {
+namespace {
+namespace cgt_basics_test {
 
 void test_colors()
 {
@@ -11,7 +10,7 @@ void test_colors()
     assert(WHITE == 1);
     assert(EMPTY == 2);
     assert(BORDER == 3);
-    
+
     assert(LEFT == 0);
     assert(RIGHT == 1);
 }
@@ -50,16 +49,16 @@ void test_in_range()
 
 void test_color_char()
 {
-    assert(color_code[BLACK] == 'B');
-    assert(color_code[WHITE] == 'W');
-    assert(color_code[EMPTY] == '.');
-    assert(color_code[BORDER] == 'X');
-    
+    assert(COLOR_CODE[BLACK] == 'B');
+    assert(COLOR_CODE[WHITE] == 'W');
+    assert(COLOR_CODE[EMPTY] == '.');
+    assert(COLOR_CODE[BORDER] == 'X');
+
     assert(color_char(BLACK) == 'B');
     assert(color_char(WHITE) == 'W');
     assert(color_char(EMPTY) == '.');
     assert(color_char(BORDER) == 'X');
- 
+
     assert(char_to_color('B') == BLACK);
     assert(char_to_color('W') == WHITE);
 
@@ -69,14 +68,15 @@ void test_color_char()
     assert(!is_black_white_char('X'));
 }
 
-} // namespace cgt_basics
+} // namespace cgt_basics_test
+} // namespace
 
 void cgt_basics_test_all()
 {
-    cgt_basics::test_colors();
-    cgt_basics::test_color_char();
-    cgt_basics::test_in_range();
-    cgt_basics::test_is_black_white();
-    cgt_basics::test_is_empty_black_white();
-    cgt_basics::test_opponent();
+    cgt_basics_test::test_colors();
+    cgt_basics_test::test_color_char();
+    cgt_basics_test::test_in_range();
+    cgt_basics_test::test_is_black_white();
+    cgt_basics_test::test_is_empty_black_white();
+    cgt_basics_test::test_opponent();
 }

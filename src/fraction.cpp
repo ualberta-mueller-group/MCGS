@@ -12,7 +12,8 @@ using namespace std;
 //////////////////////////////////////// helper functions
 namespace {
 
-inline void compute_integral_part(const fraction& frac, int& int_simplified, int& int_compatible)
+inline void compute_integral_part(const fraction& frac, int& int_simplified,
+                                  int& int_compatible)
 {
     int remainder_compatible = frac.top();
     bool success = safe_pow2_mod(remainder_compatible, frac.bottom());
@@ -34,7 +35,8 @@ inline bool raise_denominator_common(fraction& frac, int exponent)
     int top_copy = frac.top();
     int bottom_copy = frac.bottom();
 
-    if (!safe_mul2_shift(top_copy, exponent) || !safe_mul2_shift(bottom_copy, exponent))
+    if (!safe_mul2_shift(top_copy, exponent) ||
+        !safe_mul2_shift(bottom_copy, exponent))
         return false;
 
     frac.set(top_copy, bottom_copy);
@@ -65,7 +67,8 @@ void fraction::simplify()
     _check_legal();
 
     static_assert(is_integral_v<decltype(_top)> && is_signed_v<decltype(_top)>);
-    static_assert(is_integral_v<decltype(_bottom)> && is_signed_v<decltype(_bottom)>);
+    static_assert(is_integral_v<decltype(_bottom)> &&
+                  is_signed_v<decltype(_bottom)>);
 
     while (!is_simplified())
     {
@@ -251,7 +254,8 @@ bool fraction::safe_add_fraction(fraction& x, fraction& y)
     int xtop = x.top();
     int ytop = y.top();
 
-    bool success = safe_add(xtop, ytop) && (TOP_MIN <= xtop) && (xtop <= TOP_MAX);
+    bool success =
+        safe_add(xtop, ytop) && (TOP_MIN <= xtop) && (xtop <= TOP_MAX);
 
     if (success)
     {
@@ -271,7 +275,8 @@ bool fraction::safe_subtract_fraction(fraction& x, fraction& y)
     int xtop = x.top();
     int ytop = y.top();
 
-    bool success = safe_subtract(xtop, ytop) && (TOP_MIN <= xtop) && (xtop <= TOP_MAX);
+    bool success =
+        safe_subtract(xtop, ytop) && (TOP_MIN <= xtop) && (xtop <= TOP_MAX);
 
     if (success)
     {
@@ -291,11 +296,11 @@ void fraction::_init(int top, int bottom)
 
 void fraction::_check_legal() const
 {
-    if (!(
-            (_bottom > 0)                     && //
-            is_power_of_2(_bottom)            && //
+    if (!(                                       //
+            (_bottom > 0) &&                     //
+            is_power_of_2(_bottom) &&            //
             (TOP_MIN <= _top && _top <= TOP_MAX) //
-    ))
-        throw range_error("Illegal fraction: " + to_string(_top) + "/" + to_string(_bottom));
+            ))                                   //
+        throw range_error("Illegal fraction: " + to_string(_top) + "/" +
+                          to_string(_bottom));
 }
-

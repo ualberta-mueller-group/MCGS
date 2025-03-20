@@ -3,7 +3,7 @@
 
 using namespace std;
 
-sumgame::undo_stack_unwinder::undo_stack_unwinder(sumgame& sum): _sum(sum)
+sumgame::undo_stack_unwinder::undo_stack_unwinder(sumgame& sum) : _sum(sum)
 {
     _sum._push_undo_code(SUMGAME_UNDO_STACK_FRAME);
 }

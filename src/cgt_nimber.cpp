@@ -29,28 +29,29 @@ void nimber::print(std::ostream& str) const
 int nimber::nim_sum(const std::vector<int>& values)
 {
     int sum = 0;
-    for (int heap: values)
+    for (int heap : values)
         sum ^= heap;
     return sum;
 }
+
 //---------------------------------------------------------------------------
 class nimber_move_generator : public move_generator
 {
 public:
     nimber_move_generator(const nimber& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
 private:
     const nimber& _game;
     int _current_number;
 };
 
 nimber_move_generator::nimber_move_generator(const nimber& game, bw to_play)
-    : move_generator(to_play),
-      _game(game),
-      _current_number(1)
-{ }
+    : move_generator(to_play), _game(game), _current_number(1)
+{
+}
 
 void nimber_move_generator::operator++()
 {
@@ -73,5 +74,5 @@ move_generator* nimber::create_move_generator(bw to_play) const
 {
     return new nimber_move_generator(*this, to_play);
 }
-//---------------------------------------------------------------------------
 
+//---------------------------------------------------------------------------

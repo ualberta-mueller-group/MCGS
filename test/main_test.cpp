@@ -39,39 +39,41 @@ const bool RUN_OVERRIDE_TESTS = false;
 
 using std::cout, std::endl, std::string;
 
+namespace {
 void override_tests()
 {
-    cgt_game_simplification_test_all();
+    file_parser_test_all();
 }
 
-namespace
+void print_flag(const string& flag_string, const string& flag_description)
 {
-    void print_flag(const string& flag_string, const string& flag_description)
-    {
-        cout << "\t" << flag_string << endl;
-        cout << "\t\t" << flag_description << endl;
-        cout << endl;
-    }
+    cout << "\t" << flag_string << endl;
+    cout << "\t\t" << flag_description << endl;
+    cout << endl;
 }
 
 void print_usage(const char* exec_name)
 {
     cout << "Usage: " << exec_name << " [flags]" << endl;
 
-    cout << "\tRuns unit tests. On successful completion, \"SUCCESS\" should be printed.";
+    cout << "\tRuns unit tests. On successful completion, \"SUCCESS\" should "
+            "be printed.";
     cout << endl;
 
     cout << "Flags:" << endl;
     print_flag("--no-slow-tests", "Skip running tests which take longer.");
     print_flag("-h, --help", "Print this message and exit.");
 }
+} // namespace
 
 int main(int argc, const char** argv)
 {
     if (RUN_OVERRIDE_TESTS)
     {
         override_tests();
-        cout << "DONE. Remember to disable override tests (at top of main_test.cpp)" << endl;
+        cout << "DONE. Remember to disable override tests (at top of "
+                "main_test.cpp)"
+             << endl;
         return 0;
     }
 
@@ -137,7 +139,10 @@ int main(int argc, const char** argv)
     */
 
     sumgame_map_view_test_all();
-    custom_traits_test_all(); // NOTE: this test runs at compile time, not run time
+
+    // NOTE: this test runs at compile time, not run time
+    custom_traits_test_all();
+
     cgt_game_simplification_test_all();
 
     cout << "SUCCESS" << endl;

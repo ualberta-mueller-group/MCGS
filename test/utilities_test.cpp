@@ -1,6 +1,5 @@
 #include "utilities_test.h"
 #include "cgt_basics.h"
-#include "cgt_dyadic_rational.h"
 #include "utilities.h"
 #include <cstdint>
 #include <sstream>
@@ -12,7 +11,6 @@ void test_size_in_bits()
 {
     assert(size_in_bits<int>() == size_in_bits(int(0)));
     assert(size_in_bits<int>() == sizeof(int) * CHAR_BIT);
-
 
     assert(size_in_bits<uint64_t>() == size_in_bits(uint64_t(0)));
     assert(size_in_bits<uint64_t>() == sizeof(uint64_t) * CHAR_BIT);
@@ -29,6 +27,7 @@ void test_print_bits()
        expected output
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {0, "00000000"},
@@ -43,6 +42,7 @@ void test_print_bits()
         {254, "11111110"},
         {255, "11111111"},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -63,6 +63,7 @@ void test_split_string()
         expected output
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {"", {}},
@@ -70,6 +71,7 @@ void test_split_string()
         {"abc", {"abc"}},
         {"\t \n a\n b   c de  ", {"a", "b", "c", "de"}}
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -89,6 +91,7 @@ void test_is_int()
        expected output
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {"", false},
@@ -115,6 +118,7 @@ void test_is_int()
         {"-25", true},
         {"-6", true},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -135,6 +139,7 @@ void test_string_starts_ends_with()
         expected string_ends_with() result
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {"abcd", "abcd", true, true},
@@ -151,6 +156,7 @@ void test_string_starts_ends_with()
         {"abc", "b", false, false},
         {"abc", "d", false, false},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -172,6 +178,7 @@ void test_is_power_of_2()
        expected result
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {0, false},
@@ -186,6 +193,7 @@ void test_is_power_of_2()
         {63, false},
         {64, true},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -220,6 +228,7 @@ void test_relation_from_search_results()
 {
     typedef tuple<bool, bool, bool, bool, relation> test_case_t;
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {0, 0, 0, 0, REL_UNKNOWN},
@@ -239,6 +248,7 @@ void test_relation_from_search_results()
         {1, 1, 1, 0, REL_LESS},
         {1, 1, 1, 1, REL_EQUAL},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -248,7 +258,8 @@ void test_relation_from_search_results()
         const bool& is_ge = get<3>(test);
         const relation& expected = get<4>(test);
 
-        assert(relation_from_search_results(le_known, is_le, ge_known, is_ge) == expected);
+        assert(relation_from_search_results(le_known, is_le, ge_known, is_ge) ==
+               expected);
     }
 }
 } // namespace

@@ -10,13 +10,13 @@
 
 using std::string, std::pair, std::vector;
 
-clobber_1xn::clobber_1xn(const vector<int>& board) :
-    strip(board)
-{ }
+clobber_1xn::clobber_1xn(const vector<int>& board) : strip(board)
+{
+}
 
-clobber_1xn::clobber_1xn(std::string game_as_string) :
-    strip(game_as_string)
-{ }
+clobber_1xn::clobber_1xn(std::string game_as_string) : strip(game_as_string)
+{
+}
 
 void clobber_1xn::play(const move& m, bw to_play)
 {
@@ -43,17 +43,17 @@ void clobber_1xn::undo_move()
     replace(to, opponent(player));
 }
 
-split_result clobber_1xn::split_implementation() const
+split_result clobber_1xn::_split_implementation() const
 {
     vector<pair<int, int>> chunk_ranges;
 
     string board = board_as_string();
-    size_t N = board.size();
+    const size_t N = board.size();
 
-    //auto add_chunk = [&](int start, int len) -> void
+    // auto add_chunk = [&](int start, int len) -> void
     //{
-    //    result->push_back(new clobber_1xn(board.substr(start, len)));
-    //};
+    //     result->push_back(new clobber_1xn(board.substr(start, len)));
+    // };
 
     int chunk_start = -1;
     bool found_black = false;
@@ -75,11 +75,13 @@ split_result clobber_1xn::split_implementation() const
             if (color == BLACK)
             {
                 found_black = true;
-            } else
+            }
+            else
             {
                 found_white = true;
             }
-        } else
+        }
+        else
         {
             // end of chunk
             if (chunk_start != -1 && found_black && found_white)
@@ -98,21 +100,22 @@ split_result clobber_1xn::split_implementation() const
         chunk_ranges.push_back({chunk_start, N - chunk_start});
     }
 
-    if (chunk_ranges.size() == 1) 
+    if (chunk_ranges.size() == 1)
     {
         return split_result();
-    } else
+    }
+    else
     {
         split_result result = split_result(vector<game*>());
 
         for (const pair<int, int>& range : chunk_ranges)
         {
-            result->push_back(new clobber_1xn(board.substr(range.first, range.second)));
+            result->push_back(
+                new clobber_1xn(board.substr(range.first, range.second)));
         }
 
         return result;
     }
-
 }
 
 game* clobber_1xn::inverse() const
@@ -125,82 +128,82 @@ std::ostream& operator<<(std::ostream& out, const clobber_1xn& g)
     out << g.board_as_string();
     return out;
 }
+
 //---------------------------------------------------------------------------
 
 class clobber_1xn_move_generator : public move_generator
 {
 public:
     clobber_1xn_move_generator(const clobber_1xn& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
-private:
-    int at(int p) const {return _game.at(p); }
-    bool is_move(int p, int dir) const;
-    bool has_move(int p) const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
 
-    void find_next_move();
+private:
+    int _at(int p) const { return _game.at(p); }
+
+    bool _is_move(int p, int dir) const;
+    bool _has_move(int p) const;
+    void _find_next_move();
+
     const clobber_1xn& _game;
     int _current; // current stone location to test
-    int _dir; // +-1
+    int _dir;     // +-1
 };
 
-inline clobber_1xn_move_generator::clobber_1xn_move_generator(const clobber_1xn& game, bw to_play) :
-    move_generator(to_play),
-    _game(game),
-    _current(0),
-    _dir(1)
+inline clobber_1xn_move_generator::clobber_1xn_move_generator(
+    const clobber_1xn& game, bw to_play)
+    : move_generator(to_play), _game(game), _current(0), _dir(1)
 {
-    if (  _game.size() > 0
-     && ! is_move(_current, _dir)
-       )
-        find_next_move();
+    if (_game.size() > 0             //
+        && !_is_move(_current, _dir) //
+        )                            //
+        _find_next_move();
 }
 
 void clobber_1xn_move_generator::operator++()
 {
-    find_next_move();
+    _find_next_move();
 }
 
-inline bool clobber_1xn_move_generator::is_move(int p, int dir) const
+inline bool clobber_1xn_move_generator::_is_move(int p, int dir) const
 {
-    return at(p) == to_play()
-        && _game.checked_is_color(p + dir, opponent());
+    return _at(p) == to_play() && _game.checked_is_color(p + dir, opponent());
 }
 
-bool clobber_1xn_move_generator::has_move(int p) const
+bool clobber_1xn_move_generator::_has_move(int p) const
 {
-    assert(at(p) == to_play());
-    return is_move(p, 1) || is_move(p, -1);
+    assert(_at(p) == to_play());
+    return _is_move(p, 1) || _is_move(p, -1);
 }
 
-void clobber_1xn_move_generator::find_next_move()
+void clobber_1xn_move_generator::_find_next_move()
 {
     const int num = _game.size();
-    
+
     // try same from, other dir first.
-    if (      _dir == 1
-           && _current < num
-           && at(_current) == to_play()
-           && is_move(_current, -1)
-       )
-       _dir = -1;
-    
+    if (_dir == 1                     //
+        && _current < num             //
+        && _at(_current) == to_play() //
+        && _is_move(_current, -1)     //
+        )                             //
+        _dir = -1;
+
     else // advance
     {
         ++_current;
-        while (   _current < num
-               && (  at(_current) != to_play()
-                  || ! has_move(_current)
-                  )
-              )
+        while (_current < num                 //
+               && (_at(_current) != to_play() //
+                   || !_has_move(_current)    //
+                   )                          //
+               )                              //
             ++_current;
         if (_current < num)
         {
-            if (is_move(_current, 1))
-               _dir = 1;
+            if (_is_move(_current, 1))
+                _dir = 1;
             else
-               _dir = -1;
+                _dir = -1;
         }
     }
 }
@@ -215,10 +218,12 @@ move clobber_1xn_move_generator::gen_move() const
     assert(operator bool());
     return cgt_move::two_part_move(_current, _current + _dir);
 }
+
 //---------------------------------------------------------------------------
 
 move_generator* clobber_1xn::create_move_generator(bw to_play) const
 {
     return new clobber_1xn_move_generator(*this, to_play);
 }
+
 //---------------------------------------------------------------------------

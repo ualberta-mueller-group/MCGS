@@ -38,7 +38,8 @@ void change_record::simplify_basic(sumgame& sum)
 void change_record::undo_simplify_basic(sumgame& sum)
 {
     // IMPORTANT: reactivate before deleting to avoid use after free
-    for (auto it = deactivated_games.rbegin(); it != deactivated_games.rend(); it++)
+    for (auto it = deactivated_games.rbegin(); it != deactivated_games.rend();
+         it++)
     {
         game* g = *it;
 
@@ -71,6 +72,5 @@ void change_record::_move_impl(change_record&& other) noexcept
 
     other._clear();
 }
-
 
 } // namespace sumgame_impl

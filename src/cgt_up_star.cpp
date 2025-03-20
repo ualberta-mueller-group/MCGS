@@ -3,6 +3,23 @@
 //---------------------------------------------------------------------------
 #include "cgt_up_star.h"
 
+
+
+//////////////////////////////////////// helper functions
+namespace {
+inline bool is_same_player(int ups, bw to_play)
+{
+    return (ups > 0) == (to_play == BLACK);
+}
+
+inline int sign(int value)
+{
+    assert(value != 0);
+    return (value > 0) ? 1 : -1;
+}
+
+} // namespace
+
 //---------------------------------------------------------------------------
 // special cases if -1 <= _value <= 1
 void up_star::play(const move& m, bw to_play)
@@ -12,7 +29,7 @@ void up_star::play(const move& m, bw to_play)
     if (_value == 0) // last move from * to 0
     {
         assert(_star);
-        assert(flip_star);    
+        assert(flip_star);
     }
     else
     {
@@ -22,7 +39,7 @@ void up_star::play(const move& m, bw to_play)
                 assert(delta_v == -num_ups());
             else
                 assert(delta_v == 1);
-        } 
+        }
         else if (_value > 0)
             assert(delta_v == -1);
         else
@@ -30,7 +47,7 @@ void up_star::play(const move& m, bw to_play)
     }
     _value += delta_v;
     if (flip_star)
-        _star = ! _star;
+        _star = !_star;
     game::play(m, to_play);
 }
 
@@ -42,7 +59,7 @@ void up_star::undo_move()
     const int delta_v = cgt_move::decode3(m, &flip_star, &to_play);
     _value -= delta_v;
     if (flip_star)
-        _star = ! _star;
+        _star = !_star;
     game::undo_move();
 }
 
@@ -64,11 +81,13 @@ class up_star_move_generator : public move_generator
 {
 public:
     up_star_move_generator(const up_star& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
 private:
-    int compute_num_moves(const up_star& game, bw to_play) const;
+    int _compute_num_moves(const up_star& game, bw to_play) const;
+
     const up_star& _game;
     const int _num_moves;
     int _num_generated;
@@ -77,9 +96,10 @@ private:
 up_star_move_generator::up_star_move_generator(const up_star& game, bw to_play)
     : move_generator(to_play),
       _game(game),
-      _num_moves(compute_num_moves(game, to_play)),
+      _num_moves(_compute_num_moves(game, to_play)),
       _num_generated(0)
-{ }
+{
+}
 
 void up_star_move_generator::operator++()
 {
@@ -91,8 +111,8 @@ up_star_move_generator::operator bool() const
     return _num_moves > _num_generated;
 }
 
-int up_star_move_generator::compute_num_moves(
-    const up_star& game, bw to_play) const
+int up_star_move_generator::_compute_num_moves(const up_star& game,
+                                               bw to_play) const
 {
     const int ups = game.num_ups();
     if (ups == 0)
@@ -105,22 +125,11 @@ int up_star_move_generator::compute_num_moves(
         return 1;
 }
 
-inline bool is_same_player(int ups, bw to_play)
-{
-    return (ups > 0) == (to_play == BLACK);
-}
-
-inline int sign(int value)
-{
-    assert(value != 0);
-    return (value > 0)? 1 : -1;
-}
-
-//value 0: 0, *
-// value +1: up = {0 | *}, up* = {0,* | 0}
-// value -1: down = {* | 0}, down* = {0 | 0,*}
-// value >= 2: up(n) = {0|up(n-1)*}, up(n)* = {0|up(n-1)}
-// value <= -2: down(n) = {down(n-1)*|0}, down(n)* = {down(n-1)|0}
+// value 0: 0, *
+//  value +1: up = {0 | *}, up* = {0,* | 0}
+//  value -1: down = {* | 0}, down* = {0 | 0,*}
+//  value >= 2: up(n) = {0|up(n-1)*}, up(n)* = {0|up(n-1)}
+//  value <= -2: down(n) = {down(n-1)*|0}, down(n)* = {down(n-1)|0}
 move up_star_move_generator::gen_move() const
 {
     assert(_num_moves > _num_generated);
@@ -151,4 +160,3 @@ move_generator* up_star::create_move_generator(bw to_play) const
 }
 
 //---------------------------------------------------------------------------
-

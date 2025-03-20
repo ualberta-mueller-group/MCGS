@@ -26,7 +26,7 @@ enum sumgame_undo_code
 //////////////////////////////////////// sumgame_move
 struct sumgame_move
 {
-    sumgame_move(int subg, move m) : subgame_idx(subg), m(m) { }
+    sumgame_move(int subg, move m) : subgame_idx(subg), m(m) {}
 
     int subgame_idx;
     move m;
@@ -35,33 +35,31 @@ struct sumgame_move
 //////////////////////////////////////// play_record
 struct play_record
 {
-    play_record(sumgame_move sm) :
-        did_split(false), sm(sm), new_games()
-    { }
+    play_record(sumgame_move sm) : did_split(false), sm(sm), new_games() {}
 
     inline void add_game(game* game) { new_games.push_back(game); }
 
     bool did_split;
     sumgame_move sm;
-    std::vector<game const*> new_games; // doesn't own games, just stores them for debugging
-
+    std::vector<game const*>
+        new_games; // doesn't own games, just stores them for debugging
 };
 
 //////////////////////////////////////// solve_result
 struct solve_result
 {
-    bool win;
 
     solve_result() = delete;
 
-    solve_result(bool win) : win(win)
-    { }
+    solve_result(bool win) : win(win) {}
 
     // return this on timeout
     inline static std::optional<solve_result> invalid()
     {
         return std::optional<solve_result>();
     }
+
+    bool win;
 };
 
 //////////////////////////////////////// sumgame
@@ -70,7 +68,7 @@ class sumgame : public alternating_move_game
 public:
     sumgame(bw color);
     ~sumgame();
-    
+
     // TODO should these be public?
     void play_sum(const sumgame_move& m, bw to_play);
     void undo_move() override;
@@ -88,18 +86,24 @@ public:
 
         On timeout, the returned optional has no value
     */
-    std::optional<solve_result> solve_with_timeout(unsigned long long timeout) const;
+    std::optional<solve_result> solve_with_timeout(
+        unsigned long long timeout) const;
 
     bool solve_with_games(std::vector<game*>& gs) const;
     bool solve_with_games(game* g) const;
 
     int num_total_games() const;
     int num_active_games() const;
-    const game* subgame_const(int i) const {return _subgames[i]; }
-    game* subgame(int i) const {return _subgames[i]; }
+
+    const game* subgame_const(int i) const { return _subgames[i]; }
+
+    game* subgame(int i) const { return _subgames[i]; }
+
     const std::vector<game*>& subgames() const { return _subgames; }
+
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
+
 private:
     class undo_stack_unwinder;
 
@@ -113,18 +117,18 @@ private:
     void _assert_games_unique() const;
 
     mutable bool _should_stop;
-    std::vector<game*> _subgames; // sumgame owns these subgames
+    std::vector<game*> _subgames;
 
     std::vector<sumgame_undo_code> _undo_code_stack;
     std::vector<play_record> _play_record_stack;
     std::vector<sumgame_impl::change_record> _change_record_stack;
 };
+
 //---------------------------------------------------------------------------
 
-inline sumgame::sumgame(bw color) :
-    alternating_move_game(color),
-    _subgames()
-{ }
+inline sumgame::sumgame(bw color) : alternating_move_game(color), _subgames()
+{
+}
 
 inline int sumgame::num_total_games() const
 {
@@ -134,7 +138,7 @@ inline int sumgame::num_total_games() const
 inline int sumgame::num_active_games() const
 {
     int active = 0;
-    for (const game* g: _subgames)
+    for (const game* g : _subgames)
         if (g->is_active())
             ++active;
     return active;
@@ -145,4 +149,3 @@ inline int sumgame::num_active_games() const
 std::ostream& operator<<(std::ostream& out, const sumgame& s);
 
 //---------------------------------------------------------------------------
-

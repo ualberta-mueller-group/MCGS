@@ -39,6 +39,11 @@ MCGS_TEST_DEPS := $(call OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.d)
 #### For linter tooling
 ALL_SRC_FILES := $(MCGS_SRC) $(MCGS_SRC_H) $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H) 
 ALL_SRC_FILES := $(sort $(ALL_SRC_FILES))
+
+ALL_CPP_FILES := $(MCGS_SRC) $(MCGS_TEST_SRC)
+ALL_CPP_FILES := $(sort $(ALL_CPP_FILES))
+
+
 TIDY_CONFIG := .clang-tidy
 TIDY_CONFIG_HEADERS := .clang-tidy-headers
 FORMAT_SCRIPT := utils/format-files.py
@@ -62,17 +67,22 @@ ifdef USE_FLAGS
 endif
 
 
+# NOTE: clang-tidy should be invoked on cpp files
+
 # Tidy targets
+#$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 tidy:
-	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
+	$(eval LINT_FILES ?= $(ALL_CPP_FILES))
 	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
 
+#$(eval LINT_FILES ?= $(MCGS_SRC) $(MCGS_SRC_H))
 tidy_release:
-	$(eval LINT_FILES ?= $(MCGS_SRC) $(MCGS_SRC_H))
+	$(eval LINT_FILES ?= $(MCGS_SRC))
 	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
 
+#$(eval LINT_FILES ?= $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H))
 tidy_test:
-	$(eval LINT_FILES ?= $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H))
+	$(eval LINT_FILES ?= $(MCGS_TEST_SRC))
 	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
 
 tidy_header_functions:

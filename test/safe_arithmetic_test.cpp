@@ -2,7 +2,6 @@
 #include "safe_arithmetic.h"
 #include <limits>
 #include <cstdint>
-#include <iostream>
 #include <optional>
 
 using namespace std;
@@ -57,9 +56,11 @@ void test_addition_like()
     const int32_t& max = numeric_limits<int32_t>::max();
 
     typedef optional<int32_t> exp_t;
-    typedef tuple<int32_t, int32_t, exp_t, exp_t, exp_t, exp_t, exp_t, exp_t> test_case_t;
+    typedef tuple<int32_t, int32_t, exp_t, exp_t, exp_t, exp_t, exp_t, exp_t>
+        test_case_t;
     /*
-       Each line in this comment represents one expected result in the test_case_t
+       Each line in this comment represents one expected result in the
+       test_case_t
 
         safe_add, !add_will_wrap
         safe_add_negatable
@@ -70,6 +71,7 @@ void test_addition_like()
         safe_subtract_negatable(y, x)
     */
 
+    // clang-format off
     vector<test_case_t> test_cases // auto generated from a python script
     {
         {min, -1, {}, {}, {min + 1}, {max}, {min + 1}, {max}},
@@ -94,6 +96,7 @@ void test_addition_like()
 		{max, max, {}, {}, {0}, {0}, {0}, {0}},
 		{26, 91, {117}, {117}, {-65}, {65}, {-65}, {65}},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -136,6 +139,7 @@ void test_negate()
        negate_will_wrap(x), !safe_negate(x)
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {min, true},
@@ -144,6 +148,7 @@ void test_negate()
         {0, false},
         {1244, false},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -172,6 +177,7 @@ void test_mul2_shift()
         safe_mul2_shift(x, y)
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {min, 0, {}},
@@ -207,6 +213,7 @@ void test_mul2_shift()
         {1, 32, {}},
         {1, 33, {}},
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -243,6 +250,7 @@ void test_mod()
         safe_pow2_mod(x, y)
     */
 
+    // clang-format off
     vector<test_case_t> test_cases
     {
         {21, 0, {}},
@@ -258,6 +266,7 @@ void test_mod()
         {max, 4, {max % 4}},
         {0, 2, {0}}
     };
+    // clang-format on
 
     for (const test_case_t& test : test_cases)
     {
@@ -292,4 +301,3 @@ void safe_arithmetic_test_all()
     test_mul2_shift();
     test_mod();
 }
-

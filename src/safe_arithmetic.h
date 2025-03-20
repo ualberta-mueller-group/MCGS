@@ -8,11 +8,13 @@ static_assert(int32_t(-1) == int32_t(0xFFFFFFFF), "Not two's complement");
 
 static_assert(std::numeric_limits<int>::min() < 0);
 static_assert(std::numeric_limits<int>::max() > 0);
-static_assert(std::numeric_limits<int>::min() + 1 == -std::numeric_limits<int>::max());
+static_assert(std::numeric_limits<int>::min() + 1 ==
+              -std::numeric_limits<int>::max());
 
 //////////////////////////////////////// arithmetic wrapping checks
-template <class T>
-constexpr bool add_will_wrap(const T& x, const T& y) // NUMERIC
+
+template <class T> // NUMERIC
+constexpr bool add_will_wrap(const T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -22,7 +24,8 @@ constexpr bool add_will_wrap(const T& x, const T& y) // NUMERIC
     if (x > 0 && y > 0)
     {
         return x > (max - y); // (x + y) > max
-    } else if (x < 0 && y < 0)
+    }
+    else if (x < 0 && y < 0)
     {
         return x < (min - y); // (x + y) < min
     }
@@ -30,8 +33,8 @@ constexpr bool add_will_wrap(const T& x, const T& y) // NUMERIC
     return false;
 }
 
-template <class T>
-constexpr bool subtract_will_wrap(const T& x, const T& y) // NUMERIC
+template <class T> // NUMERIC
+constexpr bool subtract_will_wrap(const T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -41,7 +44,8 @@ constexpr bool subtract_will_wrap(const T& x, const T& y) // NUMERIC
     if (y > 0)
     {
         return x < (min + y); // (x - y) < min
-    } else if (y < 0)
+    }
+    else if (y < 0)
     {
         return x > (max + y); // (x - y) > max
     }
@@ -49,9 +53,8 @@ constexpr bool subtract_will_wrap(const T& x, const T& y) // NUMERIC
     return false;
 }
 
-
-template <class T>
-inline constexpr bool negate_will_wrap(const T& x) // SIGNED INTEGRAL
+template <class T> // SIGNED INTEGRAL
+inline constexpr bool negate_will_wrap(const T& x)
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
@@ -61,8 +64,8 @@ inline constexpr bool negate_will_wrap(const T& x) // SIGNED INTEGRAL
 //////////////////////////////////////// safe arithmetic operations
 // These should all be safe even with invalid arguments
 
-template <class T>
-inline constexpr bool safe_add(T& x, const T& y) // NUMERIC
+template <class T> // NUMERIC
+inline constexpr bool safe_add(T& x, const T& y)
 {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -73,8 +76,8 @@ inline constexpr bool safe_add(T& x, const T& y) // NUMERIC
     return true;
 }
 
-template <class T>
-inline constexpr bool safe_add_negatable(T& x, const T& y) // SIGNED INTEGRAL
+template <class T> // SIGNED INTEGRAL
+inline constexpr bool safe_add_negatable(T& x, const T& y)
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
@@ -91,9 +94,9 @@ inline constexpr bool safe_add_negatable(T& x, const T& y) // SIGNED INTEGRAL
     return true;
 }
 
-template <class T>
-inline constexpr bool safe_subtract(T& x, const T& y) // NUMERIC
-{ 
+template <class T> // NUMERIC
+inline constexpr bool safe_subtract(T& x, const T& y)
+{
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
     if (subtract_will_wrap(x, y))
@@ -103,8 +106,8 @@ inline constexpr bool safe_subtract(T& x, const T& y) // NUMERIC
     return true;
 }
 
-template <class T>
-inline constexpr bool safe_subtract_negatable(T& x, const T& y) // SIGNED INTEGRAL
+template <class T> // SIGNED INTEGRAL
+inline constexpr bool safe_subtract_negatable(T& x, const T& y)
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
@@ -121,8 +124,8 @@ inline constexpr bool safe_subtract_negatable(T& x, const T& y) // SIGNED INTEGR
     return true;
 }
 
-template <class T>
-constexpr bool safe_negate(T& x) // SIGNED INTEGRAL
+template <class T> // SIGNED INTEGRAL
+constexpr bool safe_negate(T& x)
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
@@ -138,8 +141,8 @@ constexpr bool safe_negate(T& x) // SIGNED INTEGRAL
 }
 
 // if successful, result is negatable
-template <class T1, class T2>
-constexpr bool safe_mul2_shift(T1& shiftee, const T2& exponent) // SIGNED INTEGRAL and INTEGRAL
+template <class T1, class T2> // SIGNED INTEGRAL and INTEGRAL
+constexpr bool safe_mul2_shift(T1& shiftee, const T2& exponent)
 {
     static_assert(std::is_integral_v<T1> && std::is_integral_v<T2>);
     static_assert(std::is_signed_v<T1>);
@@ -161,11 +164,11 @@ constexpr bool safe_mul2_shift(T1& shiftee, const T2& exponent) // SIGNED INTEGR
     }
 
     // Because shifting negative values is undefined:
-    using T1_uns = typename std::make_unsigned<T1>::type; // NOLINT
-    T1_uns mask_uns(-1);
+    using T1_Uns = typename std::make_unsigned<T1>::type; // NOLINT(readability-identifier-naming)
+    T1_Uns mask_uns(-1);
     assert(n_bits >= 1 + exponent); // no underflow on next line
-    mask_uns <<= (n_bits - 1 - exponent); // (exponent + 1) most significant bits; prevents wrapping AND sign flip
-
+    // (exponent + 1) most significant bits; prevents wrapping AND sign flip
+    mask_uns <<= (n_bits - 1 - exponent);
     const T1& mask = reinterpret_cast<const T1&>(mask_uns);
 
     assert(x >= 0);
@@ -188,8 +191,8 @@ constexpr bool safe_mul2_shift(T1& shiftee, const T2& exponent) // SIGNED INTEGR
     return true;
 }
 
-template <class T>
-constexpr bool safe_pow2_mod(T& x, const T& mod) // SIGNED INTEGRAL
+template <class T> // SIGNED INTEGRAL
+constexpr bool safe_pow2_mod(T& x, const T& mod)
 {
     static_assert(std::is_integral_v<T>);
     static_assert(std::is_signed_v<T>);
@@ -218,4 +221,3 @@ constexpr bool safe_pow2_mod(T& x, const T& mod) // SIGNED INTEGRAL
     x = -((-x) & (mod - 1));
     return true;
 }
-

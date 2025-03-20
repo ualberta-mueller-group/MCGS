@@ -14,7 +14,6 @@
 #include "autotests.h"
 #include <chrono>
 
-
 using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
@@ -29,7 +28,8 @@ int main(int argc, char** argv)
 
     if (opts.run_tests)
     {
-        run_autotests(opts.test_directory, opts.outfile_name, opts.test_timeout);
+        run_autotests(opts.test_directory, opts.outfile_name,
+                      opts.test_timeout);
         return 0;
     }
 
@@ -44,7 +44,8 @@ int main(int argc, char** argv)
             if (first_case)
             {
                 first_case = false;
-            } else
+            }
+            else
             {
                 cout << endl;
             }
@@ -62,31 +63,37 @@ int main(int argc, char** argv)
             }
 
             cout << "Player: " << color_char(gc.to_play) << endl;
-            cout << "Expected: " << test_result_to_string(gc.expected_outcome) << endl;
+            cout << "Expected: " << test_result_to_string(gc.expected_outcome)
+                 << endl;
 
             if (opts.dry_run)
             {
                 cout << "Not running search..." << endl;
-            } else
+            }
+            else
             {
-                std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+                std::chrono::time_point start =
+                    std::chrono::high_resolution_clock::now();
                 bool result = sum.solve(); // TODO allow timeout here?
-                std::chrono::time_point end = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double, std::milli> duration = end - start;
+                std::chrono::time_point end =
+                    std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> duration =
+                    end - start;
 
-                cout << "Got: " << test_result_to_string((test_result) result) << endl;
+                cout << "Got: " << test_result_to_string((test_result) result)
+                     << endl;
                 cout << "Time (ms): " << duration.count() << endl;
-                
+
                 cout << "Status: ";
                 if (gc.expected_outcome == TEST_RESULT_UNSPECIFIED)
                 {
                     cout << "COMPLETED";
-                } else
+                }
+                else
                 {
                     cout << ((gc.expected_outcome == result) ? "PASS" : "FAIL");
                 }
                 cout << endl;
-
             }
             if (gc.comments.size() > 0)
             {

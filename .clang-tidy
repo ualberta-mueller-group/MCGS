@@ -1,9 +1,10 @@
-Checks: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers'
-WarningsAsErrors: 'readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers'
+Checks: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers,misc-use-internal-linkage'
+WarningsAsErrors: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers,misc-use-internal-linkage'
 HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:
 
+  - { key: misc-use-internal-linkage.FixMode, value: None }
 
   - { key: modernize-use-override.IgnoreDestructors, value: true }
   - { key: modernize-use-override.AllowOverrideAndFinal, value: true }
@@ -25,7 +26,6 @@ CheckOptions:
   - { key: readability-identifier-naming.ProtectedMethodCase, value: lower_case }
   - { key: readability-identifier-naming.PrivateMethodCase, value: lower_case }
 
-
   - { key: readability-identifier-naming.PublicMemberCase, value: lower_case }
   - { key: readability-identifier-naming.ProtectedMemberCase, value: lower_case }
   - { key: readability-identifier-naming.PrivateMemberCase, value: lower_case }
@@ -38,24 +38,21 @@ CheckOptions:
   - { key: readability-identifier-naming.UnionCase, value: lower_case }
   - { key: readability-identifier-naming.VariableCase, value: lower_case }
 
+  - { key: readability-identifier-naming.TypeTemplateParameterCase, value: Camel_Snake_Case }
+  - { key: readability-identifier-naming.ValueTemplateParameterCase, value: lower_case }
 
 #  - { key: readability-identifier-naming.ConstexprVariableCase, value: lower_case }
 #  - { key: readability-identifier-naming.GlobalVariableCase, value: lower_case }
 #  - { key: readability-identifier-naming.LocalVariableCase, value: lower_case }
 #  - { key: readability-identifier-naming.StaticVariableCase, value: lower_case }
 
-
   - { key: readability-identifier-naming.ConstexprFunctionCase, value: lower_case }
   - { key: readability-identifier-naming.ConstexprMethodCase, value: lower_case }
   - { key: readability-identifier-naming.ConstexprVariableCase, value: UPPER_CASE }
 
-
   - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
 
-
-
   - { key: readability-identifier-naming.ClassMemberIgnoredRegexp, value: "_?[a-z_0-9]+" }
-
 
   - { key: readability-identifier-naming.StaticVariableCase, value: lower_case }
 
