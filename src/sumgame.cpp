@@ -278,7 +278,6 @@ optional<solve_result> sumgame::_solve_with_timeout()
     _debug_extra();
 #endif
 
-    // TODO does this hurt performance?
     undo_stack_unwinder stack_unwinder(*this);
 
     if (_over_time())
