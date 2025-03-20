@@ -1,7 +1,10 @@
 import subprocess
 import os
 import sys
-
+"""
+Grouping C++ source files into chunks of 10, run clang-format on a chunk,
+and optionally open it in nvim
+"""
 
 use_vim = False
 chunk_no = -1
@@ -80,7 +83,7 @@ f.write(proc.stdout)
 f.close()
 
 if use_vim:
-    vim_files=""
+    vim_files = ""
     for f in chunk:
         ft = get_transformed(f)
         vim_files += f"tabnew {f} | "

@@ -1,3 +1,4 @@
+# Used by "format" targets in makefile
 import subprocess
 import sys
 from pathlib import Path

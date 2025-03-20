@@ -11,6 +11,7 @@ outfile = open(outfile_name, "w")
 
 ngames = 16
 
+
 def convert_cpp_arg_single(arg):
     if type(arg) is bool:
         return "true" if arg else "false"
@@ -78,7 +79,7 @@ class dyadic_rational:
         self.bottom = 1 << random.randint(0, 5)
 
     def as_mcgs_input(self):
-        line = f"[dyadic_rational] ({self.top} {self.bottom})"
+        line = f"[dyadic_rational] ({self.top}/{self.bottom})"
         return line
 
     def as_cgsuite_input(self):
@@ -101,6 +102,7 @@ class nimber:
     def as_cpp(self):
         return get_create_expr("nimber", [self.val])
 
+
 class switch_game:
     def __init__(self):
         self.left_top = random.randint(-48, 48)
@@ -110,7 +112,7 @@ class switch_game:
         self.right_bottom = 1 << random.randint(0, 5)
 
     def as_mcgs_input(self):
-        return f"[switch_game] ({self.left_top},{self.left_bottom} {self.right_top},{self.right_bottom})"
+        return f"[switch_game] ({self.left_top}/{self.left_bottom}, {self.right_top}/{self.right_bottom})"
 
     def as_cgsuite_input(self):
         line = "{"
@@ -125,6 +127,7 @@ class switch_game:
         args.append(f"fraction({self.left_top}, {self.left_bottom})")
         args.append(f"fraction({self.right_top}, {self.right_bottom})")
         return get_create_expr("switch_game", args)
+
 
 classes = [integer_game, up_star, dyadic_rational, nimber, switch_game]
 
@@ -151,9 +154,11 @@ for i in range(ngames):
     if (i + 1) in range(ngames):
         cpp_string += "\n"
 
-outfile.write("/_ Nim := game.heap.Nim \\\n")
-outfile.write(f"/_CGSUITE STRING\n{cgsuite_string}\n\\\n")
-outfile.write(f"/_CPP STRING\n{cpp_string}\n\\\n")
+outfile.write("{B, W}\n")
 
+outfile.write("\n")
+outfile.write(f"/*_ CGSUITE STRING\nNim := game.heap.Nim\n{cgsuite_string}\n*/\n")
+outfile.write("\n")
+outfile.write(f"/*_ CPP STRING\n{cpp_string}\n*/\n")
 
 outfile.close()
