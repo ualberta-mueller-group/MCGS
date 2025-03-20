@@ -112,13 +112,20 @@ To implement a new game `x`:
 The `test/input` directory contains input files used by unit tests. Add your new tests there.
 
 ### Implementing Game-Specific Optimizations
-Currently there are two game-specific optimizations. More will be added in future versions. Optimizations are enabled by default, and can be toggled off (see `./MCGS --help` for details on disabling optimizations).
+Currently there are two game-specific optimizations. More will be added in future versions. Optimizations are enabled by default, and can be toggled off (see `./MCGS --help` for details on disabling optimizations). Some optimizations introduce significant overhead.
 
-#### Splitting Into Subgames
+#### Splitting Into Subgames (`subgame_split`)
 In your game `x`, override and implement `game::split_implementation()`. See `game.h` for important implementation details, and add unit tests.
-`split_implementation()` is used to break apart a `game` into a list of subgames whose sum is equal to the original `game`. This speeds up search by allowing MCGS to reason about smaller independent subproblems.
+`split_implementation()` is used to break apart a `game` into a list of subgames whose sum is equal to the original `game`. This may speed up search by allowing MCGS to reason about smaller independent subproblems.
 
-#### Simplifying Sums of Games
-Currently MCGS simplifies sums containing "simple" CGT games (`integer_game`, `dyadic_rational`, `up_star`, `switch_game`, and `nimber`), at every minimax search step, by summing together their values, resulting in fewer subgames. If your game's `split_implementation()` method returns subgames of these types, they will be included in this simplification step. 
+This optimization has significant overhead, and in the current version is unlikely to be useful unless your game splits into "basic" CGT games, and `simplify_basic_cgt_games` remains enabled.
 
-Currently there is no hook to write your own similar simplification steps, but you can modify existing functions. See functions `sumgame::simplify_basic` (sumgame.cpp) and `simplify_basic_all` (cgt_game_simplification.cpp).
+#### Simplifying Sums of Games (`simplify_basic_cgt_games`)
+Currently MCGS simplifies sums containing "basic" CGT games (`integer_game`, `dyadic_rational`, `up_star`, `switch_game`, and `nimber`), by summing together their values, resulting in fewer subgames. If your game's `split_implementation()` method returns subgames of these types, they will be included in this simplification step. 
+
+Currently there is no hook to write your own similar simplification steps, but you can modify existing functions. See the following functions:
+- `sumgame::simplify_basic` (sumgame.cpp)
+- `sumgame::undo_simplify_basic` (sumgame.cpp)
+- `simplify_basic_all` (cgt_game_simplification.cpp).
+
+This optimization adds very little overhead, as MCGS avoids running it until necessary.
