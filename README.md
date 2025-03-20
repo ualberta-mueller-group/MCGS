@@ -118,9 +118,9 @@ Currently there are two game-specific optimizations. More will be added in futur
 In your game `x`, override and implement `game::split_implementation()`. See `game.h` for important implementation details, and add unit tests.
 `split_implementation()` is used to break apart a `game` into a list of subgames whose sum is equal to the original `game`. This may speed up search by allowing MCGS to reason about smaller independent subproblems.
 
-This optimization has significant overhead, and in the current version is unlikely to be useful unless your game splits into "basic" CGT games, and `simplify_basic_cgt_games` remains enabled.
+This optimization has significant overhead, and in the current version is unlikely to be useful unless your game splits into "basic" CGT games, and `simplify_basic_cgt` remains enabled.
 
-#### Simplifying Sums of Games (`simplify_basic_cgt_games`)
+#### Simplifying Sums of Games (`simplify_basic_cgt`)
 Currently MCGS simplifies sums containing "basic" CGT games (`integer_game`, `dyadic_rational`, `up_star`, `switch_game`, and `nimber`), by summing together their values, resulting in fewer subgames. If your game's `split_implementation()` method returns subgames of these types, they will be included in this simplification step. 
 
 Currently there is no hook to write your own similar simplification steps, but you can modify existing functions. See the following functions:

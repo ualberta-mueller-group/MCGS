@@ -65,8 +65,8 @@ void print_help_message(const string& exec_name)
     print_flag("--no-subgame-split", "Don't split subgames after playing moves in them");
 
     print_flag(
-        "--no-simplify-basic-cgt-games",
-        "Don't simplify basic CGT games (switch_game, integer_game, etc).");
+        "--no-simplify-basic-cgt",
+        "Don't simplify basic CGT games (integer_game, dyadic_rational, up_star, switch_game, nimber).");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -284,9 +284,9 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg == "--no-simplify-basic-cgt-games")
+        if (arg == "--no-simplify-basic-cgt")
         {
-            optimization_options::set_simplify_basic_cgt_games(false);
+            optimization_options::set_simplify_basic_cgt(false);
             continue;
         }
 

@@ -507,7 +507,7 @@ void sumgame::undo_move()
 
 void sumgame::simplify_basic()
 {
-    if (!optimization_options::simplify_basic_cgt_games())
+    if (!optimization_options::simplify_basic_cgt())
         return;
 
     if (!_need_cgt_simplify)
@@ -530,7 +530,7 @@ void sumgame::simplify_basic()
 
 void sumgame::undo_simplify_basic()
 {
-    if (!optimization_options::simplify_basic_cgt_games())
+    if (!optimization_options::simplify_basic_cgt())
         return;
 
     _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);

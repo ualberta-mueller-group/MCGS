@@ -17,18 +17,18 @@ public:
         _subgame_split = val;
     }
 
-    // simplify_basic_cgt_games
-    inline static bool simplify_basic_cgt_games()
+    // simplify_basic_cgt
+    inline static bool simplify_basic_cgt()
     {
-        return _simplify_basic_cgt_games;
+        return _simplify_basic_cgt;
     }
 
-    inline static void set_simplify_basic_cgt_games(bool val)
+    inline static void set_simplify_basic_cgt(bool val)
     {
-        _simplify_basic_cgt_games = val;
+        _simplify_basic_cgt = val;
     }
 
 private:
     static bool _subgame_split;
-    static bool _simplify_basic_cgt_games;
+    static bool _simplify_basic_cgt;
 };
