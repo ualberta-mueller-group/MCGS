@@ -468,12 +468,12 @@ void sumgame::undo_move()
 
 void sumgame::simplify_basic()
 {
-    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
-
     if (!optimization_options::simplify_basic_cgt_games())
     {
         return;
     }
+
+    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
 
     _change_record_stack.emplace_back();
     change_record& record = _change_record_stack.back();
@@ -483,12 +483,12 @@ void sumgame::simplify_basic()
 
 void sumgame::undo_simplify_basic()
 {
-    _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
-
     if (!optimization_options::simplify_basic_cgt_games())
     {
         return;
     }
+
+    _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
 
     assert(!_change_record_stack.empty());
     change_record& record = _change_record_stack.back();
