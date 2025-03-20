@@ -3,19 +3,25 @@ This document includes more detailed information than `README.md`, including des
 
 
 # Search and Solving a Game
-- Two classes implement game solving: `alternating_move_game`
-and `sumgame`
+- Two classes implement game solving: `alternating_move_game` and `sumgame`
 - `alternating_move_game` is used for solving a single game, without splitting it into a sum of subgames
     - `alternating_move_game::solve` is a basic boolean negamax search
 - `sumgame` is used to store and solve a sum of games. 
-It is derived from `alternating_move_game`.
-    - `sumgame::solve` is a basic boolean negamax search for sums
-    - `sumgame::solve_with_timeout` can search with a time limit
-    - TODO `sumgame::solve_with_timeout` could use a macro to check if the result of a recursive call timed out
+    - It is derived from `alternating_move_game`
+        - Reimplements `solve` method
+    - Solving implemented mostly by private method `sumgame::_solve_with_timeout`
+        - Boolean negamax search, with optimizations
+            - Splits a subgame into more subgames after playing a move in it
+            - Simplifies "basic" CGT games
+        - Other `solve` methods within `sumgame` are implemented in terms of this method
+        - A timeout of 0 means search never times out
+        - In the future we could use a macro to check if the result of a recursive call timed out
+    - `sumgame::solve` runs until completion, without timing out
+    - `sumgame::solve_with_timeout` runs until it either completes, or the timeout expires
     - `sumgame::solve_with_games` temporarily adds games to the sum, calls `sumgame::solve`, then removes the games and returns the result.
 
-### "Logically const" interface for solving games
-- In both `alternating_move_game` and `sumgame`, the `solve` method is declared as const.
+## "Logically const" interface for solving games
+- In both `alternating_move_game` and `sumgame`, the public `solve` methods are declared as const.
 - This means that while the game state may be modified during solve,
 it must be restored before the end of `solve` in any case, including timeout or other failure modes.
 - `class assert_restore_game` in `alternating_move_game.h` is a stub for
@@ -61,78 +67,36 @@ These functions perform operations, and will only change the operands on success
     - `x := x * 2^exponent` (implemented as left shift)
     - Negative values of `x` are allowed
     - also `false` when the operation would flip the sign
-    - On success, the resulting `x` is also negatable
+    - On success, the resulting `x` is also negatable without wrapping
 - `safe_pow2_mod(signed int& x, const signed int pow2)`
     - `x := x % pow2` (implemented as bitwise `&`)
     - `false` if `pow2` is not a power of 2, or `pow2 <= 0`
 
 ## safe_int<T> (future work?)
-Currently, the user of these functions must check if they succeeded, and must be careful to only operate on values in a safe way. The user must ensure that errors don't go undetected. If handling overflow becomes a persistent theme in new code, we could make a `safe_int<T>` template class which wraps integer types, and implements safe arithmetic operations. Operations which cause wrapping would set an "error" bit in the `safe_int`, and operations having one or more operands in the error state would return another `safe_int` also in an error state. Users of this type could do arithmetic as if it were a normal integral type, but attempting to use the underlying integer value would throw an exception if the error bit is set; `<`, `<=`, `==`, `!=`, `>`, `>=`, `.value()` and `operator bool()` would all throw in the error state. This would ensure that all errors are caught.
+This is not implemented, but described as a possible future task.
+- The user of safe arithmetic functions must still be careful to avoid errors
+- Ideally we would have a `safe_int<T>` type, for signed integral types
+    - Has two private fields: `T _value` and `bool _is_valid`
+    - Has range of `[T_MIN + 1, T_MAX]`, assuming `T_MIN + 1 == -T_MAX`
+    - Operations causing overflow will invalidate the result
+    - Operations using invalid operands give an invalid result
+    - Reading the value of an invalid result throws an exception
+        - Programmer has to check `is_valid()` method at the end of computation before reading value, to avoid an exception
+        - Ensures correctness; if no exception was thrown, the program is correct
+- Have a macro `CHECK_SAFE_INT(x, code)`
+    - If `x` is not valid, run `code` (allow cleanup and return from function)
 
-We may not need this if safe arithmetic isn't needed in much future code.
-
-The range of a `safe_int<T>` should be `[T_MIN + 1, T_MAX]`, assuming `T_MIN + 1 == -T_MAX`, because the value should be negatable (i.e. for use by `game::inverse()`). Currently it is possible to construct `integer_game`, `dyadic_rational`, `switch_game`, and `up_star` using `INT_MIN`, causing their `inverse()` to be incorrect, though moves cannot be played on these games because of the limitations of `move` being an `int`.
-
-These operations would be significantly slower, but would ensure correctness.
-
-We could also have a macro `#define CHECK_SAFE_INT(x, code) {if (!x.ok()) {code}}`, with `code` being a lambda function and/or return statement, as a way to do clean up before aborting the function. A user of this class should use this macro to detect errors instead of catching exceptions, as that is likely to be much slower.
-
-For most binary operators, 3 operations need to be defined: `safe_int<T> OP safe_int<T>`, `safe_int<T> OP T`, and `T OP safe_int<T>`.
-
-Operations we would need to define:
-- binary +, -, <<, >>
-- maybe binary * and /, though I'm not sure how to best do this...
-- binary pow2_mod
-- +=, -=
-- pre/post increment/decrement
-- binary &, |, ^
-- unary -, ~
-
-# "RTTI": Run-time type information (obj_id.h)
-- Defines interface class `i_obj_id` with virtual method `obj_id_t get_obj_id()`
-    - `obj_id_t` is an integral type with a unique value for every class inherting `class i_obj_id`
-    - Also defines a template function `obj_id_t get_obj_id<T>()` to get the `obj_id_t` for a type without needing an instance of the type
-    - Currently the implementation is provided by the interface class, using `unordered_map<std::type_index, obj_id_t>`
-
-TODO: tweak this before next release to ensure performance is OK
-
-Two possibly better solutions, both defined in terms of a template function `obj_id_t get_obj_id<T>()` which has variable `static obj_id_t my_id = __next_id++` (this removes the need for a map):
-
-1. Interface declares pure abstract method `get_obj_id()`. Games manually call the template version `get_obj_id<T>()` to implement the method:
-```
-class clobber: public game
-{
-    obj_id_t get_obj_id() const override
-    {
-        return get_obj_id<clobber>();
-    }
-};
-
-```
-
-2. Interface declares variable `protected obj_id_t my_id`, and implements non-virtual `obj_id_t get_obj_id()` which checks if `my_id` was initialized, then returns it. Games inherit a template class which initialize the value:
-```
-template <class T>
-class obj_id_impl<T>
-{
-    static_assert(is_base_of_v(i_obj_id, T));
-
-    obj_id_impl()
-    {
-        my_id = get_obj_id<T>();
-    }
-}
-
-...
-
-class clobber: public game, private obj_id_impl<clobber>
-{
-    // No other work needed to implement the function here
-}
-```
-
-Solution 2 gets rid of a virtual method call, and may be simpler, but the `obj_id_impl<T>` could be missed by a programmer
-
+# "RTTI": Run-time type information (game_type.h)
+- Defines interface class `i_game_type`
+    - Currently implements method `game_type_t game_type() const` ("concrete" non-virtual method)
+    - Also implements template function `game_type_t game_type<T>()`
+    - `game_type_t` is an unsigned integral type with a unique value for every class inheriting from `i_game_type`
+    - Both the template and method versions give the same result for the same `T`
+        - The value is determined at run-time, and is dependent on the order of `game_type()` calls
+    - Uses built-in C++ RTTI (`std::type_info` and `std::type_index`) to look up value in a `std::unordered_map`
+        - Template version is faster as it stores this value in a static variable after the first map lookup
+- `game.h` defines template `T* cast_game<T*>(game*)` acting as a `reinterpret_cast`, but uses
+`assert`s to verify that the game is not `nullptr`, is active, and is of type `T` (using its `game_type_t`)
 
 # More on data types
 
@@ -150,13 +114,11 @@ Represents a move made in a `sumgame`
 
 ## `sumgame_impl::change_record` class (sumgame_change_record.h)
 - Similar to `play_record`; used to track changes to `sumgame` (i.e. by sumgame simplification steps), to allow undoing of changes
-    - Holds 2 `vector<game*>`s: one for deactivated games, and one for added games
-    - Undo operation first reactivates games, then pops games from `sumgame` and deletes them
-- Simplification code is implemented in `cgt_game_simplification.h`, and is called by `change_record` methods
-    - i.e. `change_record::simplify_basic(sumgame&)` which sums together basic CGT games such as `integer_game`, `dyadic_rational`, `switch_game` etc
+- Holds 2 `vector<game*>`s: one for deactivated games, and one for added games
+- Undo operation first reactivates games, then pops games from `sumgame` and deletes them
 
 ## `sumgame_map_view` class (sumgame_map_view.h)
-- Sorts all `game` objects contained by a `sumgame` using RTTI (run-time type information), acting as a map from game type to `vector<game*>&`
+- Sorts all `game` objects contained by a `sumgame` using their `game_type_t`, acting as a map from game type to `vector<game*>&`
 - Has public methods to mutate underlying `sumgame` while keeping it synchronized with the map view
     - These mutations are stored in a `change_record`
     - i.e. `sumgame_map_view::deactivate_game(game*)`, `sumgame_map_view::add_game(game*)`
@@ -180,7 +142,7 @@ It derives from `alternating_move_game` and reimplements the
     - It uses `sumgame_move`
     - It keeps its own `_play_record_stack` with sum-level info
     - Subgames keep their own stacks with local moves as well
-- Has an "undo stack" consisting of multiple vectors
+- Has an "undo stack" consisting of multiple `vector`s
     - `vector<sumgame_undo_code>`
         - Stack of enum type indicating which undo functions need to be called before returning from the current minimax search step
         - Contains markers, `SUMGAME_UNDO_STACK_FRAME`, pushed at the start of each minimax search step
@@ -189,12 +151,13 @@ It derives from `alternating_move_game` and reimplements the
     - `vector<sumgame_impl::change_record>`
         - To undo other mutations to the `sumgame` i.e. by game simplification steps
     - These are stored as vector<T> instead of vector<T*> with the aim of reducing CPU cache misses
-        - TODO: explore this before next release
+        - This seems to be slightly faster, but we should re-verify this when significantly changing the undo stack
 
 ## `fraction` class (fraction.h)
 - Simple and lightweight fraction type whose denominator must be a positive power of 2
     - Consists only of 2 private `int`s: `_top` and `_bottom`, making copying fast
         - These `int`s must be within the interval `[INT_MIN + 1, INT_MAX]`, ensuring values are negatable without overflow
+        - This range is enforced by the constructor and arithmetic operations
     - Has comparison operators (`<`, `<=`, `==`, `!=`, `>=`, `>`, `fraction::get_relation()`)
         - These will never fail, but are significantly more expensive than `int` comparisons due to needing to make operands compatible (have the same denominator)
         - `fraction(1, 2) == fraction(2, 4)`
@@ -252,13 +215,13 @@ in a sum.
 and is stored in the move stack. 
 - `undo_move` must respect and use the move player color information in the stack.
 
-# Bounds
-`bounds.h` and `bounds.cpp` define functions and types used for finding lower and upper bounds of games.
+# Bounds (bounds.h)
+Defines functions and types used for finding lower and upper bounds of games.
 
 - The `bound_scale` enum represents a scale of games on which bounds are found.
 - `bound_t` is a signed integral type representing an index along a bound scale.
 - The functions `get_scale_game()` and `get_inverse_scale_game()` return a new `game` object for a given scale and index along the scale.
-- The `relation` enum denotes how two games are related (i.e. less than, equal to, etc).
+- The `relation` enum, (cgt_basics.h), is used to represent how a game relates to its bounds
 - The `bounds_options` struct specifies a scale and interval on which bounds should be searched for.
 
 Some scales and their games at select indices are shown in the following table:
@@ -274,7 +237,7 @@ A pair of lower and upper bounds for a sumgame `S` is represented by the `game_b
 For serializaton purposes, it may be better to encode data for each bound into one `bound_t` using bitmasks, instead of having a `bound_t`, `bool`, and `relation`.
 
 ## `find_bounds()` function
-`find_bounds()` computes both bounds for a `sumgame`, or `vector<game*>`, or `game*`. It takes a `vector` of one or more `bounds_options` structs, and returns a `vector` containing one `game_bounds` object for each `bounds_options`. The actual return type is `vector<game_bounds_ptr>`, where `game_bounds_ptr` is a typedef of `shared_ptr<game_bounds>`.
+`find_bounds()` computes both bounds for a `sumgame`, or `vector<game*>`, or `game*`. It takes a `vector` of one or more `bounds_options` structs, and returns a `vector` containing one `game_bounds` object for each `bounds_options`. The actual return type is `vector<game_bounds_ptr>` (`vector<shared_ptr<game_bounds>>`)
 
 `find_bounds()` implements binary search, and calls `sumgame::solve_with_games()` to compare `S` against games on a scale. Fuzzy comparisons (when `S - Gi` for some scale index `i` is a first player win) cause the search space represented by the interval `[MIN, MAX]` to split into two intervals: `[MIN, i)` and `(i, MAX]`, and search continues on both new intervals.
 
@@ -309,7 +272,7 @@ Searching for bounds is faster within smaller intervals. When finding bounds for
 
 Maybe bound generation in the database should be done using a sliding window of statistics for the last `N` games to help size intervals appropriately.
 
-# Sumgame Simplification
+# Sumgame Simplification (cgt_game_simplification.h)
 `sumgame::simplify_basic()` simplifies the sumgame by summing together basic CGT games and simplifying switches, (and `sumgame::undo_simplify_basic()` undoes this). Each step handles a different game type. Run-time type information is used to distinguish game types. To ensure that new games produced by a previous step may be included in the next step, steps happen in the following order:
 
 1. `nimber`
@@ -332,10 +295,10 @@ First, all `switch_game`s are separated based on their `switch_kind`. Only `SWIT
 
 Note that operations involve the `fraction` class, and when arithmetic overflow would have occurred during simplification of a given `switch_game` object, this particular `switch_game` object is skipped and left untouched.
 
-#### Proper switch
+### Proper switch
 Proper switches are `switch_game`s where `X > Y`. These games are normalized to produce a sum `M + {A | -A}`, for fractions `M` and `A`, where `M` is the mean of `X` and `Y`, and `A > -A`. `M` is added to the `sumgame` as a `dyadic_rational`, and `{A | -A}` is added to the `sumgame` as a `switch_game`.
 
-#### Convertible number
+### Convertible number
 Switches representing numbers are `switch_game`s where `X <= Y`. Several subcases occur:
 
 - If `X < 0` and `Y > 0`, the game is 0 (so it is just deactivated)
@@ -398,26 +361,27 @@ a move generator in a `std::unique_ptr`
 - removed `nim` class and moved functionality such as nim sum to `nimber`
 - implemented `game::inverse()` for all game types
 
-
 ### Version 1.1 completed parts 
 - More cleanup and Tools and Components for Database
     - Code formatting tools and checks, "lint"-like
     - `scale` S such as multiples of up, or up+star, or integers
         - binary search to find upper/lower bounds for a game G on scale S
         - simplify `game` G in `sumgame` S
-            - compare G with a simpler game H, replace in S if equal
-            - compare G1+G2 with a simpler H, replace in S if equal
-
-            - change read from string functions to directly create sumgame
             - compare with/without subgame split
-
-## Future: Smaller Step Versions 1.x to Prepare for Version 2
-
-### Version 2
 - simplify games of same type in S, e.g.
     - add up integers/rationals
     - add ups+stars
     - add nimbers
+
+## Future: Smaller Step Versions 1.x to Prepare for Version 2
+- change read from string functions to directly create sumgame
+    - this would require `sumgame` to be the sole owner of its games
+    - OR, the `game_case` produced by `file_parser::parse_chunk` could own 
+    the games in a `vector<unique_ptr<game>>`
+- compare G with a simpler game H, replace in S if equal
+- compare G1+G2 with a simpler H, replace in S if equal
+
+### Version 2
 - general sum simplifications
     - remove/deactivate 0
     - find inverse pairs and deactivate

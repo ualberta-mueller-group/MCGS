@@ -18,6 +18,9 @@ public:
     /*
        Functions below here will never cause overflow. They are
        always successful.
+
+       However, constructing invalid fractions, or setting invalid values,
+       will throw an exception.
     */
     fraction(const dyadic_rational& rational);
 
