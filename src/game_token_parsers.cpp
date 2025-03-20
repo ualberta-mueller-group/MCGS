@@ -15,7 +15,8 @@ namespace {
     Calls split_string() on the line, after surrounding special characters with
     spaces
 */
-vector<string> get_string_tokens(const string& line, const vector<char>& special_chars)
+vector<string> get_string_tokens(const string& line,
+                                 const vector<char>& special_chars)
 {
     const size_t N = line.size();
 
@@ -25,8 +26,9 @@ vector<string> get_string_tokens(const string& line, const vector<char>& special
     for (size_t i = 0; i < N; i++)
     {
         const char& c = line[i];
-        
-        if (find(special_chars.begin(), special_chars.end(), c) != special_chars.end())
+
+        if (find(special_chars.begin(), special_chars.end(), c) !=
+            special_chars.end())
         {
             new_line.push_back(' ');
             new_line.push_back(c);
@@ -92,7 +94,8 @@ bool get_int(const vector<string>& string_tokens, size_t& idx, int& val)
 }
 
 // also matches ints
-bool get_fraction(const vector<string>& string_tokens, size_t& idx, vector<fraction>& fracs)
+bool get_fraction(const vector<string>& string_tokens, size_t& idx,
+                  vector<fraction>& fracs)
 {
     const size_t N = string_tokens.size();
     if (!(idx < N))
@@ -108,7 +111,7 @@ bool get_fraction(const vector<string>& string_tokens, size_t& idx, vector<fract
     };
 
     // must have 1st int
-    if (!get_int(string_tokens, idx, top)) 
+    if (!get_int(string_tokens, idx, top))
         return false;
 
     if (!(idx < N))
@@ -140,7 +143,7 @@ bool consume_optional_comma(const vector<string>& string_tokens, size_t& idx)
         return true; // end of input OK
 
     const string& token = string_tokens[idx];
-    
+
     // non-comma OK
     if (!is_comma(token))
         return true;
@@ -153,7 +156,7 @@ bool consume_optional_comma(const vector<string>& string_tokens, size_t& idx)
 /*
     Also matches empty list
 
-   Spaces or commas can separate list items, but commas cannot be at the 
+   Spaces or commas can separate list items, but commas cannot be at the
    end of the list
 
    i.e.
@@ -190,7 +193,6 @@ bool get_fraction_list(const string& line, vector<fraction>& fracs)
 }
 
 } // namespace
-
 
 ////////////////////////////////////////////////// game parsers
 

@@ -162,7 +162,8 @@ std::unordered_set<game_type_t> get_cgt_type_set()
 bool is_simple_cgt(game* g)
 {
     // TODO this should be initialized before time is counted
-    static const std::unordered_set<game_type_t> CGT_TYPE_SET = get_cgt_type_set();
+    static const std::unordered_set<game_type_t> CGT_TYPE_SET =
+        get_cgt_type_set();
 
     game_type_t type = g->game_type();
     return CGT_TYPE_SET.find(type) != CGT_TYPE_SET.end();

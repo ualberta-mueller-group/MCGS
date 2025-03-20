@@ -62,11 +62,12 @@ void print_help_message(const string& exec_name)
     cout << "\tThese flags toggle optimizations on/off." << endl;
     cout << endl;
 
-    print_flag("--no-subgame-split", "Don't split subgames after playing moves in them");
+    print_flag("--no-subgame-split",
+               "Don't split subgames after playing moves in them");
 
-    print_flag(
-        "--no-simplify-basic-cgt",
-        "Don't simplify basic CGT games (integer_game, dyadic_rational, up_star, switch_game, nimber).");
+    print_flag("--no-simplify-basic-cgt",
+               "Don't simplify basic CGT games (integer_game, dyadic_rational, "
+               "up_star, switch_game, nimber).");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -106,7 +107,8 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag("--parser-debug", "Print file_parser debug info.");
 
-    print_flag("--assert-correct-version", "Quit if a file version is found which doesn't match.");
+    print_flag("--assert-correct-version",
+               "Quit if a file version is found which doesn't match.");
 }
 
 } // namespace

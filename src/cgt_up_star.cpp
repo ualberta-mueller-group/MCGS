@@ -3,8 +3,6 @@
 //---------------------------------------------------------------------------
 #include "cgt_up_star.h"
 
-
-
 //////////////////////////////////////// helper functions
 namespace {
 inline bool is_same_player(int ups, bw to_play)

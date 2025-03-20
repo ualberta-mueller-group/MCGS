@@ -213,7 +213,8 @@ template <class T_Ptr>
 inline T_Ptr cast_game(game* g)
 {
     static_assert(std::is_pointer_v<T_Ptr>);
-    using T = typename std::remove_pointer<T_Ptr>::type; // NOLINT(readability-identifier-naming)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T = typename std::remove_pointer<T_Ptr>::type;
 
     static_assert(is_concrete_game_v<T>);
 

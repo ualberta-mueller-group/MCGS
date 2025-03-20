@@ -3,7 +3,6 @@
 
 using namespace std;
 
-
 bool optimization_options::_subgame_split = true;
 bool optimization_options::_simplify_basic_cgt = true;
 

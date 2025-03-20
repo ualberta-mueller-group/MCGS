@@ -10,7 +10,9 @@ game_type_t next_id = 0;
 } // namespace
 
 namespace __game_type_impl { // NOLINT(readability-identifier-naming)
-game_type_t __get_game_type(const std::type_info& info) // NOLINT(readability-identifier-naming)
+
+// NOLINTNEXTLINE(readability-identifier-naming)
+game_type_t __get_game_type(const std::type_info& info)
 {
     const std::type_index& idx = std::type_index(info);
 

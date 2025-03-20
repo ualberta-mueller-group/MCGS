@@ -58,7 +58,8 @@ std::string board_to_string(const std::vector<int>& board)
 }
 
 template <const bool mirror>
-inline std::vector<int> inverse_board_impl(const std::vector<int>& original_board)
+inline std::vector<int> inverse_board_impl(
+    const std::vector<int>& original_board)
 {
     std::vector<int> new_board(original_board.size());
 
@@ -113,4 +114,3 @@ std::vector<int> strip::inverse_mirror_board() const
 {
     return inverse_board_impl<true>(_board);
 }
-

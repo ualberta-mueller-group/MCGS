@@ -164,7 +164,8 @@ constexpr bool safe_mul2_shift(T1& shiftee, const T2& exponent)
     }
 
     // Because shifting negative values is undefined:
-    using T1_Uns = typename std::make_unsigned<T1>::type; // NOLINT(readability-identifier-naming)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T1_Uns = typename std::make_unsigned<T1>::type;
     T1_Uns mask_uns(-1);
     assert(n_bits >= 1 + exponent); // no underflow on next line
     // (exponent + 1) most significant bits; prevents wrapping AND sign flip
