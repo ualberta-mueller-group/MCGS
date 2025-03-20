@@ -128,4 +128,4 @@ Currently there is no hook to write your own similar simplification steps, but y
 - `sumgame::undo_simplify_basic` (sumgame.cpp)
 - `simplify_basic_all` (cgt_game_simplification.cpp).
 
-This optimization adds very little overhead, as MCGS avoids running it until necessary.
+TODO: this optimization should have low overhead, but occasionally it makes performance worse when a switch game becomes normalized and produces an integer game.

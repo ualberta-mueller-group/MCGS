@@ -223,15 +223,15 @@ void simplify_basic_switch(sumgame_map_view& map_view)
         f1.simplify();
         f2.simplify();
 
+        switch_game* new_switch = new switch_game(f1, f2);
+        map_view.add_game(new_switch);
+
         consumed_switches.push_back(g_switch);
         if (mean.top() != 0)
         {
             dyadic_rational* new_rational = new dyadic_rational(mean);
             map_view.add_game(new_rational);
         }
-
-        switch_game* new_switch = new switch_game(f1, f2);
-        map_view.add_game(new_switch);
     }
 
     // Convert number switches
