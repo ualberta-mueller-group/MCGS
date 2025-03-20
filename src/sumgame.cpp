@@ -513,13 +513,19 @@ void sumgame::simplify_basic()
     if (!_need_cgt_simplify)
         return;
 
-    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
-
     _change_record_stack.emplace_back();
     change_record& record = _change_record_stack.back();
 
     record.simplify_basic(*this);
     _need_cgt_simplify = false;
+
+    if (record.no_change())
+    {
+        _change_record_stack.pop_back();
+        return;
+    }
+
+    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
 }
 
 void sumgame::undo_simplify_basic()

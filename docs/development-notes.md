@@ -282,6 +282,12 @@ Maybe bound generation in the database should be done using a sliding window of 
 
 Steps producing no useful simplification will not modify the `sumgame`. i.e. if the `sumgame` has only one non-zero `up_star` game, the game will be left alone, rather than duplicated with one inactive copy.
 
+These steps are run at the start of `sumgame::_solve_with_timeout()`, when:
+- At the root of minimax search
+- A "basic" CGT game has been added
+- After undoing a simplification
+    - Calls to `simplify_basic()` which don't change the `sumgame` are never undone
+
 ## `nimber` Simplification
 - All `nimber`s are summed together using `nimber::nim_sum()`
 - This step only has an effect if the sum contains at least 2 nimbers, or contains 1 nimber with `value() <= 1`

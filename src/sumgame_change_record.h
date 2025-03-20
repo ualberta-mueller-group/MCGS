@@ -21,6 +21,8 @@ public:
     void simplify_basic(sumgame& sum);
     void undo_simplify_basic(sumgame& sum);
 
+    bool no_change() const;
+
     std::vector<game*> deactivated_games;
     std::vector<game*> added_games;
 

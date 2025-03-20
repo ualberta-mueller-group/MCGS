@@ -59,6 +59,11 @@ void change_record::undo_simplify_basic(sumgame& sum)
     _clear();
 }
 
+bool change_record::no_change() const
+{
+    return deactivated_games.empty() && added_games.empty();
+}
+
 void change_record::_clear()
 {
     deactivated_games.clear();
