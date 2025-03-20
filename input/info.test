@@ -123,7 +123,7 @@ XOXOO...XO
                 '1 -1/2 3 4'
                 '  1  -1  /  2   3  ,  4  '
 
-    Game syntax:
+    Games:
         [clobber_1xn], [nogo_1xn], and [elephants]:
             Contiguous sequence of '.', 'X', and 'O'.
 

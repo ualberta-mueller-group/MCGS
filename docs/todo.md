@@ -33,16 +33,17 @@ Suggestions from talk given, or from MCGS users
 
 ## V1.1 todo
 - clean up documentation
-    - prune/shorten parts of dev notes?
-        - safe_int<T>
-            - keep as 1 paragraph?
-        - RTTI
-            - put this in `optimizations` section and shorten it
-        - Put large sections into separate files linked by main file?
+    - Dev notes is large. Split larger sections into files, and link to each
+    section in a main index `.md` file?
+        - Or keep in one file and maintain a table of contents at the top?
     - `docs/temp` directory?
         - `clobber-solver-algorithm.txt`
         - `db-planning.txt`
-    - prune todos
+        - These files contain useful information, but are rough "temporary" files
+        which will eventually be deleted or merged into dev notes. They shouldn't
+        be merged into dev notes yet
+        - If we split dev notes into multiple files, we could link to these in some
+        "temporary" section
 
 # Future tasks
 ## V1.2
@@ -84,6 +85,9 @@ Suggestions from talk given, or from MCGS users
 - Resolve code problems
     - sumgame ownership of games
     - Consider alternatives to `move` being an int?
+        - Pass around pointers to heap-allocated moves, whose actual types
+        are defined by each game?
+        - Have an interface type for storing "to play"
     - Some code comments should be split between the code and development-notes.md
     - Ugly/confusing std::optional usage
         - i.e. split_result() vs split_result(vector<game*>()), 1st has no value, 2nd has a value
@@ -96,7 +100,6 @@ Suggestions from talk given, or from MCGS users
     - Quick and dirty method just to get intuition and some basic data
     - Good to know how much time is spent doing transposition table lookups, DB lookups, etc, before designing these
         - i.e. if in-memory DB lookups already dominate the run time, then adding disk reads may be especially costly
-
 
 ## Lower priority
 - Improve MCGS CLI args
@@ -121,7 +124,8 @@ Suggestions from talk given, or from MCGS users
     - Heuristic functions?
         - Opponent's number of moves (as in Clobber solver)?
 - Computational cost model
-    - Can help determine when it may be beneficial to find bounds during search
+    - Can help determine when it may be beneficial to compute bounds, or other information,
+    during search
 
 # Current discussion topics
 - todo.md organization 
@@ -140,7 +144,6 @@ Suggestions from talk given, or from MCGS users
         - Write test cases and documentation for these.
 
 ## General design questions
-- Should we allow fractions in `switch_game`? e.g. 1/2 | -3/4
 - Rename `x_1xn` to `x_strip` ?
 - Rename `x_game` to `game_x`? E.g. `integer_game` to `game_integer` ?
 - Scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
