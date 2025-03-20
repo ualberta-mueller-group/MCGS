@@ -2,7 +2,14 @@
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
 #include "sumgame.h"
+#include "game.h"
 #include "game_type.h"
+
+#include "cgt_dyadic_rational.h"
+#include "cgt_integer_game.h"
+#include "cgt_nimber.h"
+#include "cgt_switch.h"
+#include "cgt_up_star.h"
 
 #include <chrono>
 #include <ctime>
@@ -135,6 +142,35 @@ sumgame_move sumgame_move_generator::gen_sum_move() const
 }
 
 //---------------------------------------------------------------------------
+// Helpers
+
+namespace {
+
+std::unordered_set<game_type_t> get_cgt_type_set()
+{
+    std::unordered_set<game_type_t> cgt_set;
+
+    cgt_set.insert(game_type<dyadic_rational>());
+    cgt_set.insert(game_type<integer_game>());
+    cgt_set.insert(game_type<nimber>());
+    cgt_set.insert(game_type<switch_game>());
+    cgt_set.insert(game_type<up_star>());
+
+    return cgt_set;
+}
+
+bool is_simple_cgt(game* g)
+{
+    // TODO this should be initialized before time is counted
+    static const std::unordered_set<game_type_t> CGT_TYPE_SET = get_cgt_type_set();
+
+    game_type_t type = g->game_type();
+    return CGT_TYPE_SET.find(type) != CGT_TYPE_SET.end();
+}
+
+} // namespace
+
+//---------------------------------------------------------------------------
 
 sumgame::~sumgame()
 {
@@ -146,6 +182,9 @@ void sumgame::add(game* g)
 {
     _subgames.push_back(g);
     assert(g->is_active());
+
+    if (!_need_cgt_simplify && is_simple_cgt(g))
+        _need_cgt_simplify = true;
 }
 
 void sumgame::add(std::vector<game*>& gs)
@@ -196,6 +235,7 @@ optional<solve_result> sumgame::solve_with_timeout(
     sumgame& sum = const_cast<sumgame&>(*this);
 
     _should_stop = false;
+    _need_cgt_simplify = true;
 
     // spawn a thread, then wait with a timeout for it to complete
     std::promise<optional<solve_result>> promise;
@@ -472,12 +512,16 @@ void sumgame::simplify_basic()
         return;
     }
 
+    if (!_need_cgt_simplify)
+        return;
+
     _push_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
 
     _change_record_stack.emplace_back();
     change_record& record = _change_record_stack.back();
 
     record.simplify_basic(*this);
+    _need_cgt_simplify = false;
 }
 
 void sumgame::undo_simplify_basic()
@@ -488,6 +532,8 @@ void sumgame::undo_simplify_basic()
     }
 
     _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
+
+    _need_cgt_simplify = true;
 
     assert(!_change_record_stack.empty());
     change_record& record = _change_record_stack.back();

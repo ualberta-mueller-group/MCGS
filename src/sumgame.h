@@ -116,6 +116,7 @@ private:
     void _assert_games_unique() const;
 
     mutable bool _should_stop;
+    mutable bool _need_cgt_simplify;
     std::vector<game*> _subgames;
 
     std::vector<sumgame_undo_code> _undo_code_stack;
