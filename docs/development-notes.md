@@ -323,6 +323,15 @@ For each sum, no useful work was done if the sum is the result of less than 2 ga
 ## `up_star` Simplification
 `up_star`s are summed together similarly to `integer_game`s and `dyadic_rational`s, and the resulting sum replaces the games used to produce it, only when the sum is useful (as explained in the previous subsection).
 
+# Misc Future Optimizations
+- We should be able to compile with `-DNDEBUG` at some point
+    - This causes compiler warnings because of unused variables
+    - There's a clang-tidy check, `bugprone-assert-side-effect`, which can ensure
+    that none of our asserts have side effects.
+    - But, it should have the `CheckFunctionCalls` option enabled, which disallows
+    calls to all non-const functions
+- `game_type()` could possibly be faster if we eliminated the `unordered_map` lookup
+
 # Design Choices and Remaining Uglinesses
 ## A `move` must be implemented as an `int` 
 - It is challenging to make a generic abstract move class, in a "nice" and efficient way.

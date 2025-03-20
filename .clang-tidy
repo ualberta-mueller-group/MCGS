@@ -1,8 +1,25 @@
-Checks: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers,misc-use-internal-linkage'
-WarningsAsErrors: '-*,readability-identifier-naming,modernize-use-override,google-global-names-in-headers,misc-definitions-in-headers,misc-use-internal-linkage'
+Checks: "-*,
+  readability-identifier-naming,
+  modernize-use-override,
+  google-global-names-in-headers,
+  misc-definitions-in-headers,
+  misc-use-internal-linkage,
+  bugprone-assert-side-effect,"
+
+WarningsAsErrors: "-*,
+  readability-identifier-naming,
+  modernize-use-override,
+  google-global-names-in-headers,
+  misc-definitions-in-headers,
+  misc-use-internal-linkage,
+  bugprone-assert-side-effect,"
+
 HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:
+
+  # TODO enable me at some point
+  - { key: bugprone-assert-side-effect.CheckFunctionCalls, value: false }
 
   - { key: misc-use-internal-linkage.FixMode, value: None }
 
@@ -41,10 +58,6 @@ CheckOptions:
   - { key: readability-identifier-naming.TypeTemplateParameterCase, value: Camel_Snake_Case }
   - { key: readability-identifier-naming.ValueTemplateParameterCase, value: lower_case }
 
-#  - { key: readability-identifier-naming.ConstexprVariableCase, value: lower_case }
-#  - { key: readability-identifier-naming.GlobalVariableCase, value: lower_case }
-#  - { key: readability-identifier-naming.LocalVariableCase, value: lower_case }
-#  - { key: readability-identifier-naming.StaticVariableCase, value: lower_case }
 
   - { key: readability-identifier-naming.ConstexprFunctionCase, value: lower_case }
   - { key: readability-identifier-naming.ConstexprMethodCase, value: lower_case }
