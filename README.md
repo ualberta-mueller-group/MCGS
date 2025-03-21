@@ -19,7 +19,7 @@ The overall approach and future plans will be described in a forthcoming documen
   - [Implementing a New Game](#implementing-a-new-game)
   - [Implementing Game-Specific Optimizations](#implementing-game-specific-optimizations)
     - [Splitting Into Subgames](#splitting-into-subgames-subgame_split)
-    - [Simplifying Sums of Games](simplifying-sums-of-games-simplify_basic_cgt)
+    - [Simplifying Sums of Games](#simplifying-sums-of-games-simplify_basic_cgt)
 
 ### Building MCGS
 First download this repository, and enter its directory.
