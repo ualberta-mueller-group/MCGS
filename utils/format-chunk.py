@@ -1,10 +1,10 @@
+# Grouping C++ source files into chunks of 10, run clang-format on a chunk,
+# and optionally open it in nvim. This is useful for reviewing style changes
+# to all source files
+
 import subprocess
 import os
 import sys
-"""
-Grouping C++ source files into chunks of 10, run clang-format on a chunk,
-and optionally open it in nvim
-"""
 
 use_vim = False
 chunk_no = -1

@@ -273,7 +273,8 @@ print("")
 print(f"{len(unsafe_changes)} file(s) differ by more than just whitespace")
 
 if len(unsafe_changes) > 0:
-    print("Check if the differences are from comments at the end of namespace braces")
+    print("Check if the differences are from comments at the ends of namespace braces, \
+or are a result of exceeding the line column limit")
     print("Relevant files:")
     for f in unsafe_changes:
         print(f)

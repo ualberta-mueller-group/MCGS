@@ -1,3 +1,6 @@
+# Computes sums of random CGT games, outputting a valid MCGS input file.
+# Includes equivalent expressions to create the games directly in C++, and
+# in CGSuite
 import random
 import sys
 
