@@ -9,21 +9,26 @@ This document includes more detailed information than `README.md`, including des
 - `sumgame` is used to store and solve a sum of games. 
     - It is derived from `alternating_move_game`
         - Reimplements `solve` method
-    - Solving implemented mostly by private method `sumgame::_solve_with_timeout`
-        - Boolean negamax search, with optimizations
-            - Splits a subgame into more subgames after playing a move in it
-            - Simplifies "basic" CGT games
-        - Other `solve` methods within `sumgame` are implemented in terms of this method
-        - A timeout of 0 means search never times out
+    - Boolean negamax search, with optimizations
+        - Splits a subgame into more subgames after playing a move in it
+        - Simplifies "basic" CGT games
+    - `sumgame::_solve_with_timeout`
+        - `private` method implements most of the search algorithm
+        - Runs until it either completes, or times out
+        - A timeout of 0 means infinite time
+        - All public `solve` methods within `sumgame` (see below) are implemented in terms of this method
         - In the future we could use a macro to check if the result of a recursive call timed out
-    - `sumgame::solve` runs until completion, without timing out
-    - `sumgame::solve_with_timeout` runs until it either completes, or the timeout expires
-        - Currently this spawns a thread which calls `_solve_with_timeout`, and the main thread blocks until completion or timeout.
+    - `sumgame::solve_with_timeout`
+        - Currently spawns a thread which calls `_solve_with_timeout`, and the main thread blocks until completion or timeout.
         - This may interfere with some performance profiling tools, but other implementations based on checking a clock seem to be costly.
-    - `sumgame::solve_with_games` temporarily adds games to the sum, calls `sumgame::solve`, then removes the games and returns the result.
+    - `sumgame::solve`
+        - runs until completion, without timing out
+    - `sumgame::solve_with_games`
+        - Temporarily adds `games` to the sum, calls `sumgame::solve`, then removes `games` and returns the result.
+        - Useful for playing a difference game
 
-## "Logically const" interface for solving games
-- In both `alternating_move_game` and `sumgame`, the public `solve` methods are declared as const.
+## "Logically `const`" Interface for Solving Games
+- In both `alternating_move_game` and `sumgame`, the public `solve` methods are declared as `const`.
 - This means that while the game state may be modified during solve,
 it must be restored before the end of `solve` in any case, including timeout or other failure modes.
 - `class assert_restore_game` in `alternating_move_game.h` is a stub for
@@ -32,7 +37,7 @@ checking that the state is restored
     - TODO it probably is broken for sumgame, since it uses a different stack
     - TODO this check will be made functional after hash codes are implemented
 
-# Safe arithmetic functions (safe_arithmetic.h)
+# Safe Arithmetic Functions (`safe_arithmetic.h`)
 This section uses the term "wrapping" to mean either underflow or overflow.
 
 - Defines template functions to do arithmetic without wrapping
@@ -40,11 +45,11 @@ This section uses the term "wrapping" to mean either underflow or overflow.
 - All functions return a `bool`
     - When `true`, the operation was completed without wrapping
     - When `false`, the operation would have wrapped. No operands were changed
-        - Also returned on invalid arguments, i.e. negative bit shift amounts
+        - `false` is also returned on invalid arguments, i.e. negative bit shift amounts
 - Functions accept different types
     - `int` denotes any integral type
     - `num` denotes any integral or floating point type
-    - Assume both unsigned and signed types unless stated otherwise
+    - Both unsigned and signed types, unless stated otherwise
 
 These functions test whether an operation would wrap, without doing the operation:
 - `add_will_wrap(const num x, const num y)`
@@ -88,7 +93,7 @@ This is not implemented, but described as a possible future task.
 - Have a macro `CHECK_SAFE_INT(x, code)`
     - If `x` is not valid, run `code` (allow cleanup and return from function)
 
-# "RTTI": Run-time type information (game_type.h)
+# RTTI - Run-time type information (`game_type.h`)
 - Defines interface class `i_game_type`
     - Currently implements method `game_type_t game_type() const` ("concrete" non-virtual method)
     - Also implements template function `game_type_t game_type<T>()`
@@ -105,24 +110,24 @@ This is not implemented, but described as a possible future task.
 
 # More on data types
 
-## `sumgame_move` struct (sumgame.h)
+## `sumgame_move` struct (`sumgame.h`)
 Represents a move made in a `sumgame`
 - Contains a subgame index and the `move` made in the subgame
 - The index is into the vector `sumgame::_subgames`
 - The `move` is for the subgame stored there
 
-## `play_record` struct (sumgame.h)
+## `play_record` struct (`sumgame.h`)
 - Holds information about a `sumgame_move` played in a `sumgame`
     - the `sumgame_move` itself
     - whether or not the move resulted in a split
     - which subgames were created from the split
 
-## `sumgame_impl::change_record` class (sumgame_change_record.h)
+## `sumgame_impl::change_record` class (`sumgame_change_record.h`)
 - Similar to `play_record`; used to track changes to `sumgame` (i.e. by sumgame simplification steps), to allow undoing of changes
 - Holds 2 `vector<game*>`s: one for deactivated games, and one for added games
 - Undo operation first reactivates games, then pops games from `sumgame` and deletes them
 
-## `sumgame_map_view` class (sumgame_map_view.h)
+## `sumgame_map_view` class (`sumgame_map_view.h`)
 - Sorts all `game` objects contained by a `sumgame` using their `game_type_t`, acting as a map from game type to `vector<game*>&`
 - Has public methods to mutate underlying `sumgame` while keeping it synchronized with the map view
     - These mutations are stored in a `change_record`
@@ -130,13 +135,13 @@ Represents a move made in a `sumgame`
 - Only games with `is_active() == true` are kept in the map
 - The map view remains valid only while the programmer interacts with the underlying `sumgame` through `sumgame_map_view`'s interface
 
-## `sumgame::undo_stack_unwinder` class (sumgame_undo_stack_unwinder.h)
+## `sumgame::undo_stack_unwinder` class (`sumgame_undo_stack_unwinder.h`)
 - Private inner class of `sumgame`
 - Created as local variable at the start of `sumgame::_solve_with_timeout()`
     - Constructor pushes a marker onto `sumgame`'s undo stack
     - Destructor iteratively pops undo stack, calling undo functions (i.e. `sumgame::undo_move()`, `sumgame::undo_simplify_basic()`) until it sees the marker
 
-## `sumgame` class (sumgame.h)
+## `sumgame` class (`sumgame.h`)
 A `sumgame` represents a (possibly empty) set of subgames. 
 It derives from `alternating_move_game` and reimplements the
 `solve` method to take advantage of sum structure
@@ -158,7 +163,7 @@ It derives from `alternating_move_game` and reimplements the
     - These are stored as `vector<T>` instead of `vector<T*>` with the aim of reducing CPU cache misses
         - This seems to be slightly faster, but we should re-verify this when significantly changing the undo stack
 
-## `fraction` class (fraction.h)
+## `fraction` class (`fraction.h`)
 - Simple and lightweight fraction type whose denominator must be a positive power of 2
     - Consists only of 2 private `int`s: `_top` and `_bottom`, making copying fast
         - These `int`s must be within the interval `[INT_MIN + 1, INT_MAX]`, ensuring values are negatable without overflow
@@ -182,7 +187,7 @@ It derives from `alternating_move_game` and reimplements the
 
 `fraction`s are more likely than integers to encounter arithmetic overflow, as raising the denominator by a factor of 2 halves the magnitude of representable values. `fraction`s don't store separate integral and fractional components, as this would complicate implementation: `mul2_bottom()` (effectively a division by a power of 2) would also need to operate on the integral component, which may not be divisible by 2.
 
-## `switch_game` class (cgt_switch.h)
+## `switch_game` class (`cgt_switch.h`)
 - Represents a game `g`, `g = {X | Y}` where `X` and `Y` are fractions
     - `X` and `Y` are represented by the `fraction` class
 - Has 4 "kinds" represented by an enum, accessible by `switch_game::kind()`
@@ -220,7 +225,7 @@ in a sum.
 and is stored in the move stack. 
 - `undo_move` must respect and use the move player color information in the stack.
 
-# Bounds (bounds.h)
+# Bounds (`bounds.h`)
 Defines functions and types used for finding lower and upper bounds of games.
 
 - The `bound_scale` enum represents a scale of games on which bounds are found.
@@ -360,7 +365,7 @@ a move generator in a `std::unique_ptr`
     - See the example in `alternating_move_game::solve`
 
 ## Reimplementation/duplication of `game` concepts in `sumgame`
-- This is a consequence of - A `move` must be an `int`
+- This is a consequence of the design choice above: `move` must be an `int`
 - A move in a sumgame is specified in `struct sumgame_move` by two parts: the index of the subgame in the `_subgames` vector, and the move inside the subgame (encoded in a game-specific way)
 - `play()` in sumgame takes a `sumgame_move` as argument, not a `move`
 - `solve()` also uses `sumgame_move`
@@ -389,7 +394,7 @@ a move generator in a `std::unique_ptr`
 - removed `nim` class and moved functionality such as nim sum to `nimber`
 - implemented `game::inverse()` for all game types
 
-### Version 1.1 completed parts 
+### Version 1.1 completed 
 - More cleanup and Tools and Components for Database
     - Code formatting tools and checks, "lint"-like
     - `scale` S such as multiples of up, or up+star, or integers
