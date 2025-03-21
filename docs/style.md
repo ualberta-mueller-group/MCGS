@@ -10,7 +10,7 @@ This document gives details about coding style for C++ files in this project, an
     - [Tidy Config Testing Script](#tidy-config-testing-script)
 
 # Code Style
-This section describes the style used by C++ files in this project.
+This section describes the style used by C++ files in this project. Most of the rules described in this section are applied by `clang-format` or enforced by `clang-tidy`; more on this later.
 
 ## Brace wrapping
 Braces get their own lines:
