@@ -18,6 +18,8 @@ This document includes more detailed information than `README.md`, including des
         - In the future we could use a macro to check if the result of a recursive call timed out
     - `sumgame::solve` runs until completion, without timing out
     - `sumgame::solve_with_timeout` runs until it either completes, or the timeout expires
+        - Currently this spawns a thread which calls `_solve_with_timeout`, and the main thread blocks until completion or timeout.
+        - This may interfere with some performance profiling tools, but other implementations based on checking a clock seem to be costly.
     - `sumgame::solve_with_games` temporarily adds games to the sum, calls `sumgame::solve`, then removes the games and returns the result.
 
 ## "Logically const" interface for solving games
@@ -95,6 +97,9 @@ This is not implemented, but described as a possible future task.
         - The value is determined at run-time, and is dependent on the order of `game_type()` calls
     - Uses built-in C++ RTTI (`std::type_info` and `std::type_index`) to look up value in a `std::unordered_map`
         - Template version is faster as it stores this value in a static variable after the first map lookup
+    - `game_type_t` is only defined for "concrete" games (non-abstract classes derived from `game`).
+        - `game_type<T>()` fails a static assert if `T` doesn't satisfy this condition
+        - `game_type() const` already satisfies this as it's not possible to instantiate an abstract type
 - `game.h` defines template `T* cast_game<T*>(game*)` acting as a `reinterpret_cast`, but uses
 `assert`s to verify that the game is not `nullptr`, is active, and is of type `T` (using its `game_type_t`)
 
@@ -150,7 +155,7 @@ It derives from `alternating_move_game` and reimplements the
         - To undo moves played in a sumgame
     - `vector<sumgame_impl::change_record>`
         - To undo other mutations to the `sumgame` i.e. by game simplification steps
-    - These are stored as vector<T> instead of vector<T*> with the aim of reducing CPU cache misses
+    - These are stored as `vector<T>` instead of `vector<T*>` with the aim of reducing CPU cache misses
         - This seems to be slightly faster, but we should re-verify this when significantly changing the undo stack
 
 ## `fraction` class (fraction.h)
@@ -187,7 +192,7 @@ It derives from `alternating_move_game` and reimplements the
         - A true switch, also normalized (i.e. `g = {A | -A}`, where `A` is a fraction and `A` > `-A`)
     - `SWITCH_KIND_RATIONAL`
         - A `switch_game` after a move has been played by either player
-        - After a move has been played, the underlying kind is inaccessible
+        - After a move has been played, the underlying kind is inaccessible, until moves are undone and the game becomes a switch again
     - `SWITCH_KIND_CONVERTIBLE_NUMBER`
         - A `switch_game` for which `X <= Y`
         - Here `g` is equal to a number -- a `dyadic_rational` and possibly a star (as an `up_star`)
@@ -332,7 +337,7 @@ For each sum, no useful work was done if the sum is the result of less than 2 ga
     - There's a clang-tidy check, `bugprone-assert-side-effect`, which can ensure
     that none of our asserts have side effects.
     - But, it should have the `CheckFunctionCalls` option enabled, which disallows
-    calls to all non-const functions
+    calls to all non-const functions (including global utility functions)
 - `game_type()` could possibly be faster if we eliminated the `unordered_map` lookup
 
 # Design Choices and Remaining Uglinesses
