@@ -226,15 +226,15 @@ Defines functions and types used for finding lower and upper bounds of games.
 - The `bound_scale` enum represents a scale of games on which bounds are found.
 - `bound_t` is a signed integral type representing an index along a bound scale.
 - The functions `get_scale_game()` and `get_inverse_scale_game()` return a new `game` object for a given scale and index along the scale.
-- The `relation` enum, (cgt_basics.h), is used to represent how a game relates to its bounds
+- The `relation` enum, (`cgt_basics.h`), is used to represent how a game relates to its bounds
 - The `bounds_options` struct specifies a scale and interval on which bounds should be searched for.
 
 Some scales and their games at select indices are shown in the following table:
 | Scale | -2 | -1 | 0 | 1 | 2 |
 | --- | --- | --- | --- | --- | --- |
-| up_star | vv* | v* | * | ^* | ^^* |
+| `up_star` | vv* | v* | * | ^* | ^^* |
 | up | vv | v | 0 | ^ | ^^ |
-| dyadic_rational | -2/8 | -1/8 | 0 | 1/8 | 2/8 |
+| `dyadic_rational` | -2/8 | -1/8 | 0 | 1/8 | 2/8 |
 
 ## `game_bounds` class
 A pair of lower and upper bounds for a sumgame `S` is represented by the `game_bounds` class. Each bound within is represented by a `bound_t` indicating its location along a scale, a `bool` indicating whether it's valid or invalid, and a `relation` indicating its relation to `S`. The `relation` is interpreted with the bound game `G` being on the left hand side, i.e. `G REL_LESS_OR_EQUAL S`, or `G REL_GREATER S` to denote `G <= S` and `G > S` respectively.
