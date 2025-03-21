@@ -338,6 +338,11 @@ For each sum, no useful work was done if the sum is the result of less than 2 ga
     that none of our asserts have side effects.
     - But, it should have the `CheckFunctionCalls` option enabled, which disallows
     calls to all non-const functions (including global utility functions)
+    - Possible run-time errors should use exceptions, not asserts (i.e. constructing)
+    an invalid game due to user input.
+    - `THROW_ASSERT(condition)` and `THROW_ASSERT(condition, exception)` are macros
+    defined by `throw_assert.h`, which throw exceptions, and can replace asserts
+    where run-time errors may occur.
 - `game_type()` could possibly be faster if we eliminated the `unordered_map` lookup
 
 # Design Choices and Remaining Uglinesses
