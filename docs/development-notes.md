@@ -286,7 +286,8 @@ These steps are run at the start of `sumgame::_solve_with_timeout()`, when:
 - At the root of minimax search
 - A "basic" CGT game has been added
 - After undoing a simplification
-    - Calls to `simplify_basic()` which don't change the `sumgame` are never undone
+    - Calls to `simplify_basic()` which don't change the `sumgame` don't trigger an undo
+
 
 ## `nimber` Simplification
 - All `nimber`s are summed together using `nimber::nim_sum()`
@@ -303,6 +304,8 @@ Note that operations involve the `fraction` class, and when arithmetic overflow 
 
 ### Proper switch
 Proper switches are `switch_game`s where `X > Y`. These games are normalized to produce a sum `M + {A | -A}`, for fractions `M` and `A`, where `M` is the mean of `X` and `Y`, and `A > -A`. `M` is added to the `sumgame` as a `dyadic_rational`, and `{A | -A}` is added to the `sumgame` as a `switch_game`.
+
+This step only happens if there is at least one `integer_game` or `dyadic_rational` in the sum. This is to avoid the problem of switch normalization increasing the number of moves that can be played at a search step, leading to worse performance than if basic CGT simplification was disabled.
 
 ### Convertible number
 Switches representing numbers are `switch_game`s where `X <= Y`. Several subcases occur:

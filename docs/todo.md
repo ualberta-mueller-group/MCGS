@@ -31,20 +31,6 @@ Suggestions from talk given, or from MCGS users
 - Add code linter
     - Resolve linter errors
 
-## V1.1 todo
-- clean up documentation
-    - Dev notes is large. Split larger sections into files, and link to each
-    section in a main index `.md` file?
-        - Or keep in one file and maintain a table of contents at the top?
-    - `docs/temp` directory?
-        - `clobber-solver-algorithm.txt`
-        - `db-planning.txt`
-        - These files contain useful information, but are rough "temporary" files
-        which will eventually be deleted or merged into dev notes. They shouldn't
-        be merged into dev notes yet
-        - If we split dev notes into multiple files, we could link to these in some
-        "temporary" section
-
 # Future tasks
 ## V1.2
 - hashing
@@ -107,6 +93,8 @@ Suggestions from talk given, or from MCGS users
         - i.e. "--test-timeout" without "--run-tests"
     - Arg parsing loop could be cleaned up/abstracted a bit
     - Unify "--help" page styles across scripts/executables
+
+- Split development notes into multiple files with links from a main file?
 
 ## V2 and beyond
 - Grab a CGT seminar spot to talk about MCGS and give a demo

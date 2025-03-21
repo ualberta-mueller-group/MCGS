@@ -184,7 +184,11 @@ void sumgame::add(game* g)
     _subgames.push_back(g);
     assert(g->is_active());
 
-    if (!_need_cgt_simplify && is_simple_cgt(g))
+    if ( //
+            optimization_options::simplify_basic_cgt() &&  //
+            !_need_cgt_simplify &&  //
+            is_simple_cgt(g) //
+        ) //
         _need_cgt_simplify = true;
 }
 
