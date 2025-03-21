@@ -39,6 +39,8 @@ Suggestions from talk given, or from MCGS users
 - Use a proper unit testing framework?
     - Easier to change this now rather than later
     - Could possibly show code coverage and number of tests run
+    - https://github.com/siu/minunit
+    - Also some Google framework
 
 ## Medium priority (Important or good to have before V2):
 - Test framework improvements
@@ -114,15 +116,6 @@ Suggestions from talk given, or from MCGS users
 - Computational cost model
     - Can help determine when it may be beneficial to compute bounds, or other information,
     during search
-
-# Current discussion topics
-- todo.md organization 
-    - "Tasks" and "Discussion topics" sections?
-        - "Current"/"Future" prefixes?
-    - What does each version denote?
-        - Use a proper unit test framework, maybe https://github.com/siu/minunit
-    - What discussion topics should be deferred, if any? (There's a lot in this section)
-        - Should these be assigned priorities?
 
 - Document semantics of game-in-sumgame. The sumgame become the owner. Make this explicit e.g. with `unique_ptr`. 
     - Alternative: copy the game
