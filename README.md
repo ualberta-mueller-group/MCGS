@@ -126,6 +126,6 @@ Currently MCGS simplifies sums containing "basic" CGT games (`integer_game`, `dy
 Currently there is no hook to write your own similar simplification steps, but you can modify existing functions. See the following functions:
 - `sumgame::simplify_basic` (sumgame.cpp)
 - `sumgame::undo_simplify_basic` (sumgame.cpp)
-- `simplify_basic_all` (cgt_game_simplification.cpp).
+- `simplify_basic_all` (cgt_game_simplification.cpp)
 
-TODO: this optimization should have low overhead, but occasionally it makes performance worse when a switch game becomes normalized and produces an integer game.
+This optimization has low overhead, as MCGS avoids running these steps unless necessary.

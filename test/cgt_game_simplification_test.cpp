@@ -104,8 +104,16 @@ void switch_test()
         {{ // INPUT
                 make_shared<switch_game>(6, 3),
         },{ // EXPECTED
+                make_shared<switch_game>(6, 3),
+        },}, // END
+
+        {{ // INPUT
+                make_shared<switch_game>(6, 3),
+                make_shared<integer_game>(0),
+        },{ // EXPECTED
                 make_shared<switch_game>(fraction(3, 2), fraction(-3, 2)),
                 make_shared<dyadic_rational>(9, 2),
+                make_shared<integer_game>(0),
         },}, // END
 
         {{ // INPUT
@@ -249,6 +257,8 @@ void all_test()
         },}, // END
 
         {{ // INPUT
+
+                make_shared<integer_game>(0),
                 make_shared<switch_game>(fraction(5), fraction(-6)),
                 make_shared<switch_game>(fraction(3), fraction(-7)),
                 make_shared<switch_game>(fraction(61, 4), fraction(-131, 8)),
@@ -260,6 +270,7 @@ void all_test()
         },}, // END
 
         {{ // INPUT
+            make_shared<integer_game>(0),
             make_shared<switch_game>(fraction(5), fraction(5)),
             make_shared<switch_game>(fraction(-7), fraction(3)),
             make_shared<switch_game>(fraction(-21, 8), fraction(9, 4)),

@@ -1,5 +1,6 @@
 #include "cgt_game_simplification.h"
 
+#include "cgt_dyadic_rational.h"
 #include "fraction.h"
 #include "safe_arithmetic.h"
 #include "game_type.h"
@@ -177,7 +178,6 @@ void simplify_basic_switch(sumgame_map_view& map_view)
     vector<switch_game*> proper_switches;
     vector<switch_game*> number_switches;
 
-    vector<game*> consumed_switches;
 
     for (game* g : *switch_games)
     {
@@ -201,52 +201,71 @@ void simplify_basic_switch(sumgame_map_view& map_view)
         }
     }
 
-    // Normalize proper switches
-    for (switch_game* g_switch : proper_switches)
-    {
-        assert(g_switch->kind() == SWITCH_KIND_PROPER);
-
-        fraction f1 = g_switch->left();
-        fraction f2 = g_switch->right();
-
-        // Compute mean, then subtract it
-        fraction mean = f1;
-        if (                                          //
-            !fraction::safe_add_fraction(mean, f2) || // mean = (f1 + f2)
-            !mean.mul2_bottom(1) ||                   // mean = (f1 + f2) / 2
-            !fraction::safe_subtract_fraction(f1, mean) || // f1 = f1 - mean
-            !fraction::safe_subtract_fraction(f2, mean)    // f2 = f2 - mean
-            )                                              //
-            continue;
-
-        mean.simplify();
-        f1.simplify();
-        f2.simplify();
-
-        switch_game* new_switch = new switch_game(f1, f2);
-        map_view.add_game(new_switch);
-
-        consumed_switches.push_back(g_switch);
-        if (mean.top() != 0)
-        {
-            dyadic_rational* new_rational = new dyadic_rational(mean);
-            map_view.add_game(new_rational);
-        }
-    }
-
     // Convert number switches
-    for (switch_game* g_switch : number_switches)
     {
-        assert(g_switch->kind() == SWITCH_KIND_CONVERTIBLE_NUMBER);
+        vector<game*> consumed_switches;
+        for (switch_game* g_switch : number_switches)
+        {
+            assert(g_switch->kind() == SWITCH_KIND_CONVERTIBLE_NUMBER);
 
-        const fraction& f1 = g_switch->left();
-        const fraction& f2 = g_switch->right();
+            const fraction& f1 = g_switch->left();
+            const fraction& f2 = g_switch->right();
 
-        if (convert_number_switch(f1, f2, map_view))
-            consumed_switches.push_back(g_switch);
+            if (convert_number_switch(f1, f2, map_view))
+                consumed_switches.push_back(g_switch);
+        }
+        map_view.deactivate_games(consumed_switches);
     }
 
-    map_view.deactivate_games(consumed_switches);
+    auto get_size = [&](game_type_t type) -> size_t
+    {
+        vector<game*>* games = map_view.get_games_nullable(type);
+        if (games != nullptr)
+            return games->size();
+        return 0;
+    };
+
+    size_t n_int_or_rational = 0;
+    n_int_or_rational += get_size(game_type<integer_game>());
+    n_int_or_rational += get_size(game_type<dyadic_rational>());
+
+    // Normalize proper switches
+    if (n_int_or_rational > 0)
+    {
+        vector<game*> consumed_switches;
+        for (switch_game* g_switch : proper_switches)
+        {
+            assert(g_switch->kind() == SWITCH_KIND_PROPER);
+
+            fraction f1 = g_switch->left();
+            fraction f2 = g_switch->right();
+
+            // Compute mean, then subtract it
+            fraction mean = f1;
+            if (                                          //
+                !fraction::safe_add_fraction(mean, f2) || // mean = (f1 + f2)
+                !mean.mul2_bottom(1) ||                   // mean = (f1 + f2) / 2
+                !fraction::safe_subtract_fraction(f1, mean) || // f1 = f1 - mean
+                !fraction::safe_subtract_fraction(f2, mean)    // f2 = f2 - mean
+                )                                              //
+                continue;
+
+            mean.simplify();
+            f1.simplify();
+            f2.simplify();
+
+            switch_game* new_switch = new switch_game(f1, f2);
+            map_view.add_game(new_switch);
+
+            consumed_switches.push_back(g_switch);
+            if (mean.top() != 0)
+            {
+                dyadic_rational* new_rational = new dyadic_rational(mean);
+                map_view.add_game(new_rational);
+            }
+        }
+        map_view.deactivate_games(consumed_switches);
+    }
 }
 
 void simplify_basic_up_star(sumgame_map_view& map_view)
