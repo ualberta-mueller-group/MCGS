@@ -7,7 +7,6 @@ This document gives details about coding style for C++ files in this project, an
     - [clang-tidy Targets](#clang-tidy-targets)
     - [clang-format Targets](#clang-format-targets)
 - [Modifying Tooling Configs](#modifying-tooling-configs)
-    - [Tidy Config Testing Script](#tidy-config-testing-script)
 
 # Code Style
 This section describes the style used by C++ files in this project. Most of the rules described in this section are applied by `clang-format` or enforced by `clang-tidy`; more on this later.
@@ -100,7 +99,7 @@ void some_func(const Some_Type& x)
 ### Exceptions for naming
 It is acceptable to disable linter checks where reasonable.
 
-Generally, when implementation details must be exposed in a header and are not to be used by consumers of the header, prefix the identifiers with 1 or 2 underscores `_`, and disable clang-tidy relevant checks as necessary. More details on bypassing linter checks will be given in following sections. Example:
+Generally, when implementation details must be exposed in a header and are not to be used by consumers of the header, prefix the identifiers with 2 underscores `_`, and disable relevant clang-tidy checks as necessary. More details on bypassing linter checks will be given in following sections. Example:
 ```
 // NOLINTBEGIN(readability-identifier-naming)
 #define __MUL2_IMPL(x) (x + x)
@@ -288,6 +287,7 @@ When files are formatted correctly according to the `clang-format` config, the `
 - tidy_header_functions
     - Special case which only checks for non-trivial functions in headers. Other targets do not check this
     - Run clang-tidy on all `.h` files, using release compilation flags, and `.clang-tidy-headers` as the config file
+    - TODO: Currently this target gives false positives about redefinitions of types, i.e. forward-declared classes in 2 headers which include each other
 
 The result will be printed to the screen, and also saved in `tidy_result.txt`. Many thousands of warnings will be found and suppressed within included system headers, and problems within project code will be shown as errors instead of warnings. If errors are not mentioned in the output, then no problems were found in project code. Errors must be fixed manually, as automatically applying suggested changes will break code, i.e. renaming a virtual method in a base class will not rename the overriden method in derived classes.
 
@@ -330,6 +330,9 @@ The following subsections are only relevant to those seeking to modify the Clang
 ## Tidy Config Testing Script
 The files in this subsection are assumed to be in `utils/tidy_config_test`, unless stated otherwise.
 
-`run.sh` is used to test `.clang-tidy` (from the project's root directory) against an auto-generated sample input file. Through comments, `scripts/tidy_test_template.cpp` specifies which lines should produce clang-tidy errors, and which should not. This file is used to generate `temp/tidy_test.cpp` by renaming identifiers containing "check" or "CHECK" to some variant of "yeserror", "YESERROR", "noerror", and "NOERROR", based on capitalization, and adding a unique numeric suffix. These numeric suffixes will show up in `temp/errors.txt` with the text "FALSE POSITIVE" or "MISSING ERROR" to indicate that a line produced an error when it shouldn't have, or produced no error when it should have. See `temp/tidy_test.cpp` to make sense of these numbers. When `temp/errors.txt` is empty, and the tool ran successfully, then the `.clang-tidy` config in the root directory produces the expected result.
+`run.sh` is used to test `.clang-tidy` (from the project's root directory) against an auto-generated sample input file. Through comments, `scripts/tidy_test_template.cpp` specifies which lines should produce clang-tidy errors, and which should not. This file is used to generate `temp/tidy_test.cpp` by renaming identifiers containing "check" or "CHECK" to some variant of "yeserror", "YESERROR", "noerror", and "NOERROR", based on capitalization, and appending a unique numeric suffix. These numeric suffixes will show up in `temp/errors.txt` with the text "FALSE POSITIVE" or "MISSING ERROR" to indicate that a line produced an error when it shouldn't have, or produced no error when it should have. See `temp/tidy_test.cpp` to make sense of these numbers. When `temp/errors.txt` is empty, and the tool ran successfully, then the `.clang-tidy` config in the root directory produces the expected result.
 
 If `temp/errors.txt` has false positives, check the clang-tidy output in `temp/output.txt` to see what's causing them.
+
+## Format Config Testing File
+`utils/format_config_test/clang-format-example.cpp` is a useful input file to clang-format to test many settings, including bin packing of arguments, function declaration parameters, and constructor initializer lists.
