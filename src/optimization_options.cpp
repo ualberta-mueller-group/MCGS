@@ -13,7 +13,7 @@ string optimization_options::get_summary()
 
     str << "subgame_split " << _subgame_split;
     str << endl;
-    str << "simplify_basic_cgt" << _simplify_basic_cgt;
+    str << "simplify_basic_cgt " << _simplify_basic_cgt;
 
     return str.str();
 }
