@@ -23,11 +23,11 @@ constexpr bool add_is_safe(const T& x, const T& y)
 
     if (x > 0 && y > 0)
     {
-        return !(x > (max - y)); // (x + y) > max
+        return x <= (max - y); // (x + y) <= max
     }
     else if (x < 0 && y < 0)
     {
-        return !(x < (min - y)); // (x + y) < min
+        return x >= (min - y); // (x + y) >= min
     }
 
     return true;
@@ -43,11 +43,11 @@ constexpr bool subtract_is_safe(const T& x, const T& y)
 
     if (y > 0)
     {
-        return !(x < (min + y)); // (x - y) < min
+        return x >= (min + y); // (x - y) >= min
     }
     else if (y < 0)
     {
-        return !(x > (max + y)); // (x - y) > max
+        return x <= (max + y); // (x - y) <= max
     }
 
     return true;
