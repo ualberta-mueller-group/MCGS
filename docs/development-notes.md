@@ -17,7 +17,7 @@ This document includes more detailed information than `README.md`, including des
         - Runs until it either completes, or times out
         - A timeout of 0 means infinite time
         - All public `solve` methods within `sumgame` (see below) are implemented in terms of this method
-        - In the future we could use a macro to check if the result of a recursive call timed out
+        - In the future we could use a macro to check if the result of a recursive call timed out (wrap recursive solve calls with some `CHECK` macro which will return from the function if the result is invalid)
     - `sumgame::solve_with_timeout`
         - Currently spawns a thread which calls `_solve_with_timeout`, and the main thread blocks until completion or timeout.
         - This may interfere with some performance profiling tools, but other implementations based on checking a clock seem to be costly.
@@ -52,12 +52,12 @@ This section uses the term "wrapping" to mean either underflow or overflow.
     - Both unsigned and signed types, unless stated otherwise
 
 These functions test whether an operation would wrap, without doing the operation:
-- `add_will_wrap(const num x, const num y)`
-    - `true` iff `x + y` would wrap
-- `subtract_will_wrap(const num x, const num y)`
-    - `true` iff `x - y` would wrap
-- `negate_will_wrap(const signed int x)`
-    - `true` iff `-x` would wrap
+- `add_is_safe(const num x, const num y)`
+    - `true` iff `x + y` won't wrap
+- `subtract_is_safe(const num x, const num y)`
+    - `true` iff `x - y` won't wrap
+- `negate_is_safe(const signed int x)`
+    - `true` iff `-x` won't wrap
 
 These functions perform operations, and will only change the operands on success:
 - `safe_add(num& x, const num y)`
