@@ -10,9 +10,9 @@ namespace {
 
 //////////////////////////////////////// helper functions
 template <class T>
-void test_add_will_wrap(const T& x, const T& y, bool exp)
+void test_add_is_safe(const T& x, const T& y, bool exp)
 {
-    assert(add_will_wrap(x, y) == exp);
+    assert(!add_is_safe(x, y) == exp);
 }
 
 template <class T>
@@ -30,9 +30,9 @@ void test_safe_add_negatable(T x, T y, const optional<T>& exp)
 }
 
 template <class T>
-void test_subtract_will_wrap(const T& x, const T& y, bool exp)
+void test_subtract_is_safe(const T& x, const T& y, bool exp)
 {
-    assert(subtract_will_wrap(x, y) == exp);
+    assert(!subtract_is_safe(x, y) == exp);
 }
 
 template <class T>
@@ -62,10 +62,10 @@ void test_addition_like()
        Each line in this comment represents one expected result in the
        test_case_t
 
-        safe_add, !add_will_wrap
+        safe_add, add_is_safe
         safe_add_negatable
-        safe_subtract(x, y), !subtract_will_wrap(x, y)
-        safe_subtract(y, x), !subtract_will_wrap(y, x)
+        safe_subtract(x, y), subtract_is_safe(x, y)
+        safe_subtract(y, x), subtract_is_safe(y, x)
 
         safe_subtract_negatable(x, y)
         safe_subtract_negatable(y, x)
@@ -111,17 +111,17 @@ void test_addition_like()
 
         test_safe_add(x, y, exp1);
         test_safe_add(y, x, exp1);
-        test_add_will_wrap(x, y, !exp1.has_value());
-        test_add_will_wrap(y, x, !exp1.has_value());
+        test_add_is_safe(x, y, !exp1.has_value());
+        test_add_is_safe(y, x, !exp1.has_value());
 
         test_safe_add_negatable(x, y, exp2);
         test_safe_add_negatable(y, x, exp2);
 
         test_safe_subtract(x, y, exp3);
-        test_subtract_will_wrap(x, y, !exp3.has_value());
+        test_subtract_is_safe(x, y, !exp3.has_value());
 
         test_safe_subtract(y, x, exp4);
-        test_subtract_will_wrap(y, x, !exp4.has_value());
+        test_subtract_is_safe(y, x, !exp4.has_value());
 
         test_safe_subtract_negatable(x, y, exp5);
 
@@ -136,7 +136,7 @@ void test_negate()
 
     typedef tuple<int32_t, bool> test_case_t;
     /*
-       negate_will_wrap(x), !safe_negate(x)
+       !negate_is_safe(x), !safe_negate(x)
     */
 
     // clang-format off
@@ -155,7 +155,7 @@ void test_negate()
         const int32_t& x = get<0>(test);
         const bool& exp = get<1>(test);
 
-        assert(negate_will_wrap(x) == exp);
+        assert(!negate_is_safe(x) == exp);
         int32_t y = x;
         bool safe = safe_negate(y);
         assert(safe == !exp);
