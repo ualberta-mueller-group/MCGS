@@ -8,7 +8,6 @@ summary_path = Path("format_result.txt")
 transform_suffix = "___transformed"
 config_name = ".clang-format"
 
-assert Path(config_name).exists()
 
 
 args = sys.argv[1 : ]
@@ -23,6 +22,7 @@ def print_flag(flag_text, flag_description):
 def print_help():
     print(f"Usage: python3 {sys.argv[0]} [flags] [input files]")
     print("\n\tCreates, deletes, or applies format transformations on source files.")
+    print("\tThis file is meant to be used by makefile targets instead of being used directly.")
 
     print(f"""
 [input files] is a possibly mixed list of source files and transform files.
@@ -70,6 +70,9 @@ if len(args) < 1:
 
 if summary_path.exists():
     os.remove(summary_path)
+
+
+assert Path(config_name).exists()
 
 
 def remove_if_exists(filename, print_message):

@@ -7,6 +7,11 @@ BLACK = "X"
 WHITE = "O"
 EMPTY = "."
 
+if "-h" in sys.argv or "--help" in sys.argv:
+    print(f"Usage: python3 {sys.argv[0]}")
+    exit(0)
+
+
 def einput(prompt):
     print(prompt, file=sys.stderr, end="")
     return input()

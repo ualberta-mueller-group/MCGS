@@ -4,9 +4,9 @@
 import random
 import sys
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 2 or "-h" in sys.argv or "--help" in sys.argv:
     print(f"Usage: python3 {sys.argv[0]} <out file name>")
-    exit(1)
+    exit(0)
 
 
 outfile_name = sys.argv[1]

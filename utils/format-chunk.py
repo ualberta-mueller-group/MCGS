@@ -9,6 +9,20 @@ import sys
 use_vim = False
 chunk_no = -1
 
+
+if "-h" in sys.argv or "--help" in sys.argv:
+    print(f"Usage: python3 {sys.argv[0]} [arg] [arg]")
+    print("")
+    print("Args:")
+    print("\tvim")
+    print("\t\tOpen chunk in nvim")
+    print("")
+    print("\t-<int>")
+    print("\t\ti.e. '-0', '-1', etc. Select a chunk to format")
+    print("")
+    exit(0)
+    
+
 args = sys.argv
 for arg in sys.argv[1 : ]:
     if arg == "vim":
