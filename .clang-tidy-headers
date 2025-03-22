@@ -3,5 +3,5 @@ WarningsAsErrors: 'readability-function-size'
 HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:
-  - { key: readability-function-size.StatementThreshold, value: 2 }
+  - { key: readability-function-size.LineThreshold, value: 4 }
 
