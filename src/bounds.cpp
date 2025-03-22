@@ -208,7 +208,7 @@ bound_t game_bounds::get_midpoint() const
 {
     assert(both_valid());
 
-    THROW_ASSERT(!add_will_wrap(_lower, _upper));
+    THROW_ASSERT(add_is_safe(_lower, _upper));
     return (_lower + _upper) / 2;
 }
 
@@ -354,7 +354,7 @@ bound_t search_region::get_midpoint() const
 {
     assert(valid());
 
-    THROW_ASSERT(!add_will_wrap(low, high));
+    THROW_ASSERT(add_is_safe(low, high));
     return (low + high) / 2;
 }
 

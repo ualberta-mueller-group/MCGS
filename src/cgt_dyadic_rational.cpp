@@ -83,7 +83,7 @@ void dyadic_rational::print(std::ostream& str) const
 
 void dyadic_rational::_check_legal() const
 {
-    THROW_ASSERT(_q > 0 && is_power_of_2(_q) && !negate_will_wrap(_p));
+    THROW_ASSERT(_q > 0 && is_power_of_2(_q) && negate_is_safe(_p));
 }
 
 //---------------------------------------------------------------------------

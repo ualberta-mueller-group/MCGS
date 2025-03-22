@@ -35,7 +35,7 @@ private:
 
 inline up_star::up_star(int value, bool star) : _value(value), _star(star)
 {
-    THROW_ASSERT(!negate_will_wrap(_value));
+    THROW_ASSERT(negate_is_safe(_value));
 }
 
 //---------------------------------------------------------------------------

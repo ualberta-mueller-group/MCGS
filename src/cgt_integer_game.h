@@ -31,7 +31,7 @@ public:
 private:
     inline void _check_legal() const
     {
-        THROW_ASSERT(!negate_will_wrap(_value));
+        THROW_ASSERT(negate_is_safe(_value));
     }
 
     int _value;

@@ -134,7 +134,7 @@ switch_kind switch_game::_init_kind() const
         return SWITCH_KIND_CONVERTIBLE_NUMBER;
     }
 
-    assert(!negate_will_wrap(_right.top()));
+    assert(negate_is_safe(_right.top()));
     if (_left.bottom() == _right.bottom() && _left.top() == -_right.top())
     {
         return SWITCH_KIND_PROPER_NORMALIZED;

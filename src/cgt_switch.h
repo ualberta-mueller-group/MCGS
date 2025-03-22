@@ -61,8 +61,8 @@ private:
     inline void _check_legal() const
     {
         THROW_ASSERT(_left.is_simplified() && _right.is_simplified());
-        THROW_ASSERT(!negate_will_wrap(_left.top()));
-        THROW_ASSERT(!negate_will_wrap(_right.top()));
+        THROW_ASSERT(negate_is_safe(_left.top()));
+        THROW_ASSERT(negate_is_safe(_right.top()));
     }
 
     const fraction _left, _right;
