@@ -178,7 +178,6 @@ void simplify_basic_switch(sumgame_map_view& map_view)
     vector<switch_game*> proper_switches;
     vector<switch_game*> number_switches;
 
-
     for (game* g : *switch_games)
     {
         switch_game* g_switch = cast_game<switch_game*>(g);
@@ -244,7 +243,7 @@ void simplify_basic_switch(sumgame_map_view& map_view)
             fraction mean = f1;
             if (                                          //
                 !fraction::safe_add_fraction(mean, f2) || // mean = (f1 + f2)
-                !mean.mul2_bottom(1) ||                   // mean = (f1 + f2) / 2
+                !mean.mul2_bottom(1) || // mean = (f1 + f2) / 2
                 !fraction::safe_subtract_fraction(f1, mean) || // f1 = f1 - mean
                 !fraction::safe_subtract_fraction(f2, mean)    // f2 = f2 - mean
                 )                                              //
