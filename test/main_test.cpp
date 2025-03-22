@@ -3,6 +3,8 @@
 // Imports all unit tests
 //---------------------------------------------------------------------------
 
+const bool RUN_OVERRIDE_TESTS = false;
+
 #include <cassert>
 #include <string>
 #include <iostream>
@@ -24,32 +26,57 @@
 #include "cli_options_test.h"
 #include "simple_text_hash_test.h"
 
+#include "scale_test.h"
+#include "game_bounds_test.h"
+#include "find_bounds_test.h"
+#include "utilities_test.h"
+#include "game_type_test.h"
+#include "safe_arithmetic_test.h"
+#include "fraction_test.h"
+#include "sumgame_map_view_test.h"
+#include "custom_traits_test.h"
+#include "cgt_game_simplification_test.h"
+
 using std::cout, std::endl, std::string;
 
-namespace
+namespace {
+void override_tests()
 {
-    void print_flag(const string& flag_string, const string& flag_description)
-    {
-        cout << "\t" << flag_string << endl;
-        cout << "\t\t" << flag_description << endl;
-        cout << endl;
-    }
+    file_parser_test_all();
+}
+
+void print_flag(const string& flag_string, const string& flag_description)
+{
+    cout << "\t" << flag_string << endl;
+    cout << "\t\t" << flag_description << endl;
+    cout << endl;
 }
 
 void print_usage(const char* exec_name)
 {
     cout << "Usage: " << exec_name << " [flags]" << endl;
 
-    cout << "\tRuns unit tests. On successful completion, \"SUCCESS\" should be printed.";
+    cout << "\tRuns unit tests. On successful completion, \"SUCCESS\" should "
+            "be printed.";
     cout << endl;
 
     cout << "Flags:" << endl;
     print_flag("--no-slow-tests", "Skip running tests which take longer.");
     print_flag("-h, --help", "Print this message and exit.");
 }
+} // namespace
 
 int main(int argc, const char** argv)
 {
+    if (RUN_OVERRIDE_TESTS)
+    {
+        override_tests();
+        cout << "DONE. Remember to disable override tests (at top of "
+                "main_test.cpp)"
+             << endl;
+        return 0;
+    }
+
     bool do_slow_tests = true;
 
     // arg parse loop
@@ -83,6 +110,11 @@ int main(int argc, const char** argv)
     cgt_switch_test_all();
     cgt_up_star_test_all();
 
+    utilities_test_all();
+    game_type_test_all();
+    safe_arithmetic_test_all();
+    fraction_test_all();
+
     split_test_all();
 
     if (do_slow_tests)
@@ -96,6 +128,17 @@ int main(int argc, const char** argv)
     file_parser_test_all();
     cli_options_test_all();
     simple_text_hash_test_all();
+
+    scale_test_all();
+    game_bounds_test_all();
+    find_bounds_test_all();
+
+    sumgame_map_view_test_all();
+
+    // NOTE: this test runs at compile time, not run time
+    custom_traits_test_all();
+
+    cgt_game_simplification_test_all();
 
     cout << "SUCCESS" << endl;
 }

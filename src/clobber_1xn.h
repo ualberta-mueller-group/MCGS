@@ -17,14 +17,16 @@ public:
     void undo_move() override;
 
 protected:
-    split_result split_implementation() const override;
+    split_result _split_implementation() const override;
 
 public:
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;
-    void print(std::ostream& str) const override { str << "clobber_1xn:" << board_as_string();}
-private:
+
+    void print(std::ostream& str) const override
+    {
+        str << "clobber_1xn:" << board_as_string();
+    }
 };
 
 std::ostream& operator<<(std::ostream& out, const clobber_1xn& g);
-

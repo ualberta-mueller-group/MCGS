@@ -1,5 +1,6 @@
 #include "file_parser.h"
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -14,31 +15,38 @@
 
 /*
     NOTE: here we should usually throw instead of using assert() for many
-        file_parser functions; many errors will be from bad user input rather than programming bugs,
-        and exceptions also make unit testing easier
+        file_parser functions; many errors will be from bad user input rather
+   than programming bugs, and exceptions also make unit testing easier
 
     Version command is optional, BUT STILL CHECKED, when reading from string
 */
 
 using namespace std;
 
+using namespace file_parser_impl;
 
 //////////////////////////////////////////////////////////// static members
 bool file_parser::debug_printing = false;
 bool file_parser::silence_warnings = false;
-unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
+bool file_parser::override_assert_correct_version = false;
 
+unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 
 //////////////////////////////////////////////////////////// file_token_iterator
 
 file_token_iterator::file_token_iterator(istream* stream, bool delete_stream)
-    : __main_stream_ptr(stream), _delete_stream(delete_stream), _line_number(-1)
+    : _main_stream_ptr(stream),
+      _delete_stream(delete_stream),
+      _line_number(-1),
+      _token_buffer(),
+      _token_idx(0)
 {
+    _token_buffer.reserve(8);
 }
 
 file_token_iterator::~file_token_iterator()
 {
-    cleanup();
+    _cleanup();
 }
 
 int file_token_iterator::line_number() const
@@ -51,10 +59,40 @@ int file_token_iterator::line_number() const
 
 bool file_token_iterator::get_token(string& token)
 {
-    assert(__main_stream_ptr != nullptr);
     token.clear();
 
-    istream& _main_stream = *__main_stream_ptr;
+    // Check if token buffer has data
+    if (_token_idx < _token_buffer.size())
+    {
+        const token_info& ti = _token_buffer[_token_idx];
+        _token_idx++;
+
+        _line_number = ti.line_number;
+        token = ti.token_string;
+
+        return true;
+    }
+
+    // Check if stream has more tokens
+    if (_get_token_from_stream(token))
+    {
+        _token_buffer.emplace_back(token, _line_number);
+        _token_idx++;
+
+        assert(_token_idx == _token_buffer.size());
+
+        return true;
+    }
+
+    return false;
+}
+
+bool file_token_iterator::_get_token_from_stream(string& token)
+{
+    assert(_main_stream_ptr != nullptr);
+    token.clear();
+
+    istream& main_stream = *_main_stream_ptr;
 
     // Check if current line has more tokens
     if (_line_stream && _line_stream >> token)
@@ -69,7 +107,8 @@ bool file_token_iterator::get_token(string& token)
 
     // Scroll through the file's lines until we get a token
     string next_line;
-    while (_main_stream && getline(_main_stream, next_line) && !_main_stream.fail())
+    while (main_stream && getline(main_stream, next_line) &&
+           !main_stream.fail())
     {
         _line_number++;
         _line_stream = stringstream(next_line);
@@ -81,55 +120,81 @@ bool file_token_iterator::get_token(string& token)
 
         if (_line_stream.fail() && !_line_stream.eof())
         {
-            throw ios_base::failure("file_token_iterator operator++ line IO error");
+            throw ios_base::failure(
+                "file_token_iterator operator++ line IO error");
         }
     }
 
-    if (_main_stream.fail() && !_main_stream.eof())
+    if (main_stream.fail() && !main_stream.eof())
     {
         throw ios_base::failure("file_token_iterator operator++ file IO error");
     }
-    
+
     // no remaining tokens
     return false;
 }
 
-void file_token_iterator::cleanup()
+void file_token_iterator::consume()
 {
-    if (_delete_stream && __main_stream_ptr != nullptr)
+    vector<token_info> new_buffer;
+    new_buffer.reserve(_token_buffer.size() - _token_idx);
+
+    for (size_t i = _token_idx; i < _token_buffer.size(); i++)
+    {
+        new_buffer.push_back(_token_buffer[i]);
+    }
+
+    _token_buffer.clear();
+    _token_buffer = std::move(new_buffer);
+    _token_idx = 0;
+}
+
+void file_token_iterator::rewind()
+{
+    _token_idx = 0;
+}
+
+void file_token_iterator::_cleanup()
+{
+    if (_delete_stream && _main_stream_ptr != nullptr)
     {
         // close if it's a file...
-        ifstream* file = dynamic_cast<ifstream*>(__main_stream_ptr);
+        ifstream* file = dynamic_cast<ifstream*>(_main_stream_ptr);
 
         if (file != nullptr && file->is_open())
         {
             file->close();
         }
 
-        delete __main_stream_ptr;
+        delete _main_stream_ptr;
     }
 
-    __main_stream_ptr = nullptr;
+    _main_stream_ptr = nullptr;
 }
 
-
 //////////////////////////////////////////////////////////// helper functions
+namespace {
+inline bool match_state_conclusive(match_state state)
+{
+    return state == MATCH_NOT_FOUND || state == MATCH_FULL ||
+           state == MATCH_ILLEGAL;
+};
 
 /*
     These characters can only appear in opening or closing tags
 */
-bool is_reserved_char(const char& c)
+bool is_reserved_char(const char& c1, const char& c2)
 {
-    if (
-        c == '[' ||
-        c == ']' ||
-        c == '(' ||
-        c == ')' ||
-        c == '{' ||
-        c == '}' ||
-        c == '/' ||
-        c == '\\'
-        )
+    if (                            //
+        c1 == '[' ||                //
+        c1 == ']' ||                //
+        c1 == '(' ||                //
+        c1 == ')' ||                //
+        c1 == '{' ||                //
+        c1 == '}' ||                //
+        (c1 == '/' && c2 == '*') || //
+        (c1 == '*' && c2 == '/')    //
+        )                           //
     {
         return true;
     }
@@ -138,59 +203,48 @@ bool is_reserved_char(const char& c)
 }
 
 /*
-    Check if token is of the format:
-        <open>...<close>
-
-        With reserved characters only at the ends
-
-        allow_inner allows reserved characters inside (i.e. for comments)
-
-        i.e. for open = '(' and close = ')'
-
-            ( this is a valid string )
-            ( this is not { a valid string )
-            (( this is also not valid ))
-            
+    Check if reserved characters occur in the token outside of "open" and
+   "close"
 */
-bool is_enclosed_format(const string& token, const char& open, const char& close, bool allow_inner)
+bool invalid_reserved_chars(const string& token, const string& open,
+                            const string& close)
 {
-    if (token.size() < 2)
-    {
-        return false;
-    }
+    const size_t N = token.size();
+    const size_t open_size = open.size();
+    const size_t close_size = close.size();
 
-    if (token[0] != open || token.back() != close)
-    {
-        return false;
-    }
+    assert(N >= open_size + close_size); // token has enough chars
 
-    if (!allow_inner)
+    assert(N >= close_size); // no subtraction underflow
+
+    for (size_t i = open_size; i < N - close_size; i++)
     {
-        int N = token.size();
-        for (int i = 1; i < N - 1; i++)
+        // NOTE: if we change the input format, we may need 2 or more lookahead
+        // chars
+        const char& c1 = token[i];
+        const char& c2 = i + 1 < N - close_size ? token[i + 1] : 0;
+
+        if (is_reserved_char(c1, c2))
         {
-            const char& c = token[i];
-
-            if (is_reserved_char(c))
-            {
-                return false;
-            }
+            return true;
         }
-
     }
 
-    return true;
+    return false;
 }
 
 // remove first and last characters
-void strip_enclosing(string& str)
+void strip_enclosing(string& str, const string& open, const string& close)
 {
-    assert(str.size() >= 2);
+    const size_t str_size = str.size();
+    const size_t open_size = open.size();
+    const size_t close_size = close.size();
+    assert(str.size() >= open_size + close_size);
 
-    str.pop_back();
-    str = str.substr(1);
+    str = str.substr(open_size, str_size - open_size - close_size);
 }
 
+} // namespace
 
 //////////////////////////////////////////////////////////// game_case
 
@@ -252,22 +306,27 @@ void game_case::_move_impl(game_case&& other) noexcept
     other.release_games();
 }
 
-
 ////////////////////////////////////////////////// file_parser
 
 // Private constructor -- use static functions instead
-file_parser::file_parser(istream *stream, bool delete_stream, bool do_version_check)
-    : _iterator(stream, delete_stream), _do_version_check(do_version_check),
-      _section_title(""), _line_number(0), _token(""), _case_count(0), _next_case_idx(0),
+file_parser::file_parser(istream* stream, bool delete_stream,
+                         bool do_version_check)
+    : _iterator(stream, delete_stream),
+      _do_version_check(do_version_check),
+      _section_title(""),
+      _line_number(0),
+      _token(""),
+      _case_count(0),
+      _next_case_idx(0),
       _warned_wrong_version(false)
 {
     if (_game_map.size() == 0)
     {
-        init_game_parsers();
+        _init_game_parsers();
     }
 }
 
-void file_parser::version_check(const string& version_string)
+void file_parser::_version_check(const string& version_string)
 {
     const string& expected = FILE_PARSER_VERSION_STRING;
 
@@ -275,22 +334,30 @@ void file_parser::version_check(const string& version_string)
     {
         if (!file_parser::silence_warnings)
         {
-            cerr << "WARNING: Parser version mismatch. Expected \"" + expected + "\", got: \"";
+            cerr << "WARNING: Parser version mismatch. Expected \"" + expected +
+                        "\", got: \"";
             cerr << version_string << "\"" << endl;
         }
         _warned_wrong_version = true;
+
+        if (override_assert_correct_version)
+        {
+            throw parser_exception("Wrong version", WRONG_VERSION_COMMAND);
+        }
     }
 }
 
-void file_parser::add_game_parser(const string& game_title, game_token_parser* gp)
+void file_parser::_add_game_parser(const string& game_title,
+                                   game_token_parser* gp)
 {
     assert(gp != nullptr);
 
     if (_game_map.find(game_title) != _game_map.end())
     {
         delete gp;
-        
-        string why = "Tried to add game parser \"" + game_title + "\" but it already exists";
+
+        string why = "Tried to add game parser \"" + game_title +
+                     "\" but it already exists";
         throw parser_exception(why, DUPLICATE_GAME_PARSER);
     }
 
@@ -298,8 +365,8 @@ void file_parser::add_game_parser(const string& game_title, game_token_parser* g
 }
 
 /*
-   Expand given token using the token iterator until it is formatted according
-       to is_enclosed_format(). Return false if match not found
+   Expand given token using the token iterator until it matches <open>...<close>
+   or no match is possible.
 
     i.e. given open = '(' and close = ')', and the input:
 
@@ -314,81 +381,144 @@ void file_parser::add_game_parser(const string& game_title, game_token_parser* g
     The input:
     (1 5 3)[clobber_1xn]
 
-    is invalid and will be rejected because the token will expand like: 
+    is invalid and will be rejected because the token will expand like:
     (1
     (1 5
     (1 5 3)[clobber_1xn]
     which doesn't match
 */
-bool file_parser::get_enclosed(const char& open, const char& close, bool allow_inner)
+match_state file_parser::_get_enclosed(const string& open, const string& close,
+                                       bool allow_inner)
 {
     token_iterator& iterator = _iterator;
+    match_state state = MATCH_UNKNOWN;
+    const size_t n_enclosing_chars = open.size() + close.size();
 
-    if (_token[0] != open)
+    std::function<void()> update_match_state = [&]() -> void
     {
-        return false;
-    }
+        assert(!match_state_conclusive(state));
 
-    if (is_enclosed_format(_token, open, close, allow_inner))
+        if (state == MATCH_UNKNOWN)
+        {
+            if (_token.size() < open.size())
+            {
+                return;
+            }
+            state = string_starts_with(_token, open) ? MATCH_START
+                                                     : MATCH_NOT_FOUND;
+
+            if (state == MATCH_START)
+            {
+                update_match_state(); // could have full match now...
+            }
+
+            return;
+        }
+
+        if (state == MATCH_START)
+        {
+            if (_token.size() >= n_enclosing_chars &&
+                string_ends_with(_token, close))
+            {
+                state = MATCH_FULL;
+
+                if (!allow_inner && invalid_reserved_chars(_token, open, close))
+                {
+                    state = MATCH_ILLEGAL;
+                }
+            }
+
+            return;
+        }
+
+        assert(false);
+    };
+
+    update_match_state();
+    if (match_state_conclusive(state))
     {
-        return true;
+        return state;
     }
 
     string new_token;
     while (iterator.get_token(new_token))
     {
+        assert(!match_state_conclusive(state));
+
         _token += " " + new_token;
 
-        if (is_enclosed_format(_token, open, close, allow_inner))
+        update_match_state();
+        if (match_state_conclusive(state))
         {
-            return true;
+            return state;
         }
-
     }
 
-    return false;
+    // Now handle EOF
+    assert(state == MATCH_START || state == MATCH_UNKNOWN);
+
+    if (state == MATCH_START)
+    {
+        return MATCH_ILLEGAL;
+    }
+
+    return MATCH_NOT_FOUND;
 }
 
 /*
-    Try to match the current token to specified "enclosed format". Strips enclosing
-        characters
+    Expand current token to match the format: <open><content><close>
 
-    returns false if no match, true if match, and throws on
-        illegal input (i.e. match should happen but doesn't due to bad user input)
+    On success: Returns true, consumes file tokens used, and
+        assigns _token to <content> (i.e. strips enclosing characters)
+
+    On failure: If illegal input, throws an exception. If no illegal input and
+   match doesn't occur, returns false, rewinds the token stream, and leaves
+   _token as it was before
 */
-bool file_parser::match(const char& open, const char& close, const string& match_name, bool allow_inner)
+bool file_parser::_match(const string& open, const string& close,
+                         const string& match_name, bool allow_inner)
 {
     assert(_token.size() > 0);
 
-    if (_token[0] != open)
-    {
-        return false;
-    }
+    string token_copy = _token;
 
-    bool success = get_enclosed(open, close, allow_inner);
+    match_state state = _get_enclosed(open, close, allow_inner);
+    assert(match_state_conclusive(state));
 
-    if (success)
+    if (state == MATCH_FULL)
     {
         if (file_parser::debug_printing)
         {
             cout << "Got " << match_name << ": " << _token << endl;
         }
-        strip_enclosing(_token);
+        strip_enclosing(_token, open, close);
+
+        _iterator.consume();
         return true;
     }
-    
-    string why = get_error_start() + "failed to match " + match_name;
+
+    if (state == MATCH_NOT_FOUND)
+    {
+        _iterator.rewind();
+        _token = token_copy;
+        return false;
+    }
+
+    assert(state == MATCH_ILLEGAL);
+
+    string why = _get_error_start() + "failed to match " + match_name;
     throw parser_exception(why, FAILED_MATCH);
 
     return false;
 }
 
 // parse the current token using a game_token_parser, add result to game_cases
-bool file_parser::parse_game()
+bool file_parser::_parse_game()
 {
     if (_section_title.size() == 0)
     {
-        string why = get_error_start() + "game token found but section title missing";
+        string why =
+            _get_error_start() + "game token found but section title missing";
         throw parser_exception(why, MISSING_SECTION_TITLE);
 
         return false;
@@ -398,10 +528,12 @@ bool file_parser::parse_game()
 
     if (it == _game_map.end())
     {
-        string why = get_error_start() + "game token found, but game parser doesn't exist for section \"";
+        string why =
+            _get_error_start() +
+            "game token found, but game parser doesn't exist for section \"";
         why += _section_title + "\"";
         throw parser_exception(why, MISSING_SECTION_PARSER);
-        
+
         return false;
     }
 
@@ -414,14 +546,16 @@ bool file_parser::parse_game()
         if (g == nullptr)
         {
 
-            // This won't leak memory when caught because the game_cases 
+            // This won't leak memory when caught because the game_cases
             // will be cleaned up when the file_parser is destructed
-            string why = get_error_start() + "game parser for section \"" + _section_title;
+            string why = _get_error_start() + "game parser for section \"" +
+                         _section_title;
             why += "\" failed to parse game token: \"" + _token + "\"";
             throw parser_exception(why, FAILED_GAME_TOKEN_PARSE);
 
             return false;
-        } else
+        }
+        else
         {
             _cases[i].games.push_back(g);
 
@@ -429,15 +563,12 @@ bool file_parser::parse_game()
             string hashable_chunk = _section_title + _token;
             _cases[i].hash.update(hashable_chunk);
         }
-
-
     }
 
     return true;
 }
 
-
-void file_parser::validate_command(const string& token_copy)
+void file_parser::_validate_command(const string& token_copy)
 {
     // First strip whitespace from the input token, where appropriate
     stringstream stream(token_copy);
@@ -484,15 +615,14 @@ void file_parser::validate_command(const string& token_copy)
 
     if (got != expected)
     {
-        string why = get_error_start();
+        string why = _get_error_start();
         why += "invalid command format";
         throw parser_exception(why, parser_exception_code::FAILED_CASE_COMMAND);
     }
-
 }
 
 // parse current token as a command
-bool file_parser::parse_command()
+bool file_parser::_parse_command()
 {
     const string token_copy = _token;
 
@@ -528,12 +658,12 @@ bool file_parser::parse_command()
     int to_play = EMPTY;
     test_result expected_outcome = TEST_RESULT_UNSPECIFIED;
 
-
     // check if chunks[i] is some allowed word
-    auto chunk_is_allowed = [&chunks](size_t i, const vector<string>& allowed_words) -> bool
+    auto chunk_is_allowed =
+        [&chunks](size_t i, const vector<string>& allowed_words) -> bool
     {
         // valid index?
-        //if (i < 0 || !(i < chunks.size()))
+        // if (i < 0 || !(i < chunks.size()))
         if (!(i < chunks.size()))
         {
             return false;
@@ -564,7 +694,8 @@ bool file_parser::parse_command()
             const char c = chunks[chunk_idx][0];
             chunk_idx++;
             to_play = char_to_color(c);
-        } else
+        }
+        else
         {
             return false;
         }
@@ -574,12 +705,12 @@ bool file_parser::parse_command()
         {
             const string& chunk = chunks[chunk_idx];
             chunk_idx++;
-            expected_outcome = (chunk == "win") ? TEST_RESULT_WIN : TEST_RESULT_LOSS;
+            expected_outcome =
+                (chunk == "win") ? TEST_RESULT_WIN : TEST_RESULT_LOSS;
         }
 
         return true;
     };
-
 
     // max 2 cases (run command allows 1 or 2 runs)
     for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
@@ -598,7 +729,8 @@ bool file_parser::parse_command()
 
         if (_case_count >= FILE_PARSER_MAX_CASES)
         {
-            string why = get_error_start() + "run command has too many cases, maximum is: ";
+            string why = _get_error_start() +
+                         "run command has too many cases, maximum is: ";
             why += to_string(FILE_PARSER_MAX_CASES);
             throw parser_exception(why, CASE_LIMIT_EXCEEDED);
 
@@ -620,7 +752,7 @@ bool file_parser::parse_command()
     // chunks remain but aren't part of a case...
     if (chunk_idx < chunks.size())
     {
-        string why = get_error_start() + "failed to parse case command";
+        string why = _get_error_start() + "failed to parse case command";
         throw parser_exception(why, FAILED_CASE_COMMAND);
 
         return false;
@@ -628,17 +760,17 @@ bool file_parser::parse_command()
 
     if (_case_count == 0)
     {
-        string why = get_error_start() + "\"run\" command with no cases";
+        string why = _get_error_start() + "\"run\" command with no cases";
         throw parser_exception(why, EMPTY_CASE_COMMAND);
     }
 
-    validate_command(token_copy);
+    _validate_command(token_copy);
 
     return true;
 }
 
 // print start of parser error text (including line number)
-string file_parser::get_error_start()
+string file_parser::_get_error_start()
 {
     return "Parser error on line " + to_string(_line_number) + ": ";
 }
@@ -647,13 +779,14 @@ file_parser::~file_parser()
 {
     for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
     {
-        // calling cleanup() is okay because caller-consumed games were std::moved
+        // calling cleanup() is okay because caller-consumed games were
+        // std::moved
         _cases[i].cleanup_games();
     }
 }
 
 /*
-    Parses next part of the file until a case is found. Returns true and 
+    Parses next part of the file until a case is found. Returns true and
         std::moves case to "gc" if case is
         valid, otherwise returns false indicating no more cases
 */
@@ -661,7 +794,9 @@ bool file_parser::parse_chunk(game_case& gc)
 {
     if (gc.games.size() != 0)
     {
-        throw parser_exception("Parser error: caller's game_case not empty at start of file_parser::parse_chunk()", PARSE_CHUNK_CALLER_ERROR);
+        throw parser_exception("Parser error: caller's game_case not empty at "
+                               "start of file_parser::parse_chunk()",
+                               PARSE_CHUNK_CALLER_ERROR);
     }
 
     // Check if there's already a case from the previous parse
@@ -677,7 +812,8 @@ bool file_parser::parse_chunk(game_case& gc)
     _case_count = 0;
     for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
     {
-        // calling cleanup() is okay because caller-consumed cases were std::moved
+        // calling cleanup() is okay because caller-consumed cases were
+        // std::moved
         _cases[i].cleanup_games();
     }
 
@@ -686,37 +822,39 @@ bool file_parser::parse_chunk(game_case& gc)
     while (iterator.get_token(_token))
     {
         _line_number = iterator.line_number();
+        iterator.consume();
 
         // Check version (for file)
         if (_do_version_check)
         {
-            //bool success = get_enclosed('{', '}', false);
-            bool success = match('{', '}', "command", false);
+            // bool success = get_enclosed('{', '}', false);
+            bool success = _match("{", "}", "command", false);
 
             if (!success || _token.find("version") != 0)
             {
-                string why = get_error_start() + "Failed to match version command";
+                string why =
+                    _get_error_start() + "Failed to match version command";
                 throw parser_exception(why, MISSING_VERSION_COMMAND);
 
                 return false;
             }
 
-            version_check(_token);
+            _version_check(_token);
             _do_version_check = false;
 
             continue;
         }
 
         // Match command
-        if (match('{', '}', "command", false))
+        if (_match("{", "}", "command", false))
         {
             if (_token.find("version") == 0)
             {
-                version_check(_token);
+                _version_check(_token);
                 continue;
             }
 
-            parse_command();
+            _parse_command();
 
             // the only command is a "run" command, so just return a case.
             // OK if no games were read yet -- this is a "0" game
@@ -731,23 +869,24 @@ bool file_parser::parse_chunk(game_case& gc)
         }
 
         // Match title
-        if (match('[', ']', "section title", false))
+        if (_match("[", "]", "section title", false))
         {
             _section_title = _token;
             continue;
         }
 
         // Match brackets
-        if (match('(', ')', "bracket token", false))
+        if (_match("(", ")", "bracket token", false))
         {
-            parse_game();
+            _parse_game();
             continue;
         }
 
         // Match comment
-        if (match('/', '\\', "comment", true))
+        if (_match("/*", "*/", "comment", true))
         {
-            static_assert(FILE_PARSER_MAX_CASES < 10); // next lines assume the case number is 1 digit
+            // next lines assume the case number is 1 digit
+            static_assert(FILE_PARSER_MAX_CASES < 10);
 
             // ignore comments starting with "_"
             if (_token.size() > 0 && _token[0] != '_')
@@ -763,20 +902,21 @@ bool file_parser::parse_chunk(game_case& gc)
                         case_idx = (int) (_token[1] - '0');
                     }
 
-                    if (
-                        !(case_idx >= 0 && case_idx <= 9)
-                        || case_idx >= FILE_PARSER_MAX_CASES
-                        || (_token.size() >= 3 && _token[2] != ' ')
-                        )
+                    if (                                            //
+                        !(case_idx >= 0 && case_idx <= 9)           //
+                        || case_idx >= FILE_PARSER_MAX_CASES        //
+                        || (_token.size() >= 3 && _token[2] != ' ') //
+                        )                                           //
                     {
                         string why = "Comment with '#' missing or bad number";
                         throw parser_exception(why, BAD_COMMENT_FORMAT);
                     }
 
-                    string remaining = _token.size() > 2 ? _token.substr(2) : "";
+                    string remaining =
+                        _token.size() > 2 ? _token.substr(2) : "";
                     _cases[case_idx].comments += remaining;
-
-                } else
+                }
+                else
                 {
 
                     for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
@@ -794,8 +934,7 @@ bool file_parser::parse_chunk(game_case& gc)
         {
             cout << "Got simple token: " << _token << endl;
         }
-        parse_game();
-
+        _parse_game();
     }
 
     // no more cases
@@ -814,7 +953,8 @@ file_parser* file_parser::from_file(const string& file_name)
     if (!stream->is_open())
     {
         delete stream;
-        throw ios_base::failure("file_parser failed to open file \"" + file_name + "\"");
+        throw ios_base::failure("file_parser failed to open file \"" +
+                                file_name + "\"");
     }
 
     return new file_parser(stream, true, true);
@@ -830,7 +970,6 @@ bool file_parser::warned_wrong_version()
     return _warned_wrong_version;
 }
 
-
 /*
     When implementing a new game, you must register its game parser here
 
@@ -841,19 +980,19 @@ bool file_parser::warned_wrong_version()
         created as the clobber_1xn class.
 
 */
-void file_parser::init_game_parsers()
+void file_parser::_init_game_parsers()
 {
     assert(_game_map.size() == 0);
 
-    add_game_parser("clobber_1xn",      new basic_parser<clobber_1xn>());
-    add_game_parser("nogo_1xn",         new basic_parser<nogo_1xn>());
-    add_game_parser("elephants",        new basic_parser<elephants>());
+    _add_game_parser("clobber_1xn", new basic_parser<clobber_1xn>());
+    _add_game_parser("nogo_1xn", new basic_parser<nogo_1xn>());
+    _add_game_parser("elephants", new basic_parser<elephants>());
 
-    add_game_parser("integer_game",     new int_parser<integer_game>());
-    add_game_parser("nimber",           new int_parser<nimber>());
+    _add_game_parser("integer_game", new int_parser<integer_game>());
+    _add_game_parser("nimber", new int_parser<nimber>());
 
-    add_game_parser("dyadic_rational",  new int2_parser<dyadic_rational>());
-    add_game_parser("switch_game",      new int2_parser<switch_game>());
+    _add_game_parser("dyadic_rational", new dyadic_rational_parser());
+    _add_game_parser("switch_game", new switch_game_parser());
 
-    add_game_parser("up_star",          new up_star_parser());
+    _add_game_parser("up_star", new up_star_parser());
 }

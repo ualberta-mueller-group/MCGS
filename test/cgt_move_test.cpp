@@ -1,10 +1,11 @@
+#include "cgt_move_test.h"
 #include "cgt_move.h"
-
 #include <cassert>
-#include <iostream>
-#include "test_utilities.h"
 
-namespace cgt_move{
+using namespace cgt_move;
+
+namespace {
+namespace cgt_move_test {
 
 void test_two_part_move()
 {
@@ -45,7 +46,7 @@ void test_encode_decode()
 
 void test_encode_decode2()
 {
-    int mm = (MOVE_MAX_SIZE - 1)/2;
+    int mm = (MOVE_MAX_SIZE - 1) / 2;
     const move m = two_part_move(mm, mm);
     const move m2 = encode(m, BLACK);
     assert(decode(m2) == m);
@@ -76,13 +77,14 @@ void test_encode_decode4()
     assert(decode(m3) == m);
     assert(get_color(m3) == WHITE);
 }
+} // namespace cgt_move_test
 } // namespace
 
 void cgt_move_test_all()
 {
-    cgt_move::test_two_part_move();
-    cgt_move::test_encode_decode();
-    cgt_move::test_encode_decode2();
-    cgt_move::test_encode_decode3();
-    cgt_move::test_encode_decode4();
+    cgt_move_test::test_two_part_move();
+    cgt_move_test::test_encode_decode();
+    cgt_move_test::test_encode_decode2();
+    cgt_move_test::test_encode_decode3();
+    cgt_move_test::test_encode_decode4();
 }

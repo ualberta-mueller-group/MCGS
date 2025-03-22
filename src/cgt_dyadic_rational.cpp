@@ -3,20 +3,13 @@
 //---------------------------------------------------------------------------
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
+#include "safe_arithmetic.h"
+#include "utilities.h"
 
 //---------------------------------------------------------------------------
 void dyadic_rational::simplify()
 {
     assert(is_power_of_2(_q));
-    // TODO naive loop. run Euclid??? bit-fiddling solution?
-
-    /*
-    while(_p % 2 == 0 && _q % 2 == 0)
-    {
-        _p /= 2;
-        _q /= 2;
-    }
-    */
 
     while ((_p & 0x1) == 0 && (_q & 0x1) == 0)
     {
@@ -27,8 +20,20 @@ void dyadic_rational::simplify()
 
 dyadic_rational::dyadic_rational(int p, int q) : _p(p), _q(q)
 {
-    assert(q > 0);
+    _check_legal();
     simplify();
+}
+
+dyadic_rational::dyadic_rational(const fraction& frac)
+    : _p(frac.top()), _q(frac.bottom())
+{
+    _check_legal();
+    simplify();
+}
+
+fraction dyadic_rational::get_fraction() const
+{
+    return fraction(_p, _q);
 }
 
 void dyadic_rational::play(const move& m, bw to_play)
@@ -54,16 +59,16 @@ void dyadic_rational::undo_move()
     game::undo_move();
 }
 
-split_result dyadic_rational::split_implementation() const
+split_result dyadic_rational::_split_implementation() const
 {
     if (_q != 1)
     {
         return split_result(); // no split
-    } else
+    }
+    else
     {
         return split_result({new integer_game(_p)}); // becomes integer
     }
-
 };
 
 game* dyadic_rational::inverse() const
@@ -73,7 +78,12 @@ game* dyadic_rational::inverse() const
 
 void dyadic_rational::print(std::ostream& str) const
 {
-    str << "dyadic_rational:"<< _p << '/' << _q;
+    str << "dyadic_rational:" << _p << '/' << _q;
+}
+
+void dyadic_rational::_check_legal() const
+{
+    THROW_ASSERT(_q > 0 && is_power_of_2(_q) && negate_is_safe(_p));
 }
 
 //---------------------------------------------------------------------------
@@ -82,23 +92,25 @@ class dyadic_rational_move_generator : public move_generator
 {
 public:
     dyadic_rational_move_generator(const dyadic_rational& game, bw to_play);
-    void operator++();
-    operator bool() const;
-    move gen_move() const;
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
 private:
     const dyadic_rational& _game;
     bool _has_move;
 };
 
-dyadic_rational_move_generator::dyadic_rational_move_generator
-(const dyadic_rational& game, bw to_play)
-    : move_generator(to_play),
-      _game(game),
-      _has_move(true)
+dyadic_rational_move_generator::dyadic_rational_move_generator(
+    const dyadic_rational& game, bw to_play)
+    : move_generator(to_play), _game(game), _has_move(true)
 {
-    if (game.q() == 1) // integer
-        if (((to_play == BLACK) && (game.p() <= 0))
-         || ((to_play == WHITE) && (game.p() >= 0)))
+    // integer
+    if (game.q() == 1)
+        if (                                           //
+            ((to_play == BLACK) && (game.p() <= 0))    //
+            || ((to_play == WHITE) && (game.p() >= 0)) //
+            )                                          //
             _has_move = false;
 }
 

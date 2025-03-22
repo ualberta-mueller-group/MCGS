@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 // Basic cgt and game constants and utilities
-// Players, colors, ranges, outcome_class, 
+// Players, colors, ranges, outcome_class,
 // conversion color to char and back
 //---------------------------------------------------------------------------
 
@@ -16,11 +16,10 @@ const int BORDER = 3; // outside of board
 const int LEFT = BLACK;
 const int RIGHT = WHITE;
 
-typedef int bw; // black or white
+typedef int bw;  // black or white
 typedef int ebw; // empty, black or white
 
-
-/**
+/*
  The four outcome classes of a combinatorial game, plus unknown:
  P = previous player win = 2nd player win = 0
  N = next player win = first player win
@@ -28,7 +27,32 @@ typedef int ebw; // empty, black or white
  R = right wins = white wins = O wins, no matter who goes first
  U = unknown - used when outcome is not computed (yet)
  */
-enum outcome_class { P, N, L, R, U };
+enum outcome_class
+{
+    P,
+    N,
+    L,
+    R,
+    U
+};
+
+enum relation
+{
+    REL_EQUAL = 0,
+    REL_FUZZY,
+    REL_LESS_OR_EQUAL,
+    REL_LESS,
+    REL_GREATER_OR_EQUAL,
+    REL_GREATER,
+    REL_UNKNOWN,
+};
+
+// A move encoding any move in some simple CGT games.
+enum simple_cgt_move_code
+{
+    INTEGER_MOVE_CODE = 0,
+    SWITCH_MOVE_CODE,
+};
 
 //---------------------------------------------------------------------------
 // Utility for colors
@@ -73,8 +97,8 @@ inline int ebw_opponent(int c)
 // range includes low but excludes high
 inline bool in_range(int value, int low, int high)
 {
-    return value >= low
-        && value < high;
+    return value >= low     //
+           && value < high; //
 }
 
 // range includes low but excludes high
@@ -86,7 +110,7 @@ inline void assert_range(int value, int low, int high)
 
 //---------------------------------------------------------------------------
 // Mapping from colors to char, X for BORDER
-const char color_code[] = {'B', 'W', '.', 'X'};
+const char COLOR_CODE[] = {'B', 'W', '.', 'X'};
 
 inline int char_to_color(char c)
 {
@@ -96,18 +120,20 @@ inline int char_to_color(char c)
 inline char color_char(int color)
 {
     assert_range(color, 0, 4);
-    return color_code[color];
+    return COLOR_CODE[color];
 }
 
 inline bool is_black_white_char(char c)
 {
     return c == 'B' || c == 'W';
 }
+
 //---------------------------------------------------------------------------
 // Utilities for assertions
 
 inline void assert_equal(int a, int b)
-{ 
+{
     assert(a == b);
 }
+
 //---------------------------------------------------------------------------

@@ -4,4 +4,3 @@
 #pragma once
 
 void clobber_1xn_test_all();
-

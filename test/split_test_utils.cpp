@@ -1,11 +1,8 @@
 #include "split_test_utils.h"
-
 #include <algorithm>
 
 using std::string;
 using std::vector;
-
-//////////////////////////////////////// helper functions
 
 void assert_strip_split_result(const strip* g, vector<string> expected)
 {
@@ -39,6 +36,3 @@ void assert_no_split(const game* g)
 {
     assert(!g->split().has_value());
 }
-
-
-

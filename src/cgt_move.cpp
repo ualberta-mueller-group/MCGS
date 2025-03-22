@@ -3,7 +3,6 @@
 //---------------------------------------------------------------------------
 #include "cgt_move.h"
 
-#include <iostream>
 #include <bitset>
 
 namespace cgt_move {

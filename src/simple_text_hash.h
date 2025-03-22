@@ -11,17 +11,6 @@
 class simple_text_hash
 {
 public:
-    static constexpr int buffer_size = 8;
-
-    uint8_t buffer[buffer_size];
-    int pos; // current index into buffer
-    size_t bytes_seen;
-    std::string string_representation;
-
-    static_assert(buffer_size > 0, "Buffer size must be > 0");
-    static_assert(buffer_size >= sizeof(bytes_seen), "Buffer must be able to hold byte count");
-
-
     simple_text_hash();
 
     simple_text_hash(simple_text_hash&& other) noexcept;
@@ -32,12 +21,21 @@ public:
 
     void update(const std::string& data);
 
-    // finalize the hash. After calling get_string(), update() shouldn't be called again
+    // finalize the hash. After calling get_string(), update() shouldn't be
+    // called again
     const std::string& get_string();
 
+    static constexpr int BUFFER_SIZE = 8;
+
+    uint8_t buffer[BUFFER_SIZE];
+    int pos; // current index into buffer
+    size_t bytes_seen;
+    std::string string_representation;
+
+    static_assert(BUFFER_SIZE > 0, "Buffer size must be > 0");
+    static_assert(BUFFER_SIZE >= sizeof(bytes_seen),
+                  "Buffer must be able to hold byte count");
 
 private:
     void _move_impl(simple_text_hash&& other) noexcept;
-
 };
-

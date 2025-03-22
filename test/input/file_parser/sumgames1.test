@@ -1,4 +1,4 @@
-{version 1.0}
+{version 1.1}
 [nogo_1xn] X..O
 {B win, W win}
 
@@ -10,6 +10,6 @@
 XOXOXOXO
 {B win, W}
 
-/ Now test the 0 game \
+/* Now test the 0 game */
 {B loss, W loss}
 

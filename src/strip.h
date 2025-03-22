@@ -4,7 +4,6 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-
 #include "cgt_basics.h"
 #include "game.h"
 #include <vector>
@@ -21,18 +20,23 @@ public:
     strip(const std::string& game_as_string);
     int size() const;
     int at(int p) const;
-    
+
     // is p on board, and of given color?
     bool checked_is_color(int p, int color) const;
     void play_stone(int p, int color);
     void remove_stone(int p);
-    // replaces whatever is there. 
+
+    // replaces whatever is there.
     // Less checking than play_stone or remove_stone
     void replace(int p, int color);
     std::vector<int> inverse_board() const;
+    std::vector<int> inverse_mirror_board() const;
     std::string board_as_string() const;
-    //void print(std::ostream& str) const { str << board_as_string();}
+    // void print(std::ostream& str) const { str << board_as_string();}
+
 private:
+    void _check_legal() const;
+
     std::vector<int> _board; // todo try char as well.
 };
 
@@ -49,8 +53,8 @@ inline int strip::at(int p) const
 
 inline bool strip::checked_is_color(int p, int color) const
 {
-    return in_range(p, 0, size())
-        && _board[p] == color;
+    return in_range(p, 0, size()) //
+           && _board[p] == color; //
 }
 
 inline void strip::play_stone(int p, int color)
@@ -75,6 +79,4 @@ inline void strip::replace(int p, int color)
     _board[p] = color;
 }
 
-
 //---------------------------------------------------------------------------
-

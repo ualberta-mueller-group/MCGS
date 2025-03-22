@@ -1,4 +1,4 @@
-# MCGS V1.0
+# MCGS V1.1
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
@@ -18,7 +18,8 @@ The overall approach and future plans will be described in a forthcoming documen
   - [MCGS Data Types](#mcgs-data-types)
   - [Implementing a New Game](#implementing-a-new-game)
   - [Implementing Game-Specific Optimizations](#implementing-game-specific-optimizations)
-    - [Splitting Into Subgames](#splitting-into-subgames)
+    - [Splitting Into Subgames](#splitting-into-subgames-subgame_split)
+    - [Simplifying Sums of Games](#simplifying-sums-of-games-simplify_basic_cgt)
 
 ### Building MCGS
 First download this repository, and enter its directory.
@@ -42,7 +43,7 @@ This will build and then run `./MCGS_test`, and on successful completion of unit
 
 For details about using `./MCGS`, see `./MCGS --help`. Some command line arguments are meant to be used together, and will have no effect when they aren't. This is detailed in the `--help` output, and may change in future versions. 
 
-For a full description of input syntax, see [input/info.test](input/info.test).
+For a full description of input syntax, including game-specific input syntax, see [input/info.test](input/info.test).
 
 ### Using the Testing Framework
 The testing framework included in MCGS is used to generate, compare, and analyze performance and correctness data from MCGS. The command:
@@ -74,6 +75,7 @@ The following sections are for programmers who wish to add functionality to MCGS
 The code is organized in a mostly "flat" way; most source code files are in the `./src` directory. The `main.cpp` file is in `./src/main` and all unit tests are in `./test`. In the following sections, all files mentioned by name are assumed to be in `./src` unless specified otherwise.
 
 For more information about ongoing development, see [development-notes.md](docs/development-notes.md).
+When contributing to this project, follow the style guide: [style.md](docs/style.md).
 
 ### MCGS data types
 #### game (game.h)
@@ -103,15 +105,28 @@ To implement a new game `x`:
 - Define `class x` in `x.h`, derive from `game` or `strip`.
 - Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, and `inverse()`. See comments in `game.h` for notes on important implementation details.
 - Define `class x_move_generator`, derive from `move_generator`.
-- At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h`).
+- At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h` and `game_token_parsers.cpp`).
+- Document the syntax for your game in `input/info.test`, in the `Game syntax` section in the lower half of the file.
 - In `test/x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. Add the declaration in `test/x_test.h` 
 - Call `x_test_all` from `test/main_test.cpp`.
 
 The `test/input` directory contains input files used by unit tests. Add your new tests there.
 
 ### Implementing Game-Specific Optimizations
-Currently there is one (unused) game-specific optimization. In the future there will be more (and they will be used).
+Currently there are two game-specific optimizations. More will be added in future versions. Optimizations are enabled by default, and can be toggled off (see `./MCGS --help` for details on disabling optimizations). Some optimizations introduce significant overhead.
 
-#### Splitting Into Subgames
+#### Splitting Into Subgames (`subgame_split`)
 In your game `x`, override and implement `game::split_implementation()`. See `game.h` for important implementation details, and add unit tests.
-`split_implementation()` is used to break apart a `game` into a list of subgames whose sum is equal to the original `game`. This speeds up search by allowing MCGS to reason about smaller independent subproblems.
+`split_implementation()` is used to break apart a `game` into a list of subgames whose sum is equal to the original `game`. This may speed up search by allowing MCGS to reason about smaller independent subproblems.
+
+This optimization has significant overhead, and in the current version is unlikely to be useful unless your game splits into "basic" CGT games, and `simplify_basic_cgt` remains enabled.
+
+#### Simplifying Sums of Games (`simplify_basic_cgt`)
+Currently MCGS simplifies sums containing "basic" CGT games (`integer_game`, `dyadic_rational`, `up_star`, `switch_game`, and `nimber`), by summing together their values, resulting in fewer subgames. If your game's `split_implementation()` method returns subgames of these types, they will be included in this simplification step. 
+
+Currently there is no hook to write your own similar simplification steps, but you can modify existing functions. See the following functions:
+- `sumgame::simplify_basic` (sumgame.cpp)
+- `sumgame::undo_simplify_basic` (sumgame.cpp)
+- `simplify_basic_all` (cgt_game_simplification.cpp)
+
+This optimization has low overhead, as MCGS avoids running these steps unless necessary.
