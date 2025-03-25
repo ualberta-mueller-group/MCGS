@@ -24,19 +24,27 @@ public:
     zobrist(game_type_t type);
     inline uint64_t get_value() {return _value;}
 
-    //template <class T1, class T2>
-    template <class T1>
-    void toggle_tile(int idx, const T1& val)
+    template <class T_Explicit, class T>
+    void toggle_tile(int idx, const T& val)
     {
-        //static_assert(std::is_same_v<T1, T2>, "Type mismatch");
+        static_assert(std::is_same_v<T_Explicit, T>, "Type mismatch");
 
-        const size_t N_BYTES = sizeof(T1);
+        const size_t N_BYTES = sizeof(T);
         const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&val);
 
         for (size_t i = 0; i < N_BYTES; i++)
         {
             _toggle_tile(idx, i, ptr[i]);
         }
+    }
+
+    void asd()
+    {
+        int x = 4;
+
+        toggle_tile<int>(0, x);
+        //toggle_tile<double>(0, x);
+        //toggle_tile(0, x);
     }
 
 private:
@@ -131,7 +139,7 @@ uint64_t compute_hash(const strip& str)
     for (int i = 0; i < N; i++)
     {
         int x = str.at(i);
-        z.toggle_tile(i, x);
+        z.toggle_tile<int>(i, x);
     }
 
     return z.get_value();
