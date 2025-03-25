@@ -16,8 +16,13 @@
 
 using std::cout, std::endl, std::string;
 
+#include "hashing.h"
 int main(int argc, char** argv)
 {
+
+    test_hashing1();
+    return 0;
+
     cli_options opts = parse_cli_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
