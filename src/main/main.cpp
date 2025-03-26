@@ -20,9 +20,30 @@ using std::cout, std::endl, std::string;
 #include "hashing2.h"
 int main(int argc, char** argv)
 {
+    int test_no = 0;
 
-    //test_hashing1();
-    test_hashing2();
+    for (int i = 0; i < argc; i++)
+    {
+        char* arg = argv[i];
+
+        if (strcmp(arg, "-1") == 0)
+        {
+            test_no |= 1;
+        }
+
+        if (strcmp(arg, "-2") == 0)
+        {
+            test_no |= 2;
+        }
+    }
+
+    assert(test_no == 1 || test_no == 2);
+
+    if (test_no == 1)
+        test_hashing1();
+    else
+        test_hashing2();
+
     return 0;
 
     cli_options opts = parse_cli_args(argc, (const char**) argv, false);

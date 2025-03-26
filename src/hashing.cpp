@@ -6,6 +6,7 @@
 #include <type_traits>
 #include "clobber_1xn.h"
 #include "elephants.h"
+#include "hashing_benchmark.h"
 #include "nogo_1xn.h"
 #include "game.h"
 #include "game_type.h"
@@ -64,8 +65,8 @@ using namespace std;
 
 vector<uint64_t> zobrist::_table;
 
-random_device rd;
-mt19937 rng(rd());
+//random_device rd;
+mt19937_64 rng;
 uniform_int_distribution<uint64_t> dist(1, numeric_limits<uint64_t>::max());
 
 
@@ -131,12 +132,13 @@ void zobrist::_toggle_tile(int idx, int sub_idx, uint8_t byte)
 }
 
 
-uint64_t compute_hash(const strip& str)
+inline uint64_t compute_hash(const strip& str)
 {
-    zobrist z(str.game_type());
+    //zobrist z(str.game_type());
+    zobrist z(1);
 
-    const int N = str.size();
-    for (int i = 0; i < N; i++)
+    const size_t N = str.size();
+    for (size_t i = 0; i < N; i++)
     {
         int x = str.at(i);
         z.toggle_tile<int>(i, x);
@@ -156,124 +158,19 @@ void print_hash(const strip& str)
 
 ////////////////////////////////////////
 
-uint64_t n_zeroes = 0;
-uint64_t n_collisions = 0;
-uint64_t n_games = 0;
-std::unordered_set<uint64_t> hash_set;
-
-
-void test_hash(uint64_t full_hash)
-{
-
-    n_games++;
-
-    uint64_t bottom_half_mask(-1);
-    bottom_half_mask >>= 32;
-
-    uint64_t hash = 0;
-    hash ^= full_hash & bottom_half_mask;
-    hash ^= (full_hash >> 32) & bottom_half_mask;
-
-    if (hash == 0)
-    {
-        n_zeroes += 1;
-        return;
-    }
-
-    auto it = hash_set.insert(hash);
-
-    if (!it.second)
-    {
-        n_collisions += 1;
-    }
-}
 
 } // namespace
 
 
 void test_hashing1()
 {
-    rng.seed(7079);
+    rng.seed(time(0));
     zobrist::init();
 
-    for (int size = 1; size <= 16; size++)
+    hash_func_t fn = [&](const strip& g) -> uint64_t
     {
+        return compute_hash(g);
+    };
 
-        cout << "Size: " << size << endl;
-
-        vector<int> board(size);
-
-        for (int& x : board)
-            x = 0;
-
-        auto increment = [&]() -> bool
-        {
-            board.back() += 1;
-            bool carry = false;
-
-            for (auto it = board.rbegin(); it != board.rend(); it++)
-            {
-                int& val = *it;
-
-                if (carry)
-                {
-                    val += 1;
-                    carry = false;
-                }
-
-                if (val >= 3)
-                {
-                    val %= 3;
-                    carry = true;
-                }
-
-            }
-
-            return !carry;
-        };
-
-        do
-        {
-            clobber_1xn c(board);
-            nogo_1xn n(board);
-            elephants e(board);
-
-            uint64_t hash1 = compute_hash(c);
-            uint64_t hash2 = compute_hash(n);
-            uint64_t hash3 = compute_hash(e);
-
-            test_hash(hash1);
-            test_hash(hash2);
-            test_hash(hash3);
-
-            //cout << c << " " << hash1 << endl;
-            //cout << n << " " << hash2 << endl;
-            //cout << endl;
-
-
-        }
-        while (increment());
-    }
-
-    cout << "ZEROES: " << n_zeroes << endl;
-    cout << "COLLISIONS: " << n_collisions << endl;
-    cout << "GAMES: " << n_games << endl;
-
-    cout << "Collision rate: " << 100.0 * (double) n_collisions / (double) n_games << endl;
-
-
-    const size_t N_GAMES = n_games;
-    n_zeroes = 0;
-    n_collisions = 0;
-    n_games = 0;
-    hash_set.clear();
-
-    cout << "Computing random rate" << endl;
-    for (size_t i = 0; i < N_GAMES; i++)
-    {
-        uint64_t hash = dist(rng);
-        test_hash(hash);
-    }
-
-    cout << "Random collision rate: " << 100.0 * (double) n_collisions / (double) n_games << endl;
+    benchmark_hash_function(fn, "hashing.cpp");
 }
