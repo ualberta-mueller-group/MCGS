@@ -8,6 +8,10 @@
 #include <vector>
 #include <cstdint>
 #include <cassert>
+#include "clobber_1xn.h"
+#include "elephants.h"
+#include "game_type.h"
+#include "nogo_1xn.h"
 #include "safe_arithmetic.h"
 #include "throw_assert.h"
 #include <iostream>
@@ -223,6 +227,23 @@ private:
 
 
 random_table strip_table;
+random_table game_table;
+
+random_table clobber_table;
+random_table nogo_table;
+random_table elephants_table;
+
+random_table& get_table(game_type_t type)
+{
+    static std::vector<random_table*> tables =
+    {
+        &clobber_table,
+        &nogo_table,
+        &elephants_table,
+    };
+
+    return *tables[type - 1];
+}
 
 //////////////////////////////////////// implement random_table
 using namespace std;
@@ -233,7 +254,10 @@ constexpr uint64_t MULTIPLIER = 48271;
 inline uint64_t hash_func(const strip& g)
 {
     uint64_t hash = 0;
-    game_type_t type = g.game_type() + 1;
+    game_type_t type = g.game_type();
+    uint64_t type_multiplier = game_table.get<game_type_t>(0, type);
+
+    random_table& table = get_table(type);
 
     assert(type > 0);
 
@@ -241,10 +265,10 @@ inline uint64_t hash_func(const strip& g)
     for (size_t i = 0; i < N; i++)
     {
         const int& val = g.at(i);
-        hash ^= strip_table.get<int>(i, val);
+        hash ^= table.get<int>(i, val);
     }
 
-    return hash * (type * MULTIPLIER);
+    return hash;
 }
 
 
@@ -254,9 +278,21 @@ inline uint64_t hash_func(const strip& g)
 void test_hashing2()
 {
     rng.seed(time(0));
-    strip_table.add_letter<int>(EMPTY);
-    strip_table.add_letter<int>(BLACK);
-    strip_table.add_letter<int>(WHITE);
+    
+    auto init_table = [](random_table& table) -> void
+    {
+        table.add_letter<int>(EMPTY);
+        table.add_letter<int>(BLACK);
+        table.add_letter<int>(WHITE);
+    };
+
+    init_table(clobber_table);
+    init_table(nogo_table);
+    init_table(elephants_table);
+
+    game_table.add_letter<game_type_t>(game_type<clobber_1xn>());
+    game_table.add_letter<game_type_t>(game_type<nogo_1xn>());
+    game_table.add_letter<game_type_t>(game_type<elephants>());
 
     hash_func_t fn = [&](const strip& g) -> uint64_t
     {
