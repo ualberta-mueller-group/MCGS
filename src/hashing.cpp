@@ -134,8 +134,7 @@ void zobrist::_toggle_tile(int idx, int sub_idx, uint8_t byte)
 
 inline uint64_t compute_hash(const strip& str)
 {
-    //zobrist z(str.game_type());
-    zobrist z(1);
+    zobrist z(str.game_type());
 
     const size_t N = str.size();
     for (size_t i = 0; i < N; i++)

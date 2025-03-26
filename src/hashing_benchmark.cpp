@@ -5,6 +5,8 @@
 #include <unordered_set>
 #include <chrono>
 
+#define __CHECK_COLLISIONS 0
+
 using namespace std;
 
 namespace {
@@ -31,14 +33,15 @@ void test_hash(uint64_t full_hash)
         return;
     }
 
-    return;
-
+#if (__CHECK_COLLISIONS == 1)
     auto it = hash_set.insert(hash);
 
     if (!it.second)
     {
         n_collisions += 1;
     }
+
+#endif
 }
 
 
