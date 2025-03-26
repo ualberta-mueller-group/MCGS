@@ -70,6 +70,8 @@ struct letter_t
     template <class T>
     static letter_t get_letter(const T& value)
     {
+        static_assert(sizeof(uint64_t) >= sizeof(T));
+
         letter_t letter(get_int_type<T>(), static_cast<uint64_t>(value));
         return letter;
     }
