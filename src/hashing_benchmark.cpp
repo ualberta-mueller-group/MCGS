@@ -45,7 +45,7 @@ void test_hash(uint64_t full_hash)
 
 } // namespace
 
-void benchmark_hash_function(hash_func_t& fn, const std::string& label)
+void __benchmark_hash_function(hash_func_t& fn, const std::string& label)
 {
     cout << "Test: " << label << endl;
 
