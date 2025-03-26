@@ -1,5 +1,5 @@
 CC = c++
-NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3
+NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -DNDEBUG
 TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -DSUMGAME_DEBUG_EXTRA
 # Valgrind is too slow for even short computations. Instead add: -fsanitize=leak
 # as a flag when compiling. Should work for clang++ and g++
