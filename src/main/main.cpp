@@ -17,10 +17,12 @@
 using std::cout, std::endl, std::string;
 
 #include "hashing.h"
+#include "hashing2.h"
 int main(int argc, char** argv)
 {
 
-    test_hashing1();
+    //test_hashing1();
+    test_hashing2();
     return 0;
 
     cli_options opts = parse_cli_args(argc, (const char**) argv, false);
