@@ -172,5 +172,5 @@ void test_hashing1()
         return compute_hash(g);
     };
 
-    benchmark_hash_function(fn, "hashing.cpp");
+    benchmark_hash_function(fn);
 }
