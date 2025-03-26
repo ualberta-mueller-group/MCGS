@@ -39,10 +39,12 @@ string block_simplify(const string& board)
 //////////////////////////////////////// nogo_1xn
 nogo_1xn::nogo_1xn(const vector<int>& board) : strip(board)
 {
+    init_game_type_info<nogo_1xn>(*this);
 }
 
 nogo_1xn::nogo_1xn(string game_as_string) : strip(game_as_string)
 {
+    init_game_type_info<nogo_1xn>(*this);
 }
 
 void nogo_1xn::play(const move& m, bw to_play)
