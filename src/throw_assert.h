@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <stdexcept>
 
 // NOLINTBEGIN(readability-identifier-naming)
 #define _GET_THROW_MESSAGE(cond)                                               \
