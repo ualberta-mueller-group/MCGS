@@ -10,6 +10,7 @@
 #include "safe_arithmetic.h"
 #include "throw_assert.h"
 #include <iostream>
+#include "hashing_benchmark.h"
 
 /* 
     TODO add warnings when table size becomes extremely large when it 
@@ -32,12 +33,12 @@ namespace {
     map from letter --> subtable offset
 */
 
+//static std::random_device rd;
+std::mt19937_64 rng;
+std::uniform_int_distribution<uint64_t> dist(1, UINT64_MAX);
 
-uint64_t get_random_u64()
+inline uint64_t get_random_u64()
 {
-    //static std::random_device rd;
-    static std::mt19937_64 rng(1337);
-    static std::uniform_int_distribution<uint64_t> dist(1, UINT64_MAX);
 
     uint64_t value = 0;
     while (value == 0)
@@ -206,9 +207,24 @@ private:
 
 
 
+random_table strip_table;
+
 //////////////////////////////////////// implement random_table
 using namespace std;
 
+inline uint64_t hash_func(const strip& g)
+{
+    uint64_t hash = 0;
+
+    const size_t N = g.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        const int& val = g.at(i);
+        hash ^= strip_table.get<int>(i, val);
+    }
+
+    return hash;
+}
 
 
 ////////////////////////////////////////
@@ -216,12 +232,15 @@ using namespace std;
 
 void test_hashing2()
 {
-    random_table strip_table;
-
+    rng.seed(time(0));
     strip_table.add_letter<int>(EMPTY);
     strip_table.add_letter<int>(BLACK);
     strip_table.add_letter<int>(WHITE);
 
+    hash_func_t fn = [&](const strip& g) -> uint64_t
+    {
+        return hash_func(g);
+    };
 
-
+    benchmark_hash_function(fn, "hashing2.cpp");
 }
