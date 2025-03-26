@@ -4,6 +4,7 @@
 #include <random>
 #include <type_traits>
 #include <unordered_map>
+#include <map>
 #include <vector>
 #include <cstdint>
 #include <cassert>
@@ -73,17 +74,28 @@ struct letter_t
         return letter;
     }
 
-    bool operator==(const letter_t& rhs) const
+    inline bool operator==(const letter_t& rhs) const
     {
         return (value == rhs.value) && (type == rhs.type);
+    }
+    
+    inline bool operator<(const letter_t& rhs) const
+    {
+        if (type != rhs.type)
+            return type < rhs.type;
+
+        if (value != rhs.value)
+            return value < rhs.value;
+
+        return false;
     }
 
     class hash
     {
     public:
-        size_t operator()(const letter_t& letter) const
+        inline size_t operator()(const letter_t& letter) const
         {
-            return (letter.value & letter.type);
+            return (letter.value ^ letter.type);
         }
     };
 
@@ -100,6 +112,7 @@ class random_table
 public:
     typedef std::vector<uint64_t> subtable_t;
     typedef std::unordered_map<letter_t, subtable_t, letter_t::hash> table_map_t;
+    //typedef std::map<letter_t, subtable_t> table_map_t;
 
     random_table()
     {
