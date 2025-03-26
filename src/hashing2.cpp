@@ -227,9 +227,15 @@ random_table strip_table;
 //////////////////////////////////////// implement random_table
 using namespace std;
 
+
+constexpr uint64_t MULTIPLIER = 48271;
+
 inline uint64_t hash_func(const strip& g)
 {
     uint64_t hash = 0;
+    game_type_t type = g.game_type() + 1;
+
+    assert(type > 0);
 
     const size_t N = g.size();
     for (size_t i = 0; i < N; i++)
@@ -238,7 +244,7 @@ inline uint64_t hash_func(const strip& g)
         hash ^= strip_table.get<int>(i, val);
     }
 
-    return hash;
+    return hash * (type * MULTIPLIER);
 }
 
 
