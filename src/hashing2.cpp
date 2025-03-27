@@ -1,5 +1,6 @@
 #include "hashing2.h"
 #include <algorithm>
+#include <climits>
 #include <functional>
 #include <random>
 #include <type_traits>
@@ -276,6 +277,97 @@ inline hash_t hash_func(const strip& g)
 } // namespace
 
 
+vector<hash_t> simple_table;
+
+/*
+    1024 positions
+    8 possible bytes
+    256 values for a byte
+*/
+
+constexpr uint64_t MASK_32 = 0xFFFFFFFF;
+constexpr uint_fast32_t MASK_16 = 0xFFFF;
+constexpr uint_fast16_t MASK_8 =  0xFF;
+
+inline uint_fast8_t fold_int(const uint64_t& value) 
+{
+    const uint_fast32_t fold1 = (value & MASK_32) ^ (value >> 32);
+    const uint_fast16_t fold2 = (fold1 & MASK_16) ^ (fold1 >> 16);
+    const uint_fast8_t fold3 = (fold2 & MASK_8) ^ (fold2 >> 8);
+    return fold3;
+}
+
+
+
+
+constexpr size_t SIMPLE_TABLE_N = 1024 * 256;
+
+template <class T>
+inline void rotate_right(T& val, size_t distance)
+{
+    static_assert(is_integral_v<T> && is_unsigned_v<T>);
+    assert(distance != 0);
+
+    constexpr size_t N_BITS = sizeof(T) * CHAR_BIT;
+
+    val = (val >> distance) | (val << (N_BITS - distance));
+}
+
+
+
+template <class T_Explicit, class T>
+inline void toggle(hash_t& hash, const size_t& idx, const T& val)
+{
+    static_assert(std::is_same_v<T_Explicit, T>, "Type mismatch");
+
+    constexpr size_t N_BYTES = sizeof(T);
+
+    const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&val);
+
+    using T_Unsigned = std::make_unsigned_t<T>; // NOLINT
+    const T_Unsigned& val_u = reinterpret_cast<const T_Unsigned&>(val);
+
+    const size_t idx_constrained = (idx & (1024 - 1));
+    //const size_t wrap_count = (idx >> 10);
+    
+
+    const size_t base_offset = idx_constrained * 256;
+
+    size_t i = 0;
+
+    //hash_t element = simple_table[base_offset + ((uint8_t) (ptr[i] + wrap_count))];
+    const hash_t& element = simple_table[base_offset + ptr[i]];
+    hash ^= element;
+    i++;
+
+#pragma unroll
+    while (val_u >> (i * sizeof(uint8_t)));
+    {
+        //hash_t element = simple_table[base_offset + ((uint8_t) (ptr[i] + wrap_count))];
+        hash_t element = simple_table[base_offset + ptr[i]];
+        rotate_right(element, i);
+        hash ^= element;
+        i++;
+    }
+}
+
+// collision rate better than random --> not a good thing?
+inline hash_t simple_fn(const strip& g)
+{
+    hash_t hash = 0;
+    const game_type_t type = g.game_type();
+
+    const size_t N = g.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        const int& tile = g.at(i);
+        toggle<int>(hash, i, tile);
+    }
+
+    toggle<game_type_t>(hash, N, type);
+
+    return hash;
+}
 
 void test_hashing2()
 {
@@ -306,28 +398,16 @@ void test_hashing2()
     //    return get_random_hash_t();
     //};
 
-    const size_t SIMPLE_TABLE_N = 64 * 3;
-    vector<hash_t> simple_table(SIMPLE_TABLE_N);
-    THROW_ASSERT(simple_table.size() == SIMPLE_TABLE_N);
+    simple_table.resize(SIMPLE_TABLE_N);
     for (size_t i = 0; i < SIMPLE_TABLE_N; i++)
         simple_table[i] = get_random_hash_t();
 
-    hash_func_t fn = [&](const strip& g) -> hash_t
+    hash_func_t fn = [](const strip& g) -> hash_t
     {
-        hash_t hash = 0;
-        const game_type_t type = g.game_type();
-
-        const size_t N = g.size();
-        for (size_t i = 0; i < N; i++)
-        {
-            const int& tile = g.at(i);
-            hash ^= simple_table[3 * i + tile];
-        }
-
-        hash *= (MULTIPLIER * type);
-
-        return hash;
+        return simple_fn(g);
     };
+
+
 
     benchmark_hash_function(fn);
 }

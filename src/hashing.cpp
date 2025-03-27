@@ -26,30 +26,22 @@ public:
     inline hash_t get_value() {return _value;}
 
     template <class T_Explicit, class T>
-    void toggle_tile(int idx, const T& val)
+    inline void toggle_tile(int idx, const T& val)
     {
         static_assert(std::is_same_v<T_Explicit, T>, "Type mismatch");
 
-        const size_t N_BYTES = sizeof(T);
+        constexpr size_t N_BYTES = sizeof(T);
         const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&val);
 
+#pragma unroll
         for (size_t i = 0; i < N_BYTES; i++)
         {
             _toggle_tile(idx, i, ptr[i]);
         }
     }
 
-    void asd()
-    {
-        int x = 4;
-
-        toggle_tile<int>(0, x);
-        //toggle_tile<double>(0, x);
-        //toggle_tile(0, x);
-    }
-
 private:
-    void _toggle_tile(int idx, int sub_idx, uint8_t byte);
+    void inline _toggle_tile(int idx, int sub_idx, uint8_t byte);
 
     static std::vector<hash_t> _table;
 
@@ -111,7 +103,7 @@ zobrist::zobrist(game_type_t type): _value(0), _type(type)
 {
 }
 
-void zobrist::_toggle_tile(int idx, int sub_idx, uint8_t byte)
+inline void zobrist::_toggle_tile(int idx, int sub_idx, uint8_t byte)
 {
     assert(_table.size() == ZT_ELEM_COUNT);
 
@@ -131,7 +123,6 @@ void zobrist::_toggle_tile(int idx, int sub_idx, uint8_t byte)
     _value ^= table_value;
 }
 
-
 inline hash_t compute_hash(const strip& str)
 {
     zobrist z(str.game_type());
@@ -139,8 +130,8 @@ inline hash_t compute_hash(const strip& str)
     const size_t N = str.size();
     for (size_t i = 0; i < N; i++)
     {
-        int x = str.at(i);
-        z.toggle_tile<int>(i, x);
+        const int& x = str.at(i);
+        z.toggle_tile<uint8_t>(i, (uint8_t) x);
     }
 
     return z.get_value();
