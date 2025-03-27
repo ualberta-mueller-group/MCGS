@@ -110,6 +110,67 @@ private:
 
 typedef std::pair<uint64_t, size_t> offset_pair_t;
 
+constexpr uint64_t MASK_32 = 0x00000000FFFFFFFF;
+constexpr uint64_t MASK_16 = 0x000000000000FFFF;
+constexpr uint64_t MASK_8 =  0x00000000000000FF;
+
+class bucket_hash_map
+{
+private:
+    typedef uint_fast8_t heuristic_t;
+    typedef std::vector<offset_pair_t> bucket_t;
+    typedef std::vector<bucket_t> map_t;
+
+public:
+    bucket_hash_map(): _map(1 << 8)
+    {
+        assert(_map.size() == std::numeric_limits<uint8_t>::max() + 1);
+    }
+
+    inline void insert(const offset_pair_t& op)
+    {
+        const heuristic_t& idx = _fold_int(op.first);
+        bucket_t& bucket = _map[idx];
+        bucket.push_back(op);
+
+        std::sort(bucket.begin(), bucket.end(),
+            [](const offset_pair_t& op1, const offset_pair_t& op2) -> bool
+            {
+                return op1.first < op2.first;
+            });
+    }
+
+    inline const size_t& get(const uint64_t& value) const
+    {
+        const heuristic_t& idx = _fold_int(value);
+        const bucket_t& bucket = _map[idx];
+
+        const size_t N = bucket.size();
+        for (size_t i = 0; i < N; i++)
+        {
+            const offset_pair_t& element = bucket[i];
+
+            if (element.first == value)
+                return element.second;
+        }
+
+        exit(-1);
+    }
+
+private:
+    inline heuristic_t _fold_int(const uint64_t& value) const
+    {
+        const uint_fast32_t fold1 = (value & MASK_32) ^ (value >> 32);
+        const uint_fast16_t fold2 = (fold1 & MASK_16) ^ (fold1 >> 16);
+        const uint_fast8_t fold3 = (fold2 & MASK_8) ^ (fold2 >> 8);
+        return fold3;
+    }
+
+    map_t _map;
+};
+
+
+
 class random_table
 {
 public:
@@ -126,7 +187,8 @@ public:
         _table(),
         _table_position_count(0),
         _simple_offset_map(),
-        _simple_offset_vec()
+        _simple_offset_vec(),
+        _bucket_map()
     {
         size_t next_offset = 0;
 
@@ -135,6 +197,7 @@ public:
             _offset_map.insert({l, next_offset});
             _simple_offset_map.insert({l.value, next_offset});
             _simple_offset_vec.push_back({l.value, next_offset});
+            _bucket_map.insert({l.value, next_offset});
 
             next_offset++;
         }
@@ -149,7 +212,6 @@ public:
         {
             return p1.first < p2.first;
         });
-
 
         _position_stride = _offset_map.size();
         _extend_table_if_needed(127);
@@ -187,6 +249,10 @@ public:
         //    const offset_pair_t& op = _find_offset_pair(value);
         //    offset = op.second;
         //}
+
+        { // ~16.1s
+            offset = _bucket_map.get(value);
+        }
 
         size_t idx = position * _position_stride + offset;
 
@@ -311,6 +377,8 @@ private:
 
     std::unordered_map<uint64_t, size_t> _simple_offset_map;
     std::vector<offset_pair_t> _simple_offset_vec;
+
+    bucket_hash_map _bucket_map;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
     static constexpr size_t _POSITION_INCREMENT = 64;
