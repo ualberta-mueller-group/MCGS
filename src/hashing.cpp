@@ -23,7 +23,7 @@ class zobrist
 public:
     static void init();
     zobrist(game_type_t type);
-    inline uint64_t get_value() {return _value;}
+    inline hash_t get_value() {return _value;}
 
     template <class T_Explicit, class T>
     void toggle_tile(int idx, const T& val)
@@ -51,9 +51,9 @@ public:
 private:
     void _toggle_tile(int idx, int sub_idx, uint8_t byte);
 
-    static std::vector<uint64_t> _table;
+    static std::vector<hash_t> _table;
 
-    uint64_t _value;
+    hash_t _value;
     game_type_t _type;
 };
 
@@ -63,16 +63,16 @@ using namespace std;
 
 // position -> subtable -> element
 
-vector<uint64_t> zobrist::_table;
+vector<hash_t> zobrist::_table;
 
 //random_device rd;
 mt19937_64 rng;
-uniform_int_distribution<uint64_t> dist(1, numeric_limits<uint64_t>::max());
+uniform_int_distribution<hash_t> dist(1, numeric_limits<hash_t>::max());
 
 
 
 constexpr size_t ZT_POSITIONS = 1024;
-constexpr size_t ZT_SUBTABLES_PER_POSITION = sizeof(uint64_t);
+constexpr size_t ZT_SUBTABLES_PER_POSITION = sizeof(hash_t);
 constexpr size_t ZT_ELEMS_PER_SUBTABLE = (1 << size_in_bits<uint8_t>());
 
 constexpr size_t ZT_ELEMS_PER_POSITION = (ZT_SUBTABLES_PER_POSITION * ZT_ELEMS_PER_SUBTABLE);
@@ -84,7 +84,7 @@ void zobrist::init()
     assert(_table.size() == 0);
     cout << "Init table with count: " << ZT_ELEM_COUNT << endl;
 
-    cout << "Size in bytes: " << (ZT_ELEM_COUNT * sizeof(uint64_t)) << endl;
+    cout << "Size in bytes: " << (ZT_ELEM_COUNT * sizeof(hash_t)) << endl;
 
     _table.resize(ZT_ELEM_COUNT);
 
@@ -92,7 +92,7 @@ void zobrist::init()
 
     for (size_t i = 0; i < ZT_ELEM_COUNT; i++)
     {
-        uint64_t val = dist(rng);
+        hash_t val = dist(rng);
         while (val == 0)
         {
             val = dist(rng);
@@ -126,13 +126,13 @@ void zobrist::_toggle_tile(int idx, int sub_idx, uint8_t byte)
     // within subtable, find element
     actual_idx += (byte + _type) % (256);
 
-    const uint64_t& table_value = _table[actual_idx];
+    const hash_t& table_value = _table[actual_idx];
 
     _value ^= table_value;
 }
 
 
-inline uint64_t compute_hash(const strip& str)
+inline hash_t compute_hash(const strip& str)
 {
     zobrist z(str.game_type());
 
@@ -148,7 +148,7 @@ inline uint64_t compute_hash(const strip& str)
 
 void print_hash(const strip& str)
 {
-    uint64_t hash = compute_hash(str);
+    hash_t hash = compute_hash(str);
     cout << "GAME IS: " << str << endl;
     cout << "ZOBRIST IS: " << hash << endl;
     cout << endl;
@@ -166,7 +166,7 @@ void test_hashing1()
     rng.seed(time(0));
     zobrist::init();
 
-    hash_func_t fn = [&](const strip& g) -> uint64_t
+    hash_func_t fn = [&](const strip& g) -> hash_t
     {
         return compute_hash(g);
     };

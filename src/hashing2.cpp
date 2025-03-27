@@ -40,12 +40,12 @@ namespace {
 
 //static std::random_device rd;
 std::mt19937_64 rng;
-std::uniform_int_distribution<uint64_t> dist(1, UINT64_MAX);
+std::uniform_int_distribution<hash_t> dist(1, UINT64_MAX);
 
-inline uint64_t get_random_u64()
+inline hash_t get_random_hash_t()
 {
 
-    uint64_t value = 0;
+    hash_t value = 0;
     while (value == 0)
         value = dist(rng);
 
@@ -67,7 +67,7 @@ constexpr int_type_t get_int_type()
 struct letter_t
 {
     const int_type_t type;
-    const uint64_t value;
+    const uint64_t value; // Should be u64 and not hash_t
 
     letter_t() = delete;
 
@@ -116,7 +116,7 @@ private:
 class random_table
 {
 public:
-    typedef std::vector<uint64_t> subtable_t;
+    typedef std::vector<hash_t> subtable_t;
     typedef std::unordered_map<letter_t, subtable_t, letter_t::hash> table_map_t;
     //typedef std::map<letter_t, subtable_t> table_map_t;
 
@@ -125,7 +125,7 @@ public:
     }
 
     template <class T_Explicit, class T>
-    uint64_t get(size_t position, const T& value)
+    hash_t get(size_t position, const T& value)
     {
         static_assert(std::is_same_v<T_Explicit, T>, "Type mismatch");
         static_assert(std::is_integral_v<T>);
@@ -211,8 +211,8 @@ private:
 
         for (size_t i = old_size; i < new_size; i++)
         {
-            uint64_t& element = table[i];
-            element = get_random_u64();
+            hash_t& element = table[i];
+            element = get_random_hash_t();
         }
     }
 
@@ -249,13 +249,13 @@ random_table& get_table(game_type_t type)
 using namespace std;
 
 
-constexpr uint64_t MULTIPLIER = 48271;
+constexpr hash_t MULTIPLIER = 48271;
 
-inline uint64_t hash_func(const strip& g)
+inline hash_t hash_func(const strip& g)
 {
-    uint64_t hash = 0;
+    hash_t hash = 0;
     game_type_t type = g.game_type();
-    uint64_t type_multiplier = game_table.get<game_type_t>(0, type);
+    hash_t type_multiplier = game_table.get<game_type_t>(0, type);
 
     random_table& table = get_table(type);
 
@@ -274,6 +274,8 @@ inline uint64_t hash_func(const strip& g)
 
 ////////////////////////////////////////
 } // namespace
+
+
 
 void test_hashing2()
 {
@@ -294,9 +296,37 @@ void test_hashing2()
     game_table.add_letter<game_type_t>(game_type<nogo_1xn>());
     game_table.add_letter<game_type_t>(game_type<elephants>());
 
-    hash_func_t fn = [&](const strip& g) -> uint64_t
+    //hash_func_t fn = [&](const strip& g) -> hash_t
+    //{
+    //    return hash_func(g);
+    //};
+
+    //hash_func_t fn = [](const strip& g) -> hash_t
+    //{
+    //    return get_random_hash_t();
+    //};
+
+    const size_t SIMPLE_TABLE_N = 64 * 3;
+    vector<hash_t> simple_table(SIMPLE_TABLE_N);
+    THROW_ASSERT(simple_table.size() == SIMPLE_TABLE_N);
+    for (size_t i = 0; i < SIMPLE_TABLE_N; i++)
+        simple_table[i] = get_random_hash_t();
+
+    hash_func_t fn = [&](const strip& g) -> hash_t
     {
-        return hash_func(g);
+        hash_t hash = 0;
+        const game_type_t type = g.game_type();
+
+        const size_t N = g.size();
+        for (size_t i = 0; i < N; i++)
+        {
+            const int& tile = g.at(i);
+            hash ^= simple_table[3 * i + tile];
+        }
+
+        hash *= (MULTIPLIER * type);
+
+        return hash;
     };
 
     benchmark_hash_function(fn);
