@@ -1,5 +1,7 @@
 #include "hashing3.h"
 #include <algorithm>
+#include <climits>
+#include <cstddef>
 #include <functional>
 #include <random>
 #include <type_traits>
@@ -16,6 +18,7 @@
 #include "throw_assert.h"
 #include <iostream>
 #include "hashing_benchmark.h"
+#include "utilities.h"
 
 /* 
     TODO add warnings when table size becomes extremely large when it 
@@ -110,9 +113,37 @@ private:
 
 typedef std::pair<uint64_t, size_t> offset_pair_t;
 
-constexpr uint64_t MASK_32 = 0x00000000FFFFFFFF;
-constexpr uint64_t MASK_16 = 0x000000000000FFFF;
-constexpr uint64_t MASK_8 =  0x00000000000000FF;
+//constexpr uint64_t MASK_32 = 0x00000000FFFFFFFF;
+//constexpr uint64_t MASK_16 = 0x000000000000FFFF;
+//constexpr uint64_t MASK_8 =  0x00000000000000FF;
+
+
+constexpr uint64_t MASK_32 = 0xFFFFFFFF;
+constexpr uint_fast32_t MASK_16 = 0xFFFF;
+constexpr uint_fast16_t MASK_8 =  0xFF;
+
+template <class T>
+constexpr uint_fast8_t half_bits()
+{
+    static_assert(std::is_integral_v<T>);
+    return size_in_bits<T>() / 2;
+}
+
+template <class T, size_t virtual_width>
+constexpr size_t discard_upper_half()
+{
+    static_assert(!std::is_signed_v<T>);
+    static_assert(std::is_integral_v<T>);
+    static_assert(is_power_of_2(virtual_width));
+
+    constexpr size_t REAL_WIDTH = sizeof(T) * CHAR_BIT;
+    static_assert(REAL_WIDTH >= virtual_width);
+    static_assert(is_power_of_2(REAL_WIDTH));
+
+    constexpr size_t SHIFT_WIDTH = (virtual_width) / 2 + (REAL_WIDTH - virtual_width);
+    return SHIFT_WIDTH;
+}
+
 
 class bucket_hash_map
 {
@@ -160,10 +191,22 @@ public:
 private:
     inline heuristic_t _fold_int(const uint64_t& value) const
     {
+        //return value; // 13.8s
+
+        // 16.1s
         const uint_fast32_t fold1 = (value & MASK_32) ^ (value >> 32);
         const uint_fast16_t fold2 = (fold1 & MASK_16) ^ (fold1 >> 16);
         const uint_fast8_t fold3 = (fold2 & MASK_8) ^ (fold2 >> 8);
         return fold3;
+
+        //const uint_fast32_t fold1 = (value >> 32) ^ ((value << 32) >> 32);
+
+        //constexpr size_t SHIFT2_WIDTH = discard_upper_half<uint_fast32_t, 32>();
+        //const uint_fast16_t fold2 = (fold1 >> 16) ^ ((fold1 << SHIFT2_WIDTH) >> SHIFT2_WIDTH);
+
+        //constexpr size_t SHIFT3_WIDTH = discard_upper_half<uint_fast16_t, 16>();
+        //const uint_fast8_t fold3 = (fold2 >> 8) ^ ((fold2 << SHIFT3_WIDTH) >> SHIFT3_WIDTH);
+
     }
 
     map_t _map;
