@@ -10,6 +10,7 @@
 #include "cli_options.h"
 #include "file_parser.h"
 #include "sumgame.h"
+#include "throw_assert.h"
 #include "cli_options.h"
 #include "autotests.h"
 #include <chrono>
@@ -18,9 +19,11 @@ using std::cout, std::endl, std::string;
 
 #include "hashing.h"
 #include "hashing2.h"
+#include "hashing3.h"
 int main(int argc, char** argv)
 {
     int test_no = 0;
+    int test_no_count = 0;
 
     for (int i = 0; i < argc; i++)
     {
@@ -28,21 +31,44 @@ int main(int argc, char** argv)
 
         if (strcmp(arg, "-1") == 0)
         {
-            test_no |= 1;
+            test_no = 1;
+            test_no_count++;
         }
 
         if (strcmp(arg, "-2") == 0)
         {
-            test_no |= 2;
+            test_no = 2;
+            test_no_count++;
         }
+
+        if (strcmp(arg, "-3") == 0)
+        {
+            test_no = 3;
+            test_no_count++;
+        }
+
     }
 
-    assert(test_no == 1 || test_no == 2);
+    THROW_ASSERT(test_no >= 1 || test_no <= 3);
+    THROW_ASSERT(test_no_count == 1);
 
-    if (test_no == 1)
-        test_hashing1();
-    else
-        test_hashing2();
+    switch (test_no)
+    {
+        case 1:
+            test_hashing1();
+            return 0;
+
+        case 2:
+            test_hashing2();
+            return 0;
+
+        case 3:
+            test_hashing3();
+            return 0;
+
+        default:
+            THROW_ASSERT(false);
+    }
 
     return 0;
 
