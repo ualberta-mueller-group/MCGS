@@ -5,7 +5,6 @@
 #include <unordered_set>
 #include <chrono>
 
-#define __CHECK_COLLISIONS 0
 
 using namespace std;
 
@@ -14,18 +13,19 @@ namespace {
 uint64_t n_zeroes = 0;
 uint64_t n_collisions = 0;
 uint64_t n_games = 0;
-std::unordered_set<uint64_t> hash_set;
+std::unordered_set<hash_t> hash_set;
 
-void test_hash(uint64_t full_hash)
+void test_hash(const hash_t& full_hash)
 {
     n_games++;
 
-    uint64_t bottom_half_mask(-1);
-    bottom_half_mask >>= 32;
+    //uint64_t bottom_half_mask(-1);
+    //bottom_half_mask >>= 32;
 
-    uint64_t hash = 0;
-    hash ^= full_hash & bottom_half_mask;
-    hash ^= (full_hash >> 32) & bottom_half_mask;
+    hash_t hash = 0;
+    //hash ^= full_hash & bottom_half_mask;
+    //hash ^= (full_hash >> 32) & bottom_half_mask;
+    hash = full_hash;
 
     if (hash == 0)
     {
@@ -98,15 +98,15 @@ void __benchmark_hash_function(hash_func_t& fn, const std::string& label)
         do
         {
             clobber_1xn c(board);
-            uint64_t hash1 = fn(c);
+            hash_t hash1 = fn(c);
             test_hash(hash1);
 
             nogo_1xn n(board);
-            uint64_t hash2 = fn(n);
+            hash_t hash2 = fn(n);
             test_hash(hash2);
 
             elephants e(board);
-            uint64_t hash3 = fn(e);
+            hash_t hash3 = fn(e);
             test_hash(hash3);
 
             //cout << c << " " << hash1 << endl;
@@ -124,7 +124,7 @@ void __benchmark_hash_function(hash_func_t& fn, const std::string& label)
     cout << "GAMES: " << n_games << endl;
 
     cout << "Collision rate: " << 100.0 * (double) n_collisions / (double) n_games << endl;
-    cout << "Duration (ms): " << duration.count() << endl;
+    cout << "Duration (s): " << (duration.count() / 1000.0) << endl;
 
     double rate = ((double) n_games) / (duration.count() / 1000.0);
     cout << rate << " hashes per second" << endl;
