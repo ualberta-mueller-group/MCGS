@@ -5,7 +5,7 @@
 
 
 #define __CHECK_COLLISIONS 0
-typedef uint32_t hash_t;
+typedef uint64_t hash_t;
 
 
 typedef std::function<hash_t(const strip&)> hash_func_t;
