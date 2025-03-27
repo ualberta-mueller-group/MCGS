@@ -115,24 +115,40 @@ public:
     //typedef std::map<letter_t, size_t> offset_map_t;
     typedef std::vector<hash_t> table_t;
 
+    typedef std::pair<uint64_t, size_t> offset_pair_t;
+
     random_table() = delete;
 
     random_table(const std::vector<letter_t>& letters)
         : _offset_map(),
         _position_stride(0),
         _table(),
-        _table_position_count(0)
+        _table_position_count(0),
+        _simple_offset_map(),
+        _simple_offset_vec()
     {
         size_t next_offset = 0;
 
         for (const letter_t& l : letters)
         {
             _offset_map.insert({l, next_offset});
+            _simple_offset_map.insert({l.value, next_offset});
+            _simple_offset_vec.push_back({l.value, next_offset});
+
             next_offset++;
         }
 
         // no duplicates
         THROW_ASSERT(letters.size() == _offset_map.size());
+        THROW_ASSERT(letters.size() == _simple_offset_map.size());
+        THROW_ASSERT(letters.size() == _simple_offset_vec.size());
+
+        std::sort(_simple_offset_vec.begin(), _simple_offset_vec.end(),
+        [](const offset_pair_t& p1, const offset_pair_t& p2) -> bool
+        {
+            return p1.first < p2.first;
+        });
+
 
         _position_stride = _offset_map.size();
         _extend_table_if_needed(127);
@@ -145,7 +161,7 @@ public:
         static_assert(std::is_integral_v<T>);
 
         // Get letter_t
-        letter_t letter = letter_t::get_letter<T>(value);
+        //letter_t letter = letter_t::get_letter<T>(value);
 
         // Get offset and index
         size_t offset = value;
@@ -156,6 +172,18 @@ public:
         //    assert(it != _offset_map.end());
 
         //    offset = it->second;
+        //}
+
+        //{
+        //    auto it = _simple_offset_map.find(value);
+        //    assert(it != _simple_offset_map.end());
+
+        //    offset = it->second;
+        //}
+
+        //{
+        //    const offset_pair_t& op = _find_offset_pair(value);
+        //    offset = op.second;
         //}
 
         size_t idx = position * _position_stride + offset;
@@ -237,11 +265,50 @@ private:
         assert(_table_position_count * _offset_map.size() == _table.size());
     }
 
+    inline const offset_pair_t& _find_offset_pair(const uint64_t& value)
+    {
+        if (_simple_offset_vec.size() == 0) [[unlikely]]
+            exit(-1);
+
+        size_t low = 0;
+        size_t high = _simple_offset_vec.size() - 1;
+
+        while (low <= high)
+        {
+            size_t idx = (low + high) / 2;
+
+            const offset_pair_t& op = _simple_offset_vec[idx];
+            const uint64_t& value_i = op.first;
+
+            if (value_i == value)
+                return op;
+
+            if (value_i < value)
+            {
+                // look higher
+                low = idx + 1;
+                continue;
+            }
+            else
+            {
+                // look lower
+                if (idx == 0) [[unlikely]]
+                    exit(-1);
+                high = idx - 1;
+            }
+        }
+
+        exit(-1);
+    }
+
     offset_map_t _offset_map;
     size_t _position_stride;
 
     table_t _table;
     size_t _table_position_count;
+
+    std::unordered_map<uint64_t, size_t> _simple_offset_map;
+    std::vector<offset_pair_t> _simple_offset_vec;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
     static constexpr size_t _POSITION_INCREMENT = 64;
