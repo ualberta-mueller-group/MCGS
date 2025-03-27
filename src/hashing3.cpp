@@ -108,6 +108,8 @@ private:
 };
 
 
+typedef std::pair<uint64_t, size_t> offset_pair_t;
+
 class random_table
 {
 public:
@@ -115,7 +117,6 @@ public:
     //typedef std::map<letter_t, size_t> offset_map_t;
     typedef std::vector<hash_t> table_t;
 
-    typedef std::pair<uint64_t, size_t> offset_pair_t;
 
     random_table() = delete;
 
@@ -160,28 +161,29 @@ public:
         static_assert(std::is_same_v<T_Explicit, T>, "Type mismatch");
         static_assert(std::is_integral_v<T>);
 
-        // Get letter_t
-        //letter_t letter = letter_t::get_letter<T>(value);
-
         // Get offset and index
         size_t offset = value;
 
-        //{
+        // Using value as offset: ~10s
+
+        //{ // ~20s
         //    // TODO this map lookup is doubling the time...
+
+        //    letter_t letter = letter_t::get_letter<T>(value);
         //    auto it = _offset_map.find(letter);
         //    assert(it != _offset_map.end());
 
         //    offset = it->second;
         //}
 
-        //{
+        //{ // ~16.6s
         //    auto it = _simple_offset_map.find(value);
         //    assert(it != _simple_offset_map.end());
 
         //    offset = it->second;
         //}
 
-        //{
+        //{ // ~18s
         //    const offset_pair_t& op = _find_offset_pair(value);
         //    offset = op.second;
         //}
