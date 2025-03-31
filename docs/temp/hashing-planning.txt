@@ -31,6 +31,11 @@ game
     void _mark_hash_valid();
     void _mark_hash_invalid();
 
+    virtual bool normalize();
+    virtual bool undo_normalize();
+    virtual bool comes_before(const game& rhs) const;
+
+
     const local_hash& get_hash();
 
     // Instead of virtual play() and undo_move() methods, have:
@@ -76,6 +81,7 @@ global_hash
 
     void add_game(game& g, size_t subgame_idx);
     void remove_game(game& g, size_t subgame_idx);
+    bool normalize_game(game& g, size_t subgame_idx); // calls g.normalize()?
 
     hash_t _value;
     vector<hash_t> _subgame_hashes;
@@ -113,6 +119,12 @@ sumgame
     bool _global_hash_valid;
     global_hash _hash;
 
+    void normalize();
+    void undo_normalize();
+    // use `normalize_record` to record reordering
+    // for now just do the reordering, worry about preserving parts of the global_hash
+    // later
+
     const global_hash& get_global_hash();
 
     Methods which MAY need to be aware of the global_hash:
@@ -131,6 +143,10 @@ sumgame
         get_global_hash()
 
     Some of these are probably already covered by the others
+
+    Problem with global_hash: the sumgame needs to first be normalized...
+
+
 
 
 
