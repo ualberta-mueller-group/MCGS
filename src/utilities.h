@@ -53,6 +53,32 @@ inline constexpr bool is_power_of_2(const T& n)
     return n > 0 && !(n & (n - 1));
 }
 
+template <class T>
+inline T rotate_right(const T& val, size_t distance)
+{
+    static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
+
+    if (distance <= 0)
+        return val;
+
+    constexpr size_t N_BITS = sizeof(T) * CHAR_BIT;
+
+    return (val >> distance) | (val << (N_BITS - distance));
+}
+
+template <class T>
+inline T rotate_left(const T& val, size_t distance)
+{
+    static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
+
+    if (distance <= 0)
+        return val;
+
+    constexpr size_t N_BITS = sizeof(T) * CHAR_BIT;
+
+    return (val << distance) | (val >> (N_BITS - distance));
+}
+
 ////////////////////////////////////////
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,
                                       bool is_ge);
