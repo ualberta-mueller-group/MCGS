@@ -302,16 +302,6 @@ inline uint_fast8_t fold_int(const uint64_t& value)
 
 constexpr size_t SIMPLE_TABLE_N = 1024 * 256;
 
-template <class T>
-inline void rotate_right(T& val, size_t distance)
-{
-    static_assert(is_integral_v<T> && is_unsigned_v<T>);
-    assert(distance != 0);
-
-    constexpr size_t N_BITS = sizeof(T) * CHAR_BIT;
-
-    val = (val >> distance) | (val << (N_BITS - distance));
-}
 
 
 

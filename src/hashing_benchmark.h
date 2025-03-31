@@ -4,7 +4,7 @@
 #include <functional>
 
 
-#define __CHECK_COLLISIONS 0
+#define __CHECK_COLLISIONS 1
 typedef uint64_t hash_t;
 
 
