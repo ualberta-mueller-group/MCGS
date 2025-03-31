@@ -20,6 +20,7 @@ using std::cout, std::endl, std::string;
 #include "hashing.h"
 #include "hashing2.h"
 #include "hashing3.h"
+#include "hashing_final.h"
 int main(int argc, char** argv)
 {
     int test_no = 0;
@@ -47,9 +48,14 @@ int main(int argc, char** argv)
             test_no_count++;
         }
 
+        if (strcmp(arg, "-4") == 0)
+        {
+            test_no = 4;
+            test_no_count++;
+        }
     }
 
-    THROW_ASSERT(test_no >= 1 || test_no <= 3);
+    THROW_ASSERT(test_no >= 1 || test_no <= 4);
     THROW_ASSERT(test_no_count == 1);
 
     switch (test_no)
@@ -64,6 +70,10 @@ int main(int argc, char** argv)
 
         case 3:
             test_hashing3();
+            return 0;
+
+        case 4:
+            test_hashing_final();
             return 0;
 
         default:
