@@ -36,6 +36,7 @@ private:
 
 inline integer_game::integer_game(int value) : _value(value)
 {
+    init_game_type_info<integer_game>(*this);
     _check_legal();
 }
 
