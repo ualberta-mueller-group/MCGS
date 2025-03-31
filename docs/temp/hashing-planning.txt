@@ -6,7 +6,7 @@ random_table
     Singleton. Shared by all games? Still make this a class so it's easy to
     make multiple random tables later.
 
-    // do any necessary rotations, wrap computations, and combining etc.
+    // do any necessary rotations, wrapping computations, and combining etc.
     hash_t get<T>(const size_t& position, const T& color) const;
 
     vector<hash_t> _number_table;
@@ -31,7 +31,7 @@ game
     void _mark_hash_valid();
     void _mark_hash_invalid();
 
-    const local_hash& get_hash() const;
+    const local_hash& get_hash();
 
     // Instead of virtual play() and undo_move() methods, have:
     void play(const move& m, bw to_play);
@@ -43,7 +43,7 @@ game
     virtual bool update_hash_init(local_hash& hash) = 0;
     virtual bool update_hash_play(local_hash& hash, const move& m, const bw& to_play)
     { return false; }
-    virtual bool update_hash_undo(local_hash& hash, const move& m, const bw& to_play);
+    virtual bool update_hash_undo(local_hash& hash, const move& m, const bw& to_play)
     { return false; }
 
     // When calling game::play()
@@ -66,7 +66,20 @@ global_hash
     Owned by a sumgame. Similar solution to game's local_hash?
     Details under `sumgame`.
 
+    When modifying the sum, first remove all relevant games from the global_hash,
+    then add them back after? When adding a game, store its local_hash in
+    a vector, this allows fast removing of the game's contribution to the global_hash,
+    while also allowing for an extra check in debug builds.
+
+    void reset();
+    hash_t get_value() const;
+
+    void add_game(game& g, size_t subgame_idx);
+    void remove_game(game& g, size_t subgame_idx);
+
     hash_t _value;
+    vector<hash_t> _subgame_hashes;
+    vector<bool> _subgame_valid;
 
 
 sumgame
@@ -74,17 +87,18 @@ sumgame
         -- Adding a game
         -- Removing a game
         -- Deactivating a game
+        -- Reactivating a game
         -- Playing a move
         -- Undoing a move
 
         -- Splitting a game (add/deactivate)
         -- Re-ordering games (this isn't currently possible?)
-        -- Calling simplification methods (add/remove/deactivate)
+        -- Calling simplification methods (add/remove/deactivate/reactivate)
 
         The global_hash doesn't need to know everything about the current
         sumgame state, but it needs to know when and how the state changes.
-        Create hooks in global_hash's interface for each of the invalidating
-        actions, even if internally some of them do the same thing?
+        Sumgame will have to remove and add games to the global_hash when
+        changes are made to the sumgame and its games
 
         We'll need to ensure that all sumgame mutations utilize methods which
         correctly update the global_hash. This is tricky, as sumgame exposes
@@ -100,6 +114,25 @@ sumgame
     global_hash _hash;
 
     const global_hash& get_global_hash();
+
+    Methods which MAY need to be aware of the global_hash:
+        play_sum()
+        undo_move()
+        simplify_basic()
+        undo_simplify_basic()
+        add(game*)
+        add(vector<game*>&)
+        pop(game*)
+        solve_with_timeout() // public version; others are implemented in terms of this
+        solve_with_games(vector<game*>&)
+        solve_with_games(game*)
+        _pop_game()
+
+        get_global_hash()
+
+    Some of these are probably already covered by the others
+
+
 
 
 --------------------
@@ -135,5 +168,33 @@ _xyz_implementation() --> _xyz_impl() ???
 
 A game's hash starts as invalid. play() and undo_move() will call their respective
 update_hash hooks IF the hash is valid. get_hash() will also call init_hash() if not valid.
+
+It's unclear how to implement perfect hashing, or if we'll need it. It probably
+requires games to directly update bit vectors, with some minimalist
+representation determined by the games themselves, meaning it will probably use
+a different interface from zobrist hashing (it probably doesn't make sense to
+have something like local_hash::toggle() for most cases). We can add this later by adding
+more update_hash hooks, i.e.:
+    update_zobrist_hash_init()
+    update_perfect_hash_init()
+    etc...
+and also changing game::_play_impl() and game::_undo_impl() arguments to include some enum
+indicating which hash type should be updated (if the user wants to update the hash in these
+methods).
+
+We can easily refactor this later if we need it. It shouldn't be too difficult for
+sumgame/global_hash to also support this. The class hierarchy could look like:
+
+i_local_hash
+    ^     ^
+    |     \_______ perfect_hash
+zobrist_hash
+
+
+i_global_hash
+    ^    ^
+    |    \____________ global_perfect_hash
+global_zobrist_hash
+
 
 
