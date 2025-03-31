@@ -53,6 +53,7 @@ inline game* nimber::inverse() const
 inline void nimber::play(const move& m)
 {
     nimber::play(m, BLACK);
+    init_game_type_info<nimber>(*this);
 }
 
 inline void nimber::add_nimber(int&sum, int nimber)

@@ -82,6 +82,7 @@ inline switch_game::switch_game(int left, int right)
       _rational_game(nullptr),
       _move_depth(0)
 {
+    init_game_type_info<switch_game>(*this);
     assert(_left.is_simplified() && _right.is_simplified());
 }
 
@@ -93,6 +94,7 @@ inline switch_game::switch_game(int left, const fraction& right)
       _rational_game(nullptr),
       _move_depth(0)
 {
+    init_game_type_info<switch_game>(*this);
     assert(_left.is_simplified() && _right.is_simplified());
 }
 
@@ -104,6 +106,7 @@ inline switch_game::switch_game(const fraction& left, int right)
       _rational_game(nullptr),
       _move_depth(0)
 {
+    init_game_type_info<switch_game>(*this);
     assert(_left.is_simplified() && _right.is_simplified());
 }
 
@@ -115,6 +118,7 @@ inline switch_game::switch_game(const fraction& left, const fraction& right)
       _rational_game(nullptr),
       _move_depth(0)
 {
+    init_game_type_info<switch_game>(*this);
     assert(_left.is_simplified() && _right.is_simplified());
 }
 
