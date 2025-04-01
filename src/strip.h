@@ -34,6 +34,10 @@ public:
     std::string board_as_string() const;
     // void print(std::ostream& str) const { str << board_as_string();}
 
+
+protected:
+    void _init_hash_with_board(local_hash& hash);
+
 private:
     void _check_legal() const;
 

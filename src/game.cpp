@@ -54,3 +54,51 @@ bool game::has_moves() const
 
     return false;
 }
+
+void game::play(const move& m, int to_play)
+{
+    assert(cgt_move::get_color(m) == 0);
+    const move mc = cgt_move::encode(m, to_play);
+    _move_stack.push_back(mc);
+    //     std::cout << "move "<< cgt_move::print(m) << "\n";
+    //     std::cout << "move + color "<< cgt_move::print(mc) << std::endl;
+
+    if (_hash_valid())
+        _hash_state = HASH_STATE_OK;
+
+    _play_impl(m, to_play);
+
+    if (_hash_state == HASH_STATE_OK) // not updated
+        _hash_state = HASH_STATE_INVALID;
+}
+
+void game::undo_move()
+{
+    if (_hash_valid())
+        _hash_state = HASH_STATE_OK;
+
+    _undo_move_impl();
+
+    if (_hash_state == HASH_STATE_OK) // not updated
+        _hash_state = HASH_STATE_INVALID;
+
+    _move_stack.pop_back();
+}
+
+const local_hash& game::compute_hash()
+{
+    if (_hash_valid())
+        return _hash;
+    else
+    {
+        _hash.reset();
+        _hash.toggle_type(game_type());
+        _hash_state = HASH_STATE_OK;
+
+        _init_hash(_hash);
+        _hash_state = HASH_STATE_OK;
+    }
+
+    return _hash;
+}
+

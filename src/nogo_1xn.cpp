@@ -47,30 +47,12 @@ nogo_1xn::nogo_1xn(string game_as_string) : strip(game_as_string)
     init_game_type_info<nogo_1xn>(*this);
 }
 
-void nogo_1xn::play(const move& m, bw to_play)
-{
-    const int to = m;
-    assert(at(to) == EMPTY);
-    game::play(m, to_play);
-    replace(to, to_play);
-}
-
-void nogo_1xn::undo_move()
-{
-    const move mc = last_move();
-    const int to = cgt_move::decode(mc);
-    game::undo_move();
-    const bw player = cgt_move::get_color(mc);
-    assert(at(to) == player);
-    replace(to, EMPTY);
-}
-
 /*
    implements "xo split" from
    Henry's paper
 
 */
-split_result nogo_1xn::_split_implementation() const
+split_result nogo_1xn::_split_impl() const
 {
     // NOTE: don't use checked_is_color here -- it accesses the board before
     // block simplification
@@ -124,6 +106,29 @@ split_result nogo_1xn::_split_implementation() const
 
         return result;
     }
+}
+
+void nogo_1xn::_play_impl(const move& m, bw to_play)
+{
+    const int to = m;
+    assert(at(to) == EMPTY);
+    //game::play(m, to_play);
+    replace(to, to_play);
+}
+
+void nogo_1xn::_undo_move_impl()
+{
+    const move mc = last_move();
+    const int to = cgt_move::decode(mc);
+    //game::undo_move();
+    const bw player = cgt_move::get_color(mc);
+    assert(at(to) == player);
+    replace(to, EMPTY);
+}
+
+void nogo_1xn::_init_hash(local_hash& hash)
+{
+    _init_hash_with_board(hash);
 }
 
 game* nogo_1xn::inverse() const

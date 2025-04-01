@@ -11,6 +11,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game_type.h"
+#include "hashing.h"
 
 //---------------------------------------------------------------------------
 
@@ -33,29 +34,13 @@ public:
     int moves_hash() const; // TODO do a proper implementation
     bool has_moves() const;
 
-    /*
-        When overriding play() and undo_move(), the derived type's
-        function should first call these functions.
+    void play(const move& m, bw to_play);
+    void undo_move();
 
-        i.e. in derived type's play():
-            // pushes move onto move stack for later,
-            // after encoding player color into it
-            game::play(m, to_play);
-
-        and in derived type's undo_move():
-            // get back the move we remembered
-            move m_encoded = game::last_move();
-            game::undo_move(); // pop it off the stack
-            // now decode the move
-            bw to_play = cgt_move::get_color(m_encoded);
-            move m = cgt_move::decode(m_encoded);
-
-    */
-    virtual void play(const move& m, bw to_play);
-    virtual void undo_move();
-
-    // calls _split_implementation() and filters out games having no moves
+    // calls _split_impl() and filters out games having no moves
     split_result split() const;
+
+    const local_hash& compute_hash();
 
 protected:
     /*
@@ -75,7 +60,16 @@ protected:
         To create an absent split_result:
             split_result sr = split_result();
     */
-    virtual split_result _split_implementation() const;
+    virtual split_result _split_impl() const;
+
+    virtual void _play_impl(const move& m, bw to_play) = 0;
+    virtual void _undo_move_impl() = 0;
+
+    virtual void _init_hash(local_hash& hash) = 0;
+
+    local_hash& _get_hash_ref();
+    bool _hash_valid() const;
+    void _mark_hash_updated();
 
 public:
     virtual move_generator* create_move_generator(bw to_play) const = 0;
@@ -93,11 +87,22 @@ public:
     virtual game* inverse() const = 0; // caller takes ownership
 
 private:
+    enum hash_state_enum
+    {
+        HASH_STATE_INVALID = 0,
+        HASH_STATE_OK,
+        HASH_STATE_UPDATED,
+    };
+
     std::vector<move> _move_stack;
     bool _is_active;
+
+    hash_state_enum _hash_state;
+    local_hash _hash;
+
 }; // class game
 
-inline game::game() : _move_stack(), _is_active(true)
+inline game::game() : _move_stack(), _is_active(true), _hash_state(HASH_STATE_INVALID)
 {
 }
 
@@ -116,23 +121,14 @@ inline move game::last_move() const
     return _move_stack.back();
 }
 
-inline void game::play(const move& m, int to_play)
+inline int game::moves_hash() const
 {
-    assert(cgt_move::get_color(m) == 0);
-    const move mc = cgt_move::encode(m, to_play);
-    _move_stack.push_back(mc);
-    //     std::cout << "move "<< cgt_move::print(m) << "\n";
-    //     std::cout << "move + color "<< cgt_move::print(mc) << std::endl;
-}
-
-inline void game::undo_move()
-{
-    _move_stack.pop_back();
+    return _move_stack.size();
 }
 
 inline split_result game::split() const
 {
-    split_result sr = _split_implementation();
+    split_result sr = _split_impl();
 
     // no split happened
     if (!sr)
@@ -155,14 +151,26 @@ inline split_result game::split() const
     return result;
 }
 
-inline split_result game::_split_implementation() const
+inline split_result game::_split_impl() const
 {
     return split_result(); // no value
 }
 
-inline int game::moves_hash() const
+inline local_hash& game::_get_hash_ref()
 {
-    return _move_stack.size();
+    assert(_hash_valid());
+    return _hash;
+}
+
+inline bool game::_hash_valid() const
+{
+    return (_hash_state == HASH_STATE_OK) || (_hash_state == HASH_STATE_UPDATED);
+}
+
+inline void game::_mark_hash_updated()
+{
+    assert(_hash_state == HASH_STATE_OK);
+    _hash_state = HASH_STATE_UPDATED;
 }
 
 inline std::ostream& operator<<(std::ostream& out, const game& g)

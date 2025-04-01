@@ -14,11 +14,6 @@ class up_star : public game
 {
 public:
     up_star(int value, bool star);
-    // m encodes the change in value and star for undo
-    // m is a two part move where the second part is the star change
-    // encoded as 0/1
-    void play(const move& m, bw to_play) override;
-    void undo_move() override;
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;
 
@@ -27,6 +22,16 @@ public:
     bool has_star() const { return _star; }
 
     void print(std::ostream& str) const override;
+
+protected:
+    // m encodes the change in value and star for undo
+    // m is a two part move where the second part is the star change
+    // encoded as 0/1
+    void _play_impl(const move& m, bw to_play) override;
+    void _undo_move_impl() override;
+
+    void _init_hash(local_hash& hash) override;
+
 
 private:
     int _value;

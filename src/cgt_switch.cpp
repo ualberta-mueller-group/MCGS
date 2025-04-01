@@ -13,7 +13,19 @@
 using std::cout;
 using std::endl;
 
-void switch_game::play(const move& m, bw to_play)
+split_result switch_game::_split_impl() const
+{
+    if (!is_rational())
+    {
+        return split_result();
+    }
+    else
+    {
+        return split_result({new dyadic_rational(value())});
+    }
+}
+
+void switch_game::_play_impl(const move& m, bw to_play)
 {
 
     if (is_rational())
@@ -30,10 +42,10 @@ void switch_game::play(const move& m, bw to_play)
     }
 
     _move_depth++;
-    game::play(m, to_play);
+    //game::play(m, to_play);
 }
 
-void switch_game::undo_move()
+void switch_game::_undo_move_impl()
 {
     assert(is_rational());
     assert(_move_depth >= 1);
@@ -50,18 +62,25 @@ void switch_game::undo_move()
     }
 
     _move_depth--;
-    game::undo_move();
+    //game::undo_move();
 }
 
-split_result switch_game::_split_implementation() const
+void switch_game::_init_hash(local_hash& hash)
 {
     if (!is_rational())
     {
-        return split_result();
-    }
-    else
+        hash.toggle_tile(0, 0);
+        hash.toggle_tile(1, _left.top());
+        hash.toggle_tile(2, _left.bottom());
+
+        hash.toggle_tile(3, _right.top());
+        hash.toggle_tile(4, _right.bottom());
+    } else
     {
-        return split_result({new dyadic_rational(value())});
+        const fraction& f = value();
+        hash.toggle_tile(0, 1);
+        hash.toggle_tile(5, f.top());
+        hash.toggle_tile(6, f.bottom());
     }
 }
 

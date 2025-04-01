@@ -100,14 +100,17 @@ void __benchmark_hash_function(hash_func_t& fn, const std::string& label)
             clobber_1xn c(board);
             hash_t hash1 = fn(c);
             test_hash(hash1);
+            assert(hash1 == c.compute_hash().get_value());
 
             nogo_1xn n(board);
             hash_t hash2 = fn(n);
             test_hash(hash2);
+            assert(hash2 == n.compute_hash().get_value());
 
             elephants e(board);
             hash_t hash3 = fn(e);
             test_hash(hash3);
+            assert(hash3 == e.compute_hash().get_value());
 
             //cout << c << " " << hash1 << endl;
             //cout << n << " " << hash2 << endl;
