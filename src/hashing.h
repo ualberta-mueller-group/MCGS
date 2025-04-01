@@ -38,10 +38,10 @@ public:
 
         const size_t pos_constrained = position % _n_positions;
         const size_t wrap_count = position / _n_positions;
-        const size_t base_idx = pos_constrained * ELEMENTS_PER_POSITION;
+        const size_t base_idx = pos_constrained * _ELEMENTS_PER_POSITION;
 
         // "random" offset to relative index
-        const hash_t idx_offset = _number_table[base_idx + (wrap_count % ELEMENTS_PER_POSITION)];
+        const hash_t idx_offset = _number_table[base_idx + (wrap_count % _ELEMENTS_PER_POSITION)];
         size_t i = 0;
 
 #pragma unroll
@@ -51,7 +51,7 @@ public:
             // the table only has 256 elements per position
             const uint8_t byte = (color_u >> (i * 8)) & 0xFF;
 
-            const size_t relative_idx = (byte + idx_offset) % ELEMENTS_PER_POSITION;
+            const size_t relative_idx = (byte + idx_offset) % _ELEMENTS_PER_POSITION;
             const size_t idx = base_idx + relative_idx;
 
             hash_t element = _number_table[idx];
@@ -73,9 +73,9 @@ public:
 private:
     void _init();
 
-    static constexpr size_t DEFAULT_N_POSITIONS = 32;
-    static constexpr size_t ELEMENTS_PER_POSITION = 256;
-    static constexpr uint64_t DEFAULT_RANDOM_TABLE_SEED = 0;
+    static constexpr size_t _DEFAULT_N_POSITIONS = 32;
+    static constexpr size_t _ELEMENTS_PER_POSITION = 256;
+    static constexpr uint64_t _DEFAULT_RANDOM_TABLE_SEED = 0;
 
     static std::mt19937_64 _rng;
     static std::uniform_int_distribution<hash_t> _dist;

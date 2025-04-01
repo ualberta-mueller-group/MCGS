@@ -15,7 +15,7 @@ random_table default_table(32);
 random_table type_table(8);
 } // namespace random_tables 
 
-random_table::random_table(): _n_positions(DEFAULT_N_POSITIONS)
+random_table::random_table(): _n_positions(_DEFAULT_N_POSITIONS)
 {
     _init();
 }
@@ -35,10 +35,10 @@ void random_table::_init()
     {
         seeded = true;
 
-        if (DEFAULT_RANDOM_TABLE_SEED == 0)
+        if (_DEFAULT_RANDOM_TABLE_SEED == 0)
             _rng.seed(time(0));
         else
-            _rng.seed(DEFAULT_RANDOM_TABLE_SEED);
+            _rng.seed(_DEFAULT_RANDOM_TABLE_SEED);
     }
 
     _wrap_shift_amount = 0;
