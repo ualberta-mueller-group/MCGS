@@ -27,41 +27,7 @@ elephants::elephants(const vector<int>& board) : strip(board)
     init_game_type_info<elephants>(*this);
 }
 
-void elephants::play(const move& m, bw to_play)
-{
-    assert_black_white(to_play);
-
-    game::play(m, to_play);
-
-    int from = cgt_move::from(m);
-    int to = cgt_move::to(m);
-
-    assert(checked_is_color(from, to_play));
-    assert(checked_is_color(to, EMPTY));
-    assert((to - from) == player_dir(to_play)); // correct direction
-
-    play_stone(to, to_play);
-    remove_stone(from);
-}
-
-void elephants::undo_move()
-{
-    move mc = game::last_move();
-    game::undo_move();
-
-    int to;
-    bw to_play;
-    int from = cgt_move::decode3(mc, &to, &to_play);
-
-    assert(is_black_white(to_play));
-    assert(checked_is_color(to, to_play));
-    assert(checked_is_color(from, EMPTY));
-
-    play_stone(from, to_play);
-    remove_stone(to);
-}
-
-split_result elephants::_split_implementation() const
+split_result elephants::_split_impl() const
 {
     vector<pair<int, int>> subgame_ranges;
 
@@ -131,6 +97,45 @@ split_result elephants::_split_implementation() const
 
         return result;
     }
+}
+
+void elephants::_play_impl(const move& m, bw to_play)
+{
+    assert_black_white(to_play);
+
+    //game::play(m, to_play);
+
+    int from = cgt_move::from(m);
+    int to = cgt_move::to(m);
+
+    assert(checked_is_color(from, to_play));
+    assert(checked_is_color(to, EMPTY));
+    assert((to - from) == player_dir(to_play)); // correct direction
+
+    play_stone(to, to_play);
+    remove_stone(from);
+}
+
+void elephants::_undo_move_impl()
+{
+    move mc = game::last_move();
+    //game::undo_move();
+
+    int to;
+    bw to_play;
+    int from = cgt_move::decode3(mc, &to, &to_play);
+
+    assert(is_black_white(to_play));
+    assert(checked_is_color(to, to_play));
+    assert(checked_is_color(from, EMPTY));
+
+    play_stone(from, to_play);
+    remove_stone(to);
+}
+
+void elephants::_init_hash(local_hash& hash)
+{
+    _init_hash_with_board(hash);
 }
 
 move_generator* elephants::create_move_generator(bw to_play) const

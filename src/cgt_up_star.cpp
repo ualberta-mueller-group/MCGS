@@ -19,8 +19,21 @@ inline int sign(int value)
 } // namespace
 
 //---------------------------------------------------------------------------
+
+game* up_star::inverse() const
+{
+    return new up_star(-num_ups(), has_star());
+}
+
+void up_star::print(std::ostream& str) const
+{
+    str << "up_star:" << _value;
+    if (has_star())
+        str << '*';
+}
+
 // special cases if -1 <= _value <= 1
-void up_star::play(const move& m, bw to_play)
+void up_star::_play_impl(const move& m, bw to_play)
 {
     const int delta_v = cgt_move::first(m);
     const bool flip_star = static_cast<bool>(cgt_move::second(m));
@@ -46,10 +59,10 @@ void up_star::play(const move& m, bw to_play)
     _value += delta_v;
     if (flip_star)
         _star = !_star;
-    game::play(m, to_play);
+    //game::play(m, to_play);
 }
 
-void up_star::undo_move()
+void up_star::_undo_move_impl()
 {
     const move m = last_move();
     int flip_star;
@@ -58,19 +71,13 @@ void up_star::undo_move()
     _value -= delta_v;
     if (flip_star)
         _star = !_star;
-    game::undo_move();
+    //game::undo_move();
 }
 
-game* up_star::inverse() const
+void up_star::_init_hash(local_hash& hash)
 {
-    return new up_star(-num_ups(), has_star());
-}
-
-void up_star::print(std::ostream& str) const
-{
-    str << "up_star:" << _value;
-    if (has_star())
-        str << '*';
+    hash.toggle_tile(0, _value);
+    hash.toggle_tile(1, (uint8_t) _star);
 }
 
 //---------------------------------------------------------------------------

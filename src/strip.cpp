@@ -99,6 +99,14 @@ std::string strip::board_as_string() const
     return board_to_string(_board);
 }
 
+void strip::_init_hash_with_board(local_hash& hash)
+{
+    const size_t N = this->size();
+
+    for (size_t i = 0; i < N; i++)
+        hash.toggle_tile(i, this->at(i));
+}
+
 void strip::_check_legal() const
 {
     for (const int& x : _board)

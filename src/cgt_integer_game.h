@@ -13,8 +13,6 @@ class integer_game : public game
 {
 public:
     integer_game(int value);
-    void play(const move& m, bw to_play) override;
-    void undo_move() override;
 
     int value() const { return _value; }
 
@@ -27,6 +25,12 @@ public:
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;
     void print(std::ostream& str) const override;
+
+protected:
+    void _play_impl(const move& m, bw to_play) override;
+    void _undo_move_impl() override;
+
+    void _init_hash(local_hash& hash) override;
 
 private:
     inline void _check_legal() const { THROW_ASSERT(negate_is_safe(_value)); }

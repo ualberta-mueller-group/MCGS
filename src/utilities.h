@@ -55,7 +55,7 @@ inline constexpr bool is_power_of_2(const T& n)
 }
 
 template <class T>
-inline T rotate_right(const T& val, size_t distance) // TODO unit test
+inline constexpr T rotate_right(const T& val, size_t distance) // TODO unit test
 {
     static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
 
@@ -68,7 +68,7 @@ inline T rotate_right(const T& val, size_t distance) // TODO unit test
 }
 
 template <class T>
-inline T rotate_left(const T& val, size_t distance) // TODO unit test
+inline constexpr T rotate_left(const T& val, size_t distance) // TODO unit test
 {
     static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
 
@@ -101,7 +101,7 @@ constexpr T alternating_mask() // TODO unit test
 }
 
 template <class T>
-T rotate_interleaved(const T& val, size_t distance) // TODO unit test
+constexpr T rotate_interleaved(const T& val, size_t distance) // TODO unit test
 {
     static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
 

@@ -26,12 +26,22 @@ public:
     
     void play(const move& m, bw to_play) override;
     void undo_move() override;
+    move_generator* create_move_generator(bw to_play) const override;
+
+    int value() const { return _value; }
 
     game* inverse() const override;
     void print(std::ostream& str) const override;
     static int nim_sum(const std::vector<int>& values);     // uses Nim formula
     static int nim_sum(const std::vector<nimber*>& values); // uses Nim formula
     static void add_nimber(int&sum, int nimber);
+
+
+protected:
+    void _play_impl(const move& m, bw to_play) override;
+    void _undo_move_impl() override;
+
+    void _init_hash(local_hash& hash) override;
 
 private:
     // _value is updated as *this changes during search

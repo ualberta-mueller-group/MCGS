@@ -1,6 +1,6 @@
 #pragma once
 /*
-    Implements random tables, local hashing, and global hashing
+   random_table, local_hash, global_hash
 */
 
 #include <vector>
@@ -18,14 +18,13 @@ typedef uint64_t hash_t;
 class random_table
 {
 public:
-    random_table();
     random_table(size_t n_positions);
 
     template <class T>
     hash_t get(const size_t& position, const T& color) const
     {
         // Prevent rotate_interleaved distance from wrapping and overlapping
-        static_assert(sizeof(T) <= 8);
+        static_assert((sizeof(T) * CHAR_BIT) / 8 <= 16); // <= 16 bytes
         // Size of T should be multiple of a byte
         static_assert((sizeof(T) * CHAR_BIT) % 8 == 0);
 
@@ -40,11 +39,10 @@ public:
         const size_t wrap_count = position / _n_positions;
         const size_t base_idx = pos_constrained * _ELEMENTS_PER_POSITION;
 
-        // "random" offset to relative index
+        // add "random" offset to relative index
         const hash_t idx_offset = _number_table[base_idx + (wrap_count % _ELEMENTS_PER_POSITION)];
         size_t i = 0;
 
-#pragma unroll
         do
         {
             // explicitly get 8 bits; the size of a byte may not be 8 bits, and
@@ -73,7 +71,6 @@ public:
 private:
     void _init();
 
-    static constexpr size_t _DEFAULT_N_POSITIONS = 32;
     static constexpr size_t _ELEMENTS_PER_POSITION = 256;
     static constexpr uint64_t _DEFAULT_RANDOM_TABLE_SEED = 0;
 

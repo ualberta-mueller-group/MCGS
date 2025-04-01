@@ -24,12 +24,13 @@ public:
 
     fraction get_fraction() const;
 
-    // The move argument is the OLD value that must be restored.
-    void play(const move& m, bw to_play) override;
-    void undo_move() override;
-
 protected:
-    split_result _split_implementation() const override;
+    split_result _split_impl() const override;
+    // The move argument is the OLD value that must be restored.
+    void _play_impl(const move& m, bw to_play) override;
+    void _undo_move_impl() override;
+
+    void _init_hash(local_hash& hash) override;
 
 public:
     game* inverse() const override;
