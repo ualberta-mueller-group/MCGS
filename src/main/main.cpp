@@ -20,7 +20,7 @@ using std::cout, std::endl, std::string;
 //#include "hashing.h"
 //#include "hashing2.h"
 //#include "hashing3.h"
-#include "hashing_final.h"
+#include "hashing.h"
 int main(int argc, char** argv)
 {
 
