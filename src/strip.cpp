@@ -99,7 +99,7 @@ std::string strip::board_as_string() const
     return board_to_string(_board);
 }
 
-void strip::_init_hash_with_board(local_hash& hash)
+void strip::_init_hash_default(local_hash& hash)
 {
     const size_t N = this->size();
 

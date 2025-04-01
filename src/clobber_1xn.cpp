@@ -116,13 +116,14 @@ void clobber_1xn::_undo_move_impl()
     const bw player = cgt_move::get_color(mc);
     assert(at(from) == EMPTY);
     assert(at(to) == player);
+
     replace(from, player);
     replace(to, opponent(player));
 }
 
 void clobber_1xn::_init_hash(local_hash& hash)
 {
-    _init_hash_with_board(hash);
+    strip::_init_hash_default(hash);
 }
 
 game* clobber_1xn::inverse() const

@@ -135,7 +135,7 @@ void elephants::_undo_move_impl()
 
 void elephants::_init_hash(local_hash& hash)
 {
-    _init_hash_with_board(hash);
+    strip::_init_hash_default(hash);
 }
 
 move_generator* elephants::create_move_generator(bw to_play) const

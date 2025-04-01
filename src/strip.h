@@ -36,7 +36,7 @@ public:
 
 
 protected:
-    void _init_hash_with_board(local_hash& hash);
+    void _init_hash_default(local_hash& hash);
 
 private:
     void _check_legal() const;
