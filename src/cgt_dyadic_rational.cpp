@@ -79,6 +79,16 @@ void dyadic_rational::_init_hash(local_hash& hash)
     hash.toggle_tile(1, _q);
 }
 
+void dyadic_rational::_normalize_impl()
+{
+    // Already normalized
+}
+
+void dyadic_rational::_undo_normalize_impl()
+{
+    // Nothing to undo
+}
+
 game* dyadic_rational::inverse() const
 {
     return new dyadic_rational(-_p, _q);

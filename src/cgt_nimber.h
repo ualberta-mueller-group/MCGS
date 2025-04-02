@@ -43,6 +43,9 @@ protected:
 
     void _init_hash(local_hash& hash) override;
 
+    void _normalize_impl() override;
+    void _undo_normalize_impl() override;
+
 private:
     // _value is updated as *this changes during search
     // In contrast, impartial_game::_nim_value is for root only

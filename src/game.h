@@ -12,6 +12,7 @@
 #include "cgt_move.h"
 #include "game_type.h"
 #include "hashing.h"
+#include "throw_assert.h"
 
 //---------------------------------------------------------------------------
 
@@ -43,6 +44,9 @@ public:
 
     const local_hash& compute_hash();
 
+    void normalize();
+    void undo_normalize();
+
 protected:
     /*
         Return list of games to replace current game. Empty list means game is
@@ -67,6 +71,31 @@ protected:
     virtual void _undo_move_impl() = 0;
 
     virtual void _init_hash(local_hash& hash) = 0;
+
+    ////////////////////////////////////////
+
+    // void _normalize_impl() override;
+    // void _undo_normalize_impl() override;
+
+    // void ::_normalize_impl();
+    // void ::_undo_normalize_impl();
+
+    // Already normalized
+    // Nothing to undo
+
+    ////////////////////////////////////////
+
+    //virtual void _normalize_impl() = 0;
+    virtual void _normalize_impl()
+    {
+        THROW_ASSERT(false, "Not implemented");
+    }
+
+    //virtual void _undo_normalize_impl() = 0;
+    virtual void _undo_normalize_impl()
+    {
+        THROW_ASSERT(false, "Not implemented");
+    }
 
     local_hash& _get_hash_ref();
     bool _hash_valid() const;
@@ -95,11 +124,22 @@ private:
         HASH_STATE_UPDATED,
     };
 
+    enum game_undo_code
+    {
+        GAME_UNDO_PLAY = 0,
+        GAME_UNDO_NORMALIZE,
+    };
+
+    void _push_undo_code(game_undo_code code);
+    void _pop_undo_code(game_undo_code code);
+
     std::vector<move> _move_stack;
     bool _is_active;
 
     hash_state_enum _hash_state;
     local_hash _hash;
+
+    std::vector<game_undo_code> _undo_code_stack;
 
 }; // class game
 

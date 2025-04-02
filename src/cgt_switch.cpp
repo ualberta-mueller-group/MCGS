@@ -84,6 +84,16 @@ void switch_game::_init_hash(local_hash& hash)
     }
 }
 
+void switch_game::_normalize_impl()
+{
+    // Already normalized
+}
+
+void switch_game::_undo_normalize_impl()
+{
+    // Nothing to undo
+}
+
 game* switch_game::inverse() const
 {
     switch_game* inv = new switch_game(-_right, -_left);

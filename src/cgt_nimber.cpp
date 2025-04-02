@@ -57,6 +57,16 @@ void nimber::_init_hash(local_hash& hash)
     hash.toggle_tile(0, _value);
 }
 
+void nimber::_normalize_impl()
+{
+    // Already normalized
+}
+
+void nimber::_undo_normalize_impl()
+{
+    // Nothing to undo
+}
+
 //---------------------------------------------------------------------------
 class nimber_move_generator : public move_generator
 {

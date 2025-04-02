@@ -32,6 +32,9 @@ protected:
 
     void _init_hash(local_hash& hash) override;
 
+    void _normalize_impl() override;
+    void _undo_normalize_impl() override;
+
 private:
     inline void _check_legal() const { THROW_ASSERT(negate_is_safe(_value)); }
 

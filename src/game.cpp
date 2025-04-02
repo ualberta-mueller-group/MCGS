@@ -78,6 +78,7 @@ void game::play(const move& m, int to_play)
         _hash_state = HASH_STATE_OK;
 
     _play_impl(m, to_play);
+    _push_undo_code(GAME_UNDO_PLAY);
 
     if (_hash_state == HASH_STATE_OK) // not updated
         _hash_state = HASH_STATE_INVALID;
@@ -89,6 +90,7 @@ void game::undo_move()
         _hash_state = HASH_STATE_OK;
 
     _undo_move_impl();
+    _pop_undo_code(GAME_UNDO_PLAY);
 
     if (_hash_state == HASH_STATE_OK) // not updated
         _hash_state = HASH_STATE_INVALID;
@@ -111,4 +113,28 @@ const local_hash& game::compute_hash()
     }
 
     return _hash;
+}
+
+void game::normalize()
+{
+    _push_undo_code(GAME_UNDO_NORMALIZE);
+    _normalize_impl();
+}
+
+void game::undo_normalize()
+{
+    _pop_undo_code(GAME_UNDO_NORMALIZE);
+    _undo_normalize_impl();
+}
+
+void game::_push_undo_code(game_undo_code code)
+{
+    _undo_code_stack.push_back(code);
+}
+
+void game::_pop_undo_code(game_undo_code code)
+{
+    assert(!_undo_code_stack.empty());
+    assert(_undo_code_stack.back() == code);
+    _undo_code_stack.pop_back();
 }

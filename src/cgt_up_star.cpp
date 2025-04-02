@@ -80,6 +80,16 @@ void up_star::_init_hash(local_hash& hash)
     hash.toggle_tile(1, (uint8_t) _star);
 }
 
+void up_star::_normalize_impl()
+{
+    // Already normalized
+}
+
+void up_star::_undo_normalize_impl()
+{
+    // Nothing to undo
+}
+
 //---------------------------------------------------------------------------
 
 class up_star_move_generator : public move_generator

@@ -52,6 +52,16 @@ void integer_game::_init_hash(local_hash& hash)
     hash.toggle_tile(0, _value);
 }
 
+void integer_game::_normalize_impl()
+{
+    // Already normalized
+}
+
+void integer_game::_undo_normalize_impl()
+{
+    // Nothing to undo
+}
+
 //---------------------------------------------------------------------------
 
 class integer_move_generator : public move_generator
