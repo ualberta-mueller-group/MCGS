@@ -99,12 +99,96 @@ std::string strip::board_as_string() const
     return board_to_string(_board);
 }
 
-void strip::_init_hash_default(local_hash& hash)
+const std::vector<int>& strip::board_const() const
+{
+    return _board;
+}
+
+void strip::_default_init_hash(local_hash& hash)
 {
     const size_t N = this->size();
 
     for (size_t i = 0; i < N; i++)
         hash.toggle_tile(i, this->at(i));
+}
+
+relation strip::_compare_boards(const std::vector<int>& board1,
+                                  const std::vector<int>& board2,
+                                  bool mirror1, bool mirror2)
+{
+    if (board1.size() != board2.size())
+        return board1.size() > board2.size() ? REL_LESS : REL_GREATER;
+
+    const size_t N = board1.size();
+    assert(board2.size() == N);
+
+    int step1 = 1;
+    size_t idx1 = 0;
+    if (mirror1)
+    {
+        step1 = -1;
+        idx1 = N - 1;
+    }
+
+    int step2 = 1;
+    size_t idx2 = 0;
+    if (mirror2)
+    {
+        step2 = -1;
+        idx2 = N - 1;
+    }
+
+    for (size_t i = 0; i < N; i++)
+    {
+        const int& val1 = board1[idx1];
+        const int& val2 = board2[idx2];
+
+        idx1 += step1;
+        idx2 += step2;
+
+        if (val1 == val2)
+            continue;
+
+        return val1 < val2 ? REL_LESS : REL_GREATER;
+    }
+
+    return REL_EQUAL;
+}
+
+void strip::_mirror_self()
+{
+    std::vector<int> old_board = std::move(_board);
+    assert(_board.size() == 0);
+
+    _board.resize(old_board.size());
+
+    size_t idx = 0;
+    for (auto it = old_board.rbegin(); it != old_board.rend(); it++)
+    {
+        _board[idx] = *it;
+        idx++;
+    }
+}
+
+void strip::_default_normalize_impl()
+{
+    relation rel = _compare_boards(_board, _board, true, false);
+    bool do_mirror = (rel == REL_LESS);
+
+    _default_normalize_did_mirror.push_back(do_mirror);
+
+    if (do_mirror)
+        _mirror_self();
+}
+
+void strip::_default_undo_normalize_impl()
+{
+    assert(!_default_normalize_did_mirror.empty());
+    bool do_mirror = _default_normalize_did_mirror.back();
+    _default_normalize_did_mirror.pop_back();
+
+    if (do_mirror)
+        _mirror_self();
 }
 
 void strip::_check_legal() const

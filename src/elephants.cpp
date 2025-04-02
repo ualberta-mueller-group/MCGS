@@ -135,7 +135,17 @@ void elephants::_undo_move_impl()
 
 void elephants::_init_hash(local_hash& hash)
 {
-    strip::_init_hash_default(hash);
+    strip::_default_init_hash(hash);
+}
+
+void elephants::_normalize_impl()
+{
+    // Already normalized
+}
+
+void elephants::_undo_normalize_impl()
+{
+    // Nothing to undo
 }
 
 move_generator* elephants::create_move_generator(bw to_play) const

@@ -128,7 +128,17 @@ void nogo_1xn::_undo_move_impl()
 
 void nogo_1xn::_init_hash(local_hash& hash)
 {
-    strip::_init_hash_default(hash);
+    strip::_default_init_hash(hash);
+}
+
+void nogo_1xn::_normalize_impl()
+{
+    strip::_default_normalize_impl();
+}
+
+void nogo_1xn::_undo_normalize_impl()
+{
+    strip::_default_undo_normalize_impl();
 }
 
 game* nogo_1xn::inverse() const

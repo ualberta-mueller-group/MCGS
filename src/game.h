@@ -72,30 +72,8 @@ protected:
 
     virtual void _init_hash(local_hash& hash) = 0;
 
-    ////////////////////////////////////////
-
-    // void _normalize_impl() override;
-    // void _undo_normalize_impl() override;
-
-    // void ::_normalize_impl();
-    // void ::_undo_normalize_impl();
-
-    // Already normalized
-    // Nothing to undo
-
-    ////////////////////////////////////////
-
-    //virtual void _normalize_impl() = 0;
-    virtual void _normalize_impl()
-    {
-        THROW_ASSERT(false, "Not implemented");
-    }
-
-    //virtual void _undo_normalize_impl() = 0;
-    virtual void _undo_normalize_impl()
-    {
-        THROW_ASSERT(false, "Not implemented");
-    }
+    virtual void _normalize_impl() = 0;
+    virtual void _undo_normalize_impl() = 0;
 
     local_hash& _get_hash_ref();
     bool _hash_valid() const;
