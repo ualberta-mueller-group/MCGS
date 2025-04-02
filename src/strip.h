@@ -32,15 +32,27 @@ public:
     std::vector<int> inverse_board() const;
     std::vector<int> inverse_mirror_board() const;
     std::string board_as_string() const;
+    const std::vector<int>& board_const() const; // TODO
+
     // void print(std::ostream& str) const { str << board_as_string();}
 
 
 protected:
-    void _init_hash_default(local_hash& hash);
+    void _default_init_hash(local_hash& hash);
+
+    static relation _compare_boards(const std::vector<int>& board1,
+                                      const std::vector<int>& board2,
+                                      bool mirror1 = false, bool mirror2 = false);
+
+    void _mirror_self();
+
+    void _default_normalize_impl();
+    void _default_undo_normalize_impl();
 
 private:
     void _check_legal() const;
 
+    std::vector<bool> _default_normalize_did_mirror;
     std::vector<int> _board; // todo try char as well.
 };
 

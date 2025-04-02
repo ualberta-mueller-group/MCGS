@@ -21,6 +21,9 @@ protected:
 
     void _init_hash(local_hash& hash) override;
 
+    void _normalize_impl() override;
+    void _undo_normalize_impl() override;
+
 public:
     move_generator* create_move_generator(bw to_play) const override;
 
