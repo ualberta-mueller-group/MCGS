@@ -136,6 +136,11 @@ void clobber_1xn::_undo_normalize_impl()
     strip::_default_undo_normalize_impl();
 }
 
+bool clobber_1xn::_order_less_impl(const game* rhs) const
+{
+    return strip::_default_order_less_impl(rhs);
+}
+
 game* clobber_1xn::inverse() const
 {
     return new clobber_1xn(inverse_board());

@@ -148,6 +148,11 @@ void elephants::_undo_normalize_impl()
     // Nothing to undo
 }
 
+bool elephants::_order_less_impl(const game* rhs) const
+{
+    return strip::_default_order_less_impl(rhs);
+}
+
 move_generator* elephants::create_move_generator(bw to_play) const
 {
     return new elephants_move_generator(*this, to_play);

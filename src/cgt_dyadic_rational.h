@@ -35,6 +35,8 @@ protected:
     void _normalize_impl() override;
     void _undo_normalize_impl() override;
 
+    bool _order_less_impl(const game* rhs) const override;
+
 public:
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;

@@ -3,6 +3,8 @@
 //---------------------------------------------------------------------------
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
+#include "file_parser.h"
+#include "game.h"
 #include "safe_arithmetic.h"
 #include "utilities.h"
 
@@ -87,6 +89,26 @@ void dyadic_rational::_normalize_impl()
 void dyadic_rational::_undo_normalize_impl()
 {
     // Nothing to undo
+}
+
+bool dyadic_rational::_order_less_impl(const game* rhs) const
+{
+    const dyadic_rational* other = reinterpret_cast<const dyadic_rational*>(rhs);
+    assert(dynamic_cast<const dyadic_rational*>(rhs) == other);
+
+    const int& top1 = p();
+    const int& top2 = other->p();
+
+    if (top1 != top2)
+        return top1 < top2;
+
+    const int& bot1 = q();
+    const int& bot2 = other->q();
+
+    if (bot1 != bot2)
+        return bot1 < bot2;
+
+    return false;
 }
 
 game* dyadic_rational::inverse() const

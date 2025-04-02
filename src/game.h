@@ -47,6 +47,8 @@ public:
     void normalize();
     void undo_normalize();
 
+    bool order_less(const game* rhs) const;
+
 protected:
     /*
         Return list of games to replace current game. Empty list means game is
@@ -74,6 +76,8 @@ protected:
 
     virtual void _normalize_impl() = 0;
     virtual void _undo_normalize_impl() = 0;
+
+    virtual bool _order_less_impl(const game* rhs) const = 0;
 
     local_hash& _get_hash_ref();
     bool _hash_valid() const;
@@ -255,6 +259,22 @@ constexpr bool is_concrete_game_v =
 */
 template <class T_Ptr>
 inline T_Ptr cast_game(game* g)
+{
+    static_assert(std::is_pointer_v<T_Ptr>);
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T = typename std::remove_pointer<T_Ptr>::type;
+
+    static_assert(is_concrete_game_v<T>);
+
+    assert(g != nullptr);
+    assert(g->is_active());
+    assert(g->game_type() == game_type<T>());
+
+    return reinterpret_cast<T_Ptr>(g);
+}
+
+template <class T_Ptr>
+inline T_Ptr cast_game(const game* g)
 {
     static_assert(std::is_pointer_v<T_Ptr>);
     // NOLINTNEXTLINE(readability-identifier-naming)
