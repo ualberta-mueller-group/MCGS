@@ -86,6 +86,7 @@ private:
 namespace random_tables {
 extern random_table default_table;
 extern random_table type_table;
+extern random_table modifier_table;
 } // namespace random_tables 
 
 ////////////////////////////////////////////////// local_hash
@@ -118,6 +119,30 @@ private:
     hash_t _value;
 };
 
+////////////////////////////////////////////////// global_hash
+
+class global_hash
+{
+public:
+    global_hash(): _value(0)
+    {
+    }
+
+    void reset();
+    hash_t get_value() const;
+
+    void add_subgame(size_t subgame_idx, game* g);
+    void remove_subgame(size_t subgame_idx, game* g);
+
+private:
+    void _resize_if_out_of_range(size_t subgame_idx);
+    hash_t _get_modified_hash(size_t subgame_idx, game* g);
+
+    hash_t _value;
+
+    std::vector<hash_t> _subgame_hashes;
+    std::vector<bool> _subgame_valid_mask;
+};
 
 ////////////////////////////////////////////////////////////
 void test_hashing_final();
