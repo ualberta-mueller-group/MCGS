@@ -16,6 +16,7 @@ std::uniform_int_distribution<hash_t> random_table::_dist(1, std::numeric_limits
 namespace random_tables {
 random_table default_table(1024);
 random_table type_table(32);
+random_table modifier_table(128);
 } // namespace random_tables 
 
 random_table::random_table(size_t n_positions): _n_positions(n_positions)
@@ -67,6 +68,150 @@ void local_hash::toggle_type(const game_type_t& type)
     _value ^= random_tables::type_table.get(utype, utype);
 }
 
+////////////////////////////////////////////////// global_hash
+
+void global_hash::reset()
+{
+    _value = 0;
+    _subgame_hashes.clear();
+    _subgame_valid_mask.clear();
+}
+
+hash_t global_hash::get_value() const
+{
+    return _value;
+}
+
+void global_hash::add_subgame(size_t subgame_idx, game* g)
+{
+    _resize_if_out_of_range(subgame_idx);
+    assert(!_subgame_valid_mask[subgame_idx]);
+
+    hash_t modified_hash = _get_modified_hash(subgame_idx, g);
+
+    _subgame_valid_mask[subgame_idx] = true;
+    _subgame_hashes[subgame_idx] = modified_hash;
+
+    _value ^= modified_hash;
+}
+
+void global_hash::remove_subgame(size_t subgame_idx, game* g)
+{
+    _resize_if_out_of_range(subgame_idx);
+    assert(_subgame_valid_mask[subgame_idx]);
+    assert(_subgame_hashes[subgame_idx] == _get_modified_hash(subgame_idx, g));
+
+    _value ^= _subgame_hashes[subgame_idx];
+    _subgame_valid_mask[subgame_idx] = false;
+    _subgame_hashes[subgame_idx] = 0;
+}
+
+void global_hash::_resize_if_out_of_range(size_t subgame_idx)
+{
+    assert(_subgame_hashes.size() == _subgame_valid_mask.size());
+    size_t min_size = subgame_idx + 1;
+    if (_subgame_hashes.size() < min_size)
+    {
+        _subgame_hashes.resize(min_size);
+        _subgame_valid_mask.resize(min_size);
+    }
+}
+
+hash_t global_hash::_get_modified_hash(size_t subgame_idx, game* g)
+{
+    hash_t base_hash = g->compute_hash().get_value();
+    return random_tables::modifier_table.get(subgame_idx, base_hash);
+}
+
+
+////////////////////////////////////////////////// strip_iterator
+
+class strip_iterator
+{
+public:
+    strip_iterator(size_t max_size);
+
+    bool operator++();
+    const std::vector<int>& get() const;
+
+private:
+
+    static int _convert(int val);
+
+    const size_t _max_size;
+    std::vector<int> _board;
+    mutable std::vector<int> _board_compatible;
+};
+
+strip_iterator::strip_iterator(size_t max_size): _max_size(max_size)
+{
+    assert(max_size >= 1);
+}
+
+bool strip_iterator::operator++()
+{
+    if (_board.size() == 0)
+    {
+        _board.resize(1);
+        return true;
+    }
+
+    _board.back() += 1;
+    bool carry = false;
+
+    for (auto it = _board.rbegin(); it != _board.rend(); it++)
+    {
+        int& val = *it;
+
+        if (carry)
+        {
+            val += 1;
+            carry = false;
+        }
+
+        if (val >= 3)
+        {
+            assert(val == 3);
+            val %= 3;
+            carry = true;
+        }
+    }
+
+    if (!carry)
+        return true;
+
+    const size_t size = _board.size();
+
+    if (size == _max_size)
+        return false;
+
+    _board.clear();
+    _board.resize(size + 1);
+    return true;
+}
+
+const std::vector<int>& strip_iterator::get() const
+{
+    const size_t N = _board.size();
+    _board_compatible.resize(N);
+
+    for (size_t i = 0; i < N; i++)
+    {
+        _board_compatible[i] = strip_iterator::_convert(_board[i]);
+    }
+
+    return _board_compatible;
+}
+
+
+int strip_iterator::_convert(int val)
+{
+    static const int TABLE[] = {EMPTY, BLACK, WHITE};
+
+    assert(val >= 0 && val <= 2);
+    return TABLE[val];
+}
+
 //////////////////////////////////////////////////
 
 #include "all_game_headers.h"
@@ -75,6 +220,8 @@ using namespace std;
 
 void test_hashing_final()
 {
+
+
     /*
     hash_func_t fn = [](const strip& g) -> hash_t
     {
@@ -137,10 +284,12 @@ void test_hashing_final()
         cout << "Games: " << n_games << endl;
         cout << "Collisions: " << n_collisions << endl;
         cout << "Zeroes: " << n_zeroes << endl;
-        cout << "Collision %: " << (100.0 * (double) n_collisions) / (double) n_games;
+        cout << "Collision %: " << (100.0 * (double) n_collisions) / (double) n_games << endl;
+        cout << "Set size: " << hash_set.size() << endl;
         cout << endl;
     };
 
+    /*
     //const int LARGE_INT = 64000;
     const int LARGE_INT = 100000;
     const int SMALL_INT = 300;
@@ -270,5 +419,50 @@ void test_hashing_final()
     }
 
     end_test();
-    cout << "Set size: " << hash_set.size() << endl;
+    */
+
+    begin_test("Sums");
+
+
+    strip_iterator it1(13);
+
+    while (++it1)
+    {
+        const vector<int>& board1 = it1.get();
+        clobber_1xn g1(board1);
+
+        for (int n_repeats = 1; n_repeats <= 70; n_repeats++)
+        {
+            global_hash gh;
+
+            for (int i = 0; i < n_repeats; i++)
+            {
+                gh.add_subgame(i, &g1);
+            }
+
+            hash_t value = gh.get_value();
+
+            test_hash(value);
+        }
+
+        /*
+        strip_iterator it2(4);
+        while (++it2)
+        {
+            const vector<int>& board2 = it2.get();
+            clobber_1xn g2(board2);
+
+            global_hash hash;
+            hash.add_subgame(0, &g1);
+            hash.add_subgame(1, &g2);
+
+            hash_t value = hash.get_value();
+            test_hash(value);
+        }
+        */
+    }
+
+
+
+    end_test();
 }
