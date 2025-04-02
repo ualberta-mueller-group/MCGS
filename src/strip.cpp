@@ -191,6 +191,16 @@ void strip::_default_undo_normalize_impl()
         _mirror_self();
 }
 
+bool strip::_default_order_less_impl(const game* rhs) const
+{
+    assert(game_type() == rhs->game_type());
+
+    const strip* other = reinterpret_cast<const strip*>(rhs);
+    assert(dynamic_cast<const strip*>(rhs) == other);
+
+    return _compare_boards(_board, other->_board) == REL_LESS;
+}
+
 void strip::_check_legal() const
 {
     for (const int& x : _board)

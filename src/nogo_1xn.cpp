@@ -141,6 +141,11 @@ void nogo_1xn::_undo_normalize_impl()
     strip::_default_undo_normalize_impl();
 }
 
+bool nogo_1xn::_order_less_impl(const game* rhs) const
+{
+    return strip::_default_order_less_impl(rhs);
+}
+
 game* nogo_1xn::inverse() const
 {
     return new nogo_1xn(inverse_board());

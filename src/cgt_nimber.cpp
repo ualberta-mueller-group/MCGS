@@ -50,6 +50,14 @@ void nimber::_undo_normalize_impl()
     // Nothing to undo
 }
 
+bool nimber::_order_less_impl(const game* rhs) const
+{
+    const nimber* other = reinterpret_cast<const nimber*>(rhs);
+    assert(dynamic_cast<const nimber*>(rhs) == other);
+
+    return _value < other->_value;
+}
+
 //---------------------------------------------------------------------------
 class nimber_move_generator : public move_generator
 {

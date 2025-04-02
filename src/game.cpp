@@ -116,6 +116,19 @@ void game::undo_normalize()
     _undo_normalize_impl();
 }
 
+
+bool game::order_less(const game* rhs) const
+{
+    const game_type_t type1 = game_type();
+    const game_type_t type2 = rhs->game_type();
+
+    if (type1 != type2)
+        return type1 < type2;
+
+    assert(type1 == type2);
+    return this->_order_less_impl(rhs);
+}
+
 void game::_push_undo_code(game_undo_code code)
 {
     _undo_code_stack.push_back(code);

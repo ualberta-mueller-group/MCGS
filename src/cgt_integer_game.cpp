@@ -62,6 +62,15 @@ void integer_game::_undo_normalize_impl()
     // Nothing to undo
 }
 
+
+bool integer_game::_order_less_impl(const game* rhs) const
+{
+    const integer_game* other = reinterpret_cast<const integer_game*>(rhs);
+    assert(dynamic_cast<const integer_game*>(rhs) == other);
+
+    return _value < other->value();
+}
+
 //---------------------------------------------------------------------------
 
 class integer_move_generator : public move_generator

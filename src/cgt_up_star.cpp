@@ -90,6 +90,24 @@ void up_star::_undo_normalize_impl()
     // Nothing to undo
 }
 
+
+bool up_star::_order_less_impl(const game* rhs) const
+{
+    const up_star* other = reinterpret_cast<const up_star*>(rhs);
+    assert(dynamic_cast<const up_star*>(rhs) == other);
+
+    const int& val1 = _value;
+    const int& val2 = other->_value;
+
+    if (val1 != val2)
+        return val1 < val2;
+
+    const bool star1 = _star;
+    const bool star2 = other->_star;
+
+    return star1 < star2;
+}
+
 //---------------------------------------------------------------------------
 
 class up_star_move_generator : public move_generator

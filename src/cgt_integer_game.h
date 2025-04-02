@@ -35,6 +35,8 @@ protected:
     void _normalize_impl() override;
     void _undo_normalize_impl() override;
 
+    bool _order_less_impl(const game* rhs) const override;
+
 private:
     inline void _check_legal() const { THROW_ASSERT(negate_is_safe(_value)); }
 

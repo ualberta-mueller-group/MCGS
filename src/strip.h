@@ -49,6 +49,8 @@ protected:
     void _default_normalize_impl();
     void _default_undo_normalize_impl();
 
+    bool _default_order_less_impl(const game* rhs) const;
+
 private:
     void _check_legal() const;
 
