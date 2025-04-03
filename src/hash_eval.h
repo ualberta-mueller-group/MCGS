@@ -6,6 +6,7 @@
 #include "hashing.h"
 #include "game.h"
 #include "sumgame.h"
+#include <chrono>
 
 ////////////////////////////////////////////////// hash_test
 class hash_test
@@ -24,12 +25,12 @@ public:
     {
     }
 
-    void run_test(bool check_collisions = true);
+    void run_test(bool check_collisions);
 
 protected:
-    virtual void _test_fn() = 0;
     virtual std::string _test_name() const = 0;
     virtual std::string _test_description() const = 0;
+    virtual void _test_fn() = 0;
 
     void _add_hash(const hash_t& hash);
     void _add_hash(game& g);
@@ -39,8 +40,8 @@ protected:
 
 private:
     void _reset();
-    void _add_hash_impl(const hash_t& hash);
-    void _print_summary() const;
+    bool _add_hash_impl(const hash_t& hash);
+    void _print_summary(std::chrono::duration<double, std::milli>& duration) const;
 
     std::unordered_set<hash_t> _hash_set;
     uint64_t _n_games;
@@ -59,7 +60,7 @@ public:
 
     void operator++();
     operator bool() const;
-    const std::vector<int>& get() const;
+    const std::vector<int>& operator*() const;
 
 private:
     static int _convert(int val);
@@ -70,3 +71,33 @@ private:
     bool _has_next;
 };
 
+////////////////////////////////////////////////// fraction_iterator
+#include "fraction.h"
+
+class fraction_iterator
+{
+public:
+    fraction_iterator(int top_size, int exponent_max, bool simplify = true);
+
+    void operator++();
+    operator bool() const;
+    const fraction& operator*() const;
+
+private:
+    void _increment(bool init);
+    void _increment_step(bool init);
+    void _set_frac();
+
+    const int _top_min;
+    const int _top_max;
+    const int _exponent_max;
+    const bool _simplify;
+
+    int _top;
+    int _exponent;
+
+    fraction _frac;
+    bool _has_next;
+};
+
+void hash_test_all();
