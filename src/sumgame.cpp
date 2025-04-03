@@ -11,6 +11,7 @@
 #include "cgt_switch.h"
 #include "cgt_up_star.h"
 
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <iostream>
@@ -20,7 +21,9 @@
 #include <future>
 
 #include <unordered_set>
+#include <vector>
 
+#include "hashing.h"
 #include "optimization_options.h"
 #include "sumgame_undo_stack_unwinder.h"
 
@@ -564,6 +567,52 @@ void sumgame::print(std::ostream& str) const
             g->print(str);
         }
     str << std::endl;
+}
+
+hash_t sumgame::get_global_hash_value()
+{
+    global_hash gh;
+
+    std::vector<game*> active_games;
+
+    {
+        const int N = this->num_total_games();
+
+        for (int i = 0; i < N; i++)
+        {
+            game* g = this->subgame(i);
+
+            if (!g->is_active())
+                continue;
+
+            active_games.push_back(g);
+        }
+    }
+
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    class __game_compare
+    {
+    public:
+        bool operator()(const game* g1, const game* g2) const
+        {
+            return g1->order_less(g2);
+        }
+    };
+
+    std::sort(active_games.begin(), active_games.end(), __game_compare());
+
+    {
+        const size_t N = active_games.size();
+
+        for (size_t i = 0; i < N; i++)
+        {
+            game* g = active_games[i];
+            assert(g->is_active());
+            gh.add_subgame(i, g);
+        }
+    }
+
+    return gh.get_value();
 }
 
 sumgame_move_generator* sumgame::create_sum_move_generator(bw to_play) const
