@@ -69,6 +69,7 @@ private:
     std::vector<int> _board;
     mutable std::vector<int> _board_compatible;
     bool _has_next;
+    bool _first_board;
 };
 
 ////////////////////////////////////////////////// fraction_iterator
