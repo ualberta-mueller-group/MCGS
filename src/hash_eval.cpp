@@ -1,7 +1,9 @@
 #include "hash_eval.h"
 #include "cgt_switch.h"
+#include "clobber_1xn.h"
 #include "hashing_benchmark.h"
 #include <iostream>
+#include <memory>
 #include "all_game_headers.h"
 #include "throw_assert.h"
 #include "utilities.h"
@@ -109,7 +111,7 @@ void hash_test::_print_summary(std::chrono::duration<double, std::milli>& durati
 }
 
 ////////////////////////////////////////////////// strip_iterator
-strip_iterator::strip_iterator(size_t max_size): _max_size(max_size)
+strip_iterator::strip_iterator(size_t max_size): _max_size(max_size), _first_board(true)
 {
     assert(max_size >= 1);
 
@@ -123,6 +125,13 @@ void strip_iterator::operator++()
 
     if (_board.size() == 0)
     {
+        if (_first_board)
+        {
+            _first_board = false;
+            _has_next = true;
+            return;
+        }
+
         _board.resize(1);
 
         _has_next = true;
@@ -297,7 +306,7 @@ class test_local_all_games: public hash_test
 protected:
     std::string _test_name() const override
     {
-        return "All games (local hash)";
+        return "All Games (local)";
     }
 
     std::string _test_description() const override
@@ -371,13 +380,203 @@ protected:
 
 };
 
+class test_local_all_strips: public hash_test
+{
+public:
+    std::string _test_name() const override
+    {
+        return "All Strips (local)";
+    }
+
+    std::string _test_description() const override
+    {
+        return "Local hashes for all strip games, 0-16 tiles.";
+    }
+
+    void _test_fn() override
+    {
+        for (strip_iterator it(16); it; ++it)
+        {
+            const vector<int>& board = *it;
+
+            clobber_1xn c(board);
+            _add_hash(c);
+
+            elephants e(board);
+            _add_hash(e);
+
+            nogo_1xn n(board);
+            _add_hash(n);
+        }
+
+    }
+};
+
+class test_local_mono_strips: public hash_test
+{
+public:
+    std::string _test_name() const override
+    {
+        return "Mono Strips (local)";
+    }
+
+    std::string _test_description() const override
+    {
+        return "Local hashes for long strips of a single color.";
+    }
+
+    void _test_fn() override
+    {
+        const size_t MAX_LEN = 50000;
+
+        static const int COLORS[] = {EMPTY, BLACK, WHITE};
+        const size_t N_COLORS = sizeof(COLORS) / sizeof(COLORS[0]);
+
+        vector<int> board;
+        board.reserve(MAX_LEN);
+
+        for (size_t color_idx = 0; color_idx < N_COLORS; color_idx++)
+        {
+            const int color = COLORS[color_idx];
+            board.clear();
+
+            for (size_t size = 1; size <= MAX_LEN; size++)
+            {
+                board.push_back(color);
+                assert(board.size() == size);
+
+                clobber_1xn c(board);
+                _add_hash(c);
+
+                elephants e(board);
+                _add_hash(e);
+
+                nogo_1xn n(board);
+                _add_hash(n);
+            }
+        }
+    }
+};
+
+class test_local_alt_strips: public hash_test
+{
+    std::string _test_name() const override
+    {
+        return "Alternating Strips (local)";
+    }
+
+    std::string _test_description() const override
+    {
+        return "Hashes for long alternating strip games (XOXO...XO, local).";
+    }
+
+    void _test_fn() override
+    {
+        const size_t MAX_PAIRS = 50000;
+
+        vector<int> board;
+        board.reserve(2 * MAX_PAIRS);
+
+        for (size_t i = 0; i < MAX_PAIRS; i++)
+        {
+            board.push_back(BLACK);
+            board.push_back(WHITE);
+
+            clobber_1xn c(board);
+            _add_hash(c);
+
+            elephants e(board);
+            _add_hash(e);
+
+            nogo_1xn n(board);
+            _add_hash(n);
+        }
+    }
+};
+
+class test_local_uint: public hash_test
+{
+public:
+    std::string _test_name() const override
+    {
+        return "C++ Integers (local)";
+    }
+
+    std::string _test_description() const override
+    {
+        return "Hashes for all 26 bit ints, and all 64 bit ints "
+            "consisting of a 26 bit int duplicated in 2 places with consistent "
+            "byte boundary alignment";
+    }
+
+    void _test_fn() override
+    {
+        const uint32_t N_BITS = 26;
+
+        for (uint32_t i = 0; i < (1 << N_BITS); i++)
+        {
+            local_hash lh1;
+            lh1.toggle_tile(0, i);
+            _add_hash(lh1);
+
+            if (i == 0)
+                continue;
+
+            uint64_t duplicated = i;
+            duplicated |= (duplicated << 32);
+            assert((duplicated >> 32) == i);
+
+            local_hash lh2;
+            lh2.toggle_tile(0, duplicated);
+            _add_hash(lh2);
+        }
+    }
+};
+
+class test_global_long_repeat: public hash_test
+{
+public:
+    std::string _test_name() const override
+    {
+        return "Repeated clobber_1xn (global)";
+    }
+
+    std::string _test_description() const override
+    {
+        return "Sumgame hash for a single clobber_1xn board, repeated "
+            "1-32768 times.";
+    }
+
+    void _test_fn() override
+    {
+        const size_t MAX_REPEAT = 32768;
+
+        const std::string board = "XOXO";
+
+        sumgame sum(BLACK);
+        vector<std::unique_ptr<clobber_1xn>> games;
+
+        for (size_t i = 0; i < MAX_REPEAT; i++)
+        {
+            games.emplace_back(new clobber_1xn(board));
+            sum.add(games.back().get());
+            _add_hash(sum);
+        }
+    }
+};
+
 } // namespace hash_tests
 } // namespace
 
 void hash_test_all()
 {
     {
-        hash_tests::test_local_all_games test;
+        //hash_tests::test_local_all_games test;
+        //test.run_test(true);
+    }
+    
+    {
+        hash_tests::test_global_long_repeat test;
         test.run_test(true);
     }
 }
