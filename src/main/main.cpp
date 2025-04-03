@@ -21,11 +21,13 @@ using std::cout, std::endl, std::string;
 //#include "hashing2.h"
 //#include "hashing3.h"
 #include "hashing.h"
+#include "hash_eval.h"
 int main(int argc, char** argv)
 {
 
 
-    test_hashing_final();
+    hash_test_all();
+    //test_hashing_final();
     return 0;
     /*
 
