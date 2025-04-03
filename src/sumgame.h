@@ -104,6 +104,8 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 
+    hash_t get_global_hash_value(); // TODO: this method may be temporary
+
 private:
     class undo_stack_unwinder;
 

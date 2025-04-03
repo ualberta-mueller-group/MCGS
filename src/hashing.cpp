@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <vector>
 #include <random>
+#include "sumgame.h"
 
 ////////////////////////////////////////////////// random_table
 std::mt19937_64 random_table::_rng;
@@ -424,23 +425,36 @@ void test_hashing_final()
     begin_test("Sums");
 
 
-    strip_iterator it1(13);
+    strip_iterator it1(10);
 
     while (++it1)
     {
         const vector<int>& board1 = it1.get();
-        clobber_1xn g1(board1);
+        //clobber_1xn g1(board1);
 
         for (int n_repeats = 1; n_repeats <= 70; n_repeats++)
         {
-            global_hash gh;
+            vector<game*> games;
+            games.resize(n_repeats);
+
+            sumgame sum(BLACK);
+
+            //global_hash gh;
 
             for (int i = 0; i < n_repeats; i++)
             {
-                gh.add_subgame(i, &g1);
+                //gh.add_subgame(i, &g1);
+
+                game* g = new clobber_1xn(board1);
+                games[i] = g;
+                sum.add(g);
             }
 
-            hash_t value = gh.get_value();
+            //hash_t value = gh.get_value();
+            hash_t value = sum.get_global_hash_value();
+
+            for (game* g : games)
+                delete g;
 
             test_hash(value);
         }
