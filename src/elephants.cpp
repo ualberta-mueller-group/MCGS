@@ -19,12 +19,10 @@ int player_dir(bw to_play)
 //////////////////////////////////////// elephants
 elephants::elephants(const string& game_as_string) : strip(game_as_string)
 {
-    init_game_type_info<elephants>(*this);
 }
 
 elephants::elephants(const vector<int>& board) : strip(board)
 {
-    init_game_type_info<elephants>(*this);
 }
 
 split_result elephants::_split_impl() const

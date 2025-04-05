@@ -44,7 +44,6 @@ private:
 
 inline up_star::up_star(int value, bool star) : _value(value), _star(star)
 {
-    init_game_type_info<up_star>(*this);
     THROW_ASSERT(negate_is_safe(_value));
 }
 

@@ -22,7 +22,6 @@ void dyadic_rational::simplify()
 
 dyadic_rational::dyadic_rational(int p, int q) : _p(p), _q(q)
 {
-    init_game_type_info<dyadic_rational>(*this);
     _check_legal();
     simplify();
 }
@@ -30,7 +29,6 @@ dyadic_rational::dyadic_rational(int p, int q) : _p(p), _q(q)
 dyadic_rational::dyadic_rational(const fraction& frac)
     : _p(frac.top()), _q(frac.bottom())
 {
-    init_game_type_info<dyadic_rational>(*this);
     _check_legal();
     simplify();
 }
