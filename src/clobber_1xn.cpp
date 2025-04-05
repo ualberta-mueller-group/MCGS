@@ -119,26 +119,6 @@ void clobber_1xn::_undo_move_impl()
     replace(to, opponent(player));
 }
 
-void clobber_1xn::_init_hash(local_hash& hash)
-{
-    strip::_default_init_hash(hash);
-}
-
-void clobber_1xn::_normalize_impl()
-{
-    strip::_default_normalize_impl();
-}
-
-void clobber_1xn::_undo_normalize_impl()
-{
-    strip::_default_undo_normalize_impl();
-}
-
-bool clobber_1xn::_order_less_impl(const game* rhs) const
-{
-    return strip::_default_order_less_impl(rhs);
-}
-
 game* clobber_1xn::inverse() const
 {
     return new clobber_1xn(inverse_board());

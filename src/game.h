@@ -47,7 +47,7 @@ public:
     void normalize();
     void undo_normalize();
 
-    bool order_less(const game* rhs) const;
+    relation order(const game* rhs) const;
 
 protected:
     /*
@@ -74,10 +74,10 @@ protected:
 
     virtual void _init_hash(local_hash& hash) = 0;
 
-    virtual void _normalize_impl() = 0;
-    virtual void _undo_normalize_impl() = 0;
+    virtual void _normalize_impl();
+    virtual void _undo_normalize_impl();
 
-    virtual bool _order_less_impl(const game* rhs) const = 0;
+    virtual relation _order_impl(const game* rhs) const;
 
     local_hash& _get_hash_ref();
     bool _hash_valid() const;

@@ -43,10 +43,7 @@ protected:
 
     void _init_hash(local_hash& hash) override;
 
-    void _normalize_impl() override;
-    void _undo_normalize_impl() override;
-
-    bool _order_less_impl(const game* rhs) const override;
+    relation _order_impl(const game* rhs) const override;
 
 private:
     // _value is updated as *this changes during search

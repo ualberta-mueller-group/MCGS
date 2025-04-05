@@ -597,7 +597,8 @@ hash_t sumgame::get_global_hash_value()
     public:
         bool operator()(const game* g1, const game* g2) const
         {
-            return g1->order_less(g2);
+            // Put larger games first
+            return g1->order(g2) == REL_GREATER;
         }
     };
 

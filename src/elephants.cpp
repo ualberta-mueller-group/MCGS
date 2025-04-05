@@ -131,11 +131,6 @@ void elephants::_undo_move_impl()
     remove_stone(to);
 }
 
-void elephants::_init_hash(local_hash& hash)
-{
-    strip::_default_init_hash(hash);
-}
-
 void elephants::_normalize_impl()
 {
     // Already normalized
@@ -144,11 +139,6 @@ void elephants::_normalize_impl()
 void elephants::_undo_normalize_impl()
 {
     // Nothing to undo
-}
-
-bool elephants::_order_less_impl(const game* rhs) const
-{
-    return strip::_default_order_less_impl(rhs);
 }
 
 move_generator* elephants::create_move_generator(bw to_play) const

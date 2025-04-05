@@ -84,17 +84,7 @@ void switch_game::_init_hash(local_hash& hash)
     }
 }
 
-void switch_game::_normalize_impl()
-{
-    // Already normalized
-}
-
-void switch_game::_undo_normalize_impl()
-{
-    // Nothing to undo
-}
-
-bool switch_game::_order_less_impl(const game* rhs) const
+relation switch_game::_order_impl(const game* rhs) const
 {
     const switch_game* other = reinterpret_cast<const switch_game*>(rhs);
     assert(dynamic_cast<const switch_game*>(rhs) == other);
@@ -103,7 +93,7 @@ bool switch_game::_order_less_impl(const game* rhs) const
     const switch_kind& kind2 = other->kind();
 
     if (kind1 != kind2)
-        return kind1 < kind2;
+        return kind1 < kind2 ? REL_LESS : REL_GREATER;
 
     const bool rational = this->is_rational();
     assert(other->is_rational() == rational);
@@ -113,27 +103,27 @@ bool switch_game::_order_less_impl(const game* rhs) const
         const fraction& f1 = this->value();
         const fraction& f2 = other->value();
 
-        return fraction::get_lexicographic_relation(f1, f2) == REL_LESS;
+        return fraction::get_lexicographic_relation(f1, f2);
     }
     else
     {
-        const fraction& f1_left = _left;
-        const fraction& f2_left = other->_left;
+        const fraction& f1_left = this->left();
+        const fraction& f2_left = other->left();
 
         relation rel_left = fraction::get_lexicographic_relation(f1_left, f2_left);
 
         if (rel_left != REL_EQUAL)
-            return rel_left == REL_LESS;
+            return rel_left;
 
-        const fraction& f1_right = _right;
-        const fraction& f2_right = other->_right;
+        const fraction& f1_right = this->right();
+        const fraction& f2_right = other->right();
 
         relation rel_right = fraction::get_lexicographic_relation(f1_right, f2_right);
 
-        return rel_right == REL_LESS;
+        return rel_right;
     }
 
-    return false;
+    return REL_EQUAL;
 }
 
 game* switch_game::inverse() const
