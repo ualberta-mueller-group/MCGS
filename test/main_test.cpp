@@ -3,7 +3,8 @@
 // Imports all unit tests
 //---------------------------------------------------------------------------
 
-const bool RUN_OVERRIDE_TESTS = false;
+#include "hash_eval.h"
+const bool RUN_OVERRIDE_TESTS = true;
 
 #include <cassert>
 #include <string>
@@ -36,13 +37,14 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include "sumgame_map_view_test.h"
 #include "custom_traits_test.h"
 #include "cgt_game_simplification_test.h"
+#include "hash_test.h"
 
 using std::cout, std::endl, std::string;
 
 namespace {
 void override_tests()
 {
-    file_parser_test_all();
+    hash_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -139,6 +141,8 @@ int main(int argc, const char** argv)
     custom_traits_test_all();
 
     cgt_game_simplification_test_all();
+
+    hash_test_all();
 
     cout << "SUCCESS" << endl;
 }

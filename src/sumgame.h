@@ -126,6 +126,32 @@ private:
     std::vector<sumgame_impl::change_record> _change_record_stack;
 };
 
+//////////////////////////////////////// sumgame_move_generator
+// TODO: Hide this in a namespace (i.e. __sumgame_impl) ???
+
+class sumgame_move_generator : public move_generator
+{
+public:
+    sumgame_move_generator(const sumgame& game, bw to_play);
+    ~sumgame_move_generator();
+
+    void operator++() override;
+    void next_move(bool init);
+    operator bool() const override;
+    sumgame_move gen_sum_move() const;
+
+    move gen_move() const override { assert(false); }
+
+private:
+    const game* _current() const { return _game.subgame(_subgame_idx); }
+
+    const sumgame& _game;
+    const int _num_subgames;
+    int _subgame_idx;
+    move_generator* _subgame_generator;
+};
+
+
 //---------------------------------------------------------------------------
 
 inline sumgame::sumgame(bw color) : alternating_move_game(color), _subgames()

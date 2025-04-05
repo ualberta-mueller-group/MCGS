@@ -101,4 +101,4 @@ private:
     bool _has_next;
 };
 
-void hash_test_all();
+void hash_eval_all();

@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 {
 
 
-    hash_test_all();
+    hash_eval_all();
     //test_hashing_final();
     return 0;
     /*
