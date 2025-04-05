@@ -12,12 +12,10 @@ using std::string, std::pair, std::vector;
 
 clobber_1xn::clobber_1xn(const vector<int>& board) : strip(board)
 {
-    init_game_type_info<clobber_1xn>(*this);
 }
 
 clobber_1xn::clobber_1xn(std::string game_as_string) : strip(game_as_string)
 {
-    init_game_type_info<clobber_1xn>(*this);
 }
 
 split_result clobber_1xn::_split_impl() const

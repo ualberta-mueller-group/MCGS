@@ -46,7 +46,6 @@ inline game* nimber::inverse() const
 
 inline nimber::nimber(int value) : _value(value)
 {
-    init_game_type_info<nimber>(*this);
     THROW_ASSERT(_value >= 0);
 }
 
