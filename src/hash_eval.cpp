@@ -568,7 +568,7 @@ public:
 } // namespace hash_tests
 } // namespace
 
-void hash_test_all()
+void hash_eval_all()
 {
     {
         //hash_tests::test_local_all_games test;
