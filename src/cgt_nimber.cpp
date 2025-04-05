@@ -40,22 +40,18 @@ void nimber::_init_hash(local_hash& hash)
     hash.toggle_tile(0, _value);
 }
 
-void nimber::_normalize_impl()
-{
-    // Already normalized
-}
-
-void nimber::_undo_normalize_impl()
-{
-    // Nothing to undo
-}
-
-bool nimber::_order_less_impl(const game* rhs) const
+relation nimber::_order_impl(const game* rhs) const
 {
     const nimber* other = reinterpret_cast<const nimber*>(rhs);
     assert(dynamic_cast<const nimber*>(rhs) == other);
 
-    return _value < other->_value;
+    const int& val1 = value();
+    const int& val2 = other->value();
+
+    if (val1 != val2)
+        return val1 < val2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
 }
 
 //---------------------------------------------------------------------------

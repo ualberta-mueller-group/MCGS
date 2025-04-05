@@ -79,17 +79,7 @@ void dyadic_rational::_init_hash(local_hash& hash)
     hash.toggle_tile(1, _q);
 }
 
-void dyadic_rational::_normalize_impl()
-{
-    // Already normalized
-}
-
-void dyadic_rational::_undo_normalize_impl()
-{
-    // Nothing to undo
-}
-
-bool dyadic_rational::_order_less_impl(const game* rhs) const
+relation dyadic_rational::_order_impl(const game* rhs) const
 {
     const dyadic_rational* other = reinterpret_cast<const dyadic_rational*>(rhs);
     assert(dynamic_cast<const dyadic_rational*>(rhs) == other);
@@ -98,15 +88,15 @@ bool dyadic_rational::_order_less_impl(const game* rhs) const
     const int& top2 = other->p();
 
     if (top1 != top2)
-        return top1 < top2;
+        return top1 < top2 ? REL_LESS : REL_GREATER;
 
     const int& bot1 = q();
     const int& bot2 = other->q();
 
     if (bot1 != bot2)
-        return bot1 < bot2;
+        return bot1 < bot2 ? REL_LESS : REL_GREATER;
 
-    return false;
+    return REL_EQUAL;
 }
 
 game* dyadic_rational::inverse() const

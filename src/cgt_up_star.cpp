@@ -2,6 +2,8 @@
 // Simple combinatorial games - multiples of up, down, with/without star
 //---------------------------------------------------------------------------
 #include "cgt_up_star.h"
+#include "cgt_basics.h"
+#include <charconv>
 
 //////////////////////////////////////// helper functions
 namespace {
@@ -80,32 +82,24 @@ void up_star::_init_hash(local_hash& hash)
     hash.toggle_tile(1, (uint8_t) _star);
 }
 
-void up_star::_normalize_impl()
-{
-    // Already normalized
-}
-
-void up_star::_undo_normalize_impl()
-{
-    // Nothing to undo
-}
-
-
-bool up_star::_order_less_impl(const game* rhs) const
+relation up_star::_order_impl(const game* rhs) const
 {
     const up_star* other = reinterpret_cast<const up_star*>(rhs);
     assert(dynamic_cast<const up_star*>(rhs) == other);
 
-    const int& val1 = _value;
-    const int& val2 = other->_value;
+    const int& ups1 = this->num_ups();
+    const int& ups2 = other->num_ups();
 
-    if (val1 != val2)
-        return val1 < val2;
+    if (ups1 != ups2)
+        return ups1 < ups2 ? REL_LESS : REL_GREATER;
 
-    const bool star1 = _star;
-    const bool star2 = other->_star;
+    const bool star1 = this->has_star();
+    const bool star2 = other->has_star();
 
-    return star1 < star2;
+    if (star1 != star2)
+        return star1 < star2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
 }
 
 //---------------------------------------------------------------------------

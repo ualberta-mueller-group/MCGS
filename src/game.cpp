@@ -1,8 +1,12 @@
 #include "game.h"
+#include "cgt_basics.h"
 
 #include <cassert>
+#include <cstdint>
 #include <limits>
 #include <memory>
+#include <typeindex>
+#include <unordered_set>
 
 using std::unique_ptr;
 
@@ -66,10 +70,10 @@ void game::play(const move& m, int to_play)
     if (_hash_valid())
         _hash_state = HASH_STATE_OK;
 
-    _play_impl(m, to_play);
     _push_undo_code(GAME_UNDO_PLAY);
+    _play_impl(m, to_play);
 
-    if (_hash_state == HASH_STATE_OK) // not updated
+    if (_hash_state != HASH_STATE_UPDATED)
         _hash_state = HASH_STATE_INVALID;
 }
 
@@ -81,7 +85,7 @@ void game::undo_move()
     _undo_move_impl();
     _pop_undo_code(GAME_UNDO_PLAY);
 
-    if (_hash_state == HASH_STATE_OK) // not updated
+    if (_hash_state != HASH_STATE_UPDATED)
         _hash_state = HASH_STATE_INVALID;
 
     _move_stack.pop_back();
@@ -112,21 +116,66 @@ void game::normalize()
 
 void game::undo_normalize()
 {
-    _pop_undo_code(GAME_UNDO_NORMALIZE);
     _undo_normalize_impl();
+    _pop_undo_code(GAME_UNDO_NORMALIZE);
 }
 
-
-bool game::order_less(const game* rhs) const
+relation game::order(const game* rhs) const
 {
+    assert(this != rhs); // not technically an error, but this shouldn't happen
+
     const game_type_t type1 = game_type();
     const game_type_t type2 = rhs->game_type();
 
     if (type1 != type2)
-        return type1 < type2;
+        return type1 < type2 ? REL_LESS : REL_GREATER;
 
     assert(type1 == type2);
-    return this->_order_less_impl(rhs);
+    relation rel = this->_order_impl(rhs);
+
+    assert(                       //
+            rel == REL_UNKNOWN || //
+            rel == REL_LESS ||    //
+            rel == REL_EQUAL ||   //
+            rel == REL_GREATER    //
+            );                    //
+
+    if (rel != REL_UNKNOWN)
+        return rel;
+
+    // If ordering hook isn't implemented, and stable sorting is used, don't
+    // change the order of games
+    return REL_EQUAL;
+}
+
+void game::_normalize_impl()
+{
+    // Trivial default implementation
+}
+
+void game::_undo_normalize_impl()
+{
+    // Trivial default implementation
+}
+
+relation game::_order_impl(const game* rhs) const
+{
+#ifndef NO_WARN_DEFAULT_IMPL
+    static std::unordered_set<std::type_index> unimplemented_set;
+
+    std::type_index tidx(typeid(*this));
+
+    if (unimplemented_set.find(tidx) == unimplemented_set.end())
+    {
+        unimplemented_set.insert(tidx);
+
+        std::cerr << "WARNING: Game type \"" << tidx.name() << "\" doesn't "
+            "implement ordering hook!" << std::endl;
+    }
+#endif
+
+    // Trivial default implementation
+    return REL_UNKNOWN;
 }
 
 void game::_push_undo_code(game_undo_code code)

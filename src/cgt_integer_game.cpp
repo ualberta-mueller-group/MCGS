@@ -52,23 +52,18 @@ void integer_game::_init_hash(local_hash& hash)
     hash.toggle_tile(0, _value);
 }
 
-void integer_game::_normalize_impl()
-{
-    // Already normalized
-}
-
-void integer_game::_undo_normalize_impl()
-{
-    // Nothing to undo
-}
-
-
-bool integer_game::_order_less_impl(const game* rhs) const
+relation integer_game::_order_impl(const game* rhs) const
 {
     const integer_game* other = reinterpret_cast<const integer_game*>(rhs);
     assert(dynamic_cast<const integer_game*>(rhs) == other);
 
-    return _value < other->value();
+    const int& val1 = value();
+    const int& val2 = other->value();
+
+    if (val1 != val2)
+        return val1 < val2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
 }
 
 //---------------------------------------------------------------------------
