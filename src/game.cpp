@@ -54,3 +54,14 @@ bool game::has_moves() const
 
     return false;
 }
+
+//---------------------------------------------------------------------------
+assert_restore_game::assert_restore_game(const game& g)
+    : _game(g), _game_hash(g.game_hash())
+{
+}
+
+assert_restore_game::~assert_restore_game()
+{
+    assert_equal(_game_hash, _game.game_hash());
+}
