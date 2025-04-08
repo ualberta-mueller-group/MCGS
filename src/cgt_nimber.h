@@ -72,3 +72,4 @@ inline void nimber::add_nimber(int&sum, int nimber)
 {
     sum ^= nimber;
 }
+//---------------------------------------------------------------------------
