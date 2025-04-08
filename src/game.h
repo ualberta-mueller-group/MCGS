@@ -185,6 +185,11 @@ inline local_hash& game::_get_hash_ref()
     return _hash;
 }
 
+inline int game::num_moves_played() const
+{
+    return _move_stack.size();
+}
+
 inline bool game::_hash_updatable() const
 {
     return _hash_state == HASH_STATE_NEED_UPDATE;
