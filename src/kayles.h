@@ -1,0 +1,81 @@
+//---------------------------------------------------------------------------
+// Impartial game - kayles
+//---------------------------------------------------------------------------
+//
+//
+//---------------------------------------------------------------------------
+#pragma once
+
+#include <cassert>
+#include "impartial_game.h"
+
+class kayles : public impartial_game
+{
+public:
+    kayles(int value);
+    void play(const move& m) override;
+    void play(const move& m, bw ignore_to_play) override;
+    void undo_move() override;
+    move_generator* create_move_generator() const override;
+    void print(std::ostream& str) const override;
+    game* inverse() const override;
+
+    int value() const { return _value; }
+    bool is_split() const { return _smaller_part > 0; }
+    static int static_result(int n);
+    static void print_move(move m, std::ostream& str);
+    static move encode(int take, int smaller, int larger);
+    static void init_cache();
+    void set_solved(int nimber) override;
+
+protected:
+    split_result _split_implementation() const override;
+
+private:
+    static void decode(move m, int& take, 
+    int& smaller, int& larger);
+    static void store(int n, int nimber);
+    static int get(int n); // -1 if not stored
+
+    int _value;
+    int _smaller_part; // used temporarily during play, after splitting game
+    
+    // TODO a temporary cache until we get transposition tables
+    static const int CACHE_SIZE = 100;
+    static int _cache[CACHE_SIZE];
+};
+
+inline void kayles::store(int n, int nimber)
+{
+    assert(n >= 0);
+    if (n < CACHE_SIZE)
+        _cache[n] = nimber;
+}
+
+inline int kayles::get(int n)
+{
+    assert(n >= 0);
+    if (n < CACHE_SIZE)
+        return _cache[n];
+    return -1;
+}
+
+inline void kayles::init_cache()
+{
+    for (int i=0; i < CACHE_SIZE; ++i)
+        _cache[i] = -1;
+}
+
+inline kayles::kayles(int value) : impartial_game(), _value(value), _smaller_part(0)
+{
+    assert(_value >= 0);
+    int cached_nimber = get(_value);
+    if (cached_nimber != -1)
+        set_solved(cached_nimber);
+}
+
+inline void kayles::play(const move& m, bw ignore_to_play)
+{
+    play(m);
+}
+
