@@ -214,3 +214,62 @@ global_zobrist_hash
 
 
 
+
+============================================================
+Global Transposition Table design
+
+Fields:
+- Common to all types of tables
+    - tag (hash bits not used by indexing, including "partial" bits)
+    - valid/invalid bit
+- Sumgame table
+    - win/loss bit
+- Impartial game table
+    - nimber (1? more?)
+- Possible future fields
+    - "importance" of this entry (for replacement policy)
+    - "best move" index
+    - heuristic value
+    - and more
+
+Should we have set associativity? Postpone until later?
+
+Configurable max memory usage?
+- May need to use "partial" index bits if max space isn't a power of 2 multiple
+    of the entry size. This means a bit will appear in both the index and tag
+
+We probably need at least two tables: one for sumgame, one for impartial_sumgame
+(or whatever nimber computation logic needs a cache)
+
+How to represent these values in memory?
+    - We shouldn't store a u64 for the tag, if the tag is likely just over half
+        as large as this.
+    - Entries can't store tags, because tag size isn't known at compile time.
+    - Some wasted memory is inevitable, unless every operation involves bit
+        shifts and masks.
+    - transposition_table<T> class with 3 arrays (tags, bits, entries)
+        - all 3 arrays allocated with new[]
+        - `tags` stores a tag for each entry, padded with zero bits to be a
+            multiple of 8 bits
+        - `bits` stores one or more bits for each entry, some defined by the
+            entry class. An entry always has a `valid` bit stored here, and
+            possibly more bits.
+        - `entries` is of type T*, and T can be of size 0
+        - transposition_table<T>::get() returns some kind of iterator instead
+            of the element type `T`. The iterator can access the extra bits.
+        - Instead of calling these "entry" and "iterator", call them
+            "entry_data" and "entry"? Is this more confusing?
+        - Tags can be tightly packed with no zero bit padding, if the bits
+            array has 8 empty bytes (byte aligned) at the end of the array,
+            and tag accesses are done with 2 u64 loads/stores
+        - This scheme results in minimal waste. Entries don't need to allocate
+            an entire u8 even when they only need a few bits. It's also still
+            simple enough 
+
+    TODO: work out the details of this. Ideally an entry type defines an enum
+    with one value for each bit used. Splitting data across 3 arrays may be bad
+    for cache locality, so consider combining the bits and tags. There doesn't
+    seem to be a good way to combine the entries array with the others, so for
+    now just keep these 2-3 arrays.
+
+
