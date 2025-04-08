@@ -31,7 +31,7 @@ This document includes more detailed information than `README.md`, including des
 - In both `alternating_move_game` and `sumgame`, the public `solve` methods are declared as `const`.
 - This means that while the game state may be modified during solve,
 it must be restored before the end of `solve` in any case, including timeout or other failure modes.
-- `class assert_restore_game` in `alternating_move_game.h` is a stub for
+- `class assert_restore_alternating_game` in `alternating_move_game.h` is a stub for
 checking that the state is restored
     - a naive first implementation just checks the length of the move stack
     - TODO it probably is broken for sumgame, since it uses a different stack
