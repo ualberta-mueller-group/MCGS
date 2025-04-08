@@ -207,3 +207,13 @@ void game::_pre_hash_update()
         _hash_state = HASH_STATE_INVALID;
 }
 
+//---------------------------------------------------------------------------
+assert_restore_game::assert_restore_game(const game& g)
+    : _game(g), _game_hash(g.game_hash())
+{
+}
+
+assert_restore_game::~assert_restore_game()
+{
+    assert_equal(_game_hash, _game.game_hash());
+}
