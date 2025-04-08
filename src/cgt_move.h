@@ -101,4 +101,6 @@ inline move encode3(int first, int second, bw color)
 }
 
 std::string print(const move& m);
+std::string print_two_part_move(const move& m);
+
 } // namespace cgt_move
