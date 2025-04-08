@@ -24,6 +24,8 @@ public:
     void print(std::ostream& str) const override;
     static int nim_sum(const std::vector<int>& values);     // uses Nim formula
     static int nim_sum(const std::vector<nimber*>& values); // uses Nim formula
+   static void add_nimber(int&sum, int nimber);
+
 
 private:
     int _value;
@@ -39,4 +41,8 @@ inline nimber::nimber(int value) : _value(value)
     THROW_ASSERT(_value >= 0);
 }
 
+inline void nimber::add_nimber(int&sum, int nimber)
+{
+    sum ^= nimber;
+}
 //---------------------------------------------------------------------------
