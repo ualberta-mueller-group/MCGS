@@ -30,8 +30,9 @@ public:
     void set_active(bool status);
     move last_move() const;
     // Used to verify that game is restored after search
-    int moves_hash() const; // TODO do a proper implementation
+    int game_hash() const; // TODO placeholder - do a proper implementation
     bool has_moves() const;
+    int num_moves_played() const;
 
     /*
         When overriding play() and undo_move(), the derived type's
@@ -160,9 +161,14 @@ inline split_result game::_split_implementation() const
     return split_result(); // no value
 }
 
-inline int game::moves_hash() const
+inline int game::num_moves_played() const
 {
     return _move_stack.size();
+}
+
+inline int game::game_hash() const
+{
+    return num_moves_played(); // TODO placeholder only
 }
 
 inline std::ostream& operator<<(std::ostream& out, const game& g)
