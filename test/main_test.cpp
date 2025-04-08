@@ -17,6 +17,8 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include "cgt_switch_test.h"
 #include "cgt_up_star_test.h"
 #include "clobber_1xn_test.h"
+#include "impartial_game_wrapper_test.h"
+#include "kayles_test.h"
 #include "nogo_1xn_test.h"
 #include "sumgame_test.h"
 #include "elephants_test.h"
@@ -125,6 +127,10 @@ int main(int argc, const char** argv)
         sumgame_test_all();
     }
 
+    // Impartial games
+    kayles_test_all();
+    impartial_game_wrapper_test_all();
+    
     file_parser_test_all();
     cli_options_test_all();
     simple_text_hash_test_all();

@@ -1,0 +1,84 @@
+//---------------------------------------------------------------------------
+// Implementation of impartial_game_wrapper
+//---------------------------------------------------------------------------
+#include "impartial_game_wrapper.h"
+
+#include <ostream>
+#include <string>
+#include <sstream>
+#include "cgt_basics.h"
+#include "cgt_nimber.h"
+
+game* impartial_game_wrapper::inverse() const
+{
+    return new impartial_game_wrapper(_game->inverse());
+}
+
+void impartial_game_wrapper::print(std::ostream& str) const
+{
+    str << "[impartial_game_wrapper of " << *_game << ']';
+}
+
+//---------------------------------------------------------------------------
+class ig_wrapper_move_generator : public move_generator
+{
+public:
+    ig_wrapper_move_generator(const impartial_game_wrapper& wrapper);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    const game* _game; // the wrapped game, not the wrapper itself
+    ebw _color;
+    move_generator* _color_mg;
+};
+
+ig_wrapper_move_generator::ig_wrapper_move_generator(
+    const impartial_game_wrapper& wrapper)
+    : move_generator(BLACK), _game(wrapper.wrapped_game()),
+      _color(BLACK),
+      _color_mg(_game->create_move_generator(BLACK))
+{ }
+
+void ig_wrapper_move_generator::operator++()
+{
+    ++(*_color_mg);
+    if (! (*_color_mg)) // end of moves for sub-generator
+    {
+        delete(_color_mg);
+        if (_color == BLACK)
+        {
+            _color = WHITE;
+            _color_mg = _game->create_move_generator(WHITE);
+        }
+        else
+            _color = EMPTY;
+    }
+}
+
+ig_wrapper_move_generator::operator bool() const
+{
+    return (_color != EMPTY) && (*_color_mg);
+}
+
+move ig_wrapper_move_generator::gen_move() const
+{
+    assert(operator bool());
+    const move m = _color_mg->gen_move();
+    return cgt_move::encode(m, _color);
+}
+
+split_result
+impartial_game_wrapper::_split_implementation() const
+{
+    split_result subgames = _game->_split_implementation();
+    return split_result();
+}
+
+
+//---------------------------------------------------------------------------
+move_generator* impartial_game_wrapper::create_move_generator() const
+{
+    return new ig_wrapper_move_generator(*this);
+}
