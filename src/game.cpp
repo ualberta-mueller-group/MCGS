@@ -2,7 +2,6 @@
 #include "cgt_basics.h"
 
 #include <cassert>
-#include <cstdint>
 #include <limits>
 #include <memory>
 #include <typeindex>

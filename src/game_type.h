@@ -1,10 +1,8 @@
 #pragma once
 
 #include <type_traits>
-#include <typeindex>
 #include <typeinfo>
 #include <cassert>
-#include <iostream>
 
 class game;
 

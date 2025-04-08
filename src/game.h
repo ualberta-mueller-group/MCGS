@@ -12,7 +12,6 @@
 #include "cgt_move.h"
 #include "game_type.h"
 #include "hashing.h"
-#include "throw_assert.h"
 
 //---------------------------------------------------------------------------
 
