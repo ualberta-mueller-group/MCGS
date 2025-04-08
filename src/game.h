@@ -82,6 +82,8 @@ protected:
     void _mark_hash_updated();
 
 public:
+    virtual split_result _split_implementation() const;
+
     virtual move_generator* create_move_generator(bw to_play) const = 0;
 
     /*
