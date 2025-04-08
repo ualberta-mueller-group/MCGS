@@ -3,7 +3,6 @@
 //---------------------------------------------------------------------------
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
-#include "file_parser.h"
 #include "game.h"
 #include "safe_arithmetic.h"
 #include "utilities.h"

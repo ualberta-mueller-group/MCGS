@@ -6,12 +6,11 @@
 
 namespace {
 std::unordered_map<std::type_index, game_type_t> game_type_map;
-game_type_t next_id = 0;
+game_type_t next_id = 1; // at least 1; may be used in multiplication
 } // namespace
 
-namespace __game_type_impl { // NOLINT(readability-identifier-naming)
+namespace __game_type_impl {
 
-// NOLINTNEXTLINE(readability-identifier-naming)
 game_type_t __get_game_type(const std::type_info& info)
 {
     const std::type_index& idx = std::type_index(info);

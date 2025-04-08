@@ -3,7 +3,6 @@
 //---------------------------------------------------------------------------
 #include "cgt_up_star.h"
 #include "cgt_basics.h"
-#include <charconv>
 
 //////////////////////////////////////// helper functions
 namespace {
