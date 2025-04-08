@@ -214,7 +214,7 @@ const bool PRINT_SUBGAMES = false;
 // plus sumgame simplification
 bool sumgame::solve() const
 {
-    assert_restore_game ar(*this);
+    assert_restore_alternating_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     optional<solve_result> result = sum.solve_with_timeout(0);
@@ -236,7 +236,7 @@ bool sumgame::solve() const
 optional<solve_result> sumgame::solve_with_timeout(
     unsigned long long timeout) const
 {
-    assert_restore_game ar(*this);
+    assert_restore_alternating_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     _should_stop = false;
@@ -279,7 +279,7 @@ optional<solve_result> sumgame::solve_with_timeout(
 
 bool sumgame::solve_with_games(std::vector<game*>& gs) const
 {
-    assert_restore_game ar(*this);
+    assert_restore_alternating_game ar(*this);
 
     sumgame& sum = const_cast<sumgame&>(*this);
 
@@ -304,7 +304,7 @@ bool sumgame::solve_with_games(std::vector<game*>& gs) const
 
 bool sumgame::solve_with_games(game* g) const
 {
-    assert_restore_game ar(*this);
+    assert_restore_alternating_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     sum.add(g);
