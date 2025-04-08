@@ -1,17 +1,14 @@
 #include "hash_test.h"
-#include <functional>
-#include <iostream>
 #include <memory>
 #include <type_traits>
 #include <unordered_set>
 
 #include "clobber_1xn.h"
 #include "game.h"
+#include "nogo_1xn.h"
 #include "sumgame.h"
 #include "hashing.h"
 #include "all_game_headers.h"
-#include "sstream"
-#include "test/test_utilities.h"
 
 using namespace std;
 
@@ -74,7 +71,6 @@ void test_sum_recursive(sumgame& sum, int remaining_depth)
         return;
 
     const bw initial_to_play = sum.to_play();
-    const hash_t initial_hash = sum.get_global_hash_value();
 
     unique_ptr<sumgame_move_generator> mgp1(sum.create_sum_move_generator(BLACK));
     unique_ptr<sumgame_move_generator> mgp2(sum.create_sum_move_generator(WHITE));
@@ -82,6 +78,7 @@ void test_sum_recursive(sumgame& sum, int remaining_depth)
     for (sumgame_move_generator* mg: {mgp1.get(), mgp2.get()})
     {
         sum.set_to_play(mg->to_play());
+        const hash_t initial_hash = sum.get_global_hash_value();
 
         while (*mg)
         {
@@ -153,14 +150,13 @@ void test_recursive_all()
     }
 }
 
-
 /*
-    Play moves on a strip non-recursively, and check that the hash after a move
+    Play moves on a strip recursively, and check that the hash after a move
     is different from the initial hash, and equal to computing the hash for a
     copy of the game obtained after the move.
 */
 template <class T>
-void test_strip(T& g)
+void test_strip(T& g, int remaining_depth)
 {
     static_assert(is_base_of_v<strip, T>);
     static_assert(!is_abstract_v<T>);
@@ -185,6 +181,8 @@ void test_strip(T& g)
 
             assert(new_hash == expected_hash);
 
+            test_strip<T>(g, remaining_depth - 1);
+
             g.undo_move();
             const hash_t undo_hash = g.compute_hash().get_value();
 
@@ -194,12 +192,12 @@ void test_strip(T& g)
 }
 
 template <class T>
-void test_strip(T&& g)
+void test_strip(T&& g, int remaining_depth)
 {
-    test_strip(g);
+    test_strip(g, remaining_depth);
 }
 
-// check that all permutations consisting of all games give the same global hash
+// check that all permutations containing all games give the same global hash
 hash_t test_sum_order_impl(sumgame& sum, vector<game*>& games, vector<bool>& used)
 {
     assert(games.size() == used.size());
@@ -235,7 +233,9 @@ hash_t test_sum_order_impl(sumgame& sum, vector<game*>& games, vector<bool>& use
     if (!first)
         return hash;
 
-    assert(sum.num_active_games() == games.size());
+    assert(sum.num_active_games() >= 0); // for cast on next line
+    assert((unsigned long long) sum.num_active_games() == games.size());
+
     hash = sum.get_global_hash_value();
     return hash;
 }
@@ -250,6 +250,7 @@ void test_sum_order()
         shared_ptr<game>(new integer_game(-20)),
         shared_ptr<game>(new nimber(3)),
         shared_ptr<game>(new up_star(6, true)),
+        shared_ptr<game>(new clobber_1xn("XOXOXO")),
         shared_ptr<game>(new dyadic_rational(fraction(9, 8))),
         shared_ptr<game>(new switch_game(fraction(21, 16), fraction(-13, 4))),
     };
@@ -271,9 +272,70 @@ void test_sum_order()
     test_sum_order_impl(sum, games, used);
 }
 
+/*
+   Check global_hash after mutating a sum
+*/
 void test_sum_mutate()
 {
-    assert(false); // TODO
+    // TODO this could try permutations too? How to do this?
+    clobber_1xn g1("X..O.X");
+    up_star g2(0, false);
+
+    // Empty sums
+    sumgame sum_b(BLACK);
+    sumgame sum_w(WHITE);
+
+    const hash_t b1 = sum_b.get_global_hash_value();
+    const hash_t w1 = sum_w.get_global_hash_value();
+    assert(b1 != w1);
+
+    // Add games
+    sum_b.add(&g1);
+    sum_w.add(&g1);
+
+    const hash_t b2 = sum_b.get_global_hash_value();
+    const hash_t w2 = sum_w.get_global_hash_value();
+    assert(b1 != b2 && w1 != w2 && b2 != w2);
+
+    // Remove games --> empty again
+    sum_b.pop(&g1);
+    sum_w.pop(&g1);
+
+    const hash_t b3 = sum_b.get_global_hash_value();
+    const hash_t w3 = sum_w.get_global_hash_value();
+    assert(b3 == b1 && w3 == w1);
+
+    // Add games in different orders
+    // g1 then g2
+    sum_b.add(&g1);
+    sum_b.add(&g2);
+    const hash_t b4 = sum_b.get_global_hash_value();
+    sum_b.pop(&g2);
+    sum_b.pop(&g1);
+
+    // g2 then g1
+    sum_b.add(&g2);
+    sum_b.add(&g1);
+    const hash_t b5 = sum_b.get_global_hash_value();
+    sum_b.pop(&g1);
+    sum_b.pop(&g2);
+
+    assert(b4 == b5);
+
+    // Modify to_play
+    sum_b.add(&g1);
+    sum_w.add(&g1);
+
+    assert(sum_b.to_play() == BLACK);
+    assert(sum_w.to_play() == WHITE);
+    const hash_t b6 = sum_b.get_global_hash_value();
+    const hash_t w6 = sum_w.get_global_hash_value();
+
+    sum_b.set_to_play(WHITE);
+    sum_w.set_to_play(BLACK);
+    const hash_t b7 = sum_b.get_global_hash_value();
+    const hash_t w7 = sum_w.get_global_hash_value();
+    assert(b6 == w7 && w6 == b7);
 }
 
 } // namespace
@@ -282,9 +344,9 @@ void hash_test_all()
 {
     test_recursive_all();
 
-    test_strip(clobber_1xn("XOXOXOXOXOXOXOXO"));
-    test_strip(nogo_1xn("........."));
-    test_strip(elephants("...O..X..X...O..X.O.X.O"));
+    test_strip(clobber_1xn("XOXOXO"), 3);
+    test_strip(nogo_1xn("...."), 3);
+    test_strip(elephants("..X..O.X.O"), 3);
 
     test_sum_order();
     test_sum_mutate();
