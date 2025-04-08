@@ -203,6 +203,18 @@ inline move_generator::move_generator(bw to_play) : _to_play(to_play)
 
 //---------------------------------------------------------------------------
 
+class assert_restore_game
+{
+public:
+    assert_restore_game(const game& g);
+    ~assert_restore_game();
+
+private:
+    const game& _game;
+    const int _game_hash;
+};
+//---------------------------------------------------------------------------
+
 std::ostream& operator<<(std::ostream& os, const split_result& split);
 
 template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
