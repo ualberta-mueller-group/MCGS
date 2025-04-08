@@ -553,6 +553,7 @@ void sumgame::print(std::ostream& str) const
 hash_t sumgame::get_global_hash_value()
 {
     global_hash gh;
+    gh.set_to_play(to_play());
 
     std::vector<game*> active_games;
 

@@ -14,6 +14,7 @@ namespace random_tables {
 random_table default_table(1024);
 random_table type_table(32);
 random_table modifier_table(128);
+random_table player_table(1);
 } // namespace random_tables 
 
 random_table::random_table(size_t n_positions): _n_positions(n_positions)
@@ -70,12 +71,14 @@ void local_hash::toggle_type(const game_type_t& type)
 void global_hash::reset()
 {
     _value = 0;
+    _to_play = EMPTY;
     _subgame_hashes.clear();
     _subgame_valid_mask.clear();
 }
 
 hash_t global_hash::get_value() const
 {
+    assert(_to_play != EMPTY); // Don't forget to set the player
     return _value;
 }
 
@@ -101,6 +104,20 @@ void global_hash::remove_subgame(size_t subgame_idx, game* g)
     _value ^= _subgame_hashes[subgame_idx];
     _subgame_valid_mask[subgame_idx] = false;
     _subgame_hashes[subgame_idx] = 0;
+}
+
+void global_hash::set_to_play(bw new_to_play)
+{
+    assert(new_to_play == BLACK || new_to_play == WHITE);
+
+    if (_to_play != EMPTY)
+    {
+        _value ^= random_tables::player_table.get(_to_play, _to_play);
+        _to_play = EMPTY;
+    }
+
+    _to_play = new_to_play;
+    _value ^= random_tables::player_table.get(new_to_play, new_to_play);
 }
 
 void global_hash::_resize_if_out_of_range(size_t subgame_idx)

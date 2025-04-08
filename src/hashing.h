@@ -87,6 +87,7 @@ namespace random_tables {
 extern random_table default_table;
 extern random_table type_table;
 extern random_table modifier_table;
+extern random_table player_table;
 } // namespace random_tables 
 
 ////////////////////////////////////////////////// local_hash
@@ -124,7 +125,7 @@ private:
 class global_hash
 {
 public:
-    global_hash(): _value(0)
+    global_hash(): _value(0), _to_play(EMPTY)
     {
     }
 
@@ -134,12 +135,15 @@ public:
     void add_subgame(size_t subgame_idx, game* g);
     void remove_subgame(size_t subgame_idx, game* g);
 
+    void set_to_play(bw to_play);
+
 private:
     void _resize_if_out_of_range(size_t subgame_idx);
     hash_t _get_modified_hash(size_t subgame_idx, game* g);
 
     hash_t _value;
 
+    ebw _to_play;
     std::vector<hash_t> _subgame_hashes;
     std::vector<bool> _subgame_valid_mask;
 };
