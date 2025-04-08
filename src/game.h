@@ -76,9 +76,9 @@ protected:
         To create an absent split_result:
             split_result sr = split_result();
     */
+public:
     virtual split_result _split_implementation() const;
 
-public:
     virtual move_generator* create_move_generator(bw to_play) const = 0;
 
     /*
