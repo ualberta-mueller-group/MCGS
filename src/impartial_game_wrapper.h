@@ -32,9 +32,6 @@ public:
     game* wrapped_game() const {return _game;}
     game* inverse() const override; // caller takes ownership
 
-protected:
-    split_result _split_implementation() const override;
-
 private:
     game* _game;
 };

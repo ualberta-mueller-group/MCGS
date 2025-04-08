@@ -69,14 +69,6 @@ move ig_wrapper_move_generator::gen_move() const
     return cgt_move::encode(m, _color);
 }
 
-split_result
-impartial_game_wrapper::_split_implementation() const
-{
-    split_result subgames = _game->_split_implementation();
-    return split_result();
-}
-
-
 //---------------------------------------------------------------------------
 move_generator* impartial_game_wrapper::create_move_generator() const
 {
