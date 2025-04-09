@@ -55,6 +55,8 @@ public:
         const size_t _table_idx;
         const hash_t _tag;
         Entry* _entry_ptr;
+
+        friend ttable<Entry>;
     };
 
     ttable(size_t index_width, size_t extra_bits)
