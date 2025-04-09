@@ -28,7 +28,16 @@ public:
     void undo_move() override;
     move_generator* create_move_generator(bw to_play) const override;
 
+    // Impartial game interface
+    void play(const move& m) override;
+    virtual move_generator* create_move_generator() const override;
+
+    // value() is updated as *this changes during search
+    // nim_value() is the root's value
     int value() const { return _value; }
+    
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
 
     void play(const move& m, bw to_play) override;
     void undo_move() override;
@@ -72,4 +81,3 @@ inline void nimber::add_nimber(int&sum, int nimber)
 {
     sum ^= nimber;
 }
-//---------------------------------------------------------------------------
