@@ -9,7 +9,7 @@ void nimber::play(const move& m, bw to_play)
     assert(number > 0);
     assert(number <= _value);
     _value -= number;
-    game::play(m, to_play);
+    impartial_game::play(m, to_play);
 }
 
 void nimber::undo_move()
