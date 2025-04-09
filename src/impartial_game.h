@@ -31,9 +31,9 @@ public:
     virtual move_generator* create_move_generator() const = 0;
 
     // These functions needed by game class interface
-    // They also make it possible to include any 
+    // They also make it possible to include an
     // impartial game in any (possibly partizan) sum
-    void play(const move& m, bw ignore_to_play) override;
+    void play(const move& m, bw to_play) override;
     move_generator* create_move_generator(bw ignore_to_play) const override;
     
     bool is_solved() const;
