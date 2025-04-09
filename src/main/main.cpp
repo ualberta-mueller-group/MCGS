@@ -22,8 +22,12 @@ using std::cout, std::endl, std::string;
 //#include "hashing3.h"
 #include "hashing.h"
 #include "hash_eval.h"
+#include "transposition.h"
 int main(int argc, char** argv)
 {
+
+    test_transposition();
+    return 0;
 
 
     hash_eval_all();
