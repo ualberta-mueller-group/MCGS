@@ -71,33 +71,37 @@ public:
 
         // _entries
         if constexpr (!_ENTRY_EMPTY)
-            _entries.resize(_n_entries);
+            _entries = new Entry[_n_entries];
         else
-            _entries.resize(1);
+            _entries = new Entry[1];
 
         // _bits
         const size_t bits_total = (_bits_per_entry * _n_entries);
-        const size_t bits_vec_size = (bits_total / size_in_bits<unsigned int>()) + 1;
-        _bits.resize(bits_vec_size);
+        const size_t bits_arr_size = (bits_total / size_in_bits<unsigned int>()) + 1;
+        _bits = new unsigned int[bits_arr_size];
 
         // _tags
         const size_t full_bytes_per_tag = _tag_width / size_in_bits<uint8_t>();
         const size_t partial_bytes_per_tag = (full_bytes_per_tag * size_in_bits<uint8_t>()) < _tag_width;
         _bytes_per_tag = full_bytes_per_tag + partial_bytes_per_tag;
         assert(_bytes_per_tag * size_in_bits<uint8_t>() >= _tag_width);
-        const size_t tags_vec_size = _bytes_per_tag * _n_entries;
-        _tags.resize(tags_vec_size);
+        const size_t tags_arr_size = _bytes_per_tag * _n_entries;
+        _tags = new uint8_t[tags_arr_size];
 
         // Total memory usage
         uint64_t total_bytes = 0;
-        total_bytes += _entries.size() * sizeof(_entries[0]);
-        total_bytes += _bits.size() * sizeof(_bits[0]);
-        total_bytes += _tags.size() * sizeof(_tags[0]);
+        total_bytes += (_ENTRY_EMPTY ? 1 : _n_entries) * sizeof(_entries[0]);
+        total_bytes += bits_arr_size * sizeof(_bits[0]);
+        total_bytes += tags_arr_size * sizeof(_tags[0]);
 
         std::cout << "Approximate table size: " << (total_bytes / (1024 * 1024)) << " MiB" << std::endl;
-        std::cout << _entries.size() << std::endl;
-        std::cout << _bits.size() << std::endl;
-        std::cout << _tags.size() << std::endl;
+    }
+
+    ~ttable()
+    {
+        delete[] _entries;
+        delete[] _bits;
+        delete[] _tags;
     }
 
     iterator get(const hash_t& hash)
@@ -131,13 +135,13 @@ private:
         return (hash >> _index_width);
     }
 
-    void _get_bit_location(size_t entry_idx, size_t bit_idx, size_t& bits_vec_idx, size_t& element_bit_idx) const
+    void _get_bit_location(size_t entry_idx, size_t bit_idx, size_t& bits_arr_idx, size_t& element_bit_idx) const
     {
         assert(entry_idx < _n_entries);
         assert(bit_idx < _bits_per_entry);
 
         const size_t global_bit_idx = _bits_per_entry * entry_idx + bit_idx;
-        bits_vec_idx = global_bit_idx / size_in_bits<unsigned int>();
+        bits_arr_idx = global_bit_idx / size_in_bits<unsigned int>();
         element_bit_idx = global_bit_idx % size_in_bits<unsigned int>();
     }
 
@@ -146,11 +150,11 @@ private:
         assert(entry_idx < _n_entries);
         assert(bit_idx < _bits_per_entry);
 
-        size_t bits_vec_idx;
+        size_t bits_arr_idx;
         size_t element_bit_idx;
-        _get_bit_location(entry_idx, bit_idx, bits_vec_idx, element_bit_idx);
+        _get_bit_location(entry_idx, bit_idx, bits_arr_idx, element_bit_idx);
 
-        const unsigned int& element = _bits[bits_vec_idx];
+        const unsigned int& element = _bits[bits_arr_idx];
         return (element >> element_bit_idx) & 0x1;
     }
 
@@ -159,11 +163,11 @@ private:
         assert(entry_idx < _n_entries);
         assert(bit_idx < _bits_per_entry);
 
-        size_t bits_vec_idx;
+        size_t bits_arr_idx;
         size_t element_bit_idx;
-        _get_bit_location(entry_idx, bit_idx, bits_vec_idx, element_bit_idx);
+        _get_bit_location(entry_idx, bit_idx, bits_arr_idx, element_bit_idx);
 
-        unsigned int& element = _bits[bits_vec_idx];
+        unsigned int& element = _bits[bits_arr_idx];
         const unsigned int bit_mask = ((unsigned int) 1) << element_bit_idx;
         const unsigned int inverse_bit_mask = ~bit_mask;
 
@@ -234,9 +238,11 @@ private:
         return &_entries[entry_idx];
     }
 
-    std::vector<Entry> _entries;
-    std::vector<unsigned int> _bits;
-    std::vector<uint8_t> _tags;
+
+    Entry* _entries;
+    unsigned int* _bits;
+    uint8_t* _tags;
+
 
     static constexpr bool _ENTRY_EMPTY = std::is_empty_v<Entry>;
 
