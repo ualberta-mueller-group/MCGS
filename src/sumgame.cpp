@@ -32,6 +32,8 @@ using std::endl;
 using std::optional;
 using sumgame_impl::change_record;
 
+ttable_sumgame sumgame::_tt(24, 1);
+
 //---------------------------------------------------------------------------
 
 sumgame_move_generator::sumgame_move_generator(const sumgame& game, bw to_play)
@@ -320,6 +322,13 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
     simplify_basic();
 
+    const hash_t current_hash = get_global_hash_value();
+    ttable_sumgame::iterator tt_iterator = _tt.get(current_hash);
+    if (tt_iterator.is_valid())
+    {
+        return solve_result(tt_iterator.get_bit(0));
+    }
+
     const bw toplay = to_play();
 
     std::unique_ptr<sumgame_move_generator> mgp(
@@ -358,11 +367,17 @@ optional<solve_result> sumgame::_solve_with_timeout()
         if (result.win)
         {
             /// undo_simplify_basic();
+
+            tt_iterator.set_valid(true);
+            tt_iterator.set_bit(0, result.win);
             return result;
         }
     }
 
     /// undo_simplify_basic();
+
+    tt_iterator.set_valid(true);
+    tt_iterator.set_bit(0, false);
     return solve_result(false);
 }
 

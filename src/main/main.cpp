@@ -26,13 +26,13 @@ using std::cout, std::endl, std::string;
 int main(int argc, char** argv)
 {
 
-    test_transposition();
-    return 0;
+    //test_transposition();
+    //return 0;
 
 
-    hash_eval_all();
+    //hash_eval_all();
     //test_hashing_final();
-    return 0;
+    //return 0;
     /*
 
     int test_no = 0;

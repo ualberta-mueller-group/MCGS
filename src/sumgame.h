@@ -8,6 +8,14 @@
 #include "game.h"
 #include <ctime>
 #include "sumgame_change_record.h"
+#include "transposition.h"
+
+
+struct empty_struct
+{
+};
+
+typedef ttable<empty_struct> ttable_sumgame;
 
 //////////////////////////////////////// forward declarations
 class sumgame_move_generator;
@@ -124,6 +132,8 @@ private:
     std::vector<sumgame_undo_code> _undo_code_stack;
     std::vector<play_record> _play_record_stack;
     std::vector<sumgame_impl::change_record> _change_record_stack;
+
+    static ttable_sumgame _tt;
 };
 
 //////////////////////////////////////// sumgame_move_generator
