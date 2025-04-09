@@ -1,4 +1,9 @@
 #include "transposition.h"
+#include <memory>
+#include <sstream>
+
+#include "clobber_1xn.h"
+#include "sumgame.h"
 
 ////////////////////////////////////////////////////////////////////// design
 /*
@@ -11,16 +16,23 @@
 ////////////////////////////////////////////////////////////////////// .h file
 
 #include <cstdint>
+#include <sstream>
 #include <type_traits>
 #include <vector>
 #include <iostream>
 #include "hashing.h"
 #include "utilities.h"
 
-class ttable_entry_sumgame
+class ttable_entry_non_empty
 {
 public:
-    std::string sum_string; // for testing purposes
+    uint8_t win;
+};
+
+class ttable_entry_empty
+{
+public:
+
 };
 
 template <class Entry>
@@ -37,9 +49,7 @@ public:
 
         void set_valid(bool new_valid)
         {
-            _table[_table_idx] = Entry();
-            _table._set_bit(_table_idx, 0, new_valid);
-            _table._set_tag(_table_idx, _tag * new_valid);
+            _table._reset(_table_idx, _tag, new_valid);
         }
 
         bool get_bit(size_t bit_idx) const
@@ -80,7 +90,8 @@ public:
     };
 
     ttable(size_t index_width, size_t extra_bits)
-        : _index_width(index_width),
+        : _n_entries(1 << index_width),
+        _index_width(index_width),
         _tag_width(size_in_bits<hash_t>() - index_width),
         _n_bits(extra_bits + 1)
 
@@ -89,23 +100,36 @@ public:
         assert(index_width <= size_in_bits<hash_t>());
 
         // _entries
-        const size_t entry_count = (1 << index_width);
-        _entries.resize(entry_count);
+        if constexpr (!_ENTRY_EMPTY)
+            _entries.resize(_n_entries);
+        else
+            _entries.resize(1);
 
         // _bits
-        const size_t bits_per_entry = 1 + extra_bits;
-        const size_t bits_total = (bits_per_entry * entry_count);
-        const size_t bits_vec_size = (bits_total / sizeof(unsigned int)) + 1;
+        const size_t bits_total = (_n_bits * _n_entries);
+        const size_t bits_vec_size = (bits_total / size_in_bits<unsigned int>()) + 1;
         _bits.resize(bits_vec_size);
 
         // _tags
         const size_t full_bytes_per_tag = _tag_width / size_in_bits<uint8_t>();
-        const size_t partial_bytes_per_tag = (full_bytes_per_tag * size_in_bits<uint8_t>()) > 0;
+        const size_t partial_bytes_per_tag = (full_bytes_per_tag * size_in_bits<uint8_t>()) < _tag_width;
         _n_bytes_per_tag = full_bytes_per_tag + partial_bytes_per_tag;
-        const size_t tags_vec_size = _n_bytes_per_tag * entry_count;
+        const size_t tags_vec_size = _n_bytes_per_tag * _n_entries;
         _tags.resize(tags_vec_size);
 
-        // TODO: total memory usage
+        // TODO: approximate total memory usage
+        uint64_t total_bytes = 0;
+        total_bytes += _entries.size() * sizeof(Entry);
+        total_bytes += _bits.size() * sizeof(unsigned int);
+        total_bytes += _tags.size() * sizeof(uint8_t);
+
+        std::cout << "Approximate table size: " << (total_bytes / (1024 * 1024)) << " MiB" << std::endl;
+        std::cout << _entries.size() << std::endl;
+        std::cout << _bits.size() << std::endl;
+        std::cout << _tags.size() << std::endl;
+
+
+        std::cout << "IS EMPTY: " << _ENTRY_EMPTY << std::endl;
     }
 
     iterator get(const hash_t& hash)
@@ -113,8 +137,9 @@ public:
         const hash_t index = _extract_index(hash);
         const hash_t tag = _extract_tag(hash);
 
-        assert(index < _entries.size());
-        Entry* entry_ptr = &(_entries[index]);
+        assert((index | (tag << _index_width)) == hash);
+
+        Entry* entry_ptr = _get_entry_ptr(index);
 
         return iterator(*this, index, tag, entry_ptr);
     }
@@ -140,6 +165,9 @@ private:
 
     void _get_bit_location(size_t entry_idx, size_t bit_idx, size_t& bits_vec_idx, size_t& element_bit_idx) const
     {
+        assert(entry_idx < _n_entries);
+        assert(bit_idx < _n_bits);
+
         const size_t global_bit_idx = _n_bits * entry_idx + bit_idx;
         bits_vec_idx = global_bit_idx / sizeof(unsigned int);
         element_bit_idx = global_bit_idx % sizeof(unsigned int);
@@ -147,6 +175,9 @@ private:
 
     bool _get_bit(size_t entry_idx, size_t bit_idx) const
     {
+        assert(entry_idx < _n_entries);
+        assert(bit_idx < _n_bits);
+
         size_t bits_vec_idx;
         size_t element_bit_idx;
         _get_bit_location(entry_idx, bit_idx, bits_vec_idx, element_bit_idx);
@@ -157,6 +188,9 @@ private:
 
     void _set_bit(size_t entry_idx, size_t bit_idx, bool new_val)
     {
+        assert(entry_idx < _n_entries);
+        assert(bit_idx < _n_bits);
+
         size_t bits_vec_idx;
         size_t element_bit_idx;
         _get_bit_location(entry_idx, bit_idx, bits_vec_idx, element_bit_idx);
@@ -170,6 +204,8 @@ private:
 
     hash_t _get_tag(size_t entry_idx) const
     {
+        assert(entry_idx < _n_entries);
+
         hash_t tag = 0;
 
         const size_t tag_start = _n_bytes_per_tag * entry_idx;
@@ -186,6 +222,8 @@ private:
 
     void _set_tag(size_t entry_idx, const hash_t& tag)
     {
+        assert(entry_idx < _n_entries);
+
         const size_t tag_start = _n_bytes_per_tag * entry_idx;
 
         for (size_t i = 0; i < _n_bytes_per_tag; i++)
@@ -196,9 +234,45 @@ private:
         }
     }
 
+    void _reset(size_t entry_idx, hash_t tag, bool new_valid)
+    {
+        assert(entry_idx < _n_entries);
+
+        if (!new_valid)
+        {
+            _set_bit(entry_idx, 0, false);
+            return;
+        }
+
+        Entry* entry_ptr = _get_entry_ptr(entry_idx);
+        *entry_ptr = Entry();
+
+        _set_tag(entry_idx, tag);
+
+        for (size_t i = 1; i < _n_bits; i++)
+        {
+            _set_bit(entry_idx, i, false);
+        }
+        _set_bit(entry_idx, 0, true);
+    }
+
+    Entry* _get_entry_ptr(size_t entry_idx)
+    {
+        assert(entry_idx < _n_entries);
+
+        if constexpr (_ENTRY_EMPTY)
+            return &_entries[0];
+
+        return &_entries[entry_idx];
+    }
+
     std::vector<Entry> _entries;
     std::vector<unsigned int> _bits;
     std::vector<uint8_t> _tags;
+
+    static constexpr bool _ENTRY_EMPTY = std::is_empty_v<Entry>;
+
+    const size_t _n_entries;
 
     const size_t _index_width;
     const size_t _tag_width;
@@ -207,17 +281,21 @@ private:
 };
 
 
-
-typedef ttable<ttable_entry_sumgame> ttable_sumgame_t;
-
-
 ////////////////////////////////////////////////////////////////////// .cpp file
+
+typedef ttable<ttable_entry_non_empty> ttable_non_empty;
+typedef ttable<ttable_entry_empty> ttable_empty;
 
 using namespace std;
 
-
 void test_transposition()
 {
-    ttable_sumgame_t tt(16, 0);
+    {
+        ttable_non_empty t1(28, 0);
+    }
+
+    {
+        ttable_empty t2(28, 1);
+    }
 
 }
