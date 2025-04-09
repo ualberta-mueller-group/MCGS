@@ -38,7 +38,7 @@ int nimber::nim_sum(const std::vector<int>& values)
 class nimber_move_generator : public move_generator
 {
 public:
-    nimber_move_generator(const nimber& game, bw to_play);
+    nimber_move_generator(const nimber& game);
     void operator++() override;
     operator bool() const override;
     move gen_move() const override;
@@ -48,8 +48,10 @@ private:
     int _current_number;
 };
 
-nimber_move_generator::nimber_move_generator(const nimber& game, bw to_play)
-    : move_generator(to_play), _game(game), _current_number(1)
+nimber_move_generator::nimber_move_generator(
+    const nimber& game)
+    : move_generator(BLACK),
+      _game(game), _current_number(1)
 {
 }
 
@@ -70,9 +72,9 @@ move nimber_move_generator::gen_move() const
 }
 
 //---------------------------------------------------------------------------
-move_generator* nimber::create_move_generator(bw to_play) const
+move_generator* nimber::create_move_generator() const
 {
-    return new nimber_move_generator(*this, to_play);
+    return new nimber_move_generator(*this);
 }
 
 //---------------------------------------------------------------------------
