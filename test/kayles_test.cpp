@@ -16,8 +16,8 @@ void kayles_test_values()
     for(int i=0; i < 100; ++i)
     {
         kayles k(i);
-        const int nimber = k.search_impartial_game();
-        assert(kayles::static_result(i) == nimber);
+        const int nim_value = k.search_impartial_game();
+        assert(kayles::static_result(i) == nim_value);
     }
 }
 

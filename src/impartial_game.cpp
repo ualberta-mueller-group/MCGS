@@ -20,18 +20,18 @@ inline int search(game* subgame)
 } // namespace
 //---------------------------------------------------------------------------
 
-void impartial_game::set_solved(int nimber)
+void impartial_game::set_solved(int nim_value)
 {
     assert(! is_solved());
     assert(num_moves_played() == 0);
     _root_is_solved = true;
-    _nimber = nimber;
+    _nim_value = nim_value;
 }
 
 int impartial_game::search_impartial_game() const
 {
     if (is_solved())
-        return nimber();
+        return nim_value();
         
     assert_restore_game ar(*this);
     // iterate over moves

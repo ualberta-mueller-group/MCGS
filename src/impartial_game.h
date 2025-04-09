@@ -6,7 +6,7 @@
 // 1. play(m) does not take a color argument
 // 2. move_generator does not take a color argument
 // 3. Completely different solving algorithms:
-//    Evaluate any impartial game to a nimber
+//    Evaluate any impartial game to a nim value
 //    - (implemented) brute force mex algorithm
 //    - (not yet) Lemoine and Viennot
 //    - (not yet) Beling and Rogalski
@@ -23,7 +23,7 @@ class impartial_game : public game
 {
 public:
     impartial_game();
-    // solve single game; store result in _nimber
+    // solve single game; store result in _nim_value
     int search_impartial_game() const; 
 
     // Impartial game interface
@@ -37,8 +37,8 @@ public:
     move_generator* create_move_generator(bw ignore_to_play) const override;
     
     bool is_solved() const;
-    int nimber() const; // available after it is solved
-    virtual void set_solved(int nimber);
+    int nim_value() const; // available after it is solved
+    virtual void set_solved(int nim_value);
     
     // Minimum excluded number
     static int mex(const std::set<int>& values);
@@ -47,11 +47,11 @@ private:
 
     using game::play; // avoid compiler warning
     bool _root_is_solved;
-    int _nimber;
+    int _nim_value;
 };
 
 inline impartial_game::impartial_game() : 
-    _root_is_solved(false), _nimber(0)
+    _root_is_solved(false), _nim_value(0)
 { }
 
 inline bool impartial_game::is_solved() const
@@ -59,11 +59,11 @@ inline bool impartial_game::is_solved() const
     return (num_moves_played() == 0) && _root_is_solved;
 }
 
-inline int impartial_game::nimber() const
+inline int impartial_game::nim_value() const
 {
     assert(num_moves_played() == 0);
     assert(_root_is_solved);
-    return _nimber;
+    return _nim_value;
 }
 
 inline void impartial_game::play(const move& m)

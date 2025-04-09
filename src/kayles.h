@@ -26,7 +26,7 @@ public:
     static void print_move(move m, std::ostream& str);
     static move encode(int take, int smaller, int larger);
     static void init_cache();
-    void set_solved(int nimber) override;
+    void set_solved(int nim_value) override;
 
 protected:
     split_result _split_implementation() const override;
@@ -34,7 +34,7 @@ protected:
 private:
     static void decode(move m, int& take, 
     int& smaller, int& larger);
-    static void store(int n, int nimber);
+    static void store(int n, int nim_value);
     static int get(int n); // -1 if not stored
 
     int _value;
@@ -45,11 +45,11 @@ private:
     static int _cache[CACHE_SIZE];
 };
 
-inline void kayles::store(int n, int nimber)
+inline void kayles::store(int n, int nim_value)
 {
     assert(n >= 0);
     if (n < CACHE_SIZE)
-        _cache[n] = nimber;
+        _cache[n] = nim_value;
 }
 
 inline int kayles::get(int n)
@@ -69,9 +69,9 @@ inline void kayles::init_cache()
 inline kayles::kayles(int value) : impartial_game(), _value(value), _smaller_part(0)
 {
     assert(_value >= 0);
-    int cached_nimber = get(_value);
-    if (cached_nimber != -1)
-        set_solved(cached_nimber);
+    int cached_nim_value = get(_value);
+    if (cached_nim_value != -1)
+        set_solved(cached_nim_value);
 }
 
 inline void kayles::play(const move& m, bw ignore_to_play)

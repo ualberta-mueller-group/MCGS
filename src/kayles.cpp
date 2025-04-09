@@ -104,13 +104,13 @@ int kayles::static_result(int n)
         return periodic_values[n % 12];
 }
 
-void kayles::set_solved(int nimber)
+void kayles::set_solved(int nim_value)
 {
     assert(_smaller_part == 0);
     if (! is_solved())
     {
-        kayles::store(_value, nimber);
-        impartial_game::set_solved(nimber);
+        kayles::store(_value, nim_value);
+        impartial_game::set_solved(nim_value);
     }
 }
 
