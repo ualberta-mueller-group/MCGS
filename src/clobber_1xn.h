@@ -27,6 +27,10 @@ public:
     {
         str << "clobber_1xn:" << board_as_string();
     }
+    
+    // Standard board with n consecutive "XO" pairs
+    static std::string xoxo(int n);
+
 };
 
 std::ostream& operator<<(std::ostream& out, const clobber_1xn& g);
