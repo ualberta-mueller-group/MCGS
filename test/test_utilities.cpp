@@ -15,13 +15,6 @@ void assert_solve(game& pos, bw to_play, const bool expected_result)
     assert(result == expected_result);
 }
 
-void assert_solve_impartial(impartial_game& pos, 
-    const bool expected_result)
-{
-    assert_solve(pos, BLACK, expected_result);
-    assert_solve(pos, WHITE, expected_result);
-}
-
 void assert_solve_sum(sumgame& g, bw to_play, const bool expected_result)
 {
     assert_black_white(to_play);
