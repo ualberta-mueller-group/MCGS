@@ -1,15 +1,7 @@
 //---------------------------------------------------------------------------
 // Implementation of impartial games,
 // and algorithms to solve them.
-//
-// Main changes from game: 
-// 1. play(m) does not take a color argument
-// 2. move_generator does not take a color argument
-// 3. Completely different solving algorithms:
-//    Evaluate any impartial game to a nim value
-//    - (implemented) brute force mex algorithm
-//    - (not yet) Lemoine and Viennot
-//    - (not yet) Beling and Rogalski
+// See `development-notes.md` impartial games section for details
 //---------------------------------------------------------------------------
 #pragma once
 
