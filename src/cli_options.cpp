@@ -75,7 +75,8 @@ void print_help_message(const string& exec_name)
 
     cout << "Misc options flags:" << endl;
     print_flag("--random-table-seed", "Set seed for random tables used in "
-               "game hashing. 0 means seed with current time. Default: "
+               "game hashing. 0 means seed with current time since epoch. "
+               "Default: "
                + std::to_string(init_options::DEFAULT_RANDOM_TABLE_SEED));
 
     cout << "Testing framework flags:" << endl;
