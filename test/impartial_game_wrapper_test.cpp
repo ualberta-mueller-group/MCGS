@@ -35,14 +35,6 @@ void test_nim_value(const string& s, int nim_value)
     assert(v == nim_value);
 }
 
-string xoxo(int n)
-{
-    string result;
-    for (int i = 0; i < n; ++i)
-        result += "XO";
-    return result;
-}
-
 void impartial_game_wrapper_test_values()
 {
     static int Dai_Chen_result[] =  // -1 means they could not solve it
@@ -58,7 +50,7 @@ void impartial_game_wrapper_test_values()
     // 8 not solved in 5 minutes without a cache/table
     int limit = 7; 
     for (int i = 0; i < limit; ++i)
-        test_nim_value(xoxo(i), Dai_Chen_result[i]);
+        test_nim_value(clobber_1xn::xoxo(i), Dai_Chen_result[i]);
 }
 
 void test_play_undo(const string& s)
