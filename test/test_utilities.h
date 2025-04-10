@@ -7,6 +7,7 @@
 #include <memory>
 #include "cgt_move.h"
 #include "game.h"
+#include "impartial_game.h"
 #include "sumgame.h"
 #include "file_parser.h"
 #include <string>
@@ -38,6 +39,7 @@ inline void assert_two_part_move(move_generator& mg, int from, int to)
 }
 
 void assert_solve(game& pos, bw to_play, const bool expected_result);
+void assert_solve_impartial(impartial_game& pos, const bool expected_result);
 
 void assert_solve_sum(sumgame& g, bw to_play, const bool expected_result);
 
