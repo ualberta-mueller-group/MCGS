@@ -114,6 +114,8 @@ constexpr T rotate_interleaved(const T& val, size_t distance) // TODO unit test
     return val1 | val2;
 }
 
+uint64_t ms_since_epoch();
+
 ////////////////////////////////////////
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,
                                       bool is_ge);

@@ -10,6 +10,8 @@ const bool RUN_OVERRIDE_TESTS = true;
 #include <string>
 #include <iostream>
 
+#include "mcgs_init.h"
+
 #include "cgt_basics_test.h"
 #include "cgt_dyadic_rational_test.h"
 #include "cgt_integer_game_test.h"
@@ -74,6 +76,10 @@ void print_usage(const char* exec_name)
 
 int main(int argc, const char** argv)
 {
+    init_options opts;
+    opts.random_table_seed = 0;
+    mcgs_init_all(opts);
+
     if (RUN_OVERRIDE_TESTS)
     {
         override_tests();

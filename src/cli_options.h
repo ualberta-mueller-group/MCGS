@@ -2,6 +2,7 @@
 
 #include "file_parser.h"
 #include <memory>
+#include "mcgs_init.h"
 
 /*
     Variables resulting from command line options. "parser" may be nullptr
@@ -10,6 +11,8 @@ struct cli_options
 {
     cli_options(const std::string& test_directory);
     ~cli_options();
+
+    init_options init_opts;
 
     std::shared_ptr<file_parser> parser;
     bool dry_run;     // Do dry run without running games
