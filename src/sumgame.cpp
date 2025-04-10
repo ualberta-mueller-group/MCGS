@@ -500,7 +500,9 @@ void sumgame::undo_move()
 
     if (!(sm.m == subm))
     {
-        cout << subg << ' ' << sm.m << ' ' << subm << endl;
+        cout << subg << ' ' 
+        << std::hex << sm.m << ' ' << subm 
+        << std::dec << endl;
     }
 
     assert(sm.m == subm);
