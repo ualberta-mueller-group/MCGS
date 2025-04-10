@@ -11,6 +11,7 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "impartial_game.h"
+#include "impartial_wrapper_move.h"
 
 //---------------------------------------------------------------------------
 class impartial_game_wrapper : public impartial_game
@@ -42,15 +43,15 @@ inline impartial_game_wrapper::impartial_game_wrapper(game* g) :
 
 inline void impartial_game_wrapper::play(const move& m)
 {
-    const bw color = cgt_move::get_color(m);
-    const move m_no_color = cgt_move::decode(m);
-    play(m_no_color, color);
+    const bw color = impartial_wrapper_move::get_color(m);
+    const move m_no_color = impartial_wrapper_move::decode_wrapped(m);
+    _game->play(m_no_color, color);
+    impartial_game::play(m);
 }
 
 inline void impartial_game_wrapper::play(const move& m, bw to_play)
 {
-    _game->play(m, to_play);
-    impartial_game::play(m, to_play);
+    play(m);
 }
 
 inline void impartial_game_wrapper::undo_move()

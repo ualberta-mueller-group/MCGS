@@ -9,6 +9,8 @@
 #include "cgt_basics.h"
 #include "cgt_nimber.h"
 
+using impartial_wrapper_move::encode_wrapped_move;
+
 game* impartial_game_wrapper::inverse() const
 {
     return new impartial_game_wrapper(_game->inverse());
@@ -66,7 +68,7 @@ move ig_wrapper_move_generator::gen_move() const
 {
     assert(operator bool());
     const move m = _color_mg->gen_move();
-    return cgt_move::encode(m, _color);
+    return encode_wrapped_move(m, _color);
 }
 
 //---------------------------------------------------------------------------
