@@ -60,12 +60,12 @@ inline int impartial_game::nim_value() const
 
 inline void impartial_game::play(const move& m)
 {
-    impartial_game::play(m, BLACK);
+    game::play(m, BLACK);
 }
 
 inline void impartial_game::play(const move& m, bw to_play)
 {
-    game::play(m, to_play);
+    impartial_game::play(m);
 }
 
 inline move_generator* 
