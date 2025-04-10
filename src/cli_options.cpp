@@ -1,5 +1,8 @@
 #include "cli_options.h"
+#include <cerrno>
+#include <cstdlib>
 #include <filesystem>
+#include <string>
 #include <unistd.h>
 #include <vector>
 #include <iostream>
@@ -11,7 +14,8 @@ using namespace std;
 
 ////////////////////////////////////////////////// cli_options
 cli_options::cli_options(const string& test_directory)
-    : parser(nullptr),
+    : init_opts(),
+      parser(nullptr),
       dry_run(false),
       should_exit(false),
       run_tests(false),
@@ -68,6 +72,11 @@ void print_help_message(const string& exec_name)
     print_flag("--no-simplify-basic-cgt",
                "Don't simplify basic CGT games (integer_game, dyadic_rational, "
                "up_star, switch_game, nimber).");
+
+    cout << "Misc options flags:" << endl;
+    print_flag("--random-table-seed", "Set seed for random tables used in "
+               "game hashing. 0 means seed with current time. Default: "
+               + std::to_string(init_options::DEFAULT_RANDOM_TABLE_SEED));
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -289,6 +298,36 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
         if (arg == "--no-simplify-basic-cgt")
         {
             optimization_options::set_simplify_basic_cgt(false);
+            continue;
+        }
+
+        // MISC OPTIONS
+        if (arg == "--random-table-seed")
+        {
+            arg_idx++;
+            if (arg_next.size() == 0)
+                throw cli_options_exception("Error: got --random-table-seed but no seed value");
+
+            const char* str = arg_next.c_str();
+            char* str_end = nullptr;
+            const char* expected_end = str + arg_next.size();
+            int base = 0;
+
+            const uint64_t seed = strtoull(str, &str_end, base);
+
+            if (errno == ERANGE)
+            {
+                errno = 0;
+                throw cli_options_exception("Error: --random-table-seed value out of range: \"" + arg_next + "\"");
+            }
+
+            if (str_end != expected_end)
+            {
+                throw cli_options_exception("Error: --random-table-seed value bad format: \"" + arg_next + "\"");
+            }
+
+            opts.init_opts.random_table_seed = seed;
+
             continue;
         }
 

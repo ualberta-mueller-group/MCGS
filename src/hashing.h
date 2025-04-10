@@ -18,7 +18,7 @@ typedef uint64_t hash_t;
 class random_table
 {
 public:
-    random_table(size_t n_positions);
+    random_table(size_t n_positions, uint64_t seed);
 
     template <class T>
     hash_t get(const size_t& position, const T& color) const
@@ -72,9 +72,8 @@ private:
     void _init();
 
     static constexpr size_t _ELEMENTS_PER_POSITION = 256;
-    static constexpr uint64_t _DEFAULT_RANDOM_TABLE_SEED = 0;
 
-    static std::mt19937_64 _rng;
+    std::mt19937_64 _rng;
     static std::uniform_int_distribution<hash_t> _dist;
 
     const size_t _n_positions;
@@ -83,12 +82,16 @@ private:
     std::vector<hash_t> _number_table;
 };
 
-namespace random_tables {
-extern random_table default_table;
-extern random_table type_table;
-extern random_table modifier_table;
-extern random_table player_table;
-} // namespace random_tables 
+enum global_random_table_id
+{
+    RANDOM_TABLE_DEFAULT = 0,
+    RANDOM_TABLE_TYPE,
+    RANDOM_TABLE_MODIFIER,
+    RANDOM_TABLE_PLAYER,
+};
+
+void init_global_random_tables(uint64_t seed);
+random_table& get_global_random_table(global_random_table_id table_id);
 
 ////////////////////////////////////////////////// local_hash
 class local_hash
@@ -111,7 +114,8 @@ public:
     template <class T>
     void toggle_tile(const size_t& position, const T& color)
     {
-        _value ^= random_tables::default_table.get(position, color);
+        random_table& rt = get_global_random_table(RANDOM_TABLE_DEFAULT);
+        _value ^= rt.get(position, color);
     }
 
     void toggle_type(const game_type_t& type);

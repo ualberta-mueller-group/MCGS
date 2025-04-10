@@ -5,20 +5,21 @@
 #include <limits>
 #include <vector>
 #include <random>
+#include "throw_assert.h"
+
+using namespace std;
 
 ////////////////////////////////////////////////// random_table
-std::mt19937_64 random_table::_rng;
 std::uniform_int_distribution<hash_t> random_table::_dist(1, std::numeric_limits<hash_t>::max());
 
-namespace random_tables {
-random_table default_table(1024);
-random_table type_table(32);
-random_table modifier_table(128);
-random_table player_table(1);
-} // namespace random_tables 
-
-random_table::random_table(size_t n_positions): _n_positions(n_positions)
+random_table::random_table(size_t n_positions, uint64_t seed): _n_positions(n_positions)
 {
+    while (seed == 0)
+        seed = ms_since_epoch();
+
+    std::cout << "Random table constructing with seed " << seed << std::endl;
+
+    _rng.seed(seed);
     _init();
 }
 
@@ -26,17 +27,6 @@ void random_table::_init()
 {
     assert(_n_positions > 0);
     assert(is_power_of_2(_n_positions));
-
-    static bool seeded = false;
-    if (!seeded)
-    {
-        seeded = true;
-
-        if (_DEFAULT_RANDOM_TABLE_SEED == 0)
-            _rng.seed(time(0));
-        else
-            _rng.seed(_DEFAULT_RANDOM_TABLE_SEED);
-    }
 
     _wrap_shift_amount = 0;
     while (((_n_positions >> _wrap_shift_amount) & 0x1) == 0)
@@ -56,6 +46,50 @@ void random_table::_init()
     std::cout << "Size is " << _number_table.size() << std::endl;
 }
 
+namespace {
+std::vector<random_table> global_random_tables;
+} // namespace
+
+void init_global_random_tables(uint64_t seed)
+{
+    std::uniform_int_distribution<uint64_t> dist(1, std::numeric_limits<uint64_t>::max());
+    std::mt19937_64 rng;
+
+    std::cout << "init_global_random_tables() seed: " << seed << endl;
+
+    while (seed == 0)
+        seed = ms_since_epoch();
+
+    rng.seed(seed);
+
+    auto next_seed = [&]() -> uint64_t
+    {
+        return dist(rng) * 5167;
+    };
+
+    assert(global_random_tables.empty());
+
+    assert(RANDOM_TABLE_DEFAULT == 0);
+    global_random_tables.emplace_back(1024, next_seed());
+
+    assert(RANDOM_TABLE_TYPE == 1);
+    global_random_tables.emplace_back(32, next_seed());
+
+    assert(RANDOM_TABLE_MODIFIER == 2);
+    global_random_tables.emplace_back(128, next_seed());
+
+    assert(RANDOM_TABLE_PLAYER == 3);
+    global_random_tables.emplace_back(1, next_seed());
+}
+
+random_table& get_global_random_table(global_random_table_id table_id)
+{
+    THROW_ASSERT(table_id < global_random_tables.size(),
+                 std::logic_error("global random tables not initialized yet"));
+
+    return global_random_tables[table_id];
+}
+
 ////////////////////////////////////////////////// local_hash
 void local_hash::toggle_type(const game_type_t& type)
 {
@@ -63,7 +97,8 @@ void local_hash::toggle_type(const game_type_t& type)
     using u_game_type_t = std::make_unsigned_t<game_type_t>;
     const u_game_type_t& utype = reinterpret_cast<const u_game_type_t&>(type);
 
-    _value ^= random_tables::type_table.get(utype, utype);
+    random_table& rt = get_global_random_table(RANDOM_TABLE_TYPE);
+    _value ^= rt.get(utype, utype);
 }
 
 ////////////////////////////////////////////////// global_hash
@@ -110,14 +145,16 @@ void global_hash::set_to_play(bw new_to_play)
 {
     assert(new_to_play == BLACK || new_to_play == WHITE);
 
+    random_table& rt = get_global_random_table(RANDOM_TABLE_PLAYER);
+
     if (_to_play != EMPTY)
     {
-        _value ^= random_tables::player_table.get(_to_play, _to_play);
+        _value ^= rt.get(_to_play, _to_play);
         _to_play = EMPTY;
     }
 
     _to_play = new_to_play;
-    _value ^= random_tables::player_table.get(new_to_play, new_to_play);
+    _value ^= rt.get(new_to_play, new_to_play);
 }
 
 void global_hash::_resize_if_out_of_range(size_t subgame_idx)
@@ -134,9 +171,10 @@ void global_hash::_resize_if_out_of_range(size_t subgame_idx)
 hash_t global_hash::_get_modified_hash(size_t subgame_idx, game* g)
 {
     hash_t base_hash = g->compute_hash().get_value();
-    return random_tables::modifier_table.get(subgame_idx, base_hash);
-}
 
+    random_table& rt = get_global_random_table(RANDOM_TABLE_MODIFIER);
+    return rt.get(subgame_idx, base_hash);
+}
 
 void test_hashing_final()
 {

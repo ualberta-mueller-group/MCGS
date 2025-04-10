@@ -1,5 +1,6 @@
 #include "utilities.h"
 #include <sstream>
+#include <chrono>
 
 using std::vector, std::string, std::stringstream;
 
@@ -88,6 +89,14 @@ bool string_ends_with(const std::string& str, const std::string& word)
     }
 
     return true;
+}
+
+uint64_t ms_since_epoch()
+{
+    using namespace std::chrono;
+
+    milliseconds t = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+    return t.count();
 }
 
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,

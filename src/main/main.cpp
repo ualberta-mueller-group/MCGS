@@ -10,10 +10,10 @@
 #include "cli_options.h"
 #include "file_parser.h"
 #include "sumgame.h"
-#include "throw_assert.h"
 #include "cli_options.h"
 #include "autotests.h"
 #include <chrono>
+#include "mcgs_init.h"
 
 using std::cout, std::endl, std::string;
 
@@ -102,6 +102,8 @@ int main(int argc, char** argv)
     {
         return 0;
     }
+
+    mcgs_init_all(opts.init_opts);
 
     if (opts.run_tests)
     {
