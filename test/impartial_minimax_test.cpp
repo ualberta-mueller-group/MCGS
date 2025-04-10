@@ -7,6 +7,7 @@
 #include "impartial_game_wrapper.h"
 #include "clobber_1xn.h"
 #include "kayles.h"
+#include "sumgame.h"
 
 #include <cassert>
 #include "cgt_move.h"
@@ -16,14 +17,17 @@ using std::string;
 
 namespace {
 
+void test(impartial_game& g, const bool expected_result)
+{
+    test_one_game(g, expected_result, expected_result);
+}
+
 void test_kayles()
 {
-    kayles g(0);
-    assert_solve_impartial(g, false);
-    for (int i=1; i < 10; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         kayles g(i);
-        assert_solve_impartial(g, true);
+        test(g, i != 0); // only kayles(0) is loss
     }
 }
 
@@ -31,7 +35,7 @@ void test_clobber(const string& s, const bool expected_result)
 {
     clobber_1xn c(s);
     impartial_game_wrapper g(&c);
-    assert_solve_impartial(g, expected_result);
+    test(g, expected_result);
 }
 
 void test_clobber_wrapper_all()
@@ -45,8 +49,10 @@ void test_clobber_wrapper_all()
 }
 
 } // namespace
+//---------------------------------------------------------------------------
 
 void impartial_minimax_test_all()
 {
-
+    test_kayles();
+    test_clobber_wrapper_all();
 }
