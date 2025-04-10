@@ -37,6 +37,27 @@ checking that the state is restored
     - TODO it probably is broken for sumgame, since it uses a different stack
     - TODO this check will be made functional after hash codes are implemented
 
+# Impartial Games
+- Impartial games support added in version 1.2
+- Main changes from game:
+    1. `play(m)` does not take a color argument
+    2. `move_generator` does not take a color argument
+    3. Completely different solving algorithms:
+        - Evaluate any impartial game to a nim value
+        - (implemented) brute force algorithm using mex rule
+        - (not yet) Lemoine and Viennot
+        - (not yet) Beling and Rogalski
+- New game `kayles` - a simple and solved impartial game
+- Impartial game wrapper `impartial_game_wrapper`
+    - Allows any (partizan) game to be played in an impartial way
+    - Both players can play the moves of both BLACK and WHITE
+        in the underlying game
+    - In minimax search of such a game, the player making
+        the move in the impartial game may be different from the player
+        making a move in the wrapped game
+    - Test cases: impartial clobber, using the wrapper for `clobber_1xn` and comparison with Dai and Chen's results
+- Impartial sum game
+
 # Safe Arithmetic Functions (`safe_arithmetic.h`)
 This section uses the term "wrapping" to mean either underflow or overflow.
 
