@@ -17,8 +17,14 @@ int search_sumgame(const sumgame& s)
         if (! g->is_active())
             continue;
         auto ig = static_cast<impartial_game*>(g);
-        const int result = ig->search_impartial_game();
-        ig->set_solved(result);
+        int result = 0;
+        if (ig->is_solved())
+            result = ig->nim_value();
+        else
+        {
+            result = ig->search_impartial_game();
+            ig->set_solved(result);
+        }
         nimber::add_nimber(sum_nim_value, result);
     }
     return sum_nim_value;
