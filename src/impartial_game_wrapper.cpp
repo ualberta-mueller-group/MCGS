@@ -31,6 +31,10 @@ public:
     move gen_move() const override;
 
 private:
+    // Not const inside, but const to outside, 
+    // and called by const operator bool
+    void switch_to_white() const;
+
     const game* _game; // the wrapped game, not the wrapper itself
     ebw _color;
     move_generator* _color_mg;
@@ -43,6 +47,14 @@ ig_wrapper_move_generator::ig_wrapper_move_generator(
       _color_mg(_game->create_move_generator(BLACK))
 { }
 
+void ig_wrapper_move_generator::switch_to_white() const
+{
+    assert(_color == BLACK);
+    auto mg = const_cast<ig_wrapper_move_generator*>(this);
+    mg->_color = WHITE;
+    mg->_color_mg = _game->create_move_generator(WHITE);
+}
+
 void ig_wrapper_move_generator::operator++()
 {
     ++(*_color_mg);
@@ -50,18 +62,22 @@ void ig_wrapper_move_generator::operator++()
     {
         delete(_color_mg);
         if (_color == BLACK)
-        {
-            _color = WHITE;
-            _color_mg = _game->create_move_generator(WHITE);
-        }
+            switch_to_white();
         else
             _color = EMPTY;
     }
 }
 
+// Is there still a move?
+// If there is no more black move, then switch to the white move generator
+// and try that one.
 ig_wrapper_move_generator::operator bool() const
 {
-    return (_color != EMPTY) && (*_color_mg);
+    if (_color == EMPTY)
+        return false;
+    if ((_color == BLACK) && !(*_color_mg))
+        switch_to_white();
+    return (*_color_mg);
 }
 
 move ig_wrapper_move_generator::gen_move() const
