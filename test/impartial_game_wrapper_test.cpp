@@ -7,6 +7,7 @@
 #include <cassert>
 #include "cgt_move.h"
 #include "clobber_1xn.h"
+#include "nogo_1xn.h"
 #include "test_utilities.h"
 
 using std::string;
@@ -80,7 +81,27 @@ void impartial_game_wrapper_test_play_undo()
     test_play_undo("XOXO");
     test_play_undo("XOXOXO");
 }
-        
+
+void test_nogo(string s, int nim_value)
+{
+    nogo_1xn c(s);
+    impartial_game_wrapper g(&c);
+    const int v = g.search_impartial_game();
+    assert(v == nim_value);
+}
+
+void impartial_game_wrapper_test_nogo()
+{
+    static int expected[] = // computed with this same program
+    { 0, 0, 1, 0, 1, 2, 0, 1, 0, 1, 2, 3};
+
+    for(int i=0; i<10; ++i)
+    {
+        string s(i, '.');
+        test_nogo(s, expected[i]);
+    }
+}
+
 } // namespace
 
 void impartial_game_wrapper_test_all()
@@ -88,4 +109,5 @@ void impartial_game_wrapper_test_all()
     impartial_game_wrapper_test_move_generator();
     impartial_game_wrapper_test_play_undo();
     impartial_game_wrapper_test_values();
+    impartial_game_wrapper_test_nogo();
 }
