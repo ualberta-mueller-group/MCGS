@@ -73,6 +73,8 @@ void print_help_message(const string& exec_name)
                "Don't simplify basic CGT games (integer_game, dyadic_rational, "
                "up_star, switch_game, nimber).");
 
+    print_flag("--no-sumgame-ttable", "Don't use transposition table for sumgame.");
+
     cout << "Misc options flags:" << endl;
     print_flag("--random-table-seed", "Set seed for random tables used in "
                "game hashing. 0 means seed with current time since epoch. "
@@ -292,6 +294,12 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
 
         if (arg == "--no-subgame-split")
         {
+            assert(false);
+            /*
+                TODO this either needs to be removed, or should only disable
+                splitting games for which splitting is optional
+            */
+
             optimization_options::set_subgame_split(false);
             continue;
         }
@@ -299,6 +307,12 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
         if (arg == "--no-simplify-basic-cgt")
         {
             optimization_options::set_simplify_basic_cgt(false);
+            continue;
+        }
+
+        if (arg == "--no-sumgame-ttable")
+        {
+            optimization_options::set_sumgame_ttable(false);
             continue;
         }
 

@@ -9,6 +9,7 @@
 #include <ctime>
 #include "sumgame_change_record.h"
 #include "transposition.h"
+#include <memory>
 
 struct ttable_sumgame_entry
 {
@@ -111,7 +112,10 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 
-    hash_t get_global_hash(); // TODO: this method may be temporary
+    hash_t get_global_hash() const; // TODO: this method may be temporary
+
+    // called by mcgs_init()
+    static void init_ttable(size_t index_bits);
 
 private:
     class undo_stack_unwinder;
@@ -122,8 +126,11 @@ private:
     void _push_undo_code(sumgame_undo_code code);
     void _pop_undo_code(sumgame_undo_code code);
 
+    std::optional<ttable_sumgame::iterator> _do_ttable_lookup() const;
+
     void _debug_extra() const;
     void _assert_games_unique() const;
+
 
     mutable bool _should_stop;
     mutable bool _need_cgt_simplify;
@@ -133,7 +140,7 @@ private:
     std::vector<play_record> _play_record_stack;
     std::vector<sumgame_impl::change_record> _change_record_stack;
 
-    static ttable_sumgame _tt;
+    static std::shared_ptr<ttable_sumgame> _tt;
 };
 
 //////////////////////////////////////// sumgame_move_generator
