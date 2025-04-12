@@ -14,18 +14,16 @@
 #include "autotests.h"
 #include <chrono>
 #include "mcgs_init.h"
-
-using std::cout, std::endl, std::string;
-
-//#include "hashing.h"
-//#include "hashing2.h"
-//#include "hashing3.h"
 #include "hashing.h"
 #include "hash_eval.h"
 #include "transposition.h"
+
+
+using std::cout, std::endl, std::string;
+
 int main(int argc, char** argv)
 {
-    cli_options opts = parse_cli_args(argc, (const char**) argv, false);
+    cli_options opts = cli_options::parse_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
     if (opts.should_exit)
@@ -33,7 +31,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    mcgs_init_all(opts.init_opts);
+    mcgs_init_all(opts);
 
     if (opts.run_tests)
     {

@@ -76,9 +76,7 @@ void print_usage(const char* exec_name)
 
 int main(int argc, const char** argv)
 {
-    init_options opts;
-    opts.random_table_seed = 0;
-    mcgs_init_all(opts);
+    mcgs_init_all();
 
     if (RUN_OVERRIDE_TESTS)
     {

@@ -8,6 +8,7 @@
 #include "cgt_basics.h"
 #include "file_parser.h"
 #include "sumgame.h"
+#include "throw_assert.h"
 #include <ratio>
 #include <unistd.h>
 #include <vector>
@@ -112,6 +113,8 @@ string format_duration(double duration)
 void run_autotests(const string& test_directory, const string& outfile_name,
                    unsigned long long test_timeout)
 {
+    THROW_ASSERT(test_directory.size() > 0);
+
     ofstream outfile(outfile_name); // CSV file
 
     if (!outfile.is_open())
