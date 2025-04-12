@@ -10,7 +10,6 @@
 #include "sumgame_change_record.h"
 #include "transposition.h"
 
-
 struct empty_struct
 {
 };

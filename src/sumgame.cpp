@@ -32,7 +32,7 @@ using std::endl;
 using std::optional;
 using sumgame_impl::change_record;
 
-ttable_sumgame sumgame::_tt(24, 1);
+ttable_sumgame sumgame::_tt(29, 1);
 
 //---------------------------------------------------------------------------
 
@@ -323,10 +323,10 @@ optional<solve_result> sumgame::_solve_with_timeout()
     simplify_basic();
 
     const hash_t current_hash = get_global_hash_value();
-    ttable_sumgame::iterator tt_iterator = _tt.get(current_hash);
-    if (tt_iterator.is_valid())
+    ttable_sumgame::iterator tt_iterator = _tt.get_iterator(current_hash);
+    if (tt_iterator.entry_valid())
     {
-        return solve_result(tt_iterator.get_bit(0));
+        return solve_result(tt_iterator.get_bool(0));
     }
 
     const bw toplay = to_play();
@@ -368,16 +368,16 @@ optional<solve_result> sumgame::_solve_with_timeout()
         {
             /// undo_simplify_basic();
 
-            tt_iterator.set_valid(true);
-            tt_iterator.set_bit(0, result.win);
+            tt_iterator.init_entry();
+            tt_iterator.set_bool(0, result.win);
             return result;
         }
     }
 
     /// undo_simplify_basic();
 
-    tt_iterator.set_valid(true);
-    tt_iterator.set_bit(0, false);
+    tt_iterator.init_entry();
+    tt_iterator.set_bool(0, false);
     return solve_result(false);
 }
 
