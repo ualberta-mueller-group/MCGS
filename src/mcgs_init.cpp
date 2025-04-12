@@ -2,9 +2,11 @@
 #include "throw_assert.h"
 #include <cassert>
 #include "hashing_init.h"
+#include "sumgame_init.h"
 
 init_options::init_options()
-    : random_table_seed(DEFAULT_RANDOM_TABLE_SEED)
+    : random_table_seed(DEFAULT_RANDOM_TABLE_SEED),
+    ttable_sumgame_index_bits(DEFAULT_TTABLE_SUMGAME_INDEX_BITS)
 {
 }
 
@@ -18,6 +20,7 @@ void mcgs_init_all(const init_options& opts)
     already_initialized = true;
 
     mcgs_init::init_hashing(opts.random_table_seed);
+    mcgs_init::init_ttable_sumgame(opts.ttable_sumgame_index_bits);
 }
 
 void mcgs_init_all()

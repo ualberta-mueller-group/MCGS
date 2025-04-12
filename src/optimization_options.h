@@ -19,7 +19,19 @@ public:
         _simplify_basic_cgt = val;
     }
 
+    // sumgame_ttable
+    inline static bool sumgame_ttable()
+    {
+        return _sumgame_ttable;
+    }
+
+    inline static void set_sumgame_ttable(bool val)
+    {
+        _sumgame_ttable = val;
+    }
+
 private:
     static bool _subgame_split;
     static bool _simplify_basic_cgt;
+    static bool _sumgame_ttable;
 };
