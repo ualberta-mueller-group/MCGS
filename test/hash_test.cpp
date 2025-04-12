@@ -27,7 +27,7 @@ void test_game_recursive(game& g, int remaining_depth)
     if (remaining_depth == 0)
         return;
 
-    const hash_t initial_hash = g.compute_hash().get_value();
+    const hash_t initial_hash = g.get_local_hash();
 
     unique_ptr<move_generator> mgp1(g.create_move_generator(BLACK));
     unique_ptr<move_generator> mgp2(g.create_move_generator(WHITE));
@@ -44,7 +44,7 @@ void test_game_recursive(game& g, int remaining_depth)
 
             g.play(m, mg->to_play());
 
-            const hash_t new_hash = g.compute_hash().get_value();
+            const hash_t new_hash = g.get_local_hash();
             assert(new_hash != initial_hash);
 
             auto it = hash_set.insert(new_hash);
@@ -53,7 +53,7 @@ void test_game_recursive(game& g, int remaining_depth)
             test_game_recursive(g, remaining_depth - 1);
 
             g.undo_move();
-            const hash_t undo_hash = g.compute_hash().get_value();
+            const hash_t undo_hash = g.get_local_hash();
             assert(undo_hash == initial_hash);
         }
     }
@@ -78,7 +78,7 @@ void test_sum_recursive(sumgame& sum, int remaining_depth)
     for (sumgame_move_generator* mg: {mgp1.get(), mgp2.get()})
     {
         sum.set_to_play(mg->to_play());
-        const hash_t initial_hash = sum.get_global_hash_value();
+        const hash_t initial_hash = sum.get_global_hash();
 
         while (*mg)
         {
@@ -88,14 +88,14 @@ void test_sum_recursive(sumgame& sum, int remaining_depth)
             assert(sum.to_play() == mg->to_play());
             sum.play_sum(m, mg->to_play());
 
-            const hash_t new_hash = sum.get_global_hash_value();
+            const hash_t new_hash = sum.get_global_hash();
             assert(new_hash != initial_hash);
 
             test_sum_recursive(sum, remaining_depth - 1);
 
             sum.undo_move();
 
-            const hash_t undo_hash = sum.get_global_hash_value();
+            const hash_t undo_hash = sum.get_global_hash();
             assert(undo_hash == initial_hash);
         }
     }
@@ -161,7 +161,7 @@ void test_strip(T& g, int remaining_depth)
     static_assert(is_base_of_v<strip, T>);
     static_assert(!is_abstract_v<T>);
 
-    const hash_t initial_hash = g.compute_hash().get_value();
+    const hash_t initial_hash = g.get_local_hash();
 
     shared_ptr<move_generator> mg_black(g.create_move_generator(BLACK));
     shared_ptr<move_generator> mg_white(g.create_move_generator(WHITE));
@@ -173,18 +173,18 @@ void test_strip(T& g, int remaining_depth)
             const ::move m = mg->gen_move();
             g.play(m, mg->to_play());
 
-            const hash_t new_hash = g.compute_hash().get_value();
+            const hash_t new_hash = g.get_local_hash();
             assert(new_hash != initial_hash);
 
             T game_copy(g.board_as_string());
-            const hash_t expected_hash = game_copy.compute_hash().get_value();
+            const hash_t expected_hash = game_copy.get_local_hash();
 
             assert(new_hash == expected_hash);
 
             test_strip<T>(g, remaining_depth - 1);
 
             g.undo_move();
-            const hash_t undo_hash = g.compute_hash().get_value();
+            const hash_t undo_hash = g.get_local_hash();
 
             assert(undo_hash == initial_hash);
         }
@@ -236,7 +236,7 @@ hash_t test_sum_order_impl(sumgame& sum, vector<game*>& games, vector<bool>& use
     assert(sum.num_active_games() >= 0); // for cast on next line
     assert((unsigned long long) sum.num_active_games() == games.size());
 
-    hash = sum.get_global_hash_value();
+    hash = sum.get_global_hash();
     return hash;
 }
 
@@ -285,38 +285,38 @@ void test_sum_mutate()
     sumgame sum_b(BLACK);
     sumgame sum_w(WHITE);
 
-    const hash_t b1 = sum_b.get_global_hash_value();
-    const hash_t w1 = sum_w.get_global_hash_value();
+    const hash_t b1 = sum_b.get_global_hash();
+    const hash_t w1 = sum_w.get_global_hash();
     assert(b1 != w1);
 
     // Add games
     sum_b.add(&g1);
     sum_w.add(&g1);
 
-    const hash_t b2 = sum_b.get_global_hash_value();
-    const hash_t w2 = sum_w.get_global_hash_value();
+    const hash_t b2 = sum_b.get_global_hash();
+    const hash_t w2 = sum_w.get_global_hash();
     assert(b1 != b2 && w1 != w2 && b2 != w2);
 
     // Remove games --> empty again
     sum_b.pop(&g1);
     sum_w.pop(&g1);
 
-    const hash_t b3 = sum_b.get_global_hash_value();
-    const hash_t w3 = sum_w.get_global_hash_value();
+    const hash_t b3 = sum_b.get_global_hash();
+    const hash_t w3 = sum_w.get_global_hash();
     assert(b3 == b1 && w3 == w1);
 
     // Add games in different orders
     // g1 then g2
     sum_b.add(&g1);
     sum_b.add(&g2);
-    const hash_t b4 = sum_b.get_global_hash_value();
+    const hash_t b4 = sum_b.get_global_hash();
     sum_b.pop(&g2);
     sum_b.pop(&g1);
 
     // g2 then g1
     sum_b.add(&g2);
     sum_b.add(&g1);
-    const hash_t b5 = sum_b.get_global_hash_value();
+    const hash_t b5 = sum_b.get_global_hash();
     sum_b.pop(&g1);
     sum_b.pop(&g2);
 
@@ -328,13 +328,13 @@ void test_sum_mutate()
 
     assert(sum_b.to_play() == BLACK);
     assert(sum_w.to_play() == WHITE);
-    const hash_t b6 = sum_b.get_global_hash_value();
-    const hash_t w6 = sum_w.get_global_hash_value();
+    const hash_t b6 = sum_b.get_global_hash();
+    const hash_t w6 = sum_w.get_global_hash();
 
     sum_b.set_to_play(WHITE);
     sum_w.set_to_play(BLACK);
-    const hash_t b7 = sum_b.get_global_hash_value();
-    const hash_t w7 = sum_w.get_global_hash_value();
+    const hash_t b7 = sum_b.get_global_hash();
+    const hash_t w7 = sum_w.get_global_hash();
     assert(b6 == w7 && w6 == b7);
 }
 

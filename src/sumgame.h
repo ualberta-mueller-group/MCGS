@@ -10,11 +10,11 @@
 #include "sumgame_change_record.h"
 #include "transposition.h"
 
-struct empty_struct
+struct ttable_sumgame_entry
 {
 };
 
-typedef ttable<empty_struct> ttable_sumgame;
+typedef ttable<ttable_sumgame_entry> ttable_sumgame;
 
 //////////////////////////////////////// forward declarations
 class sumgame_move_generator;
@@ -111,7 +111,7 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 
-    hash_t get_global_hash_value(); // TODO: this method may be temporary
+    hash_t get_global_hash(); // TODO: this method may be temporary
 
 private:
     class undo_stack_unwinder;

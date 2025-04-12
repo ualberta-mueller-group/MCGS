@@ -41,7 +41,7 @@ public:
     // calls _split_impl() and filters out games having no moves
     split_result split() const;
 
-    const local_hash& compute_hash();
+    hash_t get_local_hash();
 
     void normalize();
     void undo_normalize();

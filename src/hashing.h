@@ -1,6 +1,7 @@
 #pragma once
 /*
-   random_table, local_hash, global_hash
+   Defines data types used for game hashing:
+       hash_t, random_table, local_hash, global_hash
 */
 
 #include <vector>
@@ -18,10 +19,12 @@ typedef uint64_t hash_t;
 class random_table
 {
 public:
+    // seed 0 means seed using current time
     random_table(size_t n_positions, uint64_t seed);
 
+    // get a number from the random_table for zobrist hashing
     template <class T>
-    hash_t get(const size_t& position, const T& color) const
+    hash_t get_zobrist_val(size_t position, const T& color) const
     {
         // Prevent rotate_interleaved distance from wrapping and overlapping
         static_assert((sizeof(T) * CHAR_BIT) / 8 <= 16); // <= 16 bytes
@@ -30,8 +33,9 @@ public:
 
         hash_t value = 0;
 
-        // Signed values are sign extended when right shifted; avoid this
-        using T_Unsigned = std::make_unsigned_t<T>; // NOLINT
+        // don't right shift signed values
+        // NOLINTNEXTLINE(readability-identifier-naming)
+        using T_Unsigned = std::make_unsigned_t<T>;
         static_assert(sizeof(T_Unsigned) == sizeof(T));
         const T_Unsigned& color_u = reinterpret_cast<const T_Unsigned&>(color);
 
@@ -68,28 +72,37 @@ public:
         return value;
     }
 
+    // Because bool is invalid input to std::make_unsigned_t<T>
+    hash_t get_zobrist_val(size_t position, const bool& color) const
+    {
+        return get_zobrist_val(position, (uint8_t) color);
+    }
+
 private:
-    void _init();
+    void _init(uint64_t seed);
 
     static constexpr size_t _ELEMENTS_PER_POSITION = 256;
 
     std::mt19937_64 _rng;
-    static std::uniform_int_distribution<hash_t> _dist;
+
+    // using hash_t here may be undefined behavior
+    static_assert(sizeof(unsigned long long) >= sizeof(hash_t));
+    static std::uniform_int_distribution<unsigned long long> _dist;
 
     const size_t _n_positions;
-    size_t _wrap_shift_amount;
 
     std::vector<hash_t> _number_table;
 };
 
 enum global_random_table_id
 {
-    RANDOM_TABLE_DEFAULT = 0,
-    RANDOM_TABLE_TYPE,
-    RANDOM_TABLE_MODIFIER,
-    RANDOM_TABLE_PLAYER,
+    RANDOM_TABLE_DEFAULT = 0, // for content of a game (nogo tiles, integer_game int etc)
+    RANDOM_TABLE_TYPE, // for game type
+    RANDOM_TABLE_MODIFIER, // to modify local_hash in a sum based on its position
+    RANDOM_TABLE_PLAYER, // for player color (i.e. "to_play")
 };
 
+// seed 0 means seed with current time
 void init_global_random_tables(uint64_t seed);
 random_table& get_global_random_table(global_random_table_id table_id);
 
@@ -112,13 +125,13 @@ public:
     }
 
     template <class T>
-    void toggle_tile(const size_t& position, const T& color)
+    void toggle_tile(size_t position, const T& color)
     {
         random_table& rt = get_global_random_table(RANDOM_TABLE_DEFAULT);
-        _value ^= rt.get(position, color);
+        _value ^= rt.get_zobrist_val(position, color);
     }
 
-    void toggle_type(const game_type_t& type);
+    void toggle_type(game_type_t type);
 
 private:
     hash_t _value;
@@ -143,6 +156,8 @@ public:
 
 private:
     void _resize_if_out_of_range(size_t subgame_idx);
+
+    // hash modifier of a local_hash based on subgame index
     hash_t _get_modified_hash(size_t subgame_idx, game* g);
 
     hash_t _value;
@@ -152,5 +167,3 @@ private:
     std::vector<bool> _subgame_valid_mask;
 };
 
-////////////////////////////////////////////////////////////
-void test_hashing_final();

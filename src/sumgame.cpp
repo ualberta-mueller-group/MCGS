@@ -322,7 +322,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
     simplify_basic();
 
-    const hash_t current_hash = get_global_hash_value();
+    const hash_t current_hash = get_global_hash();
     ttable_sumgame::iterator tt_iterator = _tt.get_iterator(current_hash);
     if (tt_iterator.entry_valid())
     {
@@ -565,7 +565,7 @@ void sumgame::print(std::ostream& str) const
     str << std::endl;
 }
 
-hash_t sumgame::get_global_hash_value()
+hash_t sumgame::get_global_hash()
 {
     global_hash gh;
     gh.set_to_play(to_play());
