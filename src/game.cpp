@@ -90,10 +90,10 @@ void game::undo_move()
     _move_stack.pop_back();
 }
 
-const local_hash& game::compute_hash()
+hash_t game::get_local_hash()
 {
     if (_hash_valid())
-        return _hash;
+        return _hash.get_value();
     else
     {
         _hash.reset();
@@ -104,7 +104,7 @@ const local_hash& game::compute_hash()
         _hash_state = HASH_STATE_OK;
     }
 
-    return _hash;
+    return _hash.get_value();
 }
 
 void game::normalize()

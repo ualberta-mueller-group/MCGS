@@ -1,11 +1,10 @@
 #include "hash_eval.h"
 #include "cgt_switch.h"
 #include "clobber_1xn.h"
-#include "hashing_benchmark.h"
+//#include "hashing_benchmark.h"
 #include <iostream>
 #include <memory>
 #include "all_game_headers.h"
-#include "throw_assert.h"
 #include "utilities.h"
 
 using namespace std;
@@ -33,13 +32,13 @@ void hash_test::_add_hash(const hash_t& hash)
 
 void hash_test::_add_hash(game& g)
 {
-    if(!_add_hash_impl(g.compute_hash().get_value()))
+    if(!_add_hash_impl(g.get_local_hash()))
         cout << "COLLISION: " << g << endl;
 }
 
 void hash_test::_add_hash(sumgame& sg)
 {
-    _add_hash_impl(sg.get_global_hash_value());
+    _add_hash_impl(sg.get_global_hash());
 }
 
 void hash_test::_add_hash(local_hash& lh)
@@ -570,11 +569,6 @@ public:
 
 void hash_eval_all()
 {
-    {
-        //hash_tests::test_local_all_games test;
-        //test.run_test(true);
-    }
-    
     {
         hash_tests::test_global_long_repeat test;
         test.run_test(true);

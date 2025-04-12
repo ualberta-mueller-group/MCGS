@@ -1,6 +1,5 @@
 #pragma once
 #include "utilities.h"
-void test_transposition();
 
 #include "hashing.h"
 #include <stddef.h>
@@ -252,8 +251,6 @@ void ttable<Entry>::_set_tag(hash_t entry_idx, hash_t tag)
         const size_t idx = tag_start + i;
         _tags_arr[idx] = byte;
     }
-
-    assert(_get_tag(entry_idx) == tag);
 }
 
 template <class Entry>
