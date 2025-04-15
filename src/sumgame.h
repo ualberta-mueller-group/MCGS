@@ -75,7 +75,7 @@ class sumgame : public alternating_move_game
 {
 public:
     sumgame(bw color);
-    ~sumgame();
+    virtual ~sumgame();
 
     void play_sum(const sumgame_move& m, bw to_play);
     void undo_move() override;
