@@ -27,8 +27,8 @@ random_table::random_table(size_t n_positions, uint64_t seed)
 
 void random_table::print_resize_warning()
 {
-    cerr << "WARNING: a random_table was resized during a test. This may "
-        "affect validity of reported times." << endl;
+    cerr << "WARNING: a random_table was resized 1 or more times during search."
+        " This may affect validity of reported times." << endl;
 }
 
 void random_table::_init(uint64_t seed, size_t n_positions)
