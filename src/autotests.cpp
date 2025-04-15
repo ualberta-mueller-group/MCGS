@@ -14,6 +14,7 @@
 #include <vector>
 #include <sstream>
 #include <chrono>
+#include "hashing.h"
 
 using namespace std;
 
@@ -225,6 +226,9 @@ void run_autotests(const string& test_directory, const string& outfile_name,
             case_number++;
         }
     }
+
+    if (random_table::did_resize())
+        random_table::print_resize_warning();
 
     outfile.close();
 }
