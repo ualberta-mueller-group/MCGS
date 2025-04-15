@@ -12,36 +12,56 @@ using namespace std;
 
 ////////////////////////////////////////////////// random_table
 std::uniform_int_distribution<unsigned long long> random_table::_dist(1, std::numeric_limits<unsigned long long>::max());
+bool random_table::_did_resize = false;
 
-random_table::random_table(size_t n_positions, uint64_t seed): _n_positions(n_positions)
+random_table::random_table(size_t n_positions, uint64_t seed)
+    : _n_positions(0)
 {
     while (seed == 0)
         seed = ms_since_epoch();
 
     std::cout << "Random table constructing with seed " << seed << std::endl;
 
-    _init(seed);
+    _init(seed, n_positions);
 }
 
-void random_table::_init(uint64_t seed)
+void random_table::print_resize_warning()
 {
-    assert(_n_positions > 0);
-    assert(is_power_of_2(_n_positions));
+    cerr << "WARNING: a random_table was resized during a test. This may "
+        "affect validity of reported times." << endl;
+}
+
+void random_table::_init(uint64_t seed, size_t n_positions)
+{
+    assert(n_positions > 0);
 
     _rng.seed(seed);
+
+    _resize_to(n_positions);
+
+    std::cout << "Initialized with n_positions = " << n_positions << std::endl;
+    std::cout << "Size is " << _number_table.size() << std::endl;
+}
+
+void random_table::_resize_to(size_t new_n_positions)
+{
+    assert(new_n_positions > _n_positions);
 
     auto get_number = [&]() -> hash_t
     {
         return (hash_t) _dist(_rng);
     };
 
-    _number_table.resize(_n_positions * _ELEMENTS_PER_POSITION);
+    const size_t old_n_positions = _n_positions;
 
-    for (hash_t& element : _number_table)
-        element = get_number();
+    _n_positions = new_n_positions;
+    _number_table.resize(new_n_positions * _ELEMENTS_PER_POSITION);
 
-    std::cout << "Initialized with n_positions = " << _n_positions << std::endl;
-    std::cout << "Size is " << _number_table.size() << std::endl;
+    const size_t new_table_size = _number_table.size();
+    for (size_t i = old_n_positions * _ELEMENTS_PER_POSITION; i < new_table_size; i++)
+    {
+        _number_table[i] = get_number();
+    }
 }
 
 namespace {
@@ -63,6 +83,10 @@ void init_global_random_tables(uint64_t seed)
 
     auto next_seed = [&]() -> uint64_t
     {
+        /*
+           don't seed tables with values directly from the random number
+           generator; this may cause table values to overlap
+        */
         return (uint64_t) (dist(rng) * 5167);
     };
 
@@ -72,7 +96,7 @@ void init_global_random_tables(uint64_t seed)
     global_random_tables.emplace_back(1024, next_seed());
 
     assert(RANDOM_TABLE_TYPE == 1);
-    global_random_tables.emplace_back(32, next_seed());
+    global_random_tables.emplace_back(1, next_seed());
 
     assert(RANDOM_TABLE_MODIFIER == 2);
     global_random_tables.emplace_back(128, next_seed());
@@ -95,7 +119,7 @@ void local_hash::toggle_type(game_type_t type)
     static_assert(!is_signed_v<game_type_t>);
 
     random_table& rt = get_global_random_table(RANDOM_TABLE_TYPE);
-    _value ^= rt.get_zobrist_val(type, type);
+    _value ^= rt.get_zobrist_val(0, type);
 }
 
 ////////////////////////////////////////////////// global_hash
@@ -146,12 +170,12 @@ void global_hash::set_to_play(bw new_to_play)
 
     if (_to_play != EMPTY)
     {
-        _value ^= rt.get_zobrist_val(_to_play, _to_play);
+        _value ^= rt.get_zobrist_val(0, _to_play);
         _to_play = EMPTY;
     }
 
     _to_play = new_to_play;
-    _value ^= rt.get_zobrist_val(new_to_play, new_to_play);
+    _value ^= rt.get_zobrist_val(0, new_to_play);
 }
 
 void global_hash::_resize_if_out_of_range(size_t subgame_idx)

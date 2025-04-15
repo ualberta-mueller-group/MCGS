@@ -110,4 +110,10 @@ int main(int argc, char** argv)
             gc.cleanup_games();
         }
     }
+
+
+    if (random_table::did_resize())
+        random_table::print_resize_warning();
+
+    return 0;
 }
