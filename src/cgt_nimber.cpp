@@ -37,7 +37,7 @@ void nimber::_undo_move_impl()
 
 void nimber::_init_hash(local_hash& hash)
 {
-    hash.toggle_tile(0, _value);
+    hash.toggle_value(0, _value);
 }
 
 relation nimber::_order_impl(const game* rhs) const

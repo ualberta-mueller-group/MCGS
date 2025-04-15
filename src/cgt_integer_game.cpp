@@ -49,7 +49,7 @@ void integer_game::_undo_move_impl()
 
 void integer_game::_init_hash(local_hash& hash)
 {
-    hash.toggle_tile(0, _value);
+    hash.toggle_value(0, _value);
 }
 
 relation integer_game::_order_impl(const game* rhs) const

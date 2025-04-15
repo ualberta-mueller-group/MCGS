@@ -69,18 +69,18 @@ void switch_game::_init_hash(local_hash& hash)
 {
     if (!is_rational())
     {
-        hash.toggle_tile(0, 0);
-        hash.toggle_tile(1, _left.top());
-        hash.toggle_tile(2, _left.bottom());
+        hash.toggle_value(0, 0);
+        hash.toggle_value(1, _left.top());
+        hash.toggle_value(2, _left.bottom());
 
-        hash.toggle_tile(3, _right.top());
-        hash.toggle_tile(4, _right.bottom());
+        hash.toggle_value(3, _right.top());
+        hash.toggle_value(4, _right.bottom());
     } else
     {
         const fraction& f = value();
-        hash.toggle_tile(0, 1);
-        hash.toggle_tile(5, f.top());
-        hash.toggle_tile(6, f.bottom());
+        hash.toggle_value(0, 1);
+        hash.toggle_value(5, f.top());
+        hash.toggle_value(6, f.bottom());
     }
 }
 

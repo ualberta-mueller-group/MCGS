@@ -155,7 +155,7 @@ public:
     }
 
     template <class T>
-    void toggle_tile(size_t position, const T& color)
+    void toggle_value(size_t position, const T& color)
     {
         random_table& rt = get_global_random_table(RANDOM_TABLE_DEFAULT);
         _value ^= rt.get_zobrist_val(position, color);

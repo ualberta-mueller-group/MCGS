@@ -77,8 +77,8 @@ void up_star::_undo_move_impl()
 
 void up_star::_init_hash(local_hash& hash)
 {
-    hash.toggle_tile(0, _value);
-    hash.toggle_tile(1, _star);
+    hash.toggle_value(0, _value);
+    hash.toggle_value(1, _star);
 }
 
 relation up_star::_order_impl(const game* rhs) const

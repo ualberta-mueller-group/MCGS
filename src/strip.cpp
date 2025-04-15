@@ -104,7 +104,7 @@ void strip::_init_hash(local_hash& hash)
     const size_t N = this->size();
 
     for (size_t i = 0; i < N; i++)
-        hash.toggle_tile(i, this->at(i));
+        hash.toggle_value(i, this->at(i));
 }
 
 void strip::_normalize_impl()
