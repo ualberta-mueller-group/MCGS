@@ -114,11 +114,11 @@ void elephants::_play_impl(const move& m, bw to_play)
     if (_hash_valid())
     {
         local_hash& hash = _get_hash_ref();
-        hash.toggle_tile(from, to_play);
-        hash.toggle_tile(to, EMPTY);
+        hash.toggle_value(from, to_play);
+        hash.toggle_value(to, EMPTY);
 
-        hash.toggle_tile(from, EMPTY);
-        hash.toggle_tile(to, to_play);
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, to_play);
 
         _mark_hash_updated();
     }
@@ -144,11 +144,11 @@ void elephants::_undo_move_impl()
     if (_hash_valid())
     {
         local_hash& hash = _get_hash_ref();
-        hash.toggle_tile(from, EMPTY);
-        hash.toggle_tile(to, to_play);
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, to_play);
 
-        hash.toggle_tile(from, to_play);
-        hash.toggle_tile(to, EMPTY);
+        hash.toggle_value(from, to_play);
+        hash.toggle_value(to, EMPTY);
 
         _mark_hash_updated();
     }

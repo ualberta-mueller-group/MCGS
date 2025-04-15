@@ -116,8 +116,8 @@ void nogo_1xn::_play_impl(const move& m, bw to_play)
     if (_hash_valid())
     {
         local_hash& hash = _get_hash_ref();
-        hash.toggle_tile(to, EMPTY);
-        hash.toggle_tile(to, to_play);
+        hash.toggle_value(to, EMPTY);
+        hash.toggle_value(to, to_play);
         _mark_hash_updated();
     }
 
@@ -136,8 +136,8 @@ void nogo_1xn::_undo_move_impl()
     if (_hash_valid())
     {
         local_hash& hash = _get_hash_ref();
-        hash.toggle_tile(to, player);
-        hash.toggle_tile(to, EMPTY);
+        hash.toggle_value(to, player);
+        hash.toggle_value(to, EMPTY);
         _mark_hash_updated();
     }
 

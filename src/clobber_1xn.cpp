@@ -106,11 +106,11 @@ void clobber_1xn::_play_impl(const move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
-        hash.toggle_tile(from, to_play);
-        hash.toggle_tile(to, opponent(to_play));
+        hash.toggle_value(from, to_play);
+        hash.toggle_value(to, opponent(to_play));
 
-        hash.toggle_tile(from, EMPTY);
-        hash.toggle_tile(to, to_play);
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, to_play);
         _mark_hash_updated();
     }
 
@@ -134,11 +134,11 @@ void clobber_1xn::_undo_move_impl()
     {
         local_hash& hash = _get_hash_ref();
 
-        hash.toggle_tile(from, EMPTY);
-        hash.toggle_tile(to, player);
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, player);
 
-        hash.toggle_tile(from, player);
-        hash.toggle_tile(to, opponent(player));
+        hash.toggle_value(from, player);
+        hash.toggle_value(to, opponent(player));
         _mark_hash_updated();
     }
 

@@ -257,6 +257,146 @@ in a sum.
 and is stored in the move stack. 
 - `undo_move` must respect and use the move player color information in the stack.
 
+# Hashing (`hashing.h`)
+Defines main data types for game hashing:
+- `hash_t`
+    - typedef of `uint64_t`
+    - each game, or sum of games, produces a unique `hash_t` value
+- `random_table` class
+    - table of random numbers used by Zobrist hashing
+- `local_hash` class
+    - manages a `hash_t` for a single `game` object
+- `global_hash` class
+    - manages a `hash_t` for a single `sumgame` object
+
+## `random_table`
+A `random_table` is constructed with two arguments: `n_positions`, and `seed`,
+specifying how many positions (i.e. stones in a strip game) are
+represented in the table, and the seed for the random numbers in the table. A
+seed of 0 seeds the table with the current time (in ms) since the system
+clock's epoch.
+
+A `random_table` is indexed via the `get_zobrist_val()` template method, by a pair
+of integral values, (`position`, and `color`), returning a `hash_t`. `color` can
+be any 1-16 byte (inclusive) integral value. If `position` is past the bounds
+of the table, the table will grow and print a warning to stderr (only the first
+time this happens), and an additional warning is printed to stderr after
+completion of all tests.
+
+### Global `random_table`s
+There are several global `random_table`s, initialized by `mcgs_init()`
+(`mcgs_init.h`), and accessible via the `get_global_random_table(table_id)` function
+(`hashing.h`). Each table is used for a different purpose, to avoid accidental
+hash collisions.
+
+Table IDs:
+- RANDOM_TABLE_DEFAULT
+    - Used for "state" of a game (i.e. stones in a strip, `int`s of a rational)
+- RANDOM_TABLE_TYPE
+    - Used for type of a game (its `game_type_t`)
+- RANDOM_TABLE_MODIFIER
+    - Used to modify a game's `local_hash` based on its order in a `sumgame`
+- RANDOM_TABLE_PLAYER
+    - Used for color of current player to play
+
+### `random_table` Indexing and Hacks
+All `random_table` objects represent all 1-16 byte `color` values for all
+positions in the table, using a hack to generate corresponding `hash_t` values
+by modifying and combining a smaller set of values stored in memory.
+
+Every position in a `random_table` has a unique array of 256 `hash_t` values,
+used to generate the value returned by `get_zobrist_val()`. Pseudocode below:
+
+```
+// get_zobrist_val(position, color)
+
+subtable = tables[position] // array of 256 hash_t for this position
+result = 0
+i = 0
+
+do
+    byte = (color >> (i * 8)) & 0xFF // logical right shift
+    element = subtable[byte]
+    element = rotate(element, 3 * i) // i.e. rotate bits left
+    result ^= element
+while color has remaining non-zero bytes
+
+return result
+```
+
+The actual "rotate" function used is `rotate_interleaved()` (`utilities.h`).
+Bits masked by `0101...0101` are rotated left, and bits masked by `1010...1010`
+are rotated right.
+
+## local_hash
+Manages the `hash_t` of a `game`.
+
+Methods:
+- `toggle_value(size_t position, INTEGRAL color)`
+    - XOR the current hash value with a `hash_t` from `RANDOM_TABLE_DEFAULT` at `position` and `color`
+- `toggle_type(game_type_t type)`
+    - XOR the current hash value with a `hash_t` from `RANDOM_TABLE_TYPE` at position 0 and color `type`
+- `reset()`
+    - Reset the hash to 0
+- `get_value()`
+    - Get the current `hash_t` value
+
+## global_hash
+Manages the `hash_t` of a `sumgame`.
+
+To compute a global hash for a `sumgame` `S`, each `game` of `S` is sorted
+according to `game::order()`, to give each game a subgame index `i`. Then, each
+game `g_i` has a local hash `h_i`, resulting in a modified hash `H_i`
+when passed to a hash modifier function i.e. `H_i := hmod(h_i, i)` for
+some modifier function `hmod`.
+
+The actual hash modifier function returns the `hash_t` from
+RANDOM_TABLE_MODIFIER at position `i` and color `h_i`.
+
+The global hash is then the XOR of each `H_i`, and the `hash_t` from
+RANDOM_TABLE_PLAYER at position 0 and the color of the current player to play.
+
+Methods:
+- `add_subgame(size_t subgame_idx, game* g)`
+    - Given `g_i`, get `h_i`, compute and store `H_i`, then XOR `H_i` into
+        the current global hash value
+- `remove_subgame(size_t subgame_idx, game* g)`
+    - Given `g_i`, XOR the previously stored `H_i` out of the current global
+        hash value
+- `set_to_play(bw to_play)`
+    - Get the `hash_t` from `RANDOM_TABLE_PLAYER` at position 0 and
+        color `to_play` and XOR it into the current global hash value
+- `reset()`
+    - Reset the global hash value to 0, and clear all stored modified hashes
+- `get_value()`
+    - Get the current `hash_t` value
+
+# Transposition Tables (`transposition.h`)
+Defines types for transposition tables:
+- `ttable<Entry>` class
+    - A transposition table whose entries are of type `Entry`
+- `ttable<Entry>::iterator` class
+    - A reference to a (possibly absent) `Entry` in the transposition table,
+        corresponding to a particular `hash_t`
+
+A `ttable` is constructed with two arguments:
+- `size_t index_bits`
+    - How many bits of a `hash_t` are used to index into the `ttable`. The
+        number of `Entry`s in the table is `2^entry_bits`
+    - The remaining non-index bits are the "tag bits", and are stored alongside
+        each `Entry`
+- `size_t entry_bools`
+    - Quantity of extra `bool`s to associate with each `Entry`, stored outside
+        of the `Entry` as a tightly packed bit vector, and accessed through
+        the `ttable<Entry>::iterator` type
+
+A `ttable` has one method: `ttable<Entry>::get_iterator(hash_t hash)`, returning
+a `ttable<Entry>::iterator` corresponding to the `hash`. The iterator can access
+and modify the underlying `Entry` and its corresponding packed bools
+(if the entry is in the table), and can also initialize the entry if it's not
+in the table.
+
+
 # Bounds (`bounds.h`)
 Defines functions and types used for finding lower and upper bounds of games.
 

@@ -74,8 +74,8 @@ void dyadic_rational::_undo_move_impl()
 
 void dyadic_rational::_init_hash(local_hash& hash)
 {
-    hash.toggle_tile(0, _p);
-    hash.toggle_tile(1, _q);
+    hash.toggle_value(0, _p);
+    hash.toggle_value(1, _q);
 }
 
 relation dyadic_rational::_order_impl(const game* rhs) const

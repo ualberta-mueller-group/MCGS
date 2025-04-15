@@ -18,7 +18,7 @@ local_hash
     void reset();
     hash_t get_value() const;
 
-    void toggle_tile<T>(const size_t& position, const T& color);
+    void toggle_value<T>(const size_t& position, const T& color);
     // TODO: do we need an alternative method for basic CGT games? Maybe this is sufficient?
 
     hash_t _value;

@@ -515,7 +515,7 @@ public:
         for (uint32_t i = 0; i < (1 << N_BITS); i++)
         {
             local_hash lh1;
-            lh1.toggle_tile(0, i);
+            lh1.toggle_value(0, i);
             _add_hash(lh1);
 
             if (i == 0)
@@ -526,7 +526,7 @@ public:
             assert((duplicated >> 32) == i);
 
             local_hash lh2;
-            lh2.toggle_tile(0, duplicated);
+            lh2.toggle_value(0, duplicated);
             _add_hash(lh2);
         }
     }
