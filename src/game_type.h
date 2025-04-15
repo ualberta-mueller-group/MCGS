@@ -25,6 +25,10 @@ public:
         return __game_type_impl::__get_game_type(typeid(*this));
     }
 
+    virtual ~i_game_type()
+    {
+    }
+
 private:
     // ensure the type is polymorphic
     // NOLINTNEXTLINE(readability-identifier-naming)

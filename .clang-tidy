@@ -4,7 +4,10 @@ Checks: "-*,
   google-global-names-in-headers,
   misc-definitions-in-headers,
   misc-use-internal-linkage,
-  bugprone-assert-side-effect,"
+  bugprone-assert-side-effect,
+  cppcoreguidelines-virtual-class-destructor,"
+#  misc-include-cleaner,"
+
 
 WarningsAsErrors: "-*,
   readability-identifier-naming,
@@ -12,7 +15,9 @@ WarningsAsErrors: "-*,
   google-global-names-in-headers,
   misc-definitions-in-headers,
   misc-use-internal-linkage,
-  bugprone-assert-side-effect,"
+  bugprone-assert-side-effect,
+  cppcoreguidelines-virtual-class-destructor,"
+#  misc-include-cleaner,"
 
 HeaderFilterRegex: .h
 SystemHeaders: false
