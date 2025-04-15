@@ -58,7 +58,7 @@ struct cli_options
         static size_t _tt_sumgame_idx_bits;
     public:
         static size_t tt_sumgame_idx_bits() {return _tt_sumgame_idx_bits;}
-        static constexpr size_t DEFAULT_TT_SUMGAME_IDX_BITS = 24;
+        static constexpr size_t DEFAULT_TT_SUMGAME_IDX_BITS = 28;
 
         friend cli_options;
     };

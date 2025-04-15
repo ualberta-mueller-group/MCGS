@@ -111,6 +111,16 @@ void nogo_1xn::_play_impl(const move& m, bw to_play)
     const int to = m;
     assert(at(to) == EMPTY);
     //game::play(m, to_play);
+
+    // incremental hash
+    if (_hash_valid())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_tile(to, EMPTY);
+        hash.toggle_tile(to, to_play);
+        _mark_hash_updated();
+    }
+
     replace(to, to_play);
 }
 
@@ -121,6 +131,16 @@ void nogo_1xn::_undo_move_impl()
     //game::undo_move();
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
+
+    // incremental hash
+    if (_hash_valid())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_tile(to, player);
+        hash.toggle_tile(to, EMPTY);
+        _mark_hash_updated();
+    }
+
     replace(to, EMPTY);
 }
 

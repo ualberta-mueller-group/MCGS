@@ -110,6 +110,19 @@ void elephants::_play_impl(const move& m, bw to_play)
     assert(checked_is_color(to, EMPTY));
     assert((to - from) == player_dir(to_play)); // correct direction
 
+    // incremental hash
+    if (_hash_valid())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_tile(from, to_play);
+        hash.toggle_tile(to, EMPTY);
+
+        hash.toggle_tile(from, EMPTY);
+        hash.toggle_tile(to, to_play);
+
+        _mark_hash_updated();
+    }
+
     play_stone(to, to_play);
     remove_stone(from);
 }
@@ -124,8 +137,21 @@ void elephants::_undo_move_impl()
     int from = cgt_move::decode3(mc, &to, &to_play);
 
     assert(is_black_white(to_play));
-    assert(checked_is_color(to, to_play));
     assert(checked_is_color(from, EMPTY));
+    assert(checked_is_color(to, to_play));
+
+    // incremental hash
+    if (_hash_valid())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_tile(from, EMPTY);
+        hash.toggle_tile(to, to_play);
+
+        hash.toggle_tile(from, to_play);
+        hash.toggle_tile(to, EMPTY);
+
+        _mark_hash_updated();
+    }
 
     play_stone(from, to_play);
     remove_stone(to);

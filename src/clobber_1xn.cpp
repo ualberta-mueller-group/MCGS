@@ -100,6 +100,20 @@ void clobber_1xn::_play_impl(const move& m, bw to_play)
     assert(at(from) == to_play);
     assert(at(to) == opponent(to_play));
     //game::play(m, to_play);
+
+    // incremental hash
+    if (_hash_valid())
+    {
+        local_hash& hash = _get_hash_ref();
+
+        hash.toggle_tile(from, to_play);
+        hash.toggle_tile(to, opponent(to_play));
+
+        hash.toggle_tile(from, EMPTY);
+        hash.toggle_tile(to, to_play);
+        _mark_hash_updated();
+    }
+
     replace(from, EMPTY);
     replace(to, to_play);
 }
@@ -114,6 +128,19 @@ void clobber_1xn::_undo_move_impl()
     const bw player = cgt_move::get_color(mc);
     assert(at(from) == EMPTY);
     assert(at(to) == player);
+
+    // incremental hash
+    if (_hash_valid())
+    {
+        local_hash& hash = _get_hash_ref();
+
+        hash.toggle_tile(from, EMPTY);
+        hash.toggle_tile(to, player);
+
+        hash.toggle_tile(from, player);
+        hash.toggle_tile(to, opponent(player));
+        _mark_hash_updated();
+    }
 
     replace(from, player);
     replace(to, opponent(player));
