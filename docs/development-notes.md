@@ -148,6 +148,11 @@ This is not implemented, but described as a possible future task.
 
 # More on data types
 
+## `cli_options` struct (`cli_options.h`)
+Holds values resulting from parsing command-line arguments
+- Returned by static method `cli_options::parse_args`
+- Holds optimization options as global/static fields of `cli_options::optimize`
+
 ## `sumgame_move` struct (`sumgame.h`)
 Represents a move made in a `sumgame`
 - Contains a subgame index and the `move` made in the subgame
@@ -361,13 +366,21 @@ Methods:
 Manages the `hash_t` of a `sumgame`.
 
 ### Global Hash Value Definition
+`sumgame::get_global_hash()` computes the hash of a `sumgame`. The definition
+of this value is described below.
+
 To compute the `global_hash` value for a `sumgame` `S`:
 1. Sort the `game`s of `S` according to `game::order()` so that each `game` `g_i` has a subgame index `i`
 2. For each `g_i`, get its `local_hash` value `h_i`
 3. For each `h_i`, compute a modified hash `H_i := hmod(h_i, i)`, for some hash modifier function `hmod`
     - The actual `hmod` function is `H_i := RANDOM_TABLE_MODIFIER[i, h_i]`
+    - Using a linear congruential generator instead doesn't seem to be significantly different in terms of performance
 4. Given the player to play `p`, compute `P := RANDOM_TABLE_PLAYER[0, p]`
 5. The `global_hash` value is the XOR of all `H_i`, and `P`
+
+TODO: Currently `sumgame::get_global_hash()` sorts all of the `sumgame`'s games
+every time it's called. `sumgame` could maintain an ordering of its games to
+prevent this.
 
 ### `global_hash` methods
 Methods:
@@ -385,13 +398,52 @@ Methods:
 - `get_value()`
     - Get the current `hash_t` value. Must first set `p`
 
+## `game` Hooks Related to Hashing
+`game` has several virtual methods related to hashing, some of which have
+default implementations.
+
+`game::order(const game*)` returns a `relation` enum value, indicating the
+ordering of two games. Considering two games `g1` and `g2`, `g1 < g2` (for
+ordering) when:
+- `g1`'s `game_type_t` is less than `g2`'s
+- If `g1` and `g2` are of the same type, the returned value is
+    `g1._order_impl(g2)`
+    - If `_order_impl` returns `REL_UNKNOWN`, the value returned by
+        `game::order` is instead `REL_EQUAL`
+
+Hooks without default implementations:
+- `game::_init_hash(local_hash& hash)`
+    - When called, `hash` has been reset, and has had its type set. The
+        implementer needs to initialize the hash
+
+Hooks with default implementations:
+- `game::_order_impl(const game*)`
+    - Only called on two games of the same type. Returns ordering of the games,
+        as a `relation` enum value. Default returns `REL_UNKNOWN`
+    - Implementer should cast the game pointer argument to their game's type,
+        i.e. `clobber_1xn::_order_impl` should cast from `const game*` to
+        `const clobber_1xn*`
+- `game::_normalize_impl()`
+    - Normalize a game. Default does nothing
+- `game::_undo_normalize_impl()`
+    - Undo normalization of a game. Default does nothing
+
+`strip` provides default implementations:
+- `strip::_init_hash`
+    - Computes hash of the board. Assumes that the board contains all of the
+        game's state
+- `strip::_normalize_impl()` and `strip::_undo_normalize_impl()`
+    - Potentially reverses the board based on lexicographical order
+- `strip::_order_impl(const game* rhs)`
+    - Ordering based on lexicographical ordering of boards
+
 # Transposition Tables (`transposition.h`)
 Defines types for transposition tables:
 - `ttable<Entry>` class
     - A transposition table whose entries are of type `Entry`
 - `ttable<Entry>::iterator` class
     - The value returned by querying the transposition table with a `hash_t`.
-        Refers to a (possible absent) table entry and its associated data.
+        Refers to a (possibly absent) table entry and its associated data.
         Used to access, modify, or insert the table entry (and its associated
         data) for this hash
 
@@ -403,7 +455,7 @@ A `ttable<Entry>` is constructed with two arguments:
         each entry
 - `size_t entry_bools`
     - Quantity of extra `bool`s to associate with each entry, stored outside
-        of the `Entry` as a tightly packed bit vector, and accessed through
+        of the `Entry` in a tightly packed bit vector, and accessed through
         the `ttable<Entry>::iterator` type
 
 `ttable<Entry>` methods:
