@@ -35,6 +35,8 @@ make test
 ```
 This will build and then run `./MCGS_test`, and on successful completion of unit tests, the text "SUCCESS" should appear. Running all tests can take several seconds, depending on your hardware.
 
+Developers can also check for memory leaks by overriding the `LEAKCHECK` makefile variable, setting it to `1` or `true`, i.e. `make MCGS LEAKCHECK=1`, or `make LEAKCHECK=true`. This will compile source files with the `-fsanitize=leak` flag, and requires a clean build.
+
 ### Using MCGS
 `MCGS` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. The example below solves a linear clobber game `XOXOXO` twice, once with black playing first, and once with white playing first: 
 ```
