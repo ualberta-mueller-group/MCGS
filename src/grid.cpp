@@ -65,7 +65,10 @@ namespace {
             }
         }
         n_rows++;
-        THROW_ASSERT(n_cols == counter);
+        if (n_cols == 0)
+            n_cols = counter;
+        else
+            THROW_ASSERT(n_cols == counter);
 
         int_pair shape = {n_rows, n_cols};
         return {board, shape};
