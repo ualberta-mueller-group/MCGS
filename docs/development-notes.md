@@ -438,12 +438,19 @@ Hooks with default implementations:
 - `strip::_order_impl(const game* rhs)`
     - Ordering based on lexicographical ordering of boards
 
-`game`s can incrementally update their hashes in their `_play_impl()` and
-`_undo_impl()` methods:
+### Incremental Hash Updates
+`game`s can optionally incrementally update their hashes in the following methods:
+- `_play_impl()`
+- `_undo_impl()`
+- `_normalize_impl()`
+- `_undo_normalize_impl()`
+
+To incrementally update a hash, follow these steps:
 1. If `_hash_valid()` returns `true`, the hash can be updated, otherwise it cannot
 2. Get a reference to the `local_hash` through `_get_hash_ref()`
 3. Remove relevant previous state from the hash, and add the new state, using `local_hash::toggle_value(position, color)` to do both
 4. Call `_mark_hash_updated()`. If this function is not called, the hash will be discarded, to be recomputed later by `_init_hash()` as needed
+    - Some games/methods opt to discard hashes, when updating them isn't worth the cost
 
 # Transposition Tables (`transposition.h`)
 Defines types for transposition tables:
