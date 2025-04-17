@@ -338,7 +338,7 @@ Manages the `hash_t` of a `sumgame`.
 of this value is described below.
 
 To compute the `global_hash` value for a `sumgame` `S`:
-1: Normalize each `game` of `S` by calling `game::normalize()`
+1. Normalize each `game` of `S` by calling `game::normalize()`
 2. Sort the `game`s of `S` according to `game::order()` so that each `game` `g_i` has a subgame index `i`
 3. For each `g_i`, get its `local_hash` value `h_i`
 4. For each `h_i`, compute a modified hash `H_i := hmod(h_i, i)`, for some hash modifier function `hmod`
