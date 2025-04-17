@@ -338,13 +338,14 @@ Manages the `hash_t` of a `sumgame`.
 of this value is described below.
 
 To compute the `global_hash` value for a `sumgame` `S`:
-1. Sort the `game`s of `S` according to `game::order()` so that each `game` `g_i` has a subgame index `i`
-2. For each `g_i`, get its `local_hash` value `h_i`
-3. For each `h_i`, compute a modified hash `H_i := hmod(h_i, i)`, for some hash modifier function `hmod`
+1: Normalize each `game` of `S` by calling `game::normalize()`
+2. Sort the `game`s of `S` according to `game::order()` so that each `game` `g_i` has a subgame index `i`
+3. For each `g_i`, get its `local_hash` value `h_i`
+4. For each `h_i`, compute a modified hash `H_i := hmod(h_i, i)`, for some hash modifier function `hmod`
     - The actual `hmod` function is `H_i := RANDOM_TABLE_MODIFIER[i, h_i]`
     - Using a linear congruential generator instead doesn't seem to be significantly different in terms of performance
-4. Given the player to play `p`, compute `P := RANDOM_TABLE_PLAYER[0, p]`
-5. The `global_hash` value is the XOR of all `H_i`, and `P`
+5. Given the player to play `p`, compute `P := RANDOM_TABLE_PLAYER[0, p]`
+6. The `global_hash` value is the XOR of all `H_i`, and `P`
 
 TODO: Currently `sumgame::get_global_hash()` sorts all of the `sumgame`'s games
 every time it's called. `sumgame` could maintain an ordering of its games to
@@ -651,3 +652,54 @@ a move generator in a `std::unique_ptr`
     - remove/deactivate 0
     - find inverse pairs and deactivate
 
+# Regarding `game` "Hooks"
+- A `game`'s `local_hash` is computed lazily by `game::get_local_hash()`, and then possibly incrementally updated afterward
+- The hash is computed from scratch by abstract method `game::_init_hash(local_hash&) = 0`, implemented by each game
+- Hashes can optionally be incrementally updated by a game's play(), undo_move(), normalize(), and undo_normalize() methods
+    - These methods can check if the hash has been computed via `_hash_valid()`, then update the hash and call `_mark_hash_updated()`
+    - But this requires `game` to do record keeping before these methods interact with the hash
+        - play() must immediately call `game::play()`
+        - undo_move() must immediately get the previous move from the stack, and call `game::undo_move()`
+        - normalize() must immediately call `game::normalize()`
+        - undo_normalize() must immediately call `game::undo_normalize()`
+        - If any of these methods fail to call the corresponding base class method, search will be incorrect
+
+- An alternative is to use "hooks", i.e. have `game::play()` be a non-virtual method which calls abstract method `game::_play_hook() = 0`
+    - With this, it's impossible for the user to forget to call base class methods
+    - But multiple levels of inheritance can make hooks confusing
+        - With "c" for "color" and "nc" for "no color":
+            - `void game::play_c()` and `virtual void game::_play_c_hook() = 0`
+            - `void impartial_game::play_nc()` and `virtual void impartial_game::_play_nc_hook() = 0`
+            - A 3rd abstract class, inherting from `impartial_game`, would make this worse
+        - Harder to trace execution
+            - Your game's play() method isn't called directly when you do `g.play(...)`
+                - Can't trace execution just by looking at your play() method
+                - Multiple methods called before the game's play() method
+            - The code has more functions, making it harder to understand
+            - See call graph example below
+
+## Call graphs for `impartial_game`s, using hook solution
+```
+kayles k(...);
+k.play_c(...);
+```
+game::play_c()
+    impartial_game::_play_c_hook() final
+        kayles::_play_nc_hook() override
+
+
+```
+kayles k(...);
+k.play_nc(...);
+```
+impartial_game::play_nc()
+    game::play_c()
+        impartial_game::_play_c_hook() final
+            kayles::_play_nc_hook() override
+
+
+## Proposal
+Have some methods be hooks, and others not. `game::play()` and
+`game::undo_move()` should stay how they were before, but normalize and
+undo_normalize can be hooks; these methods are unlikely to result in confusing
+chains of virtual methods

@@ -84,7 +84,7 @@ public:
 
     void add(game* g);
     void add(std::vector<game*>& gs);
-    void pop(game* g);
+    void pop(const game* g);
 
     bool solve() const override;
 

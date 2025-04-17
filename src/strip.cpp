@@ -117,6 +117,11 @@ void strip::_normalize_impl()
 
     if (do_mirror)
         _mirror_self();
+    else
+    {
+        if (_hash_valid())
+            _mark_hash_updated();
+    }
 }
 
 void strip::_undo_normalize_impl()
@@ -127,6 +132,11 @@ void strip::_undo_normalize_impl()
 
     if (do_mirror)
         _mirror_self();
+    else
+    {
+        if (_hash_valid())
+            _mark_hash_updated();
+    }
 }
 
 relation strip::_order_impl(const game* rhs) const
