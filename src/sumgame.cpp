@@ -155,6 +155,26 @@ bool is_simple_cgt(game* g)
 
 } // namespace
 
+// TODO use assert_restore_game in alternating_move_game.h instead
+class assert_restore_sumgame
+{
+public:
+    assert_restore_sumgame(const sumgame& sg)
+        : _sg(sg),
+          _initial_hash(sg.get_global_hash())
+    {
+    }
+
+    ~assert_restore_sumgame()
+    {
+        assert(_sg.get_global_hash(true) == _initial_hash);
+    }
+
+private:
+    const sumgame& _sg;
+    const hash_t _initial_hash;
+};
+
 //---------------------------------------------------------------------------
 
 sumgame::~sumgame()
@@ -311,6 +331,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
 {
 #ifdef SUMGAME_DEBUG_EXTRA
     _debug_extra();
+    assert_restore_sumgame ars(*this);
 #endif
 
     undo_stack_unwinder stack_unwinder(*this);
@@ -603,8 +624,14 @@ void sumgame::print(std::ostream& str) const
     str << std::endl;
 }
 
-hash_t sumgame::get_global_hash() const
+hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 {
+    if (invalidate_game_hashes)
+    {
+        for (game* g : _subgames)
+            g->invalidate_hash();
+    }
+
     global_hash gh;
     gh.set_to_play(to_play());
 

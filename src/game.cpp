@@ -163,6 +163,11 @@ relation game::order(const game* rhs) const
     return REL_EQUAL;
 }
 
+void game::invalidate_hash()
+{
+    _hash_state = HASH_STATE_INVALID;
+}
+
 void game::_normalize_impl()
 {
     // Trivial default implementation
