@@ -47,6 +47,8 @@ public:
 
     relation order(const game* rhs) const;
 
+    void invalidate_hash(); // for debugging
+
 protected:
     /*
         Return list of games to replace current game. Empty list means game is

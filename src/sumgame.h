@@ -111,7 +111,7 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 
-    hash_t get_global_hash() const; // TODO: this method may be temporary
+    hash_t get_global_hash(bool invalidate_game_hashes = false) const; // TODO: this method may be temporary
 
     // called by mcgs_init()
     static void init_ttable(size_t index_bits);

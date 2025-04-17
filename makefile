@@ -9,6 +9,11 @@ ifneq (,$(filter $(LEAKCHECK),1 true))
 	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -fsanitize=leak
 endif
 
+ifneq (,$(filter $(DEBUG),1 true))
+	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -DSUMGAME_DEBUG_EXTRA
+	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -DSUMGAME_DEBUG_EXTRA
+endif
+
 # Valgrind is too slow for even short computations. Instead use: -fsanitize=leak
 # as a flag when compiling. Should work for clang++ and g++
 # Still slows down executation considerably, but not nearly as much
