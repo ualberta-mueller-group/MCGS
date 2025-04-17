@@ -338,6 +338,35 @@ void test_sum_mutate()
     assert(b6 == w7 && w6 == b7);
 }
 
+void test_random_table_resize()
+{
+    random_table rt(2, 37);
+
+    // read first 512 values
+    std::vector<hash_t> vals;
+
+    for (size_t i = 0; i < 512; i++)
+    {
+        const size_t pos = i / 256;
+        const size_t color = i % 256;
+
+        vals.push_back(rt.get_zobrist_val(pos, color));
+    }
+
+    // this will resize the table
+    rt.get_zobrist_val(8, 7);
+
+    // check that those values didn't change
+    for (size_t i = 0; i < 512; i++)
+    {
+        const size_t pos = i / 256;
+        const size_t color = i % 256;
+
+        const hash_t element = rt.get_zobrist_val(pos, color);
+        assert(vals[i] == element);
+    }
+}
+
 } // namespace
 
 void hash_test_all()
@@ -350,4 +379,6 @@ void hash_test_all()
 
     test_sum_order();
     test_sum_mutate();
+
+    test_random_table_resize();
 }

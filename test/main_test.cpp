@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "hash_eval.h"
-const bool RUN_OVERRIDE_TESTS = false;
+const bool RUN_OVERRIDE_TESTS = true;
 
 #include <cassert>
 #include <string>
