@@ -29,4 +29,12 @@ public:
     }
 };
 
+class nogo_rule
+{
+public:
+    static bool is_legal(std::vector<int> board, int_pair shape, int p, int toplay);
+    static bool has_liberty(const std::vector<int>& board, int_pair shape, int p);
+    static std::vector<int> neighbors(int_pair shape, int p);
+};
+
 std::ostream& operator<<(std::ostream& out, const nogo& g);

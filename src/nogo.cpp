@@ -52,86 +52,41 @@ std::ostream& operator<<(std::ostream& out, const nogo& g)
     return out;
 }
 
-//---------------------------------------------------------------------------
-
-class nogo_move_generator : public move_generator
+//////////////////////////////////////// nogo_rule
+bool nogo_rule::is_legal(std::vector<int> board, int_pair shape, int p, int toplay)
 {
-public:
-    nogo_move_generator(const nogo& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    bool _is_legal(int p);
-    void _find_next_move();
-
-    bool has_liberty(int p) const;
-    std::vector<int> neighbors(int p) const;
-
-    const nogo& _game;
-    std::vector<int> _board;
-    int _current; // current stone location to test
-};
-
-inline nogo_move_generator::nogo_move_generator(const nogo& game,
-    bw to_play)
-: move_generator(to_play), _game(game), _board(game.get_board()), _current(0)
-{
-    if (_game.size() > 0 && !_is_legal(_current))
-        _find_next_move();
-}
-
-void nogo_move_generator::operator++()
-{
-    _find_next_move();
-}
-
-inline void nogo_move_generator::_find_next_move()
-{
-    _current++;
-
-    int num = (int) _game.size();
-    while (_current < num && !_is_legal(_current))
-    {
-        _current++;
-    }
-}
-
-inline bool nogo_move_generator::_is_legal(int p)
-{
-    if (_game.at(p) != EMPTY)
+    if (board[p] != EMPTY)
         return false;
 
-    _board[p] = to_play();
-    int opp_color = ebw_opponent(to_play());
+    board[p] = toplay;
+    int opp_color = ebw_opponent(toplay);
 
-    if (!has_liberty(p))
+    if (!nogo_rule::has_liberty(board, shape, p))
     {
-        _board[p] = EMPTY;
+        board[p] = EMPTY;
         return false;
     }
 
-    std::vector<int> nbrs = neighbors(p);
+    std::vector<int> nbrs = nogo_rule::neighbors(shape, p);
     for (int nbr : nbrs)
     {
-        if (_board[nbr] == opp_color && !has_liberty(nbr))
+        if (board[nbr] == opp_color && !nogo_rule::has_liberty(board, shape, nbr))
         {
-            _board[p] = EMPTY;
+            board[p] = EMPTY;
             return false;
         }
     }
 
-    _board[p] = EMPTY;
+    board[p] = EMPTY;
     return true;
 }
 
-bool nogo_move_generator::has_liberty(int p) const
+bool nogo_rule::has_liberty(const std::vector<int>& board, int_pair shape, int p)
 {
-    int size = _game.size();
+    int size = (int) board.size();
     std::vector<bool> markers = std::vector<bool>(size, false);
 
-    int color = _board[p];
+    int color = board[p];
     std::vector<int> point_stack = { p };
     markers[p] = true;
 
@@ -140,12 +95,12 @@ bool nogo_move_generator::has_liberty(int p) const
         int p = point_stack.back();
         point_stack.pop_back();
 
-        std::vector<int> nbrs = neighbors(p);
+        std::vector<int> nbrs = nogo_rule::neighbors(shape, p);
         for (int nbr : nbrs)
         {
-            if (_board[nbr] == EMPTY)
+            if (board[nbr] == EMPTY)
                 return true;
-            if (_board[nbr] == color && !markers[nbr])
+            if (board[nbr] == color && !markers[nbr])
             {
                 point_stack.push_back(nbr);
                 markers[nbr] = true;
@@ -156,13 +111,13 @@ bool nogo_move_generator::has_liberty(int p) const
     return false;
 }
 
-std::vector<int> nogo_move_generator::neighbors(int p) const
+std::vector<int> nogo_rule::neighbors(int_pair shape, int p)
 {
-    int_pair coord = _game.point_to_coord(p);
-    int r = coord.first, c = coord.second;
+    int n_rows = shape.first;
+    int n_cols = shape.second;
 
-    int_pair shape = _game.shape();
-    int n_rows = shape.first, n_cols = shape.second;
+    int r = p / shape.second;
+    int c = p % shape.second;
 
     std::vector<int> nbrs;
     if (r > 0)
@@ -175,6 +130,51 @@ std::vector<int> nogo_move_generator::neighbors(int p) const
         nbrs.push_back(p + 1);      // right
     
     return nbrs;
+}
+
+//---------------------------------------------------------------------------
+
+class nogo_move_generator : public move_generator
+{
+public:
+    nogo_move_generator(const nogo& game, bw to_play);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    void _find_next_move();
+
+    const nogo& _game;
+    int _current; // current stone location to test
+};
+
+inline nogo_move_generator::nogo_move_generator(const nogo& game,
+                                                bw to_play)
+    : move_generator(to_play), _game(game), _current(0)
+{
+    if (_game.size() > 0 &&
+        !nogo_rule::is_legal(_game.get_board(), _game.shape(), _current, to_play))
+    {
+        _find_next_move();
+    }
+}
+
+void nogo_move_generator::operator++()
+{
+    _find_next_move();
+}
+
+inline void nogo_move_generator::_find_next_move()
+{
+    _current++;
+
+    int num = (int) _game.size();
+    while (_current < num &&
+        !nogo_rule::is_legal(_game.get_board(), _game.shape(), _current, to_play()))
+    {
+        _current++;
+    }
 }
 
 nogo_move_generator::operator bool() const
