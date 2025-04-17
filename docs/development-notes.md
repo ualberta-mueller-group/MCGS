@@ -37,10 +37,10 @@ checking that the state is restored
     - TODO it probably is broken for sumgame, since it uses a different stack
     - TODO this check will be made functional after hash codes are implemented
 
-# Initialization
+# Initialization (`mcgs_init.h`)
 Executables based on the C++ source code must call one of the `mcgs_init_all()`
 or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
-parsing command-line arguments. This function initializes static data, i.e.
+parsing command-line arguments. These functions initialize static data, i.e.
 `sumgame`'s transposition table, and global `random_table`s.
 
 # Safe Arithmetic Functions (`safe_arithmetic.h`)
@@ -239,16 +239,16 @@ and is stored in the move stack.
 # Hashing (`hashing.h`)
 Defines main data types for game hashing:
 - `hash_t`
-    - typedef of `uint64_t`
-    - each game, or sum of games, produces a unique `hash_t` value
+    - Typedef of `uint64_t`
+    - Each game, or sum of games, produces a unique `hash_t` value
 - `random_table` class
-    - table of random numbers used by Zobrist hashing
+    - Table of random numbers used by Zobrist hashing
 - `local_hash` class
-    - manages a `hash_t` for a single `game` object
+    - Manages a `hash_t` for a single `game` object
 - `global_hash` class
-    - manages a `hash_t` for a single `sumgame` object
+    - Manages a `hash_t` for a single `sumgame` object
 
-## `random_table` class
+## `random_table` Class
 A `random_table` is constructed with two arguments: `n_positions`, and `seed`,
 specifying how many positions (i.e. stones in a strip game) are
 represented in the table, and the seed for the random numbers in the table. A
@@ -261,7 +261,7 @@ be any 1-16 byte (inclusive) integral value. If `position` is past the bounds
 of the table, the table will grow and print a warning to stderr (only the first
 time this happens), and an additional warning is printed to stderr after
 completion of all tests. This resizing may affect validity of reported test
-times, particularly for small tests.
+times, particularly for small tests, or when many resizes happen.
 
 ### Global `random_table`s
 There are several global `random_table`s, initialized by `mcgs_init_all()`
@@ -317,7 +317,7 @@ The actual "rotate" function used is `rotate_interleaved()` (`utilities.h`).
 Bits masked by `0101...0101` are rotated left, and bits masked by `1010...1010`
 are rotated right.
 
-## `local_hash` class
+## `local_hash` Class
 Manages the `hash_t` of a `game`.
 
 Methods:
@@ -330,7 +330,7 @@ Methods:
 - `get_value()`
     - Get the current `hash_t` value
 
-## `global_hash` class
+## `global_hash` Class
 Manages the `hash_t` of a `sumgame`.
 
 ### Global Hash Value Definition
@@ -350,7 +350,7 @@ TODO: Currently `sumgame::get_global_hash()` sorts all of the `sumgame`'s games
 every time it's called. `sumgame` could maintain an ordering of its games to
 prevent this.
 
-### `global_hash` methods
+### `global_hash` Methods
 Methods:
 - `add_subgame(size_t subgame_idx, game* g)`
     - Given `g_i`, get `h_i`, compute and store `H_i`, then XOR `H_i` into
@@ -382,7 +382,7 @@ ordering) when:
 Hooks without default implementations:
 - `game::_init_hash(local_hash& hash)`
     - When called, `hash` has been reset, and has had its type set. The
-        implementer needs to initialize the hash
+        implementer must compute the full hash for their game.
 
 Hooks with default implementations:
 - `game::_order_impl(const game*)`
@@ -397,7 +397,7 @@ Hooks with default implementations:
     - Undo normalization of a game. Default does nothing
 
 `strip` provides default implementations:
-- `strip::_init_hash`
+- `strip::_init_hash(local_hash& hash)`
     - Computes hash of the board. Assumes that the board contains all of the
         game's state
 - `strip::_normalize_impl()` and `strip::_undo_normalize_impl()`
