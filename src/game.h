@@ -114,6 +114,9 @@ private:
     void _push_undo_code(game_undo_code code);
     void _pop_undo_code(game_undo_code code);
 
+    void _pre_hash_update();
+    void _post_hash_update();
+
     std::vector<move> _move_stack;
     bool _is_active;
 

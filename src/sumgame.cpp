@@ -184,7 +184,7 @@ void sumgame::add(std::vector<game*>& gs)
     }
 }
 
-void sumgame::pop(game* g)
+void sumgame::pop(const game* g)
 {
     assert(!_subgames.empty());
     assert(_subgames.back() == g);
@@ -225,6 +225,8 @@ optional<solve_result> sumgame::solve_with_timeout(
 
     _should_stop = false;
     _need_cgt_simplify = true;
+    for (game* g : _subgames)
+        g->normalize();
 
     // spawn a thread, then wait with a timeout for it to complete
     std::promise<optional<solve_result>> promise;
@@ -258,6 +260,10 @@ optional<solve_result> sumgame::solve_with_timeout(
     thr.join();
 
     assert(future.valid());
+
+
+    for (game* g : _subgames)
+        g->undo_normalize();
     return future.get();
 }
 
@@ -475,9 +481,14 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 
         for (game* gp : *sr)
         {
-            add(gp);
+            add(gp); // no need to normalize, add() will do it
             record.add_game(gp); // save these games in the record for debugging
         }
+    }
+    else
+    {
+        if (cli_options::optimize::tt_sumgame_idx_bits() > 0)
+            g->normalize();
     }
 
     alternating_move_game::play(mv);
@@ -510,9 +521,14 @@ void sumgame::undo_move()
             // a previous undo should have reactivated g
             assert(_subgames.back()->is_active());
 
-            delete _subgames.back();
-            _subgames.pop_back();
+            pop(g);
+            delete g;
         }
+    }
+    else
+    {
+        if (cli_options::optimize::tt_sumgame_idx_bits() > 0)
+            s->undo_normalize();
     }
 
     const move subm = cgt_move::decode(s->last_move());

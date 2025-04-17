@@ -77,26 +77,23 @@ void game::play(const move& m, int to_play)
     //     std::cout << "move "<< cgt_move::print(m) << "\n";
     //     std::cout << "move + color "<< cgt_move::print(mc) << std::endl;
 
-    if (_hash_valid())
-        _hash_state = HASH_STATE_OK;
+    _pre_hash_update();
 
     _push_undo_code(GAME_UNDO_PLAY);
     _play_impl(m, to_play);
 
-    if (_hash_state != HASH_STATE_UPDATED)
-        _hash_state = HASH_STATE_INVALID;
+    _post_hash_update();
+
 }
 
 void game::undo_move()
 {
-    if (_hash_valid())
-        _hash_state = HASH_STATE_OK;
+    _pre_hash_update();
 
     _undo_move_impl();
     _pop_undo_code(GAME_UNDO_PLAY);
 
-    if (_hash_state != HASH_STATE_UPDATED)
-        _hash_state = HASH_STATE_INVALID;
+    _post_hash_update();
 
     _move_stack.pop_back();
 }
@@ -120,14 +117,22 @@ hash_t game::get_local_hash()
 
 void game::normalize()
 {
+    _pre_hash_update();
+
     _push_undo_code(GAME_UNDO_NORMALIZE);
     _normalize_impl();
+
+    _post_hash_update();
 }
 
 void game::undo_normalize()
 {
+    _pre_hash_update();
+
     _undo_normalize_impl();
     _pop_undo_code(GAME_UNDO_NORMALIZE);
+
+    _post_hash_update();
 }
 
 relation game::order(const game* rhs) const
@@ -161,11 +166,15 @@ relation game::order(const game* rhs) const
 void game::_normalize_impl()
 {
     // Trivial default implementation
+    if(_hash_valid())
+        _mark_hash_updated();
 }
 
 void game::_undo_normalize_impl()
 {
     // Trivial default implementation
+    if(_hash_valid())
+        _mark_hash_updated();
 }
 
 relation game::_order_impl(const game* rhs) const
@@ -198,4 +207,16 @@ void game::_pop_undo_code(game_undo_code code)
     assert(!_undo_code_stack.empty());
     assert(_undo_code_stack.back() == code);
     _undo_code_stack.pop_back();
+}
+
+void game::_pre_hash_update()
+{
+    if (_hash_valid())
+        _hash_state = HASH_STATE_OK;
+}
+
+void game::_post_hash_update()
+{
+    if (_hash_state != HASH_STATE_UPDATED)
+        _hash_state = HASH_STATE_INVALID;
 }

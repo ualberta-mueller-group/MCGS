@@ -160,11 +160,15 @@ void elephants::_undo_move_impl()
 void elephants::_normalize_impl()
 {
     // Already normalized
+    if (_hash_valid())
+        _mark_hash_updated();
 }
 
 void elephants::_undo_normalize_impl()
 {
     // Nothing to undo
+    if (_hash_valid())
+        _mark_hash_updated();
 }
 
 move_generator* elephants::create_move_generator(bw to_play) const
