@@ -227,7 +227,7 @@ void run_autotests(const string& test_directory, const string& outfile_name,
         }
     }
 
-    if (random_table::did_resize())
+    if (random_table::did_resize_warning())
         random_table::print_resize_warning();
 
     outfile.close();

@@ -30,7 +30,7 @@ public:
     // Because bool is invalid input to std::make_unsigned_t<T>
     inline hash_t get_zobrist_val(size_t position, bool color);
 
-    inline static bool did_resize();
+    inline static bool did_resize_warning();
 
     static void print_resize_warning();
 
@@ -46,7 +46,7 @@ private:
     static_assert(sizeof(unsigned long long) >= sizeof(hash_t));
     static std::uniform_int_distribution<unsigned long long> _dist;
 
-    static bool _did_resize;
+    static bool _did_resize_warning;
 
     std::mt19937_64 _rng;
     size_t _n_positions;
@@ -104,9 +104,9 @@ inline hash_t random_table::get_zobrist_val(size_t position, bool color)
     return get_zobrist_val(position, (uint8_t) color);
 }
 
-inline bool random_table::did_resize()
+inline bool random_table::did_resize_warning()
 {
-    return _did_resize;
+    return _did_resize_warning;
 }
 
 inline void random_table::_resize_if_out_of_range(size_t idx)
@@ -114,11 +114,11 @@ inline void random_table::_resize_if_out_of_range(size_t idx)
     if (idx < _n_positions)
         return;
 
-    _resize_to(idx + 1);
+    _resize_to(_n_positions * 2);
 
-    if (!_did_resize)
+    if (!_did_resize_warning)
     {
-        _did_resize = true;
+        _did_resize_warning = true;
         std::cerr << "WARNING: random_table resized" << std::endl;
     }
 }

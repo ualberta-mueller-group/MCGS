@@ -112,7 +112,7 @@ int main(int argc, char** argv)
     }
 
 
-    if (random_table::did_resize())
+    if (random_table::did_resize_warning())
         random_table::print_resize_warning();
 
     return 0;

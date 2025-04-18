@@ -12,7 +12,7 @@ using namespace std;
 
 ////////////////////////////////////////////////// random_table
 std::uniform_int_distribution<unsigned long long> random_table::_dist(1, std::numeric_limits<unsigned long long>::max());
-bool random_table::_did_resize = false;
+bool random_table::_did_resize_warning = false;
 
 random_table::random_table(size_t n_positions, uint64_t seed)
     : _n_positions(0)
