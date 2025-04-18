@@ -20,7 +20,8 @@ random_table::random_table(size_t n_positions, uint64_t seed)
     while (seed == 0)
         seed = ms_since_epoch();
 
-    std::cout << "Random table constructing with seed " << seed << std::endl;
+    // TODO: DEBUG PRINTING
+    //std::cout << "Random table constructing with seed " << seed << std::endl;
 
     _init(seed, n_positions);
 }
@@ -39,8 +40,9 @@ void random_table::_init(uint64_t seed, size_t n_positions)
 
     _resize_to(n_positions);
 
-    std::cout << "Initialized with n_positions = " << n_positions << std::endl;
-    std::cout << "Size is " << _number_table.size() << std::endl;
+    // TODO: DEBUG PRINTING
+    //std::cout << "Initialized with n_positions = " << n_positions << std::endl;
+    //std::cout << "Size is " << _number_table.size() << std::endl;
 }
 
 void random_table::_resize_to(size_t new_n_positions)
@@ -74,7 +76,8 @@ void init_global_random_tables(uint64_t seed)
     std::uniform_int_distribution<unsigned long long> dist(1, std::numeric_limits<unsigned long long>::max());
     std::mt19937_64 rng;
 
-    std::cout << "init_global_random_tables() seed: " << seed << endl;
+    // TODO: DEBUG PRINTING
+    //std::cout << "init_global_random_tables() seed: " << seed << endl;
 
     while (seed == 0)
         seed = ms_since_epoch();
