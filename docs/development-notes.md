@@ -461,7 +461,7 @@ These base class methods do some record keeping around local hashes.
 
 ## 1. Mandatory `_init_hash` Method
 All games must implement `game::_init_hash(local_hash& hash)`. In this method,
-assume that `hash` has been reset, and that the game's type has already been
+assume that `hash` has been reset, and that the game's `game_type_t` has already been
 baked into `hash`. Use `hash.toggle_value(position, color)`, and include the
 entire game state in the hash.
 
@@ -497,7 +497,7 @@ void strip::_normalize_impl()
 }
 ```
 
-`game` provides default implementations which do a trivial update.
+`game` provides trivial default implementations which preserve the current state.
 
 ## 3. Optional Incremental Hash Updates
 Some of a game's methods may incrementally update the hash:
@@ -518,7 +518,7 @@ void nogo_1xn::play(const move& m, bw to_play)
 
     const int to = m;
 
-    // If false, the game's hash cannot be updated
+    // If false, the local_hash hasn't been initialized, or was previously invalidated
     if (_hash_updatable())
     {
         // This will fail an assert if the above condition is false
@@ -527,7 +527,7 @@ void nogo_1xn::play(const move& m, bw to_play)
         hash.toggle_value(to, EMPTY); // Remove old state
         hash.toggle_value(to, to_play); // Add new state
 
-        // If not called, the incremental update has no effect
+        // The hash is invalidated unless this is called
         _mark_hash_updated();
     }
 
@@ -540,7 +540,7 @@ void nogo_1xn::play(const move& m, bw to_play)
 ```
 void game::_normalize_impl()
 {
-    // Do nothing, and keep the current hash if possible
+    // Do nothing, and keep the current hash
     if(_hash_updatable())
         _mark_hash_updated();
 }
@@ -593,13 +593,13 @@ A `ttable<Entry>` is constructed with two arguments:
         - `true` IFF the queried table entry is present in the table
     - `void init_entry()` and `void init_entry(const Entry&)`
         - Initialize the table entry and its data. May overwrite another table entry
-    - void set_entry(const Entry& entry)
+    - `void set_entry(const Entry& entry)`
         - Assign the table entry to `entry`.
         - If the entry isn't valid, this is equivalent to `init_entry(entry)`
 - Methods which are only valid if `entry_valid()` returns `true`:
     - `Entry& get_entry()`
         - Get reference to the `Entry` of the table entry
-    - `bool get_bool(size_t bool_idx)` and `void set_bool(size_t bool_idx, bool new_val)`
+    - `bool get_bool(size_t bool_idx) const` and `void set_bool(size_t bool_idx, bool new_val)`
         - Get/set the value of a packed bool associated with the table entry
 
 In C++, empty structs occupy at least 1 byte. If `Entry` is empty (according to
@@ -613,6 +613,9 @@ constructor.
 
 ## `ttable` Example 1
 ```
+#include "hashing.h"
+#include "transposition.h"
+
 clobber_1xn g("XOXO");
 const hash_t hash  = g.get_local_hash();
 
@@ -626,7 +629,6 @@ ttable<ttable_entry> tt(24, 0);
 
 ttable<ttable_entry>::iterator tt_it = tt.get_iterator(hash);
 
-...
 // At start of minimax search
 if (tt_it.entry_valid())
     return tt_it.get_entry().win;
@@ -638,6 +640,9 @@ tt_it.set_entry(entry);
 
 ## `ttable` Example 2
 ```
+#include "hashing.h"
+#include "transposition.h"
+
 clobber_1xn g("XOXO");
 const hash_t hash = g.get_local_hash();
 
@@ -650,7 +655,6 @@ ttable<empty_struct> tt(24, 1);
 
 ttable<empty_struct>::iterator tt_it = tt.get_iterator(hash);
 
-...
 // Start of minimax search
 if (tt_it.entry_valid())
     return tt_it.get_bool(0);
