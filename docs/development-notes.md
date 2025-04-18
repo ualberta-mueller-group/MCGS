@@ -399,59 +399,6 @@ Methods:
 - `get_value()`
     - Get the current `hash_t` value. Must first set `p`
 
-## `game` Hooks Related to Hashing
-`game` has several virtual methods related to hashing, some of which have
-default implementations.
-
-Non-virtual `game::order(const game*)` returns a `relation` enum value, indicating the
-ordering of two games. Considering two games `g1` and `g2`, `g1 < g2` (for
-ordering) when:
-- `g1`'s `game_type_t` is less than `g2`'s
-- If `g1` and `g2` are of the same type, the returned value is
-    `g1._order_impl(g2)`
-    - If `_order_impl` returns `REL_UNKNOWN`, the value returned by
-        `game::order` is instead `REL_EQUAL`
-
-Hooks without default implementations:
-- `game::_init_hash(local_hash& hash)`
-    - When called, `hash` has been reset, and has had its type set. The
-        implementer must compute the full hash for their game.
-
-Hooks with default implementations:
-- `game::_order_impl(const game*)`
-    - Only called on two games of the same type. Returns ordering of the games,
-        as a `relation` enum value. Default returns `REL_UNKNOWN`
-    - Implementer should cast the game pointer argument to their game's type,
-        i.e. `clobber_1xn::_order_impl` should cast from `const game*` to
-        `const clobber_1xn*`
-- `game::_normalize_impl()`
-    - Normalize a game. Default does nothing
-- `game::_undo_normalize_impl()`
-    - Undo normalization of a game. Default does nothing
-
-`strip` provides default implementations:
-- `strip::_init_hash(local_hash& hash)`
-    - Computes hash of the board. Assumes that the board contains all of the
-        game's state
-- `strip::_normalize_impl()` and `strip::_undo_normalize_impl()`
-    - Potentially reverses the board based on lexicographical order
-- `strip::_order_impl(const game* rhs)`
-    - Ordering based on lexicographical ordering of boards
-
-### Incremental Hash Updates
-`game`s can optionally incrementally update their hashes in the following methods:
-- `play()`
-- `undo_move()`
-- `_normalize_impl()`
-- `_undo_normalize_impl()`
-
-To incrementally update a hash, follow these steps:
-1. If `_hash_updatable()` returns `true`, the hash can be updated, otherwise it cannot
-2. Get a reference to the `local_hash` through `_get_hash_ref()`
-3. Remove relevant previous state from the hash, and add the new state, using `local_hash::toggle_value(position, color)` to do both
-4. Call `_mark_hash_updated()`. If this function is not called, the hash will be discarded, to be recomputed later by `_init_hash()` as needed
-    - Some games/methods opt to discard hashes, when updating them isn't worth the cost
-
 # Adding Hashing To Games
 Important:
 1. A game's `play` method should call `game::play` at the START of the method
@@ -858,7 +805,9 @@ a move generator in a `std::unique_ptr`
     - remove/deactivate 0
     - find inverse pairs and deactivate
 
-# Regarding `game` "Hooks"
+# This text can probably be deleted
+
+## Regarding `game` "Hooks"
 - A `game`'s `local_hash` is computed lazily by `game::get_local_hash()`, and then possibly incrementally updated afterward
 - The hash is computed from scratch by abstract method `game::_init_hash(local_hash&) = 0`, implemented by each game
 - Hashes can optionally be incrementally updated by a game's play(), undo_move(), normalize(), and undo_normalize() methods
@@ -884,7 +833,7 @@ a move generator in a `std::unique_ptr`
             - The code has more functions, making it harder to understand
             - See call graph example below
 
-## Call graphs for `impartial_game`s, using hook solution
+### Call graphs for `impartial_game`s, using hook solution
 ```
 kayles k(...);
 k.play_c(...);
@@ -904,8 +853,63 @@ impartial_game::play_nc()
             kayles::_play_nc_hook() override
 
 
-## Proposal
+### Proposal
 Have some methods be hooks, and others not. `game::play()` and
 `game::undo_move()` should stay how they were before, but normalize and
 undo_normalize can be hooks; these methods are unlikely to result in confusing
 chains of virtual methods
+
+## `game` Hooks Related to Hashing
+`game` has several virtual methods related to hashing, some of which have
+default implementations.
+
+Non-virtual `game::order(const game*)` returns a `relation` enum value, indicating the
+ordering of two games. Considering two games `g1` and `g2`, `g1 < g2` (for
+ordering) when:
+- `g1`'s `game_type_t` is less than `g2`'s
+- If `g1` and `g2` are of the same type, the returned value is
+    `g1._order_impl(g2)`
+    - If `_order_impl` returns `REL_UNKNOWN`, the value returned by
+        `game::order` is instead `REL_EQUAL`
+
+Hooks without default implementations:
+- `game::_init_hash(local_hash& hash)`
+    - When called, `hash` has been reset, and has had its type set. The
+        implementer must compute the full hash for their game.
+
+Hooks with default implementations:
+- `game::_order_impl(const game*)`
+    - Only called on two games of the same type. Returns ordering of the games,
+        as a `relation` enum value. Default returns `REL_UNKNOWN`
+    - Implementer should cast the game pointer argument to their game's type,
+        i.e. `clobber_1xn::_order_impl` should cast from `const game*` to
+        `const clobber_1xn*`
+- `game::_normalize_impl()`
+    - Normalize a game. Default does nothing
+- `game::_undo_normalize_impl()`
+    - Undo normalization of a game. Default does nothing
+
+`strip` provides default implementations:
+- `strip::_init_hash(local_hash& hash)`
+    - Computes hash of the board. Assumes that the board contains all of the
+        game's state
+- `strip::_normalize_impl()` and `strip::_undo_normalize_impl()`
+    - Potentially reverses the board based on lexicographical order
+- `strip::_order_impl(const game* rhs)`
+    - Ordering based on lexicographical ordering of boards
+
+### Incremental Hash Updates
+`game`s can optionally incrementally update their hashes in the following methods:
+- `play()`
+- `undo_move()`
+- `_normalize_impl()`
+- `_undo_normalize_impl()`
+
+To incrementally update a hash, follow these steps:
+1. If `_hash_updatable()` returns `true`, the hash can be updated, otherwise it cannot
+2. Get a reference to the `local_hash` through `_get_hash_ref()`
+3. Remove relevant previous state from the hash, and add the new state, using `local_hash::toggle_value(position, color)` to do both
+4. Call `_mark_hash_updated()`. If this function is not called, the hash will be discarded, to be recomputed later by `_init_hash()` as needed
+    - Some games/methods opt to discard hashes, when updating them isn't worth the cost
+
+
