@@ -18,9 +18,11 @@ public:
         Entry& get_entry();
         Entry& get_entry() const;
 
+        void set_entry(const Entry& entry);
+
         void init_entry();
         void init_entry(const Entry& entry);
-        //void set_entry(Entry&& entry); // TODO is this needed?
+        //void init_entry(const Entry&& entry); // TODO do we need this too?
 
         bool get_bool(size_t bool_idx) const;
         void set_bool(size_t bool_idx, bool new_val);
@@ -299,6 +301,19 @@ Entry& ttable<Entry>::iterator::get_entry() const
     assert(entry_valid());
     assert(_entry_ptr != nullptr);
     return *_entry_ptr;
+}
+
+template <class Entry>
+void ttable<Entry>::iterator::set_entry(const Entry& entry)
+{
+    if (!entry_valid())
+    {
+        init_entry(entry);
+        return;
+    }
+
+    assert(_entry_ptr != nullptr);
+    *_entry_ptr = entry;
 }
 
 template <class Entry>
