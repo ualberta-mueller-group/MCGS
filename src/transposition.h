@@ -111,13 +111,14 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     _bools_arr_size = 1 + total_bools / size_in_bits<unsigned int>();
 
     //// Estimate memory cost
-    uint64_t byte_count = 0;
-    byte_count += _entries_arr_size * sizeof(Entry);
-    byte_count += _tags_arr_size * sizeof(uint8_t);
-    byte_count += _bools_arr_size * sizeof(unsigned int);
-    double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
-    std::cout << "Estimated table size: " << byte_count_formatted;
-    std::cout << " MiB" << std::endl;
+    // TODO: DEBUG PRINTING
+    //uint64_t byte_count = 0;
+    //byte_count += _entries_arr_size * sizeof(Entry);
+    //byte_count += _tags_arr_size * sizeof(uint8_t);
+    //byte_count += _bools_arr_size * sizeof(unsigned int);
+    //double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
+    //std::cout << "Estimated table size: " << byte_count_formatted;
+    //std::cout << " MiB" << std::endl;
 
     //// Initialize arrays
     _entries_arr = new Entry[_entries_arr_size];
