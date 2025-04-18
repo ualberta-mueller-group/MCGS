@@ -37,6 +37,31 @@ fraction dyadic_rational::get_fraction() const
     return fraction(_p, _q);
 }
 
+void dyadic_rational::play(const move& m, bw to_play)
+{
+    game::play(m, to_play);
+
+    assert(m == cgt_move::two_part_move(_p, _q));
+    assert(_p != 0);
+    if (to_play == BLACK)
+        --_p;
+    else
+        ++_p;
+    simplify();
+}
+
+void dyadic_rational::undo_move()
+{
+    const move m = last_move();
+    game::undo_move();
+
+    int q;
+    bw to_play;
+    const int p = cgt_move::decode3(m, &q, &to_play);
+    _p = p;
+    _q = q;
+}
+
 split_result dyadic_rational::_split_impl() const
 {
     if (_q != 1)
@@ -48,29 +73,6 @@ split_result dyadic_rational::_split_impl() const
         return split_result({new integer_game(_p)}); // becomes integer
     }
 };
-
-void dyadic_rational::_play_impl(const move& m, bw to_play)
-{
-    assert(m == cgt_move::two_part_move(_p, _q));
-    assert(_p != 0);
-    if (to_play == BLACK)
-        --_p;
-    else
-        ++_p;
-    simplify();
-    //game::play(m, to_play);
-}
-
-void dyadic_rational::_undo_move_impl()
-{
-    const move m = last_move();
-    int q;
-    bw to_play;
-    const int p = cgt_move::decode3(m, &q, &to_play);
-    _p = p;
-    _q = q;
-    //game::undo_move();
-}
 
 void dyadic_rational::_init_hash(local_hash& hash)
 {

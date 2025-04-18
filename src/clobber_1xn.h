@@ -14,10 +14,11 @@ public:
     clobber_1xn(const std::vector<int>& board);
     clobber_1xn(std::string game_as_string);
 
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
+
 protected:
     split_result _split_impl() const override;
-    void _play_impl(const move& m, bw to_play) override;
-    void _undo_move_impl() override;
 
 public:
     game* inverse() const override;

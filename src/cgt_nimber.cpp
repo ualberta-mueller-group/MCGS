@@ -3,6 +3,25 @@
 //---------------------------------------------------------------------------
 #include "cgt_nimber.h"
 
+void nimber::play(const move& m, bw to_play)
+{
+    game::play(m, to_play);
+
+    const int number = cgt_move::second(m);
+    assert(number > 0);
+    assert(number <= _value);
+    _value -= number;
+}
+
+void nimber::undo_move()
+{
+    const move m = cgt_move::decode(last_move());
+    game::undo_move();
+
+    const int number = cgt_move::second(m);
+    assert(number > 0);
+    _value += number;
+}
 
 void nimber::print(std::ostream& str) const
 {
@@ -17,23 +36,6 @@ int nimber::nim_sum(const std::vector<int>& values)
     return sum;
 }
 
-void nimber::_play_impl(const move& m, bw to_play)
-{
-    const int number = cgt_move::second(m);
-    assert(number > 0);
-    assert(number <= _value);
-    _value -= number;
-    //game::play(m, to_play);
-}
-
-void nimber::_undo_move_impl()
-{
-    const move m = cgt_move::decode(last_move());
-    const int number = cgt_move::second(m);
-    assert(number > 0);
-    _value += number;
-    //game::undo_move();
-}
 
 void nimber::_init_hash(local_hash& hash)
 {

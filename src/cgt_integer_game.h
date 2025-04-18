@@ -22,13 +22,14 @@ public:
         _check_legal();
     }
 
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
+
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;
     void print(std::ostream& str) const override;
 
 protected:
-    void _play_impl(const move& m, bw to_play) override;
-    void _undo_move_impl() override;
 
     void _init_hash(local_hash& hash) override;
 
