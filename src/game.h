@@ -82,8 +82,6 @@ protected:
     void _mark_hash_updated();
 
 public:
-    virtual split_result _split_implementation() const;
-
     virtual move_generator* create_move_generator(bw to_play) const = 0;
 
     /*
@@ -144,11 +142,6 @@ inline void game::set_active(bool status)
 inline move game::last_move() const
 {
     return _move_stack.back();
-}
-
-inline int game::moves_hash() const
-{
-    return _move_stack.size();
 }
 
 inline split_result game::split() const

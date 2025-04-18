@@ -29,7 +29,7 @@ public:
     void set_solved(int nim_value) override;
 
 protected:
-    split_result _split_implementation() const override;
+    split_result _split_impl() const override;
 
 private:
     static void decode(move m, int& take, 

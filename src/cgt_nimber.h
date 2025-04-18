@@ -26,22 +26,8 @@ public:
     
     void play(const move& m, bw to_play) override;
     void undo_move() override;
-    move_generator* create_move_generator(bw to_play) const override;
-
-    // Impartial game interface
-    void play(const move& m) override;
-    virtual move_generator* create_move_generator() const override;
-
-    // value() is updated as *this changes during search
-    // nim_value() is the root's value
-    int value() const { return _value; }
+//    move_generator* create_move_generator(bw to_play) const override;
     
-    void play(const move& m, bw to_play) override;
-    void undo_move() override;
-
-    void play(const move& m, bw to_play) override;
-    void undo_move() override;
-
     game* inverse() const override;
     void print(std::ostream& str) const override;
     static int nim_sum(const std::vector<int>& values);     // uses Nim formula
@@ -74,7 +60,6 @@ inline game* nimber::inverse() const
 inline void nimber::play(const move& m)
 {
     nimber::play(m, BLACK);
-    init_game_type_info<nimber>(*this);
 }
 
 inline void nimber::add_nimber(int&sum, int nimber)
