@@ -371,7 +371,7 @@ Methods:
 `game` has several virtual methods related to hashing, some of which have
 default implementations.
 
-`game::order(const game*)` returns a `relation` enum value, indicating the
+Non-virtual `game::order(const game*)` returns a `relation` enum value, indicating the
 ordering of two games. Considering two games `g1` and `g2`, `g1 < g2` (for
 ordering) when:
 - `g1`'s `game_type_t` is less than `g2`'s
@@ -408,17 +408,127 @@ Hooks with default implementations:
 
 ### Incremental Hash Updates
 `game`s can optionally incrementally update their hashes in the following methods:
-- `_play_impl()`
-- `_undo_impl()`
+- `play()`
+- `undo_move()`
 - `_normalize_impl()`
 - `_undo_normalize_impl()`
 
 To incrementally update a hash, follow these steps:
-1. If `_hash_valid()` returns `true`, the hash can be updated, otherwise it cannot
+1. If `_hash_updatable()` returns `true`, the hash can be updated, otherwise it cannot
 2. Get a reference to the `local_hash` through `_get_hash_ref()`
 3. Remove relevant previous state from the hash, and add the new state, using `local_hash::toggle_value(position, color)` to do both
 4. Call `_mark_hash_updated()`. If this function is not called, the hash will be discarded, to be recomputed later by `_init_hash()` as needed
     - Some games/methods opt to discard hashes, when updating them isn't worth the cost
+
+# Adding Hashing To Games
+Important:
+1. A game's `play` method should call `game::play` at the START of the method
+2. A game's `undo_move` method should call `game::undo_move` at the START of the method (after getting the last move from the stack)
+
+These base class methods do some record keeping around local hashes.
+
+## 1. Mandatory `_init_hash` Method
+All games must implement `game::_init_hash(local_hash& hash)`. In this method,
+assume that `hash` has been reset, and that the game's type has already been
+baked into `hash`. Use `hash.toggle_value(position, color)`, and include the
+entire game state in the hash.
+
+Example:
+```
+void dyadic_rational::_init_hash(local_hash& hash)
+{
+    hash.toggle_value(0, _p);
+    hash.toggle_value(1, _q);
+}
+```
+
+A default implementation is provided by `strip`.
+
+## 2. Optional `_normalize_impl` and `_undo_normalize_impl` Methods
+Games can optionally implement `game::_normalize_impl()` and
+`game::_undo_normalize_impl()`, (but if one is implemented, the other should be
+as well)
+
+Default implementation in `strip` (omitting incremental hash update):
+```
+void strip::_normalize_impl()
+{
+    // Is mirrored board lexicographically less than the current board?
+    relation rel = _compare_boards(_board, _board, true, false);
+    bool do_mirror = (rel == REL_LESS);
+
+    if (do_mirror)
+        _mirror_self();
+
+    // For undo
+    _default_normalize_did_mirror.push_back(do_mirror);
+}
+```
+
+`game` provides default implementations which do a trivial update.
+
+## 3. Optional Incremental Hash Updates
+Some of a game's methods may incrementally update the hash:
+- `play`
+- `undo_move`
+- `_normalize_impl`
+- `_undo_normalize_impl`
+
+If these methods don't update the hash, the hash is automatically invalidated,
+and will be recomputed using `_init_hash` the next time it's needed.
+
+Incremental hash update in `nogo_1xn::play`:
+```
+void nogo_1xn::play(const move& m, bw to_play)
+{
+    // This must be called first
+    game::play(m, to_play);
+
+    const int to = m;
+
+    // If false, the game's hash cannot be updated
+    if (_hash_updatable())
+    {
+        // This will fail an assert if the above condition is false
+        local_hash& hash = _get_hash_ref();
+
+        hash.toggle_value(to, EMPTY); // Remove old state
+        hash.toggle_value(to, to_play); // Add new state
+
+        // If not called, the incremental update has no effect
+        _mark_hash_updated();
+    }
+
+    // Modify game state
+    replace(to, to_play);
+}
+```
+
+`game`'s default implementation of `_normalize_impl()`:
+```
+void game::_normalize_impl()
+{
+    // Do nothing, and keep the current hash if possible
+    if(_hash_updatable())
+        _mark_hash_updated();
+}
+```
+
+## 4: Optional `_order_impl` Method
+Games can optionally implement `game::_order_impl(const game* rhs)`. `rhs` always
+has the same type as `this` -- the argument passed to `clobber_1xn::_order_impl` is always a `const clobber_1xn*`,
+and must be casted from `const game*` in the method.
+
+The returned value is a `relation` enum value (`cgt_basics.h`), and should have one of the
+following values:
+- `REL_LESS`
+- `REL_EQUAL`
+- `REL_GREATER`
+- `REL_UNKNOWN`
+    - This is returned by `game`'s default implementation
+    
+i.e. return `REL_LESS` if `this` is lexicographically less than `rhs`.
+
 
 # Transposition Tables (`transposition.h`)
 Defines types for transposition tables:
@@ -447,10 +557,13 @@ A `ttable<Entry>` is constructed with two arguments:
 
 `ttable<Entry>::iterator` methods:
 - Methods which are always valid:
-    - `bool entry_valid()`
+    - `bool entry_valid() const`
         - `true` IFF the queried table entry is present in the table
     - `void init_entry()` and `void init_entry(const Entry&)`
         - Initialize the table entry and its data. May overwrite another table entry
+    - void set_entry(const Entry& entry)
+        - Assign the table entry to `entry`.
+        - If the entry isn't valid, this is equivalent to `init_entry(entry)`
 - Methods which are only valid if `entry_valid()` returns `true`:
     - `Entry& get_entry()`
         - Get reference to the `Entry` of the table entry
@@ -464,6 +577,56 @@ table entry consists of a small number of `bool`s, the `Entry` struct can be
 left empty, and those `bool`s can instead be stored in a packed bit vector by
 the `ttable<Entry>` itself, by setting the `entry_bools` argument in the
 constructor.
+
+
+## `ttable` Example 1
+```
+clobber_1xn g("XOXO");
+const hash_t hash  = g.get_local_hash();
+
+struct ttable_entry
+{
+    bool win;
+};
+
+// 24 bit index, no extra bools associated with entry
+ttable<ttable_entry> tt(24, 0);
+
+ttable<ttable_entry>::iterator tt_it = tt.get_iterator(hash);
+
+...
+// At start of minimax search
+if (tt_it.entry_valid())
+    return tt_it.get_entry().win;
+
+// Later in minimax search function, when result is known ("search_result" is some bool)
+ttable_entry entry = {search_result};
+tt_it.set_entry(entry);
+```
+
+## `ttable` Example 2
+```
+clobber_1xn g("XOXO");
+const hash_t hash = g.get_local_hash();
+
+struct empty_struct
+{
+};
+
+// 24 bit index, every entry has 1 additional bool stored outside of it
+ttable<empty_struct> tt(24, 1);
+
+ttable<empty_struct>::iterator tt_it = tt.get_iterator(hash);
+
+...
+// Start of minimax search
+if (tt_it.entry_valid())
+    return tt_it.get_bool(0);
+
+// Later in minimax search function, when result is known ("search_result" is some bool)
+tt_it.init_entry();
+tt_it.set_bool(0, search_result);
+```
 
 # Bounds (`bounds.h`)
 Defines functions and types used for finding lower and upper bounds of games.
