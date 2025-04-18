@@ -13,6 +13,7 @@ class kayles : public impartial_game
 {
 public:
     kayles(int value);
+    void _init_hash(local_hash& hash) override;
     void play(const move& m) override;
     void play(const move& m, bw ignore_to_play) override;
     void undo_move() override;

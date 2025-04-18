@@ -29,6 +29,7 @@ public:
     // impartial game in any possibly (partizan) sum
     void play(const move& m, bw ignore_to_play) override;
     move_generator* create_move_generator(bw ignore_to_play) const override;
+    void _init_hash(local_hash& hash) override;
     
     game* wrapped_game() const {return _game;}
     game* inverse() const override; // caller takes ownership

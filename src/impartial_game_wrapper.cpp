@@ -11,6 +11,14 @@
 
 using impartial_wrapper_move::encode_wrapped_move;
 
+void impartial_game_wrapper::_init_hash(local_hash& hash)
+{
+    // TO DO what is the right thing to do here?
+    // Assume that for _game, _init_hash has already been called
+    // How is the hash of the wrapper related to the
+    // hash of the game?
+}
+
 game* impartial_game_wrapper::inverse() const
 {
     return new impartial_game_wrapper(_game->inverse());

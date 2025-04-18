@@ -27,6 +27,12 @@ void kayles::decode(move m, int& take,
     take = 1 + f % 2;
 }
 
+void kayles::_init_hash(local_hash& hash)
+{
+    hash.toggle_value(0, _value);
+    assert(_smaller_part == 0); // not sure.
+}
+
 void kayles::play(const move& m)
 {
     int take;
@@ -70,7 +76,7 @@ game* kayles::inverse() const
     return new kayles(_value);
 }
 
-split_result kayles::_split_implementation() const
+split_result kayles::_split_impl() const
 {
     assert(_value >= _smaller_part);
     split_result result = split_result(vector<game*>());
