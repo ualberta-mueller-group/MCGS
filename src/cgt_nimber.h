@@ -14,16 +14,23 @@ class nimber : public game
 {
 public:
     nimber(int value);
-    void play(const move& m, bw to_play) override;
-    void undo_move() override;
     move_generator* create_move_generator(bw to_play) const override;
 
     int value() const { return _value; }
+
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
 
     game* inverse() const override;
     void print(std::ostream& str) const override;
     static int nim_sum(const std::vector<int>& values);     // uses Nim formula
     static int nim_sum(const std::vector<nimber*>& values); // uses Nim formula
+
+protected:
+
+    void _init_hash(local_hash& hash) override;
+
+    relation _order_impl(const game* rhs) const override;
 
 private:
     int _value;

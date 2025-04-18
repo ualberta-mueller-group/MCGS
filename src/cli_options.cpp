@@ -1,23 +1,47 @@
 #include "cli_options.h"
+#include <cerrno>
+#include <cstdlib>
 #include <filesystem>
+#include <string>
 #include <unistd.h>
 #include <vector>
 #include <iostream>
 #include "file_parser.h"
 #include "utilities.h"
-#include "optimization_options.h"
 
 using namespace std;
+
+////////////////////////////////////////////////// cli_options::optimize
+
+std::string cli_options::optimize::get_summary()
+{
+    std::stringstream str;
+
+    str << "subgame_split " << _subgame_split;
+
+    str << std::endl;
+    str << "simplify_basic_cgt " << _simplify_basic_cgt;
+
+    str << std::endl;
+    str << "tt_sumgame_idx_bits " << _tt_sumgame_idx_bits;
+
+    return str.str();
+}
+
+bool cli_options::optimize::_subgame_split = DEFAULT_SUBGAME_SPLIT;
+bool cli_options::optimize::_simplify_basic_cgt = DEFAULT_SIMPLIFY_BASIC_CGT;
+size_t cli_options::optimize::_tt_sumgame_idx_bits = DEFAULT_TT_SUMGAME_IDX_BITS;
 
 ////////////////////////////////////////////////// cli_options
 cli_options::cli_options(const string& test_directory)
     : parser(nullptr),
-      dry_run(false),
-      should_exit(false),
-      run_tests(false),
-      test_directory(test_directory),
-      outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
-      test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
+    dry_run(false),
+    should_exit(false),
+    run_tests(false),
+    test_directory(test_directory),
+    outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
+    test_timeout(cli_options::DEFAULT_TEST_TIMEOUT),
+    random_table_seed(cli_options::DEFAULT_RANDOM_TABLE_SEED)
 {
 }
 
@@ -69,6 +93,18 @@ void print_help_message(const string& exec_name)
                "Don't simplify basic CGT games (integer_game, dyadic_rational, "
                "up_star, switch_game, nimber).");
 
+    print_flag("--tt-sumgame-idx-bits <# index bits>", "How many index "
+        "bits to use for sumgame's transposition table. 0 disables "
+        "transposition table. Default: " +
+        std::to_string(
+            cli_options::optimize::DEFAULT_TT_SUMGAME_IDX_BITS) + ".");
+
+    cout << "Misc options flags:" << endl;
+    print_flag("--random-table-seed", "Set seed for random tables used in "
+               "game hashing. 0 means seed with current time since epoch. "
+               "Default: "
+               + std::to_string(cli_options::DEFAULT_RANDOM_TABLE_SEED) + ".");
+
     cout << "Testing framework flags:" << endl;
     cout << endl;
     cout << "\tThese flags only have an effect when using \"--run-tests\"."
@@ -114,7 +150,7 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 } // namespace
 
 //////////////////////////////////////// exported functions
-cli_options parse_cli_args(int argc, const char** argv, bool silent)
+cli_options cli_options::parse_args(int argc, const char** argv, bool silent)
 {
     bool print_optimizations = false;
 
@@ -282,13 +318,63 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
 
         if (arg == "--no-subgame-split")
         {
-            optimization_options::set_subgame_split(false);
+            assert(false);
+            /*
+                TODO this either needs to be removed, or should only disable
+                splitting games for which splitting is optional
+            */
+
+            cli_options::optimize::_subgame_split = false;
             continue;
         }
 
         if (arg == "--no-simplify-basic-cgt")
         {
-            optimization_options::set_simplify_basic_cgt(false);
+            cli_options::optimize::_simplify_basic_cgt = false;
+            continue;
+        }
+
+        if (arg == "--tt-sumgame-idx-bits")
+        {
+            arg_idx++;
+
+            if (!is_int(arg_next))
+                throw cli_options_exception("Error: tt-sumgame-idx-bits value not an int");
+
+            const size_t n_index_bits = atoi(arg_next.c_str());
+
+            cli_options::optimize::_tt_sumgame_idx_bits = n_index_bits;
+
+            continue;
+        }
+
+        // MISC OPTIONS
+        if (arg == "--random-table-seed")
+        {
+            arg_idx++;
+            if (arg_next.size() == 0)
+                throw cli_options_exception("Error: got --random-table-seed but no seed value");
+
+            const char* str = arg_next.c_str();
+            char* str_end = nullptr;
+            const char* expected_end = str + arg_next.size();
+            int base = 0;
+
+            const uint64_t seed = strtoull(str, &str_end, base);
+
+            if (errno == ERANGE)
+            {
+                errno = 0;
+                throw cli_options_exception("Error: --random-table-seed value out of range: \"" + arg_next + "\"");
+            }
+
+            if (str_end != expected_end)
+            {
+                throw cli_options_exception("Error: --random-table-seed value bad format: \"" + arg_next + "\"");
+            }
+
+            opts.random_table_seed = seed;
+
             continue;
         }
 
@@ -328,7 +414,7 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
 
     if (print_optimizations)
     {
-        cout << optimization_options::get_summary() << endl;
+        cout << cli_options::optimize::get_summary() << endl;
     }
 
     return opts;

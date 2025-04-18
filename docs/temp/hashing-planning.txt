@@ -1,0 +1,275 @@
+hash_t
+    Typedef of uint64_t
+
+
+random_table
+    Singleton. Shared by all games? Still make this a class so it's easy to
+    make multiple random tables later.
+
+    // do any necessary rotations, wrapping computations, and combining etc.
+    hash_t get<T>(const size_t& position, const T& color) const;
+
+    vector<hash_t> _number_table;
+
+
+local_hash
+    Just a zobrist hash for now.
+
+    void reset();
+    hash_t get_value() const;
+
+    void toggle_value<T>(const size_t& position, const T& color);
+    // TODO: do we need an alternative method for basic CGT games? Maybe this is sufficient?
+
+    hash_t _value;
+
+
+game
+    local_hash _hash;
+    bool _hash_valid; // private
+
+    void _mark_hash_valid();
+    void _mark_hash_invalid();
+
+    virtual bool normalize();
+    virtual bool undo_normalize();
+    virtual bool comes_before(const game& rhs) const;
+
+
+    const local_hash& get_hash();
+
+    // Instead of virtual play() and undo_move() methods, have:
+    void play(const move& m, bw to_play);
+    void undo_move();
+
+    virtual void _play_impl(const move& m, bw to_play);
+    virtual void _undo_impl(const move& m, bw to_play);
+
+    virtual bool update_hash_init(local_hash& hash) = 0;
+    virtual bool update_hash_play(local_hash& hash, const move& m, const bw& to_play)
+    { return false; }
+    virtual bool update_hash_undo(local_hash& hash, const move& m, const bw& to_play)
+    { return false; }
+
+    // When calling game::play()
+        // 1: game::play()
+        // 2: If _hash_valid: _hash_valid = game::update_hash_play()
+        // 3: game::_play_impl()
+
+    // When calling game::undo()
+        // 1: game::undo()
+        // 2: If _hash_valid: _hash_valid = game::update_hash_undo()
+        // 3: game::_undo_impl()
+
+    // When calling get_hash()
+        // 1: get_hash()
+        // 2: if !_hash_valid: hash_update_init()
+        // 3: return _hash, or throw, or do something...
+
+
+global_hash
+    Owned by a sumgame. Similar solution to game's local_hash?
+    Details under `sumgame`.
+
+    When modifying the sum, first remove all relevant games from the global_hash,
+    then add them back after? When adding a game, store its local_hash in
+    a vector, this allows fast removing of the game's contribution to the global_hash,
+    while also allowing for an extra check in debug builds.
+
+    void reset();
+    hash_t get_value() const;
+
+    void add_game(game& g, size_t subgame_idx);
+    void remove_game(game& g, size_t subgame_idx);
+    bool normalize_game(game& g, size_t subgame_idx); // calls g.normalize()?
+
+    hash_t _value;
+    vector<hash_t> _subgame_hashes;
+    vector<bool> _subgame_valid;
+
+
+sumgame
+    Several sumgame actions invalidate a global_hash:
+        -- Adding a game
+        -- Removing a game
+        -- Deactivating a game
+        -- Reactivating a game
+        -- Playing a move
+        -- Undoing a move
+
+        -- Splitting a game (add/deactivate)
+        -- Re-ordering games (this isn't currently possible?)
+        -- Calling simplification methods (add/remove/deactivate/reactivate)
+
+        The global_hash doesn't need to know everything about the current
+        sumgame state, but it needs to know when and how the state changes.
+        Sumgame will have to remove and add games to the global_hash when
+        changes are made to the sumgame and its games
+
+        We'll need to ensure that all sumgame mutations utilize methods which
+        correctly update the global_hash. This is tricky, as sumgame exposes
+        its games through `subgame(int)`. We'll need an
+        `assert_correct_global_hash` (with -DSUMGAME_DEBUG_EXTRA, any time the
+        global_hash is accessed, first save its value and then recompute it,
+        then compare).
+
+        For now just always recompute a global_hash.
+
+
+    bool _global_hash_valid;
+    global_hash _hash;
+
+    void normalize();
+    void undo_normalize();
+    // use `normalize_record` to record reordering
+    // for now just do the reordering, worry about preserving parts of the global_hash
+    // later
+
+    const global_hash& get_global_hash();
+
+    Methods which MAY need to be aware of the global_hash:
+        play_sum()
+        undo_move()
+        simplify_basic()
+        undo_simplify_basic()
+        add(game*)
+        add(vector<game*>&)
+        pop(game*)
+        solve_with_timeout() // public version; others are implemented in terms of this
+        solve_with_games(vector<game*>&)
+        solve_with_games(game*)
+        _pop_game()
+
+        get_global_hash()
+
+    Some of these are probably already covered by the others
+
+    Problem with global_hash: the sumgame needs to first be normalized...
+
+
+
+
+
+
+--------------------
+
+Possibly missing: LCG
+
+--------------------
+
+
+Are `game`s hash hooks optional in some sense?
+    -- Can they be totally absent?
+        -- Make them return bools, have default implementation; returns false.
+           If a game doesn't implement them, do the correct thing.
+    -- Can they immediately return, and have their functionality be implemented
+       by _play_impl() and _undo_impl()?
+
+    SOLUTION: Make the hooks virtual, give default implementation which returns false.
+              Throw when get_hash() can't produce a valid hash. We can check which
+              games need implementations by removing the default implementation.
+              Make hash_update_init() mandatory (just make it pure abstract)
+
+              At some point hashes may be optional, and we can deal with this
+              later
+
+              Maybe the other hooks get removed later and we only keep the
+              hash_update_init() hook?
+
+    ANOTHER PROBLEM: This is perhaps too flexible... So only have the init hook?
+
+How does global_hash know about the local_hashes?
+
+_xyz_implementation() --> _xyz_impl() ???
+
+A game's hash starts as invalid. play() and undo_move() will call their respective
+update_hash hooks IF the hash is valid. get_hash() will also call init_hash() if not valid.
+
+It's unclear how to implement perfect hashing, or if we'll need it. It probably
+requires games to directly update bit vectors, with some minimalist
+representation determined by the games themselves, meaning it will probably use
+a different interface from zobrist hashing (it probably doesn't make sense to
+have something like local_hash::toggle() for most cases). We can add this later by adding
+more update_hash hooks, i.e.:
+    update_zobrist_hash_init()
+    update_perfect_hash_init()
+    etc...
+and also changing game::_play_impl() and game::_undo_impl() arguments to include some enum
+indicating which hash type should be updated (if the user wants to update the hash in these
+methods).
+
+We can easily refactor this later if we need it. It shouldn't be too difficult for
+sumgame/global_hash to also support this. The class hierarchy could look like:
+
+i_local_hash
+    ^     ^
+    |     \_______ perfect_hash
+zobrist_hash
+
+
+i_global_hash
+    ^    ^
+    |    \____________ global_perfect_hash
+global_zobrist_hash
+
+
+
+
+============================================================
+Global Transposition Table design
+
+Fields:
+- Common to all types of tables
+    - tag (hash bits not used by indexing, including "partial" bits)
+    - valid/invalid bit
+- Sumgame table
+    - win/loss bit
+- Impartial game table
+    - nimber (1? more?)
+- Possible future fields
+    - "importance" of this entry (for replacement policy)
+    - "best move" index
+    - heuristic value
+    - and more
+
+Should we have set associativity? Postpone until later?
+
+Configurable max memory usage?
+- May need to use "partial" index bits if max space isn't a power of 2 multiple
+    of the entry size. This means a bit will appear in both the index and tag
+
+We probably need at least two tables: one for sumgame, one for impartial_sumgame
+(or whatever nimber computation logic needs a cache)
+
+How to represent these values in memory?
+    - We shouldn't store a u64 for the tag, if the tag is likely just over half
+        as large as this.
+    - Entries can't store tags, because tag size isn't known at compile time.
+    - Some wasted memory is inevitable, unless every operation involves bit
+        shifts and masks.
+    - transposition_table<T> class with 3 arrays (tags, bits, entries)
+        - all 3 arrays allocated with new[]
+        - `tags` stores a tag for each entry, padded with zero bits to be a
+            multiple of 8 bits
+        - `bits` stores one or more bits for each entry, some defined by the
+            entry class. An entry always has a `valid` bit stored here, and
+            possibly more bits.
+        - `entries` is of type T*, and T can be of size 0
+        - transposition_table<T>::get() returns some kind of iterator instead
+            of the element type `T`. The iterator can access the extra bits.
+        - Instead of calling these "entry" and "iterator", call them
+            "entry_data" and "entry"? Is this more confusing?
+        - Tags can be tightly packed with no zero bit padding, if the bits
+            array has 8 empty bytes (byte aligned) at the end of the array,
+            and tag accesses are done with 2 u64 loads/stores
+        - This scheme results in minimal waste. Entries don't need to allocate
+            an entire u8 even when they only need a few bits. It's also still
+            simple enough 
+
+    TODO: work out the details of this. Ideally an entry type defines an enum
+    with one value for each bit used. Splitting data across 3 arrays may be bad
+    for cache locality, so consider combining the bits and tags. There doesn't
+    seem to be a good way to combine the entries array with the others, so for
+    now just keep these 2-3 arrays.
+
+

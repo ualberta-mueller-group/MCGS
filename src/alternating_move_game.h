@@ -14,6 +14,8 @@ class alternating_move_game
 public:
     alternating_move_game(bw color);
     alternating_move_game(game& game, bw color);
+    virtual ~alternating_move_game();
+
     bw to_play() const;
     bw opponent() const;
     void set_to_play(bw color);
@@ -54,6 +56,10 @@ inline alternating_move_game::alternating_move_game(game& game, bw to_play)
     : _game(&game), _to_play(to_play)
 {
     assert_black_white(to_play);
+}
+
+inline alternating_move_game::~alternating_move_game()
+{
 }
 
 inline bw alternating_move_game::to_play() const

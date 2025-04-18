@@ -3,11 +3,14 @@
 // Imports all unit tests
 //---------------------------------------------------------------------------
 
+#include "hash_eval.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
 #include <string>
 #include <iostream>
+
+#include "mcgs_init.h"
 
 #include "cgt_basics_test.h"
 #include "cgt_dyadic_rational_test.h"
@@ -36,13 +39,14 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include "sumgame_map_view_test.h"
 #include "custom_traits_test.h"
 #include "cgt_game_simplification_test.h"
+#include "hash_test.h"
 
 using std::cout, std::endl, std::string;
 
 namespace {
 void override_tests()
 {
-    file_parser_test_all();
+    hash_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -68,6 +72,8 @@ void print_usage(const char* exec_name)
 
 int main(int argc, const char** argv)
 {
+    mcgs_init_all();
+
     if (RUN_OVERRIDE_TESTS)
     {
         override_tests();
@@ -139,6 +145,8 @@ int main(int argc, const char** argv)
     custom_traits_test_all();
 
     cgt_game_simplification_test_all();
+
+    hash_test_all();
 
     cout << "SUCCESS" << endl;
 }

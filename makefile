@@ -1,7 +1,20 @@
 CC = c++
+#NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -DNDEBUG -DNO_WARN_DEFAULT_IMPL
 NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3
 TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -DSUMGAME_DEBUG_EXTRA
-# Valgrind is too slow for even short computations. Instead add: -fsanitize=leak
+
+# i.e. "make MCGS LEAKCHECK=1" or "make MCGS LEAKCHECK=true"
+ifneq (,$(filter $(LEAKCHECK),1 true))
+	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -fsanitize=leak
+	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -fsanitize=leak
+endif
+
+ifneq (,$(filter $(DEBUG),1 true))
+	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -DSUMGAME_DEBUG_EXTRA
+	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -DSUMGAME_DEBUG_EXTRA
+endif
+
+# Valgrind is too slow for even short computations. Instead use: -fsanitize=leak
 # as a flag when compiling. Should work for clang++ and g++
 # Still slows down executation considerably, but not nearly as much
 

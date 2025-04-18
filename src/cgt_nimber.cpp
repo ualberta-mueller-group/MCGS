@@ -5,20 +5,22 @@
 
 void nimber::play(const move& m, bw to_play)
 {
+    game::play(m, to_play);
+
     const int number = cgt_move::second(m);
     assert(number > 0);
     assert(number <= _value);
     _value -= number;
-    game::play(m, to_play);
 }
 
 void nimber::undo_move()
 {
     const move m = cgt_move::decode(last_move());
+    game::undo_move();
+
     const int number = cgt_move::second(m);
     assert(number > 0);
     _value += number;
-    game::undo_move();
 }
 
 void nimber::print(std::ostream& str) const
@@ -32,6 +34,26 @@ int nimber::nim_sum(const std::vector<int>& values)
     for (int heap : values)
         sum ^= heap;
     return sum;
+}
+
+
+void nimber::_init_hash(local_hash& hash)
+{
+    hash.toggle_value(0, _value);
+}
+
+relation nimber::_order_impl(const game* rhs) const
+{
+    const nimber* other = reinterpret_cast<const nimber*>(rhs);
+    assert(dynamic_cast<const nimber*>(rhs) == other);
+
+    const int& val1 = value();
+    const int& val2 = other->value();
+
+    if (val1 != val2)
+        return val1 < val2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
 }
 
 //---------------------------------------------------------------------------

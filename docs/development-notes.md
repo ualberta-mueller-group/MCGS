@@ -37,6 +37,12 @@ checking that the state is restored
     - TODO it probably is broken for sumgame, since it uses a different stack
     - TODO this check will be made functional after hash codes are implemented
 
+# Initialization (`mcgs_init.h`)
+Executables based on the C++ source code must call one of the `mcgs_init_all()`
+or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
+parsing command-line arguments. These functions initialize static data, i.e.
+`sumgame`'s transposition table, and global `random_table`s.
+
 # Safe Arithmetic Functions (`safe_arithmetic.h`)
 This section uses the term "wrapping" to mean either underflow or overflow.
 
@@ -109,6 +115,11 @@ This is not implemented, but described as a possible future task.
 `assert`s to verify that the game is not `nullptr`, is active, and is of type `T` (using its `game_type_t`)
 
 # More on data types
+
+## `cli_options` struct (`cli_options.h`)
+Holds values resulting from parsing command-line arguments
+- Returned by static method `cli_options::parse_args`
+- Holds optimization options as global/static fields of `cli_options::optimize`
 
 ## `sumgame_move` struct (`sumgame.h`)
 Represents a move made in a `sumgame`
@@ -224,6 +235,402 @@ in a sum.
 - The color of the player is encoded as part of the move 
 and is stored in the move stack. 
 - `undo_move` must respect and use the move player color information in the stack.
+
+# Hashing (`hashing.h`)
+Defines main data types for game hashing:
+- `hash_t`
+    - Typedef of `uint64_t`
+    - Each game, or sum of games, produces a unique `hash_t` value
+- `random_table` class
+    - Table of random numbers used by Zobrist hashing
+- `local_hash` class
+    - Manages a `hash_t` for a single `game` object
+- `global_hash` class
+    - Manages a `hash_t` for a single `sumgame` object
+
+## `random_table` Class
+A `random_table` is constructed with two arguments: `n_positions`, and `seed`,
+specifying how many positions (i.e. stones in a strip game) are
+represented in the table, and the seed for the random numbers in the table. A
+seed of 0 seeds the table with the current time (in ms) since the system
+clock's epoch.
+
+A `random_table` is indexed via the `get_zobrist_val()` template method, by a pair
+of integral values, (`position`, and `color`), returning a `hash_t`. `color` can
+be any 1-16 byte (inclusive) integral value. If `position` is past the bounds
+of the table, the table will grow and print a warning to stderr (only the first
+time this happens), and an additional warning is printed to stderr after
+completion of all tests. This resizing may affect validity of reported test
+times, particularly for small tests, or when many resizes happen.
+
+### Global `random_table`s
+There are several global `random_table`s, initialized by `mcgs_init_all()`
+(`mcgs_init.h`), and accessible via the `get_global_random_table(table_id)` function
+(`hashing.h`). Each table is used for a different purpose, to avoid accidental
+hash collisions.
+
+Table IDs:
+- `RANDOM_TABLE_DEFAULT`
+    - Used for "state" of a game (i.e. stones in a strip, `int`s of a rational)
+- `RANDOM_TABLE_TYPE`
+    - Used for type of a game (its `game_type_t`)
+- `RANDOM_TABLE_MODIFIER`
+    - Used in computing `global_hash` values, to modify a game's `local_hash`
+        based on its order in a `sumgame`
+- `RANDOM_TABLE_PLAYER`
+    - Used for color of current player to play
+
+Throughout the rest of the `Hashing` section, table indexing is expressed by
+the notation `TABLE_ID[position, color]`, but in the source code, table IDs are
+enum values, and the actual tables are accessed by the `get_global_random_table(table_id)`
+function.
+
+### `random_table` Indexing and Hacks
+All `random_table` objects represent all 1-16 byte `color` values for all
+positions in the table, using a hack to generate corresponding `hash_t` values
+by combining a smaller set of values stored in memory. Every position in a
+`random_table` has a unique array of 256 random `hash_t` values, used to
+generate the value returned by `get_zobrist_val()`.
+Pseudocode below (using unsigned arithmetic):
+
+```
+// get_zobrist_val(position, color)
+
+let "tables" be an array of arrays, where each sub-array belongs to one position and contains 256 random hash_t values
+
+subtable = tables[position] // array of 256 hash_t for this position
+result = 0
+i = 0
+
+do
+    byte = (color >> (i * 8)) & 0xFF // logical right shift
+    element = subtable[byte] // a hash_t
+    element = rotate(element, 3 * i) // bitwise rotation
+    result ^= element
+    i = i + 1
+while color has remaining non-zero bytes
+
+return result
+```
+
+The actual "rotate" function used is `rotate_interleaved()` (`utilities.h`).
+Bits masked by `0101...0101` are rotated left, and bits masked by `1010...1010`
+are rotated right.
+
+## `local_hash` Class
+Manages the `hash_t` of a `game`.
+
+Methods:
+- `toggle_value<T>(size_t position, T color)`
+    - XOR the current hash value with `RANDOM_TABLE_DEFAULT[position, color]`
+- `toggle_type(game_type_t type)`
+    - XOR the current hash value with `RANDOM_TABLE_TYPE[0, type]`
+- `reset()`
+    - Reset the hash to 0
+- `get_value()`
+    - Get the current `hash_t` value
+
+## `global_hash` Class
+Manages the `hash_t` of a `sumgame`.
+
+### Global Hash Value Definition
+`sumgame::get_global_hash()` computes the hash of a `sumgame`. The definition
+of this value is described below.
+
+To compute the `global_hash` value for a `sumgame` `S`:
+1. Normalize each `game` of `S` by calling `game::normalize()`
+2. Sort the `game`s of `S` according to `game::order()` so that each `game` `g_i` has a subgame index `i`
+3. For each `g_i`, get its `local_hash` value `h_i`
+4. For each `h_i`, compute a modified hash `H_i := hmod(h_i, i)`, for some hash modifier function `hmod`
+    - The actual `hmod` function is `H_i := RANDOM_TABLE_MODIFIER[i, h_i]`
+    - Using a linear congruential generator instead doesn't seem to be significantly different in terms of performance
+5. Given the player to play `p`, compute `P := RANDOM_TABLE_PLAYER[0, p]`
+6. The `global_hash` value is the XOR of all `H_i`, and `P`
+
+TODO: Currently `sumgame::get_global_hash()` sorts all of the `sumgame`'s games
+every time it's called. `sumgame` could maintain an ordering of its games to
+prevent this.
+
+### `global_hash` Methods
+Methods:
+- `add_subgame(size_t subgame_idx, game* g)`
+    - Given `g_i`, get `h_i`, compute and store `H_i`, then XOR `H_i` into
+        the current global hash value
+- `remove_subgame(size_t subgame_idx, game* g)`
+    - Given `g_i`, XOR the previously stored `H_i` out of the current global
+        hash value
+- `set_to_play(bw to_play)`
+    - Given `p`, compute `P` and XOR it into the global hash value
+    - If `p` was previously set, first XORs the previous `P` out of the global hash value
+- `reset()`
+    - Reset the global hash value to 0, and clear all stored `H_i` and `p`
+- `get_value()`
+    - Get the current `hash_t` value. Must first set `p`
+
+## `game` Hooks Related to Hashing
+`game` has several virtual methods related to hashing, some of which have
+default implementations.
+
+Non-virtual `game::order(const game*)` returns a `relation` enum value, indicating the
+ordering of two games. Considering two games `g1` and `g2`, `g1 < g2` (for
+ordering) when:
+- `g1`'s `game_type_t` is less than `g2`'s
+- If `g1` and `g2` are of the same type, the returned value is
+    `g1._order_impl(g2)`
+    - If `_order_impl` returns `REL_UNKNOWN`, the value returned by
+        `game::order` is instead `REL_EQUAL`
+
+Hooks without default implementations:
+- `game::_init_hash(local_hash& hash)`
+    - When called, `hash` has been reset, and has had its type set. The
+        implementer must compute the full hash for their game.
+
+Hooks with default implementations:
+- `game::_order_impl(const game*)`
+    - Only called on two games of the same type. Returns ordering of the games,
+        as a `relation` enum value. Default returns `REL_UNKNOWN`
+    - Implementer should cast the game pointer argument to their game's type,
+        i.e. `clobber_1xn::_order_impl` should cast from `const game*` to
+        `const clobber_1xn*`
+- `game::_normalize_impl()`
+    - Normalize a game. Default does nothing
+- `game::_undo_normalize_impl()`
+    - Undo normalization of a game. Default does nothing
+
+`strip` provides default implementations:
+- `strip::_init_hash(local_hash& hash)`
+    - Computes hash of the board. Assumes that the board contains all of the
+        game's state
+- `strip::_normalize_impl()` and `strip::_undo_normalize_impl()`
+    - Potentially reverses the board based on lexicographical order
+- `strip::_order_impl(const game* rhs)`
+    - Ordering based on lexicographical ordering of boards
+
+### Incremental Hash Updates
+`game`s can optionally incrementally update their hashes in the following methods:
+- `play()`
+- `undo_move()`
+- `_normalize_impl()`
+- `_undo_normalize_impl()`
+
+To incrementally update a hash, follow these steps:
+1. If `_hash_updatable()` returns `true`, the hash can be updated, otherwise it cannot
+2. Get a reference to the `local_hash` through `_get_hash_ref()`
+3. Remove relevant previous state from the hash, and add the new state, using `local_hash::toggle_value(position, color)` to do both
+4. Call `_mark_hash_updated()`. If this function is not called, the hash will be discarded, to be recomputed later by `_init_hash()` as needed
+    - Some games/methods opt to discard hashes, when updating them isn't worth the cost
+
+# Adding Hashing To Games
+Important:
+1. A game's `play` method should call `game::play` at the START of the method
+2. A game's `undo_move` method should call `game::undo_move` at the START of the method (after getting the last move from the stack)
+
+These base class methods do some record keeping around local hashes.
+
+## 1. Mandatory `_init_hash` Method
+All games must implement `game::_init_hash(local_hash& hash)`. In this method,
+assume that `hash` has been reset, and that the game's `game_type_t` has already been
+baked into `hash`. Use `hash.toggle_value(position, color)`, and include the
+entire game state in the hash.
+
+Example:
+```
+void dyadic_rational::_init_hash(local_hash& hash)
+{
+    hash.toggle_value(0, _p);
+    hash.toggle_value(1, _q);
+}
+```
+
+A default implementation is provided by `strip`.
+
+## 2. Optional `_normalize_impl` and `_undo_normalize_impl` Methods
+Games can optionally implement `game::_normalize_impl()` and
+`game::_undo_normalize_impl()`, (but if one is implemented, the other should be
+as well)
+
+Default implementation in `strip` (omitting incremental hash update):
+```
+void strip::_normalize_impl()
+{
+    // Is mirrored board lexicographically less than the current board?
+    relation rel = _compare_boards(_board, _board, true, false);
+    bool do_mirror = (rel == REL_LESS);
+
+    if (do_mirror)
+        _mirror_self();
+
+    // For undo
+    _default_normalize_did_mirror.push_back(do_mirror);
+}
+```
+
+`game` provides trivial default implementations which preserve the current state.
+
+## 3. Optional Incremental Hash Updates
+Some of a game's methods may incrementally update the hash:
+- `play`
+- `undo_move`
+- `_normalize_impl`
+- `_undo_normalize_impl`
+
+If these methods don't update the hash, the hash is automatically invalidated,
+and will be recomputed using `_init_hash` the next time it's needed.
+
+Incremental hash update in `nogo_1xn::play`:
+```
+void nogo_1xn::play(const move& m, bw to_play)
+{
+    // This must be called first
+    game::play(m, to_play);
+
+    const int to = m;
+
+    // If false, the local_hash hasn't been initialized, or was previously invalidated
+    if (_hash_updatable())
+    {
+        // This will fail an assert if the above condition is false
+        local_hash& hash = _get_hash_ref();
+
+        hash.toggle_value(to, EMPTY); // Remove old state
+        hash.toggle_value(to, to_play); // Add new state
+
+        // The hash is invalidated unless this is called
+        _mark_hash_updated();
+    }
+
+    // Modify game state
+    replace(to, to_play);
+}
+```
+
+`game`'s default implementation of `_normalize_impl()`:
+```
+void game::_normalize_impl()
+{
+    // Do nothing, and keep the current hash
+    if(_hash_updatable())
+        _mark_hash_updated();
+}
+```
+
+## 4: Optional `_order_impl` Method
+Games can optionally implement `game::_order_impl(const game* rhs)`. `rhs` always
+has the same type as `this` -- the argument passed to `clobber_1xn::_order_impl` is always a `const clobber_1xn*`,
+and must be casted from `const game*` in the method.
+
+The returned value is a `relation` enum value (`cgt_basics.h`), and should have one of the
+following values:
+- `REL_LESS`
+- `REL_EQUAL`
+- `REL_GREATER`
+- `REL_UNKNOWN`
+    - This is returned by `game`'s default implementation
+    
+i.e. return `REL_LESS` if `this` is lexicographically less than `rhs`.
+
+
+# Transposition Tables (`transposition.h`)
+Defines types for transposition tables:
+- `ttable<Entry>` class
+    - A transposition table whose entries are of type `Entry`
+- `ttable<Entry>::iterator` class
+    - The value returned by querying the transposition table with a `hash_t`.
+        Refers to a (possibly absent) table entry and its associated data.
+        Used to access, modify, or insert the table entry (and its associated
+        data) for this hash
+
+A `ttable<Entry>` is constructed with two arguments:
+- `size_t index_bits`
+    - How many bits of a `hash_t` are used to index into the table. The
+        number of entries in the table is `2^index_bits`
+    - The remaining non-index bits are the "tag bits", and are stored alongside
+        each entry
+- `size_t entry_bools`
+    - Quantity of extra `bool`s to associate with each entry, stored outside
+        of the `Entry` in a tightly packed bit vector, and accessed through
+        the `ttable<Entry>::iterator` type
+
+`ttable<Entry>` methods:
+- `ttable<Entry>::iterator get_iterator(hash_t hash)`
+    - Returns an entry iterator corresponding to the queried hash
+
+`ttable<Entry>::iterator` methods:
+- Methods which are always valid:
+    - `bool entry_valid() const`
+        - `true` IFF the queried table entry is present in the table
+    - `void init_entry()` and `void init_entry(const Entry&)`
+        - Initialize the table entry and its data. May overwrite another table entry
+    - `void set_entry(const Entry& entry)`
+        - Assign the table entry to `entry`.
+        - If the entry isn't valid, this is equivalent to `init_entry(entry)`
+- Methods which are only valid if `entry_valid()` returns `true`:
+    - `Entry& get_entry()`
+        - Get reference to the `Entry` of the table entry
+    - `bool get_bool(size_t bool_idx) const` and `void set_bool(size_t bool_idx, bool new_val)`
+        - Get/set the value of a packed bool associated with the table entry
+
+In C++, empty structs occupy at least 1 byte. If `Entry` is empty (according to
+`std::is_empty_v<Entry>`), the `ttable<Entry>` will only store a single `Entry` object,
+reusing it for every table entry. This can be used to save space, i.e. if a
+table entry consists of a small number of `bool`s, the `Entry` struct can be
+left empty, and those `bool`s can instead be stored in a packed bit vector by
+the `ttable<Entry>` itself, by setting the `entry_bools` argument in the
+constructor.
+
+
+## `ttable` Example 1
+```
+#include "hashing.h"
+#include "transposition.h"
+
+clobber_1xn g("XOXO");
+const hash_t hash  = g.get_local_hash();
+
+struct ttable_entry
+{
+    bool win;
+};
+
+// 24 bit index, no extra bools associated with entry
+ttable<ttable_entry> tt(24, 0);
+
+ttable<ttable_entry>::iterator tt_it = tt.get_iterator(hash);
+
+// At start of minimax search
+if (tt_it.entry_valid())
+    return tt_it.get_entry().win;
+
+// Later in minimax search function, when result is known ("search_result" is some bool)
+ttable_entry entry = {search_result};
+tt_it.set_entry(entry);
+```
+
+## `ttable` Example 2
+```
+#include "hashing.h"
+#include "transposition.h"
+
+clobber_1xn g("XOXO");
+const hash_t hash = g.get_local_hash();
+
+struct empty_struct
+{
+};
+
+// 24 bit index, every entry has 1 additional bool stored outside of it
+ttable<empty_struct> tt(24, 1);
+
+ttable<empty_struct>::iterator tt_it = tt.get_iterator(hash);
+
+// Start of minimax search
+if (tt_it.entry_valid())
+    return tt_it.get_bool(0);
+
+// Later in minimax search function, when result is known ("search_result" is some bool)
+tt_it.init_entry();
+tt_it.set_bool(0, search_result);
+```
 
 # Bounds (`bounds.h`)
 Defines functions and types used for finding lower and upper bounds of games.
@@ -419,3 +826,54 @@ a move generator in a `std::unique_ptr`
     - remove/deactivate 0
     - find inverse pairs and deactivate
 
+# Regarding `game` "Hooks"
+- A `game`'s `local_hash` is computed lazily by `game::get_local_hash()`, and then possibly incrementally updated afterward
+- The hash is computed from scratch by abstract method `game::_init_hash(local_hash&) = 0`, implemented by each game
+- Hashes can optionally be incrementally updated by a game's play(), undo_move(), normalize(), and undo_normalize() methods
+    - These methods can check if the hash has been computed via `_hash_valid()`, then update the hash and call `_mark_hash_updated()`
+    - But this requires `game` to do record keeping before these methods interact with the hash
+        - play() must immediately call `game::play()`
+        - undo_move() must immediately get the previous move from the stack, and call `game::undo_move()`
+        - normalize() must immediately call `game::normalize()`
+        - undo_normalize() must immediately call `game::undo_normalize()`
+        - If any of these methods fail to call the corresponding base class method, search will be incorrect
+
+- An alternative is to use "hooks", i.e. have `game::play()` be a non-virtual method which calls abstract method `game::_play_hook() = 0`
+    - With this, it's impossible for the user to forget to call base class methods
+    - But multiple levels of inheritance can make hooks confusing
+        - With "c" for "color" and "nc" for "no color":
+            - `void game::play_c()` and `virtual void game::_play_c_hook() = 0`
+            - `void impartial_game::play_nc()` and `virtual void impartial_game::_play_nc_hook() = 0`
+            - A 3rd abstract class, inherting from `impartial_game`, would make this worse
+        - Harder to trace execution
+            - Your game's play() method isn't called directly when you do `g.play(...)`
+                - Can't trace execution just by looking at your play() method
+                - Multiple methods called before the game's play() method
+            - The code has more functions, making it harder to understand
+            - See call graph example below
+
+## Call graphs for `impartial_game`s, using hook solution
+```
+kayles k(...);
+k.play_c(...);
+```
+game::play_c()
+    impartial_game::_play_c_hook() final
+        kayles::_play_nc_hook() override
+
+
+```
+kayles k(...);
+k.play_nc(...);
+```
+impartial_game::play_nc()
+    game::play_c()
+        impartial_game::_play_c_hook() final
+            kayles::_play_nc_hook() override
+
+
+## Proposal
+Have some methods be hooks, and others not. `game::play()` and
+`game::undo_move()` should stay how they were before, but normalize and
+undo_normalize can be hooks; these methods are unlikely to result in confusing
+chains of virtual methods

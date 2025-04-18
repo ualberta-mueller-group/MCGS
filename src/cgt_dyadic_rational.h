@@ -29,7 +29,11 @@ public:
     void undo_move() override;
 
 protected:
-    split_result _split_implementation() const override;
+    split_result _split_impl() const override;
+
+    void _init_hash(local_hash& hash) override;
+
+    relation _order_impl(const game* rhs) const override;
 
 public:
     game* inverse() const override;

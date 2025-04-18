@@ -20,11 +20,26 @@ clobber_1xn::clobber_1xn(std::string game_as_string) : strip(game_as_string)
 
 void clobber_1xn::play(const move& m, bw to_play)
 {
+    game::play(m, to_play);
+
     const int from = cgt_move::from(m);
     const int to = cgt_move::to(m);
     assert(at(from) == to_play);
     assert(at(to) == opponent(to_play));
-    game::play(m, to_play);
+
+    // incremental hash
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+
+        hash.toggle_value(from, to_play);
+        hash.toggle_value(to, opponent(to_play));
+
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, to_play);
+        _mark_hash_updated();
+    }
+
     replace(from, EMPTY);
     replace(to, to_play);
 }
@@ -32,18 +47,34 @@ void clobber_1xn::play(const move& m, bw to_play)
 void clobber_1xn::undo_move()
 {
     const move mc = last_move();
+    game::undo_move();
+
     const move m = cgt_move::decode(mc);
     const int from = cgt_move::from(m);
     const int to = cgt_move::to(m);
-    game::undo_move();
+
     const bw player = cgt_move::get_color(mc);
     assert(at(from) == EMPTY);
     assert(at(to) == player);
+
+    // incremental hash
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, player);
+
+        hash.toggle_value(from, player);
+        hash.toggle_value(to, opponent(player));
+        _mark_hash_updated();
+    }
+
     replace(from, player);
     replace(to, opponent(player));
 }
 
-split_result clobber_1xn::_split_implementation() const
+split_result clobber_1xn::_split_impl() const
 {
     vector<pair<int, int>> chunk_ranges;
 
@@ -117,6 +148,7 @@ split_result clobber_1xn::_split_implementation() const
         return result;
     }
 }
+
 
 game* clobber_1xn::inverse() const
 {

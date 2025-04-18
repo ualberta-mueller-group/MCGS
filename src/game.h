@@ -11,6 +11,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game_type.h"
+#include "hashing.h"
 
 //---------------------------------------------------------------------------
 
@@ -33,29 +34,20 @@ public:
     int moves_hash() const; // TODO do a proper implementation
     bool has_moves() const;
 
-    /*
-        When overriding play() and undo_move(), the derived type's
-        function should first call these functions.
-
-        i.e. in derived type's play():
-            // pushes move onto move stack for later,
-            // after encoding player color into it
-            game::play(m, to_play);
-
-        and in derived type's undo_move():
-            // get back the move we remembered
-            move m_encoded = game::last_move();
-            game::undo_move(); // pop it off the stack
-            // now decode the move
-            bw to_play = cgt_move::get_color(m_encoded);
-            move m = cgt_move::decode(m_encoded);
-
-    */
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
 
-    // calls _split_implementation() and filters out games having no moves
+    // calls _split_impl() and filters out games having no moves
     split_result split() const;
+
+    hash_t get_local_hash();
+
+    void normalize();
+    void undo_normalize();
+
+    relation order(const game* rhs) const;
+
+    void invalidate_hash(); // for debugging
 
 protected:
     /*
@@ -75,7 +67,18 @@ protected:
         To create an absent split_result:
             split_result sr = split_result();
     */
-    virtual split_result _split_implementation() const;
+    virtual split_result _split_impl() const;
+
+    virtual void _init_hash(local_hash& hash) = 0;
+
+    virtual void _normalize_impl();
+    virtual void _undo_normalize_impl();
+
+    virtual relation _order_impl(const game* rhs) const;
+
+    local_hash& _get_hash_ref();
+    bool _hash_updatable() const;
+    void _mark_hash_updated();
 
 public:
     virtual move_generator* create_move_generator(bw to_play) const = 0;
@@ -93,11 +96,35 @@ public:
     virtual game* inverse() const = 0; // caller takes ownership
 
 private:
+    enum hash_state_enum
+    {
+        HASH_STATE_INVALID = 0,
+        HASH_STATE_NEED_UPDATE,
+        HASH_STATE_UP_TO_DATE,
+    };
+
+    enum game_undo_code
+    {
+        GAME_UNDO_PLAY = 0,
+        GAME_UNDO_NORMALIZE,
+    };
+
+    void _push_undo_code(game_undo_code code);
+    void _pop_undo_code(game_undo_code code);
+
+    void _pre_hash_update();
+
     std::vector<move> _move_stack;
     bool _is_active;
+
+    hash_state_enum _hash_state;
+    local_hash _hash;
+
+    std::vector<game_undo_code> _undo_code_stack;
+
 }; // class game
 
-inline game::game() : _move_stack(), _is_active(true)
+inline game::game() : _move_stack(), _is_active(true), _hash_state(HASH_STATE_INVALID)
 {
 }
 
@@ -116,23 +143,14 @@ inline move game::last_move() const
     return _move_stack.back();
 }
 
-inline void game::play(const move& m, int to_play)
+inline int game::moves_hash() const
 {
-    assert(cgt_move::get_color(m) == 0);
-    const move mc = cgt_move::encode(m, to_play);
-    _move_stack.push_back(mc);
-    //     std::cout << "move "<< cgt_move::print(m) << "\n";
-    //     std::cout << "move + color "<< cgt_move::print(mc) << std::endl;
-}
-
-inline void game::undo_move()
-{
-    _move_stack.pop_back();
+    return _move_stack.size();
 }
 
 inline split_result game::split() const
 {
-    split_result sr = _split_implementation();
+    split_result sr = _split_impl();
 
     // no split happened
     if (!sr)
@@ -155,14 +173,26 @@ inline split_result game::split() const
     return result;
 }
 
-inline split_result game::_split_implementation() const
+inline split_result game::_split_impl() const
 {
     return split_result(); // no value
 }
 
-inline int game::moves_hash() const
+inline local_hash& game::_get_hash_ref()
 {
-    return _move_stack.size();
+    assert(_hash_updatable());
+    return _hash;
+}
+
+inline bool game::_hash_updatable() const
+{
+    return _hash_state == HASH_STATE_NEED_UPDATE;
+}
+
+inline void game::_mark_hash_updated()
+{
+    assert(_hash_state == HASH_STATE_NEED_UPDATE);
+    _hash_state = HASH_STATE_UP_TO_DATE;
 }
 
 inline std::ostream& operator<<(std::ostream& out, const game& g)
@@ -211,6 +241,22 @@ constexpr bool is_concrete_game_v =
 */
 template <class T_Ptr>
 inline T_Ptr cast_game(game* g)
+{
+    static_assert(std::is_pointer_v<T_Ptr>);
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T = typename std::remove_pointer<T_Ptr>::type;
+
+    static_assert(is_concrete_game_v<T>);
+
+    assert(g != nullptr);
+    assert(g->is_active());
+    assert(g->game_type() == game_type<T>());
+
+    return reinterpret_cast<T_Ptr>(g);
+}
+
+template <class T_Ptr>
+inline T_Ptr cast_game(const game* g)
 {
     static_assert(std::is_pointer_v<T_Ptr>);
     // NOLINTNEXTLINE(readability-identifier-naming)

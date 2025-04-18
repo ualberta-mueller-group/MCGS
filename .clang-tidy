@@ -4,7 +4,10 @@ Checks: "-*,
   google-global-names-in-headers,
   misc-definitions-in-headers,
   misc-use-internal-linkage,
-  bugprone-assert-side-effect,"
+  bugprone-assert-side-effect,
+  cppcoreguidelines-virtual-class-destructor,"
+#  misc-include-cleaner,"
+
 
 WarningsAsErrors: "-*,
   readability-identifier-naming,
@@ -12,7 +15,9 @@ WarningsAsErrors: "-*,
   google-global-names-in-headers,
   misc-definitions-in-headers,
   misc-use-internal-linkage,
-  bugprone-assert-side-effect,"
+  bugprone-assert-side-effect,
+  cppcoreguidelines-virtual-class-destructor,"
+#  misc-include-cleaner,"
 
 HeaderFilterRegex: .h
 SystemHeaders: false
@@ -62,6 +67,8 @@ CheckOptions:
   - { key: readability-identifier-naming.ConstexprFunctionCase, value: lower_case }
   - { key: readability-identifier-naming.ConstexprMethodCase, value: lower_case }
   - { key: readability-identifier-naming.ConstexprVariableCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.ConstexprVariableIgnoredRegexp, value: "_?[A-Z_0-9]+" }
+  
 
   - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
 

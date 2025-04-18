@@ -27,7 +27,7 @@ cli_options call_parse(const vector<string>& args)
         argv[i] = args[i].c_str();
     }
 
-    return parse_cli_args(argc, argv.data(), true);
+    return cli_options::parse_args(argc, argv.data(), true);
 }
 
 // empty args gives correct options

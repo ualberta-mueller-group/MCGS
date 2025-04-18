@@ -5,8 +5,11 @@
 
 void integer_game::play(const move& m, bw to_play)
 {
+    game::play(INTEGER_MOVE_CODE, to_play);
+
     assert(m == INTEGER_MOVE_CODE);
     assert(_value != 0);
+
     if (to_play == BLACK)
     {
         assert(_value > 0);
@@ -17,12 +20,13 @@ void integer_game::play(const move& m, bw to_play)
         assert(_value < 0);
         _value += 1;
     }
-    game::play(INTEGER_MOVE_CODE, to_play);
 }
 
 void integer_game::undo_move()
 {
     const move m = last_move();
+    game::undo_move();
+
     const bw to_play = cgt_move::get_color(m);
     if (to_play == BLACK)
     {
@@ -34,7 +38,6 @@ void integer_game::undo_move()
         assert(_value <= 0);
         _value -= 1;
     }
-    game::undo_move();
 }
 
 game* integer_game::inverse() const
@@ -45,6 +48,26 @@ game* integer_game::inverse() const
 void integer_game::print(std::ostream& str) const
 {
     str << "integer:" << _value;
+}
+
+
+void integer_game::_init_hash(local_hash& hash)
+{
+    hash.toggle_value(0, _value);
+}
+
+relation integer_game::_order_impl(const game* rhs) const
+{
+    const integer_game* other = reinterpret_cast<const integer_game*>(rhs);
+    assert(dynamic_cast<const integer_game*>(rhs) == other);
+
+    const int& val1 = value();
+    const int& val2 = other->value();
+
+    if (val1 != val2)
+        return val1 < val2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
 }
 
 //---------------------------------------------------------------------------

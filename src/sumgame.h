@@ -8,6 +8,14 @@
 #include "game.h"
 #include <ctime>
 #include "sumgame_change_record.h"
+#include "transposition.h"
+#include <memory>
+
+struct ttable_sumgame_entry
+{
+};
+
+typedef ttable<ttable_sumgame_entry> ttable_sumgame;
 
 //////////////////////////////////////// forward declarations
 class sumgame_move_generator;
@@ -67,7 +75,7 @@ class sumgame : public alternating_move_game
 {
 public:
     sumgame(bw color);
-    ~sumgame();
+    virtual ~sumgame();
 
     void play_sum(const sumgame_move& m, bw to_play);
     void undo_move() override;
@@ -76,7 +84,7 @@ public:
 
     void add(game* g);
     void add(std::vector<game*>& gs);
-    void pop(game* g);
+    void pop(const game* g);
 
     bool solve() const override;
 
@@ -103,6 +111,11 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 
+    hash_t get_global_hash(bool invalidate_game_hashes = false) const; // TODO: this method may be temporary
+
+    // called by mcgs_init()
+    static void init_ttable(size_t index_bits);
+
 private:
     class undo_stack_unwinder;
 
@@ -112,8 +125,11 @@ private:
     void _push_undo_code(sumgame_undo_code code);
     void _pop_undo_code(sumgame_undo_code code);
 
+    std::optional<ttable_sumgame::iterator> _do_ttable_lookup() const;
+
     void _debug_extra() const;
     void _assert_games_unique() const;
+
 
     mutable bool _should_stop;
     mutable bool _need_cgt_simplify;
@@ -122,7 +138,35 @@ private:
     std::vector<sumgame_undo_code> _undo_code_stack;
     std::vector<play_record> _play_record_stack;
     std::vector<sumgame_impl::change_record> _change_record_stack;
+
+    static std::shared_ptr<ttable_sumgame> _tt;
 };
+
+//////////////////////////////////////// sumgame_move_generator
+// TODO: Hide this in a namespace (i.e. __sumgame_impl) ???
+
+class sumgame_move_generator : public move_generator
+{
+public:
+    sumgame_move_generator(const sumgame& game, bw to_play);
+    ~sumgame_move_generator();
+
+    void operator++() override;
+    void next_move(bool init);
+    operator bool() const override;
+    sumgame_move gen_sum_move() const;
+
+    move gen_move() const override { assert(false); }
+
+private:
+    const game* _current() const { return _game.subgame(_subgame_idx); }
+
+    const sumgame& _game;
+    const int _num_subgames;
+    int _subgame_idx;
+    move_generator* _subgame_generator;
+};
+
 
 //---------------------------------------------------------------------------
 

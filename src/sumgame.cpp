@@ -11,6 +11,7 @@
 #include "cgt_switch.h"
 #include "cgt_up_star.h"
 
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <iostream>
@@ -20,37 +21,20 @@
 #include <future>
 
 #include <unordered_set>
+#include <vector>
 
-#include "optimization_options.h"
+#include "hashing.h"
 #include "sumgame_undo_stack_unwinder.h"
+#include "cli_options.h"
 
 using std::cout;
 using std::endl;
 using std::optional;
 using sumgame_impl::change_record;
 
+std::shared_ptr<ttable_sumgame> sumgame::_tt(nullptr);
+
 //---------------------------------------------------------------------------
-class sumgame_move_generator : public move_generator
-{
-public:
-    sumgame_move_generator(const sumgame& game, bw to_play);
-    ~sumgame_move_generator();
-
-    void operator++() override;
-    void next_move(bool init);
-    operator bool() const override;
-    sumgame_move gen_sum_move() const;
-
-    move gen_move() const override { assert(false); }
-
-private:
-    const game* _current() const { return _game.subgame(_subgame_idx); }
-
-    const sumgame& _game;
-    const int _num_subgames;
-    int _subgame_idx;
-    move_generator* _subgame_generator;
-};
 
 sumgame_move_generator::sumgame_move_generator(const sumgame& game, bw to_play)
     : move_generator(to_play),
@@ -171,6 +155,26 @@ bool is_simple_cgt(game* g)
 
 } // namespace
 
+// TODO use assert_restore_game in alternating_move_game.h instead
+class assert_restore_sumgame
+{
+public:
+    assert_restore_sumgame(const sumgame& sg)
+        : _sg(sg),
+          _initial_hash(sg.get_global_hash())
+    {
+    }
+
+    ~assert_restore_sumgame()
+    {
+        assert(_sg.get_global_hash(true) == _initial_hash);
+    }
+
+private:
+    const sumgame& _sg;
+    const hash_t _initial_hash;
+};
+
 //---------------------------------------------------------------------------
 
 sumgame::~sumgame()
@@ -185,7 +189,7 @@ void sumgame::add(game* g)
     assert(g->is_active());
 
     if (                                              //
-        optimization_options::simplify_basic_cgt() && //
+        cli_options::optimize::simplify_basic_cgt() && //
         !_need_cgt_simplify &&                        //
         is_simple_cgt(g)                              //
         )                                             //
@@ -200,7 +204,7 @@ void sumgame::add(std::vector<game*>& gs)
     }
 }
 
-void sumgame::pop(game* g)
+void sumgame::pop(const game* g)
 {
     assert(!_subgames.empty());
     assert(_subgames.back() == g);
@@ -241,6 +245,8 @@ optional<solve_result> sumgame::solve_with_timeout(
 
     _should_stop = false;
     _need_cgt_simplify = true;
+    for (game* g : _subgames)
+        g->normalize();
 
     // spawn a thread, then wait with a timeout for it to complete
     std::promise<optional<solve_result>> promise;
@@ -274,6 +280,10 @@ optional<solve_result> sumgame::solve_with_timeout(
     thr.join();
 
     assert(future.valid());
+
+
+    for (game* g : _subgames)
+        g->undo_normalize();
     return future.get();
 }
 
@@ -321,6 +331,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
 {
 #ifdef SUMGAME_DEBUG_EXTRA
     _debug_extra();
+    assert_restore_sumgame ars(*this);
 #endif
 
     undo_stack_unwinder stack_unwinder(*this);
@@ -337,6 +348,14 @@ optional<solve_result> sumgame::_solve_with_timeout()
     }
 
     simplify_basic();
+
+    // TODO this is quite ugly...
+    std::optional<ttable_sumgame::iterator> tt_iterator = _do_ttable_lookup();
+    if (tt_iterator)
+    {
+        if (tt_iterator->entry_valid())
+            return tt_iterator->get_bool(0);
+    }
 
     const bw toplay = to_play();
 
@@ -376,11 +395,27 @@ optional<solve_result> sumgame::_solve_with_timeout()
         if (result.win)
         {
             /// undo_simplify_basic();
+
+            if (tt_iterator)
+            {
+                assert(tt_iterator.has_value());
+
+                tt_iterator->init_entry();
+                tt_iterator->set_bool(0, result.win);
+            }
             return result;
         }
     }
 
     /// undo_simplify_basic();
+    if (tt_iterator)
+    {
+        assert(tt_iterator.has_value());
+
+        tt_iterator->init_entry();
+        tt_iterator->set_bool(0, false);
+    }
+
     return solve_result(false);
 }
 
@@ -394,6 +429,17 @@ void sumgame::_pop_undo_code(sumgame_undo_code code)
     assert(!_undo_code_stack.empty());
     assert(_undo_code_stack.back() == code);
     _undo_code_stack.pop_back();
+}
+
+std::optional<ttable_sumgame::iterator> sumgame::_do_ttable_lookup() const
+{
+    if (cli_options::optimize::tt_sumgame_idx_bits() == 0)
+        return std::optional<ttable_sumgame::iterator>();
+
+    assert(_tt != nullptr);
+
+    const hash_t current_hash = get_global_hash();
+    return _tt->get_iterator(current_hash);
 }
 
 void sumgame::_debug_extra() const
@@ -443,12 +489,12 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 
     g->play(mv, to_play);
     split_result sr;
-    if (optimization_options::subgame_split())
+    if (cli_options::optimize::subgame_split())
         sr = g->split();
 
     if (sr) // split changed the sum
     {
-        assert(optimization_options::subgame_split());
+        assert(cli_options::optimize::subgame_split());
         record.did_split = true;
 
         // g is no longer part of the sum
@@ -456,9 +502,14 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 
         for (game* gp : *sr)
         {
-            add(gp);
+            add(gp); // no need to normalize, add() will do it
             record.add_game(gp); // save these games in the record for debugging
         }
+    }
+    else
+    {
+        if (cli_options::optimize::tt_sumgame_idx_bits() > 0)
+            g->normalize();
     }
 
     alternating_move_game::play(mv);
@@ -477,7 +528,7 @@ void sumgame::undo_move()
     // undo split (if necessary)
     if (record.did_split)
     {
-        assert(optimization_options::subgame_split());
+        assert(cli_options::optimize::subgame_split());
         assert(!s->is_active()); // should have been deactivated on last split
 
         s->set_active(true);
@@ -491,9 +542,14 @@ void sumgame::undo_move()
             // a previous undo should have reactivated g
             assert(_subgames.back()->is_active());
 
-            delete _subgames.back();
-            _subgames.pop_back();
+            pop(g);
+            delete g;
         }
+    }
+    else
+    {
+        if (cli_options::optimize::tt_sumgame_idx_bits() > 0)
+            s->undo_normalize();
     }
 
     const move subm = cgt_move::decode(s->last_move());
@@ -512,7 +568,7 @@ void sumgame::undo_move()
 
 void sumgame::simplify_basic()
 {
-    if (!optimization_options::simplify_basic_cgt())
+    if (!cli_options::optimize::simplify_basic_cgt())
         return;
 
     if (!_need_cgt_simplify)
@@ -535,7 +591,7 @@ void sumgame::simplify_basic()
 
 void sumgame::undo_simplify_basic()
 {
-    if (!optimization_options::simplify_basic_cgt())
+    if (!cli_options::optimize::simplify_basic_cgt())
         return;
 
     _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
@@ -564,6 +620,69 @@ void sumgame::print(std::ostream& str) const
             g->print(str);
         }
     str << std::endl;
+}
+
+hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
+{
+    if (invalidate_game_hashes)
+    {
+        for (game* g : _subgames)
+            g->invalidate_hash();
+    }
+
+    global_hash gh;
+    gh.set_to_play(to_play());
+
+    std::vector<game*> active_games;
+
+    {
+        const int N = this->num_total_games();
+
+        for (int i = 0; i < N; i++)
+        {
+            game* g = this->subgame(i);
+
+            if (!g->is_active())
+                continue;
+
+            active_games.push_back(g);
+        }
+    }
+
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    class __game_compare
+    {
+    public:
+        bool operator()(const game* g1, const game* g2) const
+        {
+            // Put larger games first
+            return g1->order(g2) == REL_GREATER;
+        }
+    };
+
+    std::sort(active_games.begin(), active_games.end(), __game_compare());
+
+    {
+        const size_t N = active_games.size();
+
+        for (size_t i = 0; i < N; i++)
+        {
+            game* g = active_games[i];
+            assert(g->is_active());
+            gh.add_subgame(i, g);
+        }
+    }
+
+    return gh.get_value();
+}
+
+void sumgame::init_ttable(size_t index_bits)
+{
+    if (cli_options::optimize::tt_sumgame_idx_bits() == 0)
+        return;
+
+    assert(_tt.get() == nullptr); // Not already initialized
+    _tt.reset(new ttable_sumgame(index_bits, 1));
 }
 
 sumgame_move_generator* sumgame::create_sum_move_generator(bw to_play) const

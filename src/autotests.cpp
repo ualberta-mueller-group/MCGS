@@ -8,11 +8,13 @@
 #include "cgt_basics.h"
 #include "file_parser.h"
 #include "sumgame.h"
+#include "throw_assert.h"
 #include <ratio>
 #include <unistd.h>
 #include <vector>
 #include <sstream>
 #include <chrono>
+#include "hashing.h"
 
 using namespace std;
 
@@ -112,6 +114,8 @@ string format_duration(double duration)
 void run_autotests(const string& test_directory, const string& outfile_name,
                    unsigned long long test_timeout)
 {
+    THROW_ASSERT(test_directory.size() > 0);
+
     ofstream outfile(outfile_name); // CSV file
 
     if (!outfile.is_open())
@@ -222,6 +226,9 @@ void run_autotests(const string& test_directory, const string& outfile_name,
             case_number++;
         }
     }
+
+    if (random_table::did_resize_warning())
+        random_table::print_resize_warning();
 
     outfile.close();
 }

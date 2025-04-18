@@ -18,7 +18,10 @@ public:
     void undo_move() override;
 
 protected:
-    split_result _split_implementation() const override;
+    split_result _split_impl() const override;
+
+    void _normalize_impl() override;
+    void _undo_normalize_impl() override;
 
 public:
     move_generator* create_move_generator(bw to_play) const override;

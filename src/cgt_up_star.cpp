@@ -2,6 +2,7 @@
 // Simple combinatorial games - multiples of up, down, with/without star
 //---------------------------------------------------------------------------
 #include "cgt_up_star.h"
+#include "cgt_basics.h"
 
 //////////////////////////////////////// helper functions
 namespace {
@@ -19,9 +20,12 @@ inline int sign(int value)
 } // namespace
 
 //---------------------------------------------------------------------------
+
 // special cases if -1 <= _value <= 1
 void up_star::play(const move& m, bw to_play)
 {
+    game::play(m, to_play);
+
     const int delta_v = cgt_move::first(m);
     const bool flip_star = static_cast<bool>(cgt_move::second(m));
     if (_value == 0) // last move from * to 0
@@ -46,19 +50,19 @@ void up_star::play(const move& m, bw to_play)
     _value += delta_v;
     if (flip_star)
         _star = !_star;
-    game::play(m, to_play);
 }
 
 void up_star::undo_move()
 {
     const move m = last_move();
+    game::undo_move();
+
     int flip_star;
     bw to_play;
     const int delta_v = cgt_move::decode3(m, &flip_star, &to_play);
     _value -= delta_v;
     if (flip_star)
         _star = !_star;
-    game::undo_move();
 }
 
 game* up_star::inverse() const
@@ -71,6 +75,33 @@ void up_star::print(std::ostream& str) const
     str << "up_star:" << _value;
     if (has_star())
         str << '*';
+}
+
+
+void up_star::_init_hash(local_hash& hash)
+{
+    hash.toggle_value(0, _value);
+    hash.toggle_value(1, _star);
+}
+
+relation up_star::_order_impl(const game* rhs) const
+{
+    const up_star* other = reinterpret_cast<const up_star*>(rhs);
+    assert(dynamic_cast<const up_star*>(rhs) == other);
+
+    const int& ups1 = this->num_ups();
+    const int& ups2 = other->num_ups();
+
+    if (ups1 != ups2)
+        return ups1 < ups2 ? REL_LESS : REL_GREATER;
+
+    const bool star1 = this->has_star();
+    const bool star2 = other->has_star();
+
+    if (star1 != star2)
+        return star1 < star2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
 }
 
 //---------------------------------------------------------------------------

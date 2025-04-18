@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
+#include "game.h"
 #include "safe_arithmetic.h"
 #include "utilities.h"
 
@@ -38,6 +39,8 @@ fraction dyadic_rational::get_fraction() const
 
 void dyadic_rational::play(const move& m, bw to_play)
 {
+    game::play(m, to_play);
+
     assert(m == cgt_move::two_part_move(_p, _q));
     assert(_p != 0);
     if (to_play == BLACK)
@@ -45,21 +48,21 @@ void dyadic_rational::play(const move& m, bw to_play)
     else
         ++_p;
     simplify();
-    game::play(m, to_play);
 }
 
 void dyadic_rational::undo_move()
 {
     const move m = last_move();
+    game::undo_move();
+
     int q;
     bw to_play;
     const int p = cgt_move::decode3(m, &q, &to_play);
     _p = p;
     _q = q;
-    game::undo_move();
 }
 
-split_result dyadic_rational::_split_implementation() const
+split_result dyadic_rational::_split_impl() const
 {
     if (_q != 1)
     {
@@ -70,6 +73,32 @@ split_result dyadic_rational::_split_implementation() const
         return split_result({new integer_game(_p)}); // becomes integer
     }
 };
+
+void dyadic_rational::_init_hash(local_hash& hash)
+{
+    hash.toggle_value(0, _p);
+    hash.toggle_value(1, _q);
+}
+
+relation dyadic_rational::_order_impl(const game* rhs) const
+{
+    const dyadic_rational* other = reinterpret_cast<const dyadic_rational*>(rhs);
+    assert(dynamic_cast<const dyadic_rational*>(rhs) == other);
+
+    const int& top1 = p();
+    const int& top2 = other->p();
+
+    if (top1 != top2)
+        return top1 < top2 ? REL_LESS : REL_GREATER;
+
+    const int& bot1 = q();
+    const int& bot2 = other->q();
+
+    if (bot1 != bot2)
+        return bot1 < bot2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
+}
 
 game* dyadic_rational::inverse() const
 {
