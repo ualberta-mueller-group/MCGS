@@ -13,20 +13,9 @@
 using std::cout;
 using std::endl;
 
-split_result switch_game::_split_impl() const
+void switch_game::play(const move& m, bw to_play)
 {
-    if (!is_rational())
-    {
-        return split_result();
-    }
-    else
-    {
-        return split_result({new dyadic_rational(value())});
-    }
-}
-
-void switch_game::_play_impl(const move& m, bw to_play)
-{
+    game::play(m, to_play);
 
     if (is_rational())
     {
@@ -42,15 +31,16 @@ void switch_game::_play_impl(const move& m, bw to_play)
     }
 
     _move_depth++;
-    //game::play(m, to_play);
 }
 
-void switch_game::_undo_move_impl()
+void switch_game::undo_move()
 {
+    const int m = cgt_move::decode(last_move());
+    game::undo_move();
+
     assert(is_rational());
     assert(_move_depth >= 1);
 
-    const int m = cgt_move::decode(last_move());
     if (_move_depth == 1) // back from integer to switch
     {
         assert(m == SWITCH_MOVE_CODE);
@@ -62,7 +52,18 @@ void switch_game::_undo_move_impl()
     }
 
     _move_depth--;
-    //game::undo_move();
+}
+
+split_result switch_game::_split_impl() const
+{
+    if (!is_rational())
+    {
+        return split_result();
+    }
+    else
+    {
+        return split_result({new dyadic_rational(value())});
+    }
 }
 
 void switch_game::_init_hash(local_hash& hash)

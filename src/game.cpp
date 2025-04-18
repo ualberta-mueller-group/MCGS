@@ -74,42 +74,30 @@ void game::play(const move& m, int to_play)
     assert(cgt_move::get_color(m) == 0);
     const move mc = cgt_move::encode(m, to_play);
     _move_stack.push_back(mc);
-    //     std::cout << "move "<< cgt_move::print(m) << "\n";
-    //     std::cout << "move + color "<< cgt_move::print(mc) << std::endl;
 
     _pre_hash_update();
-
     _push_undo_code(GAME_UNDO_PLAY);
-    _play_impl(m, to_play);
-
-    _post_hash_update();
-
 }
 
 void game::undo_move()
 {
     _pre_hash_update();
-
-    _undo_move_impl();
     _pop_undo_code(GAME_UNDO_PLAY);
-
-    _post_hash_update();
-
     _move_stack.pop_back();
 }
 
 hash_t game::get_local_hash()
 {
-    if (_hash_valid())
+    if (_hash_state == HASH_STATE_UP_TO_DATE)
         return _hash.get_value();
     else
     {
         _hash.reset();
         _hash.toggle_type(game_type());
-        _hash_state = HASH_STATE_OK;
+        _hash_state = HASH_STATE_NEED_UPDATE;
 
         _init_hash(_hash);
-        _hash_state = HASH_STATE_OK;
+        _hash_state = HASH_STATE_UP_TO_DATE;
     }
 
     return _hash.get_value();
@@ -121,8 +109,6 @@ void game::normalize()
 
     _push_undo_code(GAME_UNDO_NORMALIZE);
     _normalize_impl();
-
-    _post_hash_update();
 }
 
 void game::undo_normalize()
@@ -131,8 +117,6 @@ void game::undo_normalize()
 
     _undo_normalize_impl();
     _pop_undo_code(GAME_UNDO_NORMALIZE);
-
-    _post_hash_update();
 }
 
 relation game::order(const game* rhs) const
@@ -166,19 +150,20 @@ relation game::order(const game* rhs) const
 void game::invalidate_hash()
 {
     _hash_state = HASH_STATE_INVALID;
+    _hash.reset();
 }
 
 void game::_normalize_impl()
 {
     // Trivial default implementation
-    if(_hash_valid())
+    if(_hash_updatable())
         _mark_hash_updated();
 }
 
 void game::_undo_normalize_impl()
 {
     // Trivial default implementation
-    if(_hash_valid())
+    if(_hash_updatable())
         _mark_hash_updated();
 }
 
@@ -216,12 +201,9 @@ void game::_pop_undo_code(game_undo_code code)
 
 void game::_pre_hash_update()
 {
-    if (_hash_valid())
-        _hash_state = HASH_STATE_OK;
-}
-
-void game::_post_hash_update()
-{
-    if (_hash_state != HASH_STATE_UPDATED)
+    if (_hash_state == HASH_STATE_UP_TO_DATE)
+        _hash_state = HASH_STATE_NEED_UPDATE;
+    else
         _hash_state = HASH_STATE_INVALID;
 }
+

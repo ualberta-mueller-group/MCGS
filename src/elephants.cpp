@@ -25,6 +25,66 @@ elephants::elephants(const vector<int>& board) : strip(board)
 {
 }
 
+void elephants::play(const move& m, bw to_play)
+{
+    game::play(m, to_play);
+
+    assert_black_white(to_play);
+
+    int from = cgt_move::from(m);
+    int to = cgt_move::to(m);
+
+    assert(checked_is_color(from, to_play));
+    assert(checked_is_color(to, EMPTY));
+    assert((to - from) == player_dir(to_play)); // correct direction
+
+    // incremental hash
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_value(from, to_play);
+        hash.toggle_value(to, EMPTY);
+
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, to_play);
+
+        _mark_hash_updated();
+    }
+
+    play_stone(to, to_play);
+    remove_stone(from);
+}
+
+void elephants::undo_move()
+{
+    move mc = game::last_move();
+    game::undo_move();
+
+    int to;
+    bw to_play;
+    int from = cgt_move::decode3(mc, &to, &to_play);
+
+    assert(is_black_white(to_play));
+    assert(checked_is_color(from, EMPTY));
+    assert(checked_is_color(to, to_play));
+
+    // incremental hash
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, to_play);
+
+        hash.toggle_value(from, to_play);
+        hash.toggle_value(to, EMPTY);
+
+        _mark_hash_updated();
+    }
+
+    play_stone(from, to_play);
+    remove_stone(to);
+}
+
 split_result elephants::_split_impl() const
 {
     vector<pair<int, int>> subgame_ranges;
@@ -97,77 +157,18 @@ split_result elephants::_split_impl() const
     }
 }
 
-void elephants::_play_impl(const move& m, bw to_play)
-{
-    assert_black_white(to_play);
-
-    //game::play(m, to_play);
-
-    int from = cgt_move::from(m);
-    int to = cgt_move::to(m);
-
-    assert(checked_is_color(from, to_play));
-    assert(checked_is_color(to, EMPTY));
-    assert((to - from) == player_dir(to_play)); // correct direction
-
-    // incremental hash
-    if (_hash_valid())
-    {
-        local_hash& hash = _get_hash_ref();
-        hash.toggle_value(from, to_play);
-        hash.toggle_value(to, EMPTY);
-
-        hash.toggle_value(from, EMPTY);
-        hash.toggle_value(to, to_play);
-
-        _mark_hash_updated();
-    }
-
-    play_stone(to, to_play);
-    remove_stone(from);
-}
-
-void elephants::_undo_move_impl()
-{
-    move mc = game::last_move();
-    //game::undo_move();
-
-    int to;
-    bw to_play;
-    int from = cgt_move::decode3(mc, &to, &to_play);
-
-    assert(is_black_white(to_play));
-    assert(checked_is_color(from, EMPTY));
-    assert(checked_is_color(to, to_play));
-
-    // incremental hash
-    if (_hash_valid())
-    {
-        local_hash& hash = _get_hash_ref();
-        hash.toggle_value(from, EMPTY);
-        hash.toggle_value(to, to_play);
-
-        hash.toggle_value(from, to_play);
-        hash.toggle_value(to, EMPTY);
-
-        _mark_hash_updated();
-    }
-
-    play_stone(from, to_play);
-    remove_stone(to);
-}
 
 void elephants::_normalize_impl()
 {
     // Already normalized
-    if (_hash_valid())
+    if (_hash_updatable())
         _mark_hash_updated();
 }
 
 void elephants::_undo_normalize_impl()
 {
     // Nothing to undo
-    if (_hash_valid())
+    if (_hash_updatable())
         _mark_hash_updated();
 }
 

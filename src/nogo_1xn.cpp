@@ -45,6 +45,46 @@ nogo_1xn::nogo_1xn(string game_as_string) : strip(game_as_string)
 {
 }
 
+void nogo_1xn::play(const move& m, bw to_play)
+{
+    game::play(m, to_play);
+
+    const int to = m;
+    assert(at(to) == EMPTY);
+
+    // incremental hash
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_value(to, EMPTY);
+        hash.toggle_value(to, to_play);
+        _mark_hash_updated();
+    }
+
+    replace(to, to_play);
+}
+
+void nogo_1xn::undo_move()
+{
+    const move mc = last_move();
+    game::undo_move();
+
+    const int to = cgt_move::decode(mc);
+    const bw player = cgt_move::get_color(mc);
+    assert(at(to) == player);
+
+    // incremental hash
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_value(to, player);
+        hash.toggle_value(to, EMPTY);
+        _mark_hash_updated();
+    }
+
+    replace(to, EMPTY);
+}
+
 /*
    implements "xo split" from
    Henry's paper
@@ -104,44 +144,6 @@ split_result nogo_1xn::_split_impl() const
 
         return result;
     }
-}
-
-void nogo_1xn::_play_impl(const move& m, bw to_play)
-{
-    const int to = m;
-    assert(at(to) == EMPTY);
-    //game::play(m, to_play);
-
-    // incremental hash
-    if (_hash_valid())
-    {
-        local_hash& hash = _get_hash_ref();
-        hash.toggle_value(to, EMPTY);
-        hash.toggle_value(to, to_play);
-        _mark_hash_updated();
-    }
-
-    replace(to, to_play);
-}
-
-void nogo_1xn::_undo_move_impl()
-{
-    const move mc = last_move();
-    const int to = cgt_move::decode(mc);
-    //game::undo_move();
-    const bw player = cgt_move::get_color(mc);
-    assert(at(to) == player);
-
-    // incremental hash
-    if (_hash_valid())
-    {
-        local_hash& hash = _get_hash_ref();
-        hash.toggle_value(to, player);
-        hash.toggle_value(to, EMPTY);
-        _mark_hash_updated();
-    }
-
-    replace(to, EMPTY);
 }
 
 game* nogo_1xn::inverse() const

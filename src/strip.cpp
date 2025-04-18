@@ -119,7 +119,7 @@ void strip::_normalize_impl()
         _mirror_self();
     else
     {
-        if (_hash_valid())
+        if (_hash_updatable())
             _mark_hash_updated();
     }
 }
@@ -134,7 +134,7 @@ void strip::_undo_normalize_impl()
         _mirror_self();
     else
     {
-        if (_hash_valid())
+        if (_hash_updatable())
             _mark_hash_updated();
     }
 }

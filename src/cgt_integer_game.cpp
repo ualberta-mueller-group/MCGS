@@ -3,20 +3,13 @@
 //---------------------------------------------------------------------------
 #include "cgt_integer_game.h"
 
-game* integer_game::inverse() const
+void integer_game::play(const move& m, bw to_play)
 {
-    return new integer_game(-_value);
-}
+    game::play(INTEGER_MOVE_CODE, to_play);
 
-void integer_game::print(std::ostream& str) const
-{
-    str << "integer:" << _value;
-}
-
-void integer_game::_play_impl(const move& m, bw to_play)
-{
     assert(m == INTEGER_MOVE_CODE);
     assert(_value != 0);
+
     if (to_play == BLACK)
     {
         assert(_value > 0);
@@ -27,12 +20,13 @@ void integer_game::_play_impl(const move& m, bw to_play)
         assert(_value < 0);
         _value += 1;
     }
-    //game::play(INTEGER_MOVE_CODE, to_play);
 }
 
-void integer_game::_undo_move_impl()
+void integer_game::undo_move()
 {
     const move m = last_move();
+    game::undo_move();
+
     const bw to_play = cgt_move::get_color(m);
     if (to_play == BLACK)
     {
@@ -44,8 +38,18 @@ void integer_game::_undo_move_impl()
         assert(_value <= 0);
         _value -= 1;
     }
-    //game::undo_move();
 }
+
+game* integer_game::inverse() const
+{
+    return new integer_game(-_value);
+}
+
+void integer_game::print(std::ostream& str) const
+{
+    str << "integer:" << _value;
+}
+
 
 void integer_game::_init_hash(local_hash& hash)
 {

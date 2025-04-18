@@ -14,10 +14,11 @@ public:
     elephants(const std::string& game_as_string);
     elephants(const std::vector<int>& board);
 
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
+
 protected:
     split_result _split_impl() const override;
-    void _play_impl(const move& m, bw to_play) override;
-    void _undo_move_impl() override;
 
     void _normalize_impl() override;
     void _undo_normalize_impl() override;

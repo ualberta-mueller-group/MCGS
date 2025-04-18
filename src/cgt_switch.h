@@ -28,10 +28,11 @@ public:
     switch_game(const fraction& left, int right);
     switch_game(const fraction& left, const fraction& right);
 
+    void play(const move& m, bw to_play) override;
+    void undo_move() override;
+
 protected:
     split_result _split_impl() const override;
-    void _play_impl(const move& m, bw to_play) override;
-    void _undo_move_impl() override;
 
     void _init_hash(local_hash& hash) override;
 

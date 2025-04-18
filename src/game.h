@@ -35,8 +35,8 @@ public:
     bool has_moves() const;
     int num_moves_played() const;
 
-    void play(const move& m, bw to_play);
-    void undo_move();
+    virtual void play(const move& m, bw to_play);
+    virtual void undo_move();
 
     // calls _split_impl() and filters out games having no moves
     split_result split() const;
@@ -70,9 +70,6 @@ protected:
     */
     virtual split_result _split_impl() const;
 
-    virtual void _play_impl(const move& m, bw to_play) = 0;
-    virtual void _undo_move_impl() = 0;
-
     virtual void _init_hash(local_hash& hash) = 0;
 
     virtual void _normalize_impl();
@@ -81,7 +78,7 @@ protected:
     virtual relation _order_impl(const game* rhs) const;
 
     local_hash& _get_hash_ref();
-    bool _hash_valid() const;
+    bool _hash_updatable() const;
     void _mark_hash_updated();
 
 public:
@@ -103,8 +100,8 @@ private:
     enum hash_state_enum
     {
         HASH_STATE_INVALID = 0,
-        HASH_STATE_OK,
-        HASH_STATE_UPDATED,
+        HASH_STATE_NEED_UPDATE,
+        HASH_STATE_UP_TO_DATE,
     };
 
     enum game_undo_code
@@ -117,7 +114,6 @@ private:
     void _pop_undo_code(game_undo_code code);
 
     void _pre_hash_update();
-    void _post_hash_update();
 
     std::vector<move> _move_stack;
     bool _is_active;
@@ -185,19 +181,19 @@ inline split_result game::_split_impl() const
 
 inline local_hash& game::_get_hash_ref()
 {
-    assert(_hash_valid());
+    assert(_hash_updatable());
     return _hash;
 }
 
-inline bool game::_hash_valid() const
+inline bool game::_hash_updatable() const
 {
-    return (_hash_state == HASH_STATE_OK) || (_hash_state == HASH_STATE_UPDATED);
+    return _hash_state == HASH_STATE_NEED_UPDATE;
 }
 
 inline void game::_mark_hash_updated()
 {
-    assert(_hash_state == HASH_STATE_OK);
-    _hash_state = HASH_STATE_UPDATED;
+    assert(_hash_state == HASH_STATE_NEED_UPDATE);
+    _hash_state = HASH_STATE_UP_TO_DATE;
 }
 
 inline int game::game_hash() const
