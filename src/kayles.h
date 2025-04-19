@@ -30,6 +30,7 @@ public:
     void set_solved(int nim_value) override;
 
 protected:
+    relation _order_impl(const game* rhs) const override;
     split_result _split_impl() const override;
 
 private:

@@ -13,10 +13,12 @@ using impartial_wrapper_move::encode_wrapped_move;
 
 void impartial_game_wrapper::_init_hash(local_hash& hash)
 {
-    // TO DO what is the right thing to do here?
-    // Assume that for _game, _init_hash has already been called
-    // How is the hash of the wrapper related to the
-    // hash of the game?
+    // The local_hash passed to a game's _init_hash method 
+    // already has the game's game_type_t accounted for. 
+    // All impartial_game_wrapper instances have the same 
+    // game_type_t, but this should be OK in this case, 
+    // as the wrapped game's hash already includes its type.
+    hash.toggle_value(0, _game->get_local_hash());
 }
 
 game* impartial_game_wrapper::inverse() const
