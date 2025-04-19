@@ -76,6 +76,19 @@ game* kayles::inverse() const
     return new kayles(_value);
 }
 
+relation kayles::_order_impl(const game* rhs) const
+{
+    const kayles* other = reinterpret_cast<const kayles*>(rhs);
+    assert(dynamic_cast<const kayles*>(rhs) == other);
+
+    const int val1 = value();
+    const int val2 = other->value();
+
+    if (val1 != val2)
+        return val1 < val2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
+}
 split_result kayles::_split_impl() const
 {
     assert(_value >= _smaller_part);
