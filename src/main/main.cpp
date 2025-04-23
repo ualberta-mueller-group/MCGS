@@ -17,12 +17,17 @@
 #include "hashing.h"
 #include "hash_eval.h"
 #include "transposition.h"
+#include "global_options.h"
 
 
 using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
 {
+    cout << global_option_base::get_summary_all() << endl;
+
+    return 0;
+
     cli_options opts = cli_options::parse_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
