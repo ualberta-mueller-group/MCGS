@@ -124,6 +124,9 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag("--assert-correct-version",
                "Quit if a file version is found which doesn't match.");
+
+    print_flag(global::silence_warnings.flag(), "Don't print warnings to "
+        "stderr, i.e. random_table resize");
 }
 
 } // namespace
@@ -235,6 +238,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == "--assert-correct-version")
         {
             file_parser::override_assert_correct_version = true;
+            continue;
+        }
+
+        if (arg == global::silence_warnings.flag())
+        {
+            global::silence_warnings.set(true);
             continue;
         }
 

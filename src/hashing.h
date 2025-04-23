@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <climits>
 #include <type_traits>
+#include "global_options.h"
 #include "utilities.h"
 #include <random>
 #include "game_type.h"
@@ -116,7 +117,7 @@ inline void random_table::_resize_if_out_of_range(size_t idx)
 
     _resize_to(_n_positions * 2);
 
-    if (!_did_resize_warning)
+    if (!_did_resize_warning && !global::silence_warnings())
     {
         _did_resize_warning = true;
         std::cerr << "WARNING: random_table resized" << std::endl;

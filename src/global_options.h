@@ -86,7 +86,7 @@ public:
     global_option(const std::string& name, const T& default_value, global_summary_enum print_summary = GLOBAL_SUMMARY_INCLUDE);
 
     inline const T& get() const; // get current value
-    inline const T& operator*() const; // shorthand for get()
+    inline const T& operator()() const; // shorthand for get()
     std::string get_str() const override; // current value as string
 
     inline void set(const T& new_value);
@@ -115,7 +115,7 @@ inline const T& global_option<T>::get() const
 }
 
 template <class T>
-inline const T& global_option<T>::operator*() const
+inline const T& global_option<T>::operator()() const
 {
     return _current_value;
 }
@@ -155,5 +155,7 @@ extern global_option<uint64_t> random_table_seed;
 extern global_option<bool> subgame_split;
 extern global_option<bool> simplify_basic_cgt;
 extern global_option<size_t> tt_sumgame_idx_bits;
+
+extern global_option<bool> silence_warnings;
 
 } // namespace global

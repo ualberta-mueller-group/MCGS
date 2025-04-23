@@ -3,6 +3,7 @@
 // Imports all unit tests
 //---------------------------------------------------------------------------
 
+#include "global_options.h"
 #include "hash_eval.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
@@ -72,6 +73,7 @@ void print_usage(const char* exec_name)
 
 int main(int argc, const char** argv)
 {
+    global::silence_warnings.set(true);
     mcgs_init_all();
 
     if (RUN_OVERRIDE_TESTS)

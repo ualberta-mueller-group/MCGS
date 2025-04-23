@@ -1,4 +1,5 @@
 #include "hashing.h"
+#include "global_options.h"
 #include "utilities.h"
 #include <iostream>
 #include "game.h"
@@ -28,6 +29,9 @@ random_table::random_table(size_t n_positions, uint64_t seed)
 
 void random_table::print_resize_warning()
 {
+    if (global::silence_warnings())
+        return;
+
     cerr << "WARNING: a random_table was resized 1 or more times during search."
         " This may affect validity of reported times." << endl;
 }
