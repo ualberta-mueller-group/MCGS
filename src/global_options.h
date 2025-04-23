@@ -37,6 +37,9 @@ private: \
         class name to set the "name" field
     - move globals out of cli_options and into global_options, and keep this file
         free of other "#includes". This header should ideally include nothing
+    - constructor needs to "register" the variable somehow, so that a summary
+        can be printed and used by the testing framework. All relevant
+        configuration should be printed here
 
 Don't make the fields static, just declare static global_option<T>s
 */
