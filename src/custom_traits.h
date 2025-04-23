@@ -6,6 +6,14 @@
 static_assert(std::is_pointer_v<int*>);
 static_assert(!std::is_pointer_v<std::shared_ptr<int>>);
 
+/*
+    TODO: std::pointer_traits is not SFINAE-friendly on gcc 9.4; either delete
+    this file (it's not critical), or find a workaround...
+
+    This behavior was retroactively added to the C++11 standard, so this code
+    is supposed to compile
+*/
+
 namespace custom_traits {
 // NOLINTBEGIN(readability-identifier-naming)
 // clang-format off

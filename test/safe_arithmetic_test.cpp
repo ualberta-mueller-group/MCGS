@@ -3,6 +3,7 @@
 #include <limits>
 #include <cstdint>
 #include <optional>
+#include <tuple>
 
 using namespace std;
 

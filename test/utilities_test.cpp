@@ -3,6 +3,7 @@
 #include "utilities.h"
 #include <cstdint>
 #include <sstream>
+#include <tuple>
 
 using namespace std;
 
