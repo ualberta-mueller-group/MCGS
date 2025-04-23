@@ -11,10 +11,11 @@ std::vector<global_option_base*> all_options;
 
 } // namespace
 
-global_option_base::global_option_base(const std::string& name)
+global_option_base::global_option_base(const std::string& name, global_summary_enum print_summary)
     : _name(name)
 {
-    all_options.push_back(this);
+    if (print_summary == GLOBAL_SUMMARY_INCLUDE)
+        all_options.push_back(this);
 }
 
 global_option_base::~global_option_base()
@@ -80,17 +81,29 @@ inline std::string global_option_base::_name_with_dashes() const
     return name_modified;
 }
 
+// NOLINTNEXTLINE(readability-identifier-naming)
+#define __INIT_GLOBAL_IMPL(variable_name, value_type, default_value, summary_enum) \
+global_option<value_type> variable_name(std::string(#variable_name), default_value, summary_enum)
+
 //////////////////////////////////////////////////////////// Options
 
 // Preferred way to initialize global_option
-#define INIT_GLOBAL(variable_name, value_type, default_value) \
-global_option<value_type> variable_name(std::string(#variable_name), default_value)
+#define INIT_GLOBAL_WITH_SUMMARY(variable_name, value_type, default_value) \
+__INIT_GLOBAL_IMPL(variable_name, value_type, default_value, GLOBAL_SUMMARY_INCLUDE)
+
+#define INIT_GLOBAL_WITHOUT_SUMMARY(variable_name, value_type, default_value) \
+__INIT_GLOBAL_IMPL(variable_name, value_type, default_value, GLOBAL_SUMMARY_EXCLUDE)
+
 
 namespace global {
 
-INIT_GLOBAL(random_table_seed, uint64_t, 7753);
-INIT_GLOBAL(subgame_split, bool, true);
-INIT_GLOBAL(simplify_basic_cgt, bool, true);
-INIT_GLOBAL(tt_sumgame_idx_bits, size_t, 28);
+// These WILL be printed with ./MCGS --print-optimizations
+INIT_GLOBAL_WITH_SUMMARY(random_table_seed, uint64_t, 7753);
+INIT_GLOBAL_WITH_SUMMARY(subgame_split, bool, true);
+INIT_GLOBAL_WITH_SUMMARY(simplify_basic_cgt, bool, true);
+INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);
 
-} // namespace global_options
+// These WILL NOT be printed with ./MCGS --print-optimizations
+//INIT_GLOBAL_WITHOUT_SUMMARY(some_global_option, int, 21);
+
+} // namespace global

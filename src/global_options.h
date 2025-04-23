@@ -12,11 +12,23 @@
 #include <cstdint>
 #include <stddef.h>
 
-////////////////////////////////////////////////// class global_option_base
+// Whether or not a global_option is printed by "./MCGS --print-optimizations"
+enum global_summary_enum
+{
+    GLOBAL_SUMMARY_INCLUDE = 0,
+    GLOBAL_SUMMARY_EXCLUDE,
+};
+
+////////////////////////////////////////////////// abstract class global_option_base
 class global_option_base
 {
 public:
-    global_option_base(const std::string& name);
+    /*
+       Variable's name as it appears in the code, and whether or not this
+       value is included in the config summary
+    */
+    global_option_base(const std::string& name, global_summary_enum print_summary);
+
     virtual ~global_option_base();
 
     inline const std::string& name() const
@@ -32,13 +44,14 @@ public:
     std::string virtual get_str() const = 0; // value as string
     std::string virtual get_default_str() const = 0; // default value as string
 
-    // i.e. some_int: 21
+    // i.e. "some_int: 21"
     std::string get_summary_single() const;
 
-    // Combine summaries of all global_options
+    // Combine summaries of all global_options (who are marked to be included)
     static std::string get_summary_all();
 
 protected:
+    // '_' --> '-'
     std::string _name_with_dashes() const;
 
 private:
@@ -58,25 +71,28 @@ public:
             extern global_option<int> some_int;
             }
 
-            // in global_options.cpp
+            // in global_options.cpp (all 3 definitions are equivalent)
             namespace global {
-            global_option<int> some_int("some_int", 21);
 
-            // or preferably using a macro defined in global_options.cpp:
-            INIT_GLOBAL(some_int, int, 21);
+            global_option<int> some_int("some_int", 21);
+            global_option<int> some_int("some_int", 21, GLOBAL_SUMMARY_INCLUDE);
+
+            // preferred method
+            INIT_GLOBAL_WITH_SUMMARY(some_int, int, 21);
+
             }
 
     */
-    global_option(const std::string& name, const T& default_value);
+    global_option(const std::string& name, const T& default_value, global_summary_enum print_summary = GLOBAL_SUMMARY_INCLUDE);
 
-    inline const T& get() const;
+    inline const T& get() const; // get current value
     inline const T& operator*() const; // shorthand for get()
-    std::string get_str() const override;
+    std::string get_str() const override; // current value as string
 
     inline void set(const T& new_value);
 
-    inline const T& get_default() const;
-    std::string get_default_str() const override;
+    inline const T& get_default() const; // default value
+    std::string get_default_str() const override; // default value as string
 
 private:
     const T _default_value;
@@ -85,8 +101,8 @@ private:
 
 ////////////////////////////////////////////////// global_option implementation
 template <class T>
-global_option<T>::global_option(const std::string& name, const T& default_value)
-    : global_option_base(name),
+global_option<T>::global_option(const std::string& name, const T& default_value, global_summary_enum print_summary)
+    : global_option_base(name, print_summary),
     _default_value(default_value),
     _current_value(default_value)
 {
@@ -140,4 +156,4 @@ extern global_option<bool> subgame_split;
 extern global_option<bool> simplify_basic_cgt;
 extern global_option<size_t> tt_sumgame_idx_bits;
 
-} // namespace global_options
+} // namespace global
