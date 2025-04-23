@@ -11,9 +11,32 @@ std::vector<global_option_base*> all_options;
 
 } // namespace
 
-global_option_base::global_option_base()
+global_option_base::global_option_base(const std::string& name)
+    : _name(name)
 {
     all_options.push_back(this);
+}
+
+global_option_base::~global_option_base()
+{
+
+}
+
+std::string global_option_base::flag() const
+{
+    return "--" + _name_with_dashes();
+}
+
+std::string global_option_base::no_flag() const
+{
+    return "--no-" + _name_with_dashes();
+}
+
+std::string global_option_base::get_summary_single() const
+{
+    std::stringstream str;
+    str << name() << ": " << get_str();
+    return str.str();
 }
 
 std::string global_option_base::get_summary_all()
@@ -41,16 +64,33 @@ std::string global_option_base::get_summary_all()
     return summary;
 }
 
+inline std::string global_option_base::_name_with_dashes() const
+{
+    std::string name_modified;
+    name_modified.reserve(_name.size());
+
+    for (const char& c : _name)
+    {
+        if (c == '_')
+            name_modified.push_back('-');
+        else
+            name_modified.push_back(c);
+    }
+
+    return name_modified;
+}
+
 //////////////////////////////////////////////////////////// Options
 
 // Preferred way to initialize global_option
 #define INIT_GLOBAL(variable_name, value_type, default_value) \
 global_option<value_type> variable_name(std::string(#variable_name), default_value)
 
-namespace global_options {
+namespace global {
 
-INIT_GLOBAL(some_value1, int, 5);
-INIT_GLOBAL(some_value3, double, 1.1);
-INIT_GLOBAL(some_value2, float, 5.5);
+INIT_GLOBAL(random_table_seed, uint64_t, 7753);
+INIT_GLOBAL(subgame_split, bool, true);
+INIT_GLOBAL(simplify_basic_cgt, bool, true);
+INIT_GLOBAL(tt_sumgame_idx_bits, size_t, 28);
 
 } // namespace global_options

@@ -23,9 +23,9 @@
 #include <unordered_set>
 #include <vector>
 
+#include "global_options.h"
 #include "hashing.h"
 #include "sumgame_undo_stack_unwinder.h"
-#include "cli_options.h"
 
 using std::cout;
 using std::endl;
@@ -189,7 +189,7 @@ void sumgame::add(game* g)
     assert(g->is_active());
 
     if (                                              //
-        cli_options::optimize::simplify_basic_cgt() && //
+        *global::simplify_basic_cgt &&                //
         !_need_cgt_simplify &&                        //
         is_simple_cgt(g)                              //
         )                                             //
@@ -433,7 +433,7 @@ void sumgame::_pop_undo_code(sumgame_undo_code code)
 
 std::optional<ttable_sumgame::iterator> sumgame::_do_ttable_lookup() const
 {
-    if (cli_options::optimize::tt_sumgame_idx_bits() == 0)
+    if (*global::tt_sumgame_idx_bits == 0)
         return std::optional<ttable_sumgame::iterator>();
 
     assert(_tt != nullptr);
@@ -489,12 +489,12 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 
     g->play(mv, to_play);
     split_result sr;
-    if (cli_options::optimize::subgame_split())
+    if (*global::subgame_split)
         sr = g->split();
 
     if (sr) // split changed the sum
     {
-        assert(cli_options::optimize::subgame_split());
+        assert(*global::subgame_split);
         record.did_split = true;
 
         // g is no longer part of the sum
@@ -508,7 +508,7 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
     }
     else
     {
-        if (cli_options::optimize::tt_sumgame_idx_bits() > 0)
+        if (*global::tt_sumgame_idx_bits > 0)
             g->normalize();
     }
 
@@ -528,7 +528,7 @@ void sumgame::undo_move()
     // undo split (if necessary)
     if (record.did_split)
     {
-        assert(cli_options::optimize::subgame_split());
+        assert(*global::subgame_split);
         assert(!s->is_active()); // should have been deactivated on last split
 
         s->set_active(true);
@@ -548,7 +548,7 @@ void sumgame::undo_move()
     }
     else
     {
-        if (cli_options::optimize::tt_sumgame_idx_bits() > 0)
+        if (*global::tt_sumgame_idx_bits > 0)
             s->undo_normalize();
     }
 
@@ -568,7 +568,7 @@ void sumgame::undo_move()
 
 void sumgame::simplify_basic()
 {
-    if (!cli_options::optimize::simplify_basic_cgt())
+    if (!*global::simplify_basic_cgt)
         return;
 
     if (!_need_cgt_simplify)
@@ -591,7 +591,7 @@ void sumgame::simplify_basic()
 
 void sumgame::undo_simplify_basic()
 {
-    if (!cli_options::optimize::simplify_basic_cgt())
+    if (!*global::simplify_basic_cgt)
         return;
 
     _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
@@ -678,7 +678,7 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 
 void sumgame::init_ttable(size_t index_bits)
 {
-    if (cli_options::optimize::tt_sumgame_idx_bits() == 0)
+    if (*global::tt_sumgame_idx_bits == 0)
         return;
 
     assert(_tt.get() == nullptr); // Not already initialized

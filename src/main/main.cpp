@@ -24,11 +24,7 @@ using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
 {
-    cout << global_option_base::get_summary_all() << endl;
-
-    return 0;
-
-    cli_options opts = cli_options::parse_args(argc, (const char**) argv, false);
+    cli_options opts = parse_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
     if (opts.should_exit)
