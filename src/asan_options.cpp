@@ -3,6 +3,8 @@
     by default on Mac OS
 
     extern "C" needed because of C++ name mangling?
+
+    See: https://github.com/google/sanitizers/wiki/AddressSanitizerFlags
 */
 
 // NOLINTNEXTLINE(readability-identifier-naming,misc-use-internal-linkage)
