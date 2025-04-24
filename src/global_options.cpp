@@ -81,18 +81,14 @@ inline std::string global_option_base::_name_with_dashes() const
     return name_modified;
 }
 
-// NOLINTNEXTLINE(readability-identifier-naming)
-#define __INIT_GLOBAL_IMPL(variable_name, value_type, default_value, summary_enum) \
-global_option<value_type> variable_name(std::string(#variable_name), default_value, summary_enum)
-
 //////////////////////////////////////////////////////////// Options
 
-// Preferred way to initialize global_option
+// Preferred way to initialize global_option. "#" in macro treats value as a string
 #define INIT_GLOBAL_WITH_SUMMARY(variable_name, value_type, default_value) \
-__INIT_GLOBAL_IMPL(variable_name, value_type, default_value, GLOBAL_SUMMARY_INCLUDE)
+global_option<value_type> variable_name(std::string(#variable_name), default_value, GLOBAL_SUMMARY_INCLUDE)
 
 #define INIT_GLOBAL_WITHOUT_SUMMARY(variable_name, value_type, default_value) \
-__INIT_GLOBAL_IMPL(variable_name, value_type, default_value, GLOBAL_SUMMARY_EXCLUDE)
+global_option<value_type> variable_name(std::string(#variable_name), default_value, GLOBAL_SUMMARY_EXCLUDE)
 
 
 namespace global {
@@ -104,7 +100,6 @@ INIT_GLOBAL_WITH_SUMMARY(simplify_basic_cgt, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);
 
 // These WILL NOT be printed with ./MCGS --print-optimizations
-//INIT_GLOBAL_WITHOUT_SUMMARY(some_global_option, int, 21);
 INIT_GLOBAL_WITHOUT_SUMMARY(silence_warnings, bool, false);
 
 } // namespace global

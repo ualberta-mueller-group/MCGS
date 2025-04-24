@@ -43,6 +43,44 @@ or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
 parsing command-line arguments. These functions initialize static data, i.e.
 `sumgame`'s transposition table, and global `random_table`s.
 
+# Global Options (`global_options.h`)
+This file defines the `global_option` class, representing a global variable
+which is part of MCGS's configuration.
+
+Specific global variables are also defined in this file, including those necessary to
+reproduce experiments (i.e. random seeds, table sizes), but also more general
+global values such as debug logging level.
+
+A `global_option` may optionally be included in the configuration summary
+printed by `./MCGS --print-optimizations`.
+
+To create a new global variable, first declare it at the bottom of
+`global_options.h`:
+```
+namespace global {
+extern global_option<double> some_variable;
+}
+```
+Then define it at the bottom of `global_options.cpp` (preferably using one of
+the macros defined there):
+```
+namespace global {
+// WILL be printed by config summary
+INIT_GLOBAL_WITH_SUMMARY(some_variable, double, 4.5);
+
+// or
+
+// WILL NOT be printed by config summary
+INIT_GLOBAL_WITHOUT_SUMMARY(some_variable, double, 4.5);
+}
+```
+
+A `global_option` has a `_name` field, which may show in the config summary, and
+is also used to define the value of `global_option::flag()`, a method giving
+the flag which should be used to set the option from the command line.
+The macros at the bottom of `global_options.cpp` initialize the `_name` field
+to the name of the variable in the source code.
+
 # Safe Arithmetic Functions (`safe_arithmetic.h`)
 This section uses the term "wrapping" to mean either underflow or overflow.
 

@@ -51,7 +51,7 @@ public:
     static std::string get_summary_all();
 
 protected:
-    // '_' --> '-'
+    // name(), but replace '_' with '-'
     std::string _name_with_dashes() const;
 
 private:
