@@ -85,7 +85,7 @@ or
 ```
 make MCGS ASAN=address
 ```
-This will compile source files with either the `-fsanitize=leak` or `-fsanitize=address` flags respectively, and requires a clean build. `-fsanitize=leak` links against LeakSanitizerand has very little overhead, but detects fewer errors, whereas `-fsanitize=address` links LeakSanitizer and additionally instruments compiled code, to detect more memory errors and give more detailed diagnostics.
+This will compile source files with either the `-fsanitize=leak` or `-fsanitize=address` flags respectively, and requires a clean build. `-fsanitize=leak` links against LeakSanitizer and has very little overhead, but detects fewer errors, whereas `-fsanitize=address` links LeakSanitizer and additionally instruments compiled code, to detect more memory errors and give more detailed diagnostics.
 
 See: [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html) for more information.
 
