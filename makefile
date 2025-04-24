@@ -3,10 +3,11 @@ CC = c++
 NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread
 TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -DSUMGAME_DEBUG_EXTRA -pthread
 
-# i.e. "make MCGS LEAKCHECK=1" or "make MCGS LEAKCHECK=true"
-ifneq (,$(filter $(LEAKCHECK),1 true))
-	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -fsanitize=leak
-	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -fsanitize=leak
+# i.e. "make MCGS ASAN=leak" or "make MCGS ASAN=address"
+ifneq (,$(filter $(ASAN),leak address))
+	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN)
+	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) $(ASAN_FLAGS)
+	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) $(ASAN_FLAGS)
 endif
 
 ifneq (,$(filter $(DEBUG),1 true))

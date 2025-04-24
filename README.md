@@ -35,8 +35,6 @@ make test
 ```
 This will build and then run `./MCGS_test`, and on successful completion of unit tests, the text "SUCCESS" should appear. Running all tests can take several seconds, depending on your hardware.
 
-Developers can also check for memory leaks by overriding the `LEAKCHECK` makefile variable, setting it to `1` or `true`, i.e. `make MCGS LEAKCHECK=1`, or `make LEAKCHECK=true`. This will compile source files with the `-fsanitize=leak` flag, and requires a clean build.
-
 ### Using MCGS
 `MCGS` can read input from a file, or as a quoted command line argument, or interactively from the command line via stdin. The example below solves a linear clobber game `XOXOXO` twice, once with black playing first, and once with white playing first: 
 ```
@@ -78,6 +76,19 @@ The code is organized in a mostly "flat" way; most source code files are in the 
 
 For more information about ongoing development, see [development-notes.md](docs/development-notes.md).
 When contributing to this project, follow the style guide: [style.md](docs/style.md).
+
+Developers can check for memory leaks and other memory errors by overriding the `ASAN` makefile variable, setting it to either `leak` or `address`, i.e:
+```
+make MCGS ASAN=leak
+```
+or
+```
+make MCGS ASAN=address
+```
+This will compile source files with either the `-fsanitize=leak` or `-fsanitize=address` flags respectively, and requires a clean build. `-fsanitize=leak` links against LeakSanitizerand has very little overhead, but detects fewer errors, whereas `-fsanitize=address` links LeakSanitizer and additionally instruments compiled code, to detect more memory errors and give more detailed diagnostics.
+
+See: [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html) for more information.
+
 
 ### MCGS data types
 #### game (game.h)
