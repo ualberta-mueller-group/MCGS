@@ -80,9 +80,6 @@ ifdef USE_FLAGS
 	endif
 endif
 
-
-# NOTE: clang-tidy should be invoked on cpp files
-
 # Tidy targets
 #$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 tidy:
@@ -99,10 +96,10 @@ tidy_test:
 	$(eval LINT_FILES ?= $(MCGS_TEST_SRC))
 	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
 
-tidy_header_functions:
+tidy_headers:
 	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 	$(eval LINT_FILES := $(filter %.h, $(LINT_FILES)))
-	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++-header 2>&1 | tee tidy_result.txt
 
 
 # Format targets

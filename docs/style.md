@@ -272,13 +272,8 @@ These tools should catch:
 
 You should use the following makefile targets before opening a pull request:
 - `tidy`
+- `tidy_headers`
 - `format`
-- `tidy_header_functions`
-    - TODO: Omit this one for now because it's a hack. `clang-tidy` should
-    be called on `.cpp` files and not `.h` files. This target uses the
-    `readability-function-size` check, so it needs to be run on `.h` files, but
-    this causes false positives about redefinitions of types, i.e. for
-    forward-declared classes in 2 headers which include each other.
 
 When files are formatted correctly according to the `clang-format` config, the `format` target probably shouldn't leave files other than `format_result.txt` after completion.
 
@@ -291,10 +286,8 @@ When files are formatted correctly according to the `clang-format` config, the `
     - Run clang-tidy on only release `.cpp` files (i.e. `MCGS` target), using release compilation flags
 - tidy_test
     - Run clang-tidy on only test `.cpp` files (i.e. `MCGS_test` target), using test compilation flags
-- tidy_header_functions
-    - Special case which only checks for non-trivial functions in headers. Other targets do not check this
+- tidy_headers
     - Run clang-tidy on all `.h` files, using release compilation flags, and `.clang-tidy-headers` as the config file
-    - TODO: fix this target sometime
 
 The result will be printed to the screen, and also saved in `tidy_result.txt`. Many thousands of warnings will be found and suppressed within included system headers, and problems within project code will be shown as errors instead of warnings. If errors are not mentioned in the output, then no problems were found in project code. Errors must be fixed manually, as automatically applying suggested changes will break code, i.e. renaming a virtual method in a base class will not rename the overriden method in derived classes.
 

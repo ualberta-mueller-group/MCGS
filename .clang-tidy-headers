@@ -1,5 +1,5 @@
-Checks: '-*,readability-function-size'
-WarningsAsErrors: 'readability-function-size'
+Checks: '-*,readability-function-size,misc-include-cleaner'
+WarningsAsErrors: 'readability-function-size,misc-include-cleaner'
 HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:

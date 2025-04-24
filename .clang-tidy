@@ -5,8 +5,8 @@ Checks: "-*,
   misc-definitions-in-headers,
   misc-use-internal-linkage,
   bugprone-assert-side-effect,
-  cppcoreguidelines-virtual-class-destructor,"
-#  misc-include-cleaner,"
+  cppcoreguidelines-virtual-class-destructor,
+  misc-include-cleaner,"
 
 
 WarningsAsErrors: "-*,
@@ -16,8 +16,8 @@ WarningsAsErrors: "-*,
   misc-definitions-in-headers,
   misc-use-internal-linkage,
   bugprone-assert-side-effect,
-  cppcoreguidelines-virtual-class-destructor,"
-#  misc-include-cleaner,"
+  cppcoreguidelines-virtual-class-destructor,
+  misc-include-cleaner,"
 
 HeaderFilterRegex: .h
 SystemHeaders: false
