@@ -30,7 +30,7 @@ void kayles::decode(move m, int& take,
 void kayles::_init_hash(local_hash& hash)
 {
     hash.toggle_value(0, _value);
-    assert(_smaller_part == 0); // not sure.
+    assert(_smaller_part == 0);
 }
 
 void kayles::play(const move& m)
@@ -78,6 +78,7 @@ game* kayles::inverse() const
 
 relation kayles::_order_impl(const game* rhs) const
 {
+    // implementation modified from integer_game
     const kayles* other = reinterpret_cast<const kayles*>(rhs);
     assert(dynamic_cast<const kayles*>(rhs) == other);
 
@@ -89,6 +90,7 @@ relation kayles::_order_impl(const game* rhs) const
 
     return REL_EQUAL;
 }
+
 split_result kayles::_split_impl() const
 {
     assert(_value >= _smaller_part);
