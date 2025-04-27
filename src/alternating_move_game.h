@@ -12,6 +12,7 @@
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include <cassert>
 
 class alternating_move_game
 {

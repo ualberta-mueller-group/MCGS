@@ -9,6 +9,8 @@
 // IWYU pragma: end_exports
 
 #include "fraction.h"
+#include <cassert>
+#include <ostream>
 
 class fraction;
 

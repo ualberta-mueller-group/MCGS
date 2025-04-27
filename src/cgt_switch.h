@@ -12,6 +12,9 @@
 #include "cgt_dyadic_rational.h"
 #include "throw_assert.h"
 #include <memory>
+#include <cassert>
+#include <ostream>
+#include <cstddef>
 
 //---------------------------------------------------------------------------
 

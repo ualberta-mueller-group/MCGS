@@ -9,6 +9,7 @@
 
 #include "safe_arithmetic.h"
 #include "throw_assert.h"
+#include <ostream>
 
 // This is needed for undo_move in the case when _value has reached 0
 class integer_game : public game

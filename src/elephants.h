@@ -9,6 +9,9 @@
 #include "strip.h"
 // IWYU pragma: end_exports
 
+#include <vector>
+#include <ostream>
+
 //////////////////////////////////////// elephants
 class elephants : public strip
 {

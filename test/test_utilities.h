@@ -11,6 +11,7 @@
 #include "file_parser.h"
 #include <string>
 #include <vector>
+#include <cassert>
 
 inline void assert_move(move_generator& mg, int mv)
 {

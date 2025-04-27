@@ -3,6 +3,7 @@
 #include "utilities.h"
 #include <cctype>
 #include <string>
+#include <vector>
 
 /*
     New games must have a corresponding call to file_parser::add_game_parser()

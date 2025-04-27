@@ -5,6 +5,8 @@
 #include <string>
 #include "cgt_basics.h"
 #include <cstdint>
+#include <cstddef>
+#include <ostream>
 
 //////////////////////////////////////// general utility functions
 template <class T>

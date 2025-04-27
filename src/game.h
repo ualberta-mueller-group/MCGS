@@ -14,6 +14,7 @@
 #include <ostream>
 #include <vector>
 #include <optional>
+#include <cassert>
 
 #include <type_traits>
 

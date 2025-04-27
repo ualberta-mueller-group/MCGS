@@ -16,8 +16,12 @@
 #include "global_options.h"
 #include "utilities.h"
 #include <random>
-#include "game_type.h"
 #include <iostream>
+#include "cgt_basics.h"
+#include "game_type.h"
+
+class game;
+
 
 typedef uint64_t hash_t;
 

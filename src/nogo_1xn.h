@@ -10,6 +10,7 @@
 // IWYU pragma: end_exports
 
 #include <vector>
+#include <ostream>
 
 class nogo_1xn : public strip
 {

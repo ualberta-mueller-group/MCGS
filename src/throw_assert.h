@@ -1,6 +1,6 @@
 #pragma once
-#include <string>
-#include <stdexcept>
+#include <string> // IWYU pragma: keep
+#include <stdexcept> // IWYU pragma: keep
 
 // NOLINTBEGIN(readability-identifier-naming)
 #define _GET_THROW_MESSAGE(cond)                                               \

@@ -8,6 +8,9 @@
 #include <memory>
 #include <exception>
 #include "simple_text_hash.h"
+#include <iostream>
+#include <cstddef>
+#include <cstdlib>
 
 // file_parser checks for a version command when reading from file or stdin
 #define FILE_PARSER_VERSION_STRING "version 1.1"

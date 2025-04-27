@@ -3,6 +3,8 @@
 
 #include "hashing.h"
 #include <cstddef>
+#include <cassert>
+#include <type_traits>
 
 ////////////////////////////////////////////////// class ttable
 template <class Entry>

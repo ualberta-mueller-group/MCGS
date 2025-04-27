@@ -9,6 +9,7 @@
 
 #include "safe_arithmetic.h"
 #include "throw_assert.h"
+#include <ostream>
 
 //---------------------------------------------------------------------------
 

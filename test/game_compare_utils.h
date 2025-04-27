@@ -16,6 +16,8 @@
 #include "sumgame.h"
 #include "custom_traits.h"
 #include <unordered_set>
+#include <string>
+#include <vector>
 
 namespace compare_games_by_print {
 

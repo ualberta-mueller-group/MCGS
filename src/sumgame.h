@@ -10,6 +10,10 @@
 #include "sumgame_change_record.h"
 #include "transposition.h"
 #include <memory>
+#include <vector>
+#include <optional>
+#include <ostream>
+#include <cassert>
 
 struct ttable_sumgame_entry
 {

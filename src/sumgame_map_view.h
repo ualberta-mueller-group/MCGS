@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "game.h"
 #include "sumgame.h"
+#include <cassert>
 
 class sumgame_map_view
 {

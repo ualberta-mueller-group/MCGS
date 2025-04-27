@@ -7,6 +7,9 @@
 #include "game.h"
 #include "sumgame.h"
 #include <chrono>
+#include <ratio>
+#include <cstddef>
+#include <vector>
 
 ////////////////////////////////////////////////// hash_test
 class hash_test

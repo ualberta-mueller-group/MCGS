@@ -2,6 +2,8 @@
 
 #include "file_parser.h"
 #include <memory>
+#include <string>
+#include <exception>
 
 /*
     Variables resulting from command line options. "parser" may be nullptr

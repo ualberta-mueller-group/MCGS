@@ -10,6 +10,7 @@
 #include <vector>
 #include "cgt_basics.h"
 #include "throw_assert.h"
+#include <ostream>
 
 //---------------------------------------------------------------------------
 

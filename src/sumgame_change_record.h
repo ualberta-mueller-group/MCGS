@@ -2,6 +2,7 @@
 #include "sumgame.h"
 #include <climits>
 #include <vector>
+#include "game.h"
 
 //////////////////////////////////////// forward declarations
 class sumgame;
