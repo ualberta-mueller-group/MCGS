@@ -9,6 +9,9 @@
 #include "sumgame.h"
 #include "hashing.h"
 #include "all_game_headers.h"
+#include <cassert>
+#include <vector>
+#include <cstddef>
 
 using namespace std;
 

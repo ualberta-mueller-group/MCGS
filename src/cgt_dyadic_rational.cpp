@@ -6,6 +6,9 @@
 #include "game.h"
 #include "safe_arithmetic.h"
 #include "utilities.h"
+#include <cassert>
+#include <ostream>
+#include "throw_assert.h"
 
 //---------------------------------------------------------------------------
 void dyadic_rational::simplify()

@@ -2,6 +2,9 @@
 // Simple combinatorial games - nimbers
 //---------------------------------------------------------------------------
 #include "cgt_nimber.h"
+#include <cassert>
+#include <ostream>
+#include <vector>
 
 void nimber::play(const move& m, bw to_play)
 {

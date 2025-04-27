@@ -3,10 +3,13 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "cgt_basics.h"
-#include "cgt_dyadic_rational.h"
+// IWYU pragma: begin_exports
 #include "game.h"
+// IWYU pragma: end_exports
+
+#include "cgt_basics.h"
 #include "safe_arithmetic.h"
+#include "cgt_dyadic_rational.h"
 #include "throw_assert.h"
 #include <memory>
 

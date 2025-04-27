@@ -4,6 +4,7 @@
 #include "cgt_move.h"
 
 #include <bitset>
+#include <string>
 
 namespace cgt_move {
 

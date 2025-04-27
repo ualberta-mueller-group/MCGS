@@ -5,6 +5,9 @@
 #include <cassert>
 #include <string>
 #include <istream>
+#include <unordered_map>
+#include <memory>
+#include <vector>
 #include <fstream>
 #include <utility>
 #include "cgt_basics.h"

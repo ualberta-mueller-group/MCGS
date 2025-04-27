@@ -3,6 +3,8 @@
 #include "cgt_move.h"
 #include "strip.h"
 #include <vector>
+#include <cassert>
+#include <cstddef>
 
 using std::string, std::cout, std::endl, std::pair;
 using std::vector;

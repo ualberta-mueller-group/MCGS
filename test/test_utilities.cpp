@@ -3,6 +3,15 @@
 //---------------------------------------------------------------------------
 #include "test_utilities.h"
 #include "file_parser.h"
+#include <string>
+#include <vector>
+#include <sstream>
+#include "game.h"
+#include "sumgame.h"
+#include "alternating_move_game.h"
+#include <cassert>
+#include <cstddef>
+#include <memory>
 
 using std::vector, std::string, std::stringstream;
 

@@ -7,6 +7,7 @@
 #include "test_utilities.h"
 #include <memory>
 #include <vector>
+#include <tuple>
 
 namespace {
 namespace cgt_switch_test {

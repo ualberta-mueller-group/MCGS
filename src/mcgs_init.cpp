@@ -4,6 +4,7 @@
 #include <cassert>
 #include "hashing_init.h"
 #include "sumgame_init.h"
+#include "cli_options.h"
 
 namespace {
 bool already_initialized = false;

@@ -6,6 +6,10 @@
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
 #include "safe_arithmetic.h"
+#include <cassert>
+#include <type_traits>
+#include <algorithm>
+#include "utilities.h"
 
 using namespace std;
 

@@ -10,11 +10,15 @@
 #include "sumgame.h"
 #include "throw_assert.h"
 #include <ratio>
-#include <unistd.h>
 #include <vector>
 #include <sstream>
 #include <chrono>
 #include "hashing.h"
+#include <string>
+#include "game.h"
+#include <cassert>
+#include <memory>
+#include <optional>
 
 using namespace std;
 

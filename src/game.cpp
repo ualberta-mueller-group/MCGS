@@ -6,6 +6,8 @@
 #include <memory>
 #include <typeindex>
 #include <unordered_set>
+#include <iostream>
+#include <cstddef>
 
 using std::unique_ptr;
 

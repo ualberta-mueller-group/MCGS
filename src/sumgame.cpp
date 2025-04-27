@@ -10,9 +10,11 @@
 #include "cgt_nimber.h"
 #include "cgt_switch.h"
 #include "cgt_up_star.h"
+#include "alternating_move_game.h"
 
 #include <algorithm>
 #include <chrono>
+#include <optional>
 #include <ctime>
 #include <iostream>
 #include <memory>
@@ -20,6 +22,7 @@
 #include <thread>
 #include <future>
 
+#include <cassert>
 #include <unordered_set>
 #include <vector>
 

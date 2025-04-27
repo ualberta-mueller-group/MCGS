@@ -4,12 +4,14 @@
 #include <filesystem>
 #include <stdexcept>
 #include <string>
-#include <unistd.h>
 #include <vector>
 #include <iostream>
+#include <memory>
+#include <cstdint>
 #include "file_parser.h"
 #include "global_options.h"
 #include "utilities.h"
+#include <cassert>
 
 using namespace std;
 

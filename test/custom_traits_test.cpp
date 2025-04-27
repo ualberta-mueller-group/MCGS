@@ -1,6 +1,7 @@
 #include "custom_traits_test.h"
 #include "custom_traits.h"
 #include "all_game_headers.h"
+#include <memory>
 
 using namespace custom_traits;
 using namespace std;

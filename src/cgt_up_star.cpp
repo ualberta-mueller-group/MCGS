@@ -3,6 +3,8 @@
 //---------------------------------------------------------------------------
 #include "cgt_up_star.h"
 #include "cgt_basics.h"
+#include <cassert>
+#include <ostream>
 
 //////////////////////////////////////// helper functions
 namespace {

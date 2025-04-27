@@ -2,6 +2,8 @@
 #include "clobber_1xn.h"
 #include <cassert>
 #include "test_utilities.h"
+#include <string>
+#include <memory>
 
 using std::string;
 

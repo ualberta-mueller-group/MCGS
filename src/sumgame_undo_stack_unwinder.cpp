@@ -1,5 +1,6 @@
 #include "sumgame_undo_stack_unwinder.h"
 #include "sumgame.h"
+#include <cassert>
 
 using namespace std;
 

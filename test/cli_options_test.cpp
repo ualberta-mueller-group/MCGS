@@ -6,6 +6,9 @@
 #include "file_parser.h"
 #include "test/test_utilities.h"
 #include <cassert>
+#include <vector>
+#include <string>
+#include <ios>
 
 constexpr const char* EXEC_NAME = "./MCGS_test";
 

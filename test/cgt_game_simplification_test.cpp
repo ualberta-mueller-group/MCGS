@@ -10,6 +10,9 @@
 #include "sumgame_map_view.h"
 #include "game_compare_utils.h"
 #include "all_game_headers.h"
+#include <vector>
+#include <tuple>
+#include <cassert>
 
 using namespace std;
 using compare_games_by_print::sumgame_same_games;

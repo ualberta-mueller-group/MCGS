@@ -2,6 +2,8 @@
 // Simple combinatorial games - integers
 //---------------------------------------------------------------------------
 #include "cgt_integer_game.h"
+#include <cassert>
+#include <ostream>
 
 void integer_game::play(const move& m, bw to_play)
 {

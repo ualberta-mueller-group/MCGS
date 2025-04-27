@@ -2,8 +2,7 @@
 #include "utilities.h"
 
 #include "hashing.h"
-#include <stddef.h>
-#include <iostream>
+#include <cstddef>
 
 ////////////////////////////////////////////////// class ttable
 template <class Entry>

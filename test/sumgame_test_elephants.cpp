@@ -2,6 +2,7 @@
 #include "elephants.h"
 #include "test_utilities.h"
 #include <iostream>
+#include <string>
 
 using std::cout, std::endl;
 using std::string;

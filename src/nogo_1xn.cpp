@@ -7,6 +7,8 @@
 #include "game.h"
 #include "strip.h"
 #include <memory>
+#include <cassert>
+#include <ostream>
 
 using std::string, std::pair, std::unique_ptr;
 using std::vector;

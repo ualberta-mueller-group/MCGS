@@ -1,5 +1,10 @@
 #include "split_test_utils.h"
 #include <algorithm>
+#include <string>
+#include "strip.h"
+#include "game.h"
+#include <cassert>
+#include <cstddef>
 
 using std::string;
 using std::vector;

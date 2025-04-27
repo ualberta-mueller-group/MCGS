@@ -2,7 +2,8 @@
 #include "find_bounds_test.h"
 #include "bounds.h"
 #include <string>
-#include <memory>
+#include <vector>
+#include <cassert>
 
 using namespace std;
 

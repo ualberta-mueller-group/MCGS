@@ -2,6 +2,7 @@
 #include "all_game_headers.h"
 #include <unordered_set>
 #include <vector>
+#include <cassert>
 
 using namespace std;
 

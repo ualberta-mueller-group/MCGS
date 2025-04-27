@@ -7,10 +7,14 @@
         2. see the "Options" section at the bottom of global_options.cpp
 */
 
+
+// IWYU pragma: begin_exports
 #include <string>
+// IWYU pragma: end_exports
+
 #include <sstream>
 #include <cstdint>
-#include <stddef.h>
+#include <cstddef>
 
 // Whether or not a global_option is printed by "./MCGS --print-optimizations"
 enum global_summary_enum

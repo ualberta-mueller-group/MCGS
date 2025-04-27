@@ -5,6 +5,11 @@
 
 #include "cgt_basics.h"
 #include "throw_assert.h"
+#include <cassert>
+#include <cstdlib>
+#include <vector>
+#include <utility>
+#include <cstddef>
 
 //---------------------------------------------------------------------------
 

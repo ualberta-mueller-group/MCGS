@@ -4,9 +4,13 @@
        hash_t, random_table, local_hash, global_hash
 */
 
-#include <vector>
+
+// IWYU pragma: begin_exports
 #include <cstdint>
-#include <stddef.h>
+// IWYU pragma: end_exports
+
+#include <vector>
+#include <cstddef>
 #include <climits>
 #include <type_traits>
 #include "global_options.h"

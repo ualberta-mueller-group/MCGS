@@ -10,6 +10,8 @@
 #include "safe_arithmetic.h"
 
 #include <iostream>
+#include <cassert>
+
 using std::cout;
 using std::endl;
 

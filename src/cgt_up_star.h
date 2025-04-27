@@ -3,8 +3,10 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "cgt_basics.h"
+// IWYU pragma: begin_exports
 #include "game.h"
+// IWYU pragma: end_exports
+
 #include "safe_arithmetic.h"
 #include "throw_assert.h"
 

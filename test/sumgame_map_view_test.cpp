@@ -3,6 +3,7 @@
 #include "sumgame.h"
 #include <vector>
 #include <memory>
+#include <cassert>
 #include "all_game_headers.h"
 #include "sumgame_change_record.h"
 #include "sumgame_map_view.h"

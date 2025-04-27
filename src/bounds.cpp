@@ -11,6 +11,8 @@
 #include <limits>
 #include <cassert>
 #include <memory>
+#include <vector>
+#include <utility>
 
 using namespace std;
 

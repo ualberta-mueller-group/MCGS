@@ -4,6 +4,8 @@
 #include "cgt_up_star.h"
 
 #include <sstream>
+#include <string>
+#include <cassert>
 
 using namespace std;
 

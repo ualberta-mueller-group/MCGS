@@ -1,5 +1,6 @@
 #include "hashing_init.h"
 #include "hashing.h"
+#include <cstdint>
 
 namespace mcgs_init {
 

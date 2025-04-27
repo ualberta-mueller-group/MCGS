@@ -4,7 +4,6 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
-#include "hash_eval.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>

@@ -5,6 +5,9 @@
 #include "cgt_switch.h"
 #include <algorithm>
 #include <string>
+#include <vector>
+#include <cassert>
+#include <cstddef>
 
 using namespace std;
 

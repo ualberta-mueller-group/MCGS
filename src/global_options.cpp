@@ -1,6 +1,9 @@
 #include "global_options.h"
 #include <vector>
 #include <algorithm>
+#include <sstream>
+#include <cstddef>
+#include <cstdint>
 
 ////////////////////////////////////////////////// Implementation details
 namespace {

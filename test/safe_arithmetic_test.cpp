@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <optional>
 #include <tuple>
+#include <cassert>
+#include <vector>
 
 using namespace std;
 

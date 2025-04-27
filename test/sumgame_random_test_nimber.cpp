@@ -4,6 +4,7 @@
 #include "sum_of_nimbers.h"
 #include "test_utilities.h"
 #include <random>
+#include <vector>
 
 namespace {
 /*

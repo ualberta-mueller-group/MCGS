@@ -8,6 +8,9 @@
 #include <vector>
 #include <random>
 #include "throw_assert.h"
+#include <cstddef>
+#include <cassert>
+#include <stdexcept>
 
 using namespace std;
 

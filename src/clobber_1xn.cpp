@@ -7,6 +7,9 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "strip.h"
+#include <cassert>
+#include <cstddef>
+#include <ostream>
 
 using std::string, std::pair, std::vector;
 

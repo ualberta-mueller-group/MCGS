@@ -4,8 +4,12 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "cgt_basics.h"
+// IWYU pragma: begin_exports
+#include <string>
 #include "game.h"
+// IWYU pragma: end_exports
+
+#include "cgt_basics.h"
 #include <vector>
 
 //---------------------------------------------------------------------------

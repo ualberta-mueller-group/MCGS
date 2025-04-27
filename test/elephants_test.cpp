@@ -10,6 +10,8 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
+#include <cassert>
+#include <cstddef>
 
 using std::cout, std::endl, std::unique_ptr, std::vector;
 

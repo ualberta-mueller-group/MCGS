@@ -1,11 +1,19 @@
 #include "hash_eval.h"
 #include "cgt_switch.h"
 #include "clobber_1xn.h"
-//#include "hashing_benchmark.h"
 #include <iostream>
 #include <memory>
+#include <unordered_set>
 #include "all_game_headers.h"
 #include "utilities.h"
+#include <chrono>
+#include <cstddef>
+#include <cassert>
+#include <vector>
+#include <string>
+#include <cstdint>
+#include <ratio>
+#include "sumgame.h"
 
 using namespace std;
 ////////////////////////////////////////////////// hash_test

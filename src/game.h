@@ -4,14 +4,18 @@
 
 #pragma once
 
-#include <iostream>
-#include <type_traits>
-#include <vector>
-#include <optional>
+// IWYU pragma: begin_exports
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game_type.h"
 #include "hashing.h"
+// IWYU pragma: end_exports
+
+#include <ostream>
+#include <vector>
+#include <optional>
+
+#include <type_traits>
 
 //---------------------------------------------------------------------------
 

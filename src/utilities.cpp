@@ -1,6 +1,12 @@
 #include "utilities.h"
 #include <sstream>
 #include <chrono>
+#include <string>
+#include <cstddef>
+#include <cctype>
+#include <cassert>
+#include <cstdint>
+#include "cgt_basics.h"
 
 using std::vector, std::string, std::stringstream;
 

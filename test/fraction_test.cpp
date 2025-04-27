@@ -6,6 +6,10 @@
 #include "utilities.h"
 #include <sstream>
 #include <stdexcept>
+#include <cassert>
+#include <tuple>
+#include <vector>
+#include <optional>
 #include <functional>
 
 using namespace std;
