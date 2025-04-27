@@ -12,11 +12,10 @@ namespace {
 
 void kayles_test_values()
 {
-    kayles::init_cache();
     for(int i=0; i < 100; ++i)
     {
         kayles k(i);
-        const int nim_value = k.search_impartial_game();
+        const int nim_value = k.search_with_tt();
         assert(kayles::static_result(i) == nim_value);
     }
 }

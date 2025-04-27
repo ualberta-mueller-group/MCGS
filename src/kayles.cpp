@@ -7,8 +7,6 @@
 #include <vector>
 using std::vector;
 
-int kayles::_cache[100];
-
 move kayles::encode(int take, int smaller, int larger)
 {
     int first = 2 * smaller + take - 1;
@@ -35,25 +33,25 @@ void kayles::_init_hash(local_hash& hash)
 
 void kayles::play(const move& m)
 {
+    impartial_game::play(m);
     int take;
     int smaller;
     int larger;
     decode(m, take, smaller, larger);
     _value = larger;
     _smaller_part = smaller;
-    impartial_game::play(m);
 }
 
 void kayles::undo_move()
 {
     const move m = cgt_move::decode(last_move());
+    game::undo_move();
     int take;
     int smaller;
     int larger;
     decode(m, take, smaller, larger);
     _value = larger + smaller + take;
     _smaller_part = 0;
-    game::undo_move();
 }
 
 void kayles::print(std::ostream& str) const
@@ -130,7 +128,6 @@ void kayles::set_solved(int nim_value)
     assert(_smaller_part == 0);
     if (! is_solved())
     {
-        kayles::store(_value, nim_value);
         impartial_game::set_solved(nim_value);
     }
 }

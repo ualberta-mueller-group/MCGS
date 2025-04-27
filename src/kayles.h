@@ -34,50 +34,21 @@ protected:
     split_result _split_impl() const override;
 
 private:
-    static void decode(move m, int& take, 
-    int& smaller, int& larger);
+    static void decode(move m, int& take,
+                       int& smaller, int& larger);
     static void store(int n, int nim_value);
     static int get(int n); // -1 if not stored
 
     int _value;
     int _smaller_part; // used temporarily during play, after splitting game
-    
-    // TODO a temporary cache until we get transposition tables
-    static const int CACHE_SIZE = 100;
-    static int _cache[CACHE_SIZE];
 };
-
-inline void kayles::store(int n, int nim_value)
-{
-    assert(n >= 0);
-    if (n < CACHE_SIZE)
-        _cache[n] = nim_value;
-}
-
-inline int kayles::get(int n)
-{
-    assert(n >= 0);
-    if (n < CACHE_SIZE)
-        return _cache[n];
-    return -1;
-}
-
-inline void kayles::init_cache()
-{
-    for (int i=0; i < CACHE_SIZE; ++i)
-        _cache[i] = -1;
-}
 
 inline kayles::kayles(int value) : impartial_game(), _value(value), _smaller_part(0)
 {
     assert(_value >= 0);
-    int cached_nim_value = get(_value);
-    if (cached_nim_value != -1)
-        set_solved(cached_nim_value);
 }
 
 inline void kayles::play(const move& m, bw ignore_to_play)
 {
     play(m);
 }
-
