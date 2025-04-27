@@ -66,7 +66,7 @@ split_result switch_game::_split_impl() const
     }
 }
 
-void switch_game::_init_hash(local_hash& hash)
+void switch_game::_init_hash(local_hash& hash) const
 {
     if (!is_rational())
     {

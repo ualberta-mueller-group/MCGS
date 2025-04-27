@@ -36,7 +36,7 @@ public:
     // void print(std::ostream& str) const { str << board_as_string();}
 
 protected:
-    void _init_hash(local_hash& hash) override;
+    void _init_hash(local_hash& hash) const override;
 
     void _normalize_impl() override;
     void _undo_normalize_impl() override;

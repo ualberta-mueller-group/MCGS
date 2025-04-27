@@ -37,7 +37,7 @@ int nimber::nim_sum(const std::vector<int>& values)
 }
 
 
-void nimber::_init_hash(local_hash& hash)
+void nimber::_init_hash(local_hash& hash) const
 {
     hash.toggle_value(0, _value);
 }

@@ -74,7 +74,7 @@ split_result dyadic_rational::_split_impl() const
     }
 };
 
-void dyadic_rational::_init_hash(local_hash& hash)
+void dyadic_rational::_init_hash(local_hash& hash) const
 {
     hash.toggle_value(0, _p);
     hash.toggle_value(1, _q);

@@ -75,7 +75,7 @@ void game::undo_move()
     _move_stack.pop_back();
 }
 
-hash_t game::get_local_hash()
+hash_t game::get_local_hash() const
 {
     if (_hash_state == HASH_STATE_UP_TO_DATE)
         return _hash.get_value();
@@ -136,7 +136,7 @@ relation game::order(const game* rhs) const
     return REL_EQUAL;
 }
 
-void game::invalidate_hash()
+void game::invalidate_hash() const
 {
     _hash_state = HASH_STATE_INVALID;
     _hash.reset();

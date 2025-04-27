@@ -28,7 +28,7 @@ public:
 
 protected:
 
-    void _init_hash(local_hash& hash) override;
+    void _init_hash(local_hash& hash) const override;
 
     relation _order_impl(const game* rhs) const override;
 
