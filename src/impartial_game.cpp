@@ -8,14 +8,37 @@
 #include <sstream>
 #include "cgt_basics.h"
 #include "cgt_nimber.h"
+#include "hashing.h"
+#include "transposition.h"
+
 //---------------------------------------------------------------------------
 
 namespace{
-inline int search(game* subgame)
+
+inline int search(game* subgame, impartial_tt& tt)
 {
     const impartial_game* g =
         static_cast<const impartial_game*>(subgame);
-    return g->search_impartial_game();
+    return g->search_impartial_game(tt);
+}
+
+inline void tt_store(impartial_tt& tt, impartial_game* g, 
+                     int nim_value)
+{
+    const hash_t hash = g->get_local_hash();
+    auto tt_it = tt.get_iterator(hash);
+    tt_it.set_entry(impartial_ttable_entry(nim_value));
+}
+
+inline bool tt_lookup(impartial_tt& tt, impartial_game* g, 
+                     int& nim_value)
+{
+    const hash_t hash = g->get_local_hash();
+    auto tt_it = tt.get_iterator(hash);
+    const bool is_valid = tt_it.entry_valid();
+    if (is_valid)
+        nim_value = tt_it.get_entry()._nim_value;
+    return is_valid;
 }
 } // namespace
 //---------------------------------------------------------------------------
@@ -28,19 +51,28 @@ void impartial_game::set_solved(int nim_value)
     _nim_value = nim_value;
 }
 
-int impartial_game::search_impartial_game() const
+int impartial_game::search_with_tt() const
+{
+    impartial_tt tt(24, 0);
+    return search_impartial_game(tt);
+}
+
+int impartial_game::search_impartial_game(impartial_tt& tt) const
 {
     if (is_solved())
         return nim_value();
-        
+
     assert_restore_game ar(*this);
-    // iterate over moves
-    // solve resulting games after each move, XOR
-    // compute mex
     auto g = const_cast<impartial_game*>(this);
+    int v;
+    if (tt_lookup(tt, g, v))
+        return v;
+
     std::unique_ptr<move_generator> mgp(g->create_move_generator());
     move_generator& mg = *mgp;
 
+    // iterate over moves and solve after each move
+    // compute mex
     std::set<int> nimbers;
     for (; mg; ++mg)
     {
@@ -54,14 +86,14 @@ int impartial_game::search_impartial_game() const
             // search new games in sr, nim-add them
             for (game* subgame: *sr)
             {
-                int result = search(subgame);
+                int result = search(subgame, tt);
                 nimber::add_nimber(move_nimber, result);
                 delete subgame;
             }
         }
         else // no split, keep searching same subgame
         {
-            move_nimber = g->search_impartial_game();
+            move_nimber = g->search_impartial_game(tt);
         }
 
         nimbers.insert(move_nimber);
@@ -70,6 +102,7 @@ int impartial_game::search_impartial_game() const
     int result = mex(nimbers);
     if (g->num_moves_played() == 0)
         g->set_solved(result);
+    tt_store(tt, g, result);
     return result;
 }
 

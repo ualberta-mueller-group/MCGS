@@ -32,7 +32,7 @@ void test_nim_value(const string& s, int nim_value)
 {
     clobber_1xn c(s);
     impartial_game_wrapper g(&c);
-    const int v = g.search_impartial_game();
+    const int v = g.search_with_tt();
     assert(v == nim_value);
 }
 
@@ -86,7 +86,7 @@ void test_nogo(string s, int nim_value)
 {
     nogo_1xn c(s);
     impartial_game_wrapper g(&c);
-    const int v = g.search_impartial_game();
+    const int v = g.search_with_tt();
     assert(v == nim_value);
 }
 

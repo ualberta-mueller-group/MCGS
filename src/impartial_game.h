@@ -9,6 +9,19 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "transposition.h"
+
+//---------------------------------------------------------------------------
+// Transposition table for impartial games
+//---------------------------------------------------------------------------
+struct impartial_ttable_entry
+{
+    int _nim_value;
+    impartial_ttable_entry() : _nim_value(0) {}
+    impartial_ttable_entry(int v) : _nim_value(v) {}
+};
+
+typedef ttable<impartial_ttable_entry> impartial_tt;
 
 //---------------------------------------------------------------------------
 class impartial_game : public game
@@ -16,7 +29,8 @@ class impartial_game : public game
 public:
     impartial_game();
     // solve single game; store result in _nim_value
-    int search_impartial_game() const; 
+    int search_with_tt() const;
+    int search_impartial_game(impartial_tt& tt) const;
 
     // Impartial game interface
     virtual void play(const move& m);

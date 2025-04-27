@@ -22,7 +22,7 @@ int search_sumgame(const sumgame& s)
             result = ig->nim_value();
         else
         {
-            result = ig->search_impartial_game();
+            result = ig->search_with_tt();
             ig->set_solved(result);
         }
         nimber::add_nimber(sum_nim_value, result);
