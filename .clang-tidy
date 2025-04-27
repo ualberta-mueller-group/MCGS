@@ -23,6 +23,9 @@ HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:
 
+  # Semicolon-separated list of regexes
+  - { key: misc-include-cleaner.IgnoreHeaders, value: "src/all_game_headers\\.h" }
+
   # TODO enable me at some point
   - { key: bugprone-assert-side-effect.CheckFunctionCalls, value: false }
 
