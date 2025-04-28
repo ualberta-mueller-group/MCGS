@@ -18,11 +18,18 @@ game_type_t __get_game_type(const std::type_info& info);
 class i_game_type
 {
 public:
+    i_game_type()
+    {
+        _type = 0; // no game has type of 0
+    }
+
     game_type_t game_type() const
     {
-        // can't save this in a static variable because this method is used by
-        // all game classes
-        return __game_type_impl::__get_game_type(typeid(*this));
+        if (_type == 0)
+            _type = __game_type_impl::__get_game_type(typeid(*this));
+
+        assert(_type != 0);
+        return _type;
     }
 
     virtual ~i_game_type()
@@ -36,6 +43,8 @@ private:
     {
         assert(false); // method shouldn't be called
     }
+
+    mutable game_type_t _type;
 };
 
 template <class T>
