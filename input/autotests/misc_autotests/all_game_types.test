@@ -9,4 +9,4 @@
 [switch_game] (2 -1)
 
 [up_star] (-2 *)
-{B, W}
+{B win, W loss}
