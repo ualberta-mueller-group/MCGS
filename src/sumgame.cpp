@@ -652,18 +652,12 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
         }
     }
 
-    // NOLINTNEXTLINE(readability-identifier-naming)
-    class __game_compare
+    std::sort(active_games.begin(), active_games.end(), [](const game* g1, const game* g2) -> bool
     {
-    public:
-        bool operator()(const game* g1, const game* g2) const
-        {
-            // Put larger games first
-            return g1->order(g2) == REL_GREATER;
-        }
-    };
-
-    std::sort(active_games.begin(), active_games.end(), __game_compare());
+        const hash_t hash1 = g1->get_local_hash();
+        const hash_t hash2 = g2->get_local_hash();
+        return hash1 < hash2;
+    });
 
     {
         const size_t N = active_games.size();
