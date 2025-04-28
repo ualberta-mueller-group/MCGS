@@ -51,9 +51,9 @@ void impartial_game::set_solved(int nim_value)
     _nim_value = nim_value;
 }
 
-int impartial_game::search_with_tt() const
+int impartial_game::search_with_tt(int tt_size) const
 {
-    impartial_tt tt(24, 0);
+    impartial_tt tt(tt_size, 0);
     return search_impartial_game(tt);
 }
 
