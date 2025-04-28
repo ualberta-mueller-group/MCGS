@@ -123,10 +123,7 @@ inline void random_table::_resize_if_out_of_range(size_t idx)
     if (idx < _n_positions)
         return;
 
-    size_t target_size = _n_positions;
-
-    while (!(idx < target_size))
-        target_size *= 2;
+    const size_t target_size = new_vector_capacity(idx, _n_positions);
 
     _resize_to(target_size);
 
@@ -188,6 +185,7 @@ class global_hash
 public:
     global_hash(): _value(0), _to_play(EMPTY)
     {
+        _reserve_space(32);
     }
 
     void reset();
@@ -200,6 +198,7 @@ public:
 
 private:
     void _resize_if_out_of_range(size_t subgame_idx);
+    void _reserve_space(size_t capacity);
 
     // hash modifier of a local_hash based on subgame index
     hash_t _get_modified_hash(size_t subgame_idx, game* g);

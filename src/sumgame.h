@@ -137,6 +137,7 @@ private:
 
     mutable bool _should_stop;
     mutable bool _need_cgt_simplify;
+    mutable global_hash _sumgame_hash;
     std::vector<game*> _subgames;
 
     std::vector<sumgame_undo_code> _undo_code_stack;

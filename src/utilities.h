@@ -118,6 +118,8 @@ constexpr T rotate_interleaved(const T& val, size_t distance) // TODO unit test
 
 uint64_t ms_since_epoch();
 
+size_t new_vector_capacity(size_t access_idx, size_t current_capacity);
+
 ////////////////////////////////////////
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,
                                       bool is_ge);

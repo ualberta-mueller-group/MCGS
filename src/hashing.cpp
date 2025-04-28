@@ -191,12 +191,21 @@ void global_hash::set_to_play(bw new_to_play)
 void global_hash::_resize_if_out_of_range(size_t subgame_idx)
 {
     assert(_subgame_hashes.size() == _subgame_valid_mask.size());
-    size_t min_size = subgame_idx + 1;
-    if (_subgame_hashes.size() < min_size)
-    {
-        _subgame_hashes.resize(min_size);
-        _subgame_valid_mask.resize(min_size);
-    }
+    const size_t current_size = _subgame_hashes.size();
+
+    if (subgame_idx < current_size)
+        return;
+
+    const size_t target_size = new_vector_capacity(subgame_idx, current_size);
+
+    _subgame_hashes.resize(target_size);
+    _subgame_valid_mask.resize(target_size);
+}
+
+void global_hash::_reserve_space(size_t capacity)
+{
+    _subgame_hashes.reserve(capacity);
+    _subgame_valid_mask.reserve(capacity);
 }
 
 hash_t global_hash::_get_modified_hash(size_t subgame_idx, game* g)

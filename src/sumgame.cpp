@@ -633,8 +633,8 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
             g->invalidate_hash();
     }
 
-    global_hash gh;
-    gh.set_to_play(to_play());
+    _sumgame_hash.reset();
+    _sumgame_hash.set_to_play(to_play());
 
     std::vector<game*> active_games;
 
@@ -666,11 +666,11 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
         {
             game* g = active_games[i];
             assert(g->is_active());
-            gh.add_subgame(i, g);
+            _sumgame_hash.add_subgame(i, g);
         }
     }
 
-    return gh.get_value();
+    return _sumgame_hash.get_value();
 }
 
 void sumgame::init_ttable(size_t index_bits)
