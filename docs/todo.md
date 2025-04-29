@@ -28,12 +28,21 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 # Future tasks
 ## V1.2
+### V1.2 done
 - hashing for games and sum games
 - `grid` and `nogo` on a grid classes
+- impartial games and simple impartial game solver
+- kayles, a simple impartial game
+- Impartial game wrapper to play impartial version of any `game`
+- transposition table
+
+### V1.2 to do
+- cleanup impartial games
 
 ## V1.3
 - transposition table
-    - Discussion in design document
+    - design documentation?
+    - compare to discussion in design document
     - Replacement policy?
 - performance testing
     - with/without table
