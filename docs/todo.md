@@ -52,6 +52,18 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Important or good to have before V2
 - Medium priority
 
+### Move ordering heuristics
+- Can we define some in a game-independent way?
+- Play in the middle heuristic
+    - simple hack: generate all moves, create list,
+      and pick from list starting in the middle
+- sort by game size heuristic (already used implicitly in sumgame?)
+- any heuristics for impartial games?
+    - the move generator for impartial game wrapper generates all moves for black first, using the underlying game generator, followed by all moves for white.
+        - If there is a good game-specific move generator, then this is inefficient. It will create all bad black moves before any good white move
+        - choose moves alternatingly for black and white instead
+    - Problem: a good move in the underlying game may not be a good move in the impartial version
+
 ### Use a proper unit testing framework?
 - Easier to change this now rather than later
 - Could possibly show code coverage and number of tests run
