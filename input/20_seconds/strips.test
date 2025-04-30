@@ -9,6 +9,21 @@ XOXOXOXOXOXOXOXOXOXOXOXOXO
 XXOXXOXXOXXOXXOXXOXXOXXOXXOXXOXXO
 {B win, W loss}
 
+XO.XXOX.OX.OOXOOXXOXXXXOXXX.XOO.XOOXXO
+{B loss, W loss}
+
+OOX.OXXXXXOOXOOXOXXOXXOOO.XO.OOX.XOO.XO
+{B win, W win}
+
+XXXOXX.OX.OXOOXX.OOOXX.XXXXOXXOXOXO.XO.XOO
+{B win, W loss}
+
+OOX.OXXXXXOOXOOXOXXOXXOOO.XO.OOX.XOO.XO
+{B win, W win}
+
+XOO.OXOXO.OX.XXXOOOXOOXX.XOOXXO.XOOOO.OOX.OXXX
+{B loss, W win}
+
 [elephants]
 .XO........X..XO...O...XO.....XOX.O.....
 X.X.......X.O..O....O..XX..OX.O.......O.
@@ -16,5 +31,17 @@ X.O
 {B win, W win}
 
 [nogo_1xn]
+..................
+{B win, W win}
+
+...................
+{B win, W win}
+
+....................
+{B win, W win}
+
 .....................
+{B win, W win}
+
+......................
 {B win, W win}
