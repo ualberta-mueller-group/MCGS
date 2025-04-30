@@ -4,6 +4,33 @@ import pathlib
 import datetime
 import hashlib
 
+"""
+ttables persist between tests, which causes 2 new problems:
+
+    1: If the tests, or execution order of tests represented in two .csvs
+        differ, then times can't be meaningfully compared
+
+    2: create-table.py currently reads the entire comparison .csv file row by
+        row and stores the row data in a dict. This may overwrite the first
+        instance of a test with the second, which now have different times
+        due to ttable persistence. This causes slowdowns (i.e. 10,000,000%) to
+        be (incorrectly) reported, when there are no slowdowns, as the
+        comparison column will be the time for a single ttable lookup
+
+For 1: Have create-table.py print a warning if the sequence of tests differ
+    between .csv files. This can either be done by looking at the sequence
+    of input hashes, OR by comparing the sequence of row keys. Or do both and
+    mention which happened in the warning?
+
+    Also include the warning in the .html output
+
+For 2: Store all instances of the same test from the comparison file.
+
+    For now I add an assert against duplicate input hashes...
+
+"""
+
+print("TODO: Resolve note at top of create-table.py")
 
 ######################################## Constants
 time_threshold_frac = 0.1
@@ -512,6 +539,8 @@ if comparison_file_name is not None:
     for reader_row in reader:
         input_row = reader_row_to_input_row(reader_row)
         row_key = input_row_get_key(input_row)
+
+        assert row_key not in comparison_rows
         comparison_rows[row_key] = input_row
 
     comparison_file.close()
@@ -538,11 +567,15 @@ for i in range(len(output_field_list)):
 table_string += "</tr>\n"
 
 
+seen_input_row_keys = set()
 # Read each input row, making an output row
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
 
     input_row_key = input_row_get_key(input_row) if comparison_file_name is not None else None
+    assert input_row_key not in seen_input_row_keys
+    seen_input_row_keys.add(input_row_key)
+
     comparison_row = comparison_rows.get(input_row_key)
 
     input_rows = [input_row]
