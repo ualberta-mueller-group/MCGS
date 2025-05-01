@@ -573,7 +573,7 @@ for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
 
     input_row_key = input_row_get_key(input_row) if comparison_file_name is not None else None
-    assert input_row_key not in seen_input_row_keys
+    assert (input_row_key not in seen_input_row_keys) or input_row_key is None
     seen_input_row_keys.add(input_row_key)
 
     comparison_row = comparison_rows.get(input_row_key)
