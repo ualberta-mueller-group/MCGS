@@ -1,6 +1,27 @@
 # Development notes
 This document includes more detailed information than `README.md`, including design choices and tradeoffs, version history, and implementation details.
 
+# Outstanding Issues
+## Splitting Can Make Move Ordering Worse
+Splitting into subgames creates move ordering problems in some cases. 
+
+Consider:
+```
+[clobber_1xn] XOXOXOXOXO.XOXOXOXOXO
+[integer_game] 6
+```
+
+It is favorable to play in the clobber game. Without splitting, moves will
+first be tried in the clobber game. However, with splitting, a move will
+cause the clobber game to split into subgames, and those subgames will be placed
+at the end of the sum, meaning moves will be played on the integer game first.
+Without a transposition table, this increases run time from
+(5.49 ms black, 17.45 ms white) to (3557.94 ms black, 9807.72 ms white)
+
+Maybe we can have a subgame sorting pass which occasionally runs?
+
+## `ttable` Persistence Affects Tests
+See note at top of `create-table.py`
 
 # Search and Solving a Game
 - Two classes implement game solving: `alternating_move_game` and `sumgame`

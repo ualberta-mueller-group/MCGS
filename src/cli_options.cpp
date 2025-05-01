@@ -324,7 +324,8 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
         if (arg == global::subgame_split.no_flag())
         {
-            throw std::logic_error("TODO: remove or change sumgame splitting option");
+            //throw std::logic_error("TODO: remove or change sumgame splitting option");
+            cerr << "TODO: remove or change sumgame splitting option" << endl;
             /*
                 TODO this either needs to be removed, or should only disable
                 splitting games for which splitting is optional
