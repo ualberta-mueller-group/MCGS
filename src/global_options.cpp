@@ -104,5 +104,6 @@ INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);
 
 // These WILL NOT be printed with ./MCGS --print-optimizations
 INIT_GLOBAL_WITHOUT_SUMMARY(silence_warnings, bool, false);
+INIT_GLOBAL_WITHOUT_SUMMARY(debug_file, std::string, "");
 
 } // namespace global

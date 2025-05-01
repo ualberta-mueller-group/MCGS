@@ -11,7 +11,8 @@
 */
 
 // NOLINTNEXTLINE(readability-identifier-naming,misc-use-internal-linkage)
-extern "C" const char* __asan_default_options() {
+extern "C" const char* __asan_default_options()
+{
     // string literals automatically concatenated
 
     return

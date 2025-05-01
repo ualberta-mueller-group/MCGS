@@ -5,6 +5,7 @@
 #include "hashing_init.h"
 #include "sumgame_init.h"
 #include "cli_options.h"
+#include "debug_print.h"
 
 namespace {
 bool already_initialized = false;
@@ -15,6 +16,7 @@ void mcgs_init_all(const cli_options& opts)
     THROW_ASSERT(!already_initialized);
     already_initialized = true;
 
+    mcgs_init::init_debug_print(global::debug_file());
     mcgs_init::init_hashing(global::random_table_seed());
     mcgs_init::init_ttable_sumgame(global::tt_sumgame_idx_bits());
 }
