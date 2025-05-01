@@ -47,9 +47,7 @@ void impartial_game_wrapper_test_values()
       3, 1                               // 41-42
      };
     
-    // Fast up to 6, 7 takes a few seconds, 
-    // 8 not solved in 5 minutes without a cache/table
-    int limit = 7; 
+    int limit = 10;
     for (int i = 0; i < limit; ++i)
         test_nim_value(clobber_1xn::xoxo(i), Dai_Chen_result[i]);
 }
@@ -82,20 +80,29 @@ void impartial_game_wrapper_test_play_undo()
     test_play_undo("XOXOXO");
 }
 
+const int UNKNOWN = -1;
+
 void test_nogo(string s, int nim_value)
 {
     nogo_1xn c(s);
     impartial_game_wrapper g(&c);
     const int v = g.search_with_tt();
-    assert(v == nim_value);
+    if (nim_value != UNKNOWN)
+        assert(v == nim_value);
 }
 
 void impartial_game_wrapper_test_nogo()
 {
     static int expected[] = // computed with this same program
-    { 0, 0, 1, 0, 1, 2, 0, 1, 0, 1, 2, 3};
+    { 0, 
+      0, 1, 0, 1, 2, 0, 1, 0, 1, 2,       //  1-10
+      3, 1, 0, 3, 1, 0, 2, 2, 3, UNKNOWN, // 11-20
+      UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, 
+      UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, 
+      UNKNOWN, UNKNOWN                    // 21-30
+      };
 
-    for(int i=0; i<10; ++i)
+    for(int i=0; i<11; ++i)
     {
         string s(i, '.');
         test_nogo(s, expected[i]);
