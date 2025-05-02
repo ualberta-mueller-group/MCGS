@@ -29,6 +29,7 @@ class impartial_game : public game
 public:
     impartial_game();
     // solve single game; store result in _nim_value
+    // tt_size is expressed as exponent of 2, e.g. 24 means 2^24
     int search_with_tt(int tt_size = 24) const;
     int search_impartial_game(impartial_tt& tt) const;
 

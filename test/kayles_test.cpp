@@ -12,7 +12,7 @@ namespace {
 
 void kayles_test_values()
 {
-    for(int i=0; i < 100; ++i)
+    for(int i = 0; i < 100; ++i)
     {
         kayles k(i);
         const int nim_value = k.search_with_tt();
@@ -22,7 +22,7 @@ void kayles_test_values()
 
 void kayles_test_move_generator()
 {
-    for(int i=0; i<20; ++i)
+    for(int i = 0; i < 20; ++i)
     {
         kayles k(i);
         assert_num_moves(k, BLACK, i);

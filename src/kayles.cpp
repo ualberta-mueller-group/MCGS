@@ -7,12 +7,16 @@
 #include <vector>
 using std::vector;
 
+// Encode triple (take, smaller, larger) as a move
 move kayles::encode(int take, int smaller, int larger)
 {
+    assert(take == 1 || take == 2);
+    assert(larger >= smaller);
     int first = 2 * smaller + take - 1;
     return cgt_move::two_part_move(first, larger);
 }
 
+// Decode move back to triple (take, smaller, larger)
 void kayles::decode(move m, int& take, 
                     int& smaller, int& larger)
 {
@@ -27,28 +31,22 @@ void kayles::decode(move m, int& take,
 
 void kayles::_init_hash(local_hash& hash)
 {
-    hash.toggle_value(0, _value);
     assert(_smaller_part == 0);
+    hash.toggle_value(0, _value);
 }
 
 void kayles::play(const move& m)
 {
     impartial_game::play(m);
-    int take;
-    int smaller;
-    int larger;
-    decode(m, take, smaller, larger);
-    _value = larger;
-    _smaller_part = smaller;
+    int ignore_take;
+    decode(m, ignore_take, _smaller_part, _value);
 }
 
 void kayles::undo_move()
 {
     const move m = cgt_move::decode(last_move());
     game::undo_move();
-    int take;
-    int smaller;
-    int larger;
+    int take, smaller, larger;
     decode(m, take, smaller, larger);
     _value = larger + smaller + take;
     _smaller_part = 0;
@@ -61,9 +59,7 @@ void kayles::print(std::ostream& str) const
 
 void kayles::print_move(move m, std::ostream& str)
 {
-    int take;
-    int smaller;
-    int larger;
+    int take, smaller, larger;
     decode(m, take, smaller, larger);
     str << "kayles move: take " << take 
     << ", smaller " << smaller << ", larger " << larger << '\n';

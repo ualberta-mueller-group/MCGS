@@ -211,6 +211,11 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Get good performance on 2-D boards?
     
 ## More Impartial Games Support
+
+- Small todo's
+    - Remove duplication between performance and unit tests:
+      Move tables of expected results into new header file.
+    - performance tests should have "impartial" in the name
 - Search algorithms
     - Lemoine and Viennot, Nimbers are inevitable (2012)
     - Also see, compare with 2022 course report

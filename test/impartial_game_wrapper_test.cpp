@@ -11,6 +11,7 @@
 #include "test_utilities.h"
 
 using std::string;
+const int UNKNOWN = -1;
 
 namespace {
 
@@ -38,13 +39,16 @@ void test_nim_value(const string& s, int nim_value)
 
 void impartial_game_wrapper_test_values()
 {
-    static int Dai_Chen_result[] =  // -1 means they could not solve it
+    // Results from: J. Dai and X. Chen, 
+    // Impartial Clobber Solver,
+    // CMPUT 655 project report, University of Alberta 2022
+    static int Dai_Chen_result[] =
     { 0, 
-      1, 3, 0, 2, 0, 2,  0, 3,  1,  4,   //  1-10
-      6, 1, 0, 1, 3, 7, -1, 3,  1,  0,   // 11-20
-     -1, 4, 0, 1, 3, 0,  4, 0,  2,  0,   // 21-30
-      3, 1, 4, 6, 1, 0,  1, 3, -1, -1,   // 31-40
-      3, 1                               // 41-42
+      1, 3, 0, 2, 0, 2,  0, 3,  1,  4,       //  1-10
+      6, 1, 0, 1, 3, 7, UNKNOWN, 3,  1,  0,  // 11-20
+      UNKNOWN, 4, 0, 1, 3, 0,  4, 0,  2,  0, // 21-30
+      3, 1, 4, 6, 1, 0,  1, 3, UNKNOWN, -1,  // 31-40
+      3, 1                                   // 41-42
      };
     
     int limit = 10;
@@ -79,8 +83,6 @@ void impartial_game_wrapper_test_play_undo()
     test_play_undo("XOXO");
     test_play_undo("XOXOXO");
 }
-
-const int UNKNOWN = -1;
 
 void test_nogo(string s, int nim_value)
 {

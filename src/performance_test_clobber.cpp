@@ -1,5 +1,7 @@
+//---------------------------------------------------------------------------
+// Performance tests for Impartial Clobber on a 1-dimensional strip
+//---------------------------------------------------------------------------
 #include "performance_test_clobber.h"
-
 
 #include <cassert>
 #include <chrono>
@@ -44,8 +46,6 @@ void performance_test_clobber()
       3, 1                                       // 41-42
      };
     
-    // Fast up to 6, 7 takes a few seconds, 
-    // 8 not solved in 5 minutes without a cache/table
     int limit = 20; 
     for (int i = 0; i < limit; ++i)
         test_nim_value(clobber_1xn::xoxo(i), Dai_Chen_result[i]);

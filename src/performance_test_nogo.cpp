@@ -1,5 +1,7 @@
+//---------------------------------------------------------------------------
+// Performance tests for Impartial NoGo on a 1-dimensional strip
+//---------------------------------------------------------------------------
 #include "performance_test_nogo.h"
-
 
 #include <cassert>
 #include <chrono>
