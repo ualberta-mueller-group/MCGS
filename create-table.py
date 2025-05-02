@@ -68,12 +68,18 @@ def warn_comparison_file_duplicate_tests():
     print("Comparison file contains duplicate tests")
 
 
+def warn_diverging_test_sequence():
+    if warn_common("diverging_test_sequence"):
+        return
+    print("Tests or test order differs between input and comparison files")
+
+
 ######################################## Constants
 time_threshold_frac = 0.1
 time_threshold_abs = 5
 
-# Highlight times that differ by at least time_threshold_abs milliseconds AND have a percent difference
-# of at least time_threshold_frac * 100
+# Highlight times that differ by at least time_threshold_abs milliseconds AND
+# have a fraction of at least (1.0 + time_threshold_frac)
 
 src_dir = "src"
 
@@ -569,6 +575,7 @@ def input_row_get_key(input_row):
     return tuple(key)
 
 
+comparison_file_key_sequence = []
 # Read all rows from the comparison file, if specified
 if comparison_file_name is not None:
     comparison_file = open(comparison_file_name, "r")
@@ -577,7 +584,9 @@ if comparison_file_name is not None:
 
     for reader_row in reader:
         input_row = reader_row_to_input_row(reader_row)
+
         row_key = input_row_get_key(input_row)
+        comparison_file_key_sequence.append(row_key)
 
         row_list = comparison_rows.get(row_key)
         if row_list is None:
@@ -615,11 +624,13 @@ table_string += "</tr>\n"
 
 
 # Read each input row, making an output row
+input_file_key_sequence = []
 seen_input_row_keys = set()
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
 
     input_row_key = input_row_get_key(input_row) if comparison_file_name is not None else None
+    input_file_key_sequence.append(input_row_key)
 
     if input_row_key in seen_input_row_keys:
         warn_input_file_duplicate_tests()
@@ -627,7 +638,7 @@ for reader_row in reader:
 
     comparison_row_list = comparison_rows.get(input_row_key)
     comparison_row = None
-    if comparison_row_list is not None:
+    if comparison_row_list is not None and len(comparison_row_list) != 0:
         comparison_row = comparison_row_list.pop()
 
     input_rows = [input_row]
@@ -665,7 +676,37 @@ for reader_row in reader:
 table_string += "</table>\n"
 infile.close()
 
+# Check for diverging tests or test order
+diverging_test_sequence = False
+if comparison_file_name is not None:
+    if input_file_key_sequence != comparison_file_key_sequence:
+        diverging_test_sequence = True
+
+if diverging_test_sequence:
+    warn_diverging_test_sequence()
+
 ######################################## Write HTML file
+# Include warnings
+warning_list = []
+
+if diverging_test_sequence:
+    string = "Input and comparison .csvs have different "\
+        "tests, or different order of tests"
+
+    warning_list.append(string)
+
+warning_string = ""
+if len(warning_list) != 0:
+    warning_string = "<span id=\"python-warnings\">\n"
+
+    warning_string += "<p><b>WARNINGS:</b></p>\n"
+    warning_string += "<ul>\n"
+
+    for warning in warning_list:
+        warning_string += "<li>" + warning + "</li>\n"
+
+    warning_string += "</ul>\n"
+    warning_string += "</span>\n"
 
 
 # Timestamps and MD5s of input files (and date of output file)
@@ -729,6 +770,7 @@ script_string = script_file.read()
 script_file.close()
 
 # Replace the smaller things first (order of these affects performance)
+html_template_string = html_template_string.replace("<!-- REPLACE WITH PYTHON WARNINGS -->", warning_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH METADATA -->", metadata_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH COLUMN OPTIONS -->", column_options_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH SCRIPT -->", script_string)
