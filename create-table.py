@@ -337,19 +337,19 @@ def get_faster(new_time, old_time):
     new_time = max(0.0001, new_time)
     old_time = max(0.0001, old_time)
 
-    # use percent difference for highlighting so that the order of input files
-    # doesn't matter
-    frac_difference = abs(new_time - old_time) / ((new_time + old_time) / 2)
+    time_max = max(new_time, old_time)
+    time_min = min(new_time, old_time)
 
-    frac_improved = -(new_time - old_time) / abs(old_time)
-    diff = new_time - old_time
+    frac = time_max / time_min
+    assert frac >= 1.0
 
-    text = "{:.2f}% ".format(abs(frac_improved) * 100)
-    text += "SLOWER" if diff > 0 else "FASTER"
+    text = "{:.2f}x ".format(frac)
+    text += "AS FAST" if new_time < old_time else "AS SLOW"
 
     css = None
 
-    if frac_difference >= time_threshold_frac and abs(diff) >= time_threshold_abs:
+    diff = new_time - old_time
+    if frac >= (1.0 + time_threshold_frac) and abs(diff) >= time_threshold_abs:
         css = "cell-slower" if diff > 0 else "cell-faster"
 
     return text, css
