@@ -32,6 +32,42 @@ For 2: Store all instances of the same test from the comparison file.
 
 print("TODO: Resolve note at top of create-table.py")
 
+
+######################################## Warnings
+# Track warnings already printed
+warned_dict = {
+}
+
+
+def warn_common(warning_name):
+    global warned_dict
+
+    warned = warned_dict.get(warning_name)
+    if warned is None:
+        warned = False
+
+    assert type(warned) is bool
+
+    warned_dict[warning_name] = True
+
+    if not warned:
+        print("WARNING: ", end="")
+
+    return warned
+
+
+def warn_input_file_duplicate_tests():
+    if warn_common("input_file_duplicate_tests"):
+        return
+    print("Primary input file contains duplicate tests")
+
+
+def warn_comparison_file_duplicate_tests():
+    if warn_common("comparison_file_duplicate_tests"):
+        return
+    print("Comparison file contains duplicate tests")
+
+
 ######################################## Constants
 time_threshold_frac = 0.1
 time_threshold_abs = 5
@@ -419,7 +455,10 @@ row_functions = []
 # and comparison file. Or None
 row_match_key = None
 
-# Map containing all rows from the comparison file, indexed according to row_match_key
+# Map containing all rows from the comparison file. Indexed according to row_match_key
+# Elements are lists of rows which have the same
+# key (to handle duplicate tests).
+# The end of the list contains the first test in the comparison .csv
 # Rows are in "input row" format
 comparison_rows = {
 }
@@ -540,10 +579,18 @@ if comparison_file_name is not None:
         input_row = reader_row_to_input_row(reader_row)
         row_key = input_row_get_key(input_row)
 
-        assert row_key not in comparison_rows
-        comparison_rows[row_key] = input_row
+        row_list = comparison_rows.get(row_key)
+        if row_list is None:
+            comparison_rows[row_key] = []
+        else:
+            warn_comparison_file_duplicate_tests()
+
+        comparison_rows[row_key].append(input_row)
 
     comparison_file.close()
+
+for key in comparison_rows:
+    comparison_rows[key].reverse()
 
 
 # Start processing the input file
@@ -567,16 +614,21 @@ for i in range(len(output_field_list)):
 table_string += "</tr>\n"
 
 
-seen_input_row_keys = set()
 # Read each input row, making an output row
+seen_input_row_keys = set()
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
 
     input_row_key = input_row_get_key(input_row) if comparison_file_name is not None else None
-    assert (input_row_key not in seen_input_row_keys) or input_row_key is None
+
+    if input_row_key in seen_input_row_keys:
+        warn_input_file_duplicate_tests()
     seen_input_row_keys.add(input_row_key)
 
-    comparison_row = comparison_rows.get(input_row_key)
+    comparison_row_list = comparison_rows.get(input_row_key)
+    comparison_row = None
+    if comparison_row_list is not None:
+        comparison_row = comparison_row_list.pop()
 
     input_rows = [input_row]
     if comparison_row is not None:
