@@ -95,7 +95,7 @@ inline void alternating_move_game::undo_move()
 inline int alternating_move_game::game_hash() const
 {
     if (_game)
-        return game_pos().moves_hash();
+        return game_pos().game_hash();
     else // todo compute game hash for sum game
         return 0;
 }
@@ -106,11 +106,11 @@ inline bool alternating_move_game::find_static_winner(bool& success) const
 }
 
 //---------------------------------------------------------------------------
-class assert_restore_game
+class assert_restore_alternating_game
 {
 public:
-    assert_restore_game(const alternating_move_game& game);
-    ~assert_restore_game();
+    assert_restore_alternating_game(const alternating_move_game& game);
+    ~assert_restore_alternating_game();
 
 private:
     const alternating_move_game& _game;

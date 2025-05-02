@@ -8,6 +8,7 @@ using std::vector, std::string, std::stringstream;
 
 void assert_solve(game& pos, bw to_play, const bool expected_result)
 {
+    assert_restore_game r(pos);
     assert_black_white(to_play);
     alternating_move_game g(pos, to_play);
     const bool result = g.solve();

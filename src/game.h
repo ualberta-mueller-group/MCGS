@@ -31,8 +31,9 @@ public:
     void set_active(bool status);
     move last_move() const;
     // Used to verify that game is restored after search
-    int moves_hash() const; // TODO do a proper implementation
+    int game_hash() const; // TODO placeholder - do a proper implementation
     bool has_moves() const;
+    int num_moves_played() const;
 
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
@@ -184,6 +185,12 @@ inline local_hash& game::_get_hash_ref()
     return _hash;
 }
 
+inline int game::num_moves_played() const
+{
+    assert(_hash_updatable());
+    return _hash;
+}
+
 inline bool game::_hash_updatable() const
 {
     return _hash_state == HASH_STATE_NEED_UPDATE;
@@ -193,6 +200,22 @@ inline void game::_mark_hash_updated()
 {
     assert(_hash_state == HASH_STATE_NEED_UPDATE);
     _hash_state = HASH_STATE_UP_TO_DATE;
+}
+
+inline bool game::_hash_updatable() const
+{
+    return _hash_state == HASH_STATE_NEED_UPDATE;
+}
+
+inline void game::_mark_hash_updated()
+{
+    assert(_hash_state == HASH_STATE_NEED_UPDATE);
+    _hash_state = HASH_STATE_UP_TO_DATE;
+}
+
+inline int game::game_hash() const
+{
+    return num_moves_played(); // TODO placeholder only
 }
 
 inline std::ostream& operator<<(std::ostream& out, const game& g)
@@ -225,6 +248,18 @@ inline move_generator::move_generator(bw to_play) : _to_play(to_play)
 {
 }
 
+//---------------------------------------------------------------------------
+
+class assert_restore_game
+{
+public:
+    assert_restore_game(const game& g);
+    ~assert_restore_game();
+
+private:
+    const game& _game;
+    const int _game_hash;
+};
 //---------------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& os, const split_result& split);
