@@ -39,12 +39,6 @@ protected:
 
     relation _order_impl(const game* rhs) const override;
 
-protected:
-
-    void _init_hash(local_hash& hash) override;
-
-    relation _order_impl(const game* rhs) const override;
-
 private:
     // _value is updated as *this changes during search
     // In contrast, impartial_game::_nim_value is for root only

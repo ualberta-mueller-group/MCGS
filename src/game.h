@@ -144,11 +144,6 @@ inline move game::last_move() const
     return _move_stack.back();
 }
 
-inline int game::moves_hash() const
-{
-    return _move_stack.size();
-}
-
 inline split_result game::split() const
 {
     split_result sr = _split_impl();
@@ -187,19 +182,7 @@ inline local_hash& game::_get_hash_ref()
 
 inline int game::num_moves_played() const
 {
-    assert(_hash_updatable());
-    return _hash;
-}
-
-inline bool game::_hash_updatable() const
-{
-    return _hash_state == HASH_STATE_NEED_UPDATE;
-}
-
-inline void game::_mark_hash_updated()
-{
-    assert(_hash_state == HASH_STATE_NEED_UPDATE);
-    _hash_state = HASH_STATE_UP_TO_DATE;
+    return _move_stack.size();
 }
 
 inline bool game::_hash_updatable() const
