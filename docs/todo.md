@@ -1,6 +1,38 @@
 # BUGS
 - none known
 
+### Remaining Issues from merging impartial-games branch into v1.2-develop
+- `assert_restore_game`
+    - before merge, `assert_restore_game` was defined for 
+    `alternating_move_game` only
+    - in impartial-games, the old class was renamed to
+    `assert_restore_alternating_game`, and a new 
+    `assert_restore_game` was defined for `game` in `game.h`
+    - Probably this should be changed by making `assert_restore_game`
+    a base class and overriding it in subclasses
+    - Especially, the `assert_restore_alternating_game` should
+    just become a specialized implementation
+    - Importantly, other classes such as `sumgame` could do a lot more
+    class-specific checks to make sure that everything is restored
+- `game::game_hash` - this is a placeholder from before hashing was added.
+    It is used in `assert_restore_game` and `assert_restore_alternating_game`
+    Those classes should test the both the size of the move stack and
+    the real hash code are restored. And probably more things.
+- all notes should be updated/pruned. Some documentation should go into readme? V1.2 done notes should move out of todo (and everything else that has been done already)
+- Needs review: in impartial games, there are still too many "two version" 
+  methods and move generators,
+  both with and without a color argument.
+- Needs review: `impartial_game` stores a `_nim_value_` after it is solved.
+  Do we need it, or should we make the game object smaller and 
+  just use the hash table to store the value?
+  It is a bit confusing since a `impartial_game` is an
+  object with changable state (can play/undo moves), and
+  the `_nim_value_` is only valid for the root state (0 moves played).
+  This is checked by assertions, but still questionable design?
+- The new `performance_test_...` functions are not called.
+    Should we have an interface to call them?
+
+
 # Limitations and Annoyances
 - `alternating_move_game` should complain if the game is "splittable", since it can only handle a single game that does not split
 
@@ -28,7 +60,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 # Future tasks
 ## V1.2
-### V1.2 done
+### V1.2 done - move out of todo.md
 - hashing for games and sum games
 - `grid` and `nogo` on a grid classes
 - impartial games and simple impartial game solver
@@ -37,7 +69,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - transposition table
 
 ### V1.2 to do
-- cleanup impartial games
+- merge cleanup branch
 
 ## V1.3
 - transposition table
