@@ -29,12 +29,19 @@ public:
     }
 };
 
+struct nogo_board
+{
+    std::vector<int> board;
+    int_pair shape;
+};
+
 class nogo_rule
 {
 public:
-    static bool is_legal(std::vector<int> board, int_pair shape, int p, int toplay);
-    static bool has_liberty(const std::vector<int>& board, int_pair shape, int p);
-    static std::vector<int> neighbors(int_pair shape, int p);
+    static bool is_legal(nogo_board nboard, int p, int toplay);
+    static bool has_liberty(const nogo_board& nboard, int p);
+    static std::vector<int> neighbors(const nogo_board& nboard, int p);
 };
 
 std::ostream& operator<<(std::ostream& out, const nogo& g);
+std::ostream& operator<<(std::ostream& os, const nogo_board& nboard);

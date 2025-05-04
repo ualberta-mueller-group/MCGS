@@ -53,24 +53,26 @@ std::ostream& operator<<(std::ostream& out, const nogo& g)
 }
 
 //////////////////////////////////////// nogo_rule
-bool nogo_rule::is_legal(std::vector<int> board, int_pair shape, int p, int toplay)
+bool nogo_rule::is_legal(nogo_board nboard, int p, int toplay)
 {
+    std::vector<int>& board = nboard.board;
+
     if (board[p] != EMPTY)
         return false;
 
     board[p] = toplay;
-    int opp_color = ebw_opponent(toplay);
+    int opp_color = 1 - toplay;
 
-    if (!nogo_rule::has_liberty(board, shape, p))
+    if (!nogo_rule::has_liberty(nboard, p))
     {
         board[p] = EMPTY;
         return false;
     }
 
-    std::vector<int> nbrs = nogo_rule::neighbors(shape, p);
+    std::vector<int> nbrs = nogo_rule::neighbors(nboard, p);
     for (int nbr : nbrs)
     {
-        if (board[nbr] == opp_color && !nogo_rule::has_liberty(board, shape, nbr))
+        if (board[nbr] == opp_color && !nogo_rule::has_liberty(nboard, nbr))
         {
             board[p] = EMPTY;
             return false;
@@ -81,8 +83,10 @@ bool nogo_rule::is_legal(std::vector<int> board, int_pair shape, int p, int topl
     return true;
 }
 
-bool nogo_rule::has_liberty(const std::vector<int>& board, int_pair shape, int p)
+bool nogo_rule::has_liberty(const nogo_board& nboard, int p)
 {
+    const std::vector<int>& board = nboard.board;
+
     int size = (int) board.size();
     std::vector<bool> markers = std::vector<bool>(size, false);
 
@@ -95,7 +99,7 @@ bool nogo_rule::has_liberty(const std::vector<int>& board, int_pair shape, int p
         int p = point_stack.back();
         point_stack.pop_back();
 
-        std::vector<int> nbrs = nogo_rule::neighbors(shape, p);
+        std::vector<int> nbrs = nogo_rule::neighbors(nboard, p);
         for (int nbr : nbrs)
         {
             if (board[nbr] == EMPTY)
@@ -111,22 +115,23 @@ bool nogo_rule::has_liberty(const std::vector<int>& board, int_pair shape, int p
     return false;
 }
 
-std::vector<int> nogo_rule::neighbors(int_pair shape, int p)
+std::vector<int> nogo_rule::neighbors(const nogo_board& nboard, int p)
 {
-    int n_rows = shape.first;
-    int n_cols = shape.second;
+    const std::vector<int> board = nboard.board;
+    int n_rows = nboard.shape.first;
+    int n_cols = nboard.shape.second;
 
-    int r = p / shape.second;
-    int c = p % shape.second;
+    int r = p / nboard.shape.second;
+    int c = p % nboard.shape.second;
 
     std::vector<int> nbrs;
-    if (r > 0)
+    if (r > 0 && board[p - n_cols] != BORDER)
         nbrs.push_back(p - n_cols); // up
-    if (r < n_rows-1)
+    if (r < n_rows-1 && board[p + n_cols] != BORDER)
         nbrs.push_back(p + n_cols); // down
-    if (c > 0)
+    if (c > 0 && board[p - 1] != BORDER)
         nbrs.push_back(p - 1);      // left
-    if (c < n_cols-1)
+    if (c < n_cols-1 && board[p + 1] != BORDER)
         nbrs.push_back(p + 1);      // right
     
     return nbrs;
@@ -144,6 +149,7 @@ public:
 
 private:
     void _find_next_move();
+    bool _is_legal();
 
     const nogo& _game;
     int _current; // current stone location to test
@@ -153,8 +159,7 @@ inline nogo_move_generator::nogo_move_generator(const nogo& game,
                                                 bw to_play)
     : move_generator(to_play), _game(game), _current(0)
 {
-    if (_game.size() > 0 &&
-        !nogo_rule::is_legal(_game.get_board(), _game.shape(), _current, to_play))
+    if (_game.size() > 0 && !_is_legal())
     {
         _find_next_move();
     }
@@ -170,11 +175,15 @@ inline void nogo_move_generator::_find_next_move()
     _current++;
 
     int num = (int) _game.size();
-    while (_current < num &&
-        !nogo_rule::is_legal(_game.get_board(), _game.shape(), _current, to_play()))
+    while (_current < num && !_is_legal())
     {
         _current++;
     }
+}
+
+inline bool nogo_move_generator::_is_legal()
+{
+    return nogo_rule::is_legal({_game.board(), _game.shape()}, _current, to_play());
 }
 
 nogo_move_generator::operator bool() const
@@ -196,3 +205,18 @@ move_generator* nogo::create_move_generator(bw to_play) const
 }
 
 //---------------------------------------------------------------------------
+
+std::ostream& operator<<(std::ostream& os, const nogo_board& nboard)
+{
+    const char COLOR2CHAR[] = {'X', 'O', '.', '#'};
+    int size = (int) nboard.board.size();
+    int n_cols = nboard.shape.second;
+    std::string sboard;
+    for (int i = 0; i < size; i++)
+    {
+        sboard += COLOR2CHAR[nboard.board[i]];
+        sboard += ((i+1) % n_cols == 0) ? '\n' : ' ';
+    }
+    os << sboard;
+    return os;
+}
