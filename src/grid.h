@@ -37,7 +37,7 @@ public:
     int_pair point_to_coord(int p) const;
     int coord_to_point(int_pair coord) const;
 
-    std::vector<int> get_board() const;
+    std::vector<int> board() const;
 
 private:
     void _check_legal() const;
@@ -103,7 +103,7 @@ inline int grid::coord_to_point(int_pair coord) const
     return coord.first * _shape.second + coord.second;
 }
 
-inline std::vector<int> grid::get_board() const
+inline std::vector<int> grid::board() const
 {
     return _board;
 }

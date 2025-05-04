@@ -10,10 +10,11 @@
 //---------------------------------------------------------------------------
 
 namespace {
+    const int ROW_SEP = 4;  // row separator
 
     void check_is_valid_char(char c)
     {
-        THROW_ASSERT(c == 'X' || c == 'O' || c == '.' || c == '|');
+        THROW_ASSERT(c == 'X' || c == 'O' || c == '.' || c == '#' || c == '|');
     }
 
     int char_to_color(char c)
@@ -24,8 +25,10 @@ namespace {
             return WHITE;
         else if (c == '.')
             return EMPTY;
-        else if (c == '|')
+        else if (c == '#')
             return BORDER;
+        else if (c == '|')
+            return ROW_SEP;
         else
             assert(false);
 
@@ -35,9 +38,9 @@ namespace {
 
     int color_to_char(int color)
     {
-        static char clobber_char[] = {'X', 'O', '.', '|'};
+        static char clobber_char[] = {'X', 'O', '.', '#', '|'};
 
-        assert_range(color, BLACK, BORDER + 1);
+        assert_range(color, BLACK, ROW_SEP + 1);
         return clobber_char[color];
     }
     
@@ -49,7 +52,7 @@ namespace {
         {
             check_is_valid_char(c);
             int color = char_to_color(c);
-            if (color == BORDER)
+            if (color == ROW_SEP)
             {
                 n_rows++;
                 if (n_cols == 0)
@@ -123,7 +126,7 @@ std::string grid::board_as_string() const
 void grid::_check_legal() const
 {
     for (const int& x : _board)
-        THROW_ASSERT(x == BLACK || x == WHITE || x == EMPTY);
+        THROW_ASSERT(x == BLACK || x == WHITE || x == EMPTY || x == BORDER || x == ROW_SEP);
 }
 
 std::vector<int> grid::inverse_board() const
@@ -131,7 +134,8 @@ std::vector<int> grid::inverse_board() const
     std::vector<int> new_board = _board;
     for (int& p : new_board)
     {
-        p = ebw_opponent(p);
+        if (p != BORDER)
+            p = ebw_opponent(p);
     }
     return new_board;
 }
