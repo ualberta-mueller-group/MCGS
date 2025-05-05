@@ -113,8 +113,6 @@ void game::undo_normalize()
 
 relation game::order(const game* rhs) const
 {
-    assert(this != rhs); // not technically an error, but this shouldn't happen
-
     const game_type_t type1 = game_type();
     const game_type_t type2 = rhs->game_type();
 
@@ -131,12 +129,15 @@ relation game::order(const game* rhs) const
             rel == REL_GREATER    //
             );                    //
 
-    if (rel != REL_UNKNOWN)
-        return rel;
 
     // If ordering hook isn't implemented, and stable sorting is used, don't
     // change the order of games
-    return REL_EQUAL;
+    if (rel == REL_UNKNOWN)
+        rel = REL_EQUAL;
+
+    assert((this != rhs) || (rel == REL_EQUAL));
+
+    return rel;
 }
 
 void game::invalidate_hash() const
