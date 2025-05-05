@@ -114,7 +114,7 @@ inline void random_table::_resize_if_out_of_range(size_t idx)
     if (idx < _n_positions)
         return;
 
-    _resize_to(_n_positions * 2);
+    _resize_to(idx + 2);
 
     if (!_did_resize_warning)
     {

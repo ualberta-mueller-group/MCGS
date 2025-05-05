@@ -36,14 +36,15 @@ class ig_wrapper_move_generator : public move_generator
 {
 public:
     ig_wrapper_move_generator(const impartial_game_wrapper& wrapper);
+    ~ig_wrapper_move_generator();
+
     void operator++() override;
     operator bool() const override;
     move gen_move() const override;
 
 private:
-    // Not const inside, but const to outside, 
-    // and called by const operator bool
-    void switch_to_white() const;
+    void _next_color();
+    void _next_move(bool init);
 
     const game* _game; // the wrapped game, not the wrapper itself
     ebw _color;
@@ -55,39 +56,65 @@ ig_wrapper_move_generator::ig_wrapper_move_generator(
     : move_generator(BLACK), _game(wrapper.wrapped_game()),
       _color(BLACK),
       _color_mg(_game->create_move_generator(BLACK))
-{ }
-
-void ig_wrapper_move_generator::switch_to_white() const
 {
-    assert(_color == BLACK);
-    auto mg = const_cast<ig_wrapper_move_generator*>(this);
-    mg->_color = WHITE;
-    mg->_color_mg = _game->create_move_generator(WHITE);
+    _next_move(true);
+}
+
+ig_wrapper_move_generator::~ig_wrapper_move_generator()
+{
+    if (_color_mg != nullptr)
+        delete _color_mg;
+}
+
+void ig_wrapper_move_generator::_next_color()
+{
+    assert(_color == BLACK || _color == WHITE);
+    assert(_color_mg != nullptr);
+
+    delete _color_mg;
+    _color_mg = nullptr;
+
+    _color = (_color == BLACK) ? WHITE : EMPTY;
+
+    if (_color != EMPTY)
+        _color_mg = _game->create_move_generator(_color);
+}
+
+void ig_wrapper_move_generator::_next_move(bool init)
+{
+    assert(_color != EMPTY);
+    assert(_color_mg != nullptr);
+    assert(init || *_color_mg);
+
+    // Try current move generator
+    if (!init)
+        ++(*_color_mg);
+    bool found_move = *_color_mg;
+
+    // Try next colors
+    while (!found_move && _color != EMPTY)
+    {
+        _next_color();
+        found_move = (_color != EMPTY) && *_color_mg;
+    }
 }
 
 void ig_wrapper_move_generator::operator++()
 {
-    ++(*_color_mg);
-    if (! (*_color_mg)) // end of moves for sub-generator
-    {
-        delete(_color_mg);
-        if (_color == BLACK)
-            switch_to_white();
-        else
-            _color = EMPTY;
-    }
+    _next_move(false);
 }
 
 // Is there still a move?
-// If there is no more black move, then switch to the white move generator
-// and try that one.
 ig_wrapper_move_generator::operator bool() const
 {
     if (_color == EMPTY)
         return false;
-    if ((_color == BLACK) && !(*_color_mg))
-        switch_to_white();
-    return (*_color_mg);
+
+    assert(_color_mg != nullptr);
+    const bool has_move = *_color_mg;
+
+    assert(has_move);
+    return has_move;
 }
 
 move ig_wrapper_move_generator::gen_move() const

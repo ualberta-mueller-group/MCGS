@@ -10,6 +10,7 @@
 #include "cgt_nimber.h"
 #include "hashing.h"
 #include "transposition.h"
+#include <memory>
 
 //---------------------------------------------------------------------------
 

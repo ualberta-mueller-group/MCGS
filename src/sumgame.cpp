@@ -657,6 +657,9 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
     public:
         bool operator()(const game* g1, const game* g2) const
         {
+            if (g1 == g2) // TODO: do this in the actual game::order function
+                return false;
+
             // Put larger games first
             return g1->order(g2) == REL_GREATER;
         }

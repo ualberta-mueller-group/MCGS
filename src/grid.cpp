@@ -10,89 +10,89 @@
 //---------------------------------------------------------------------------
 
 namespace {
-    const int ROW_SEP = 4;  // row separator
+const int ROW_SEP = 4;  // row separator
 
-    void check_is_valid_char(char c)
+void check_is_valid_char(char c)
+{
+    THROW_ASSERT(c == 'X' || c == 'O' || c == '.' || c == '#' || c == '|');
+}
+
+int char_to_color(char c)
+{
+    if (c == 'X')
+        return BLACK;
+    else if (c == 'O')
+        return WHITE;
+    else if (c == '.')
+        return EMPTY;
+    else if (c == '#')
+        return BORDER;
+    else if (c == '|')
+        return ROW_SEP;
+    else
+        assert(false);
+
+    exit(-1);
+    return -1;
+}
+
+int color_to_char(int color)
+{
+    static char clobber_char[] = {'X', 'O', '.', '#', '|'};
+
+    assert_range(color, BLACK, ROW_SEP + 1);
+    return clobber_char[color];
+}
+
+std::pair<std::vector<int>, int_pair> string_to_board(const std::string& game_as_string)
+{
+    std::vector<int> board;
+    int n_rows = 0, n_cols = 0, counter = 0;
+    for (auto c : game_as_string)
     {
-        THROW_ASSERT(c == 'X' || c == 'O' || c == '.' || c == '#' || c == '|');
-    }
-
-    int char_to_color(char c)
-    {
-        if (c == 'X')
-            return BLACK;
-        else if (c == 'O')
-            return WHITE;
-        else if (c == '.')
-            return EMPTY;
-        else if (c == '#')
-            return BORDER;
-        else if (c == '|')
-            return ROW_SEP;
-        else
-            assert(false);
-
-        exit(-1);
-        return -1;
-    }
-
-    int color_to_char(int color)
-    {
-        static char clobber_char[] = {'X', 'O', '.', '#', '|'};
-
-        assert_range(color, BLACK, ROW_SEP + 1);
-        return clobber_char[color];
-    }
-    
-    std::pair<std::vector<int>, int_pair> string_to_board(const std::string& game_as_string)
-    {
-        std::vector<int> board;
-        int n_rows = 0, n_cols = 0, counter = 0;
-        for (auto c : game_as_string)
+        check_is_valid_char(c);
+        int color = char_to_color(c);
+        if (color == ROW_SEP)
         {
-            check_is_valid_char(c);
-            int color = char_to_color(c);
-            if (color == ROW_SEP)
-            {
-                n_rows++;
-                if (n_cols == 0)
-                    n_cols = counter;
-                else
-                    THROW_ASSERT(n_cols == counter);
-                counter = 0;
-            }
+            n_rows++;
+            if (n_cols == 0)
+                n_cols = counter;
             else
-            {
-                board.push_back(color);
-                counter++;
-            }
+                THROW_ASSERT(n_cols == counter);
+            counter = 0;
         }
-        n_rows++;
-        if (n_cols == 0)
-            n_cols = counter;
         else
-            THROW_ASSERT(n_cols == counter);
-
-        int_pair shape = {n_rows, n_cols};
-        return {board, shape};
-    }
-    
-    std::string board_to_string(const std::vector<int>& board, const int_pair shape)
-    {
-        std::string result;
-        int n_cols = shape.second;
-        for (int r = 0; r < shape.first; r++)
         {
-            for (int c = 0; c < shape.second; c++)
-            {
-                result += color_to_char(board[r*n_cols+c]);
-            }
-            if (r != shape.first - 1)
-                result += '|';
+            board.push_back(color);
+            counter++;
         }
-        return result;
     }
-    
+    n_rows++;
+    if (n_cols == 0)
+        n_cols = counter;
+    else
+        THROW_ASSERT(n_cols == counter);
+
+    int_pair shape = {n_rows, n_cols};
+    return {board, shape};
+}
+
+std::string board_to_string(const std::vector<int>& board, const int_pair shape)
+{
+    std::string result;
+    int n_cols = shape.second;
+    for (int r = 0; r < shape.first; r++)
+    {
+        for (int c = 0; c < shape.second; c++)
+        {
+            result += color_to_char(board[r*n_cols+c]);
+        }
+        if (r != shape.first - 1)
+            result += '|';
+    }
+    return result;
+}
+
 } // namespace
 
 //---------------------------------------------------------------------------
@@ -125,10 +125,13 @@ std::string grid::board_as_string() const
 
 void grid::_init_hash(local_hash& hash)
 {
+    hash.toggle_value(0, _shape.first);
+    hash.toggle_value(1, _shape.second);
+
     const size_t N = this->size();
 
     for (size_t i = 0; i < N; i++)
-        hash.toggle_value(i, this->at(i));
+        hash.toggle_value(i + 2, this->at(i));
 }
 
 void grid::_check_legal() const
