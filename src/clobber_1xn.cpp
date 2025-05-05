@@ -158,12 +158,20 @@ game* clobber_1xn::inverse() const
     return new clobber_1xn(inverse_board());
 }
 
+string clobber_1xn::xoxo(int n)
+{
+    string result;
+    for (int i = 0; i < n; ++i)
+        result += "XO";
+    return result;
+}
+//---------------------------------------------------------------------------
+
 std::ostream& operator<<(std::ostream& out, const clobber_1xn& g)
 {
     out << g.board_as_string();
     return out;
 }
-
 //---------------------------------------------------------------------------
 
 class clobber_1xn_move_generator : public move_generator

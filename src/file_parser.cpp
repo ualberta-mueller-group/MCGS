@@ -998,4 +998,6 @@ void file_parser::_init_game_parsers()
     _add_game_parser("switch_game", new switch_game_parser());
 
     _add_game_parser("up_star", new up_star_parser());
+
+    _add_game_parser("nogo", new basic_parser<nogo>());
 }

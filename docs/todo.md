@@ -1,6 +1,41 @@
 # BUGS
 - none known
 
+### Remaining Issues from merging impartial-games branch into v1.2-develop
+- `assert_restore_game`
+    - before merge, `assert_restore_game` was defined for 
+    `alternating_move_game` only
+    - in impartial-games, the old class was renamed to
+    `assert_restore_alternating_game`, and a new 
+    `assert_restore_game` was defined for `game` in `game.h`
+    - Probably this should be changed by making `assert_restore_game`
+    a base class and overriding it in subclasses
+    - Especially, the `assert_restore_alternating_game` should
+    just become a specialized implementation
+    - Importantly, other classes such as `sumgame` could do a lot more
+    class-specific checks to make sure that everything is restored
+- `game::game_hash` - this is a placeholder from before hashing was added.
+    It is used in `assert_restore_game` and `assert_restore_alternating_game`
+    Those classes should test the both the size of the move stack and
+    the real hash code are restored. And probably more things.
+- all notes should be updated/pruned. Some documentation should go into readme? V1.2 done notes should move out of todo (and everything else that has been done already)
+- Needs review: in impartial games, there are still too many "two version" 
+  methods and move generators,
+  both with and without a color argument.
+- Needs review: `impartial_game` stores a `_nim_value_` after it is solved.
+  Do we need it, or should we make the game object smaller and 
+  just use the hash table to store the value?
+  It is a bit confusing since a `impartial_game` is an
+  object with changable state (can play/undo moves), and
+  the `_nim_value_` is only valid for the root state (0 moves played).
+  This is checked by assertions, but still questionable design?
+- The new `performance_test_...` functions are not called.
+    Should we have an interface to call them?
+
+
+# Limitations and Annoyances
+- `alternating_move_game` should complain if the game is "splittable", since it can only handle a single game that does not split
+
 # User Comments and Notes
 Suggestions from audience of talk given at CGTC, or from MCGS users
 
@@ -25,12 +60,21 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 # Future tasks
 ## V1.2
+### V1.2 done - move out of todo.md
 - hashing for games and sum games
 - `grid` and `nogo` on a grid classes
+- impartial games and simple impartial game solver
+- kayles, a simple impartial game
+- Impartial game wrapper to play impartial version of any `game`
+- transposition table
+
+### V1.2 to do
+- merge cleanup branch
 
 ## V1.3
 - transposition table
-    - Discussion in design document
+    - design documentation?
+    - compare to discussion in design document
     - Replacement policy?
 - performance testing
     - with/without table
@@ -39,6 +83,18 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 ## Possible steps for Versions 1.X
 - Important or good to have before V2
 - Medium priority
+
+### Move ordering heuristics
+- Can we define some in a game-independent way?
+- Play in the middle heuristic
+    - simple hack: generate all moves, create list,
+      and pick from list starting in the middle
+- sort by game size heuristic (already used implicitly in sumgame?)
+- any heuristics for impartial games?
+    - the move generator for impartial game wrapper generates all moves for black first, using the underlying game generator, followed by all moves for white.
+        - If there is a good game-specific move generator, then this is inefficient. It will create all bad black moves before any good white move
+        - choose moves alternatingly for black and white instead
+    - Problem: a good move in the underlying game may not be a good move in the impartial version
 
 ### Use a proper unit testing framework?
 - Easier to change this now rather than later
@@ -75,8 +131,10 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 ### Ownership of games in `sumgame`
 - Decide and document semantics of game-in-sumgame. 
-- Suggestion: The sumgame become the owner. Make this explicit e.g. with `unique_ptr`. 
-- Alternative: copy the game
+- Current status: the caller who adds a game g to a sum s 
+  owns g. New games that are created by `split()` are owned by s.
+- One suggestion: The sumgame becomes the owner. Make this explicit e.g. with `unique_ptr`. 
+- Another alternative: always copy the game
 - Possible bug: can we have multiple references to the same subgame in a sum? Probably not a good idea, then we should guard against that. 
     - Example `sumgame s; game g; s.add(&g); s.add(&g);`
         - currently there is an `assert` protecting against adding twice
@@ -136,6 +194,16 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - `cgt_game` class - define game by left+right options, read from string
 - `rule_set` class as in CGSuite?
 - Should zero be its own type??
+- Should we have "type info" for each game type, 
+  such as is splittable, is impartial, etc. Right now some 
+  of this information is expressed through inheritance, 
+  but e.g. splittable cannot easily be done that way.
+    - Why splittable? See note on `alternating_move_game`.
+      There are three cases: 
+        1. games that never split, such as nimber, integer
+        2. Games that must split, e.g. kayles
+        3. Games that work without split, but are probably 
+           less efficient. Nogo, Clobber?
 
 ## Search features
 - Search stats: node count, leaf count, time, depth
@@ -167,23 +235,25 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Binary search to find confusion interval
 
 ## Publications
-- Clobber paper, based on 701 report
+- Clobber paper, based on Taylor's 701 report
     - Where to publish?
     - What work needs to be done to turn report into paper?
 - New paper with MCGS design and results
     - What goals? Match game-specific performance in 1xn Clobber, Nogo? 
     - Get good performance on 2-D boards?
     
-## Impartial Games Support
-- New base class `impartial_game`
-    - Main search algorithm: compute `nimber` that is equal to given game
-    - Search algorithms
-        - Basic algorithm using Mex rule
-        - Lemoine and Viennot, Nimbers are inevitable (2012)
-        - Also see, compare with 2022 course report
-        "Impartial Clobber Solver" by Dai and Chen
+## More Impartial Games Support
 
-- random testing for nim sums 
+- Small todo's
+    - Remove duplication between performance and unit tests:
+      Move tables of expected results into new header file.
+    - performance tests should have "impartial" in the name
+- Search algorithms
+    - Lemoine and Viennot, Nimbers are inevitable (2012)
+    - Also see, compare with 2022 course report
+    "Impartial Clobber Solver" by Dai and Chen
+
+- Random testing for nim sums 
     - increase size limit as program becomes better
     - generate 2nd player win game by adding nim sum
 

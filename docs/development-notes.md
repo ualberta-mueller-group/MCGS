@@ -52,11 +52,43 @@ See note at top of `create-table.py`
 - In both `alternating_move_game` and `sumgame`, the public `solve` methods are declared as `const`.
 - This means that while the game state may be modified during solve,
 it must be restored before the end of `solve` in any case, including timeout or other failure modes.
-- `class assert_restore_game` in `alternating_move_game.h` is a stub for
+- `class assert_restore_alternating_game` in `alternating_move_game.h` is a stub for
 checking that the state is restored
     - a naive first implementation just checks the length of the move stack
     - TODO it probably is broken for sumgame, since it uses a different stack
     - TODO this check will be made functional after hash codes are implemented
+
+# Impartial Games
+- Impartial games support added in version 1.2
+- Main differences between `impartial_game` and `game`:
+    1. `play(m)` does not take a color argument
+    2. `move_generator` does not take a color argument
+    3. Completely different solving algorithms:
+        - Evaluate any impartial game to a nim value
+        - Can evaluate a sum one subgame at a time, no need
+          for "global search" of sum - just compute all nimbers
+          and nim-add them
+        - (implemented) brute force algorithm using mex rule
+        - (not yet) Lemoine and Viennot
+        - (not yet) Beling and Rogalski
+    4. Since `impartial_game` is a subclass of `game`,
+       such games can still be searched in minimax fashion 
+       as part of a regular `sumgame` - see the tests 
+       in `impartial_sumgame_test`
+- New game `kayles` - a simple and solved impartial game
+- Impartial game wrapper `impartial_game_wrapper`
+    - Allows any (partizan) game to be played in an 
+      impartial way
+    - Both players can play the moves of both BLACK and WHITE
+      in the underlying game
+    - In minimax search of such a game, the player making
+      the move in the impartial game may be different from the player
+      making a move in the wrapped game
+    - Test cases: impartial clobber, using the wrapper 
+      for `clobber_1xn` and comparison with Dai and Chen's 
+      results
+- Impartial sum game, `impartial_sumgame` - solve a sum 
+  of impartial games
 
 # Initialization (`mcgs_init.h`)
 Executables based on the C++ source code must call one of the `mcgs_init_all()`

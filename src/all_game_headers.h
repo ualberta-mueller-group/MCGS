@@ -9,4 +9,5 @@
 #include "clobber_1xn.h"
 #include "elephants.h"
 #include "nogo_1xn.h"
+#include "nogo.h"
 // IWYU pragma: end_exports

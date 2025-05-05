@@ -105,6 +105,7 @@ public:
 
     int num_total_games() const;
     int num_active_games() const;
+    bool is_empty() const; // no active games, game over
 
     const game* subgame_const(int i) const { return _subgames[i]; }
 
@@ -191,6 +192,14 @@ inline int sumgame::num_active_games() const
         if (g->is_active())
             ++active;
     return active;
+}
+
+inline bool sumgame::is_empty() const
+{
+    for (const game* g : _subgames)
+        if (g->is_active())
+            return false;
+    return true;
 }
 
 //---------------------------------------------------------------------------

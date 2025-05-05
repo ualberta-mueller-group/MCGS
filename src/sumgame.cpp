@@ -221,7 +221,7 @@ const bool PRINT_SUBGAMES = false;
 // plus sumgame simplification
 bool sumgame::solve() const
 {
-    assert_restore_game ar(*this);
+    assert_restore_alternating_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     optional<solve_result> result = sum.solve_with_timeout(0);
@@ -243,7 +243,7 @@ bool sumgame::solve() const
 optional<solve_result> sumgame::solve_with_timeout(
     unsigned long long timeout) const
 {
-    assert_restore_game ar(*this);
+    assert_restore_alternating_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     _should_stop = false;
@@ -292,7 +292,7 @@ optional<solve_result> sumgame::solve_with_timeout(
 
 bool sumgame::solve_with_games(std::vector<game*>& gs) const
 {
-    assert_restore_game ar(*this);
+    assert_restore_alternating_game ar(*this);
 
     sumgame& sum = const_cast<sumgame&>(*this);
 
@@ -317,7 +317,7 @@ bool sumgame::solve_with_games(std::vector<game*>& gs) const
 
 bool sumgame::solve_with_games(game* g) const
 {
-    assert_restore_game ar(*this);
+    assert_restore_alternating_game ar(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     sum.add(g);
@@ -559,7 +559,9 @@ void sumgame::undo_move()
 
     if (!(sm.m == subm))
     {
-        cout << subg << ' ' << sm.m << ' ' << subm << endl;
+        cout << subg << ' ' 
+        << std::hex << sm.m << ' ' << subm 
+        << std::dec << endl;
     }
 
     assert(sm.m == subm);
@@ -652,12 +654,25 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
         }
     }
 
-    std::sort(active_games.begin(), active_games.end(), [](const game* g1, const game* g2) -> bool
+    /*
+    auto compare_fn = [](const game* g1, const game* g2) -> bool
     {
         const hash_t hash1 = g1->get_local_hash();
         const hash_t hash2 = g2->get_local_hash();
         return hash1 < hash2;
-    });
+    };
+    */
+
+    auto compare_fn = [](const game* g1, const game* g2) -> bool
+    {
+       if (g1 == g2) // TODO: do this in the actual game::order function
+            return false;
+
+        // Put larger games first
+        return g1->order(g2) == REL_GREATER;
+    };
+
+    std::sort(active_games.begin(), active_games.end(), compare_fn);
 
     {
         const size_t N = active_games.size();

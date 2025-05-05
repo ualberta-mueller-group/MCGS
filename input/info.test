@@ -127,6 +127,10 @@ XOXOO...XO
     Games:
         [clobber_1xn], [nogo_1xn], and [elephants]:
             Contiguous sequence of '.', 'X', and 'O'.
+        
+        [nogo]
+            Contiguous sequence of '.', 'X', 'O', and '|'. A flattened row-major
+            representation of 2D board with '|' separating the rows.
 
         [integer_game], and [nimber]:
             A single int.
