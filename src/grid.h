@@ -41,6 +41,10 @@ public:
 
 protected:
     void _init_hash(local_hash& hash) const override;
+    relation _order_impl(const game* rhs) const override;
+
+    static relation _compare_grids(const grid& g1, const grid& g2);
+
 
 private:
     void _check_legal() const;

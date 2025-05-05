@@ -134,6 +134,45 @@ void grid::_init_hash(local_hash& hash) const
         hash.toggle_value(i + 2, this->at(i));
 }
 
+relation grid::_order_impl(const game* rhs) const
+{
+    assert(game_type() == rhs->game_type());
+
+    const grid* other = reinterpret_cast<const grid*>(rhs);
+    assert(dynamic_cast<const grid*>(rhs) == other);
+
+    return _compare_grids(*this, *other);
+}
+
+relation grid::_compare_grids(const grid& g1, const grid& g2)
+{
+    const int_pair& shape1 = g1._shape;
+    const int_pair& shape2 = g2._shape;
+
+    if (shape1.first != shape2.first)
+        return shape1.first < shape2.first ? REL_LESS : REL_GREATER;
+
+    if (shape1.second != shape2.second)
+        return shape1.second < shape2.second ? REL_LESS : REL_GREATER;
+
+    const int size1 = g1.size();
+    const int size2 = g2.size();
+    assert(size1 == size2);
+    assert(size1 == g1._board.size());
+    assert(size2 == g2._board.size());
+
+    for (int i = 0; i < size1; i++)
+    {
+        const int& val1 = g1._board[i];
+        const int& val2 = g2._board[i];
+
+        if (val1 != val2)
+            return val1 < val2 ? REL_LESS : REL_GREATER;
+    }
+
+    return REL_EQUAL;
+}
+
 void grid::_check_legal() const
 {
     for (const int& x : _board)
