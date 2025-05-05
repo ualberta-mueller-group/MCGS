@@ -1,5 +1,6 @@
 #include "game.h"
 #include "cgt_basics.h"
+#include "warn_default.h"
 
 #include <cassert>
 #include <limits>
@@ -146,6 +147,8 @@ void game::invalidate_hash() const
 
 void game::_normalize_impl()
 {
+    WARN_DEFAULT_IMPL();
+
     // Trivial default implementation
     if(_hash_updatable())
         _mark_hash_updated();
@@ -153,6 +156,8 @@ void game::_normalize_impl()
 
 void game::_undo_normalize_impl()
 {
+    WARN_DEFAULT_IMPL();
+
     // Trivial default implementation
     if(_hash_updatable())
         _mark_hash_updated();
@@ -160,19 +165,7 @@ void game::_undo_normalize_impl()
 
 relation game::_order_impl(const game* rhs) const
 {
-#ifndef NO_WARN_DEFAULT_IMPL
-    static std::unordered_set<std::type_index> unimplemented_set;
-
-    std::type_index tidx(typeid(*this));
-
-    if (unimplemented_set.find(tidx) == unimplemented_set.end())
-    {
-        unimplemented_set.insert(tidx);
-
-        std::cerr << "WARNING: Game type \"" << tidx.name() << "\" doesn't "
-            "implement ordering hook!" << std::endl;
-    }
-#endif
+    WARN_DEFAULT_IMPL();
 
     // Trivial default implementation
     return REL_UNKNOWN;
