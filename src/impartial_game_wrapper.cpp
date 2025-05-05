@@ -21,6 +21,29 @@ void impartial_game_wrapper::_init_hash(local_hash& hash) const
     hash.toggle_value(0, _game->get_local_hash());
 }
 
+void impartial_game_wrapper::_normalize_impl()
+{
+    _game->normalize();
+}
+
+void impartial_game_wrapper::_undo_normalize_impl()
+{
+    _game->undo_normalize();
+}
+
+relation impartial_game_wrapper::_order_impl(const game* rhs) const
+{
+    const impartial_game_wrapper* other = reinterpret_cast<const impartial_game_wrapper*>(rhs);
+    assert(dynamic_cast<const impartial_game_wrapper*>(rhs) == other);
+
+    const game* g1 = _game;
+    const game* g2 = other->_game;
+
+    // This won't cause infinite recursion, as we're calling order() on the
+    // wrapped games
+    return g1->order(g2);
+}
+
 game* impartial_game_wrapper::inverse() const
 {
     return new impartial_game_wrapper(_game->inverse());
