@@ -20,23 +20,25 @@ nogo::nogo(const std::vector<int>& board, int_pair shape)
 
 void nogo::play(const move& m, bw to_play)
 {
+    game::play(m, to_play);
+
     const int to = m;
     assert(at(to) == EMPTY);
-    game::play(m, to_play);
     replace(to, to_play);
 }
 
 void nogo::undo_move()
 {
     const move mc = last_move();
-    const int to = cgt_move::decode(mc);
     game::undo_move();
+
+    const int to = cgt_move::decode(mc);
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
     replace(to, EMPTY);
 }
 
-split_result nogo::_split_implementation() const
+split_result nogo::_split_impl() const
 {
     return split_result();  // no split
 }
