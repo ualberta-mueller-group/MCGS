@@ -123,6 +123,14 @@ std::string grid::board_as_string() const
     return board_to_string(_board, _shape);
 }
 
+void grid::_init_hash(local_hash& hash)
+{
+    const size_t N = this->size();
+
+    for (size_t i = 0; i < N; i++)
+        hash.toggle_value(i, this->at(i));
+}
+
 void grid::_check_legal() const
 {
     for (const int& x : _board)

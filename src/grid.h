@@ -39,6 +39,9 @@ public:
 
     std::vector<int> board() const;
 
+protected:
+    void _init_hash(local_hash& hash) override;
+
 private:
     void _check_legal() const;
 
