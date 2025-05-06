@@ -21,7 +21,8 @@ public:
     grid(const std::string& game_as_string);
     int size() const;
     int at(int p) const;
-    int_pair shape() const;
+    int at(const int_pair& coord) const;
+    const int_pair& shape() const;
 
     // is p on board, and of given color?
     bool checked_is_color(int p, int color) const;
@@ -36,6 +37,8 @@ public:
 
     int_pair point_to_coord(int p) const;
     int coord_to_point(int_pair coord) const;
+
+    bool coord_in_bounds(const int_pair& coord) const;
 
     std::vector<int> board() const;
 
@@ -65,7 +68,18 @@ inline int grid::at(int p) const
     return _board[p];
 }
 
-inline int_pair grid::shape() const
+
+inline int grid::at(const int_pair& coord) const
+{
+    assert(coord_in_bounds(coord));
+
+    int p = coord_to_point(coord);
+    assert_range(p, 0, size());
+
+    return _board[p];
+}
+
+inline const int_pair& grid::shape() const
 {
     return _shape;
 }
@@ -108,6 +122,16 @@ inline int_pair grid::point_to_coord(int p) const
 inline int grid::coord_to_point(int_pair coord) const
 {
     return coord.first * _shape.second + coord.second;
+}
+
+
+inline bool grid::coord_in_bounds(const int_pair& coord) const
+{
+    return                                 //
+        (coord.first >= 0) &&              //
+        (coord.first < _shape.first) &&    //
+        (coord.second >= 0) &&             //
+        (coord.second < _shape.second);    //
 }
 
 inline std::vector<int> grid::board() const

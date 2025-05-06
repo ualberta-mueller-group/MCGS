@@ -1,0 +1,18 @@
+{version 1.1}
+[clobber]
+
+/*_ TODO: give commit hash for MCGS-verified results */
+
+/* 3x7 random MCGS */
+XXXXXOO|XXXXXOX|XXOOOXO
+	{B win, W loss}
+
+/* 3x8 random MCGS */
+XOXOXXXO|XXXXOXXO|OOXXXXOX
+	{B win, W loss}
+
+/* 3x8 random */
+/*#0 times out */
+/*#1 MCGS */
+XOXOOOXX|OXOXOOXO|XXOOXXOX
+	{B, W win}

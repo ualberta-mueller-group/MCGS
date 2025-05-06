@@ -1,0 +1,65 @@
+{version 1.1}
+[clobber]
+
+/*_ TODO: give commit hash for MCGS-verified results */
+
+/* random filled 4x6 MCGS */
+OXOXOO|XXXXXO|OOXXOO|XXOOOO
+	{B loss, W win}
+
+/* random filled 6x2 MCGS */
+OX|XO|OX|OX|OO|OO
+	{B loss, W win}
+
+/* random filled 2x6 MCGS */
+XXXXOO|XXOOXO
+	{B win, W loss}
+
+/* random filled 9x3 MCGS */
+XXX|OXO|OXO|OXX|OXO|XOX|OXX|XXX|XXX
+	{B win, W loss}
+
+/* random filled 2x8 MCGS */
+XXXOXXXO|XXOOOOXO
+	{B win, W win}
+
+/* random filled 4x4 MCGS */
+OXXX|XOXO|OXXX|OOOO
+	{B win, W win}
+
+/* random filled 7x4 MCGS */
+OOXX|XXOX|XOOX|OOOX|OOOO|OOOO|OXOO
+	{B loss, W win}
+
+/* random filled 8x3 MCGS */
+XXO|XXX|OXX|OXX|OOO|OXX|OOX|OXX
+	{B win, W loss}
+
+/* random filled 4x5 MCGS */
+XXXOO|XXOXO|OXXOO|OOXOO
+	{B win, W win}
+
+/* random filled 5x3 MCGS */
+XOO|OXX|XXO|OOX|OOO
+	{B loss, W win}
+
+/* random filled 2x9 MCGS */
+OXXXOOXOO|OOOXXXOOO
+	{B loss, W win}
+
+/* random filled 2x10 MCGS */
+OOXOOXXOXX|OXOXOXOOXO
+	{B loss, W win}
+
+/* random filled 7x3 MCGS */
+XOO|OOO|XOO|OOO|OOO|XOX|XOO
+	{B loss, W win}
+
+/* random filled 2x8 MCGS */
+XOOOXXOX|OXXXOXXO
+	{B win, W win}
+
+/* random filled 4x6 MCGS */
+XOXOOO|OXOXOX|OOOOOX|OOOXXO
+	{B loss, W win}
+

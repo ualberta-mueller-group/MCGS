@@ -1,0 +1,142 @@
+{version 1.1}
+/* These results only validated by the late November 2022 Linear Clobber solver */
+[clobber]
+
+/* 15.57 ms */
+XOXOXOXO {B win}
+
+/* 15.39 ms */
+XOXOXOXO {W win}
+
+/* 15.67 ms */
+OOX.OXX.XXOOOXXXXOX.XO {B win}
+
+/* 17.35 ms */
+OOX.OXX.XXOOOXXXXOX.XO {W win}
+
+/* 16.14 ms */
+XO.XOX.XXO.OXXOOXX {B win}
+
+/* 16.28 ms */
+XO.XOX.XXO.OXXOOXX {W loss}
+
+/* 16.81 ms */
+XOOXO.XXXOXOXX {B win}
+
+/* 16.34 ms */
+XOOXO.XXXOXOXX {W win}
+
+/* 16.95 ms */
+OX.XXXXXXXXXXXOXO.XXXO.OX.XO {B win}
+
+/* 14.85 ms */
+OX.XXXXXXXXXXXOXO.XXXO.OX.XO {W loss}
+
+/* 17.79 ms */
+XOXOOOO.XXOOXO.OOOOOOX {B loss}
+
+/* 16.31 ms */
+XOXOOOO.XXOOXO.OOOOOOX {W win}
+
+/* 16.50 ms */
+XO.OOX.XOXOXXXX.OXX {B win}
+
+/* 16.92 ms */
+XO.OOX.XOXOXXXX.OXX {W win}
+
+/* 16.10 ms */
+OX.XOOOXOXXXOOX {B loss}
+
+/* 15.47 ms */
+OX.XOOOXOXXXOOX {W win}
+
+/* 15.94 ms */
+XXXO.XXXXXXXXO.XOOOX.XOO.OX.XOO {B win}
+
+/* 15.66 ms */
+XXXO.XXXXXXXXO.XOOOX.XOO.OX.XOO {W loss}
+
+/* 16.75 ms */
+OOX.OX.XXO.OOOOXXO.OX.OX {B win}
+
+/* 16.35 ms */
+OOX.OX.XXO.OOOOXXO.OX.OX {W win}
+
+/* 16.40 ms */
+XXOXXOXXOXXO {B win}
+
+/* 16.17 ms */
+XXOXXOXXOXXO {W loss}
+
+/* 17.24 ms */
+OXOXOXOX {B win}
+
+/* 16.19 ms */
+OXOXOXOX {W win}
+
+/* 16.67 ms */
+XOXOXOXOX {B win}
+
+/* 15.72 ms */
+XOXOXOXOX {W win}
+
+/* 15.54 ms */
+XOO.XO.XOXOOX.OXO {B loss}
+
+/* 15.02 ms */
+XOO.XO.XOXOOX.OXO {W win}
+
+/* 15.94 ms */
+XOOO.OXXOXOXOO.OX {B win}
+
+/* 15.51 ms */
+XOOO.OXXOXOXOO.OX {W win}
+
+/* 15.60 ms */
+OOXXXOXX.OOX.XO.XO.OOX.OX {B loss}
+
+/* 16.42 ms */
+OOXXXOXX.OOX.XO.XO.OOX.OX {W win}
+
+/* 16.85 ms */
+OXXXX.OXX.OXO.OXO.XO.XO {B win}
+
+/* 16.66 ms */
+OXXXX.OXX.OXO.OXO.XO.XO {W loss}
+
+/* 16.58 ms */
+OX.OXO.OX.XOOXX.XO.XO {B win}
+
+/* 16.20 ms */
+OX.OXO.OX.XOOXX.XO.XO {W win}
+
+/* 17.28 ms */
+OXX.OOX.XO.OX.XO.OX.XXOOOXX {B loss}
+
+/* 14.99 ms */
+OXX.OOX.XO.OX.XO.OX.XXOOOXX {W loss}
+
+/* 17.45 ms */
+XXO.XOOOO.OXOOOOX.OOX.OX.XO {B loss}
+
+/* 16.40 ms */
+XXO.XOOOO.OXOOOOX.OOX.OX.XO {W win}
+
+/* 15.79 ms */
+XXOOOOXXXXOXOOXXO.XOO {B win}
+
+/* 17.35 ms */
+XXOOOOXXXXOXOOXXO.XOO {W win}
+
+/* 15.81 ms */
+OXXXXX.XOXXOXXXXX.OXOO.XO {B win}
+
+/* 15.90 ms */
+OXXXXX.XOXXOXXXXX.OXOO.XO {W loss}
+
+/* 15.86 ms */
+OX.XO.OOOOOOOXX.XXXOXOOXXXX.XO {B win}
+
+/* 15.72 ms */
+OX.XO.OOOOOOOXX.XXXOXOOXXXX.XO {W loss}
+

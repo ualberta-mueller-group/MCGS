@@ -1,0 +1,43 @@
+{version 1.1}
+/* These results only validated by the late November 2022 Linear Clobber solver  */
+[clobber]
+
+/* 16.48 ms */
+XX {W loss}
+
+/* 15.77 ms */
+XO {B win}
+
+/* 15.46 ms */
+XO {W win}
+
+/* 16.27 ms */
+XXO {B win}
+
+/* 17.86 ms */
+XXO {W loss}
+
+/* 16.41 ms */
+OX {B win}
+
+/* 16.60 ms */
+OX {W win}
+
+/* 17.08 ms */
+XXXO.XOO {B win}
+
+/* 15.16 ms */
+XXXO.XOO {W win}
+
+/* 17.57 ms */
+XOX {B win}
+
+/* 17.54 ms */
+XOX {W win}
+
+/* 17.49 ms */
+XXXXXO.XOOOOO {B loss}
+
+/* 17.27 ms */
+XXXXXO.XOOOOO {W loss}
+
