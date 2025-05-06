@@ -208,6 +208,65 @@ void clobber_move_generator::_next_move(bool init)
     }
 }
 
+// This version is generally (?) a bit faster?
+/*
+
+void clobber_move_generator::_next_move(bool init)
+{
+    assert(init || *this);
+    assert(_game.coord_in_bounds(_coord));
+    assert(_dir != CLOBBER_NO_DIR);
+
+    _has_move = false;
+
+    if (!init && !_increment())
+        return;
+
+    const int player = to_play();
+
+    while (true)
+    {
+        const int tile = _game.at(_coord);
+
+        // Go to a tile of our color
+        if (tile != player)
+        {
+            bool inc_successful = _increment_coord();
+
+            if (!inc_successful) // no more tiles to try
+                return;
+
+            continue;
+        }
+
+        // Try all directions
+        while (true)
+        {
+            assert(_dir != CLOBBER_NO_DIR);
+
+            _has_move = _game.is_move(_coord, _get_target_coord(), player);
+
+            if (_has_move)
+                return;
+
+            bool inc_successful = _increment_dir();
+
+            if (!inc_successful)
+                break;
+        }
+
+        assert(_dir == CLOBBER_NO_DIR);
+
+        bool inc_successful = _increment_coord();
+        if (!inc_successful)
+            return;
+    }
+}
+
+*/
+
+
+
 inline bool clobber_move_generator::_increment()
 {
     if (_increment_dir())
