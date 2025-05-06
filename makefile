@@ -1,5 +1,5 @@
 CC = c++
-#NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -DNDEBUG -DNO_WARN_DEFAULT_IMPL
+#NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread -DNDEBUG -DNO_WARN_DEFAULT_IMPL
 NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread
 TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -DSUMGAME_DEBUG_EXTRA -pthread
 
