@@ -6,6 +6,7 @@ import sys
 BLACK = "X"
 WHITE = "O"
 EMPTY = "."
+SEP = "|"
 
 if "-h" in sys.argv or "--help" in sys.argv:
     print(f"Usage: python3 {sys.argv[0]}")
@@ -17,7 +18,10 @@ def einput(prompt):
     return input()
 
 
-boardLen = int(einput("Strip length: ", ))
+boardRows = int(einput("Board rows: ", ))
+boardCols = int(einput("Board cols: ", ))
+boardCells = boardRows * boardCols
+
 minBlackStones = int(einput("Min black stones: "))
 maxBlackStones = int(einput("Max black stones: "))
 
@@ -27,10 +31,10 @@ count = int(einput("Number of cases: "))
 
 assert minBlackStones <= maxBlackStones
 assert minWhiteStones <= maxWhiteStones
-assert maxBlackStones + maxWhiteStones <= boardLen
+assert maxBlackStones + maxWhiteStones <= boardCells
 
 for i in range(count):
-    strip = [EMPTY for i in range(boardLen)]
+    grid = [[EMPTY for c in range(boardCols)] for r in range(boardRows)]
 
     blackStones = random.randint(minBlackStones, maxBlackStones)
     whiteStones = random.randint(minWhiteStones, maxWhiteStones)
@@ -38,7 +42,7 @@ for i in range(count):
     # Randomly add stones
     remainingB = blackStones
     remainingW = whiteStones
-    choices = [i for i in range(len(strip))]
+    choices = [(r, c) for r in range(boardRows) for c in range(boardCols)]
 
     while len(choices) > 0 and remainingB + remainingW > 0:
         colors = []
@@ -58,6 +62,11 @@ for i in range(count):
         to = random.choice(choices)
         choices.remove(to)
 
-        strip[to] = color
+        r, c = to
+        row = grid[r]
+        row[c] = color
 
-    print("".join(strip))
+    row_strings = ["".join(row) for row in grid]
+    grid_string = "|".join(row_strings)
+    print(grid_string)
+
