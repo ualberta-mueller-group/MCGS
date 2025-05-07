@@ -15,6 +15,8 @@
 */
 
 
+/*
+
 namespace {
 
 enum clobber_dir
@@ -56,6 +58,7 @@ static_assert(CLOBBER_DIR_INITIAL == 0);
 
 } // namespace
 
+*/
 
 
 ////////////////////////////////////////////////// move generator
@@ -141,8 +144,107 @@ bool clobber::is_move(const int& from, const int& to, bw to_play) const
 
 split_result clobber::_split_impl() const
 {
-    // TODO
-    return split_result();
+    if (size() == 0)
+        return split_result();
+
+    split_result result = split_result(std::vector<game*>());
+
+    const int_pair grid_shape = shape();
+    const int grid_size = size();
+
+    std::vector<bool> closed_set(grid_size, false);
+
+    std::vector<grid_location> open_stack;
+
+    constexpr int BLACK_MASK = 1;
+    constexpr int WHITE_MASK = 1 << 1;
+    constexpr int FULL_MASK = BLACK_MASK | WHITE_MASK;
+    int component_color_mask = 0;
+
+    std::vector<std::vector<int>> component_vec;
+    std::vector<int> component;
+
+    grid_location start(grid_shape);
+
+    auto reset_vars = [&]() -> void
+    {
+        assert(open_stack.empty());
+        component_color_mask = 0;
+
+        if (component.empty())
+        {
+            component.resize(grid_size, EMPTY);
+        } else
+        {
+            for (int& val : component)
+                val = EMPTY;
+        }
+    };
+
+    while (start.increment_position())
+    {
+        int start_point = start.get_point();
+        if (closed_set[start_point])
+            continue;
+
+        int start_color = at(start_point);
+        if (start_color == EMPTY)
+            continue;
+
+        reset_vars();
+        open_stack.push_back(start);
+
+        while (!open_stack.empty())
+        {
+            // Get next location, close it
+            grid_location loc1 = open_stack.back();
+            open_stack.pop_back();
+
+            int point1 = loc1.get_point();
+            if (closed_set[point1])
+                continue;
+            closed_set[point1] = true;
+
+            int color1 = at(point1);
+            if (color1 == EMPTY)
+                continue;
+            else if (color1 == BLACK)
+                component_color_mask |= BLACK_MASK;
+            else if (color1 == WHITE)
+                component_color_mask |= WHITE_MASK;
+            else
+                assert(false);
+
+            component[point1] = color1;
+
+            // Get neighbors
+            grid_location loc2 = loc1;
+            for (grid_dir dir : GRID_DIRS_CARDINAL)
+            {
+                if (loc2.move(dir))
+                {
+                    open_stack.push_back(loc2);
+                    loc2 = loc1;
+                }
+            }
+        }
+
+        if (component_color_mask == FULL_MASK)
+        {
+            component_vec.emplace_back(std::move(component));
+            assert(component.empty());
+        }
+    }
+
+    if (component_vec.size() > 1)
+    {
+        for (const std::vector<int>& board : component_vec)
+            result->push_back(new clobber(board, grid_shape));
+
+        return result;
+    }
+
+    return split_result(); // TODO
 }
 
 move_generator* clobber::create_move_generator(bw to_play) const
