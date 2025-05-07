@@ -2,6 +2,7 @@
 
 #include <array>
 #include "grid.h"
+#include <ostream>
 
 enum grid_dir
 {
@@ -89,6 +90,7 @@ public:
 
     // utility
     bool get_neighbor(int_pair& neighbor, grid_dir direction) const;
+    bool get_neighbor_point(int& neighbor_point, grid_dir direction) const;
 
     // mutators
     bool move(grid_dir direction);
@@ -102,10 +104,118 @@ public:
     static int_pair point_to_coord(int point, const int_pair& shape);
 
     static bool get_neighbor(int_pair& neighbor, const int_pair& coord, grid_dir direction, const int_pair& shape);
+    static bool get_neighbor_point(int& neighbor_point, const int_pair& coord, grid_dir direction, const int_pair& shape);
+
 
 private:
     int_pair _shape;
     int_pair _coord;
 };
 
+std::ostream& operator<<(std::ostream& os, const int_pair& pr);
+
+
+////////////////////////////////////////////////////////////
+inline grid_location::grid_location(const int_pair& shape)
+    : _shape(shape),
+    _coord(0, 0)
+{
+    // TODO 0 size grid is awkward...
+    assert(_shape.first > 0 && _shape.second > 0);
+}
+
+inline grid_location::grid_location(const int_pair& shape, const int_pair& coord)
+    : _shape(shape),
+    _coord(coord)
+{
+    // TODO 0 size grid is awkward...
+    assert(_shape.first > 0 && _shape.second > 0);
+    assert(coord_in_shape(_coord, _shape));
+}
+
+inline grid_location::grid_location(const int_pair& shape, int point)
+    : _shape(shape),
+    _coord(point_to_coord(point, shape))
+{
+    // TODO 0 size grid is awkward...
+    assert(_shape.first > 0 && _shape.second > 0);
+    assert(coord_in_shape(_coord, _shape));
+}
+
+inline const int_pair& grid_location::get_shape() const
+{
+    return _shape;
+}
+
+inline const int_pair& grid_location::get_coord() const
+{
+    return _coord;
+}
+
+inline int grid_location::get_point() const
+{
+    return coord_to_point(_coord, _shape);
+}
+
+inline void grid_location::set_shape(const int_pair& shape)
+{
+    _shape = shape;
+    assert(coord_in_shape(_coord, _shape));
+}
+
+inline void grid_location::set_coord(const int_pair& coord)
+{
+    _coord = coord;
+    assert(coord_in_shape(_coord, _shape));
+}
+
+inline void grid_location::set_point(int point)
+{
+    _coord = point_to_coord(point, _shape);
+    assert(coord_in_shape(_coord, _shape));
+}
+
+inline bool grid_location::get_neighbor(int_pair& neighbor, grid_dir direction) const
+{
+    return get_neighbor(neighbor, _coord, direction, _shape);
+}
+
+inline bool grid_location::get_neighbor_point(int& neighbor_point, grid_dir direction) const
+{
+    return get_neighbor_point(neighbor_point, _coord, direction, _shape);
+}
+
+inline bool grid_location::move(grid_dir direction)
+{
+    return get_neighbor(_coord, _coord, direction, _shape);
+}
+
+inline bool grid_location::coord_in_shape(const int_pair& coord, const int_pair& shape)
+{
+    return                                 //
+        (coord.first >= 0) &&              //
+        (coord.first < shape.first) &&    //
+        (coord.second >= 0) &&             //
+        (coord.second < shape.second);    //
+}
+
+inline bool grid_location::point_in_shape(int point, const int_pair& shape)
+{
+    const int grid_size = shape.first * shape.second;
+    return (point >= 0) && (point < grid_size);
+}
+
+inline int grid_location::coord_to_point(const int_pair& coord, const int_pair& shape)
+{
+    assert(coord_in_shape(coord, shape));
+    return coord.first * shape.second + coord.second;
+}
+
+inline int_pair grid_location::point_to_coord(int point, const int_pair& shape)
+{
+    assert(point_in_shape(point, shape));
+    int r = point / shape.second;
+    int c = point % shape.second;
+    return {r, c};
+}
 

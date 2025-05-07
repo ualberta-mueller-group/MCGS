@@ -12,7 +12,7 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
-    bool is_move(const int_pair& from, const int_pair& to, bw to_play) const;
+    bool is_move(const int& from, const int& to, bw to_play) const;
 
 protected:
     split_result _split_impl() const override;

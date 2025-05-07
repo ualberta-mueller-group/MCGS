@@ -3,6 +3,7 @@
 #include "game.h"
 #include "cgt_move.h"
 #include <cassert>
+#include "grid_utils.h"
 
 /*
 
@@ -72,13 +73,13 @@ private:
 
     bool _increment();
     bool _increment_dir();
-    bool _increment_coord();
-
-    int_pair _get_target_coord() const;
 
     const clobber& _game;
-    int_pair _coord;
-    clobber_dir _dir;
+    grid_location _location;
+    size_t _dir_idx;
+
+    int _location_point;
+    int _target_point;
     bool _has_move;
 };
 
@@ -130,15 +131,11 @@ void clobber::undo_move()
     replace(to, opp);
 }
 
-bool clobber::is_move(const int_pair& from, const int_pair& to, bw to_play) const
+bool clobber::is_move(const int& from, const int& to, bw to_play) const
 {
     assert(is_black_white(to_play));
 
-    if (!coord_in_bounds(from) || !coord_in_bounds(to))
-        return false;
-
     const bw opp = opponent(to_play);
-
     return (at(from) == to_play) && (at(to) == opp);
 }
 
@@ -168,8 +165,10 @@ game* clobber::inverse() const
 clobber_move_generator::clobber_move_generator(const clobber& game, bw to_play)
     : move_generator(to_play),
     _game(game),
-    _coord(0, 0),
-    _dir(CLOBBER_DIR_INITIAL),
+    _location(game.shape()),
+    _dir_idx(0),
+    _location_point(0),
+    _target_point(0),
     _has_move(false)
 {
     if (_game.size() != 0)
@@ -191,17 +190,13 @@ move clobber_move_generator::gen_move() const
 {
     assert(*this);
 
-    const int from_point = _game.coord_to_point(_coord);
-    const int to_point = _game.coord_to_point(_get_target_coord());
-
-    return cgt_move::two_part_move(from_point, to_point);
+    return cgt_move::two_part_move(_location_point, _target_point);
 }
 
 void clobber_move_generator::_next_move(bool init)
 {
     assert(init || *this);
-    assert(_game.coord_in_bounds(_coord));
-    assert(_dir != CLOBBER_NO_DIR);
+    assert(_dir_idx < GRID_DIRS_CARDINAL.size());
 
     _has_move = false;
 
@@ -212,119 +207,32 @@ void clobber_move_generator::_next_move(bool init)
 
     while (true)
     {
-        _has_move = _game.is_move(_coord, _get_target_coord(), player);
+        const grid_dir dir = GRID_DIRS_CARDINAL[_dir_idx];
+
+        bool valid_neighbor = _location.get_neighbor_point(_target_point, dir);
+        if (valid_neighbor)
+        {
+            _location_point = _location.get_point();
+            _has_move = _game.is_move(_location_point, _target_point, player);
+        }
 
         if (_has_move || !_increment())
             break;
     }
 }
 
-// This version is generally (?) a bit faster?
-/*
-
-void clobber_move_generator::_next_move(bool init)
-{
-    assert(init || *this);
-    assert(_game.coord_in_bounds(_coord));
-    assert(_dir != CLOBBER_NO_DIR);
-
-    _has_move = false;
-
-    if (!init && !_increment())
-        return;
-
-    const int player = to_play();
-
-    while (true)
-    {
-        const int tile = _game.at(_coord);
-
-        // Go to a tile of our color
-        if (tile != player)
-        {
-            bool inc_successful = _increment_coord();
-
-            if (!inc_successful) // no more tiles to try
-                return;
-
-            continue;
-        }
-
-        // Try all directions
-        while (true)
-        {
-            assert(_dir != CLOBBER_NO_DIR);
-
-            _has_move = _game.is_move(_coord, _get_target_coord(), player);
-
-            if (_has_move)
-                return;
-
-            bool inc_successful = _increment_dir();
-
-            if (!inc_successful)
-                break;
-        }
-
-        assert(_dir == CLOBBER_NO_DIR);
-
-        bool inc_successful = _increment_coord();
-        if (!inc_successful)
-            return;
-    }
-}
-
-*/
-
-
-
 inline bool clobber_move_generator::_increment()
 {
     if (_increment_dir())
         return true;
 
-    return _increment_coord();
+    _dir_idx = 0;
+    return _location.increment_position();
 }
 
 inline bool clobber_move_generator::_increment_dir()
 {
-    assert(_dir != CLOBBER_NO_DIR);
-
-    _dir = next_clobber_dir(_dir);
-
-    return _dir != CLOBBER_NO_DIR;
+    assert(_dir_idx < GRID_DIRS_CARDINAL.size());
+    _dir_idx++;
+    return _dir_idx < GRID_DIRS_CARDINAL.size();
 }
-
-inline bool clobber_move_generator::_increment_coord()
-{
-    assert(_game.coord_in_bounds(_coord));
-
-    _dir = CLOBBER_DIR_INITIAL;
-
-    _coord.second++;
-
-    const int_pair& shape = _game.shape();
-
-    if (_coord.second >= shape.second)
-    {
-        assert(!_game.coord_in_bounds(_coord));
-
-        _coord.second = 0;
-        _coord.first++;
-
-        if (_coord.first >= shape.first)
-        {
-            assert(!_game.coord_in_bounds(_coord));
-            return false;
-        }
-    }
-
-    assert(_game.coord_in_bounds(_coord));
-    return true;
-}
-
-inline int_pair clobber_move_generator::_get_target_coord() const
-{
-    return apply_clobber_dir(_coord, _dir);
-}
-

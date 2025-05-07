@@ -21,7 +21,6 @@ public:
     grid(const std::string& game_as_string);
     int size() const;
     int at(int p) const;
-    int at(const int_pair& coord) const;
     const int_pair& shape() const;
 
     // is p on board, and of given color?
@@ -65,17 +64,6 @@ inline int grid::size() const
 inline int grid::at(int p) const
 {
     assert_range(p, 0, size());
-    return _board[p];
-}
-
-
-inline int grid::at(const int_pair& coord) const
-{
-    assert(coord_in_bounds(coord));
-
-    int p = coord_to_point(coord);
-    assert_range(p, 0, size());
-
     return _board[p];
 }
 
