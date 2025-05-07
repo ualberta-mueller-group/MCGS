@@ -108,9 +108,19 @@ void clobber::play(const move& m, bw to_play)
     const int to = cgt_move::to(m);
 
     const bw opp = opponent(to_play);
-
     assert(checked_is_color(from, to_play));
     assert(checked_is_color(to, opp));
+
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_value(2 + from, to_play);
+        hash.toggle_value(2 + to, opp);
+
+        hash.toggle_value(2 + from, EMPTY);
+        hash.toggle_value(2 + to, to_play);
+        _mark_hash_updated();
+    }
 
     replace(from, EMPTY);
     replace(to, to_play);
@@ -129,6 +139,17 @@ void clobber::undo_move()
 
     assert(checked_is_color(from, EMPTY));
     assert(checked_is_color(to, to_play));
+
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_value(2 + from, EMPTY);
+        hash.toggle_value(2 + to, to_play);
+
+        hash.toggle_value(2 + from, to_play);
+        hash.toggle_value(2 + to, opp);
+        _mark_hash_updated();
+    }
 
     replace(from, to_play);
     replace(to, opp);
