@@ -124,7 +124,6 @@ inline int grid::coord_to_point(int_pair coord) const
     return coord.first * _shape.second + coord.second;
 }
 
-
 inline bool grid::coord_in_bounds(const int_pair& coord) const
 {
     return                                 //
