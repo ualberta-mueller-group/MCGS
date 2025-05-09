@@ -1022,4 +1022,6 @@ void file_parser::_init_game_parsers()
 
     _add_game_parser("nogo", new basic_parser<nogo>());
     _add_game_parser("clobber", new basic_parser<clobber>());
+
+    _add_game_parser("kayles", new int_parser<kayles>());
 }

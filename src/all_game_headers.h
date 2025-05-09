@@ -11,4 +11,5 @@
 #include "nogo_1xn.h"
 #include "nogo.h"
 #include "clobber.h"
+#include "kayles.h"
 // IWYU pragma: end_exports
