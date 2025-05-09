@@ -55,6 +55,8 @@ public:
 
     void invalidate_hash() const; // for debugging
 
+    virtual bool is_impartial() const;
+
 protected:
     /*
         Return list of games to replace current game. Empty list means game is
@@ -172,6 +174,11 @@ inline split_result game::split() const
     }
 
     return result;
+}
+
+inline bool game::is_impartial() const
+{
+    return false;
 }
 
 inline split_result game::_split_impl() const

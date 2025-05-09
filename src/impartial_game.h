@@ -43,6 +43,8 @@ public:
     // impartial game in any (possibly partizan) sum
     void play(const move& m, bw to_play) override;
     move_generator* create_move_generator(bw ignore_to_play) const override;
+
+    bool is_impartial() const override final;
     
     bool is_solved() const;
     int nim_value() const; // available after it is solved
@@ -61,6 +63,11 @@ private:
 inline impartial_game::impartial_game() : 
     _root_is_solved(false), _nim_value(0)
 { }
+
+inline bool impartial_game::is_impartial() const
+{
+    return true;
+}
 
 inline bool impartial_game::is_solved() const
 {

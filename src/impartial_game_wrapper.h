@@ -32,6 +32,8 @@ public:
     // impartial game in any possibly (partizan) sum
     void play(const move& m, bw ignore_to_play) override;
     move_generator* create_move_generator(bw ignore_to_play) const override;
+
+    split_result _split_impl() const override;
     void _init_hash(local_hash& hash) const override;
 
     void _normalize_impl() override;
