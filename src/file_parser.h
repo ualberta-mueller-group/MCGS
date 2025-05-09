@@ -208,6 +208,10 @@ private:
     static void _add_game_parser(const std::string& game_title,
                                  game_token_parser* gp);
 
+    // called automatically by _add_game_parser
+    static void _add_game_parser_impartial(const std::string& game_title,
+                                 std::shared_ptr<game_token_parser>& gp_shared);
+
     // token-generating helper functions
     file_parser_impl::match_state _get_enclosed(const std::string& open,
                                                 const std::string& close,

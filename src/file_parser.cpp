@@ -355,16 +355,33 @@ void file_parser::_add_game_parser(const string& game_title,
 {
     assert(gp != nullptr);
 
-    if (_game_map.find(game_title) != _game_map.end())
-    {
-        delete gp;
+    auto it = _game_map.insert({game_title, shared_ptr<game_token_parser>(gp)});
 
+    if (!it.second)
+    {
         string why = "Tried to add game parser \"" + game_title +
                      "\" but it already exists";
         throw parser_exception(why, DUPLICATE_GAME_PARSER);
     }
 
-    _game_map.insert({game_title, shared_ptr<game_token_parser>(gp)});
+    _add_game_parser_impartial(game_title, it.first->second);
+}
+
+void file_parser::_add_game_parser_impartial(const string& game_title,
+                                   shared_ptr<game_token_parser>& gp_shared)
+{
+    assert(gp_shared.get() != nullptr);
+
+    string impartial_title = "impartial " + game_title;
+    shared_ptr<game_token_parser> impartial_parser(new impartial_game_token_parser_wrapper(gp_shared));
+
+    auto it = _game_map.insert({impartial_title, impartial_parser});
+    if (!it.second)
+    {
+        string why = "Tried to add impartial game parser for \"" + game_title +
+                     "\" but it already exists";
+        throw parser_exception(why, DUPLICATE_GAME_PARSER);
+    }
 }
 
 /*
@@ -982,6 +999,10 @@ bool file_parser::warned_wrong_version()
     Will cause games in the section denoted by "[clobber_1xn]" to be
         created as the clobber_1xn class.
 
+    Additionally, this will automatically create the section
+        "[impartial clobber_1xn]", whose games are the result of wrapping the
+        game produced by the parser passed to add_game_parser, with an
+        impartial_game_wrapper.
 */
 void file_parser::_init_game_parsers()
 {

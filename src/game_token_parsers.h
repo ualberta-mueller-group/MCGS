@@ -2,7 +2,9 @@
 #include "game.h"
 #include "utilities.h"
 #include <string>
+#include <cassert>
 #include <vector>
+#include <memory>
 
 /*
     New games must have a corresponding call to file_parser::add_game_parser()
@@ -105,3 +107,21 @@ class dyadic_rational_parser : public game_token_parser
 public:
     game* parse_game(const std::string& game_token) const override;
 };
+
+////////////////////////////////////////////////// impartial games
+class impartial_game_token_parser_wrapper: public game_token_parser
+{
+public:
+    impartial_game_token_parser_wrapper(std::shared_ptr<game_token_parser>& parser): _parser(parser)
+    {
+        assert(parser.get() != nullptr);
+    }
+
+    virtual ~impartial_game_token_parser_wrapper() {}
+
+    game* parse_game(const std::string& game_token) const override;
+
+private:
+    std::shared_ptr<game_token_parser> _parser;
+};
+

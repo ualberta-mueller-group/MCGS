@@ -8,6 +8,7 @@
 #include <vector>
 #include <cassert>
 #include <cstddef>
+#include "impartial_game_wrapper.h"
 
 using namespace std;
 
@@ -283,3 +284,15 @@ game* dyadic_rational_parser::parse_game(const string& game_token) const
 
     return new dyadic_rational(f);
 }
+
+// impartial games
+game* impartial_game_token_parser_wrapper::parse_game(const string& game_token) const
+{
+    game* g = _parser->parse_game(game_token);
+
+    if (g == nullptr)
+        return nullptr;
+
+    return new impartial_game_wrapper(g, true);
+}
+

@@ -17,7 +17,10 @@
 class impartial_game_wrapper : public impartial_game
 {
 public:
-    impartial_game_wrapper(game* g);
+    impartial_game_wrapper(game* g); // game still owned by caller
+    impartial_game_wrapper(game* g, bool owns_game); // if true, game is owned by callee
+
+    ~impartial_game_wrapper();
 
     void play(const move& m) override;
     void undo_move() override;
@@ -41,11 +44,22 @@ public:
 
 private:
     game* _game;
+    const bool _owns_game;
 };
 
 inline impartial_game_wrapper::impartial_game_wrapper(game* g) :
-    impartial_game(), _game(g)
+    impartial_game(), _game(g), _owns_game(false)
 { }
+
+inline impartial_game_wrapper::impartial_game_wrapper(game* g, bool owns_game) :
+    impartial_game(), _game(g), _owns_game(owns_game)
+{ }
+
+inline impartial_game_wrapper::~impartial_game_wrapper()
+{
+    if (_owns_game)
+        delete _game;
+}
 
 inline void impartial_game_wrapper::play(const move& m)
 {
