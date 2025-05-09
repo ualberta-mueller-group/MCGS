@@ -2,8 +2,12 @@
 // Impartial game - kayles
 //---------------------------------------------------------------------------
 #include "kayles.h"
+#include "cgt_move.h"
+#include "cgt_basics.h"
+#include "hashing.h"
 
 #include <ostream>
+#include <cassert>
 #include <vector>
 using std::vector;
 
@@ -17,7 +21,7 @@ move kayles::encode(int take, int smaller, int larger)
 }
 
 // Decode move back to triple (take, smaller, larger)
-void kayles::decode(move m, int& take, 
+void kayles::_decode(move m, int& take, 
                     int& smaller, int& larger)
 {
     larger = cgt_move::second(m);
@@ -39,7 +43,7 @@ void kayles::play(const move& m)
 {
     impartial_game::play(m);
     int ignore_take;
-    decode(m, ignore_take, _smaller_part, _value);
+    _decode(m, ignore_take, _smaller_part, _value);
 }
 
 void kayles::undo_move()
@@ -47,7 +51,7 @@ void kayles::undo_move()
     const move m = cgt_move::decode(last_move());
     game::undo_move();
     int take, smaller, larger;
-    decode(m, take, smaller, larger);
+    _decode(m, take, smaller, larger);
     _value = larger + smaller + take;
     _smaller_part = 0;
 }
@@ -60,7 +64,7 @@ void kayles::print(std::ostream& str) const
 void kayles::print_move(move m, std::ostream& str)
 {
     int take, smaller, larger;
-    decode(m, take, smaller, larger);
+    _decode(m, take, smaller, larger);
     str << "kayles move: take " << take 
     << ", smaller " << smaller << ", larger " << larger << '\n';
 }

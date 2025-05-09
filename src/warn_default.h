@@ -2,6 +2,7 @@
 
 // IWYU pragma: begin_exports
 #include <unordered_map>
+#include <unordered_set>
 #include <typeinfo>
 #include <typeindex>
 #include <iostream>

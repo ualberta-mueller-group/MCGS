@@ -4,9 +4,10 @@
 #include "performance_test_nogo.h"
 
 #include <cassert>
+#include <string>
 #include <chrono>
+#include <ratio>
 #include <iostream>
-#include "cgt_move.h"
 #include "nogo_1xn.h"
 #include "impartial_game_wrapper.h"
 
@@ -17,6 +18,8 @@ using std::chrono::high_resolution_clock;
 
 using namespace std;
 const int UNKNOWN = -1;
+
+namespace {
 
 void test_nogo(const string& s, int nim_value)
 {
@@ -33,6 +36,8 @@ void test_nogo(const string& s, int nim_value)
          << duration.count()
          << endl;
 }
+
+} // namespace
 
 void performance_test_nogo()
 {

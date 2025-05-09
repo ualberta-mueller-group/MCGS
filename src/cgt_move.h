@@ -7,8 +7,9 @@
 
 #pragma once
 
-#include <string>
 #include "cgt_basics.h"
+
+#include <string>
 #include <cassert>
 
 // Currently all moves must be encoded as int, and decoded from int

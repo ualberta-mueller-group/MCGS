@@ -5,8 +5,6 @@
 #include <cassert>
 #include <limits>
 #include <memory>
-#include <typeindex>
-#include <unordered_set>
 #include <iostream>
 #include <cstddef>
 

@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cstdlib>
 #include "throw_assert.h"
+#include <string>
 
 namespace {
 // NOLINTNEXTLINE(readability-identifier-naming)

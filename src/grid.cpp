@@ -6,6 +6,10 @@
 #include "cgt_basics.h"
 #include "throw_assert.h"
 #include "strip.h"
+#include <cassert>
+#include <cstdlib>
+#include <utility>
+#include <vector>
 
 //---------------------------------------------------------------------------
 

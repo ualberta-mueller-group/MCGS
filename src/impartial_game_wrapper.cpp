@@ -4,10 +4,10 @@
 #include "impartial_game_wrapper.h"
 
 #include <ostream>
-#include <string>
-#include <sstream>
+#include <cassert>
 #include "cgt_basics.h"
 #include "cgt_nimber.h"
+#include "impartial_wrapper_move.h"
 
 using impartial_wrapper_move::encode_wrapped_move;
 

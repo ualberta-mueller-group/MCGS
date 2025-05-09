@@ -5,8 +5,9 @@
 
 #include <cassert>
 #include <chrono>
+#include <ratio>
 #include <iostream>
-#include "cgt_move.h"
+#include <string>
 #include "clobber_1xn.h"
 #include "impartial_game_wrapper.h"
 
@@ -18,6 +19,7 @@ using std::chrono::high_resolution_clock;
 using namespace std;
 const int UNKNOWN = -1;
 
+namespace {
 void test_nim_value(const string& s, int nim_value)
 {
     clobber_1xn c(s);
@@ -34,10 +36,11 @@ void test_nim_value(const string& s, int nim_value)
          << duration.count()
          << endl;
 }
+} // namespace
 
 void performance_test_clobber()
 {
-        static int Dai_Chen_result[] =  // -1 means they could not solve it
+        static int dai_chen_result[] =  // -1 means they could not solve it
     { 0, 
       1, 3, 0, 2, 0, 2,  0, 3,  1,  4,           //  1-10
       6, 1, 0, 1, 3, 7, UNKNOWN, 3,  1,  0,      // 11-20
@@ -48,6 +51,6 @@ void performance_test_clobber()
     
     int limit = 20; 
     for (int i = 0; i < limit; ++i)
-        test_nim_value(clobber_1xn::xoxo(i), Dai_Chen_result[i]);
+        test_nim_value(clobber_1xn::xoxo(i), dai_chen_result[i]);
 
 }

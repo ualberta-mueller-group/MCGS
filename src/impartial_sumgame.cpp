@@ -3,10 +3,11 @@
 //---------------------------------------------------------------------------
 #include "impartial_sumgame.h"
 
-#include "cgt_basics.h"
 #include "cgt_nimber.h"
 #include "game.h"
 #include "impartial_game.h"
+#include "sumgame.h"
+#include "alternating_move_game.h"
 
 int search_sumgame(const sumgame& s)
 {

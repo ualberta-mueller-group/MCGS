@@ -5,6 +5,8 @@
 #include "impartial_game_wrapper.h"
 
 #include <cassert>
+#include <memory>
+#include <string>
 #include "cgt_move.h"
 #include "clobber_1xn.h"
 #include "nogo_1xn.h"
@@ -42,7 +44,7 @@ void impartial_game_wrapper_test_values()
     // Results from: J. Dai and X. Chen, 
     // Impartial Clobber Solver,
     // CMPUT 655 project report, University of Alberta 2022
-    static int Dai_Chen_result[] =
+    static int dai_chen_result[] =
     { 0, 
       1, 3, 0, 2, 0, 2,  0, 3,  1,  4,       //  1-10
       6, 1, 0, 1, 3, 7, UNKNOWN, 3,  1,  0,  // 11-20
@@ -53,7 +55,7 @@ void impartial_game_wrapper_test_values()
     
     int limit = 10;
     for (int i = 0; i < limit; ++i)
-        test_nim_value(clobber_1xn::xoxo(i), Dai_Chen_result[i]);
+        test_nim_value(clobber_1xn::xoxo(i), dai_chen_result[i]);
 }
 
 void test_play_undo(const string& s)

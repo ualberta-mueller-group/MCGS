@@ -9,6 +9,8 @@
 #include <fstream>
 // IWYU pragma: end_exports
 
+#include <string>
+
 std::ofstream& debug_stream();
 
 namespace mcgs_init {

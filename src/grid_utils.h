@@ -3,6 +3,7 @@
 #include <array>
 #include "grid.h"
 #include <ostream>
+#include <cassert>
 
 enum grid_dir
 {

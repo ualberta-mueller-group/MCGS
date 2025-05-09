@@ -4,6 +4,7 @@
 #include "kayles_test.h"
 #include "kayles.h"
 
+#include <memory>
 #include <cassert>
 #include "cgt_move.h"
 #include "test_utilities.h"

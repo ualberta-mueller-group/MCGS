@@ -1,6 +1,5 @@
 #pragma once
 #include "sumgame.h"
-#include <climits>
 #include <vector>
 #include "game.h"
 

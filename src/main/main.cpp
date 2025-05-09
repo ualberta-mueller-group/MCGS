@@ -2,21 +2,17 @@
 // main.cpp - main loop of MCGS
 //---------------------------------------------------------------------------
 
-#include <cstdio>
-#include <cstring>
 #include <iostream>
 #include <string>
 #include "cgt_basics.h"
 #include "cli_options.h"
 #include "file_parser.h"
 #include "sumgame.h"
-#include "cli_options.h"
 #include "autotests.h"
 #include <chrono>
+#include <ratio>
 #include "mcgs_init.h"
 #include "hashing.h"
-#include "hash_eval.h"
-#include "transposition.h"
 #include "global_options.h"
 
 

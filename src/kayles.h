@@ -6,8 +6,13 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include <cassert>
+// IWYU pragma: begin_exports
+#include "game.h"
 #include "impartial_game.h"
+// IWYU pragma: end_exports
+
+#include <cassert>
+#include <ostream>
 
 class kayles : public impartial_game
 {
@@ -34,10 +39,10 @@ protected:
     split_result _split_impl() const override;
 
 private:
-    static void decode(move m, int& take,
+    static void _decode(move m, int& take,
                        int& smaller, int& larger);
-    static void store(int n, int nim_value);
-    static int get(int n); // -1 if not stored
+    static void _store(int n, int nim_value);
+    static int _get(int n); // -1 if not stored
 
     int _value;
     int _smaller_part; // used temporarily during play, after splitting game

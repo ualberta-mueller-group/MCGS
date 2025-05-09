@@ -2,7 +2,6 @@
 #include <cerrno>
 #include <cstdlib>
 #include <filesystem>
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <iostream>

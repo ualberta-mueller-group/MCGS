@@ -3,14 +3,12 @@
 //---------------------------------------------------------------------------
 #include "impartial_game.h"
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include "cgt_basics.h"
 #include "cgt_nimber.h"
 #include "hashing.h"
 #include "transposition.h"
 #include <memory>
+#include <cassert>
+#include <set>
 
 //---------------------------------------------------------------------------
 
@@ -38,7 +36,7 @@ inline bool tt_lookup(impartial_tt& tt, impartial_game* g,
     auto tt_it = tt.get_iterator(hash);
     const bool is_valid = tt_it.entry_valid();
     if (is_valid)
-        nim_value = tt_it.get_entry()._nim_value;
+        nim_value = tt_it.get_entry().nim_value;
     return is_valid;
 }
 } // namespace

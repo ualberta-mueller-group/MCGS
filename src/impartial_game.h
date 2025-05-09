@@ -6,6 +6,7 @@
 #pragma once
 
 #include <set>
+#include <cassert>
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
@@ -16,9 +17,9 @@
 //---------------------------------------------------------------------------
 struct impartial_ttable_entry
 {
-    int _nim_value;
-    impartial_ttable_entry() : _nim_value(0) {}
-    impartial_ttable_entry(int v) : _nim_value(v) {}
+    int nim_value;
+    impartial_ttable_entry() : nim_value(0) {}
+    impartial_ttable_entry(int v) : nim_value(v) {}
 };
 
 typedef ttable<impartial_ttable_entry> impartial_tt;

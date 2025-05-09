@@ -7,10 +7,9 @@
 #include "impartial_game_wrapper.h"
 #include "clobber_1xn.h"
 #include "kayles.h"
-#include "sumgame.h"
 
+#include <string>
 #include <cassert>
-#include "cgt_move.h"
 #include "test_utilities.h"
 
 using std::string;

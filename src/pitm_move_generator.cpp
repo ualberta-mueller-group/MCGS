@@ -1,4 +1,8 @@
 #include "pitm_move_generator.h"
+#include "game.h"
+#include <cassert>
+#include <vector>
+#include <cstddef>
 
 pitm_move_generator::pitm_move_generator(move_generator* gen, bw to_play)
     : move_generator(to_play),

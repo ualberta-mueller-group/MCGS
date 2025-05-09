@@ -22,7 +22,7 @@ public:
 
     // Impartial game interface
     void play(const move& m) override;
-    virtual move_generator* create_move_generator() const override;
+    move_generator* create_move_generator() const override;
 
     // value() is updated as *this changes during search
     // nim_value() is the root's value

@@ -1,6 +1,7 @@
 #pragma once
 #include "game.h"
 #include <vector>
+#include <cstddef>
 
 class pitm_move_generator: public move_generator
 {

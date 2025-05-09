@@ -1,12 +1,17 @@
 #include "test_framework_stream.h"
 
+/*
 #include <cstring>
-#include <fstream>
 #include <ios>
-#include <cassert>
 #include <streambuf>
-#include <iostream>
 #include <cstdio>
+#include <iostream>
+*/
+
+#include <cassert>
+#include <string>
+#include <utility>
+#include <fstream>
 #include <vector>
 
 /*

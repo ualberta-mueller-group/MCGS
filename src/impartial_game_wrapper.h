@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <vector>
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
 #include "impartial_game.h"
 #include "impartial_wrapper_move.h"
+#include <ostream>
 
 //---------------------------------------------------------------------------
 class impartial_game_wrapper : public impartial_game

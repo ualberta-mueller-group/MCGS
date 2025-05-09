@@ -1,6 +1,5 @@
 #include "sumgame_change_record.h"
 #include "game.h"
-#include <climits>
 #include <vector>
 #include <cassert>
 #include <utility>

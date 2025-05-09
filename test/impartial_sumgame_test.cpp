@@ -8,6 +8,9 @@
 #include "kayles.h"
 #include "cgt_nimber.h"
 #include "test_utilities.h"
+#include "sumgame.h"
+#include <cassert>
+#include <vector>
 
 namespace {
 

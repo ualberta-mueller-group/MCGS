@@ -7,7 +7,6 @@
 #include <memory>
 #include "cgt_move.h"
 #include "game.h"
-#include "impartial_game.h"
 #include "sumgame.h"
 #include "file_parser.h"
 #include <string>

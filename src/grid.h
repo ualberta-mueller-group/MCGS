@@ -8,6 +8,8 @@
 #include "game.h"
 #include <vector>
 #include <utility>
+#include <string>
+#include <cassert>
 
 //---------------------------------------------------------------------------
 

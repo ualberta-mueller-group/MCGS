@@ -6,7 +6,10 @@
 #include "cgt_basics.h"
 #include "game.h"
 #include "grid.h"
-#include <memory>
+#include <string>
+#include <vector>
+#include <cassert>
+#include <ostream>
 
 //////////////////////////////////////// nogo
 nogo::nogo(std::string game_as_string) : grid(game_as_string)

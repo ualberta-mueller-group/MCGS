@@ -1,7 +1,6 @@
 #pragma once
 #include "game.h"
 #include "utilities.h"
-#include <cctype>
 #include <string>
 #include <vector>
 

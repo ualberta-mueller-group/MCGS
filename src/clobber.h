@@ -1,6 +1,13 @@
 #pragma once
 
+// IWYU pragma: begin_exports
+#include "game.h"
 #include "grid.h"
+// IWYU pragma: end_exports
+
+#include <vector>
+#include <string>
+#include <ostream>
 
 class clobber: public grid
 {

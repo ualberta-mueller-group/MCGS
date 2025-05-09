@@ -2,6 +2,7 @@
 // Move utilities
 //---------------------------------------------------------------------------
 #include "cgt_move.h"
+#include "cgt_basics.h"
 
 #include <bitset>
 #include <string>

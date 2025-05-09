@@ -1,5 +1,9 @@
 #include "grid_utils.h"
 #include <iostream>
+#include <cassert>
+#include <cmath>
+#include "grid.h"
+
 using std::cout, std::endl;
 
 bool grid_location::increment_position()

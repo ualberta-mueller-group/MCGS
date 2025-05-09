@@ -1,6 +1,5 @@
 #include "fraction.h"
 
-#include <climits>
 #include <stdexcept>
 #include <string>
 #include "cgt_basics.h"
