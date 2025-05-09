@@ -1,5 +1,9 @@
 #pragma once
 
+/*
+    Helpers for grids. Defines grid_location
+*/
+
 #include <array>
 #include "grid.h"
 #include <ostream>
@@ -90,7 +94,7 @@ public:
     void set_point(int point);
 
     // utility
-    bool get_neighbor(int_pair& neighbor, grid_dir direction) const;
+    bool get_neighbor_coord(int_pair& neighbor_coord, grid_dir direction) const;
     bool get_neighbor_point(int& neighbor_point, grid_dir direction) const;
 
     // mutators
@@ -104,7 +108,7 @@ public:
     static int coord_to_point(const int_pair& coord, const int_pair& shape);
     static int_pair point_to_coord(int point, const int_pair& shape);
 
-    static bool get_neighbor(int_pair& neighbor, const int_pair& coord, grid_dir direction, const int_pair& shape);
+    static bool get_neighbor_coord(int_pair& neighbor_coord, const int_pair& coord, grid_dir direction, const int_pair& shape);
     static bool get_neighbor_point(int& neighbor_point, const int_pair& coord, grid_dir direction, const int_pair& shape);
 
 
@@ -176,9 +180,9 @@ inline void grid_location::set_point(int point)
     assert(coord_in_shape(_coord, _shape));
 }
 
-inline bool grid_location::get_neighbor(int_pair& neighbor, grid_dir direction) const
+inline bool grid_location::get_neighbor_coord(int_pair& neighbor_coord, grid_dir direction) const
 {
-    return get_neighbor(neighbor, _coord, direction, _shape);
+    return get_neighbor_coord(neighbor_coord, _coord, direction, _shape);
 }
 
 inline bool grid_location::get_neighbor_point(int& neighbor_point, grid_dir direction) const
@@ -188,7 +192,7 @@ inline bool grid_location::get_neighbor_point(int& neighbor_point, grid_dir dire
 
 inline bool grid_location::move(grid_dir direction)
 {
-    return get_neighbor(_coord, _coord, direction, _shape);
+    return get_neighbor_coord(_coord, _coord, direction, _shape);
 }
 
 inline bool grid_location::coord_in_shape(const int_pair& coord, const int_pair& shape)

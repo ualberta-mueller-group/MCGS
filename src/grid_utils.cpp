@@ -33,7 +33,7 @@ bool grid_location::increment_position()
     return true;
 }
 
-bool grid_location::get_neighbor(int_pair& neighbor, const int_pair& coord, grid_dir direction, const int_pair& shape)
+bool grid_location::get_neighbor_coord(int_pair& neighbor_coord, const int_pair& coord, grid_dir direction, const int_pair& shape)
 {
     const int_pair& delta = _GRID_DISPLACEMENTS[direction];
     assert(abs(delta.first) <= 1);
@@ -44,20 +44,20 @@ bool grid_location::get_neighbor(int_pair& neighbor, const int_pair& coord, grid
     bool success = coord_in_shape(new_coord, shape);
 
     if (success)
-        neighbor = new_coord;
+        neighbor_coord = new_coord;
 
     return success;
 }
 
 bool grid_location::get_neighbor_point(int& neighbor_point, const int_pair& coord, grid_dir direction, const int_pair& shape)
 {
-    int_pair neighbor;
-    bool success = get_neighbor(neighbor, coord, direction, shape);
+    int_pair neighbor_coord;
+    bool success = get_neighbor_coord(neighbor_coord, coord, direction, shape);
 
     if (!success)
         return false;
 
-    neighbor_point = coord_to_point(neighbor, shape);
+    neighbor_point = coord_to_point(neighbor_coord, shape);
     return true;
 }
 
