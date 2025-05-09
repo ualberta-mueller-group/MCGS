@@ -162,8 +162,10 @@ relation grid::_compare_grids(const grid& g1, const grid& g2)
     const int size1 = g1.size();
     const int size2 = g2.size();
     assert(size1 == size2);
-    assert(size1 == g1._board.size());
-    assert(size2 == g2._board.size());
+
+    assert(size1 >= 0 && size2 >= 0);
+    assert((unsigned int) size1 == g1._board.size());
+    assert((unsigned int) size2 == g2._board.size());
 
     for (int i = 0; i < size1; i++)
     {
