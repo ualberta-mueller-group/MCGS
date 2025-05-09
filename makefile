@@ -62,6 +62,9 @@ TIDY_CONFIG := .clang-tidy
 TIDY_CONFIG_HEADERS := .clang-tidy-headers
 FORMAT_SCRIPT := utils/format-files.py
 
+GREP_FILES_BASE := $(wildcard .*) $(wildcard *)
+GREP_FILES_EXCLUDE := . .. .cache .git
+GREP_FILES := $(filter-out $(GREP_FILES_EXCLUDE),$(GREP_FILES_BASE))
 
 
 .DEFAULT_GOAL := MCGS
@@ -114,6 +117,10 @@ format_delete:
 format_replace:
 	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 	@python3 $(FORMAT_SCRIPT) --replace $(LINT_FILES)
+
+# Grep targets
+find_todo:
+	grep -R -i "TODO" $(GREP_FILES)
 
 
 ifeq ($(CAN_BUILD), 1)
