@@ -249,65 +249,6 @@ void strip_enclosing(string& str, const string& open, const string& close)
 
 } // namespace
 
-//////////////////////////////////////////////////////////// game_case
-
-game_case::game_case()
-{
-    release_games(); // sets variables to defaults
-}
-
-game_case::~game_case()
-{
-    // Caller should have cleaned up games...
-    assert(games.size() == 0);
-}
-
-game_case::game_case(game_case&& other) noexcept
-{
-    _move_impl(std::forward<game_case>(other));
-}
-
-game_case& game_case::operator=(game_case&& other) noexcept
-{
-    _move_impl(std::forward<game_case>(other));
-
-    return *this;
-}
-
-void game_case::cleanup_games()
-{
-    for (game* g : games)
-    {
-        delete g;
-    }
-
-    release_games();
-}
-
-// resets game_case, releasing ownership of its games without deleting them
-void game_case::release_games()
-{
-    to_play = EMPTY;
-    expected_outcome = TEST_RESULT_UNSPECIFIED;
-
-    games.clear();
-
-    comments.clear();
-    hash.clear();
-}
-
-void game_case::_move_impl(game_case&& other) noexcept
-{
-    assert(games.size() == 0);
-
-    to_play = std::move(other.to_play);
-    expected_outcome = std::move(other.expected_outcome);
-    games = std::move(other.games);
-    comments = std::move(other.comments);
-    hash = std::move(other.hash);
-
-    other.release_games();
-}
 
 ////////////////////////////////////////////////// file_parser
 
@@ -616,8 +557,8 @@ void file_parser::_validate_command(const string& token_copy)
     {
         game_case& gc = _cases[i];
 
-        string player(1, color_char(gc.to_play));
-        test_result result = gc.expected_outcome;
+        string player(1, color_char(gc.run_command.player));
+        test_result result = gc.run_command.expected_outcome;
 
         expected += player;
 
@@ -758,11 +699,11 @@ bool file_parser::_parse_command()
         }
 
         game_case& gc = _cases[_case_count];
-        gc.to_play = to_play;
-        gc.expected_outcome = expected_outcome;
+        gc.run_command.player = to_play;
+        gc.run_command.expected_outcome = expected_outcome;
 
         // Update hash
-        string player_string = string(1, gc.to_play);
+        string player_string = string(1, gc.run_command.player);
         string hashable_chunk = "PLAYER" + player_string;
         gc.hash.update(hashable_chunk);
 

@@ -333,8 +333,8 @@ void e2e_test21()
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_WIN;
+        gc->run_command.player = BLACK;
+        gc->run_command.expected_outcome = TEST_RESULT_WIN;
         gc->games.push_back(new nogo_1xn("X..O"));
     }
 
@@ -342,8 +342,8 @@ void e2e_test21()
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->to_play = WHITE;
-        gc->expected_outcome = TEST_RESULT_WIN;
+        gc->run_command.player = WHITE;
+        gc->run_command.expected_outcome = TEST_RESULT_WIN;
         gc->games.push_back(new nogo_1xn("X..O"));
     }
 
@@ -351,8 +351,8 @@ void e2e_test21()
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_LOSS;
+        gc->run_command.player = BLACK;
+        gc->run_command.expected_outcome = TEST_RESULT_LOSS;
         gc->games.push_back(new integer_game(4));
         gc->games.push_back(new integer_game(-5));
     }
@@ -361,8 +361,8 @@ void e2e_test21()
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->to_play = WHITE;
-        gc->expected_outcome = TEST_RESULT_WIN;
+        gc->run_command.player = WHITE;
+        gc->run_command.expected_outcome = TEST_RESULT_WIN;
         gc->games.push_back(new integer_game(4));
         gc->games.push_back(new integer_game(-5));
     }
@@ -371,8 +371,8 @@ void e2e_test21()
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_WIN;
+        gc->run_command.player = BLACK;
+        gc->run_command.expected_outcome = TEST_RESULT_WIN;
         gc->games.push_back(new clobber_1xn("XOXOXOXO"));
     }
 
@@ -380,8 +380,8 @@ void e2e_test21()
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->to_play = WHITE;
-        gc->expected_outcome = TEST_RESULT_UNSPECIFIED;
+        gc->run_command.player = WHITE;
+        gc->run_command.expected_outcome = TEST_RESULT_UNSPECIFIED;
         gc->games.push_back(new clobber_1xn("XOXOXOXO"));
     }
 
@@ -389,16 +389,16 @@ void e2e_test21()
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_LOSS;
+        gc->run_command.player = BLACK;
+        gc->run_command.expected_outcome = TEST_RESULT_LOSS;
     }
 
     {
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->to_play = WHITE;
-        gc->expected_outcome = TEST_RESULT_LOSS;
+        gc->run_command.player = WHITE;
+        gc->run_command.expected_outcome = TEST_RESULT_LOSS;
     }
 
     assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames1.test", cases);
@@ -444,8 +444,8 @@ void e2e_test24()
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_LOSS;
+        gc->run_command.player = BLACK;
+        gc->run_command.expected_outcome = TEST_RESULT_LOSS;
         gc->games.push_back(new clobber_1xn("XOOX"));
     }
 

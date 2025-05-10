@@ -176,7 +176,7 @@ void run_autotests(const string& test_directory, const string& outfile_name,
         {
             cout << file_name << " " << case_number << endl;
 
-            sumgame sum(gc.to_play);
+            sumgame sum(gc.run_command.player);
             for (game* g : gc.games)
             {
                 sum.add(g);
@@ -201,13 +201,13 @@ void run_autotests(const string& test_directory, const string& outfile_name,
             string status_string = "TIMEOUT";
             if (result.has_value())
             {
-                if (gc.expected_outcome == TEST_RESULT_UNSPECIFIED)
+                if (gc.run_command.expected_outcome == TEST_RESULT_UNSPECIFIED)
                 {
                     status_string = "COMPLETED";
                 }
                 else
                 {
-                    status_string = (result.value().win == gc.expected_outcome)
+                    status_string = (result.value().win == gc.run_command.expected_outcome)
                                         ? "PASS"
                                         : "FAIL";
                 }
@@ -216,8 +216,8 @@ void run_autotests(const string& test_directory, const string& outfile_name,
             append_field(outfile, relative_file_path.string(), true);
             append_field(outfile, to_string(case_number), true);
             append_field(outfile, human_readable_game_string(gc.games), true);
-            append_field(outfile, string(1, color_char(gc.to_play)), true);
-            append_field(outfile, test_result_to_string(gc.expected_outcome),
+            append_field(outfile, string(1, color_char(gc.run_command.player)), true);
+            append_field(outfile, test_result_to_string(gc.run_command.expected_outcome),
                          true);
             append_field(outfile, result_string, true);
             append_field(outfile, format_duration(duration.count()), true);

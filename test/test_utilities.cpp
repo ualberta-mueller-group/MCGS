@@ -147,8 +147,8 @@ void assert_file_parser_output(file_parser* parser,
         game_case& expected = *expected_cases[case_idx];
         case_idx++;
 
-        assert(gc.to_play == expected.to_play);
-        assert(gc.expected_outcome == expected.expected_outcome);
+        assert(gc.run_command.player == expected.run_command.player);
+        assert(gc.run_command.expected_outcome == expected.run_command.expected_outcome);
         assert(gc.games.size() == expected.games.size());
 
         for (size_t i = 0; i < gc.games.size(); i++)
@@ -201,9 +201,9 @@ void assert_solve_test_file(const std::string& file_name,
         case_count += 1;
 
         // Should probably define a meaningful expected result for unit tests...
-        assert(gc.expected_outcome != TEST_RESULT_UNSPECIFIED);
+        assert(gc.run_command.expected_outcome != TEST_RESULT_UNSPECIFIED);
 
-        sumgame s(gc.to_play);
+        sumgame s(gc.run_command.player);
 
         for (game* g : gc.games)
         {
@@ -211,7 +211,7 @@ void assert_solve_test_file(const std::string& file_name,
         }
 
         bool result = s.solve();
-        assert(result == gc.expected_outcome);
+        assert(result == gc.run_command.expected_outcome);
 
         gc.cleanup_games();
     }

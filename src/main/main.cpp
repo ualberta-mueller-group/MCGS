@@ -54,7 +54,7 @@ int main(int argc, char** argv)
                 cout << endl;
             }
 
-            sumgame sum(gc.to_play);
+            sumgame sum(gc.run_command.player);
 
             for (game* g : gc.games)
             {
@@ -66,8 +66,8 @@ int main(int argc, char** argv)
                 cout << "\t" << "<no games specified>" << endl;
             }
 
-            cout << "Player: " << color_char(gc.to_play) << endl;
-            cout << "Expected: " << test_result_to_string(gc.expected_outcome)
+            cout << "Player: " << color_char(gc.run_command.player) << endl;
+            cout << "Expected: " << test_result_to_string(gc.run_command.expected_outcome)
                  << endl;
 
             if (opts.dry_run)
@@ -89,13 +89,13 @@ int main(int argc, char** argv)
                 cout << "Time (ms): " << duration.count() << endl;
 
                 cout << "Status: ";
-                if (gc.expected_outcome == TEST_RESULT_UNSPECIFIED)
+                if (gc.run_command.expected_outcome == TEST_RESULT_UNSPECIFIED)
                 {
                     cout << "COMPLETED";
                 }
                 else
                 {
-                    cout << ((gc.expected_outcome == result) ? "PASS" : "FAIL");
+                    cout << ((gc.run_command.expected_outcome == result) ? "PASS" : "FAIL");
                 }
                 cout << endl;
             }
