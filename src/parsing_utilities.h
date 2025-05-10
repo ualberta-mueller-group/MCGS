@@ -5,8 +5,6 @@
 #include "fraction.h"
 #include "game_case.h"
 
-////////////////////////////////////////////////// data types
-
 ////////////////////////////////////////////////// parsing functions
 std::vector<std::string> get_string_tokens(const std::string& line,
                                  const std::vector<char>& special_chars);

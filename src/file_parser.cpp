@@ -12,7 +12,9 @@
 #include <utility>
 #include "cgt_basics.h"
 #include "all_game_headers.h"
+#include "game_case.h"
 #include "game_token_parsers.h"
+#include "parsing_utilities.h"
 #include "utilities.h"
 #include <ios>
 
@@ -583,7 +585,7 @@ void file_parser::_validate_command(const string& token_copy)
 }
 
 // parse current token as a command
-bool file_parser::_parse_command()
+bool file_parser::_parse_command_old()
 {
     const string token_copy = _token;
 
@@ -726,6 +728,43 @@ bool file_parser::_parse_command()
     }
 
     _validate_command(token_copy);
+
+    return true;
+}
+
+bool file_parser::_parse_command()
+{
+    assert(_case_count == 0);
+
+    vector<run_command_t> command_list;
+    bool success = get_run_command_list(_token, command_list);
+
+    if (!success)
+    {
+        string why = "failed to parse run command: \"" + _token + "\"";
+        throw parser_exception(why, FAILED_CASE_COMMAND);
+    }
+
+    if (command_list.empty())
+    {
+        string why = "run command with no cases";
+        throw parser_exception(why, EMPTY_CASE_COMMAND);
+    }
+
+    if (command_list.size() > FILE_PARSER_MAX_CASES)
+    {
+        string why = _get_error_start() +
+                     "run command has too many cases, maximum is: ";
+        why += to_string(FILE_PARSER_MAX_CASES);
+        throw parser_exception(why, CASE_LIMIT_EXCEEDED);
+    }
+
+    const size_t n_commands = command_list.size();
+    for (size_t i = 0; i < n_commands; i++)
+    {
+        _cases[i].run_command = command_list[i];
+        _case_count++;
+    }
 
     return true;
 }

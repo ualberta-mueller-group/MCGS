@@ -150,6 +150,7 @@ private:
     bool _parse_game();
 
     void _validate_command(const std::string& token_copy);
+    bool _parse_command_old(); // TODO: remove me?
     bool _parse_command();
 
     std::string _get_error_start();

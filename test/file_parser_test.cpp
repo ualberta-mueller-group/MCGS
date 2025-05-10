@@ -183,9 +183,9 @@ void e2e_test10()
 void e2e_test11()
 {
     assert_throw_status_file("invalid_command2.test", true,
-                             FAILED_CASE_COMMAND);
+                             CASE_LIMIT_EXCEEDED);
     assert_throw_status_string("invalid_command2.test", true,
-                               FAILED_CASE_COMMAND);
+                               CASE_LIMIT_EXCEEDED);
 }
 
 void e2e_test12()
