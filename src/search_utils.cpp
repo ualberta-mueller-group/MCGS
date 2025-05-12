@@ -1,71 +1,196 @@
 #include "search_utils.h"
+#include "cgt_basics.h"
 
+#include <string>
+#include <vector>
+#include "sumgame.h"
+#include "game.h"
+#include "throw_assert.h"
 #include <chrono>
 #include <ratio>
-#include "throw_assert.h"
-#include "impartial_sumgame.h"
 
 using namespace std;
 
+////////////////////////////////////////////////// helpers
 namespace {
-test_status_t get_test_status(const search_value* real_value, const search_value* expected_value)
-{
-    assert(real_value != nullptr);
 
-    if (real_value->value_type == SEARCH_VALUE_TYPE_NONE)
+test_status_t compare_search_values(const search_value* found_value, const search_value* expected_value)
+{
+    assert(found_value != nullptr);
+
+    if (found_value->type() == SEARCH_VALUE_TYPE_NONE)
         return TEST_STATUS_TIMEOUT;
 
     if (expected_value == nullptr)
         return TEST_STATUS_COMPLETE;
 
-    return (*real_value == *expected_value) ? TEST_STATUS_PASS : TEST_STATUS_FAIL;
+    switch (found_value->type())
+    {
+        case SEARCH_VALUE_TYPE_NONE:
+            return TEST_STATUS_TIMEOUT;
+
+        case SEARCH_VALUE_TYPE_WINLOSS:
+            return found_value->win() == expected_value->win() ? TEST_STATUS_PASS : TEST_STATUS_FAIL;
+
+        case SEARCH_VALUE_TYPE_NIMBER:
+            return found_value->nimber() == expected_value->nimber() ? TEST_STATUS_PASS : TEST_STATUS_FAIL;
+    }
+
+    THROW_ASSERT(false);
 }
+
 } // namespace
 
-//////////////////////////////////////////////////
-search_result search_partizan(const sumgame& sum,
-    unsigned long long timeout,
-    const search_value* expected_value)
+////////////////////////////////////////////////// search_value
+search_value::search_value():
+    _type(SEARCH_VALUE_TYPE_NONE),
+    _value_win(false),
+    _value_nimber(-1)
+{
+}
+
+string search_value::str() const
+{
+    switch (type())
+    {
+        case SEARCH_VALUE_TYPE_NONE:
+            return "???";
+        case SEARCH_VALUE_TYPE_WINLOSS:
+            return _value_win ? "Win" : "Loss";
+        case SEARCH_VALUE_TYPE_NIMBER:
+        {
+            assert(_value_nimber >= 0);
+            return "*" + to_string(_value_nimber);
+        }
+    }
+
+    THROW_ASSERT(false);
+}
+
+search_value_type_t search_value::type() const
+{
+    return _type;
+}
+
+bool search_value::win() const
+{
+    THROW_ASSERT(type() == SEARCH_VALUE_TYPE_WINLOSS);
+    return _value_win;
+}
+
+int search_value::nimber() const
+{
+
+    THROW_ASSERT(type() == SEARCH_VALUE_TYPE_NIMBER);
+    return _value_nimber;
+}
+
+void search_value::set_none()
+{
+    _type = SEARCH_VALUE_TYPE_NONE;
+}
+
+void search_value::set_win(bool new_win)
+{
+    _type = SEARCH_VALUE_TYPE_WINLOSS;
+    _value_win = new_win;
+    _value_nimber = -1;
+}
+
+void search_value::set_nimber(int new_nimber)
+{
+    assert(new_nimber >= 0);
+
+    _type = SEARCH_VALUE_TYPE_NIMBER;
+    _value_nimber = new_nimber;
+}
+
+////////////////////////////////////////////////// test_status_t
+string test_status_to_string(test_status_t status)
+{
+    switch (status)
+    {
+        case TEST_STATUS_TIMEOUT:
+            return "TIMEOUT";
+        case TEST_STATUS_PASS:
+                return "PASS";
+        case TEST_STATUS_FAIL:
+                return "FAIL";
+        case TEST_STATUS_COMPLETE:
+                return "COMPLETE";
+    }
+
+    THROW_ASSERT(false);
+}
+
+////////////////////////////////////////////////// search_result
+string search_result::player_str() const
+{
+    if (is_black_white(player))
+        return string(color_char(player), 1);
+
+    assert(player == EMPTY);
+    return "IMP"; // impartial
+}
+
+string search_result::value_str() const
+{
+    return value.str();
+}
+
+string search_result::status_str() const
+{
+    return test_status_to_string(status);
+}
+
+string search_result::duration_str() const
+{
+    const char* format = "%.2f";
+
+    int size = snprintf(nullptr, 0, format, duration) + 1;
+    // variable length arrays are not part of the C++ standard; use vector
+    vector<char> buffer(size);
+
+    int got_size = snprintf(buffer.data(), size, format, duration);
+    assert(size == got_size + 1);
+
+    return string(buffer.data());
+}
+
+////////////////////////////////////////////////// search functions
+search_result search_partizan(const sumgame& sum, const search_value* expected_value, unsigned long long timeout)
 {
     search_result result;
-    result.player = sum.to_play();
 
     chrono::time_point start = chrono::high_resolution_clock::now();
-    std::optional<solve_result> sr = sum.solve_with_timeout(timeout);
+    optional<solve_result> sr = sum.solve_with_timeout(timeout);
     chrono::time_point end = chrono::high_resolution_clock::now();
+
     chrono::duration<double, std::milli> duration = end - start;
-    result.duration = duration.count();
+
+    // Assign values to search_result
+    result.player = sum.to_play();
 
     if (sr.has_value())
-    {
-        result.value.value_type = SEARCH_VALUE_TYPE_WINLOSS;
-        result.value.value_win = sr->win;
-    }
+        result.value.set_win(sr->win);
     else
-        result.value.value_type = SEARCH_VALUE_TYPE_NONE;
+        result.value.set_none();
 
-    result.status = get_test_status(&result.value, expected_value);
+    result.status = compare_search_values(&result.value, expected_value);
 
+    result.duration = duration.count();
+    
     return result;
 }
 
-search_result search_impartial(const sumgame& sum,
-    unsigned long long timeout,
-    const search_value* expected_value)
+search_result search_partizan(const vector<game*>& games, bw to_play, const search_value* expected_value, unsigned long long timeout)
 {
-    search_result result;
-    result.player = EMPTY;
+    assert(is_black_white(to_play));
 
-    chrono::time_point start = chrono::high_resolution_clock::now();
-    int nim_value = search_sumgame(sum);
-    chrono::time_point end = chrono::high_resolution_clock::now();
-    chrono::duration<double, std::milli> duration = end - start;
-    result.duration = duration.count();
+    sumgame sum(to_play);
 
-    result.value.value_type = SEARCH_VALUE_TYPE_NIMBER;
-    result.value.value_nimber = nim_value;
+    for (game* g : games)
+        sum.add(g);
 
-    result.status = get_test_status(&result.value, expected_value);
-
-    return result;
+    return search_partizan(sum, expected_value, timeout);
 }

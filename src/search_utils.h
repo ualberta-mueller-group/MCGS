@@ -1,47 +1,48 @@
 #pragma once
-
-#include "cgt_basics.h"
-#include "sumgame.h"
-#include <string>
-#include "throw_assert.h"
-
-/* TODO (in order)
-
-    - Review this design, it's a bit messy...
-        - Do these types need better encapsulation? (esp. the union type?)
-    - impartial_sumgame
-        - Give search function a better name
-        - Give it a timeout
-
-
-    For "union" type: use an actual union internally, with an enum indicating
-        the real type
-
-    The enums should have their own to_string functions
-
-    Input needs to be validated somehow so that file_parser can print
-        proper error messages...
-
+/*
+    Utilities for solving both partizan and impartial sums. Used by main.cpp
+        and autotests.cpp to run tests.
 */
 
+#include <string>
+#include <vector>
+#include "sumgame.h"
+#include "game.h"
+
+////////////////////////////////////////////////// search_value
 enum search_value_type_t
 {
-    SEARCH_VALUE_TYPE_NONE = 0,
+    SEARCH_VALUE_TYPE_NONE = 0, // i.e. timeout
     SEARCH_VALUE_TYPE_WINLOSS,
     SEARCH_VALUE_TYPE_NIMBER,
 };
 
-struct search_value
+class search_value
 {
-    std::string str() const;
-    bool operator==(const search_value& rhs) const;
-    bool operator!=(const search_value& rhs) const;
+public:
+    search_value();
 
-    search_value_type_t value_type;
-    bool value_win;
-    int value_nimber;
+    // getters
+    std::string str() const;
+    search_value_type_t type() const;
+
+    // value getters (must check type() first)
+    bool win() const;
+    int nimber() const;
+
+    // setters
+    void set_none();
+    void set_win(bool new_win);
+    void set_nimber(int new_nimber);
+
+private:
+    search_value_type_t _type;
+
+    bool _value_win;
+    int _value_nimber;
 };
 
+////////////////////////////////////////////////// test_status_t
 enum test_status_t
 {
     TEST_STATUS_TIMEOUT = 0,
@@ -50,37 +51,23 @@ enum test_status_t
     TEST_STATUS_COMPLETE,
 };
 
+std::string test_status_to_string(test_status_t status);
+
+////////////////////////////////////////////////// search_result
 struct search_result
 {
-public:
-    std::string player_string() const;
-    std::string status_string() const;
-    std::string value_string() const;
-    std::string duration_string() const;
+    std::string player_str() const;
+    std::string value_str() const;
+    std::string status_str() const;
+    std::string duration_str() const;
 
     ebw player;
-    test_status_t status;
     search_value value;
+    test_status_t status;
     double duration;
 };
 
+////////////////////////////////////////////////// search functions
+search_result search_partizan(const sumgame& sum, const search_value* expected_value = nullptr, unsigned long long timeout = 0);
+search_result search_partizan(const std::vector<game*>& games, bw to_play, const search_value* expected_value = nullptr, unsigned long long timeout = 0);
 
-search_result search_partizan(const sumgame& sum,
-    unsigned long long timeout = 0, 
-    const search_value* expected_value = nullptr);
-
-// TODO
-//search_result search_partizan(const std::vector<game*>,
-//    bw player,
-//    unsigned long long timeout = 0, 
-//    const search_value* expected_value = nullptr);
-
-search_result search_impartial(const sumgame& sum,
-    unsigned long long timeout = 0, 
-    const search_value* expected_value = nullptr);
-
-// TODO
-//search_result search_impartial(const sumgame& sum,
-//    ebw player,
-//    unsigned long long timeout = 0, 
-//    const search_value* expected_value = nullptr);
