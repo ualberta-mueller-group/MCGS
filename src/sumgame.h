@@ -118,6 +118,8 @@ public:
 
     hash_t get_global_hash(bool invalidate_game_hashes = false) const; // TODO: this method may be temporary
 
+    bool impartial() const;
+
     // called by mcgs_init()
     static void init_ttable(size_t index_bits);
 

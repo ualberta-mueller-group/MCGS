@@ -1,9 +1,9 @@
 #include "search_utils.h"
-#include "cgt_basics.h"
 
 #include <string>
 #include <vector>
 #include "sumgame.h"
+#include "impartial_sumgame.h"
 #include "game.h"
 #include "throw_assert.h"
 #include <chrono>
@@ -80,8 +80,8 @@ bool search_value::win() const
 
 int search_value::nimber() const
 {
-
     THROW_ASSERT(type() == SEARCH_VALUE_TYPE_NIMBER);
+    assert(_value_nimber >= 0);
     return _value_nimber;
 }
 
@@ -160,6 +160,8 @@ string search_result::duration_str() const
 ////////////////////////////////////////////////// search functions
 search_result search_partizan(const sumgame& sum, const search_value* expected_value, unsigned long long timeout)
 {
+    assert(expected_value == nullptr || expected_value->type() == SEARCH_VALUE_TYPE_WINLOSS);
+
     search_result result;
 
     chrono::time_point start = chrono::high_resolution_clock::now();
@@ -179,7 +181,7 @@ search_result search_partizan(const sumgame& sum, const search_value* expected_v
     result.status = compare_search_values(&result.value, expected_value);
 
     result.duration = duration.count();
-    
+
     return result;
 }
 
@@ -194,3 +196,39 @@ search_result search_partizan(const vector<game*>& games, bw to_play, const sear
 
     return search_partizan(sum, expected_value, timeout);
 }
+
+// TODO TIMEOUT
+search_result search_impartial(const sumgame& sum, const search_value* expected_value, unsigned long long timeout)
+{
+    assert(expected_value == nullptr || expected_value->type() == SEARCH_VALUE_TYPE_NIMBER);
+    THROW_ASSERT(sum.impartial());
+
+    search_result result;
+
+    chrono::time_point start = chrono::high_resolution_clock::now();
+    int nim_value = search_sumgame(sum);
+    chrono::time_point end = chrono::high_resolution_clock::now();
+
+    chrono::duration<double, std::milli> duration = end - start;
+
+    // Assign values to search_result
+    result.player = sum.to_play();
+
+    result.value.set_nimber(nim_value);
+
+    result.status = compare_search_values(&result.value, expected_value);
+
+    result.duration = duration.count();
+
+    return result;
+}
+
+search_result search_impartial(const std::vector<game*>& games, const search_value* expected_value, unsigned long long timeout)
+{
+    sumgame sum(BLACK);
+    for (game* g : games)
+        sum.add(g);
+
+    return search_impartial(sum, expected_value, timeout);
+}
+

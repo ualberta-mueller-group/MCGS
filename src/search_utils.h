@@ -59,7 +59,7 @@ struct search_result
     std::string player_str() const;
     std::string value_str() const;
     std::string status_str() const;
-    std::string duration_str() const;
+    std::string duration_str() const; // Print elapsed time to 2 decimal places
 
     ebw player;
     search_value value;
@@ -71,3 +71,5 @@ struct search_result
 search_result search_partizan(const sumgame& sum, const search_value* expected_value = nullptr, unsigned long long timeout = 0);
 search_result search_partizan(const std::vector<game*>& games, bw to_play, const search_value* expected_value = nullptr, unsigned long long timeout = 0);
 
+search_result search_impartial(const sumgame& sum, const search_value* expected_value = nullptr, unsigned long long timeout = 0);
+search_result search_impartial(const std::vector<game*>& games, const search_value* expected_value = nullptr, unsigned long long timeout = 0);

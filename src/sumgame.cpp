@@ -685,6 +685,16 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
     return _sumgame_hash.get_value();
 }
 
+bool sumgame::impartial() const
+{
+    const int N = num_total_games();
+    for (int i = 0; i < N; i++)
+        if (! subgame(i)->is_impartial())
+            return false;
+
+    return true;
+}
+
 void sumgame::init_ttable(size_t index_bits)
 {
     if (global::tt_sumgame_idx_bits() == 0)
