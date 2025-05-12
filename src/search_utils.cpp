@@ -228,7 +228,7 @@ search_result search_impartial(const sumgame& sum, const search_value* expected_
     chrono::duration<double, std::milli> duration = end - start;
 
     // Assign values to search_result
-    result.player = sum.to_play();
+    result.player = EMPTY;
 
     result.value.set_nimber(nim_value);
 
