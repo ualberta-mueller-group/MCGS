@@ -16,4 +16,4 @@
 #include "sumgame.h"
 
 // solve sumgame s - compute its nim_value
-int search_sumgame(const sumgame& s);
+int search_impartial_sumgame(const sumgame& s);

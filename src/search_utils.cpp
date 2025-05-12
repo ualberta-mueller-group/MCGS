@@ -221,7 +221,7 @@ search_result search_impartial(const sumgame& sum, const search_value* expected_
     search_result result;
 
     chrono::time_point start = chrono::high_resolution_clock::now();
-    int nim_value = search_sumgame(sum);
+    int nim_value = search_impartial_sumgame(sum);
     chrono::time_point end = chrono::high_resolution_clock::now();
 
     chrono::duration<double, std::milli> duration = end - start;

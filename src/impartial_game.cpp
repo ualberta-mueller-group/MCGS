@@ -65,7 +65,11 @@ int impartial_game::search_impartial_game(impartial_tt& tt) const
     auto g = const_cast<impartial_game*>(this);
     int v;
     if (tt_lookup(tt, g, v))
+    {
+        if (g->num_moves_played() == 0)
+            g->set_solved(v);
         return v;
+    }
 
     std::unique_ptr<move_generator> mgp(g->create_move_generator());
     move_generator& mg = *mgp;

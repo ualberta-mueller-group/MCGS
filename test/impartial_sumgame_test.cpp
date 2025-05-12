@@ -16,7 +16,7 @@ namespace {
 
 void test_sum_nim_value(const sumgame& sum, int nim_value)
 {
-    int search_value = search_sumgame(sum);
+    int search_value = search_impartial_sumgame(sum);
     assert(search_value == nim_value);
 }
 
@@ -38,7 +38,6 @@ void test_game_sum(std::vector<game*>&& games, int nim_value)
 
 void impartial_sumgame_test_all()
 {
-
     test_game_sum({
                       new kayles(1), // nim value 1
                       new kayles(1), // nim value 1
@@ -52,6 +51,7 @@ void impartial_sumgame_test_all()
                   },
                   1 // nim sum
     );
+
     test_game_sum({
                       new kayles(2), // nim value 2
                       new kayles(3),  // nim value 3
@@ -74,5 +74,4 @@ void impartial_sumgame_test_all()
                   },
                   4 // nim sum
     );
-    
 }

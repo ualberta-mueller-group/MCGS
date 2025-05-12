@@ -1,6 +1,6 @@
 CC = c++
 #NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread -DNDEBUG -DNO_WARN_DEFAULT_IMPL
-NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread
+NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread
 TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -DSUMGAME_DEBUG_EXTRA -pthread
 
 # i.e. "make MCGS ASAN=leak" or "make MCGS ASAN=address"
