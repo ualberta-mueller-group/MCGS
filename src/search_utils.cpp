@@ -216,7 +216,8 @@ search_result search_partizan(const vector<game*>& games, bw to_play, const sear
 // TODO TIMEOUT
 search_result search_impartial(const sumgame& sum, const search_value* expected_value, unsigned long long timeout)
 {
-    THROW_ASSERT(sum.impartial());
+    if (!sum.impartial())
+        throw std::logic_error("Sum contains partizan games");
 
     search_result result;
 
