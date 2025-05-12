@@ -34,6 +34,14 @@ public:
     int search_with_tt(int tt_size = 24) const;
     int search_impartial_game(impartial_tt& tt) const;
 
+    /*
+        TODO: this method should probably be hidden somehow; it's an
+        implementation detail and is used by
+        search_impartial_sumgame_with_timeout
+    */
+    int search_impartial_game_cancellable(impartial_tt& tt,
+                                          const bool& over_time) const;
+
     // Impartial game interface
     virtual void play(const move& m);
     virtual move_generator* create_move_generator() const = 0;

@@ -213,7 +213,6 @@ search_result search_partizan(const vector<game*>& games, bw to_play, const sear
     return search_partizan(sum, expected_value, timeout);
 }
 
-// TODO TIMEOUT
 search_result search_impartial(const sumgame& sum, const search_value* expected_value, unsigned long long timeout)
 {
     if (!sum.impartial())
@@ -222,7 +221,7 @@ search_result search_impartial(const sumgame& sum, const search_value* expected_
     search_result result;
 
     chrono::time_point start = chrono::high_resolution_clock::now();
-    int nim_value = search_impartial_sumgame(sum);
+    std::optional<int> nim_value = search_impartial_sumgame_with_timeout(sum, timeout);
     chrono::time_point end = chrono::high_resolution_clock::now();
 
     chrono::duration<double, std::milli> duration = end - start;
@@ -230,7 +229,10 @@ search_result search_impartial(const sumgame& sum, const search_value* expected_
     // Assign values to search_result
     result.player = EMPTY;
 
-    result.value.set_nimber(nim_value);
+    if (nim_value.has_value())
+        result.value.set_nimber(nim_value.value());
+    else
+        result.value.set_none();
 
     result.status = compare_search_values(&result.value, expected_value);
 
