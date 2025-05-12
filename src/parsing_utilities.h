@@ -4,6 +4,19 @@
 #include <cstddef>
 #include "fraction.h"
 #include "game_case.h"
+#include "search_utils.h"
+
+struct run_command_t
+{
+    run_command_t():
+        player(EMPTY),
+        expected_value()
+    {
+    }
+
+    ebw player;
+    search_value expected_value;
+};
 
 ////////////////////////////////////////////////// parsing functions
 std::vector<std::string> get_string_tokens(const std::string& line,
@@ -37,7 +50,7 @@ bool get_star(const std::vector<std::string>& string_tokens, size_t& idx, bool& 
 
 bool get_int(const std::vector<std::string>& string_tokens, size_t& idx, int& val);
 
-bool get_win_loss(const std::vector<std::string>& string_tokens, size_t& idx, test_result& result);
+bool get_win_loss(const std::vector<std::string>& string_tokens, size_t& idx, bool& win);
 
 bool get_player(const std::vector<std::string>& string_tokens, size_t& idx, ebw& player);
 

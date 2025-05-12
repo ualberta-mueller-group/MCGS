@@ -21,8 +21,8 @@ test_status_t compare_search_values(const search_value* found_value, const searc
     if (found_value->type() == SEARCH_VALUE_TYPE_NONE)
         return TEST_STATUS_TIMEOUT;
 
-    if (expected_value == nullptr)
-        return TEST_STATUS_COMPLETE;
+    if (expected_value == nullptr || expected_value->type() == SEARCH_VALUE_TYPE_NONE)
+        return TEST_STATUS_COMPLETED;
 
     switch (found_value->type())
     {
@@ -41,6 +41,16 @@ test_status_t compare_search_values(const search_value* found_value, const searc
 
 } // namespace
 
+////////////////////////////////////////////////// misc functions
+string player_name_bw_imp(ebw to_play)
+{
+    if (is_black_white(to_play))
+        return string(1, color_char(to_play));
+
+    assert(to_play == EMPTY);
+    return "IMP"; // impartial
+}
+
 ////////////////////////////////////////////////// search_value
 search_value::search_value():
     _type(SEARCH_VALUE_TYPE_NONE),
@@ -54,7 +64,7 @@ string search_value::str() const
     switch (type())
     {
         case SEARCH_VALUE_TYPE_NONE:
-            return "???";
+            return "None";
         case SEARCH_VALUE_TYPE_WINLOSS:
             return _value_win ? "Win" : "Loss";
         case SEARCH_VALUE_TYPE_NIMBER:
@@ -116,8 +126,8 @@ string test_status_to_string(test_status_t status)
                 return "PASS";
         case TEST_STATUS_FAIL:
                 return "FAIL";
-        case TEST_STATUS_COMPLETE:
-                return "COMPLETE";
+        case TEST_STATUS_COMPLETED:
+                return "COMPLETED";
     }
 
     THROW_ASSERT(false);
@@ -126,11 +136,7 @@ string test_status_to_string(test_status_t status)
 ////////////////////////////////////////////////// search_result
 string search_result::player_str() const
 {
-    if (is_black_white(player))
-        return string(color_char(player), 1);
-
-    assert(player == EMPTY);
-    return "IMP"; // impartial
+    return player_name_bw_imp(player);
 }
 
 string search_result::value_str() const
@@ -160,8 +166,6 @@ string search_result::duration_str() const
 ////////////////////////////////////////////////// search functions
 search_result search_partizan(const sumgame& sum, const search_value* expected_value, unsigned long long timeout)
 {
-    assert(expected_value == nullptr || expected_value->type() == SEARCH_VALUE_TYPE_WINLOSS);
-
     search_result result;
 
     chrono::time_point start = chrono::high_resolution_clock::now();
@@ -200,7 +204,6 @@ search_result search_partizan(const vector<game*>& games, bw to_play, const sear
 // TODO TIMEOUT
 search_result search_impartial(const sumgame& sum, const search_value* expected_value, unsigned long long timeout)
 {
-    assert(expected_value == nullptr || expected_value->type() == SEARCH_VALUE_TYPE_NIMBER);
     THROW_ASSERT(sum.impartial());
 
     search_result result;

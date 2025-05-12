@@ -5,70 +5,7 @@
 #include "simple_text_hash.h"
 // IWYU pragma: end_exports
 
-// expected outcome of a game_case
-enum test_result
-{
-    TEST_RESULT_LOSS = 0,
-    TEST_RESULT_WIN,
-    TEST_RESULT_NIMBER,
-    TEST_RESULT_UNSPECIFIED,
-};
-
-inline std::string test_result_to_string(const test_result& outcome)
-{
-    switch (outcome)
-    {
-        case TEST_RESULT_UNSPECIFIED:
-        {
-            return "Unspecified";
-            break;
-        }
-
-        case TEST_RESULT_WIN:
-        {
-            return "Win";
-            break;
-        }
-
-        case TEST_RESULT_LOSS:
-        {
-            return "Loss";
-            break;
-        }
-
-        case TEST_RESULT_NIMBER:
-        {
-            return "Nimber";
-            break;
-        }
-
-        default:
-        {
-            std::cerr << "test_result_to_string() invalid input: ";
-            std::cerr << outcome << std::endl;
-            exit(-1); // exit instead of assert (could be due to bad file input)
-        }
-    }
-
-    std::cerr << "This string should not appear: see test_result_to_string()"
-              << std::endl;
-    exit(-1);
-}
-
-class run_command_t
-{
-public:
-    run_command_t()
-    {
-        reset();
-    }
-
-    void reset();
-
-    ebw player; // empty IFF nimber expected
-    test_result expected_outcome;
-    int expected_nimber;
-};
+#include "search_utils.h"
 
 /*
     game_case:
@@ -92,7 +29,11 @@ struct game_case
     void release_games(); // release ownership of games, and reset self to
                           // default values
 
-    run_command_t run_command;
+    search_result run(unsigned long long timeout = 0) const;
+
+    ebw to_play;
+    search_value expected_value;
+    bool impartial;
 
     std::vector<game*> games;
     std::string comments;

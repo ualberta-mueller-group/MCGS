@@ -9,6 +9,9 @@
 #include "sumgame.h"
 #include "game.h"
 
+////////////////////////////////////////////////// misc functions
+std::string player_name_bw_imp(ebw to_play);
+
 ////////////////////////////////////////////////// search_value
 enum search_value_type_t
 {
@@ -48,7 +51,7 @@ enum test_status_t
     TEST_STATUS_TIMEOUT = 0,
     TEST_STATUS_PASS,
     TEST_STATUS_FAIL,
-    TEST_STATUS_COMPLETE,
+    TEST_STATUS_COMPLETED,
 };
 
 std::string test_status_to_string(test_status_t status);

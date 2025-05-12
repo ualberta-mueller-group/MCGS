@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include "cgt_basics.h"
 #include "utilities.h"
 #include "fraction.h"
 
@@ -77,7 +78,7 @@ bool get_int(const vector<string>& string_tokens, size_t& idx, int& val)
     return true;
 }
 
-bool get_win_loss(const vector<string>& string_tokens, size_t& idx, test_result& result)
+bool get_win_loss(const vector<string>& string_tokens, size_t& idx, bool& win)
 {
     const size_t N = string_tokens.size();
     if (!(idx < N))
@@ -86,9 +87,9 @@ bool get_win_loss(const vector<string>& string_tokens, size_t& idx, test_result&
     const string& token = string_tokens[idx];
 
     if (token == "win")
-        result = TEST_RESULT_WIN;
+        win = true;
     else if (token == "loss")
-        result = TEST_RESULT_LOSS;
+        win = false;
     else
         return false;
 
@@ -229,15 +230,13 @@ bool get_fraction_list(const string& line, vector<fraction>& fracs)
     return true;
 }
 
-bool get_run_command(const vector<string>& string_tokens, size_t& idx, vector<run_command_t>& run_commands)
+bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx, std::vector<run_command_t>& run_commands)
 {
     const size_t N = string_tokens.size();
     if (!(idx < N))
         return false;
 
     run_command_t rc;
-    rc.expected_outcome = TEST_RESULT_UNSPECIFIED;
-    rc.expected_nimber = -1;
 
     // Must have player
     if (!get_player(string_tokens, idx, rc.player))
@@ -250,18 +249,25 @@ bool get_run_command(const vector<string>& string_tokens, size_t& idx, vector<ru
     }
 
     // Optional expected outcome
-    if (rc.player == BLACK || rc.player == WHITE)
-        get_win_loss(string_tokens, idx, rc.expected_outcome);
-    else if (rc.player == EMPTY)
+    if (is_black_white(rc.player))
     {
-        bool got_nimber = get_int(string_tokens, idx, rc.expected_nimber);
+        bool win;
+        if (get_win_loss(string_tokens, idx, win))
+            rc.expected_value.set_win(win);
+    }
+    else
+    {
+        assert(rc.player == EMPTY);
+
+        int nim_value;
+        bool got_nimber = get_int(string_tokens, idx, nim_value);
 
         if (got_nimber)
         {
-            rc.expected_outcome = TEST_RESULT_NIMBER;
-
-            if (rc.expected_nimber < 0)
+            if (nim_value < 0)
                 return false;
+
+            rc.expected_value.set_nimber(nim_value);
         }
     }
 
@@ -269,7 +275,7 @@ bool get_run_command(const vector<string>& string_tokens, size_t& idx, vector<ru
     return true;
 }
 
-bool get_run_command_list(const string& line, vector<run_command_t>& commands)
+bool get_run_command_list(const std::string& line, std::vector<run_command_t>& commands)
 {
     assert(commands.empty());
 
