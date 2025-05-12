@@ -25,6 +25,9 @@ class search_value
 public:
     search_value();
 
+    bool operator==(const search_value& rhs) const;
+    bool operator!=(const search_value& rhs) const;
+
     // getters
     std::string str() const;
     search_value_type_t type() const;

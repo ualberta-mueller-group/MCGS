@@ -7,6 +7,7 @@
 #include <vector>
 #include <sstream>
 #include "game.h"
+#include "search_utils.h"
 #include "sumgame.h"
 #include "alternating_move_game.h"
 #include <cassert>
@@ -147,8 +148,8 @@ void assert_file_parser_output(file_parser* parser,
         game_case& expected = *expected_cases[case_idx];
         case_idx++;
 
-        assert(gc.run_command.player == expected.run_command.player);
-        assert(gc.run_command.expected_outcome == expected.run_command.expected_outcome);
+        assert(gc.to_play == expected.to_play);
+        assert(gc.expected_value == expected.expected_value);
         assert(gc.games.size() == expected.games.size());
 
         for (size_t i = 0; i < gc.games.size(); i++)
@@ -201,9 +202,9 @@ void assert_solve_test_file(const std::string& file_name,
         case_count += 1;
 
         // Should probably define a meaningful expected result for unit tests...
-        assert(gc.run_command.expected_outcome != TEST_RESULT_UNSPECIFIED);
+        assert(gc.expected_value.type() == SEARCH_VALUE_TYPE_WINLOSS);
 
-        sumgame s(gc.run_command.player);
+        sumgame s(gc.to_play);
 
         for (game* g : gc.games)
         {
@@ -211,7 +212,7 @@ void assert_solve_test_file(const std::string& file_name,
         }
 
         bool result = s.solve();
-        assert(result == gc.run_command.expected_outcome);
+        assert(result == gc.expected_value.win());
 
         gc.cleanup_games();
     }

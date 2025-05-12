@@ -7,6 +7,7 @@
 #include <cassert>
 
 #include "cgt_basics.h"
+#include "search_utils.h"
 #include "utilities.h"
 #include "fraction.h"
 
@@ -237,6 +238,7 @@ bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx,
         return false;
 
     run_command_t rc;
+    assert(rc.expected_value.type() == SEARCH_VALUE_TYPE_NONE);
 
     // Must have player
     if (!get_player(string_tokens, idx, rc.player))

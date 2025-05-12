@@ -156,8 +156,8 @@ void cli_opts_test8()
         game_case* gc = new game_case();
         cases.push_back(gc);
 
-        gc->run_command.player = BLACK;
-        gc->run_command.expected_outcome = TEST_RESULT_WIN;
+        gc->to_play = BLACK;
+        gc->expected_value.set_win(true);
         gc->games.push_back(new nogo_1xn("X..O"));
         gc->games.push_back(new nogo_1xn("X...O..X"));
     }
@@ -185,9 +185,8 @@ void cli_opts_test9()
     {
         game_case* gc = new game_case();
         cases.push_back(gc);
-
-        gc->run_command.player = BLACK;
-        gc->run_command.expected_outcome = TEST_RESULT_LOSS;
+        gc->to_play = BLACK;
+        gc->expected_value.set_win(false);
         gc->games.push_back(new clobber_1xn("XOOX"));
     }
 

@@ -24,19 +24,8 @@ test_status_t compare_search_values(const search_value* found_value, const searc
     if (expected_value == nullptr || expected_value->type() == SEARCH_VALUE_TYPE_NONE)
         return TEST_STATUS_COMPLETED;
 
-    switch (found_value->type())
-    {
-        case SEARCH_VALUE_TYPE_NONE:
-            return TEST_STATUS_TIMEOUT;
-
-        case SEARCH_VALUE_TYPE_WINLOSS:
-            return found_value->win() == expected_value->win() ? TEST_STATUS_PASS : TEST_STATUS_FAIL;
-
-        case SEARCH_VALUE_TYPE_NIMBER:
-            return found_value->nimber() == expected_value->nimber() ? TEST_STATUS_PASS : TEST_STATUS_FAIL;
-    }
-
-    THROW_ASSERT(false);
+    THROW_ASSERT(found_value->type() == expected_value->type());
+    return *found_value == *expected_value ? TEST_STATUS_PASS : TEST_STATUS_FAIL;
 }
 
 } // namespace
@@ -57,6 +46,29 @@ search_value::search_value():
     _value_win(false),
     _value_nimber(-1)
 {
+}
+
+bool search_value::operator==(const search_value& rhs) const
+{
+    if (type() != rhs.type())
+        return false;
+
+    switch (type())
+    {
+        case SEARCH_VALUE_TYPE_NONE:
+            return true;
+        case SEARCH_VALUE_TYPE_WINLOSS:
+            return win() == rhs.win();
+        case SEARCH_VALUE_TYPE_NIMBER:
+            return nimber() == rhs.nimber();
+    }
+
+    assert(false);
+}
+
+bool search_value::operator!=(const search_value& rhs) const
+{
+    return !(*this == rhs);
 }
 
 string search_value::str() const
