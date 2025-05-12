@@ -51,11 +51,27 @@ private:
 
 inline impartial_game_wrapper::impartial_game_wrapper(game* g) :
     impartial_game(), _game(g), _owns_game(false)
-{ }
+{
+    /*
+        TODO:
+        impartial_game_wrapper uses wrapped game's local_hash in its own hash,
+        but if the wrapped game also wraps another impartial_game_wrapper and
+        does the same, the types will cancel out...
+    */
+    assert(!g->is_impartial());
+}
 
 inline impartial_game_wrapper::impartial_game_wrapper(game* g, bool owns_game) :
     impartial_game(), _game(g), _owns_game(owns_game)
-{ }
+{
+    /*
+        TODO:
+        impartial_game_wrapper uses wrapped game's local_hash in its own hash,
+        but if the wrapped game also wraps another impartial_game_wrapper and
+        does the same, the types will cancel out...
+    */
+    assert(!g->is_impartial());
+}
 
 inline impartial_game_wrapper::~impartial_game_wrapper()
 {
