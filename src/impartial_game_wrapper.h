@@ -10,7 +10,7 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "impartial_game.h"
-#include "impartial_wrapper_move.h"
+//#include "impartial_wrapper_move.h"
 #include <ostream>
 
 //---------------------------------------------------------------------------
@@ -81,15 +81,35 @@ inline impartial_game_wrapper::~impartial_game_wrapper()
 
 inline void impartial_game_wrapper::play(const move& m)
 {
-    const bw color = impartial_wrapper_move::get_color(m);
-    const move m_no_color = impartial_wrapper_move::decode_wrapped(m);
+    // ORIGINAL IMPLEMENTATION
+    //const bw color = impartial_wrapper_move::get_color(m);
+    //const move m_no_color = impartial_wrapper_move::decode_wrapped(m);
+    //_game->play(m_no_color, color);
+    //impartial_game::play(m);
+
+    /* TODO: impartial_game_wrapper color hack
+
+       Using the sign bit to encode color conflicts with up_star.
+       The impartial_game::play methods will preserve the color bit of m,
+       but it must already be encoded into m
+    */
+    const bw color = cgt_move::get_color(m);
+    const move m_no_color = cgt_move::decode(m);
     _game->play(m_no_color, color);
     impartial_game::play(m);
+    assert(_game->last_move() == last_move());
 }
 
 inline void impartial_game_wrapper::play(const move& m, bw to_play)
 {
     play(m);
+
+    /* TODO: impartial_game_wrapper color hack
+
+       The color encoded into m is the color of the move generator used
+       to generate m, whereas to_play is the color of the player to play in
+       minimax search
+    */
 }
 
 inline void impartial_game_wrapper::undo_move()

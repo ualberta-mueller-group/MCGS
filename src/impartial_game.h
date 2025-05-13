@@ -91,12 +91,34 @@ inline int impartial_game::nim_value() const
 
 inline void impartial_game::play(const move& m)
 {
-    game::play(m, BLACK);
+    // ORIGINAL IMPLEMENTATION
+    //game::play(m, BLACK);
+
+    /* TODO: impartial_game_wrapper color hack
+
+       Preserves the color bit of m, because ig_wrapper_move_generator
+       may use it. No other games should do this
+    */
+    const move m_no_color = cgt_move::decode(m);
+    const bw color = cgt_move::get_color(m);
+    game::play(m_no_color, color);
+    assert(last_move() == m);
 }
 
 inline void impartial_game::play(const move& m, bw to_play)
 {
     impartial_game::play(m);
+
+    /* TODO: impartial_game_wrapper color hack
+
+        m may use the color bit, but only if created by an
+        ig_wrapper_move_generator. The color in m is the color of the wrapped
+        partizan game's move generator used to generate m, whereas to_play is
+        the player to play in minimax search
+
+        The latter can be ignored, but the former must be used to play m
+        on the wrapped game
+    */
 }
 
 inline move_generator* 

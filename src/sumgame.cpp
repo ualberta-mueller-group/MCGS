@@ -2,6 +2,7 @@
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
 #include "sumgame.h"
+#include "cgt_move.h"
 #include "game.h"
 #include "game_type.h"
 
@@ -29,6 +30,7 @@
 #include "global_options.h"
 #include "hashing.h"
 #include "sumgame_undo_stack_unwinder.h"
+#include "impartial_game_wrapper.h"
 
 using std::cout;
 using std::endl;
@@ -557,14 +559,14 @@ void sumgame::undo_move()
 
     const move subm = cgt_move::decode(s->last_move());
 
-    if (!(sm.m == subm))
-    {
-        cout << subg << ' ' 
-        << std::hex << sm.m << ' ' << subm 
-        << std::dec << endl;
-    }
+    assert(                                                                   //
+            sm.m == subm ||                                                   //
+            (                                                                 //
+                (cgt_move::decode(sm.m) == subm) &&                           //
+                (s->game_type() == game_type<impartial_game_wrapper>())       //
+            )                                                                 //
+    );                                                                        //
 
-    assert(sm.m == subm);
     s->undo_move();
     alternating_move_game::undo_move();
 
