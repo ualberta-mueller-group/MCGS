@@ -332,7 +332,7 @@ bool sumgame::solve_with_games(game* g) const
 
 optional<solve_result> sumgame::_solve_with_timeout()
 {
-#ifdef SUMGAME_DEBUG_EXTRA
+#ifdef SUMGAME_DEBUG
     _debug_extra();
     assert_restore_sumgame ars(*this);
 #endif

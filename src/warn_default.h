@@ -8,7 +8,7 @@
 #include <iostream>
 // IWYU pragma: end_exports
 
-#ifndef NO_WARN_DEFAULT_IMPL
+#ifdef DEFAULT_IMPL_DEBUG
 
 #define WARN_DEFAULT_IMPL()                                                   \
 {                                                                             \

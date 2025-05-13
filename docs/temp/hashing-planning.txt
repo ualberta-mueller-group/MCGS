@@ -109,7 +109,7 @@ sumgame
         We'll need to ensure that all sumgame mutations utilize methods which
         correctly update the global_hash. This is tricky, as sumgame exposes
         its games through `subgame(int)`. We'll need an
-        `assert_correct_global_hash` (with -DSUMGAME_DEBUG_EXTRA, any time the
+        `assert_correct_global_hash` (with -DSUMGAME_DEBUG, any time the
         global_hash is accessed, first save its value and then recompute it,
         then compare).
 

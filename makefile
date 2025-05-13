@@ -1,7 +1,11 @@
 CC = c++
-#NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread -DNDEBUG -DNO_WARN_DEFAULT_IMPL
-NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread
-TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -DSUMGAME_DEBUG_EXTRA -pthread
+
+MCGS_DEBUG_FLAGS_ALL := -DSUMGAME_DEBUG -DGAME_TYPE_DEBUG -DDEFAULT_IMPL_DEBUG
+MCGS_DEBUG_FLAGS_COMMON := -DDEFAULT_IMPL_DEBUG
+
+#NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread -DNDEBUG
+NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread $(MCGS_DEBUG_FLAGS_COMMON)
+TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread $(MCGS_DEBUG_FLAGS_ALL)
 
 # i.e. "make MCGS ASAN=leak" or "make MCGS ASAN=address"
 ifneq (,$(filter $(ASAN),leak address))
@@ -11,8 +15,8 @@ ifneq (,$(filter $(ASAN),leak address))
 endif
 
 ifneq (,$(filter $(DEBUG),1 true))
-	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -DSUMGAME_DEBUG_EXTRA
-	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -DSUMGAME_DEBUG_EXTRA
+	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -DSUMGAME_DEBUG
+	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -DSUMGAME_DEBUG
 endif
 
 # Valgrind is too slow for even short computations. Instead use: -fsanitize=leak
