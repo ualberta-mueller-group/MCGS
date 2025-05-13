@@ -105,6 +105,9 @@ game* impartial_game_token_parser_wrapper::parse_game(const string& game_token) 
     if (g == nullptr)
         return nullptr;
 
+    if (g->is_impartial())
+        return g;
+
     return new impartial_game_wrapper(g, true);
 }
 
