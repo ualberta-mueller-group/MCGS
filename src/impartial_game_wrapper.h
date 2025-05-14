@@ -53,10 +53,11 @@ inline impartial_game_wrapper::impartial_game_wrapper(game* g) :
     impartial_game(), _game(g), _owns_game(false)
 {
     /*
-        TODO:
-        impartial_game_wrapper uses wrapped game's local_hash in its own hash,
-        but if the wrapped game also wraps another impartial_game_wrapper and
-        does the same, the types will cancel out...
+       Wrapping an impartial game is bad for performance, and is unsafe if
+       the wrapped game is another impartial_game_wrapper, due to
+       ig_wrapper_move_generator using the color bit of moves.
+
+       This won't cause local hashes to cancel out, however
     */
     assert(!g->is_impartial());
 }
@@ -65,10 +66,11 @@ inline impartial_game_wrapper::impartial_game_wrapper(game* g, bool owns_game) :
     impartial_game(), _game(g), _owns_game(owns_game)
 {
     /*
-        TODO:
-        impartial_game_wrapper uses wrapped game's local_hash in its own hash,
-        but if the wrapped game also wraps another impartial_game_wrapper and
-        does the same, the types will cancel out...
+       Wrapping an impartial game is bad for performance, and is unsafe if
+       the wrapped game is another impartial_game_wrapper, due to
+       ig_wrapper_move_generator using the color bit of moves.
+
+       This won't cause local hashes to cancel out, however
     */
     assert(!g->is_impartial());
 }
