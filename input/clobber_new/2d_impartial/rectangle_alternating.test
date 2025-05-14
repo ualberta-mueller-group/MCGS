@@ -1,0 +1,85 @@
+{version 1.1}
+[impartial clobber]
+
+/*_ TODO: give commit hash for MCGS-verified results */
+
+/* 2x3 CGSuite */
+XOX|OXO
+    {N 0}
+
+/* 2x4 CGSuite */
+XOXO|OXOX
+    {N 0}
+
+/* 2x5 CGSuite */
+XOXOX|OXOXO
+    {N 0}
+
+/* 2x6 CGSuite */
+XOXOXO|OXOXOX
+    {N 0}
+
+/* 3x2 CGSuite */
+XO|OX|XO
+    {N 0}
+
+/* 3x4 CGSuite */
+XOXO|OXOX|XOXO
+    {N 0}
+
+/* 3x5 CGSuite */
+XOXOX|OXOXO|XOXOX
+    {N 1}
+
+/* 3x6 MCGS */
+XOXOXO|OXOXOX|XOXOXO
+    {N 0}
+
+/* 4x2 CGSuite */
+XO|OX|XO|OX
+    {N 0}
+
+/* 4x3 CGSuite */
+XOX|OXO|XOX|OXO
+    {N 0}
+
+/* 4x5 Times out */
+XOXOX|OXOXO|XOXOX|OXOXO
+    {N}
+
+/* 4x6 Times out */
+XOXOXO|OXOXOX|XOXOXO|OXOXOX
+    {N}
+
+/* 5x2 CGSuite */
+XO|OX|XO|OX|XO
+    {N 0}
+
+/* 5x3 CGSuite */
+XOX|OXO|XOX|OXO|XOX
+    {N 1}
+
+/* 5x4 Times out */
+XOXO|OXOX|XOXO|OXOX|XOXO
+    {N}
+
+/* 5x6 Times out */
+XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO
+    {N}
+
+/* 6x2 CGSuite */
+XO|OX|XO|OX|XO|OX
+    {N 0}
+
+/* 6x3 MCGS */
+XOX|OXO|XOX|OXO|XOX|OXO
+    {N 0}
+
+/* 6x4 Times out */
+XOXO|OXOX|XOXO|OXOX|XOXO|OXOX
+    {N}
+
+/* 6x5 Times out */
+XOXOX|OXOXO|XOXOX|OXOXO|XOXOX|OXOXO
+    {N}
+

@@ -1,0 +1,27 @@
+{version 1.1}
+[impartial clobber]
+
+/*_ TODO: give commit hash for MCGS-verified results */
+
+/* 2x2 CGSuite */
+XO|OX
+    {N 0}
+
+/* 3x3 CGSuite */
+XOX|OXO|XOX
+    {N 1}
+
+/* 4x4 CGSuite */
+XOXO|OXOX|XOXO|OXOX
+    {N 0}
+
+/* 5x5 */
+/* Times out */
+XOXOX|OXOXO|XOXOX|OXOXO|XOXOX
+    {N}
+
+/* 6x6 */
+/* Times out */
+XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO|OXOXOX
+    {N}
+
