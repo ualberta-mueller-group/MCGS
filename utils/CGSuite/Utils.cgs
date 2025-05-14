@@ -1,0 +1,44 @@
+////////////////////////////////////////////////// Utility functions
+def assert(condition, message ? "Assertion failed") begin
+    if not condition then
+        System.Error(message);
+    end
+end
+
+def print(obj) begin
+    System.Print(obj);
+end
+
+def to_string(obj) begin
+    if obj is String then
+        obj;
+    else
+        obj.ToString;
+    end
+end
+
+def join(collection, separator_string ? ", ") begin
+    assert(collection is Collection);
+    assert(separator_string is String);
+
+    line := "";
+
+    as_list := collection.ToList;
+    for i from 1 to as_list.Size do
+        line := line.Concat(to_string(as_list[i]));
+
+        if (i + 1) <= as_list.Size then
+            line := line.Concat(separator_string);
+        end
+    end
+
+    line;
+end
+
+def integer_divide(a, b) begin
+    assert(a is game.Integer);
+    assert(b is game.Integer);
+    (a - (a % b)) / b;
+end
+
+;
