@@ -9,6 +9,7 @@
 #include <memory>
 #include <cassert>
 #include <ostream>
+#include "throw_assert.h"
 
 using std::string, std::pair, std::unique_ptr;
 using std::vector;
@@ -41,10 +42,51 @@ string block_simplify(const string& board)
 //////////////////////////////////////// nogo_1xn
 nogo_1xn::nogo_1xn(const vector<int>& board) : strip(board)
 {
+#ifdef NOGO_DEBUG
+    THROW_ASSERT(is_legal());
+#endif
 }
 
 nogo_1xn::nogo_1xn(string game_as_string) : strip(game_as_string)
 {
+#ifdef NOGO_DEBUG
+    THROW_ASSERT(is_legal());
+#endif
+}
+
+bool nogo_1xn::is_legal() const
+{
+    const int N = size();
+
+    if (N == 0)
+        return true;
+
+    int p1, p2;
+    bool left_reaches_empty = false;
+
+    for (int i = 0; i < N; i++)
+    {
+        p1 = at(i);
+        p2 = (i == (N - 1)) ? BORDER : at(i + 1);
+
+        if (p1 == EMPTY || p2 == EMPTY)
+        {
+            left_reaches_empty = true;
+            continue;
+        }
+
+        if (p1 == p2)
+        {
+            continue;
+        }
+
+        if (!left_reaches_empty)
+            return false;
+
+        left_reaches_empty = false;
+    }
+
+    return true;
 }
 
 void nogo_1xn::play(const move& m, bw to_play)

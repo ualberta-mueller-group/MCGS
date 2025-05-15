@@ -42,6 +42,27 @@ public:
     }
 };
 
+// forwards the string as-is to the game constructor, then calls is_legal()
+template <class T>
+class basic_parser_with_check : public game_token_parser
+{
+public:
+    game* parse_game(const std::string& game_token) const override
+    {
+        T* g = new T(game_token);
+
+        if (!g->is_legal())
+        {
+            std::cerr << "ERROR: game not legal!" << std::endl;
+
+            delete g;
+            return nullptr;
+        }
+
+        return g;
+    }
+};
+
 // takes a string of 1 and only 1 int, passes it to the game constructor
 template <class T>
 class int_parser : public game_token_parser
