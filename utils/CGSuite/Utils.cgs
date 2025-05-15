@@ -41,4 +41,32 @@ def integer_divide(a, b) begin
     (a - (a % b)) / b;
 end
 
+def mcgs_to_elephants(mcgs_string) begin
+    assert(mcgs_string is String);
+    mcgs_string.Replace("X", "t").Replace("O", "f");
+end
+
+def sum_games(games) begin
+    assert(games is Collection);
+    for g in games do
+        assert(g is game.Game);
+    end
+
+    if games.Size == 0 then
+        0;
+    end
+
+    sum := games[1];
+    for i from 2 to games.Size do
+        sum := sum + games[i];
+    end
+
+    sum;
+end
+
+def make_impartial(g) begin
+    assert(g is game.Game);
+    game.variant.ImpartialVariantGame(g);
+end
+
 ;
