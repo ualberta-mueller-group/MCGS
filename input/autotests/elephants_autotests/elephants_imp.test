@@ -1,7 +1,10 @@
 {version 1.1}
-[impartial elephants]
 
-/*_ All verified by CGSuite */
+/*_
+    Results from: CGSuite
+*/
+
+[impartial elephants]
 
 XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO {N 1}
 X.......O.....XO.O.....X..OO.X.O.OOXO... {N 1}

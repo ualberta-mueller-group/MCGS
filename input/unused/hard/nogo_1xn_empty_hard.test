@@ -1,14 +1,14 @@
 {version 1.1}
-[nogo_1xn]
 
-/* [1,27], [28,39] verified by papers */
+/*_
+    Results from: "Solving NoGo on Small Rectangular Boards",
+    Haoyu Du et al. (Sizes [1, 27])
 
-/*_ These results found in "Solving NoGo on Small Rectangular Boards"
-    by Haoyu Du et al. ([1-27] points)
-
-    [28-39] are from "Solving Linear NoGo with Combinatorial Game Theory"
-    by Haoyu Du et al.
+    And: "Solving Linear NoGo with Combinatorial Game Theory",
+    Haoyu Du et al. (Sizes [28-39])
 */
+
+[nogo_1xn]
 
 /* 18 spaces */
 .................. {B win, W win}

@@ -5,7 +5,7 @@
     Haoyu Du et al. (Sizes [1, 27])
 */
 
-[nogo_1xn]
+[nogo]
 
 /* 1 space */
 . {B loss, W loss}

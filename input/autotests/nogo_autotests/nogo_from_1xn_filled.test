@@ -4,7 +4,8 @@
     Results from: MCGS
 */
 
-[nogo_1xn]
+[nogo]
+
 .....O..O..OO..XX....X..X.X..X {B win, W loss}
 O.....O......O.OX.....XX..X.XX {B win, W win}
 .O..O.O.......X.XXX..O.X...X.. {B win, W win}

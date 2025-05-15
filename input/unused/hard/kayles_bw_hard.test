@@ -1,6 +1,8 @@
 {version 1.1}
 
 /*_
+    Results from: CGSuite
+
     Octal: 0.77
     From CGSuite:
         Period: 12
@@ -8,6 +10,7 @@
 */
 
 [kayles]
+
 61 {B win, W win}
 62 {B win, W win}
 63 {B win, W win}

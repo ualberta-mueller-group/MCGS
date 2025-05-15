@@ -1,11 +1,12 @@
 {version 1.1}
-[impartial clobber]
 
 /*_ 
     Results from: J. Dai and X. Chen, 
     Impartial Clobber Solver,
     CMPUT 655 project report, University of Alberta 2022
 */
+
+[impartial clobber]
 
 /* 11 pairs */
 XOXOXOXOXOXOXOXOXOXOXO

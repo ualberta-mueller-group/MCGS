@@ -1,6 +1,10 @@
 {version 1.1}
 
-/*_ Tests taking ~20s or less */
+/*_
+    Results from: MCGS
+
+    Some test taking ~20s or less
+*/
 
 [clobber_1xn]
 XOXOXOXOXOXOXOXOXOXOXOXOXO

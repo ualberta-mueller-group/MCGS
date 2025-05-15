@@ -1,12 +1,17 @@
 {version 1.1}
+
+/*_
+    Results from: MCGS
+*/
+
 [clobber_1xn] XOXO
 [nogo_1xn] X..O
 [elephants] X...O
+
 [integer_game] 3 -1
 [nimber] 1 2
-
 [dyadic_rational] (6/4)
 [switch_game] (2 -1)
-
 [up_star] (-2 *)
+
 {B win, W loss}

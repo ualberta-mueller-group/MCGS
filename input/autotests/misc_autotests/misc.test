@@ -1,5 +1,9 @@
 {version 1.1}
 
+/*_
+    Results from: MCGS
+*/
+
 /* * + * == 0 */
 [clobber_1xn] XO
 [elephants] X.O
