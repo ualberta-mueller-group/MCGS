@@ -208,7 +208,7 @@ split_result clobber::_split_impl() const
         }
     };
 
-    while (start.increment_position())
+    do
     {
         int start_point = start.get_point();
         if (closed_set[start_point])
@@ -262,6 +262,7 @@ split_result clobber::_split_impl() const
             assert(component.empty());
         }
     }
+    while (start.increment_position());
 
     if (component_vec.size() > 1)
     {

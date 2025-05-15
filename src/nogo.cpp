@@ -10,15 +10,23 @@
 #include <vector>
 #include <cassert>
 #include <ostream>
+#include "grid_utils.h"
+#include "throw_assert.h"
 
 //////////////////////////////////////// nogo
 nogo::nogo(std::string game_as_string) : grid(game_as_string)
 {
+#ifdef NOGO_DEBUG
+    THROW_ASSERT(is_legal());
+#endif
 }
 
 nogo::nogo(const std::vector<int>& board, int_pair shape)
     : grid(board, shape)
 {
+#ifdef NOGO_DEBUG
+    THROW_ASSERT(is_legal());
+#endif
 }
 
 void nogo::play(const move& m, bw to_play)
@@ -39,6 +47,81 @@ void nogo::undo_move()
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
     replace(to, EMPTY);
+}
+
+bool nogo::is_legal() const
+{
+    const int N = size();
+    const int_pair& grid_shape = shape();
+
+    if (N == 0)
+        return true;
+
+    static_assert(BLACK == 0 && WHITE == 1 && EMPTY == 2);
+    static const int MASKS[] = {1, 2, 0};
+    static const int FULL_MASK = 3;
+
+    std::vector<bool> closed(N, false);
+    std::vector<grid_location> open;
+
+    int n_connected = 0; // legal IFF n_connected reaches N
+
+    grid_location start(grid_shape);
+
+    do
+    {
+        // Find next EMPTY tile that hasn't been closed
+        assert(open.empty());
+        const int start_point = start.get_point();
+        if (closed[start_point] || at(start_point) != EMPTY)
+            continue;
+
+        open.push_back(start);
+        closed[start_point] = true;
+        n_connected++;
+        if (n_connected == N)
+            return true;
+
+        while (!open.empty())
+        {
+            const grid_location loc1 = open.back();
+            open.pop_back();
+
+            const int point1 = loc1.get_point();
+            const int color1 = at(point1);
+            assert(is_empty_black_white(color1));
+            const int mask1 = MASKS[color1];
+            assert(closed[point1]);
+
+            for (grid_dir dir : GRID_DIRS_CARDINAL)
+            {
+                grid_location loc2 = loc1;
+                if (!loc2.move(dir))
+                    continue;
+
+                const int point2 = loc2.get_point();
+                if (closed[point2])
+                    continue;
+
+                const int color2 = at(point2);
+                assert(is_empty_black_white(color2));
+                const int mask2 = MASKS[color2];
+                if ((mask1 | mask2) == FULL_MASK) // tiles are BLACK and WHITE
+                    continue;
+
+                open.push_back(loc2);
+                closed[point2] = true;
+                n_connected++;
+                if (n_connected == N)
+                    return true;
+            }
+
+        }
+    }
+    while (start.increment_position());
+
+    assert(n_connected <= N);
+    return n_connected == N;
 }
 
 split_result nogo::_split_impl() const

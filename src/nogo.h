@@ -21,6 +21,8 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
+    bool is_legal() const;
+
 protected:
     split_result _split_impl() const override;
 
