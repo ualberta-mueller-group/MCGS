@@ -1,56 +1,52 @@
 {version 1.1}
+
+/*_ 
+    Results from: J. Dai and X. Chen, 
+    Impartial Clobber Solver,
+    CMPUT 655 project report, University of Alberta 2022
+*/
+
 [impartial clobber]
 
-/* Dai and Chen */
 /* 0 pairs */
 {N 0}
 
-/* Dai and Chen */
 /* 1 pairs */
 XO
 {N 1}
 
-/* Dai and Chen */
 /* 2 pairs */
 XOXO
 {N 3}
 
-/* Dai and Chen */
 /* 3 pairs */
 XOXOXO
 {N 0}
 
-/* Dai and Chen */
 /* 4 pairs */
 XOXOXOXO
 {N 2}
 
-/* Dai and Chen */
 /* 5 pairs */
 XOXOXOXOXO
 {N 0}
 
-/* Dai and Chen */
 /* 6 pairs */
 XOXOXOXOXOXO
 {N 2}
 
-/* Dai and Chen */
 /* 7 pairs */
 XOXOXOXOXOXOXO
 {N 0}
 
-/* Dai and Chen */
 /* 8 pairs */
 XOXOXOXOXOXOXOXO
 {N 3}
 
-/* Dai and Chen */
 /* 9 pairs */
 XOXOXOXOXOXOXOXOXO
 {N 1}
 
-/* Dai and Chen */
 /* 10 pairs */
 XOXOXOXOXOXOXOXOXOXO
 {N 4}
