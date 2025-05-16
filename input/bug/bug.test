@@ -38,3 +38,30 @@
 *
 {B loss, W loss}
 
+/* Another simpler switch equal to 1 */
+[switch_game]
+(1/2, 2)
+[integer_game]
+-1
+{B loss, W loss}
+
+/* And its impartial value seems correct */
+[impartial switch_game]
+(1/2, 2)
+[up_star]
+*
+{B loss, W loss}
+
+/* But increase the denominator, */
+[switch_game]
+(1/4, 2)
+[integer_game]
+-1
+{B loss, W loss}
+
+/* and its impartial version fails... */
+[impartial switch_game]
+(1/4, 2)
+[up_star]
+*
+{B loss, W loss}
