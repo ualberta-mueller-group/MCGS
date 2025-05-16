@@ -69,4 +69,47 @@ def make_impartial(g) begin
     game.variant.ImpartialVariantGame(g);
 end
 
+def bool_to_winloss(b) begin
+    assert(b is Boolean);
+
+    if b then
+        "win";
+    else
+        "loss";
+    end
+end
+
+def outcome_class_to_bools(oc) begin
+    assert(oc is game.OutcomeClass);
+
+    if oc == game.OutcomeClass.N then
+        [true, true];
+    elseif oc == game.OutcomeClass.P then
+        [false, false];
+    elseif oc == game.OutcomeClass.L then
+        [true, false];
+    elseif oc == game.OutcomeClass.R then
+        [false, true];
+    else
+        assert(false);
+    end
+end
+
+def canonical_game_to_command(cg) begin
+    assert(cg is game.CanonicalShortGame);
+
+    oc := cg.OutcomeClass;
+    vals := [bool_to_winloss(b) for b in outcome_class_to_bools(oc)];
+    join(["{B ", vals[1], ", W ", vals[2], "}"], "");
+end
+
+def canonical_impgame_to_command(cg) begin
+    assert(cg is game.CanonicalShortGame);
+    assert(cg is game.Nimber or cg is game.Zero);
+
+    val := cg.NimValue;
+    join(["{N ", val, "}"], "");
+end
+
+
 ;

@@ -1,0 +1,49 @@
+{version 1.1}
+
+/*_
+    Results from: CGSuite
+*/
+
+[elephants]
+.................XO..O.XO.......X.X..O.. {B loss, W loss}
+.X.......X.O.X...XOO.O..O.....X.O....XO. {B win, W loss}
+...OXO....OX....O..XXX......X..X........ {B win, W loss}
+O.O.....X...........X.O..XO....X.X...... {B win, W loss}
+X.XX.....O..O.O...X.............O.X....O {B loss, W win}
+XX...O.....O.............OX.......OX..O. {B loss, W win}
+......OXX......OO........XO.X.X....X.... {B win, W loss}
+.O...O....O..X..X.X.X.....O.OX..O....... {B win, W win}
+..........O..O.O...X...OXXO..O..OX.X.... {B loss, W win}
+.....X.....O..XX.OXX.XO........OOX...... {B loss, W win}
+X...O.O...X..X.........O........O.OO...X {B loss, W win}
+O.....XO..X.......X.....XOO..XO...X...X. {B win, W loss}
+...X.O.XX..X....X.......O..OO.......O... {B win, W loss}
+OX..X.OX.....O..X.......X..O...O....O.X. {B loss, W win}
+X....O....O..XX.....O...O.O......O...X.. {B loss, W win}
+....X..O.O...X..O...X..X.....X.O...O..O. {B win, W win}
+....X....XO...............O....XOO..X..O {B loss, W win}
+..X.O.........OX......X......X...OXOOX.. {B win, W loss}
+.O..XX...X.....O.....OX......OO.O......O {B loss, W win}
+..X.......X...O..O.....X....X.OO.X...OX. {B win, W loss}
+
+[impartial elephants]
+.................XO..O.XO.......X.X..O.. {N 1}
+.X.......X.O.X...XOO.O..O.....X.O....XO. {N 3}
+...OXO....OX....O..XXX......X..X........ {N 1}
+O.O.....X...........X.O..XO....X.X...... {N 3}
+X.XX.....O..O.O...X.............O.X....O {N 0}
+XX...O.....O.............OX.......OX..O. {N 2}
+......OXX......OO........XO.X.X....X.... {N 1}
+.O...O....O..X..X.X.X.....O.OX..O....... {N 1}
+..........O..O.O...X...OXXO..O..OX.X.... {N 1}
+.....X.....O..XX.OXX.XO........OOX...... {N 3}
+X...O.O...X..X.........O........O.OO...X {N 3}
+O.....XO..X.......X.....XOO..XO...X...X. {N 0}
+...X.O.XX..X....X.......O..OO.......O... {N 0}
+OX..X.OX.....O..X.......X..O...O....O.X. {N 3}
+X....O....O..XX.....O...O.O......O...X.. {N 1}
+....X..O.O...X..O...X..X.....X.O...O..O. {N 0}
+....X....XO...............O....XOO..X..O {N 1}
+..X.O.........OX......X......X...OXOOX.. {N 2}
+.O..XX...X.....O.....OX......OO.O......O {N 2}
+..X.......X...O..O.....X....X.OO.X...OX. {N 1}
