@@ -16,6 +16,9 @@
 */
 split_result impartial_game_wrapper::_split_impl() const
 {
+    return split_result(); // TODO re-enable me!
+
+
     split_result result = split_result(std::vector<game*>());
 
     // Check if wrapper is solved

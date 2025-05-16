@@ -48,6 +48,7 @@ end
 
 def sum_games(games) begin
     assert(games is Collection);
+
     for g in games do
         assert(g is game.Game);
     end
@@ -111,5 +112,13 @@ def canonical_impgame_to_command(cg) begin
     join(["{N ", val, "}"], "");
 end
 
+def print_opts(g) begin
+    assert(g is game.Game);
 
+    cg := g.CanonicalForm;
+    left := join(cg.LeftOptions);
+    right := join(cg.RightOptions);
+
+    print(join(["{", left, " | ", right, "}"], ""));
+end
 ;

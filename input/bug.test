@@ -1,0 +1,40 @@
+{version 1.1}
+
+/*_ This seems to be a bug of some kind? */
+
+/* This switch equals 1 */
+[switch_game]
+(13/16, 25/8)
+[integer_game]
+-1
+{B loss, W loss}
+
+
+/* Impartial 1 equals * */
+[impartial integer_game]
+1
+[up_star]
+*
+{B loss, W loss}
+
+/* But impartial switch doesn't equal *? This seems incorrect... */
+[impartial switch_game]
+(13/16, 25/8)
+[up_star]
+*
+{B loss, W loss}
+
+/* This simpler switch equals 1 */
+[switch_game]
+(0, 2)
+[integer_game]
+-1
+{B loss, W loss}
+
+/* And the impartial simpler switch equals *, as it should */
+[impartial switch_game]
+(0, 2)
+[up_star]
+*
+{B loss, W loss}
+

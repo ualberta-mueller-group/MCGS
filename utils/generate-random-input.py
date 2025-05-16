@@ -13,6 +13,7 @@ outfile_name = sys.argv[1]
 outfile = open(outfile_name, "w")
 
 ngames = 16
+nsums = 20
 
 
 def convert_cpp_arg_single(arg):
@@ -100,7 +101,7 @@ class nimber:
         return f"[nimber] {self.val}"
 
     def as_cgsuite_input(self):
-        return f"Nim({self.val})"
+        return f"*{self.val}"
 
     def as_cpp(self):
         return get_create_expr("nimber", [self.val])
@@ -145,23 +146,29 @@ outfile.write("{version 1.1}\n")
 cgsuite_string = ""
 cpp_string = ""
 
-for i in range(ngames):
-    g = get_random_game()
-    outfile.write(g.as_mcgs_input() + "\n")
+for i in range(nsums):
+    cgsuite_string += "["
 
-    cgsuite_string += g.as_cgsuite_input()
-    if (i + 1) in range(ngames):
-        cgsuite_string += "\n"
+    outfile.write(f"/* Sum #{i} */\n")
+    for j in range(ngames):
+        g = get_random_game()
+        outfile.write(g.as_mcgs_input() + "\n")
 
-    cpp_string += g.as_cpp()
-    if (i + 1) in range(ngames):
-        cpp_string += "\n"
+        cgsuite_string += g.as_cgsuite_input()
+        if (j + 1) in range(ngames):
+            cgsuite_string += ", "
 
-outfile.write("{B, W}\n")
+        #cpp_string += g.as_cpp()
+        #if (j + 1) in range(ngames):
+        #    cpp_string += "\n"
+    outfile.write("{B, W}\n\n")
+    cgsuite_string += "],\n"
+
+#outfile.write("{B, W}\n")
 
 outfile.write("\n")
-outfile.write(f"/*_ CGSUITE STRING\nNim := game.heap.Nim\n{cgsuite_string}\n*/\n")
-outfile.write("\n")
-outfile.write(f"/*_ CPP STRING\n{cpp_string}\n*/\n")
+outfile.write(f"/*_ CGSUITE INPUT\n{cgsuite_string}\n*/\n")
+#outfile.write("\n")
+#outfile.write(f"/*_ CPP STRING\n{cpp_string}\n*/\n")
 
 outfile.close()
