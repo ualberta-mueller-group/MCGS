@@ -1,0 +1,18 @@
+{version 1.1}
+
+/*_
+    Results from: MCGS
+
+    At least one case 5-30s
+*/
+
+[impartial clobber]
+
+/* 3x7 random */
+XXXXXOO|XXXXXOX|XXOOOXO
+    {N 0}
+
+/* 4x6 random */
+OXOXOO|XXXXXO|OOXXOO|XXOOOO
+	{B loss, W win}
+

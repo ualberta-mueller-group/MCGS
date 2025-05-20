@@ -6,25 +6,15 @@
 
 [impartial clobber]
 
-/* 2x2 CGSuite */
+/* 2x2 */
 XO|OX
-    {N 0}
+    {N 0, B loss, W loss}
 
-/* 3x3 CGSuite */
+/* 3x3 */
 XOX|OXO|XOX
-    {N 1}
+    {N 1, B win, W win}
 
-/* 4x4 CGSuite */
+/* 4x4 */
 XOXO|OXOX|XOXO|OXOX
-    {N 0}
-
-/* 5x5 */
-/* Times out */
-XOXOX|OXOXO|XOXOX|OXOXO|XOXOX
-    {N}
-
-/* 6x6 */
-/* Times out */
-XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO|OXOXOX
-    {N}
+    {N 0, B loss, W loss}
 

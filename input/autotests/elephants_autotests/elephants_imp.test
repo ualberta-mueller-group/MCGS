@@ -6,10 +6,9 @@
 
 [impartial elephants]
 
-XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO {N 1}
-X.......O.....XO.O.....X..OO.X.O.OOXO... {N 1}
-X...XX.O...X.....OOOO..X...O.....O.O...O {N 0}
-X..X........O....X....O...O.......XO.X.. {N 1}
-.......X.....O..X.....O....... {N 0}
-.OXO...O.O..O.X.X......X...X..OO..X....X {N 0}
-....OXO.....X......X.XOX..O...O...O.XXO. {N 1}
+X.......O.....XO.O.....X..OO.X.O.OOXO... {N 1, B win, W win}
+X..X........O....X....O...O.......XO.X.. {N 1, B win, W win}
+.......X.....O..X.....O....... {N 0, B loss, W loss}
+.OXO...O.O..O.X.X......X...X..OO..X....X {N 0, B loss, W loss}
+....OXO.....X......X.XOX..O...O...O.XXO. {N 1, B win, W win}
+

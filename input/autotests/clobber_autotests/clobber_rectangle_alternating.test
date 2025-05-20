@@ -50,10 +50,6 @@ XOX|OXO|XOX|OXO
 XOXOX|OXOXO|XOXOX|OXOXO
 	 {B win, W win}
 
-/* 4x6 */
-XOXOXO|OXOXOX|XOXOXO|OXOXOX
-	 {B, W}
-
 /* 5x2 CGSuite */
 XO|OX|XO|OX|XO
 	 {B win, W win}
@@ -66,9 +62,6 @@ XOX|OXO|XOX|OXO|XOX
 XOXO|OXOX|XOXO|OXOX|XOXO
 	 {B win, W win}
 
-/* 5x6 */
-XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO
-	 {B, W}
 
 /* 6x2 CGSuite */
 XO|OX|XO|OX|XO|OX
@@ -77,12 +70,4 @@ XO|OX|XO|OX|XO|OX
 /* 6x3 MCGS */
 XOX|OXO|XOX|OXO|XOX|OXO
 	 {B loss, W loss}
-
-/* 6x4 */
-XOXO|OXOX|XOXO|OXOX|XOXO|OXOX
-	 {B, W}
-
-/* 6x5 */
-XOXOX|OXOXO|XOXOX|OXOXO|XOXOX|OXOXO
-	 {B, W}
 

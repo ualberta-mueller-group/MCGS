@@ -169,6 +169,7 @@ bool clobber::is_move(const int& from, const int& to, bw to_play) const
     return (at(from) == to_play) && (at(to) == opp);
 }
 
+/*
 split_result clobber::_split_impl() const
 {
     if (size() == 0)
@@ -274,6 +275,7 @@ split_result clobber::_split_impl() const
 
     return split_result(); // TODO
 }
+*/
 
 move_generator* clobber::create_move_generator(bw to_play) const
 {

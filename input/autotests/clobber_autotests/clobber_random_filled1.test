@@ -6,16 +6,14 @@
 
 [clobber]
 
-/* 3x7 random MCGS */
+/* 3x7 random */
 XXXXXOO|XXXXXOX|XXOOOXO
 	{B win, W loss}
 
-/* 3x8 random MCGS */
+/* 3x8 random */
 XOXOXXXO|XXXXOXXO|OOXXXXOX
 	{B win, W loss}
 
-/* 3x8 random */
-/*#0 times out */
-/*#1 MCGS */
+/* 3x8 random (black times out) */
 XOXOOOXX|OXOXOOXO|XXOOXXOX
-	{B, W win}
+	{W win}

@@ -1,0 +1,23 @@
+/*
+    NCInt -- non-canonical integer
+
+    An integer game that isn't a CanonicalShortGame. Usage in summation or in
+    left/right sets of ExplicitGames won't cause the expression to be
+    automatically converted to canonical form
+*/
+
+singleton class NCInt extends Ruleset
+    class Position(val as Integer) extends Game
+        override def Options(player as Player) begin
+            if (player == Player.Left) and val > 0 then
+                [Position(val - 1)];
+            elseif (player == Player.Right) and val < 0 then
+                [Position(val + 1)];
+            else
+                [];
+            end
+        end
+    end
+
+    def Eval(val as Integer) := Position(val);
+end

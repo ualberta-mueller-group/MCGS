@@ -17,7 +17,7 @@ def to_string(obj) begin
     end
 end
 
-def join(collection, separator_string ? ", ") begin
+def join(collection, separator_string ? "") begin
     assert(collection is Collection);
     assert(separator_string is String);
 
@@ -109,16 +109,47 @@ def canonical_impgame_to_command(cg) begin
     assert(cg is game.Nimber or cg is game.Zero);
 
     val := cg.NimValue;
-    join(["{N ", val, "}"], "");
+    is_win := val > 0;
+    winloss := bool_to_winloss(is_win); 
+
+    //join(["{N ", val, "}"], "");
+    join(["{N ", val, ", B ", winloss, ", W ", winloss, "}"], "");
 end
 
 def print_opts(g) begin
     assert(g is game.Game);
 
-    cg := g.CanonicalForm;
-    left := join(cg.LeftOptions);
-    right := join(cg.RightOptions);
+    left := join(g.LeftOptions, ", ");
+    right := join(g.RightOptions, ", ");
 
     print(join(["{", left, " | ", right, "}"], ""));
 end
+
+////////////////////////////////////////////////// Games
+def elephants(board) begin
+    assert(board is String);
+
+    cgs_board := mcgs_to_elephants(board);
+
+    for i from 1 to cgs_board.Length do
+        c := cgs_board[i];
+        assert((c == "t") or (c == "f") or (c == "."));
+    end
+
+    game.strip.ElephantsAndRhinos(cgs_board);
+end
+
+def clobber(board) begin
+    assert(board is String);
+    game.grid.Clobber(board);
+end
+
+def cf(g) begin
+    assert(g is Game);
+    g.CanonicalForm;
+end
+
+def imp(g) := make_impartial(g);
+
 ;
+

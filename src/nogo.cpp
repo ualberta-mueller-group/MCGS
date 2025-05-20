@@ -35,6 +35,17 @@ void nogo::play(const move& m, bw to_play)
 
     const int to = m;
     assert(at(to) == EMPTY);
+
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+
+        hash.toggle_value(2 + to, EMPTY);
+        hash.toggle_value(2 + to, to_play);
+
+        _mark_hash_updated();
+    }
+
     replace(to, to_play);
 }
 
@@ -46,6 +57,17 @@ void nogo::undo_move()
     const int to = cgt_move::decode(mc);
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
+
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+
+        hash.toggle_value(2 + to, player);
+        hash.toggle_value(2 + to, EMPTY);
+
+        _mark_hash_updated();
+    }
+
     replace(to, EMPTY);
 }
 

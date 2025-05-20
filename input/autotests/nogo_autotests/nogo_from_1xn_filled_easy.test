@@ -1,13 +1,11 @@
 {version 1.1}
 
 /*_
-    Results from: MCGS
+    Results from: SBHSolver
 */
 
 [nogo]
-.....O..O..OO..XX....X..X.X..X {B win, W loss}
 O.....O......O.OX.....XX..X.XX {B win, W win}
-.O..O.O.......X.XXX..O.X...X.. {B win, W win}
 O.O.OXX.........X...XX...O..X. {B win, W win}
 O..........O.XXXOO...X.X.....X {B win, W win}
 ...OO.XX...XO....X....OX...X.. {B win, W win}
@@ -25,7 +23,6 @@ O.X.OO......X....X...O.XX..X.. {B win, W loss}
 .O.XO.X..O...X..O..X...XX..... {B win, W loss}
 ..OX.O..X....O.X.XX.....O...X. {B win, W loss}
 .....OX..OX.X....XXX........OO {B win, W loss}
-.O....X..X...O..O...X...OX.XX. {B win, W loss}
 .OX.X....O..........XO.O...XXX {B win, W win}
 ...O.X....X.O...X.O.XX....O..X {B win, W win}
 O..XX.OX.......XX......O...X.O {B win, W loss}

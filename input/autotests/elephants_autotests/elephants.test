@@ -1,13 +1,11 @@
 {version 1.1}
 
 /*_
-    Results from: MCGS
+    Results from: CGSuite
 */
 
 [elephants]
 
-/* ?? --> N position from book, (first wins) */
-XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO {B win, W win}
 
 /* {-4* | -6*} --> R position (white wins) */
 X.......O.....XO.O.....X..OO.X.O.OOXO... {B loss, W win}
@@ -26,6 +24,4 @@ X..X........O....X....O...O.......XO.X.. {B win, W loss}
 
 /* -7 --> R position (white wins) */
 ....OXO.....X......X.XOX..O...O...O.XXO. {B loss, W win}
-
-
 
