@@ -1,0 +1,49 @@
+{version 1.1}
+
+/*_
+    Results from: CGSuite
+*/
+
+/* Sum #0 */
+[impartial integer_game] 4
+[impartial dyadic_rational] (-17/2)
+[impartial switch_game] (34/8, -5/16)
+[impartial nimber] 5
+[impartial dyadic_rational] (22/32)
+[impartial dyadic_rational] (24/1)
+{N 5, B win, W win}
+
+/* Sum #1 */
+[impartial nimber] 14
+[impartial dyadic_rational] (25/32)
+[impartial switch_game] (42/16, 0/8)
+[impartial integer_game] -9
+[impartial integer_game] 7
+[impartial switch_game] (-12/32, -17/2)
+{N 15, B win, W win}
+
+/* Sum #2 */
+[impartial nimber] 13
+[impartial nimber] 7
+[impartial dyadic_rational] (44/4)
+[impartial switch_game] (-10/4, 46/8)
+[impartial up_star] (-16)
+[impartial nimber] 5
+{N 15, B win, W win}
+
+/* Sum #3 */
+[impartial up_star] (19 *)
+[impartial switch_game] (37/8, -38/2)
+[impartial integer_game] -4
+[impartial dyadic_rational] (16/32)
+[impartial nimber] 8
+[impartial dyadic_rational] (-16/2)
+{N 8, B win, W win}
+
+
+/*_ CGSUITE INPUT
+[nc(4), nc(-17/2), {nc(34/8) | nc(-5/16)}, nc(*5), nc(22/32), nc(24/1)],
+[nc(*14), nc(25/32), {nc(42/16) | nc(0/8)}, nc(-9), nc(7), {nc(-12/32) | nc(-17/2)}],
+[nc(*13), nc(*7), nc(44/4), {nc(-10/4) | nc(46/8)}, nc(^(-16)), nc(*5)],
+[nc(^(19) + *), {nc(37/8) | nc(-38/2)}, nc(-4), nc(16/32), nc(*8), nc(-16/2)],
+*/

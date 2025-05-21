@@ -12,8 +12,8 @@ if len(sys.argv) != 2 or "-h" in sys.argv or "--help" in sys.argv:
 outfile_name = sys.argv[1]
 outfile = open(outfile_name, "w")
 
-ngames = 16
-nsums = 20
+ngames = 14
+nsums = 6
 
 
 def convert_cpp_arg_single(arg):
@@ -45,8 +45,11 @@ class integer_game:
     def as_mcgs_input(self):
         return f"[integer_game] {self.val}"
 
-    def as_cgsuite_input(self):
-        return f"({self.val})"
+    def as_cgsuite_input(self, non_canonical):
+        line = f"({self.val})"
+        if non_canonical:
+            line = f"nc{line}"
+        return line
 
     def as_cpp(self):
         return get_create_expr("integer_game", [self.val])
@@ -65,12 +68,14 @@ class up_star:
             line += ")"
         return line
 
-    def as_cgsuite_input(self):
+    def as_cgsuite_input(self, non_canonical):
         line = f"(^({self.ups})"
         if self.star:
             line += " + *)"
         else:
             line += ")"
+        if non_canonical:
+            line = f"nc{line}"
         return line
 
     def as_cpp(self):
@@ -86,8 +91,11 @@ class dyadic_rational:
         line = f"[dyadic_rational] ({self.top}/{self.bottom})"
         return line
 
-    def as_cgsuite_input(self):
-        return f"({self.top}/{self.bottom})"
+    def as_cgsuite_input(self, non_canonical):
+        line = f"({self.top}/{self.bottom})"
+        if non_canonical:
+            line = f"nc{line}"
+        return line
 
     def as_cpp(self):
         return get_create_expr("dyadic_rational", [self.top, self.bottom])
@@ -100,8 +108,11 @@ class nimber:
     def as_mcgs_input(self):
         return f"[nimber] {self.val}"
 
-    def as_cgsuite_input(self):
-        return f"*{self.val}"
+    def as_cgsuite_input(self, non_canonical):
+        line = f"*{self.val}"
+        if non_canonical:
+            line = f"nc({line})"
+        return line
 
     def as_cpp(self):
         return get_create_expr("nimber", [self.val])
@@ -118,12 +129,16 @@ class switch_game:
     def as_mcgs_input(self):
         return f"[switch_game] ({self.left_top}/{self.left_bottom}, {self.right_top}/{self.right_bottom})"
 
-    def as_cgsuite_input(self):
-        line = "{"
-        line += f"{self.left_top}/{self.left_bottom}"
-        line += " | "
-        line += f"{self.right_top}/{self.right_bottom}"
-        line += "}"
+    def as_cgsuite_input(self, non_canonical):
+        left_option = f"{self.left_top}/{self.left_bottom}"
+        right_option = f"{self.right_top}/{self.right_bottom}"
+
+        if non_canonical:
+            left_option = f"nc({left_option})"
+            right_option = f"nc({right_option})"
+
+        line = "{" + left_option + " | " + right_option + "}"
+
         return line
 
     def as_cpp(self):
@@ -154,7 +169,7 @@ for i in range(nsums):
         g = get_random_game()
         outfile.write(g.as_mcgs_input() + "\n")
 
-        cgsuite_string += g.as_cgsuite_input()
+        cgsuite_string += g.as_cgsuite_input(True)
         if (j + 1) in range(ngames):
             cgsuite_string += ", "
 
