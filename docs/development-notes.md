@@ -1,6 +1,27 @@
 # Development notes
 This document includes more detailed information than `README.md`, including design choices and tradeoffs, version history, and implementation details.
 
+# Outstanding Issues
+## Splitting Can Make Move Ordering Worse
+Splitting into subgames creates move ordering problems in some cases. 
+
+Consider:
+```
+[clobber_1xn] XOXOXOXOXO.XOXOXOXOXO
+[integer_game] 6
+```
+
+It is favorable to play in the clobber game. Without splitting, moves will
+first be tried in the clobber game. However, with splitting, a move will
+cause the clobber game to split into subgames, and those subgames will be placed
+at the end of the sum, meaning moves will be played on the integer game first.
+Without a transposition table, this increases run time from
+(5.49 ms black, 17.45 ms white) to (3557.94 ms black, 9807.72 ms white)
+
+Maybe we can have a subgame sorting pass which occasionally runs?
+
+## `ttable` Persistence Affects Tests
+See note at top of `create-table.py`
 
 # Search and Solving a Game
 - Two classes implement game solving: `alternating_move_game` and `sumgame`
@@ -74,6 +95,44 @@ Executables based on the C++ source code must call one of the `mcgs_init_all()`
 or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
 parsing command-line arguments. These functions initialize static data, i.e.
 `sumgame`'s transposition table, and global `random_table`s.
+
+# Global Options (`global_options.h`)
+This file defines the `global_option` class, representing a global variable
+which is part of MCGS's configuration.
+
+Specific global variables are also defined in this file, including those necessary to
+reproduce experiments (i.e. random seeds, table sizes), but also more general
+global values such as debug logging level.
+
+A `global_option` may optionally be included in the configuration summary
+printed by `./MCGS --print-optimizations`.
+
+To create a new global variable, first declare it at the bottom of
+`global_options.h`:
+```
+namespace global {
+extern global_option<double> some_variable;
+}
+```
+Then define it at the bottom of `global_options.cpp` (preferably using one of
+the macros defined there):
+```
+namespace global {
+// WILL be printed by config summary
+INIT_GLOBAL_WITH_SUMMARY(some_variable, double, 4.5);
+
+// or
+
+// WILL NOT be printed by config summary
+INIT_GLOBAL_WITHOUT_SUMMARY(some_variable, double, 4.5);
+}
+```
+
+A `global_option` has a `_name` field, which may show in the config summary, and
+is also used to define the value of `global_option::flag()`, a method giving
+the flag which should be used to set the option from the command line.
+The macros at the bottom of `global_options.cpp` initialize the `_name` field
+to the name of the variable in the source code.
 
 # Safe Arithmetic Functions (`safe_arithmetic.h`)
 This section uses the term "wrapping" to mean either underflow or overflow.

@@ -1,0 +1,65 @@
+{version 1.1}
+
+/*_
+    Results from: MCGS
+*/
+
+[clobber]
+
+
+/* random filled 6x2 */
+OX|XO|OX|OX|OO|OO
+	{B loss, W win}
+
+/* random filled 2x6 */
+XXXXOO|XXOOXO
+	{B win, W loss}
+
+/* random filled 9x3 */
+XXX|OXO|OXO|OXX|OXO|XOX|OXX|XXX|XXX
+	{B win, W loss}
+
+/* random filled 2x8 */
+XXXOXXXO|XXOOOOXO
+	{B win, W win}
+
+/* random filled 4x4 */
+OXXX|XOXO|OXXX|OOOO
+	{B win, W win}
+
+/* random filled 7x4 */
+OOXX|XXOX|XOOX|OOOX|OOOO|OOOO|OXOO
+	{B loss, W win}
+
+/* random filled 8x3 */
+XXO|XXX|OXX|OXX|OOO|OXX|OOX|OXX
+	{B win, W loss}
+
+/* random filled 4x5 */
+XXXOO|XXOXO|OXXOO|OOXOO
+	{B win, W win}
+
+/* random filled 5x3 */
+XOO|OXX|XXO|OOX|OOO
+	{B loss, W win}
+
+/* random filled 2x9 */
+OXXXOOXOO|OOOXXXOOO
+	{B loss, W win}
+
+/* random filled 2x10 */
+OOXOOXXOXX|OXOXOXOOXO
+	{B loss, W win}
+
+/* random filled 7x3 */
+XOO|OOO|XOO|OOO|OOO|XOX|XOO
+	{B loss, W win}
+
+/* random filled 2x8 */
+XOOOXXOX|OXXXOXXO
+	{B win, W win}
+
+/* random filled 4x6 */
+XOXOOO|OXOXOX|OOOOOX|OOOXXO
+	{B loss, W win}
+

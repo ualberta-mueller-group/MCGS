@@ -1,5 +1,6 @@
 #include "cgt_basics_test.h"
 #include "cgt_basics.h"
+#include <cassert>
 
 namespace {
 namespace cgt_basics_test {

@@ -1,0 +1,19 @@
+{version 1.1}
+
+/*_
+    Results from: CGSuite
+*/
+
+[clobber]
+
+/* 2x2 alternating */
+XO|OX
+    {B win, W win}
+
+/* 3x3 alternating */
+XOX|OXO|XOX
+    {B win, W win}
+
+/* 4x4 alternating */
+XOXO|OXOX|XOXO|OXOX
+    {B win, W win}

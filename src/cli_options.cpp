@@ -3,45 +3,26 @@
 #include <cstdlib>
 #include <filesystem>
 #include <string>
-#include <unistd.h>
 #include <vector>
 #include <iostream>
+#include <memory>
+#include <cstdint>
 #include "file_parser.h"
+#include "global_options.h"
 #include "utilities.h"
+#include <cassert>
 
 using namespace std;
-
-////////////////////////////////////////////////// cli_options::optimize
-
-std::string cli_options::optimize::get_summary()
-{
-    std::stringstream str;
-
-    str << "subgame_split " << _subgame_split;
-
-    str << std::endl;
-    str << "simplify_basic_cgt " << _simplify_basic_cgt;
-
-    str << std::endl;
-    str << "tt_sumgame_idx_bits " << _tt_sumgame_idx_bits;
-
-    return str.str();
-}
-
-bool cli_options::optimize::_subgame_split = DEFAULT_SUBGAME_SPLIT;
-bool cli_options::optimize::_simplify_basic_cgt = DEFAULT_SIMPLIFY_BASIC_CGT;
-size_t cli_options::optimize::_tt_sumgame_idx_bits = DEFAULT_TT_SUMGAME_IDX_BITS;
 
 ////////////////////////////////////////////////// cli_options
 cli_options::cli_options(const string& test_directory)
     : parser(nullptr),
-    dry_run(false),
-    should_exit(false),
-    run_tests(false),
-    test_directory(test_directory),
-    outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
-    test_timeout(cli_options::DEFAULT_TEST_TIMEOUT),
-    random_table_seed(cli_options::DEFAULT_RANDOM_TABLE_SEED)
+      dry_run(false),
+      should_exit(false),
+      run_tests(false),
+      test_directory(test_directory),
+      outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
+      test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
 {
 }
 
@@ -86,24 +67,30 @@ void print_help_message(const string& exec_name)
     cout << "\tThese flags toggle optimizations on/off." << endl;
     cout << endl;
 
-    print_flag("--no-subgame-split",
+    print_flag(global::subgame_split.no_flag(),
                "Don't split subgames after playing moves in them.");
 
-    print_flag("--no-simplify-basic-cgt",
+    print_flag(global::simplify_basic_cgt.no_flag(),
                "Don't simplify basic CGT games (integer_game, dyadic_rational, "
                "up_star, switch_game, nimber).");
 
-    print_flag("--tt-sumgame-idx-bits <# index bits>", "How many index "
-        "bits to use for sumgame's transposition table. 0 disables "
-        "transposition table. Default: " +
-        std::to_string(
-            cli_options::optimize::DEFAULT_TT_SUMGAME_IDX_BITS) + ".");
+    print_flag(global::tt_sumgame_idx_bits.flag() + " <# index bits>",
+               "How many index bits to use for sumgame's transposition table. "
+               "0 disables transposition table. Default: " +
+                   global::tt_sumgame_idx_bits.get_default_str() + ".");
+
+    print_flag(
+        global::tt_imp_sumgame_idx_bits.flag() + " <# index bits>",
+        "How many index bits to use for impartial sumgame's transposition "
+        "table. Must be at least 1. Default: " +
+            global::tt_imp_sumgame_idx_bits.get_default_str() + ".");
 
     cout << "Misc options flags:" << endl;
-    print_flag("--random-table-seed", "Set seed for random tables used in "
-               "game hashing. 0 means seed with current time since epoch. "
-               "Default: "
-               + std::to_string(cli_options::DEFAULT_RANDOM_TABLE_SEED) + ".");
+    print_flag(global::random_table_seed.flag(),
+               "Set seed for random "
+               "tables used in game hashing. 0 means seed with current time "
+               "since epoch. Default: " +
+                   global::random_table_seed.get_default_str() + ".");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -134,6 +121,11 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
 
+    print_flag(global::debug_file.flag(),
+               "Set debug output filename. Empty "
+               "string disables debug output. Default: \"" +
+                   global::debug_file.get_default_str() + "\".");
+
     print_flag("--dry-run",
                "Skip running games. Has no effect when using \"--run-tests\". "
                "Instead, set the test timeout low (i.e. 1).");
@@ -145,12 +137,16 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag("--assert-correct-version",
                "Quit if a file version is found which doesn't match.");
+
+    print_flag(global::silence_warnings.flag(),
+               "Don't print warnings to "
+               "stderr, i.e. random_table resize");
 }
 
 } // namespace
 
 //////////////////////////////////////// exported functions
-cli_options cli_options::parse_args(int argc, const char** argv, bool silent)
+cli_options parse_args(int argc, const char** argv, bool silent)
 {
     bool print_optimizations = false;
 
@@ -234,6 +230,19 @@ cli_options cli_options::parse_args(int argc, const char** argv, bool silent)
             break;
         }
 
+        if (arg == global::debug_file.flag())
+        {
+            if (!(arg_idx + 1 < arg_n))
+                throw cli_options_exception("Error: got " +
+                                            global::debug_file.flag() +
+                                            " but no value");
+
+            global::debug_file.set(arg_next);
+            arg_idx++;
+
+            continue;
+        }
+
         if (arg == "--dry-run")
         {
             opts.dry_run = true;
@@ -256,6 +265,12 @@ cli_options cli_options::parse_args(int argc, const char** argv, bool silent)
         if (arg == "--assert-correct-version")
         {
             file_parser::override_assert_correct_version = true;
+            continue;
+        }
+
+        if (arg == global::silence_warnings.flag())
+        {
+            global::silence_warnings.set(true);
             continue;
         }
 
@@ -316,44 +331,65 @@ cli_options cli_options::parse_args(int argc, const char** argv, bool silent)
 
         // OPTIMIZATION TOGGLES
 
-        if (arg == "--no-subgame-split")
+        if (arg == global::subgame_split.no_flag())
         {
-            assert(false);
+            // throw std::logic_error("TODO: remove or change sumgame splitting
+            // option");
+            cerr << "TODO: remove or change sumgame splitting option" << endl;
             /*
                 TODO this either needs to be removed, or should only disable
                 splitting games for which splitting is optional
             */
 
-            cli_options::optimize::_subgame_split = false;
+            global::subgame_split.set(false);
             continue;
         }
 
-        if (arg == "--no-simplify-basic-cgt")
+        if (arg == global::simplify_basic_cgt.no_flag())
         {
-            cli_options::optimize::_simplify_basic_cgt = false;
+            global::simplify_basic_cgt.set(false);
             continue;
         }
 
-        if (arg == "--tt-sumgame-idx-bits")
+        if (arg == global::tt_sumgame_idx_bits.flag())
         {
             arg_idx++;
 
             if (!is_int(arg_next))
-                throw cli_options_exception("Error: tt-sumgame-idx-bits value not an int");
+                throw cli_options_exception(
+                    "Error: " + global::tt_sumgame_idx_bits.flag() +
+                    " value not an int");
 
             const size_t n_index_bits = atoi(arg_next.c_str());
 
-            cli_options::optimize::_tt_sumgame_idx_bits = n_index_bits;
+            global::tt_sumgame_idx_bits.set(n_index_bits);
+            continue;
+        }
 
+        if (arg == global::tt_imp_sumgame_idx_bits.flag())
+        {
+            arg_idx++;
+
+            if (!is_int(arg_next))
+                throw cli_options_exception(
+                    "Error: " + global::tt_imp_sumgame_idx_bits.flag() +
+                    " value not an int");
+
+            const size_t n_index_bits = atoi(arg_next.c_str());
+
+            global::tt_imp_sumgame_idx_bits.set(n_index_bits);
             continue;
         }
 
         // MISC OPTIONS
-        if (arg == "--random-table-seed")
+        if (arg == global::random_table_seed.flag())
         {
+            const std::string& flag_text = global::random_table_seed.flag();
+
             arg_idx++;
             if (arg_next.size() == 0)
-                throw cli_options_exception("Error: got --random-table-seed but no seed value");
+                throw cli_options_exception("Error: got " + flag_text +
+                                            " but no seed value");
 
             const char* str = arg_next.c_str();
             char* str_end = nullptr;
@@ -365,15 +401,19 @@ cli_options cli_options::parse_args(int argc, const char** argv, bool silent)
             if (errno == ERANGE)
             {
                 errno = 0;
-                throw cli_options_exception("Error: --random-table-seed value out of range: \"" + arg_next + "\"");
+                throw cli_options_exception("Error: " + flag_text +
+                                            " value out of range: \"" +
+                                            arg_next + "\"");
             }
 
             if (str_end != expected_end)
             {
-                throw cli_options_exception("Error: --random-table-seed value bad format: \"" + arg_next + "\"");
+                throw cli_options_exception("Error: " + flag_text +
+                                            " value bad format: \"" + arg_next +
+                                            "\"");
             }
 
-            opts.random_table_seed = seed;
+            global::random_table_seed.set(seed);
 
             continue;
         }
@@ -414,7 +454,8 @@ cli_options cli_options::parse_args(int argc, const char** argv, bool silent)
 
     if (print_optimizations)
     {
-        cout << cli_options::optimize::get_summary() << endl;
+        cout << "Options: " << endl;
+        cout << global_option_base::get_summary_all() << endl;
     }
 
     return opts;

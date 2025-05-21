@@ -10,6 +10,8 @@
 #include "safe_arithmetic.h"
 
 #include <iostream>
+#include <cassert>
+
 using std::cout;
 using std::endl;
 
@@ -66,7 +68,7 @@ split_result switch_game::_split_impl() const
     }
 }
 
-void switch_game::_init_hash(local_hash& hash)
+void switch_game::_init_hash(local_hash& hash) const
 {
     if (!is_rational())
     {
@@ -76,7 +78,8 @@ void switch_game::_init_hash(local_hash& hash)
 
         hash.toggle_value(3, _right.top());
         hash.toggle_value(4, _right.bottom());
-    } else
+    }
+    else
     {
         const fraction& f = value();
         hash.toggle_value(0, 1);
@@ -111,7 +114,8 @@ relation switch_game::_order_impl(const game* rhs) const
         const fraction& f1_left = this->left();
         const fraction& f2_left = other->left();
 
-        relation rel_left = fraction::get_lexicographic_relation(f1_left, f2_left);
+        relation rel_left =
+            fraction::get_lexicographic_relation(f1_left, f2_left);
 
         if (rel_left != REL_EQUAL)
             return rel_left;
@@ -119,7 +123,8 @@ relation switch_game::_order_impl(const game* rhs) const
         const fraction& f1_right = this->right();
         const fraction& f2_right = other->right();
 
-        relation rel_right = fraction::get_lexicographic_relation(f1_right, f2_right);
+        relation rel_right =
+            fraction::get_lexicographic_relation(f1_right, f2_right);
 
         return rel_right;
     }

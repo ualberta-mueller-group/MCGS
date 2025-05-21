@@ -6,11 +6,16 @@
 #include "cgt_basics.h"
 #include "throw_assert.h"
 #include "strip.h"
+#include <cassert>
+#include <cstdlib>
+#include <utility>
+#include <vector>
+#include "warn_default.h"
 
 //---------------------------------------------------------------------------
 
 namespace {
-const int ROW_SEP = 4;  // row separator
+const int ROW_SEP = 4; // row separator
 
 void check_is_valid_char(char c)
 {
@@ -44,7 +49,8 @@ int color_to_char(int color)
     return clobber_char[color];
 }
 
-std::pair<std::vector<int>, int_pair> string_to_board(const std::string& game_as_string)
+std::pair<std::vector<int>, int_pair> string_to_board(
+    const std::string& game_as_string)
 {
     std::vector<int> board;
     int n_rows = 0, n_cols = 0, counter = 0;
@@ -85,7 +91,7 @@ std::string board_to_string(const std::vector<int>& board, const int_pair shape)
     {
         for (int c = 0; c < shape.second; c++)
         {
-            result += color_to_char(board[r*n_cols+c]);
+            result += color_to_char(board[r * n_cols + c]);
         }
         if (r != shape.first - 1)
             result += '|';
@@ -112,7 +118,7 @@ grid::grid(const std::vector<int>& board, int_pair shape)
 
 grid::grid(const std::string& game_as_string) : game()
 {
-    std::pair<std::vector<int>, int_pair> board_shape = 
+    std::pair<std::vector<int>, int_pair> board_shape =
         string_to_board(game_as_string);
     _board = board_shape.first;
     _shape = board_shape.second;
@@ -123,8 +129,9 @@ std::string grid::board_as_string() const
     return board_to_string(_board, _shape);
 }
 
-void grid::_init_hash(local_hash& hash)
+void grid::_init_hash(local_hash& hash) const
 {
+    WARN_DEFAULT_IMPL();
     hash.toggle_value(0, _shape.first);
     hash.toggle_value(1, _shape.second);
 
@@ -134,10 +141,56 @@ void grid::_init_hash(local_hash& hash)
         hash.toggle_value(i + 2, this->at(i));
 }
 
+relation grid::_order_impl(const game* rhs) const
+{
+    WARN_DEFAULT_IMPL();
+    assert(game_type() == rhs->game_type());
+
+    const grid* other = reinterpret_cast<const grid*>(rhs);
+    assert(dynamic_cast<const grid*>(rhs) == other);
+
+    return _compare_grids(*this, *other);
+}
+
+relation grid::_compare_grids(const grid& g1, const grid& g2)
+{
+    const int_pair& shape1 = g1._shape;
+    const int_pair& shape2 = g2._shape;
+
+    if (shape1.first != shape2.first)
+        return shape1.first < shape2.first ? REL_LESS : REL_GREATER;
+
+    if (shape1.second != shape2.second)
+        return shape1.second < shape2.second ? REL_LESS : REL_GREATER;
+
+    const int size1 = g1.size();
+    const int size2 = g2.size();
+    assert(size1 == size2);
+
+    assert(size1 >= 0 && size2 >= 0);
+    assert((unsigned int) size1 == g1._board.size());
+    assert((unsigned int) size2 == g2._board.size());
+
+    for (int i = 0; i < size1; i++)
+    {
+        const int& val1 = g1._board[i];
+        const int& val2 = g2._board[i];
+
+        if (val1 != val2)
+            return val1 < val2 ? REL_LESS : REL_GREATER;
+    }
+
+    return REL_EQUAL;
+}
+
 void grid::_check_legal() const
 {
     for (const int& x : _board)
-        THROW_ASSERT(x == BLACK || x == WHITE || x == EMPTY || x == BORDER || x == ROW_SEP);
+        THROW_ASSERT(x == BLACK ||  //
+                     x == WHITE ||  //
+                     x == EMPTY ||  //
+                     x == BORDER || //
+                     x == ROW_SEP); //
 }
 
 std::vector<int> grid::inverse_board() const

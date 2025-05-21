@@ -1,0 +1,37 @@
+{version 1.1}
+
+/*_
+    These are illegal
+*/
+
+[nogo_1xn]
+
+.........X....XOX.XOO.X.X.O... {B , W}
+......OX....O.XXOX..O.XX...... {B , W}
+......X..XOXX.O...O.....O.XX.. {B , W}
+....XO..X...OXO......X...X..OX {B , W}
+...OXXX.XO......XOX........O.. {B , W}
+...X.....XO.XX..........O.XXOO {B , W}
+...XOX......O......XXOX.....OX {B , W}
+..O.....X.OXO.X.XO.....X.X.... {B , W}
+..O..O....XXOX......OX...X...X {B , W}
+..OX........XX.OXXO..X.....O.. {B , W}
+.O..........O....XO..X.X.XOX.X {B , W}
+.OO.OX.X....X........X..XOX... {B , W}
+.OXO..X.....X......X.X....OOX. {B , W}
+.X....O....X...X.O...XOXO...X. {B , W}
+.X....X...X..X.....O.X.O..OXO. {B , W}
+.X...X...X.X...X..O....O...XOO {B , W}
+.XOX.....O.X....XO.XXO........ {B , W}
+.XXO.....X..OOX...X.........XO {B , W}
+O......XX......OX...OX.....XXO {B , W}
+O.X.X.XOX.X.X.O.....O......... {B , W}
+OX.....X.X.....XO....OX.X.O... {B , W}
+X.....X..OX...X..O.....XOX..O. {B , W}
+X....OXOX..OX..X........X...O. {B , W}
+X..O....X.X.X.OXO...........OX {B , W}
+X.O.....O.X.X.XX.OXO.......... {B , W}
+XO...........O.OX.X.X.O...X..X {B , W}
+XO..O......XX...X.O.....X.XO.. {B , W}
+XOX..XXOO..X.X........O....... {B , W}
+XXOX.O.......X......OXO....X.. {B , W}

@@ -6,6 +6,7 @@
 #include <cstdint>
 #include "sumgame.h"
 #include <memory>
+#include <cassert>
 
 typedef int32_t bound_t;
 

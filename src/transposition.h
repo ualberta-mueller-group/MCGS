@@ -2,8 +2,9 @@
 #include "utilities.h"
 
 #include "hashing.h"
-#include <stddef.h>
-#include <iostream>
+#include <cstddef>
+#include <cassert>
+#include <type_traits>
 
 ////////////////////////////////////////////////// class ttable
 template <class Entry>
@@ -22,14 +23,15 @@ public:
 
         void init_entry();
         void init_entry(const Entry& entry);
-        //void init_entry(const Entry&& entry); // TODO do we need this too?
+        // void init_entry(const Entry&& entry); // TODO do we need this too?
 
         bool get_bool(size_t bool_idx) const;
         void set_bool(size_t bool_idx, bool new_val);
 
     private:
         iterator() = delete;
-        iterator(ttable<Entry>& table, hash_t idx, hash_t tag, Entry* entry_ptr);
+        iterator(ttable<Entry>& table, hash_t idx, hash_t tag,
+                 Entry* entry_ptr);
 
         ttable<Entry>& _table;
         const hash_t _entry_idx;
@@ -44,12 +46,14 @@ public:
 
     iterator get_iterator(hash_t hash);
 
-
 private:
     inline hash_t _extract_index(hash_t hash) const;
     inline hash_t _extract_tag(hash_t hash) const;
 
-    inline void _get_bool_indices(hash_t entry_idx, size_t bool_idx, size_t& bools_arr_idx, size_t& element_bit_no) const;
+    inline void _get_bool_indices(hash_t entry_idx, size_t bool_idx,
+                                  size_t& bools_arr_idx,
+                                  size_t& element_bit_no) const;
+
     bool _get_bool(hash_t entry_idx, size_t bool_idx) const;
     void _set_bool(hash_t entry_idx, size_t bool_idx, bool new_val);
 
@@ -83,9 +87,9 @@ private:
 template <class Entry>
 ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     : _n_index_bits(index_bits),
-    _n_tag_bits(size_in_bits<hash_t>() - index_bits),
-    _n_entries(1 << index_bits),
-    _bools_per_entry(n_packed_bools)
+      _n_tag_bits(size_in_bits<hash_t>() - index_bits),
+      _n_entries(1 << index_bits),
+      _bools_per_entry(n_packed_bools)
 {
     assert(index_bits > 0);
     // strictly less -- avoid shifting entire width of hash_t
@@ -112,17 +116,18 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
 
     //// Estimate memory cost
     // TODO: DEBUG PRINTING
-    //uint64_t byte_count = 0;
-    //byte_count += _entries_arr_size * sizeof(Entry);
-    //byte_count += _tags_arr_size * sizeof(uint8_t);
-    //byte_count += _bools_arr_size * sizeof(unsigned int);
-    //double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
-    //std::cout << "Estimated table size: " << byte_count_formatted;
-    //std::cout << " MiB" << std::endl;
+    // uint64_t byte_count = 0;
+    // byte_count += _entries_arr_size * sizeof(Entry);
+    // byte_count += _tags_arr_size * sizeof(uint8_t);
+    // byte_count += _bools_arr_size * sizeof(unsigned int);
+    // double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
+    // std::cout << "Estimated table size: " << byte_count_formatted;
+    // std::cout << " MiB" << std::endl;
 
     //// Initialize arrays
     _entries_arr = new Entry[_entries_arr_size];
-    for (size_t i = 0; i < _entries_arr_size; i++) // TODO: always explicitly construct?
+    for (size_t i = 0; i < _entries_arr_size;
+         i++) // TODO: always explicitly construct?
         _entries_arr[i] = Entry();
 
     _tags_arr = new uint8_t[_tags_arr_size];
@@ -170,7 +175,9 @@ inline hash_t ttable<Entry>::_extract_tag(hash_t hash) const
 }
 
 template <class Entry>
-inline void ttable<Entry>::_get_bool_indices(hash_t entry_idx, size_t bool_idx, size_t& bools_arr_idx, size_t& element_bit_no) const
+inline void ttable<Entry>::_get_bool_indices(hash_t entry_idx, size_t bool_idx,
+                                             size_t& bools_arr_idx,
+                                             size_t& element_bit_no) const
 {
     assert(entry_idx < _n_entries);
     assert(bool_idx < _bools_per_entry);
@@ -249,7 +256,8 @@ void ttable<Entry>::_set_tag(hash_t entry_idx, hash_t tag)
 
     for (size_t i = 0; i < _bytes_per_tag; i++)
     {
-        const uint8_t byte = (tag >> (i * size_in_bits<uint8_t>())) & ((uint8_t) -1);
+        const uint8_t byte =
+            (tag >> (i * size_in_bits<uint8_t>())) & ((uint8_t) -1);
 
         const size_t idx = tag_start + i;
         _tags_arr[idx] = byte;
@@ -281,7 +289,8 @@ void ttable<Entry>::_init_entry(hash_t index, hash_t tag, const Entry& entry)
     *entry_ptr = entry;
 }
 
-////////////////////////////////////////////////// ttable<Entry>::iterator implementation
+////////////////////////////////////////////////// ttable<Entry>::iterator
+///implementation
 template <class Entry>
 bool ttable<Entry>::iterator::entry_valid() const
 {
@@ -344,11 +353,8 @@ void ttable<Entry>::iterator::set_bool(size_t bool_idx, bool new_val)
 }
 
 template <class Entry>
-ttable<Entry>::iterator::iterator(ttable<Entry>& table, hash_t idx, hash_t tag, Entry* entry_ptr)
-    : _table(table),
-    _entry_idx(idx),
-    _entry_tag(tag),
-    _entry_ptr(entry_ptr)
+ttable<Entry>::iterator::iterator(ttable<Entry>& table, hash_t idx, hash_t tag,
+                                  Entry* entry_ptr)
+    : _table(table), _entry_idx(idx), _entry_tag(tag), _entry_ptr(entry_ptr)
 {
 }
-

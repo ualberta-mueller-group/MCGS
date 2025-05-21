@@ -1,11 +1,14 @@
 #include "fraction.h"
 
-#include <climits>
 #include <stdexcept>
 #include <string>
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
 #include "safe_arithmetic.h"
+#include <cassert>
+#include <type_traits>
+#include <algorithm>
+#include "utilities.h"
 
 using namespace std;
 
@@ -170,7 +173,8 @@ relation fraction::get_relation(const fraction& lhs, const fraction& rhs)
     return REL_EQUAL;
 }
 
-relation fraction::get_lexicographic_relation(const fraction& f1, const fraction& f2)
+relation fraction::get_lexicographic_relation(const fraction& f1,
+                                              const fraction& f2)
 {
     const int& top1 = f1.top();
     const int& top2 = f2.top();

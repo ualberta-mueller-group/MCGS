@@ -1,53 +1,59 @@
 {version 1.1}
+
+/*_
+    Results from: "Solving NoGo on Small Rectangular Boards",
+    Haoyu Du et al. (Sizes [1, 27])
+*/
+
 [nogo_1xn]
 
 /* 1 space */
-. {B, W}
+. {B loss, W loss}
 
 /* 2 spaces */
-.. {B, W}
+.. {B win, W win}
 
 /* 3 spaces */
-... {B, W}
+... {B win, W win}
 
 /* 4 spaces */
-.... {B, W}
+.... {B loss, W loss}
 
 /* 5 spaces */
-..... {B, W}
+..... {B win, W win}
 
 /* 6 spaces */
-...... {B, W}
+...... {B win, W win}
 
 /* 7 spaces */
-....... {B, W}
+....... {B win, W win}
 
 /* 8 spaces */
-........ {B, W}
+........ {B win, W win}
 
 /* 9 spaces */
-......... {B, W}
+......... {B win, W win}
 
 /* 10 spaces */
-.......... {B, W}
+.......... {B win, W win}
 
 /* 11 spaces */
-........... {B, W}
+........... {B win, W win}
 
 /* 12 spaces */
-............ {B, W}
+............ {B win, W win}
 
 /* 13 spaces */
-............. {B, W}
+............. {B win, W win}
 
 /* 14 spaces */
-.............. {B, W}
+.............. {B win, W win}
 
 /* 15 spaces */
-............... {B, W}
+............... {B win, W win}
 
 /* 16 spaces */
-................ {B, W}
+................ {B win, W win}
 
 /* 17 spaces */
-................. {B, W}
+................. {B win, W win}

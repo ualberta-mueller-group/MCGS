@@ -4,6 +4,7 @@
 #include "kayles_test.h"
 #include "kayles.h"
 
+#include <memory>
 #include <cassert>
 #include "cgt_move.h"
 #include "test_utilities.h"
@@ -12,7 +13,7 @@ namespace {
 
 void kayles_test_values()
 {
-    for(int i = 0; i < 100; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         kayles k(i);
         const int nim_value = k.search_with_tt();
@@ -22,7 +23,7 @@ void kayles_test_values()
 
 void kayles_test_move_generator()
 {
-    for(int i = 0; i < 20; ++i)
+    for (int i = 0; i < 20; ++i)
     {
         kayles k(i);
         assert_num_moves(k, BLACK, i);
@@ -32,8 +33,7 @@ void kayles_test_move_generator()
 void test_play_undo(int n)
 {
     kayles g(n);
-    std::unique_ptr<move_generator> 
-        mgp(g.create_move_generator());
+    std::unique_ptr<move_generator> mgp(g.create_move_generator());
     move_generator& mg(*mgp);
     for (; mg; ++mg)
     {
@@ -42,7 +42,7 @@ void test_play_undo(int n)
         g.play(m);
         g.undo_move();
         assert(g.value() == n);
-        assert(! g.is_split());
+        assert(!g.is_split());
     }
 }
 

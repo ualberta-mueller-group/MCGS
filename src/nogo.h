@@ -4,9 +4,14 @@
 
 #pragma once
 
-#include "cgt_basics.h"
+// IWYU pragma: begin_exports
+#include "game.h"
 #include "grid.h"
+// IWYU pragma: end_exports
+
 #include <vector>
+#include <string>
+#include <ostream>
 
 class nogo : public grid
 {
@@ -15,6 +20,8 @@ public:
     nogo(const std::vector<int>& board, int_pair shape);
     void play(const move& m, bw to_play) override;
     void undo_move() override;
+
+    bool is_legal() const;
 
 protected:
     split_result _split_impl() const override;

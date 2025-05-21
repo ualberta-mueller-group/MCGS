@@ -2,19 +2,24 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "game.h"
 #include <unordered_map>
 #include "game_token_parsers.h"
 #include <memory>
 #include <exception>
-#include "simple_text_hash.h"
+#include <iostream>
+#include <cstddef>
+#include <cstdlib>
+
+// IWYU pragma: begin_exports
+#include "game_case.h"
+// IWYU pragma: end_exports
 
 // file_parser checks for a version command when reading from file or stdin
 #define FILE_PARSER_VERSION_STRING "version 1.1"
 
 // How many game_cases can be created by a single "run" command, i.e.
 // "{B win, W loss}"
-#define FILE_PARSER_MAX_CASES 2
+#define FILE_PARSER_MAX_CASES 3
 
 //////////////////////////////////////// token_iterator
 
@@ -84,83 +89,6 @@ private:
     size_t _token_idx;
 };
 
-////////////////////////////////////////////////// game_case
-
-// expected outcome of a game_case
-enum test_result
-{
-    TEST_RESULT_UNSPECIFIED = 3,
-    TEST_RESULT_WIN = (int) true,
-    TEST_RESULT_LOSS = (int) false,
-};
-
-inline std::string test_result_to_string(const test_result& outcome)
-{
-    switch (outcome)
-    {
-        case TEST_RESULT_UNSPECIFIED:
-        {
-            return "Unspecified";
-            break;
-        }
-
-        case TEST_RESULT_WIN:
-        {
-            return "Win";
-            break;
-        }
-
-        case TEST_RESULT_LOSS:
-        {
-            return "Loss";
-            break;
-        }
-
-        default:
-        {
-            std::cerr << "test_result_to_string() invalid input: ";
-            std::cerr << outcome << std::endl;
-            exit(-1); // exit instead of assert (could be due to bad file input)
-        }
-    }
-
-    std::cerr << "This string should not appear: see test_result_to_string()"
-              << std::endl;
-    exit(-1);
-}
-
-/*
-    game_case:
-        Games and other data returned from parsing input with file_parser.
-        Games and data within are owned by the caller
-
-    Moveable, not copyable. Caller must call cleanup_games() or release_games()
-   before destructing. This is to prevent memory bugs, due to game ownership
-        being unclear right now
-*/
-struct game_case
-{
-    game_case();
-    ~game_case();
-
-    // move constructor and move assignment operator
-    game_case(game_case&& other) noexcept;
-    game_case& operator=(game_case&& other) noexcept;
-
-    void cleanup_games(); // delete all games
-    void release_games(); // release ownership of games, and reset self to
-                          // default values
-
-    ebw to_play;
-    test_result expected_outcome;
-    std::vector<game*> games;
-    std::string comments;
-    simple_text_hash hash;
-
-private:
-    void _move_impl(game_case&& other) noexcept;
-};
-
 ////////////////////////////////////////////////// file_parser
 
 namespace file_parser_impl {
@@ -205,6 +133,11 @@ private:
     static void _add_game_parser(const std::string& game_title,
                                  game_token_parser* gp);
 
+    // called automatically by _add_game_parser
+    static void _add_game_parser_impartial(
+        const std::string& game_title,
+        std::shared_ptr<game_token_parser>& gp_shared);
+
     // token-generating helper functions
     file_parser_impl::match_state _get_enclosed(const std::string& open,
                                                 const std::string& close,
@@ -215,8 +148,6 @@ private:
 
     // functions to handle current token
     bool _parse_game();
-
-    void _validate_command(const std::string& token_copy);
     bool _parse_command();
 
     std::string _get_error_start();

@@ -4,15 +4,21 @@
 
 #pragma once
 
-#include "cgt_basics.h"
+// IWYU pragma: begin_exports
+#include "game.h"
 #include "strip.h"
+// IWYU pragma: end_exports
+
 #include <vector>
+#include <ostream>
 
 class nogo_1xn : public strip
 {
 public:
     nogo_1xn(std::string game_as_string);
     nogo_1xn(const std::vector<int>& board);
+
+    bool is_legal() const;
 
     void play(const move& m, bw to_play) override;
     void undo_move() override;

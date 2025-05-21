@@ -1,0 +1,18 @@
+#pragma once
+
+/*
+    TODO: this probably should use some macro so that debug printing can be
+    completely excluded from "production" builds...
+*/
+
+// IWYU pragma: begin_exports
+#include <fstream>
+// IWYU pragma: end_exports
+
+#include <string>
+
+std::ofstream& debug_stream();
+
+namespace mcgs_init {
+void init_debug_print(const std::string& filename);
+} // namespace mcgs_init

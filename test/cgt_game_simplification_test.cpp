@@ -10,6 +10,9 @@
 #include "sumgame_map_view.h"
 #include "game_compare_utils.h"
 #include "all_game_headers.h"
+#include <vector>
+#include <tuple>
+#include <cassert>
 
 using namespace std;
 using compare_games_by_print::sumgame_same_games;
@@ -92,7 +95,9 @@ void nimber_test()
     // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    { simplify_basic_nimber(map_view); };
+    {
+        simplify_basic_nimber(map_view);
+    };
     do_all_tests(test_cases, f);
 }
 
@@ -149,7 +154,9 @@ void switch_test()
     // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    { simplify_basic_switch(map_view); };
+    {
+        simplify_basic_switch(map_view);
+    };
     do_all_tests(test_cases, f);
 }
 
@@ -189,7 +196,9 @@ void up_star_test()
     // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    { simplify_basic_up_star(map_view); };
+    {
+        simplify_basic_up_star(map_view);
+    };
     do_all_tests(test_cases, f);
 }
 
@@ -243,7 +252,9 @@ void integers_rationals_test()
     // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    { simplify_basic_integers_rationals(map_view); };
+    {
+        simplify_basic_integers_rationals(map_view);
+    };
     do_all_tests(test_cases, f);
 }
 
@@ -310,7 +321,9 @@ void all_test()
     // clang-format on
 
     simplify_function f = [](sumgame_map_view& map_view)
-    { simplify_basic_all(map_view); };
+    {
+        simplify_basic_all(map_view);
+    };
     do_all_tests(test_cases, f);
 }
 

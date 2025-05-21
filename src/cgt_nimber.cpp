@@ -2,6 +2,9 @@
 // Simple combinatorial games - nimbers
 //---------------------------------------------------------------------------
 #include "cgt_nimber.h"
+#include <cassert>
+#include <ostream>
+#include <vector>
 
 void nimber::play(const move& m, bw to_play)
 {
@@ -36,8 +39,7 @@ int nimber::nim_sum(const std::vector<int>& values)
     return sum;
 }
 
-
-void nimber::_init_hash(local_hash& hash)
+void nimber::_init_hash(local_hash& hash) const
 {
     hash.toggle_value(0, _value);
 }
@@ -70,10 +72,8 @@ private:
     int _current_number;
 };
 
-nimber_move_generator::nimber_move_generator(
-    const nimber& game)
-    : move_generator(BLACK),
-      _game(game), _current_number(1)
+nimber_move_generator::nimber_move_generator(const nimber& game)
+    : move_generator(BLACK), _game(game), _current_number(1)
 {
 }
 

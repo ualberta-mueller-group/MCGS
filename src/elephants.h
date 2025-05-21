@@ -4,8 +4,13 @@
     Implements "Elephants and Rhinos" from Lessons in Play by David Wolfe et al.
 */
 
+// IWYU pragma: begin_exports
+#include "game.h"
 #include "strip.h"
-#include "cgt_basics.h"
+// IWYU pragma: end_exports
+
+#include <vector>
+#include <ostream>
 
 //////////////////////////////////////// elephants
 class elephants : public strip

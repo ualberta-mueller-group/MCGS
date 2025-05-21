@@ -1,11 +1,12 @@
 #include "game.h"
 #include "cgt_basics.h"
+#include "warn_default.h"
 
 #include <cassert>
 #include <limits>
 #include <memory>
-#include <typeindex>
-#include <unordered_set>
+#include <iostream>
+#include <cstddef>
 
 using std::unique_ptr;
 
@@ -75,7 +76,7 @@ void game::undo_move()
     _move_stack.pop_back();
 }
 
-hash_t game::get_local_hash()
+hash_t game::get_local_hash() const
 {
     if (_hash_state == HASH_STATE_UP_TO_DATE)
         return _hash.get_value();
@@ -110,8 +111,6 @@ void game::undo_normalize()
 
 relation game::order(const game* rhs) const
 {
-    assert(this != rhs); // not technically an error, but this shouldn't happen
-
     const game_type_t type1 = game_type();
     const game_type_t type2 = rhs->game_type();
 
@@ -121,56 +120,57 @@ relation game::order(const game* rhs) const
     assert(type1 == type2);
     relation rel = this->_order_impl(rhs);
 
-    assert(                       //
-            rel == REL_UNKNOWN || //
-            rel == REL_LESS ||    //
-            rel == REL_EQUAL ||   //
-            rel == REL_GREATER    //
-            );                    //
-
-    if (rel != REL_UNKNOWN)
-        return rel;
+    assert(                   //
+        rel == REL_UNKNOWN || //
+        rel == REL_LESS ||    //
+        rel == REL_EQUAL ||   //
+        rel == REL_GREATER    //
+    );                        //
 
     // If ordering hook isn't implemented, and stable sorting is used, don't
     // change the order of games
-    return REL_EQUAL;
+    if (rel == REL_UNKNOWN)
+        rel = REL_EQUAL;
+
+    assert((this != rhs) || (rel == REL_EQUAL));
+
+    return rel;
 }
 
-void game::invalidate_hash()
+void game::invalidate_hash() const
 {
     _hash_state = HASH_STATE_INVALID;
     _hash.reset();
 }
 
+split_result game::_split_impl() const
+{
+    WARN_DEFAULT_IMPL();
+
+    return split_result(); // no value
+}
+
 void game::_normalize_impl()
 {
+    WARN_DEFAULT_IMPL();
+
     // Trivial default implementation
-    if(_hash_updatable())
+    if (_hash_updatable())
         _mark_hash_updated();
 }
 
 void game::_undo_normalize_impl()
 {
+    WARN_DEFAULT_IMPL();
+
     // Trivial default implementation
-    if(_hash_updatable())
+    if (_hash_updatable())
         _mark_hash_updated();
 }
 
 relation game::_order_impl(const game* rhs) const
 {
-#ifndef NO_WARN_DEFAULT_IMPL
-    static std::unordered_set<std::type_index> unimplemented_set;
-
-    std::type_index tidx(typeid(*this));
-
-    if (unimplemented_set.find(tidx) == unimplemented_set.end())
-    {
-        unimplemented_set.insert(tidx);
-
-        std::cerr << "WARNING: Game type \"" << tidx.name() << "\" doesn't "
-            "implement ordering hook!" << std::endl;
-    }
-#endif
+    WARN_DEFAULT_IMPL();
 
     // Trivial default implementation
     return REL_UNKNOWN;
@@ -195,6 +195,7 @@ void game::_pre_hash_update()
     else
         _hash_state = HASH_STATE_INVALID;
 }
+
 //---------------------------------------------------------------------------
 
 assert_restore_game::assert_restore_game(const game& g)

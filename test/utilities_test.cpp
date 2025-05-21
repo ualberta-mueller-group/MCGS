@@ -3,6 +3,11 @@
 #include "utilities.h"
 #include <cstdint>
 #include <sstream>
+#include <tuple>
+#include <cassert>
+#include <limits.h>
+#include <string>
+#include <vector>
 
 using namespace std;
 

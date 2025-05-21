@@ -4,9 +4,14 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "cgt_basics.h"
+// IWYU pragma: begin_exports
+#include <string>
 #include "game.h"
+// IWYU pragma: end_exports
+
+#include "cgt_basics.h"
 #include <vector>
+#include <cassert>
 
 //---------------------------------------------------------------------------
 
@@ -36,7 +41,7 @@ public:
     // void print(std::ostream& str) const { str << board_as_string();}
 
 protected:
-    void _init_hash(local_hash& hash) override;
+    void _init_hash(local_hash& hash) const override;
 
     void _normalize_impl() override;
     void _undo_normalize_impl() override;
@@ -44,8 +49,8 @@ protected:
     relation _order_impl(const game* rhs) const override;
 
     static relation _compare_boards(const std::vector<int>& board1,
-                                      const std::vector<int>& board2,
-                                      bool mirror1 = false, bool mirror2 = false);
+                                    const std::vector<int>& board2,
+                                    bool mirror1 = false, bool mirror2 = false);
 
     void _mirror_self();
 

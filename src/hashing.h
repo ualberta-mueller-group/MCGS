@@ -4,15 +4,22 @@
        hash_t, random_table, local_hash, global_hash
 */
 
-#include <vector>
+// IWYU pragma: begin_exports
 #include <cstdint>
-#include <stddef.h>
+// IWYU pragma: end_exports
+
+#include <vector>
+#include <cstddef>
 #include <climits>
 #include <type_traits>
+#include "global_options.h"
 #include "utilities.h"
 #include <random>
-#include "game_type.h"
 #include <iostream>
+#include "cgt_basics.h"
+#include "game_type.h"
+
+class game;
 
 typedef uint64_t hash_t;
 
@@ -33,7 +40,6 @@ public:
     inline static bool did_resize_warning();
 
     static void print_resize_warning();
-
 
 private:
     void _init(uint64_t seed, size_t n_positions);
@@ -86,11 +92,10 @@ hash_t random_table::get_zobrist_val(size_t position, const T& color)
         hash_t element = _number_table[idx];
         element = rotate_interleaved(element, (3 * i) % size_in_bits<hash_t>());
         value ^= element;
-    }
-    while (                                   // Next byte still within
-        (++i * 8) < size_in_bits<T>() &&      // bounds, and remaining
-        ((color_u >> (i * 8)) != 0)           // bytes are not all 0.
-            );                                //
+    } while (                            // Next byte still within
+        (++i * 8) < size_in_bits<T>() && // bounds, and remaining
+        ((color_u >> (i * 8)) != 0)      // bytes are not all 0.
+    ); //
     /*
         Both conditions are necessary because shifting the full width of
         a variable is undefined, and often produces unexpected results.
@@ -114,9 +119,11 @@ inline void random_table::_resize_if_out_of_range(size_t idx)
     if (idx < _n_positions)
         return;
 
-    _resize_to(idx + 2);
+    const size_t target_size = new_vector_capacity(idx, _n_positions);
 
-    if (!_did_resize_warning)
+    _resize_to(target_size);
+
+    if (!_did_resize_warning && !global::silence_warnings())
     {
         _did_resize_warning = true;
         std::cerr << "WARNING: random_table resized" << std::endl;
@@ -126,10 +133,11 @@ inline void random_table::_resize_if_out_of_range(size_t idx)
 ////////////////////////////////////////////////// global random_tables
 enum global_random_table_id
 {
-    RANDOM_TABLE_DEFAULT = 0, // for content of a game (nogo tiles, integer_game int etc)
-    RANDOM_TABLE_TYPE, // for game type
-    RANDOM_TABLE_MODIFIER, // to modify local_hash in a sum based on its position
-    RANDOM_TABLE_PLAYER, // for player color (i.e. "to_play")
+    RANDOM_TABLE_DEFAULT = 0, // for content of a game (i.e. grid tiles)
+    RANDOM_TABLE_TYPE,        // for game type
+    RANDOM_TABLE_MODIFIER,    // to modify local_hash in a sum based on its
+                              // position
+    RANDOM_TABLE_PLAYER,      // for player color (i.e. "to_play")
 };
 
 // seed 0 means seed with current time
@@ -140,19 +148,11 @@ random_table& get_global_random_table(global_random_table_id table_id);
 class local_hash
 {
 public:
-    local_hash(): _value(0)
-    {
-    }
+    local_hash() : _value(0) {}
 
-    inline void reset()
-    {
-        _value = 0;
-    }
+    inline void reset() { _value = 0; }
 
-    inline hash_t get_value() const
-    {
-        return _value;
-    }
+    inline hash_t get_value() const { return _value; }
 
     template <class T>
     void toggle_value(size_t position, const T& color)
@@ -172,9 +172,7 @@ private:
 class global_hash
 {
 public:
-    global_hash(): _value(0), _to_play(EMPTY)
-    {
-    }
+    global_hash() : _value(0), _to_play(EMPTY) { _reserve_space(32); }
 
     void reset();
     hash_t get_value() const;
@@ -186,6 +184,7 @@ public:
 
 private:
     void _resize_if_out_of_range(size_t subgame_idx);
+    void _reserve_space(size_t capacity);
 
     // hash modifier of a local_hash based on subgame index
     hash_t _get_modified_hash(size_t subgame_idx, game* g);
@@ -196,4 +195,3 @@ private:
     std::vector<hash_t> _subgame_hashes;
     std::vector<bool> _subgame_valid_mask;
 };
-

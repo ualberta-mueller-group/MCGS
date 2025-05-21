@@ -9,6 +9,9 @@
 #include "sumgame.h"
 #include "hashing.h"
 #include "all_game_headers.h"
+#include <cassert>
+#include <vector>
+#include <cstddef>
 
 using namespace std;
 
@@ -32,7 +35,7 @@ void test_game_recursive(game& g, int remaining_depth)
     unique_ptr<move_generator> mgp1(g.create_move_generator(BLACK));
     unique_ptr<move_generator> mgp2(g.create_move_generator(WHITE));
 
-    for (move_generator* mg: {mgp1.get(), mgp2.get()})
+    for (move_generator* mg : {mgp1.get(), mgp2.get()})
     {
         unordered_set<hash_t> hash_set;
         hash_set.insert(initial_hash);
@@ -72,10 +75,12 @@ void test_sum_recursive(sumgame& sum, int remaining_depth)
 
     const bw initial_to_play = sum.to_play();
 
-    unique_ptr<sumgame_move_generator> mgp1(sum.create_sum_move_generator(BLACK));
-    unique_ptr<sumgame_move_generator> mgp2(sum.create_sum_move_generator(WHITE));
+    unique_ptr<sumgame_move_generator> mgp1(
+        sum.create_sum_move_generator(BLACK));
+    unique_ptr<sumgame_move_generator> mgp2(
+        sum.create_sum_move_generator(WHITE));
 
-    for (sumgame_move_generator* mg: {mgp1.get(), mgp2.get()})
+    for (sumgame_move_generator* mg : {mgp1.get(), mgp2.get()})
     {
         sum.set_to_play(mg->to_play());
         const hash_t initial_hash = sum.get_global_hash();
@@ -107,17 +112,18 @@ void test_sum_recursive(sumgame& sum, int remaining_depth)
 void test_recursive_all()
 {
     {
-        vector<shared_ptr<game>> games
-        {
-            shared_ptr<game>(new clobber_1xn("XOXOXOXO")),
-            shared_ptr<game>(new nogo_1xn("X....O")),
-            shared_ptr<game>(new elephants("...O.X..O..X...X.X..O")),
-            shared_ptr<game>(new integer_game(-20)),
-            shared_ptr<game>(new nimber(3)),
-            shared_ptr<game>(new up_star(6, true)),
-            shared_ptr<game>(new dyadic_rational(fraction(9, 8))),
-            shared_ptr<game>(new switch_game(fraction(21, 16), fraction(-13, 4))),
-        };
+        vector<shared_ptr<game>> games //
+            {
+                shared_ptr<game>(new clobber_1xn("XOXOXOXO")),            //
+                shared_ptr<game>(new nogo_1xn("X....O")),                 //
+                shared_ptr<game>(new elephants("...O.X..O..X...X.X..O")), //
+                shared_ptr<game>(new integer_game(-20)),                  //
+                shared_ptr<game>(new nimber(3)),                          //
+                shared_ptr<game>(new up_star(6, true)),                   //
+                shared_ptr<game>(new dyadic_rational(fraction(9, 8))),    //
+                shared_ptr<game>(
+                    new switch_game(fraction(21, 16), fraction(-13, 4))), //
+            };
 
         for (shared_ptr<game>& gp : games)
         {
@@ -126,18 +132,18 @@ void test_recursive_all()
     }
 
     {
-        vector<shared_ptr<game>> games
-        {
-            shared_ptr<game>(new clobber_1xn("XOXOXO")),
-            shared_ptr<game>(new nogo_1xn("....")),
-            shared_ptr<game>(new elephants("X...O")),
-            shared_ptr<game>(new integer_game(-3)),
-            shared_ptr<game>(new nimber(2)),
-            shared_ptr<game>(new up_star(2, true)),
-            shared_ptr<game>(new dyadic_rational(fraction(-3, 8))),
-            shared_ptr<game>(new switch_game(fraction(3, 16), fraction(-7, 4))),
-
-        };
+        vector<shared_ptr<game>> games //
+            {
+                shared_ptr<game>(new clobber_1xn("XOXOXO")),            //
+                shared_ptr<game>(new nogo_1xn("....")),                 //
+                shared_ptr<game>(new elephants("X...O")),               //
+                shared_ptr<game>(new integer_game(-3)),                 //
+                shared_ptr<game>(new nimber(2)),                        //
+                shared_ptr<game>(new up_star(2, true)),                 //
+                shared_ptr<game>(new dyadic_rational(fraction(-3, 8))), //
+                shared_ptr<game>(
+                    new switch_game(fraction(3, 16), fraction(-7, 4))), //
+            };
 
         sumgame sum(BLACK);
 
@@ -198,7 +204,8 @@ void test_strip(T&& g, int remaining_depth)
 }
 
 // check that all permutations containing all games give the same global hash
-hash_t test_sum_order_impl(sumgame& sum, vector<game*>& games, vector<bool>& used)
+hash_t test_sum_order_impl(sumgame& sum, vector<game*>& games,
+                           vector<bool>& used)
 {
     assert(games.size() == used.size());
 
@@ -242,18 +249,19 @@ hash_t test_sum_order_impl(sumgame& sum, vector<game*>& games, vector<bool>& use
 
 void test_sum_order()
 {
-    vector<shared_ptr<game>> games_managed
-    {
-        shared_ptr<game>(new clobber_1xn("XOXOXOXO")),
-        shared_ptr<game>(new nogo_1xn("X....O")),
-        shared_ptr<game>(new elephants("...O.X..O..X...X.X..O")),
-        shared_ptr<game>(new integer_game(-20)),
-        shared_ptr<game>(new nimber(3)),
-        shared_ptr<game>(new up_star(6, true)),
-        shared_ptr<game>(new clobber_1xn("XOXOXO")),
-        shared_ptr<game>(new dyadic_rational(fraction(9, 8))),
-        shared_ptr<game>(new switch_game(fraction(21, 16), fraction(-13, 4))),
-    };
+    vector<shared_ptr<game>> games_managed //
+        {
+            shared_ptr<game>(new clobber_1xn("XOXOXOXO")),            //
+            shared_ptr<game>(new nogo_1xn("X....O")),                 //
+            shared_ptr<game>(new elephants("...O.X..O..X...X.X..O")), //
+            shared_ptr<game>(new integer_game(-20)),                  //
+            shared_ptr<game>(new nimber(3)),                          //
+            shared_ptr<game>(new up_star(6, true)),                   //
+            shared_ptr<game>(new clobber_1xn("XOXOXO")),              //
+            shared_ptr<game>(new dyadic_rational(fraction(9, 8))),    //
+            shared_ptr<game>(
+                new switch_game(fraction(21, 16), fraction(-13, 4))), //
+        };
 
     vector<game*> games;
     for (shared_ptr<game>& sp : games_managed)

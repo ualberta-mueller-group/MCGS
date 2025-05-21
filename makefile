@@ -1,17 +1,23 @@
 CC = c++
-#NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -DNDEBUG -DNO_WARN_DEFAULT_IMPL
-NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3
-TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -DSUMGAME_DEBUG_EXTRA
 
-# i.e. "make MCGS LEAKCHECK=1" or "make MCGS LEAKCHECK=true"
-ifneq (,$(filter $(LEAKCHECK),1 true))
-	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -fsanitize=leak
-	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -fsanitize=leak
+MCGS_DEBUG_FLAGS_ALL := -DSUMGAME_DEBUG -DGAME_TYPE_DEBUG -DDEFAULT_IMPL_DEBUG -DNOGO_DEBUG
+MCGS_DEBUG_FLAGS_TEST := $(filter-out -DDEFAULT_IMPL_DEBUG,$(MCGS_DEBUG_FLAGS_ALL))
+MCGS_DEBUG_FLAGS_COMMON := -DNOGO_DEBUG
+
+#NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread -DNDEBUG
+NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread $(MCGS_DEBUG_FLAGS_COMMON)
+TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread $(MCGS_DEBUG_FLAGS_TEST)
+
+# i.e. "make MCGS ASAN=leak" or "make MCGS ASAN=address"
+ifneq (,$(filter $(ASAN),leak address))
+	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN) -D_GLIBCXX_DEBUG
+	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) $(ASAN_FLAGS)
+	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) $(ASAN_FLAGS)
 endif
 
 ifneq (,$(filter $(DEBUG),1 true))
-	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -DSUMGAME_DEBUG_EXTRA
-	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -DSUMGAME_DEBUG_EXTRA
+	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -DSUMGAME_DEBUG
+	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -DSUMGAME_DEBUG
 endif
 
 # Valgrind is too slow for even short computations. Instead use: -fsanitize=leak
@@ -61,6 +67,9 @@ TIDY_CONFIG := .clang-tidy
 TIDY_CONFIG_HEADERS := .clang-tidy-headers
 FORMAT_SCRIPT := utils/format-files.py
 
+GREP_FILES_BASE := $(wildcard .*) $(wildcard *)
+GREP_FILES_EXCLUDE := . .. .cache .git
+GREP_FILES := $(filter-out $(GREP_FILES_EXCLUDE),$(GREP_FILES_BASE))
 
 
 .DEFAULT_GOAL := MCGS
@@ -79,9 +88,6 @@ ifdef USE_FLAGS
 	endif
 endif
 
-
-# NOTE: clang-tidy should be invoked on cpp files
-
 # Tidy targets
 #$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 tidy:
@@ -98,10 +104,10 @@ tidy_test:
 	$(eval LINT_FILES ?= $(MCGS_TEST_SRC))
 	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
 
-tidy_header_functions:
+tidy_headers:
 	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 	$(eval LINT_FILES := $(filter %.h, $(LINT_FILES)))
-	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++-header 2>&1 | tee tidy_result.txt
 
 
 # Format targets
@@ -117,6 +123,10 @@ format_replace:
 	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 	@python3 $(FORMAT_SCRIPT) --replace $(LINT_FILES)
 
+# Grep targets
+find_todo:
+	grep -R -i "TODO" $(GREP_FILES)
+
 
 ifeq ($(CAN_BUILD), 1)
 MCGS: $(MCGS_OBJS)
@@ -129,10 +139,10 @@ else
 .PHONY: MCGS MCGS_test
 
 MCGS:
-	make $@ USE_FLAGS="$(NORMAL_FLAGS)" DEPS="$(MCGS_DEPS)" BUILD_DIR="$(RELEASE_BUILD_DIR)"
+	$(MAKE) $@ USE_FLAGS="$(NORMAL_FLAGS)" DEPS="$(MCGS_DEPS)" BUILD_DIR="$(RELEASE_BUILD_DIR)"
 
 MCGS_test:
-	make $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)" BUILD_DIR="$(TEST_BUILD_DIR)"
+	$(MAKE) $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)" BUILD_DIR="$(TEST_BUILD_DIR)"
 
 endif
 

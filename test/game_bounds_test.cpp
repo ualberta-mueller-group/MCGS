@@ -1,5 +1,7 @@
 #include "game_bounds_test.h"
 #include "bounds.h"
+#include <cassert>
+#include "cgt_basics.h"
 
 namespace {
 

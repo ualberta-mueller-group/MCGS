@@ -1,0 +1,80 @@
+{version 1.1}
+
+/*_
+    Results from: "Solving NoGo on Small Rectangular Boards",
+    Haoyu Du et al. (Sizes [1, 27])
+
+    And: "Solving Linear NoGo with Combinatorial Game Theory",
+    Haoyu Du et al. (Sizes [28-39])
+*/
+
+[nogo_1xn]
+
+/* 18 spaces */
+.................. {B win, W win}
+
+/* 19 spaces */
+................... {B win, W win}
+
+/* 20 spaces */
+.................... {B win, W win}
+
+/* 21 spaces */
+..................... {B win, W win}
+
+/* 22 spaces */
+...................... {B win, W win}
+
+/* 23 spaces */
+....................... {B win, W win}
+
+/* 24 spaces */
+........................ {B win, W win}
+
+/* 25 spaces */
+......................... {B win, W win}
+
+/* 26 spaces */
+.......................... {B win, W win}
+
+/* 27 spaces */
+........................... {B win, W win}
+
+/* 28 spaces */
+............................ {B win, W win}
+
+/* 29 spaces */
+............................. {B win, W win}
+
+/* 30 spaces */
+.............................. {B win, W win}
+
+/* 31 spaces */
+............................... {B win, W win}
+
+/* 32 spaces */
+................................ {B win, W win}
+
+/* 33 spaces */
+................................. {B win, W win}
+
+/* 34 spaces */
+.................................. {B win, W win}
+
+/* 35 spaces */
+................................... {B win, W win}
+
+/* 36 spaces */
+.................................... {B win, W win}
+
+/* 37 spaces */
+..................................... {B win, W win}
+
+/* 38 spaces */
+...................................... {B win, W win}
+
+/* 39 spaces */
+....................................... {B win, W win}
+
+/* 40 spaces */
+........................................ {B, W}

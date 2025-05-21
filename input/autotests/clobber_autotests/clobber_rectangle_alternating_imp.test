@@ -1,0 +1,55 @@
+{version 1.1}
+
+/*_
+    Results from: MCGS and CGSuite
+*/
+
+[impartial clobber]
+
+/* 2x3 CGSuite */
+XOX|OXO
+    {N 0}
+
+/* 2x4 CGSuite */
+XOXO|OXOX
+    {N 0}
+
+/* 2x5 CGSuite */
+XOXOX|OXOXO
+    {N 0}
+
+/* 2x6 CGSuite */
+XOXOXO|OXOXOX
+    {N 0}
+
+/* 3x2 CGSuite */
+XO|OX|XO
+    {N 0}
+
+/* 3x4 CGSuite */
+XOXO|OXOX|XOXO
+    {N 0}
+
+/* 3x5 CGSuite */
+XOXOX|OXOXO|XOXOX
+    {N 1}
+
+/* 4x2 CGSuite */
+XO|OX|XO|OX
+    {N 0}
+
+/* 4x3 CGSuite */
+XOX|OXO|XOX|OXO
+    {N 0}
+
+/* 5x2 CGSuite */
+XO|OX|XO|OX|XO
+    {N 0}
+
+/* 5x3 CGSuite */
+XOX|OXO|XOX|OXO|XOX
+    {N 1}
+
+/* 6x2 CGSuite */
+XO|OX|XO|OX|XO|OX
+    {N 0}

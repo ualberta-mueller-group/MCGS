@@ -4,13 +4,53 @@ import pathlib
 import datetime
 import hashlib
 
+######################################## Warnings
+# Track warnings already printed
+warned_dict = {
+}
+
+warned_list = []
+
+
+def warn_common(warning_name, warning_text):
+    global warned_dict, warned_list
+
+    warned = warned_dict.get(warning_name)
+    if warned is None:
+        warned = False
+
+    assert type(warned) is bool and type(warning_text) is str
+
+    if warned:
+        return
+
+    warned_dict[warning_name] = True
+    warned_list.append(warning_text)
+
+    print(f"WARNING: {warning_text}")
+
+
+def warn_input_file_duplicate_tests():
+    line = "Primary input file contains duplicate tests"
+    warn_common("input_file_duplicate_tests", line)
+
+
+def warn_comparison_file_duplicate_tests():
+    line = "Comparison file contains duplicate tests"
+    warn_common("comparison_file_duplicate_tests", line)
+
+
+def warn_diverging_test_sequence():
+    line = "Tests, or test order differs between input and comparison files"
+    warn_common("diverging_test_sequence", line)
+
 
 ######################################## Constants
 time_threshold_frac = 0.1
 time_threshold_abs = 5
 
-# Highlight times that differ by at least time_threshold_abs milliseconds AND have a percent difference
-# of at least time_threshold_frac * 100
+# Highlight times that differ by at least time_threshold_abs milliseconds AND
+# have a fraction of at least (1.0 + time_threshold_frac)
 
 src_dir = "src"
 
@@ -310,19 +350,19 @@ def get_faster(new_time, old_time):
     new_time = max(0.0001, new_time)
     old_time = max(0.0001, old_time)
 
-    # use percent difference for highlighting so that the order of input files
-    # doesn't matter
-    frac_difference = abs(new_time - old_time) / ((new_time + old_time) / 2)
+    time_max = max(new_time, old_time)
+    time_min = min(new_time, old_time)
 
-    frac_improved = -(new_time - old_time) / abs(old_time)
-    diff = new_time - old_time
+    frac = time_max / time_min
+    assert frac >= 1.0
 
-    text = "{:.2f}% ".format(abs(frac_improved) * 100)
-    text += "SLOWER" if diff > 0 else "FASTER"
+    text = "{:.2f}x ".format(frac)
+    text += "AS FAST" if new_time < old_time else "AS SLOW"
 
     css = None
 
-    if frac_difference >= time_threshold_frac and abs(diff) >= time_threshold_abs:
+    diff = new_time - old_time
+    if frac >= (1.0 + time_threshold_frac) and abs(diff) >= time_threshold_abs:
         css = "cell-slower" if diff > 0 else "cell-faster"
 
     return text, css
@@ -389,10 +429,13 @@ output_field_dict = {
 row_functions = []
 
 # List of input field aliases used to match rows between main input file
-# and comparison file. Or None
-row_match_key = None
+# and comparison file
+row_match_key = ["games", "player", "expected_result"]
 
-# Map containing all rows from the comparison file, indexed according to row_match_key
+# Map containing all rows from the comparison file. Indexed according to row_match_key
+# Elements are lists of rows which have the same
+# key (to handle duplicate tests).
+# The end of the list contains the first test in the comparison .csv
 # Rows are in "input row" format
 comparison_rows = {
 }
@@ -465,7 +508,6 @@ else:
 
     add_row_function(row_populate_double_mode)
     add_row_function(row_style)
-    row_match_key = ["games", "player", "expected_result"]
 
 
 ######################################## process rows
@@ -503,6 +545,21 @@ def input_row_get_key(input_row):
     return tuple(key)
 
 
+def reader_get_duplicate_key_set(reader):
+    key_set = set()
+    duplicate_set = set()
+
+    for reader_row in reader:
+        input_row = reader_row_to_input_row(reader_row)
+        input_row_key = input_row_get_key(input_row)
+        if input_row_key in key_set:
+            duplicate_set.add(input_row_key)
+        key_set.add(input_row_key)
+
+    return duplicate_set
+
+
+comparison_file_key_sequence = []
 # Read all rows from the comparison file, if specified
 if comparison_file_name is not None:
     comparison_file = open(comparison_file_name, "r")
@@ -511,16 +568,37 @@ if comparison_file_name is not None:
 
     for reader_row in reader:
         input_row = reader_row_to_input_row(reader_row)
+
         row_key = input_row_get_key(input_row)
-        comparison_rows[row_key] = input_row
+        comparison_file_key_sequence.append(row_key)
+
+        row_list = comparison_rows.get(row_key)
+        if row_list is None:
+            comparison_rows[row_key] = []
+        else:
+            warn_comparison_file_duplicate_tests()
+
+        comparison_rows[row_key].append(input_row)
 
     comparison_file.close()
+
+for key in comparison_rows:
+    comparison_rows[key].reverse()
 
 
 # Start processing the input file
 infile = open(infile_name, "r")
+
+# Get row keys of duplicate tests, so that the first instance of a duplicate
+# test is also marked
+duplicate_input_row_key_set = reader_get_duplicate_key_set(csv.DictReader(infile))
+if len(duplicate_input_row_key_set) != 0:
+    warn_input_file_duplicate_tests()
+infile.seek(0)
+
 reader = csv.DictReader(infile)
 assert_correct_reader_fields(reader)
+
 
 # Start HTML table string
 table_string = "<table id=\"data-table\">\n"
@@ -539,11 +617,20 @@ table_string += "</tr>\n"
 
 
 # Read each input row, making an output row
+total_test_count = 0
+input_file_key_sequence = []
+
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
+    total_test_count += 1
 
-    input_row_key = input_row_get_key(input_row) if comparison_file_name is not None else None
-    comparison_row = comparison_rows.get(input_row_key)
+    input_row_key = input_row_get_key(input_row)
+    input_file_key_sequence.append(input_row_key)
+
+    comparison_row_list = comparison_rows.get(input_row_key)
+    comparison_row = None
+    if comparison_row_list is not None and len(comparison_row_list) != 0:
+        comparison_row = comparison_row_list.pop()
 
     input_rows = [input_row]
     if comparison_row is not None:
@@ -551,6 +638,9 @@ for reader_row in reader:
 
     output_row = {}
     output_row["css_classes"] = ["row"]
+
+    if input_row_key in duplicate_input_row_key_set:
+        output_row["css_classes"].append("row-duplicate")
 
     for fn in row_functions:
         fn(input_rows, output_row)
@@ -580,7 +670,26 @@ for reader_row in reader:
 table_string += "</table>\n"
 infile.close()
 
+# Check for diverging tests or test order
+if comparison_file_name is not None:
+    if input_file_key_sequence != comparison_file_key_sequence:
+        warn_diverging_test_sequence()
+
+
 ######################################## Write HTML file
+# Include warnings
+warning_string = ""
+if len(warned_list) != 0:
+    warning_string = "<span id=\"python-warnings\">\n"
+
+    warning_string += "<p><b>WARNINGS:</b></p>\n"
+    warning_string += "<ul>\n"
+
+    for warning in warned_list:
+        warning_string += "<li>" + warning + "</li>\n"
+
+    warning_string += "</ul>\n"
+    warning_string += "</span>\n"
 
 
 # Timestamps and MD5s of input files (and date of output file)
@@ -620,6 +729,7 @@ def get_metadata_string():
 
     now = datetime.datetime.now().strftime(date_format)
     result += f"\nGenerated {now}"
+    result += f"\nTest count (primary input file): {total_test_count}"
 
     result += "</p>\n"
     return result
@@ -644,6 +754,7 @@ script_string = script_file.read()
 script_file.close()
 
 # Replace the smaller things first (order of these affects performance)
+html_template_string = html_template_string.replace("<!-- REPLACE WITH PYTHON WARNINGS -->", warning_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH METADATA -->", metadata_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH COLUMN OPTIONS -->", column_options_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH SCRIPT -->", script_string)

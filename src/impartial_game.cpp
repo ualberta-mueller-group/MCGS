@@ -3,50 +3,47 @@
 //---------------------------------------------------------------------------
 #include "impartial_game.h"
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include "cgt_basics.h"
 #include "cgt_nimber.h"
 #include "hashing.h"
 #include "transposition.h"
 #include <memory>
+#include <cassert>
+#include <set>
 
 //---------------------------------------------------------------------------
 
-namespace{
+namespace {
 
-inline int search(game* subgame, impartial_tt& tt)
+inline int search(game* subgame, impartial_tt& tt, const bool& over_time)
 {
-    const impartial_game* g =
-        static_cast<const impartial_game*>(subgame);
-    return g->search_impartial_game(tt);
+    const impartial_game* g = static_cast<const impartial_game*>(subgame);
+    assert(g == dynamic_cast<const impartial_game*>(subgame));
+    return g->search_impartial_game_cancellable(tt, over_time);
 }
 
-inline void tt_store(impartial_tt& tt, impartial_game* g, 
-                     int nim_value)
+inline void tt_store(impartial_tt& tt, impartial_game* g, int nim_value)
 {
     const hash_t hash = g->get_local_hash();
     auto tt_it = tt.get_iterator(hash);
     tt_it.set_entry(impartial_ttable_entry(nim_value));
 }
 
-inline bool tt_lookup(impartial_tt& tt, impartial_game* g, 
-                     int& nim_value)
+inline bool tt_lookup(impartial_tt& tt, impartial_game* g, int& nim_value)
 {
     const hash_t hash = g->get_local_hash();
     auto tt_it = tt.get_iterator(hash);
     const bool is_valid = tt_it.entry_valid();
     if (is_valid)
-        nim_value = tt_it.get_entry()._nim_value;
+        nim_value = tt_it.get_entry().nim_value;
     return is_valid;
 }
 } // namespace
+
 //---------------------------------------------------------------------------
 
 void impartial_game::set_solved(int nim_value)
 {
-    assert(! is_solved());
+    assert(!is_solved());
     assert(num_moves_played() == 0);
     _root_is_solved = true;
     _nim_value = nim_value;
@@ -60,6 +57,17 @@ int impartial_game::search_with_tt(int tt_size) const
 
 int impartial_game::search_impartial_game(impartial_tt& tt) const
 {
+    int result = search_impartial_game_cancellable(tt, false);
+    assert(result >= 0);
+    return result;
+}
+
+int impartial_game::search_impartial_game_cancellable(
+    impartial_tt& tt, const bool& over_time) const
+{
+    if (over_time)
+        return -1;
+
     if (is_solved())
         return nim_value();
 
@@ -67,7 +75,11 @@ int impartial_game::search_impartial_game(impartial_tt& tt) const
     auto g = const_cast<impartial_game*>(this);
     int v;
     if (tt_lookup(tt, g, v))
+    {
+        if (g->num_moves_played() == 0)
+            g->set_solved(v);
         return v;
+    }
 
     std::unique_ptr<move_generator> mgp(g->create_move_generator());
     move_generator& mg = *mgp;
@@ -77,26 +89,52 @@ int impartial_game::search_impartial_game(impartial_tt& tt) const
     std::set<int> nimbers;
     for (; mg; ++mg)
     {
+        if (over_time)
+            return -1;
+
         assert_restore_game arm(*this);
         move m = mg.gen_move();
         g->play(m);
         int move_nimber = 0;
         split_result sr = g->split();
+
         if (sr) // split found a sum
         {
             // search new games in sr, nim-add them
-            for (game* subgame: *sr)
+            for (game* subgame : *sr)
             {
-                int result = search(subgame, tt);
+                int result = search(subgame, tt, over_time);
+
+                if (over_time)
+                    break;
+                assert(result >= 0);
+
                 nimber::add_nimber(move_nimber, result);
+            }
+
+            for (game* subgame : *sr)
                 delete subgame;
+
+            if (over_time)
+            {
+                g->undo_move();
+                return -1;
             }
         }
         else // no split, keep searching same subgame
         {
-            move_nimber = g->search_impartial_game(tt);
+            move_nimber = g->search_impartial_game_cancellable(tt, over_time);
+
+            if (over_time)
+            {
+                g->undo_move();
+                return -1;
+            }
+
+            assert(move_nimber >= 0);
         }
 
+        assert(move_nimber >= 0);
         nimbers.insert(move_nimber);
         g->undo_move();
     }
@@ -113,10 +151,11 @@ int impartial_game::mex(const std::set<int>& nimbers)
     int i = 0;
     for (auto it = nimbers.begin(); it != nimbers.end(); ++it)
     {
+        assert(*it >= 0);
+
         if (*it != i)
             return i;
         ++i;
     }
     return i;
 }
-

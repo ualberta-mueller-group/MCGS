@@ -17,7 +17,7 @@ void elephants_split2()
     test_strip<elephants>("....OXO.....X......X.XOX..O...O...O.XXO.",
                           {
                               "....O",
-                              "X......X.XO",
+                              ".....X......X.",
                               "X..O...O...O",
                           });
 }
@@ -27,7 +27,7 @@ void elephants_split3()
     test_strip<elephants>(".OXO...O.O..O.X.X......X...X..OO..X....X",
                           {
                               ".O",
-                              "XO...O.O..O",
+                              "...O.O..O",
                               "X.X......X...X..OO",
                               "X....X",
                           });
@@ -38,7 +38,7 @@ void elephants_split4()
     test_strip<elephants>("X.......O.....XO.O.....X..OO.X.O.OOXO...",
                           {
                               "X.......O",
-                              "XO.O",
+                              ".O",
                               "X..OO",
                               "X.O.OO",
                           });
@@ -60,7 +60,7 @@ void elephants_split6()
                           {
                               "X..X........O",
                               "X....O...O",
-                              "X..",
+                              ".X..",
                           });
 }
 
@@ -68,7 +68,8 @@ void elephants_split7()
 {
     test_strip<elephants>("XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO",
                           {
-                              "XX...XO.O",
+                              "XX...",
+                              ".O",
                               "X..X.O..O.O",
                               "X.O",
                               "X..X..X.....O..OOO",

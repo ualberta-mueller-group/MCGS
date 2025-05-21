@@ -2,6 +2,8 @@
 // Simple combinatorial games - integers
 //---------------------------------------------------------------------------
 #include "cgt_integer_game.h"
+#include <cassert>
+#include <ostream>
 
 void integer_game::play(const move& m, bw to_play)
 {
@@ -50,8 +52,7 @@ void integer_game::print(std::ostream& str) const
     str << "integer:" << _value;
 }
 
-
-void integer_game::_init_hash(local_hash& hash)
+void integer_game::_init_hash(local_hash& hash) const
 {
     hash.toggle_value(0, _value);
 }

@@ -7,6 +7,9 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "strip.h"
+#include <cassert>
+#include <cstddef>
+#include <ostream>
 
 using std::string, std::pair, std::vector;
 
@@ -149,7 +152,6 @@ split_result clobber_1xn::_split_impl() const
     }
 }
 
-
 game* clobber_1xn::inverse() const
 {
     return new clobber_1xn(inverse_board());
@@ -162,6 +164,7 @@ string clobber_1xn::xoxo(int n)
         result += "XO";
     return result;
 }
+
 //---------------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& out, const clobber_1xn& g)
@@ -169,6 +172,7 @@ std::ostream& operator<<(std::ostream& out, const clobber_1xn& g)
     out << g.board_as_string();
     return out;
 }
+
 //---------------------------------------------------------------------------
 
 class clobber_1xn_move_generator : public move_generator

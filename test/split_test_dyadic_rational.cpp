@@ -3,6 +3,7 @@
 #include "cgt_integer_game.h"
 
 #include <memory>
+#include <cassert>
 
 using std::unique_ptr;
 

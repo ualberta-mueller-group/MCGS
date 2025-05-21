@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <cstdint>
+#include <cstddef>
 
 /*
     Used by file_parser to hash input tokens, creating a hash for a test case.

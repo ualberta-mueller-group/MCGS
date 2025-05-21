@@ -1,0 +1,74 @@
+/*
+    Given a list of game sums, print their MCGS commands (with expected values)
+*/
+
+System.ClearAll();
+Utils();
+
+/*
+    List of lists of games. Each sub-list represents a sum. "Nothing" in place
+    of a sub-list will write "SKIP" instead of a command to the output
+*/
+cases := [
+    [clobber("XO"), 5, *3],
+    Nothing,
+    [5, 2]
+];
+
+/*
+    "make_imp": Wrap games in a case with ImpartialVariantGame before summing?
+    "full_impartial_command": {N 0} vs {N 0, B loss, W loss}
+*/
+make_imp := false;
+full_impartial_command := false;
+
+////////////////////////////////////////////////////////////
+def get_command(canonical_game) begin
+    assert(canonical_game is CanonicalShortGame);
+
+    if make_imp then
+        canonical_impgame_to_command(canonical_game, full_impartial_command);
+    else
+        canonical_game_to_command(canonical_game);
+    end
+end
+
+def convert(g) begin
+    assert(g is Game);
+
+    if make_imp then
+        make_impartial(g);
+    else
+        g;
+    end
+end
+
+lines := MutableList();
+for i from 1 to cases.Size do
+    print(join([i, " of ", cases.Size]));
+
+    case := cases[i];
+
+    if case == Nothing then
+        lines.Add("SKIP");
+    else
+        assert(case is List);
+        games := MutableList();
+
+        // If testing clobber sums, edit this loop to convert Strings to Games
+        for g in case do
+            assert(g is Game);
+            games.Add(convert(g));
+        end
+
+        sum := sum_games(games);
+        canonical := sum.CanonicalForm;
+        command := get_command(canonical);
+
+        lines.Add(command);
+    end
+end
+
+out_string := join(lines, "<NL>");
+print(out_string);
+

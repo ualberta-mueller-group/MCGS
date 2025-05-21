@@ -4,9 +4,13 @@
 
 #pragma once
 
-#include "cgt_basics.h"
+// IWYU pragma: begin_exports
+#include "game.h"
 #include "strip.h"
+// IWYU pragma: end_exports
+
 #include <vector>
+#include <ostream>
 
 class clobber_1xn : public strip
 {
@@ -28,10 +32,9 @@ public:
     {
         str << "clobber_1xn:" << board_as_string();
     }
-    
+
     // Standard board with n consecutive "XO" pairs
     static std::string xoxo(int n);
-
 };
 
 std::ostream& operator<<(std::ostream& out, const clobber_1xn& g);

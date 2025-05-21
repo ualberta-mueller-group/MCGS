@@ -5,6 +5,12 @@
 
 #include "cgt_basics.h"
 #include "throw_assert.h"
+#include <cassert>
+#include <cstdlib>
+#include <vector>
+#include <utility>
+#include "warn_default.h"
+#include <cstddef>
 
 //---------------------------------------------------------------------------
 
@@ -99,8 +105,10 @@ std::string strip::board_as_string() const
     return board_to_string(_board);
 }
 
-void strip::_init_hash(local_hash& hash)
+void strip::_init_hash(local_hash& hash) const
 {
+    WARN_DEFAULT_IMPL();
+
     const size_t N = this->size();
 
     for (size_t i = 0; i < N; i++)
@@ -109,6 +117,8 @@ void strip::_init_hash(local_hash& hash)
 
 void strip::_normalize_impl()
 {
+    WARN_DEFAULT_IMPL();
+
     // Is mirrored board lexicographically less than the current board?
     relation rel = _compare_boards(_board, _board, true, false);
     bool do_mirror = (rel == REL_LESS);
@@ -126,6 +136,8 @@ void strip::_normalize_impl()
 
 void strip::_undo_normalize_impl()
 {
+    WARN_DEFAULT_IMPL();
+
     assert(!_default_normalize_did_mirror.empty());
     bool do_mirror = _default_normalize_did_mirror.back();
     _default_normalize_did_mirror.pop_back();
@@ -141,6 +153,7 @@ void strip::_undo_normalize_impl()
 
 relation strip::_order_impl(const game* rhs) const
 {
+    WARN_DEFAULT_IMPL();
     assert(game_type() == rhs->game_type());
 
     const strip* other = reinterpret_cast<const strip*>(rhs);
@@ -150,8 +163,8 @@ relation strip::_order_impl(const game* rhs) const
 }
 
 relation strip::_compare_boards(const std::vector<int>& board1,
-                                  const std::vector<int>& board2,
-                                  bool mirror1, bool mirror2)
+                                const std::vector<int>& board2, bool mirror1,
+                                bool mirror2)
 {
     if (board1.size() != board2.size())
         return board1.size() < board2.size() ? REL_LESS : REL_GREATER;
@@ -162,8 +175,8 @@ relation strip::_compare_boards(const std::vector<int>& board1,
     // Compare contents of boards
 
     size_t idx1 = 0; // initial index (assume forward iteration)
-    int step1 = 1; // index stride (assume forward iteration)
-    if (mirror1) // If comparing mirror board, iterate backwards
+    int step1 = 1;   // index stride (assume forward iteration)
+    if (mirror1)     // If comparing mirror board, iterate backwards
     {
         idx1 = N - 1;
         step1 = -1;

@@ -2,8 +2,12 @@
 // Impartial game - kayles
 //---------------------------------------------------------------------------
 #include "kayles.h"
+#include "cgt_move.h"
+#include "cgt_basics.h"
+#include "hashing.h"
 
 #include <ostream>
+#include <cassert>
 #include <vector>
 using std::vector;
 
@@ -17,8 +21,7 @@ move kayles::encode(int take, int smaller, int larger)
 }
 
 // Decode move back to triple (take, smaller, larger)
-void kayles::decode(move m, int& take, 
-                    int& smaller, int& larger)
+void kayles::_decode(move m, int& take, int& smaller, int& larger)
 {
     larger = cgt_move::second(m);
     assert(larger >= 0);
@@ -29,7 +32,7 @@ void kayles::decode(move m, int& take,
     take = 1 + f % 2;
 }
 
-void kayles::_init_hash(local_hash& hash)
+void kayles::_init_hash(local_hash& hash) const
 {
     assert(_smaller_part == 0);
     hash.toggle_value(0, _value);
@@ -39,7 +42,7 @@ void kayles::play(const move& m)
 {
     impartial_game::play(m);
     int ignore_take;
-    decode(m, ignore_take, _smaller_part, _value);
+    _decode(m, ignore_take, _smaller_part, _value);
 }
 
 void kayles::undo_move()
@@ -47,7 +50,7 @@ void kayles::undo_move()
     const move m = cgt_move::decode(last_move());
     game::undo_move();
     int take, smaller, larger;
-    decode(m, take, smaller, larger);
+    _decode(m, take, smaller, larger);
     _value = larger + smaller + take;
     _smaller_part = 0;
 }
@@ -60,9 +63,9 @@ void kayles::print(std::ostream& str) const
 void kayles::print_move(move m, std::ostream& str)
 {
     int take, smaller, larger;
-    decode(m, take, smaller, larger);
-    str << "kayles move: take " << take 
-    << ", smaller " << smaller << ", larger " << larger << '\n';
+    _decode(m, take, smaller, larger);
+    str << "kayles move: take " << take << ", smaller " << smaller
+        << ", larger " << larger << '\n';
 }
 
 game* kayles::inverse() const
@@ -101,16 +104,15 @@ split_result kayles::_split_impl() const
 // Values from https://en.wikipedia.org/wiki/Kayles
 int kayles::static_result(int n)
 {
-    static int small_values[] =
-    {/* 0+ */ 0, 1, 2, 3, 1, 4, 3, 2, 1, 4, 2, 6,
-    /* 12+ */ 4, 1, 2, 7, 1, 4, 3, 2, 1, 4, 6, 7,
-    /* 24+ */ 4, 1, 2, 8, 5, 4, 7, 2, 1, 8, 6, 7,
-    /* 36+ */ 4, 1, 2, 3, 1, 4, 7, 2, 1, 8, 2, 7,
-    /* 48+ */ 4, 1, 2, 8, 1, 4, 7, 2, 1, 4, 2, 7,
-    /* 60+ */ 4, 1, 2, 8, 1, 4, 7, 2, 1, 8, 6};
+    static int small_values[] = {
+        /* 0+ */ 0,  1, 2, 3, 1, 4, 3, 2, 1, 4, 2, 6, //
+        /* 12+ */ 4, 1, 2, 7, 1, 4, 3, 2, 1, 4, 6, 7, //
+        /* 24+ */ 4, 1, 2, 8, 5, 4, 7, 2, 1, 8, 6, 7, //
+        /* 36+ */ 4, 1, 2, 3, 1, 4, 7, 2, 1, 8, 2, 7, //
+        /* 48+ */ 4, 1, 2, 8, 1, 4, 7, 2, 1, 4, 2, 7, //
+        /* 60+ */ 4, 1, 2, 8, 1, 4, 7, 2, 1, 8, 6};   //
 
-    static int periodic_values[] =
-    {4, 1, 2, 8, 1, 4, 7, 2, 1, 8, 2, 7};
+    static int periodic_values[] = {4, 1, 2, 8, 1, 4, 7, 2, 1, 8, 2, 7};
 
     assert(n >= 0);
     if (n <= 70)
@@ -122,7 +124,7 @@ int kayles::static_result(int n)
 void kayles::set_solved(int nim_value)
 {
     assert(_smaller_part == 0);
-    if (! is_solved())
+    if (!is_solved())
     {
         impartial_game::set_solved(nim_value);
     }
@@ -144,8 +146,7 @@ private:
 };
 
 kayles_move_generator::kayles_move_generator(const kayles& game)
-    : move_generator(BLACK), _game(game), _smaller_number(0),
-    _take(1)
+    : move_generator(BLACK), _game(game), _smaller_number(0), _take(1)
 {
     if (_game.value() < 1)
         _take = 0;

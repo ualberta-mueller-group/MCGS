@@ -3,10 +3,13 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "cgt_basics.h"
+// IWYU pragma: begin_exports
 #include "game.h"
+// IWYU pragma: end_exports
+
 #include "safe_arithmetic.h"
 #include "throw_assert.h"
+#include <ostream>
 
 // This is needed for undo_move in the case when _value has reached 0
 class integer_game : public game
@@ -30,8 +33,7 @@ public:
     void print(std::ostream& str) const override;
 
 protected:
-
-    void _init_hash(local_hash& hash) override;
+    void _init_hash(local_hash& hash) const override;
 
     relation _order_impl(const game* rhs) const override;
 

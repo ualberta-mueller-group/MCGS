@@ -4,14 +4,19 @@
 
 #pragma once
 
-#include <iostream>
-#include <type_traits>
-#include <vector>
-#include <optional>
+// IWYU pragma: begin_exports
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game_type.h"
 #include "hashing.h"
+// IWYU pragma: end_exports
+
+#include <ostream>
+#include <vector>
+#include <optional>
+#include <cassert>
+
+#include <type_traits>
 
 //---------------------------------------------------------------------------
 
@@ -41,14 +46,16 @@ public:
     // calls _split_impl() and filters out games having no moves
     split_result split() const;
 
-    hash_t get_local_hash();
+    hash_t get_local_hash() const;
 
     void normalize();
     void undo_normalize();
 
     relation order(const game* rhs) const;
 
-    void invalidate_hash(); // for debugging
+    void invalidate_hash() const; // for debugging
+
+    virtual bool is_impartial() const;
 
 protected:
     /*
@@ -70,16 +77,16 @@ protected:
     */
     virtual split_result _split_impl() const;
 
-    virtual void _init_hash(local_hash& hash) = 0;
+    virtual void _init_hash(local_hash& hash) const = 0;
 
     virtual void _normalize_impl();
     virtual void _undo_normalize_impl();
 
     virtual relation _order_impl(const game* rhs) const;
 
-    local_hash& _get_hash_ref();
+    local_hash& _get_hash_ref() const;
     bool _hash_updatable() const;
-    void _mark_hash_updated();
+    void _mark_hash_updated() const;
 
 public:
     virtual move_generator* create_move_generator(bw to_play) const = 0;
@@ -118,14 +125,15 @@ private:
     std::vector<move> _move_stack;
     bool _is_active;
 
-    hash_state_enum _hash_state;
-    local_hash _hash;
+    mutable hash_state_enum _hash_state;
+    mutable local_hash _hash;
 
     std::vector<game_undo_code> _undo_code_stack;
 
 }; // class game
 
-inline game::game() : _move_stack(), _is_active(true), _hash_state(HASH_STATE_INVALID)
+inline game::game()
+    : _move_stack(), _is_active(true), _hash_state(HASH_STATE_INVALID)
 {
 }
 
@@ -169,12 +177,12 @@ inline split_result game::split() const
     return result;
 }
 
-inline split_result game::_split_impl() const
+inline bool game::is_impartial() const
 {
-    return split_result(); // no value
+    return false;
 }
 
-inline local_hash& game::_get_hash_ref()
+inline local_hash& game::_get_hash_ref() const
 {
     assert(_hash_updatable());
     return _hash;
@@ -190,7 +198,7 @@ inline bool game::_hash_updatable() const
     return _hash_state == HASH_STATE_NEED_UPDATE;
 }
 
-inline void game::_mark_hash_updated()
+inline void game::_mark_hash_updated() const
 {
     assert(_hash_state == HASH_STATE_NEED_UPDATE);
     _hash_state = HASH_STATE_UP_TO_DATE;
@@ -243,6 +251,7 @@ private:
     const game& _game;
     const int _game_hash;
 };
+
 //---------------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& os, const split_result& split);

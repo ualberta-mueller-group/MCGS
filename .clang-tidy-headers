@@ -1,7 +1,96 @@
-Checks: '-*,readability-function-size'
-WarningsAsErrors: 'readability-function-size'
+Checks: "-*,
+  readability-identifier-naming,
+  modernize-use-override,
+  google-global-names-in-headers,
+  misc-definitions-in-headers,
+  misc-use-internal-linkage,
+  bugprone-assert-side-effect,
+  cppcoreguidelines-virtual-class-destructor,
+  readability-duplicate-include,
+  misc-include-cleaner,"
+#  readability-function-size,"
+
+WarningsAsErrors: "-*,
+  readability-identifier-naming,
+  modernize-use-override,
+  google-global-names-in-headers,
+  misc-definitions-in-headers,
+  misc-use-internal-linkage,
+  bugprone-assert-side-effect,
+  cppcoreguidelines-virtual-class-destructor,
+  readability-duplicate-include,
+  misc-include-cleaner,"
+#  readability-function-size,"
+
 HeaderFilterRegex: .h
 SystemHeaders: false
 CheckOptions:
+
+  # Semicolon-separated list of regexes
+  - { key: misc-include-cleaner.IgnoreHeaders, value: "src/all_game_headers\\.h" }
+
+  # TODO enable me at some point
+  - { key: bugprone-assert-side-effect.CheckFunctionCalls, value: false }
+
+  - { key: misc-use-internal-linkage.FixMode, value: None }
+
+  - { key: modernize-use-override.IgnoreDestructors, value: true }
+  - { key: modernize-use-override.AllowOverrideAndFinal, value: true }
+
+  - { key: readability-identifier-naming.PrivateMemberPrefix, value: _ }
+  - { key: readability-identifier-naming.PrivateMethodPrefix, value: _ }
+  - { key: readability-identifier-naming.ProtectedMemberPrefix, value: _ }
+  - { key: readability-identifier-naming.ProtectedMethodPrefix, value: _ }
+  - { key: readability-identifier-naming.LocalConstantIgnoredRegexp, value: '([^_][a-z_0-9]*|[^_][A-Z_0-9]*)' }
+  - { key: readability-identifier-naming.ClassCase, value: lower_case }
+  - { key: readability-identifier-naming.EnumCase, value: lower_case }
+  - { key: readability-identifier-naming.FunctionCase, value: lower_case }
+  - { key: readability-identifier-naming.InlineNamespaceCase, value: lower_case }
+  - { key: readability-identifier-naming.LocalConstantCase, value: lower_case }
+  - { key: readability-identifier-naming.MemberCase, value: lower_case }
+  - { key: readability-identifier-naming.MethodCase, value: lower_case }
+
+  - { key: readability-identifier-naming.PublicMethodCase, value: lower_case }
+  - { key: readability-identifier-naming.ProtectedMethodCase, value: lower_case }
+  - { key: readability-identifier-naming.PrivateMethodCase, value: lower_case }
+
+  - { key: readability-identifier-naming.PublicMemberCase, value: lower_case }
+  - { key: readability-identifier-naming.ProtectedMemberCase, value: lower_case }
+  - { key: readability-identifier-naming.PrivateMemberCase, value: lower_case }
+
+  - { key: readability-identifier-naming.NamespaceCase, value: lower_case }
+  - { key: readability-identifier-naming.ParameterCase, value: lower_case }
+  - { key: readability-identifier-naming.StructCase, value: lower_case }
+  - { key: readability-identifier-naming.TypeAliasCase, value: lower_case }
+  - { key: readability-identifier-naming.TypedefCase, value: lower_case }
+  - { key: readability-identifier-naming.UnionCase, value: lower_case }
+  - { key: readability-identifier-naming.VariableCase, value: lower_case }
+
+  - { key: readability-identifier-naming.TypeTemplateParameterCase, value: Camel_Snake_Case }
+  - { key: readability-identifier-naming.ValueTemplateParameterCase, value: lower_case }
+
+
+  - { key: readability-identifier-naming.ConstexprFunctionCase, value: lower_case }
+  - { key: readability-identifier-naming.ConstexprMethodCase, value: lower_case }
+  - { key: readability-identifier-naming.ConstexprVariableCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.ConstexprVariableIgnoredRegexp, value: "_?[A-Z_0-9]+" }
+  
+
+  - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
+
+  - { key: readability-identifier-naming.ClassMemberIgnoredRegexp, value: "_?[a-z_0-9]+" }
+
+  - { key: readability-identifier-naming.StaticVariableCase, value: lower_case }
+
+  - { key: readability-identifier-naming.ClassConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.ClassConstantIgnoredRegexp, value: "_?[A-Z_0-9]+" }
+
+  - { key: readability-identifier-naming.EnumConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.GlobalConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.MacroDefinitionCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.ScopedEnumConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.StaticConstantCase, value: UPPER_CASE }
+
+# These options are unique to the header version of the config
   - { key: readability-function-size.LineThreshold, value: 4 }
 

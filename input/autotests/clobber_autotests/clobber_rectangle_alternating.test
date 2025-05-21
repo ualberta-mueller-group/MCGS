@@ -1,0 +1,73 @@
+{version 1.1}
+
+/*_
+    Results from: MCGS and CGSuite
+*/
+
+[clobber]
+
+/* 2x3 CGSuite */
+XOX|OXO
+	 {B loss, W loss}
+
+/* 2x4 CGSuite */
+XOXO|OXOX
+	 {B win, W win}
+
+/* 2x5 CGSuite */
+XOXOX|OXOXO
+	 {B win, W win}
+
+/* 2x6 CGSuite */
+XOXOXO|OXOXOX
+	 {B loss, W loss}
+
+/* 3x2 CGSuite */
+XO|OX|XO
+	 {B loss, W loss}
+
+/* 3x4 CGSuite */
+XOXO|OXOX|XOXO
+	 {B loss, W loss}
+
+/* 3x5 CGSuite */
+XOXOX|OXOXO|XOXOX
+	 {B win, W win}
+
+/* 3x6 MCGS */
+XOXOXO|OXOXOX|XOXOXO
+	 {B loss, W loss}
+
+/* 4x2 CGSuite */
+XO|OX|XO|OX
+	 {B win, W win}
+
+/* 4x3 CGSuite */
+XOX|OXO|XOX|OXO
+	 {B loss, W loss}
+
+/* 4x5 MCGS */
+XOXOX|OXOXO|XOXOX|OXOXO
+	 {B win, W win}
+
+/* 5x2 CGSuite */
+XO|OX|XO|OX|XO
+	 {B win, W win}
+
+/* 5x3 CGSuite */
+XOX|OXO|XOX|OXO|XOX
+	 {B win, W win}
+
+/* 5x4 MCGS */
+XOXO|OXOX|XOXO|OXOX|XOXO
+	 {B win, W win}
+
+
+/* 6x2 CGSuite */
+XO|OX|XO|OX|XO|OX
+	 {B loss, W loss}
+
+/* 6x3 MCGS */
+XOX|OXO|XOX|OXO|XOX|OXO
+	 {B loss, W loss}
+

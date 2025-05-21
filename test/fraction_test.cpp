@@ -6,6 +6,10 @@
 #include "utilities.h"
 #include <sstream>
 #include <stdexcept>
+#include <cassert>
+#include <tuple>
+#include <vector>
+#include <optional>
 #include <functional>
 
 using namespace std;
@@ -455,7 +459,9 @@ void test_illegal()
 
     // helper functions which may throw
     function<void(int, int)> throw1 = [](int top, int bottom) -> void
-    { fraction f(top, bottom); };
+    {
+        fraction f(top, bottom);
+    };
 
     function<void(int, int)> throw2 = [](int top, int bottom) -> void
     {

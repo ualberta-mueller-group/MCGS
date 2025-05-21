@@ -6,6 +6,9 @@
 #include "game.h"
 #include "safe_arithmetic.h"
 #include "utilities.h"
+#include <cassert>
+#include <ostream>
+#include "throw_assert.h"
 
 //---------------------------------------------------------------------------
 void dyadic_rational::simplify()
@@ -74,7 +77,7 @@ split_result dyadic_rational::_split_impl() const
     }
 };
 
-void dyadic_rational::_init_hash(local_hash& hash)
+void dyadic_rational::_init_hash(local_hash& hash) const
 {
     hash.toggle_value(0, _p);
     hash.toggle_value(1, _q);
@@ -82,7 +85,8 @@ void dyadic_rational::_init_hash(local_hash& hash)
 
 relation dyadic_rational::_order_impl(const game* rhs) const
 {
-    const dyadic_rational* other = reinterpret_cast<const dyadic_rational*>(rhs);
+    const dyadic_rational* other =
+        reinterpret_cast<const dyadic_rational*>(rhs);
     assert(dynamic_cast<const dyadic_rational*>(rhs) == other);
 
     const int& top1 = p();

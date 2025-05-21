@@ -6,6 +6,7 @@
 #pragma once
 
 #include <set>
+#include <cassert>
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
@@ -16,9 +17,11 @@
 //---------------------------------------------------------------------------
 struct impartial_ttable_entry
 {
-    int _nim_value;
-    impartial_ttable_entry() : _nim_value(0) {}
-    impartial_ttable_entry(int v) : _nim_value(v) {}
+    int nim_value;
+
+    impartial_ttable_entry() : nim_value(0) {}
+
+    impartial_ttable_entry(int v) : nim_value(v) {}
 };
 
 typedef ttable<impartial_ttable_entry> impartial_tt;
@@ -33,6 +36,14 @@ public:
     int search_with_tt(int tt_size = 24) const;
     int search_impartial_game(impartial_tt& tt) const;
 
+    /*
+        TODO: this method should probably be hidden somehow; it's an
+        implementation detail and is used by
+        search_impartial_sumgame_with_timeout
+    */
+    int search_impartial_game_cancellable(impartial_tt& tt,
+                                          const bool& over_time) const;
+
     // Impartial game interface
     virtual void play(const move& m);
     virtual move_generator* create_move_generator() const = 0;
@@ -42,24 +53,30 @@ public:
     // impartial game in any (possibly partizan) sum
     void play(const move& m, bw to_play) override;
     move_generator* create_move_generator(bw ignore_to_play) const override;
-    
+
+    bool is_impartial() const override final;
+
     bool is_solved() const;
     int nim_value() const; // available after it is solved
     virtual void set_solved(int nim_value);
-    
+
     // Minimum excluded number
     static int mex(const std::set<int>& values);
 
 private:
-
     using game::play; // avoid compiler warning
     bool _root_is_solved;
     int _nim_value;
 };
 
-inline impartial_game::impartial_game() : 
-    _root_is_solved(false), _nim_value(0)
-{ }
+inline impartial_game::impartial_game() : _root_is_solved(false), _nim_value(0)
+{
+}
+
+inline bool impartial_game::is_impartial() const
+{
+    return true;
+}
 
 inline bool impartial_game::is_solved() const
 {
@@ -75,16 +92,38 @@ inline int impartial_game::nim_value() const
 
 inline void impartial_game::play(const move& m)
 {
-    game::play(m, BLACK);
+    // ORIGINAL IMPLEMENTATION
+    // game::play(m, BLACK);
+
+    /* TODO: impartial_game_wrapper color hack
+
+       Preserves the color bit of m, because ig_wrapper_move_generator
+       may use it. No other games should do this
+    */
+    const move m_no_color = cgt_move::decode(m);
+    const bw color = cgt_move::get_color(m);
+    game::play(m_no_color, color);
+    assert(last_move() == m);
 }
 
 inline void impartial_game::play(const move& m, bw to_play)
 {
     impartial_game::play(m);
+
+    /* TODO: impartial_game_wrapper color hack
+
+        m may use the color bit, but only if created by an
+        ig_wrapper_move_generator. The color in m is the color of the wrapped
+        partizan game's move generator used to generate m, whereas to_play is
+        the player to play in minimax search
+
+        The latter can be ignored, but the former must be used to play m
+        on the wrapped game
+    */
 }
 
-inline move_generator* 
-impartial_game::create_move_generator(bw ignore_to_play) const
+inline move_generator* impartial_game::create_move_generator(
+    bw ignore_to_play) const
 {
     return create_move_generator();
 }

@@ -2,6 +2,8 @@
 #include "cgt_integer_game.h"
 #include "split_test_utils.h"
 #include <memory>
+#include "game.h"
+#include <cassert>
 
 using std::unique_ptr;
 

@@ -2,6 +2,7 @@
 #include "cgt_up_star.h"
 #include <cassert>
 #include "test_utilities.h"
+#include <memory>
 
 namespace {
 
