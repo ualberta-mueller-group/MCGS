@@ -15,6 +15,8 @@
 
 namespace {
 
+std::optional<impartial_tt> tt_optional; // mcgs_init() must be called first
+
 // Calling thread may assign "true" to over_time to stop search
 int search_impartial_sumgame_cancellable(const sumgame& s,
                                          const bool& over_time)
@@ -22,10 +24,7 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
     assert_restore_alternating_game ar(s);
     int sum_nim_value = 0;
 
-    const size_t n_bits = global::tt_imp_sumgame_idx_bits();
-    assert(n_bits > 0);
-
-    impartial_tt tt(n_bits, 0);
+    impartial_tt& tt = tt_optional.value();
 
     for (game* g : s.subgames())
     {
@@ -100,4 +99,12 @@ std::optional<int> search_impartial_sumgame_with_timeout(
     int value = future.get();
     assert(value >= 0);
     return std::optional<int>(value);
+}
+
+void init_impartial_sumgame_ttable(size_t idx_bits)
+{
+    assert(!tt_optional.has_value());
+    assert(idx_bits > 0);
+
+    tt_optional.emplace(idx_bits, 0);
 }
