@@ -73,7 +73,7 @@ AllowShortCompoundRequirementOnASingleLine: true
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: InlineOnly
 AllowShortIfStatementsOnASingleLine: Never
-AllowShortLambdasOnASingleLine: All
+AllowShortLambdasOnASingleLine: None
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
@@ -175,7 +175,7 @@ KeepEmptyLines:
   AtEndOfFile:     false
   AtStartOfBlock:  true
   AtStartOfFile:   true
-LambdaBodyIndentation: Signature
+LambdaBodyIndentation: OuterScope
 LineEnding:      DeriveLF
 MacroBlockBegin: ''
 MacroBlockEnd:   ''
