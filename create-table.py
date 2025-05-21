@@ -594,10 +594,12 @@ table_string += "</tr>\n"
 
 
 # Read each input row, making an output row
+total_test_count = 0
 input_file_key_sequence = []
 seen_input_row_keys = set()
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
+    total_test_count += 1
 
     input_row_key = input_row_get_key(input_row)
     input_file_key_sequence.append(input_row_key)
@@ -705,6 +707,7 @@ def get_metadata_string():
 
     now = datetime.datetime.now().strftime(date_format)
     result += f"\nGenerated {now}"
+    result += f"\nTest count (primary input file): {total_test_count}"
 
     result += "</p>\n"
     return result
