@@ -1,11 +1,12 @@
 CC = c++
 
 MCGS_DEBUG_FLAGS_ALL := -DSUMGAME_DEBUG -DGAME_TYPE_DEBUG -DDEFAULT_IMPL_DEBUG -DNOGO_DEBUG
+MCGS_DEBUG_FLAGS_TEST := $(filter-out -DDEFAULT_IMPL_DEBUG,$(MCGS_DEBUG_FLAGS_ALL))
 MCGS_DEBUG_FLAGS_COMMON := -DNOGO_DEBUG
 
 #NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread -DNDEBUG
 NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread $(MCGS_DEBUG_FLAGS_COMMON)
-TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread $(MCGS_DEBUG_FLAGS_ALL)
+TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread $(MCGS_DEBUG_FLAGS_TEST)
 
 # i.e. "make MCGS ASAN=leak" or "make MCGS ASAN=address"
 ifneq (,$(filter $(ASAN),leak address))

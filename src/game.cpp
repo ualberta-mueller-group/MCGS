@@ -144,6 +144,13 @@ void game::invalidate_hash() const
     _hash.reset();
 }
 
+split_result game::_split_impl() const
+{
+    WARN_DEFAULT_IMPL();
+
+    return split_result(); // no value
+}
+
 void game::_normalize_impl()
 {
     WARN_DEFAULT_IMPL();

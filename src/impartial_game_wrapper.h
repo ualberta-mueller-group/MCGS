@@ -36,7 +36,7 @@ public:
     //split_result _split_impl() const override; // See note in .cpp file
     void _init_hash(local_hash& hash) const override;
 
-    void _normalize_impl() override;
+    void _normalize_impl() override; // TODO these are maybe not always correct?
     void _undo_normalize_impl() override;
 
     relation _order_impl(const game* rhs) const override;

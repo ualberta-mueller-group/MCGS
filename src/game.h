@@ -181,10 +181,6 @@ inline bool game::is_impartial() const
     return false;
 }
 
-inline split_result game::_split_impl() const
-{
-    return split_result(); // no value
-}
 
 inline local_hash& game::_get_hash_ref() const
 {

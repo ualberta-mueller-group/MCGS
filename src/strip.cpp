@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <vector>
 #include <utility>
+#include "warn_default.h"
 #include <cstddef>
 
 //---------------------------------------------------------------------------
@@ -106,6 +107,8 @@ std::string strip::board_as_string() const
 
 void strip::_init_hash(local_hash& hash) const
 {
+    WARN_DEFAULT_IMPL();
+
     const size_t N = this->size();
 
     for (size_t i = 0; i < N; i++)
@@ -114,6 +117,8 @@ void strip::_init_hash(local_hash& hash) const
 
 void strip::_normalize_impl()
 {
+    WARN_DEFAULT_IMPL();
+
     // Is mirrored board lexicographically less than the current board?
     relation rel = _compare_boards(_board, _board, true, false);
     bool do_mirror = (rel == REL_LESS);
@@ -131,6 +136,8 @@ void strip::_normalize_impl()
 
 void strip::_undo_normalize_impl()
 {
+    WARN_DEFAULT_IMPL();
+
     assert(!_default_normalize_did_mirror.empty());
     bool do_mirror = _default_normalize_did_mirror.back();
     _default_normalize_did_mirror.pop_back();
@@ -146,6 +153,7 @@ void strip::_undo_normalize_impl()
 
 relation strip::_order_impl(const game* rhs) const
 {
+    WARN_DEFAULT_IMPL();
     assert(game_type() == rhs->game_type());
 
     const strip* other = reinterpret_cast<const strip*>(rhs);

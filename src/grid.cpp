@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <utility>
 #include <vector>
+#include "warn_default.h"
 
 //---------------------------------------------------------------------------
 
@@ -129,6 +130,7 @@ std::string grid::board_as_string() const
 
 void grid::_init_hash(local_hash& hash) const
 {
+    WARN_DEFAULT_IMPL();
     hash.toggle_value(0, _shape.first);
     hash.toggle_value(1, _shape.second);
 
@@ -140,6 +142,7 @@ void grid::_init_hash(local_hash& hash) const
 
 relation grid::_order_impl(const game* rhs) const
 {
+    WARN_DEFAULT_IMPL();
     assert(game_type() == rhs->game_type());
 
     const grid* other = reinterpret_cast<const grid*>(rhs);
