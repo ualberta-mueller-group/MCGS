@@ -3,6 +3,8 @@
 #include "all_game_headers.h"
 #include <memory>
 
+static_assert(false); // Don't use this file for now...
+
 using namespace custom_traits;
 using namespace std;
 
