@@ -4,74 +4,45 @@ import pathlib
 import datetime
 import hashlib
 
-"""
-ttables persist between tests, which causes 2 new problems:
-
-    1: If the tests, or execution order of tests represented in two .csvs
-        differ, then times can't be meaningfully compared
-
-    2: create-table.py currently reads the entire comparison .csv file row by
-        row and stores the row data in a dict. This may overwrite the first
-        instance of a test with the second, which now have different times
-        due to ttable persistence. This causes slowdowns (i.e. 10,000,000%) to
-        be (incorrectly) reported, when there are no slowdowns, as the
-        comparison column will be the time for a single ttable lookup
-
-For 1: Have create-table.py print a warning if the sequence of tests differ
-    between .csv files. This can either be done by looking at the sequence
-    of input hashes, OR by comparing the sequence of row keys. Or do both and
-    mention which happened in the warning?
-
-    Also include the warning in the .html output
-
-For 2: Store all instances of the same test from the comparison file.
-
-    For now I add an assert against duplicate input hashes...
-
-"""
-
-print("TODO: Resolve note at top of create-table.py")
-
-
 ######################################## Warnings
 # Track warnings already printed
 warned_dict = {
 }
 
+warned_list = []
 
-def warn_common(warning_name):
-    global warned_dict
+
+def warn_common(warning_name, warning_text):
+    global warned_dict, warned_list
 
     warned = warned_dict.get(warning_name)
     if warned is None:
         warned = False
 
-    assert type(warned) is bool
+    assert type(warned) is bool and type(warning_text) is str
+
+    if warned:
+        return
 
     warned_dict[warning_name] = True
+    warned_list.append(warning_text)
 
-    if not warned:
-        print("WARNING: ", end="")
-
-    return warned
+    print(f"WARNING: {warning_text}")
 
 
 def warn_input_file_duplicate_tests():
-    if warn_common("input_file_duplicate_tests"):
-        return
-    print("Primary input file contains duplicate tests")
+    line = "Primary input file contains duplicate tests"
+    warn_common("input_file_duplicate_tests", line)
 
 
 def warn_comparison_file_duplicate_tests():
-    if warn_common("comparison_file_duplicate_tests"):
-        return
-    print("Comparison file contains duplicate tests")
+    line = "Comparison file contains duplicate tests"
+    warn_common("comparison_file_duplicate_tests", line)
 
 
 def warn_diverging_test_sequence():
-    if warn_common("diverging_test_sequence"):
-        return
-    print("Tests or test order differs between input and comparison files")
+    line = "Tests, or test order differs between input and comparison files"
+    warn_common("diverging_test_sequence", line)
 
 
 ######################################## Constants
@@ -458,8 +429,8 @@ output_field_dict = {
 row_functions = []
 
 # List of input field aliases used to match rows between main input file
-# and comparison file. Or None
-row_match_key = None
+# and comparison file
+row_match_key = ["games", "player", "expected_result"]
 
 # Map containing all rows from the comparison file. Indexed according to row_match_key
 # Elements are lists of rows which have the same
@@ -537,7 +508,6 @@ else:
 
     add_row_function(row_populate_double_mode)
     add_row_function(row_style)
-    row_match_key = ["games", "player", "expected_result"]
 
 
 ######################################## process rows
@@ -629,7 +599,7 @@ seen_input_row_keys = set()
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
 
-    input_row_key = input_row_get_key(input_row) if comparison_file_name is not None else None
+    input_row_key = input_row_get_key(input_row)
     input_file_key_sequence.append(input_row_key)
 
     if input_row_key in seen_input_row_keys:
@@ -677,32 +647,21 @@ table_string += "</table>\n"
 infile.close()
 
 # Check for diverging tests or test order
-diverging_test_sequence = False
 if comparison_file_name is not None:
     if input_file_key_sequence != comparison_file_key_sequence:
-        diverging_test_sequence = True
+        warn_diverging_test_sequence()
 
-if diverging_test_sequence:
-    warn_diverging_test_sequence()
 
 ######################################## Write HTML file
 # Include warnings
-warning_list = []
-
-if diverging_test_sequence:
-    string = "Input and comparison .csvs have different "\
-        "tests, or different order of tests"
-
-    warning_list.append(string)
-
 warning_string = ""
-if len(warning_list) != 0:
+if len(warned_list) != 0:
     warning_string = "<span id=\"python-warnings\">\n"
 
     warning_string += "<p><b>WARNINGS:</b></p>\n"
     warning_string += "<ul>\n"
 
-    for warning in warning_list:
+    for warning in warned_list:
         warning_string += "<li>" + warning + "</li>\n"
 
     warning_string += "</ul>\n"
