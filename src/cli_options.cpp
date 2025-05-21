@@ -79,6 +79,11 @@ void print_help_message(const string& exec_name)
         "0 disables transposition table. Default: " +
         global::tt_sumgame_idx_bits.get_default_str() + ".");
 
+    print_flag(global::tt_imp_sumgame_idx_bits.flag() + " <# index bits>",
+        "How many index bits to use for impartial sumgame's transposition "
+        "table. Must be at least 1. Default: " +
+        global::tt_imp_sumgame_idx_bits.get_default_str() + ".");
+
     cout << "Misc options flags:" << endl;
     print_flag(global::random_table_seed.flag(), "Set seed for random "
                "tables used in game hashing. 0 means seed with current time "
@@ -350,6 +355,19 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             const size_t n_index_bits = atoi(arg_next.c_str());
 
             global::tt_sumgame_idx_bits.set(n_index_bits);
+            continue;
+        }
+
+        if (arg == global::tt_imp_sumgame_idx_bits.flag())
+        {
+            arg_idx++;
+
+            if (!is_int(arg_next))
+                throw cli_options_exception("Error: " + global::tt_imp_sumgame_idx_bits.flag() + " value not an int");
+
+            const size_t n_index_bits = atoi(arg_next.c_str());
+
+            global::tt_imp_sumgame_idx_bits.set(n_index_bits);
             continue;
         }
 

@@ -101,6 +101,7 @@ INIT_GLOBAL_WITH_SUMMARY(random_table_seed, uint64_t, 7753);
 INIT_GLOBAL_WITH_SUMMARY(subgame_split, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(simplify_basic_cgt, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);
+INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 24);
 
 // These WILL NOT be printed with ./MCGS --print-optimizations
 INIT_GLOBAL_WITHOUT_SUMMARY(silence_warnings, bool, false);

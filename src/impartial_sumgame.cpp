@@ -11,6 +11,7 @@
 #include <thread>
 #include <future>
 #include <chrono>
+#include "global_options.h"
 
 namespace {
 
@@ -21,7 +22,10 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
     assert_restore_alternating_game ar(s);
     int sum_nim_value = 0;
 
-    impartial_tt tt(24, 0);
+    const size_t n_bits = global::tt_imp_sumgame_idx_bits();
+    assert(n_bits > 0);
+
+    impartial_tt tt(n_bits, 0);
 
     for (game* g : s.subgames())
     {

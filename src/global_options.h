@@ -159,6 +159,7 @@ extern global_option<uint64_t> random_table_seed;
 extern global_option<bool> subgame_split;
 extern global_option<bool> simplify_basic_cgt;
 extern global_option<size_t> tt_sumgame_idx_bits;
+extern global_option<size_t> tt_imp_sumgame_idx_bits;
 
 extern global_option<bool> silence_warnings;
 
