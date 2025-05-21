@@ -18,6 +18,7 @@ inline int search(game* subgame, impartial_tt& tt, const bool& over_time)
 {
     const impartial_game* g =
         static_cast<const impartial_game*>(subgame);
+    assert(g == dynamic_cast<const impartial_game*>(subgame));
     return g->search_impartial_game_cancellable(tt, over_time);
 }
 

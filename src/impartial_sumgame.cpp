@@ -34,6 +34,8 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
         if (! g->is_active())
             continue;
         auto ig = static_cast<impartial_game*>(g);
+        assert(ig == dynamic_cast<impartial_game*>(g));
+
         int result = 0;
         if (ig->is_solved())
             result = ig->nim_value();
