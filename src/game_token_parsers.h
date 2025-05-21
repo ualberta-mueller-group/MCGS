@@ -131,10 +131,12 @@ public:
 };
 
 ////////////////////////////////////////////////// impartial games
-class impartial_game_token_parser_wrapper: public game_token_parser
+class impartial_game_token_parser_wrapper : public game_token_parser
 {
 public:
-    impartial_game_token_parser_wrapper(std::shared_ptr<game_token_parser>& parser): _parser(parser)
+    impartial_game_token_parser_wrapper(
+        std::shared_ptr<game_token_parser>& parser)
+        : _parser(parser)
     {
         assert(parser.get() != nullptr);
     }
@@ -146,4 +148,3 @@ public:
 private:
     std::shared_ptr<game_token_parser> _parser;
 };
-

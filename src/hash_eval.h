@@ -16,17 +16,11 @@ class hash_test
 {
 public:
     hash_test()
-        : _hash_set(),
-        _n_games(0),
-        _n_collisions(0),
-        _n_zeroes(0),
-        _sum(0)
+        : _hash_set(), _n_games(0), _n_collisions(0), _n_zeroes(0), _sum(0)
     {
     }
 
-    virtual ~hash_test()
-    {
-    }
+    virtual ~hash_test() {}
 
     void run_test(bool check_collisions);
 
@@ -44,7 +38,8 @@ protected:
 private:
     void _reset();
     bool _add_hash_impl(const hash_t& hash);
-    void _print_summary(std::chrono::duration<double, std::milli>& duration) const;
+    void _print_summary(
+        std::chrono::duration<double, std::milli>& duration) const;
 
     std::unordered_set<hash_t> _hash_set;
     uint64_t _n_games;

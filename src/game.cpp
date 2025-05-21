@@ -120,13 +120,12 @@ relation game::order(const game* rhs) const
     assert(type1 == type2);
     relation rel = this->_order_impl(rhs);
 
-    assert(                       //
-            rel == REL_UNKNOWN || //
-            rel == REL_LESS ||    //
-            rel == REL_EQUAL ||   //
-            rel == REL_GREATER    //
-            );                    //
-
+    assert(                   //
+        rel == REL_UNKNOWN || //
+        rel == REL_LESS ||    //
+        rel == REL_EQUAL ||   //
+        rel == REL_GREATER    //
+    );                        //
 
     // If ordering hook isn't implemented, and stable sorting is used, don't
     // change the order of games
@@ -156,7 +155,7 @@ void game::_normalize_impl()
     WARN_DEFAULT_IMPL();
 
     // Trivial default implementation
-    if(_hash_updatable())
+    if (_hash_updatable())
         _mark_hash_updated();
 }
 
@@ -165,7 +164,7 @@ void game::_undo_normalize_impl()
     WARN_DEFAULT_IMPL();
 
     // Trivial default implementation
-    if(_hash_updatable())
+    if (_hash_updatable())
         _mark_hash_updated();
 }
 
@@ -196,6 +195,7 @@ void game::_pre_hash_update()
     else
         _hash_state = HASH_STATE_INVALID;
 }
+
 //---------------------------------------------------------------------------
 
 assert_restore_game::assert_restore_game(const game& g)

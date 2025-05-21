@@ -21,8 +21,7 @@ move kayles::encode(int take, int smaller, int larger)
 }
 
 // Decode move back to triple (take, smaller, larger)
-void kayles::_decode(move m, int& take, 
-                    int& smaller, int& larger)
+void kayles::_decode(move m, int& take, int& smaller, int& larger)
 {
     larger = cgt_move::second(m);
     assert(larger >= 0);
@@ -65,8 +64,8 @@ void kayles::print_move(move m, std::ostream& str)
 {
     int take, smaller, larger;
     _decode(m, take, smaller, larger);
-    str << "kayles move: take " << take 
-    << ", smaller " << smaller << ", larger " << larger << '\n';
+    str << "kayles move: take " << take << ", smaller " << smaller
+        << ", larger " << larger << '\n';
 }
 
 game* kayles::inverse() const
@@ -105,16 +104,15 @@ split_result kayles::_split_impl() const
 // Values from https://en.wikipedia.org/wiki/Kayles
 int kayles::static_result(int n)
 {
-    static int small_values[] =
-    {/* 0+ */ 0, 1, 2, 3, 1, 4, 3, 2, 1, 4, 2, 6,
-    /* 12+ */ 4, 1, 2, 7, 1, 4, 3, 2, 1, 4, 6, 7,
-    /* 24+ */ 4, 1, 2, 8, 5, 4, 7, 2, 1, 8, 6, 7,
-    /* 36+ */ 4, 1, 2, 3, 1, 4, 7, 2, 1, 8, 2, 7,
-    /* 48+ */ 4, 1, 2, 8, 1, 4, 7, 2, 1, 4, 2, 7,
-    /* 60+ */ 4, 1, 2, 8, 1, 4, 7, 2, 1, 8, 6};
+    static int small_values[] = {
+        /* 0+ */ 0,  1, 2, 3, 1, 4, 3, 2, 1, 4, 2, 6, //
+        /* 12+ */ 4, 1, 2, 7, 1, 4, 3, 2, 1, 4, 6, 7, //
+        /* 24+ */ 4, 1, 2, 8, 5, 4, 7, 2, 1, 8, 6, 7, //
+        /* 36+ */ 4, 1, 2, 3, 1, 4, 7, 2, 1, 8, 2, 7, //
+        /* 48+ */ 4, 1, 2, 8, 1, 4, 7, 2, 1, 4, 2, 7, //
+        /* 60+ */ 4, 1, 2, 8, 1, 4, 7, 2, 1, 8, 6};   //
 
-    static int periodic_values[] =
-    {4, 1, 2, 8, 1, 4, 7, 2, 1, 8, 2, 7};
+    static int periodic_values[] = {4, 1, 2, 8, 1, 4, 7, 2, 1, 8, 2, 7};
 
     assert(n >= 0);
     if (n <= 70)
@@ -126,7 +124,7 @@ int kayles::static_result(int n)
 void kayles::set_solved(int nim_value)
 {
     assert(_smaller_part == 0);
-    if (! is_solved())
+    if (!is_solved())
     {
         impartial_game::set_solved(nim_value);
     }
@@ -148,8 +146,7 @@ private:
 };
 
 kayles_move_generator::kayles_move_generator(const kayles& game)
-    : move_generator(BLACK), _game(game), _smaller_number(0),
-    _take(1)
+    : move_generator(BLACK), _game(game), _smaller_number(0), _take(1)
 {
     if (_game.value() < 1)
         _take = 0;

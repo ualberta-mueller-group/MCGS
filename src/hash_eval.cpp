@@ -16,6 +16,7 @@
 #include "sumgame.h"
 
 using namespace std;
+
 ////////////////////////////////////////////////// hash_test
 void hash_test::run_test(bool check_collisions)
 {
@@ -40,7 +41,7 @@ void hash_test::_add_hash(const hash_t& hash)
 
 void hash_test::_add_hash(game& g)
 {
-    if(!_add_hash_impl(g.get_local_hash()))
+    if (!_add_hash_impl(g.get_local_hash()))
         cout << "COLLISION: " << g << endl;
 }
 
@@ -87,7 +88,8 @@ bool hash_test::_add_hash_impl(const hash_t& hash)
     return true;
 }
 
-void hash_test::_print_summary(std::chrono::duration<double, std::milli>& duration) const
+void hash_test::_print_summary(
+    std::chrono::duration<double, std::milli>& duration) const
 {
     cout << "Test name: \"" << _test_name() << "\"" << endl;
     cout << "Test description: \"" << _test_description() << "\"" << endl;
@@ -96,8 +98,10 @@ void hash_test::_print_summary(std::chrono::duration<double, std::milli>& durati
     if (_check_collisions)
     {
         cout << "Collisions: " << _n_collisions << endl;
-        cout << "Collision %: " << (100.0 * (double) _n_collisions) / (double) _n_games << endl;
-    } else
+        cout << "Collision %: "
+             << (100.0 * (double) _n_collisions) / (double) _n_games << endl;
+    }
+    else
     {
         cout << "Not checking collisions..." << endl;
     }
@@ -107,8 +111,10 @@ void hash_test::_print_summary(std::chrono::duration<double, std::milli>& durati
     if (!_check_collisions)
     {
         cout << "Duration (seconds): " << (duration.count() / 1000.0) << endl;
-        cout << "Hashes/second: " << ((double) _n_games / (duration.count() / 1000.0)) << endl;
-    } else 
+        cout << "Hashes/second: "
+             << ((double) _n_games / (duration.count() / 1000.0)) << endl;
+    }
+    else
     {
         cout << "Duration invalid (collision check enabled)" << endl;
     }
@@ -118,7 +124,8 @@ void hash_test::_print_summary(std::chrono::duration<double, std::milli>& durati
 }
 
 ////////////////////////////////////////////////// strip_iterator
-strip_iterator::strip_iterator(size_t max_size): _max_size(max_size), _first_board(true)
+strip_iterator::strip_iterator(size_t max_size)
+    : _max_size(max_size), _first_board(true)
 {
     assert(max_size >= 1);
 
@@ -213,12 +220,13 @@ int strip_iterator::_convert(int val)
 }
 
 ////////////////////////////////////////////////// fraction_iterator
-fraction_iterator::fraction_iterator(int top_size, int exponent_max, bool simplify)
+fraction_iterator::fraction_iterator(int top_size, int exponent_max,
+                                     bool simplify)
     : _top_min(-top_size),
-    _top_max(top_size),
-    _exponent_max(exponent_max),
-    _simplify(simplify),
-    _frac(0)
+      _top_max(top_size),
+      _exponent_max(exponent_max),
+      _simplify(simplify),
+      _frac(0)
 {
     assert(top_size >= 0);
     assert(exponent_max >= 0);
@@ -303,18 +311,16 @@ void fraction_iterator::_set_frac()
         _frac.simplify();
 }
 
-//////////////////////////////////////////////////////////// test implementations
+//////////////////////////////////////////////////////////// test
+///implementations
 
 namespace {
 namespace hash_tests {
 
-class test_local_all_games: public hash_test
+class test_local_all_games : public hash_test
 {
 protected:
-    std::string _test_name() const override
-    {
-        return "All Games (local)";
-    }
+    std::string _test_name() const override { return "All Games (local)"; }
 
     std::string _test_description() const override
     {
@@ -384,16 +390,12 @@ protected:
             _add_hash(e);
         }
     }
-
 };
 
-class test_local_all_strips: public hash_test
+class test_local_all_strips : public hash_test
 {
 public:
-    std::string _test_name() const override
-    {
-        return "All Strips (local)";
-    }
+    std::string _test_name() const override { return "All Strips (local)"; }
 
     std::string _test_description() const override
     {
@@ -415,17 +417,13 @@ public:
             nogo_1xn n(board);
             _add_hash(n);
         }
-
     }
 };
 
-class test_local_mono_strips: public hash_test
+class test_local_mono_strips : public hash_test
 {
 public:
-    std::string _test_name() const override
-    {
-        return "Mono Strips (local)";
-    }
+    std::string _test_name() const override { return "Mono Strips (local)"; }
 
     std::string _test_description() const override
     {
@@ -465,7 +463,7 @@ public:
     }
 };
 
-class test_local_alt_strips: public hash_test
+class test_local_alt_strips : public hash_test
 {
     std::string _test_name() const override
     {
@@ -501,19 +499,17 @@ class test_local_alt_strips: public hash_test
     }
 };
 
-class test_local_uint: public hash_test
+class test_local_uint : public hash_test
 {
 public:
-    std::string _test_name() const override
-    {
-        return "C++ Integers (local)";
-    }
+    std::string _test_name() const override { return "C++ Integers (local)"; }
 
     std::string _test_description() const override
     {
         return "Hashes for all 26 bit ints, and all 64 bit ints "
-            "consisting of a 26 bit int duplicated in 2 places with consistent "
-            "byte boundary alignment";
+               "consisting of a 26 bit int duplicated in 2 places with "
+               "consistent "
+               "byte boundary alignment";
     }
 
     void _test_fn() override
@@ -540,7 +536,7 @@ public:
     }
 };
 
-class test_global_long_repeat: public hash_test
+class test_global_long_repeat : public hash_test
 {
 public:
     std::string _test_name() const override
@@ -551,7 +547,7 @@ public:
     std::string _test_description() const override
     {
         return "Sumgame hash for a single clobber_1xn board, repeated "
-            "1-32768 times.";
+               "1-32768 times.";
     }
 
     void _test_fn() override

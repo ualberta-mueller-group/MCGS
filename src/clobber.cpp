@@ -11,7 +11,7 @@
 #include "grid_utils.h"
 
 ////////////////////////////////////////////////// move generator
-class clobber_move_generator: public move_generator
+class clobber_move_generator : public move_generator
 {
 public:
     clobber_move_generator(const clobber& game, bw to_play);
@@ -35,17 +35,17 @@ private:
     bool _has_move;
 };
 
-
 ////////////////////////////////////////////////// clobber
-clobber::clobber(int n_rows, int n_cols): grid(n_rows, n_cols)
+clobber::clobber(int n_rows, int n_cols) : grid(n_rows, n_cols)
 {
 }
 
-clobber::clobber(const std::vector<int>& board, int_pair shape): grid(board, shape)
+clobber::clobber(const std::vector<int>& board, int_pair shape)
+    : grid(board, shape)
 {
 }
 
-clobber::clobber(const std::string& game_as_string): grid(game_as_string)
+clobber::clobber(const std::string& game_as_string) : grid(game_as_string)
 {
 }
 
@@ -235,16 +235,15 @@ game* clobber::inverse() const
     return new clobber(inverse_board(), shape());
 }
 
-
 ////////////////////////////////////////////////// move generator implementation
 clobber_move_generator::clobber_move_generator(const clobber& game, bw to_play)
     : move_generator(to_play),
-    _game(game),
-    _location(game.shape()),
-    _dir_idx(0),
-    _location_point(0),
-    _target_point(0),
-    _has_move(false)
+      _game(game),
+      _location(game.shape()),
+      _dir_idx(0),
+      _location_point(0),
+      _target_point(0),
+      _has_move(false)
 {
     if (_game.size() != 0)
         _next_move(true);

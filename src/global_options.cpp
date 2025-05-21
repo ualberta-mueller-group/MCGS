@@ -14,7 +14,8 @@ std::vector<global_option_base*> all_options;
 
 } // namespace
 
-global_option_base::global_option_base(const std::string& name, global_summary_enum print_summary)
+global_option_base::global_option_base(const std::string& name,
+                                       global_summary_enum print_summary)
     : _name(name)
 {
     if (print_summary == GLOBAL_SUMMARY_INCLUDE)
@@ -23,7 +24,6 @@ global_option_base::global_option_base(const std::string& name, global_summary_e
 
 global_option_base::~global_option_base()
 {
-
 }
 
 std::string global_option_base::flag() const
@@ -49,7 +49,8 @@ std::string global_option_base::get_summary_all()
 
     // Sort options by their names
     std::sort(all_options.begin(), all_options.end(),
-    [](const global_option_base* opt1, const global_option_base* opt2) -> bool
+              [](const global_option_base* opt1,
+                 const global_option_base* opt2) -> bool
     {
         return opt1->name() < opt2->name();
     });
@@ -86,13 +87,15 @@ inline std::string global_option_base::_name_with_dashes() const
 
 //////////////////////////////////////////////////////////// Options
 
-// Preferred way to initialize global_option. "#" in macro treats value as a string
-#define INIT_GLOBAL_WITH_SUMMARY(variable_name, value_type, default_value) \
-global_option<value_type> variable_name(std::string(#variable_name), default_value, GLOBAL_SUMMARY_INCLUDE)
+// Preferred way to initialize global_option. "#" in macro treats value as a
+// string
+#define INIT_GLOBAL_WITH_SUMMARY(variable_name, value_type, default_value)     \
+    global_option<value_type> variable_name(                                   \
+        std::string(#variable_name), default_value, GLOBAL_SUMMARY_INCLUDE)
 
-#define INIT_GLOBAL_WITHOUT_SUMMARY(variable_name, value_type, default_value) \
-global_option<value_type> variable_name(std::string(#variable_name), default_value, GLOBAL_SUMMARY_EXCLUDE)
-
+#define INIT_GLOBAL_WITHOUT_SUMMARY(variable_name, value_type, default_value)  \
+    global_option<value_type> variable_name(                                   \
+        std::string(#variable_name), default_value, GLOBAL_SUMMARY_EXCLUDE)
 
 namespace global {
 

@@ -79,7 +79,6 @@ void up_star::print(std::ostream& str) const
         str << '*';
 }
 
-
 void up_star::_init_hash(local_hash& hash) const
 {
     hash.toggle_value(0, _value);

@@ -52,7 +52,6 @@ void integer_game::print(std::ostream& str) const
     str << "integer:" << _value;
 }
 
-
 void integer_game::_init_hash(local_hash& hash) const
 {
     hash.toggle_value(0, _value);

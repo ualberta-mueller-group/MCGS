@@ -17,18 +17,23 @@ using namespace std;
 ////////////////////////////////////////////////// helpers
 namespace {
 
-test_status_t compare_search_values(const search_value* found_value, const search_value* expected_value)
+test_status_t compare_search_values(const search_value* found_value,
+                                    const search_value* expected_value)
 {
     assert(found_value != nullptr);
 
     if (found_value->type() == SEARCH_VALUE_TYPE_NONE)
         return TEST_STATUS_TIMEOUT;
 
-    if (expected_value == nullptr || expected_value->type() == SEARCH_VALUE_TYPE_NONE)
+    if (                                                 //
+        expected_value == nullptr ||                     //
+        expected_value->type() == SEARCH_VALUE_TYPE_NONE //
+        )                                                //
         return TEST_STATUS_COMPLETED;
 
     THROW_ASSERT(found_value->type() == expected_value->type());
-    return *found_value == *expected_value ? TEST_STATUS_PASS : TEST_STATUS_FAIL;
+    return *found_value == *expected_value ? TEST_STATUS_PASS
+                                           : TEST_STATUS_FAIL;
 }
 
 } // namespace
@@ -44,10 +49,8 @@ string player_name_bw_imp(ebw to_play)
 }
 
 ////////////////////////////////////////////////// search_value
-search_value::search_value():
-    _type(SEARCH_VALUE_TYPE_NONE),
-    _value_win(false),
-    _value_nimber(-1)
+search_value::search_value()
+    : _type(SEARCH_VALUE_TYPE_NONE), _value_win(false), _value_nimber(-1)
 {
 }
 
@@ -138,11 +141,11 @@ string test_status_to_string(test_status_t status)
         case TEST_STATUS_TIMEOUT:
             return "TIMEOUT";
         case TEST_STATUS_PASS:
-                return "PASS";
+            return "PASS";
         case TEST_STATUS_FAIL:
-                return "FAIL";
+            return "FAIL";
         case TEST_STATUS_COMPLETED:
-                return "COMPLETED";
+            return "COMPLETED";
     }
 
     THROW_ASSERT(false);
@@ -179,7 +182,9 @@ string search_result::duration_str() const
 }
 
 ////////////////////////////////////////////////// search functions
-search_result search_partizan(const sumgame& sum, const search_value* expected_value, unsigned long long timeout)
+search_result search_partizan(const sumgame& sum,
+                              const search_value* expected_value,
+                              unsigned long long timeout)
 {
     search_result result;
 
@@ -204,7 +209,9 @@ search_result search_partizan(const sumgame& sum, const search_value* expected_v
     return result;
 }
 
-search_result search_partizan(const vector<game*>& games, bw to_play, const search_value* expected_value, unsigned long long timeout)
+search_result search_partizan(const vector<game*>& games, bw to_play,
+                              const search_value* expected_value,
+                              unsigned long long timeout)
 {
     assert(is_black_white(to_play));
 
@@ -216,7 +223,9 @@ search_result search_partizan(const vector<game*>& games, bw to_play, const sear
     return search_partizan(sum, expected_value, timeout);
 }
 
-search_result search_impartial(const sumgame& sum, const search_value* expected_value, unsigned long long timeout)
+search_result search_impartial(const sumgame& sum,
+                               const search_value* expected_value,
+                               unsigned long long timeout)
 {
     if (!sum.impartial())
         throw std::logic_error("Sum contains partizan games");
@@ -224,7 +233,8 @@ search_result search_impartial(const sumgame& sum, const search_value* expected_
     search_result result;
 
     chrono::time_point start = chrono::high_resolution_clock::now();
-    std::optional<int> nim_value = search_impartial_sumgame_with_timeout(sum, timeout);
+    std::optional<int> nim_value =
+        search_impartial_sumgame_with_timeout(sum, timeout);
     chrono::time_point end = chrono::high_resolution_clock::now();
 
     chrono::duration<double, std::milli> duration = end - start;
@@ -244,7 +254,9 @@ search_result search_impartial(const sumgame& sum, const search_value* expected_
     return result;
 }
 
-search_result search_impartial(const std::vector<game*>& games, const search_value* expected_value, unsigned long long timeout)
+search_result search_impartial(const std::vector<game*>& games,
+                               const search_value* expected_value,
+                               unsigned long long timeout)
 {
     sumgame sum(BLACK);
     for (game* g : games)
@@ -252,4 +264,3 @@ search_result search_impartial(const std::vector<game*>& games, const search_val
 
     return search_impartial(sum, expected_value, timeout);
 }
-

@@ -10,7 +10,7 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "impartial_game.h"
-//#include "impartial_wrapper_move.h"
+// #include "impartial_wrapper_move.h"
 #include <ostream>
 #include <cassert>
 
@@ -19,7 +19,8 @@ class impartial_game_wrapper : public impartial_game
 {
 public:
     impartial_game_wrapper(game* g); // game still owned by caller
-    impartial_game_wrapper(game* g, bool owns_game); // if true, game is owned by callee
+    impartial_game_wrapper(game* g,
+                           bool owns_game); // if true, game is owned by callee
 
     ~impartial_game_wrapper();
 
@@ -29,20 +30,21 @@ public:
     void print(std::ostream& str) const override;
 
     // These functions needed by game class interface
-    // They also make it possible to include any 
+    // They also make it possible to include any
     // impartial game in any possibly (partizan) sum
     void play(const move& m, bw ignore_to_play) override;
     move_generator* create_move_generator(bw ignore_to_play) const override;
 
-    //split_result _split_impl() const override; // See note in .cpp file
+    // split_result _split_impl() const override; // See note in .cpp file
     void _init_hash(local_hash& hash) const override;
 
     void _normalize_impl() override; // TODO these are maybe not always correct?
     void _undo_normalize_impl() override;
 
     relation _order_impl(const game* rhs) const override;
-    
-    game* wrapped_game() const {return _game;}
+
+    game* wrapped_game() const { return _game; }
+
     game* inverse() const override; // caller takes ownership
 
 private:
@@ -50,8 +52,8 @@ private:
     const bool _owns_game;
 };
 
-inline impartial_game_wrapper::impartial_game_wrapper(game* g) :
-    impartial_game(), _game(g), _owns_game(false)
+inline impartial_game_wrapper::impartial_game_wrapper(game* g)
+    : impartial_game(), _game(g), _owns_game(false)
 {
     /*
        Wrapping an impartial game is bad for performance, and is unsafe if
@@ -63,8 +65,8 @@ inline impartial_game_wrapper::impartial_game_wrapper(game* g) :
     assert(!g->is_impartial());
 }
 
-inline impartial_game_wrapper::impartial_game_wrapper(game* g, bool owns_game) :
-    impartial_game(), _game(g), _owns_game(owns_game)
+inline impartial_game_wrapper::impartial_game_wrapper(game* g, bool owns_game)
+    : impartial_game(), _game(g), _owns_game(owns_game)
 {
     /*
        Wrapping an impartial game is bad for performance, and is unsafe if
@@ -85,10 +87,10 @@ inline impartial_game_wrapper::~impartial_game_wrapper()
 inline void impartial_game_wrapper::play(const move& m)
 {
     // ORIGINAL IMPLEMENTATION
-    //const bw color = impartial_wrapper_move::get_color(m);
-    //const move m_no_color = impartial_wrapper_move::decode_wrapped(m);
+    // const bw color = impartial_wrapper_move::get_color(m);
+    // const move m_no_color = impartial_wrapper_move::decode_wrapped(m);
     //_game->play(m_no_color, color);
-    //impartial_game::play(m);
+    // impartial_game::play(m);
 
     /* TODO: impartial_game_wrapper color hack
 
@@ -121,9 +123,8 @@ inline void impartial_game_wrapper::undo_move()
     impartial_game::undo_move();
 }
 
-inline move_generator* 
-impartial_game_wrapper::create_move_generator(bw ignore_to_play) const
+inline move_generator* impartial_game_wrapper::create_move_generator(
+    bw ignore_to_play) const
 {
     return create_move_generator();
 }
-

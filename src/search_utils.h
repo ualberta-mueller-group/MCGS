@@ -74,8 +74,18 @@ struct search_result
 };
 
 ////////////////////////////////////////////////// search functions
-search_result search_partizan(const sumgame& sum, const search_value* expected_value = nullptr, unsigned long long timeout = 0);
-search_result search_partizan(const std::vector<game*>& games, bw to_play, const search_value* expected_value = nullptr, unsigned long long timeout = 0);
+search_result search_partizan(const sumgame& sum,
+                              const search_value* expected_value = nullptr,
+                              unsigned long long timeout = 0);
 
-search_result search_impartial(const sumgame& sum, const search_value* expected_value = nullptr, unsigned long long timeout = 0);
-search_result search_impartial(const std::vector<game*>& games, const search_value* expected_value = nullptr, unsigned long long timeout = 0);
+search_result search_partizan(const std::vector<game*>& games, bw to_play,
+                              const search_value* expected_value = nullptr,
+                              unsigned long long timeout = 0);
+
+search_result search_impartial(const sumgame& sum,
+                               const search_value* expected_value = nullptr,
+                               unsigned long long timeout = 0);
+
+search_result search_impartial(const std::vector<game*>& games,
+                               const search_value* expected_value = nullptr,
+                               unsigned long long timeout = 0);

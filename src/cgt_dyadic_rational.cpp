@@ -85,7 +85,8 @@ void dyadic_rational::_init_hash(local_hash& hash) const
 
 relation dyadic_rational::_order_impl(const game* rhs) const
 {
-    const dyadic_rational* other = reinterpret_cast<const dyadic_rational*>(rhs);
+    const dyadic_rational* other =
+        reinterpret_cast<const dyadic_rational*>(rhs);
     assert(dynamic_cast<const dyadic_rational*>(rhs) == other);
 
     const int& top1 = p();

@@ -252,7 +252,6 @@ void strip_enclosing(string& str, const string& open, const string& close)
 
 } // namespace
 
-
 ////////////////////////////////////////////////// file_parser
 
 // Private constructor -- use static functions instead
@@ -311,13 +310,14 @@ void file_parser::_add_game_parser(const string& game_title,
     _add_game_parser_impartial(game_title, it.first->second);
 }
 
-void file_parser::_add_game_parser_impartial(const string& game_title,
-                                   shared_ptr<game_token_parser>& gp_shared)
+void file_parser::_add_game_parser_impartial(
+    const string& game_title, shared_ptr<game_token_parser>& gp_shared)
 {
     assert(gp_shared.get() != nullptr);
 
     string impartial_title = "impartial " + game_title;
-    shared_ptr<game_token_parser> impartial_parser(new impartial_game_token_parser_wrapper(gp_shared));
+    shared_ptr<game_token_parser> impartial_parser(
+        new impartial_game_token_parser_wrapper(gp_shared));
 
     auto it = _game_map.insert({impartial_title, impartial_parser});
     if (!it.second)
@@ -563,8 +563,8 @@ bool file_parser::_parse_command()
 
     if (command_list.size() > FILE_PARSER_MAX_CASES)
     {
-        string why = _get_error_start() +
-                     "run command has too many cases, maximum is: ";
+        string why =
+            _get_error_start() + "run command has too many cases, maximum is: ";
         why += to_string(FILE_PARSER_MAX_CASES);
         throw parser_exception(why, CASE_LIMIT_EXCEEDED);
     }

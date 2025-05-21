@@ -31,10 +31,10 @@ void test_nogo(const string& s, int nim_value)
     chrono::duration<double, std::milli> duration = end - start;
     if (nim_value != UNKNOWN)
         assert(v == nim_value);
-    cout << "Nogo " << s.length() << ' ' << s << ' '
-         << v << ' '
-         << duration.count()
-         << endl;
+    cout << "Nogo " << s.length() << ' ' << s << ' ' //
+         << v << ' '                                 //
+         << duration.count()                         //
+         << endl;                                    //
 }
 
 } // namespace
@@ -42,15 +42,16 @@ void test_nogo(const string& s, int nim_value)
 void performance_test_nogo()
 {
     static int expected[] = // computed with this same program
-    { 0, 
-      0, 1, 0, 1, 2, 0, 1, 0, 1, 2,       //  1-10
-      3, 1, 0, 3, 1, 0, 2, 2, 3, UNKNOWN, // 11-20
-      UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, 
-      UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, 
-      UNKNOWN, UNKNOWN                    // 21-30
-      };
+        {
+            0,                                                          //
+            0,       1,       0,       1,       2, 0, 1, 0, 1, 2,       //  1-10
+            3,       1,       0,       3,       1, 0, 2, 2, 3, UNKNOWN, // 11-20
+            UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,                         //
+            UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,                         //
+            UNKNOWN, UNKNOWN                                            // 21-30
+        };
 
-    int limit = 30; 
+    int limit = 30;
     for (int i = 0; i < limit; ++i)
     {
         string s(i, '.');

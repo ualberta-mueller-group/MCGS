@@ -5,9 +5,7 @@
 #include <cstddef>
 
 pitm_move_generator::pitm_move_generator(move_generator* gen, bw to_play)
-    : move_generator(to_play),
-    _moves(),
-    _next_move(0)
+    : move_generator(to_play), _moves(), _next_move(0)
 {
     assert(gen != nullptr);
 
@@ -75,5 +73,3 @@ move pitm_move_generator::gen_move() const
     assert(*this);
     return _moves[_next_move];
 }
-
-

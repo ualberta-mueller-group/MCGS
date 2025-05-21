@@ -41,18 +41,18 @@ void test_nim_value(const string& s, int nim_value)
 
 void impartial_game_wrapper_test_values()
 {
-    // Results from: J. Dai and X. Chen, 
+    // Results from: J. Dai and X. Chen,
     // Impartial Clobber Solver,
     // CMPUT 655 project report, University of Alberta 2022
-    static int dai_chen_result[] =
-    { 0, 
-      1, 3, 0, 2, 0, 2,  0, 3,  1,  4,       //  1-10
-      6, 1, 0, 1, 3, 7, UNKNOWN, 3,  1,  0,  // 11-20
-      UNKNOWN, 4, 0, 1, 3, 0,  4, 0,  2,  0, // 21-30
-      3, 1, 4, 6, 1, 0,  1, 3, UNKNOWN, -1,  // 31-40
-      3, 1                                   // 41-42
-     };
-    
+    static int dai_chen_result[] = {
+        0,                                               //
+        1,       3, 0, 2, 0, 2, 0,       3, 1,       4,  //  1-10
+        6,       1, 0, 1, 3, 7, UNKNOWN, 3, 1,       0,  // 11-20
+        UNKNOWN, 4, 0, 1, 3, 0, 4,       0, 2,       0,  // 21-30
+        3,       1, 4, 6, 1, 0, 1,       3, UNKNOWN, -1, // 31-40
+        3,       1                                       // 41-42
+    };
+
     int limit = 10;
     for (int i = 0; i < limit; ++i)
         test_nim_value(clobber_1xn::xoxo(i), dai_chen_result[i]);
@@ -98,15 +98,16 @@ void test_nogo(string s, int nim_value)
 void impartial_game_wrapper_test_nogo()
 {
     static int expected[] = // computed with this same program
-    { 0, 
-      0, 1, 0, 1, 2, 0, 1, 0, 1, 2,       //  1-10
-      3, 1, 0, 3, 1, 0, 2, 2, 3, UNKNOWN, // 11-20
-      UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, 
-      UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, 
-      UNKNOWN, UNKNOWN                    // 21-30
-      };
+        {
+            0,                                                          //
+            0,       1,       0,       1,       2, 0, 1, 0, 1, 2,       //  1-10
+            3,       1,       0,       3,       1, 0, 2, 2, 3, UNKNOWN, // 11-20
+            UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,                         //
+            UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,                         //
+            UNKNOWN, UNKNOWN                                            // 21-30
+        };
 
-    for(int i=0; i<11; ++i)
+    for (int i = 0; i < 11; ++i)
     {
         string s(i, '.');
         test_nogo(s, expected[i]);

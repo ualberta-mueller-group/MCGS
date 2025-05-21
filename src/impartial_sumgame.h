@@ -7,7 +7,7 @@
 // Evaluate each impartial game in sum to a nim_value
 //
 // At each point in time,
-// a sumgame may contain a mix of solved (nim_value known) 
+// a sumgame may contain a mix of solved (nim_value known)
 // and unsolved subgames
 // All subgames solved so far are combined into a single nim_value
 

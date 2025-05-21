@@ -49,13 +49,12 @@ protected:
 
     static relation _compare_grids(const grid& g1, const grid& g2);
 
-
 private:
     void _check_legal() const;
 
     // _board is row-major.
     std::vector<int> _board; // todo try char as well.
-    int_pair _shape;    // (n_rows, n_cols)
+    int_pair _shape;         // (n_rows, n_cols)
 };
 
 inline int grid::size() const
@@ -116,11 +115,11 @@ inline int grid::coord_to_point(int_pair coord) const
 
 inline bool grid::coord_in_bounds(const int_pair& coord) const
 {
-    return                                 //
-        (coord.first >= 0) &&              //
-        (coord.first < _shape.first) &&    //
-        (coord.second >= 0) &&             //
-        (coord.second < _shape.second);    //
+    return                              //
+        (coord.first >= 0) &&           //
+        (coord.first < _shape.first) && //
+        (coord.second >= 0) &&          //
+        (coord.second < _shape.second); //
 }
 
 inline std::vector<int> grid::board() const

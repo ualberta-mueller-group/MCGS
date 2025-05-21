@@ -15,7 +15,8 @@
 #include <vector>
 
 /*
-   Prototyping for new test framework output format ".mcgsout" (better name pending)
+   Prototyping for new test framework output format ".mcgsout" (better name
+   pending)
 
     Idea:
     - The .mcgsout file is a simple text file containing other text files
@@ -25,9 +26,9 @@
         handles the index.
 
     - Messy solution: make a custom std::streambuf and custom std::ostream.
-        The streambuf forwards data to a file and does most of the record keeping.
-        The ostream initializes its base type with an instance of the streambuf
-        type (via a static constructor function which first constructs the
+        The streambuf forwards data to a file and does most of the record
+   keeping. The ostream initializes its base type with an instance of the
+   streambuf type (via a static constructor function which first constructs the
         streambuf), and provides an interface to close a sub-file etc
 
         This is messy, as space for the index has to be reserved before any
@@ -38,13 +39,14 @@
     - Better solution: derive from std::fstream, open for both reading and
         writing, write each sub-file into one temp file, do some record keeping,
         then write the temp file into the proper file
-        
+
         This isn't perfect as you still have to close a sub-file before writing
         to the next one
 
     - Best (?) solution: each sub-file is a separate std::fstream
         in read + write mode (and ".temp" extension), write each sub-file
-        without any superfluous restrictions, then stitch them together in the end?
+        without any superfluous restrictions, then stitch them together in the
+   end?
 
         This is very nice in contrast to other options, but there should be
         some way to manage the separate streams
@@ -58,10 +60,7 @@
 class mcgs_out
 {
 public:
-    mcgs_out(const std::string& filename):
-        _filename(filename)
-    {
-    }
+    mcgs_out(const std::string& filename) : _filename(filename) {}
 
     ~mcgs_out(); // call finalize
 
@@ -74,7 +73,6 @@ private:
     const std::string _filename;
     std::vector<subfile_pair> _streams;
 };
-
 
 void test_streams()
 {

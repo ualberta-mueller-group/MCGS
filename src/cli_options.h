@@ -13,7 +13,6 @@ struct cli_options
     cli_options(const std::string& test_directory);
     ~cli_options();
 
-
     std::shared_ptr<file_parser> parser;
     bool dry_run;     // Do dry run without running games
     bool should_exit; // Exit from main() i.e. when "--help" used
@@ -28,7 +27,6 @@ struct cli_options
     static constexpr const char* DEFAULT_TEST_OUTFILE = "out.csv";
     static constexpr const unsigned long long DEFAULT_TEST_TIMEOUT = 500;
 };
-
 
 // Thrown on bad input
 class cli_options_exception : public std::exception
@@ -50,4 +48,3 @@ private:
     When "silent" is true, don't print to stdout (useful for unit testing)
 */
 cli_options parse_args(int argc, const char** argv, bool silent = false);
-

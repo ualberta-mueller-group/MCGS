@@ -27,7 +27,9 @@ public:
     game* inverse() const override;
 
     int value() const { return _value; }
+
     bool is_split() const { return _smaller_part > 0; }
+
     static int static_result(int n);
     static void print_move(move m, std::ostream& str);
     static move encode(int take, int smaller, int larger);
@@ -39,8 +41,7 @@ protected:
     split_result _split_impl() const override;
 
 private:
-    static void _decode(move m, int& take,
-                       int& smaller, int& larger);
+    static void _decode(move m, int& take, int& smaller, int& larger);
     static void _store(int n, int nim_value);
     static int _get(int n); // -1 if not stored
 
@@ -48,7 +49,8 @@ private:
     int _smaller_part; // used temporarily during play, after splitting game
 };
 
-inline kayles::kayles(int value) : impartial_game(), _value(value), _smaller_part(0)
+inline kayles::kayles(int value)
+    : impartial_game(), _value(value), _smaller_part(0)
 {
     assert(_value >= 0);
 }

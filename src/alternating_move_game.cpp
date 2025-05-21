@@ -35,7 +35,8 @@ bool alternating_move_game::_solve()
 }
 
 //---------------------------------------------------------------------------
-assert_restore_alternating_game::assert_restore_alternating_game(const alternating_move_game& game)
+assert_restore_alternating_game::assert_restore_alternating_game(
+    const alternating_move_game& game)
     : _game(game), _game_hash(game.game_hash())
 {
 }

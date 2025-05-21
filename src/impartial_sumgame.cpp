@@ -32,7 +32,7 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
         if (over_time)
             return -1;
 
-        if (! g->is_active())
+        if (!g->is_active())
             continue;
         auto ig = static_cast<impartial_game*>(g);
         assert(ig == dynamic_cast<impartial_game*>(g));
@@ -74,12 +74,11 @@ std::optional<int> search_impartial_sumgame_with_timeout(
     std::promise<int> promise;
     std::future<int> future = promise.get_future();
 
-    std::thread thr(
-        [&]() -> void
-        {
-            int result = search_impartial_sumgame_cancellable(s, over_time);
-            promise.set_value(result);
-        });
+    std::thread thr([&]() -> void
+    {
+        int result = search_impartial_sumgame_cancellable(s, over_time);
+        promise.set_value(result);
+    });
 
     std::future_status status = std::future_status::ready;
 

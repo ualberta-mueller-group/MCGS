@@ -132,7 +132,8 @@ private:
 
 }; // class game
 
-inline game::game() : _move_stack(), _is_active(true), _hash_state(HASH_STATE_INVALID)
+inline game::game()
+    : _move_stack(), _is_active(true), _hash_state(HASH_STATE_INVALID)
 {
 }
 
@@ -180,7 +181,6 @@ inline bool game::is_impartial() const
 {
     return false;
 }
-
 
 inline local_hash& game::_get_hash_ref() const
 {
@@ -251,6 +251,7 @@ private:
     const game& _game;
     const int _game_hash;
 };
+
 //---------------------------------------------------------------------------
 
 std::ostream& operator<<(std::ostream& os, const split_result& split);

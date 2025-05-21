@@ -53,8 +53,8 @@ struct play_record
 
     bool did_split;
     sumgame_move sm;
-    std::vector<game const*>
-        new_games; // doesn't own games, just stores them for debugging
+    // doesn't own games, just stores them for debugging
+    std::vector<game const*> new_games;
 };
 
 //////////////////////////////////////// solve_result
@@ -116,8 +116,8 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 
-    hash_t get_global_hash(bool invalidate_game_hashes = false) const; // TODO: this method may be temporary
-
+    // TODO: this method may be temporary
+    hash_t get_global_hash(bool invalidate_game_hashes = false) const;
     bool impartial() const;
 
     // called by mcgs_init()
@@ -136,7 +136,6 @@ private:
 
     void _debug_extra() const;
     void _assert_games_unique() const;
-
 
     mutable bool _should_stop;
     mutable bool _need_cgt_simplify;
@@ -174,7 +173,6 @@ private:
     int _subgame_idx;
     move_generator* _subgame_generator;
 };
-
 
 //---------------------------------------------------------------------------
 

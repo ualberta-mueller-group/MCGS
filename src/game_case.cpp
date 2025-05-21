@@ -77,4 +77,3 @@ void game_case::_move_impl(game_case&& other) noexcept
 
     other.release_games();
 }
-

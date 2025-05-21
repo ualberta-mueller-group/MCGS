@@ -11,7 +11,6 @@
 #include "parsing_utilities.h"
 using namespace std;
 
-
 // non-empty "list" of at most 1 star and at most 1 int
 game* up_star_parser::parse_game(const string& game_token) const
 {
@@ -98,7 +97,8 @@ game* dyadic_rational_parser::parse_game(const string& game_token) const
 }
 
 // impartial games
-game* impartial_game_token_parser_wrapper::parse_game(const string& game_token) const
+game* impartial_game_token_parser_wrapper::parse_game(
+    const string& game_token) const
 {
     game* g = _parser->parse_game(game_token);
 
@@ -110,4 +110,3 @@ game* impartial_game_token_parser_wrapper::parse_game(const string& game_token) 
 
     return new impartial_game_wrapper(g, true);
 }
-

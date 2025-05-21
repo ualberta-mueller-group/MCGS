@@ -18,7 +18,9 @@
 struct impartial_ttable_entry
 {
     int nim_value;
+
     impartial_ttable_entry() : nim_value(0) {}
+
     impartial_ttable_entry(int v) : nim_value(v) {}
 };
 
@@ -53,24 +55,23 @@ public:
     move_generator* create_move_generator(bw ignore_to_play) const override;
 
     bool is_impartial() const override final;
-    
+
     bool is_solved() const;
     int nim_value() const; // available after it is solved
     virtual void set_solved(int nim_value);
-    
+
     // Minimum excluded number
     static int mex(const std::set<int>& values);
 
 private:
-
     using game::play; // avoid compiler warning
     bool _root_is_solved;
     int _nim_value;
 };
 
-inline impartial_game::impartial_game() : 
-    _root_is_solved(false), _nim_value(0)
-{ }
+inline impartial_game::impartial_game() : _root_is_solved(false), _nim_value(0)
+{
+}
 
 inline bool impartial_game::is_impartial() const
 {
@@ -92,7 +93,7 @@ inline int impartial_game::nim_value() const
 inline void impartial_game::play(const move& m)
 {
     // ORIGINAL IMPLEMENTATION
-    //game::play(m, BLACK);
+    // game::play(m, BLACK);
 
     /* TODO: impartial_game_wrapper color hack
 
@@ -121,8 +122,8 @@ inline void impartial_game::play(const move& m, bw to_play)
     */
 }
 
-inline move_generator* 
-impartial_game::create_move_generator(bw ignore_to_play) const
+inline move_generator* impartial_game::create_move_generator(
+    bw ignore_to_play) const
 {
     return create_move_generator();
 }

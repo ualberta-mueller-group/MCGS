@@ -5,7 +5,6 @@
 
 #pragma once
 
-
 // IWYU pragma: begin_exports
 #include "game.h"
 // IWYU pragma: end_exports

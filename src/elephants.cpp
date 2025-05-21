@@ -104,7 +104,6 @@ split_result elephants::_split_impl() const
     bool seen_black = false;
     size_t last_black = 0;
 
-
     for (size_t i = 0; i < N; i++)
     {
         const char c = board[i];
@@ -130,8 +129,7 @@ split_result elephants::_split_impl() const
             assert(last_white == i);
 
             // Skip X
-            subgame_ranges.push_back(
-                {chunk_start, last_black - chunk_start});
+            subgame_ranges.push_back({chunk_start, last_black - chunk_start});
 
             // Skip O
             chunk_start = i + 1;
@@ -188,7 +186,6 @@ split_result elephants::_split_impl() const
         return result;
     }
 }
-
 
 void elephants::_normalize_impl()
 {

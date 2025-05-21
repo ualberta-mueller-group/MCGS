@@ -15,13 +15,11 @@ extern "C" const char* __asan_default_options()
 {
     // string literals automatically concatenated
 
-    return
-        "detect_stack_use_after_return=1"
+    return "detect_stack_use_after_return=1"
 
-        ":detect_leaks=1"
+           ":detect_leaks=1"
 
-        // Catch global variable initialization order problems
-        ":check_initialization_order=1"
-        ":strict_init_order=1";
+           // Catch global variable initialization order problems
+           ":check_initialization_order=1"
+           ":strict_init_order=1";
 }
-

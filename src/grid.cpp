@@ -15,7 +15,7 @@
 //---------------------------------------------------------------------------
 
 namespace {
-const int ROW_SEP = 4;  // row separator
+const int ROW_SEP = 4; // row separator
 
 void check_is_valid_char(char c)
 {
@@ -49,7 +49,8 @@ int color_to_char(int color)
     return clobber_char[color];
 }
 
-std::pair<std::vector<int>, int_pair> string_to_board(const std::string& game_as_string)
+std::pair<std::vector<int>, int_pair> string_to_board(
+    const std::string& game_as_string)
 {
     std::vector<int> board;
     int n_rows = 0, n_cols = 0, counter = 0;
@@ -90,7 +91,7 @@ std::string board_to_string(const std::vector<int>& board, const int_pair shape)
     {
         for (int c = 0; c < shape.second; c++)
         {
-            result += color_to_char(board[r*n_cols+c]);
+            result += color_to_char(board[r * n_cols + c]);
         }
         if (r != shape.first - 1)
             result += '|';
@@ -117,7 +118,7 @@ grid::grid(const std::vector<int>& board, int_pair shape)
 
 grid::grid(const std::string& game_as_string) : game()
 {
-    std::pair<std::vector<int>, int_pair> board_shape = 
+    std::pair<std::vector<int>, int_pair> board_shape =
         string_to_board(game_as_string);
     _board = board_shape.first;
     _shape = board_shape.second;
@@ -185,7 +186,11 @@ relation grid::_compare_grids(const grid& g1, const grid& g2)
 void grid::_check_legal() const
 {
     for (const int& x : _board)
-        THROW_ASSERT(x == BLACK || x == WHITE || x == EMPTY || x == BORDER || x == ROW_SEP);
+        THROW_ASSERT(x == BLACK ||  //
+                     x == WHITE ||  //
+                     x == EMPTY ||  //
+                     x == BORDER || //
+                     x == ROW_SEP); //
 }
 
 std::vector<int> grid::inverse_board() const

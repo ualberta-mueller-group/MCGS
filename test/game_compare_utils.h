@@ -14,7 +14,7 @@
 #include "game.h"
 #include <cstdint>
 #include "sumgame.h"
-//#include "custom_traits.h" // TODO fix this and re-enable static asserts?
+// #include "custom_traits.h" // TODO fix this and re-enable static asserts?
 #include <unordered_set>
 #include <string>
 #include <vector>
@@ -38,16 +38,16 @@ public:
     uint64_t operator()(const __game_info& info) const;
 };
 
-typedef std::unordered_multiset<__game_info, __game_info_hash>
-    __game_info_set; // NOLINT(readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
+typedef std::unordered_multiset<__game_info, __game_info_hash> __game_info_set;
 
 //////////////////////////////////////// useful function templates
 template <class Game_Ptr1, class Game_Ptr2>
 bool same_games(const std::vector<Game_Ptr1>& games1,
                 const std::vector<Game_Ptr2>& games2, bool omit_inactive = true)
 {
-    //static_assert(custom_traits::is_some_game_ptr_v<Game_Ptr1>);
-    //static_assert(custom_traits::is_some_game_ptr_v<Game_Ptr2>);
+    // static_assert(custom_traits::is_some_game_ptr_v<Game_Ptr1>);
+    // static_assert(custom_traits::is_some_game_ptr_v<Game_Ptr2>);
 
     __game_info_set set1;
     __game_info_set set2;
@@ -73,7 +73,7 @@ bool sumgame_same_games(const sumgame& sum,
                         bool omit_inactive_sumgame = true,
                         bool omit_inactive_compare = true)
 {
-    //static_assert(custom_traits::is_some_game_ptr_v<Game_Ptr>);
+    // static_assert(custom_traits::is_some_game_ptr_v<Game_Ptr>);
 
     std::vector<const game*> sumgame_games;
 

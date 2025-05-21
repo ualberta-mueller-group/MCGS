@@ -44,4 +44,3 @@ struct game_case
 private:
     void _move_impl(game_case&& other) noexcept;
 };
-

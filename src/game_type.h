@@ -10,13 +10,13 @@ class game;
 
 typedef unsigned int game_type_t;
 
-
 // NOLINTBEGIN(readability-identifier-naming)
 namespace __game_type_impl {
 
 game_type_t __get_game_type(const std::type_info& info);
 
 } // namespace __game_type_impl
+
 // NOLINTEND(readability-identifier-naming)
 
 class i_game_type
@@ -42,9 +42,7 @@ public:
         return _type;
     }
 
-    virtual ~i_game_type()
-    {
-    }
+    virtual ~i_game_type() {}
 
 private:
     // ensure the type is polymorphic

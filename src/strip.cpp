@@ -163,8 +163,8 @@ relation strip::_order_impl(const game* rhs) const
 }
 
 relation strip::_compare_boards(const std::vector<int>& board1,
-                                  const std::vector<int>& board2,
-                                  bool mirror1, bool mirror2)
+                                const std::vector<int>& board2, bool mirror1,
+                                bool mirror2)
 {
     if (board1.size() != board2.size())
         return board1.size() < board2.size() ? REL_LESS : REL_GREATER;
@@ -175,8 +175,8 @@ relation strip::_compare_boards(const std::vector<int>& board1,
     // Compare contents of boards
 
     size_t idx1 = 0; // initial index (assume forward iteration)
-    int step1 = 1; // index stride (assume forward iteration)
-    if (mirror1) // If comparing mirror board, iterate backwards
+    int step1 = 1;   // index stride (assume forward iteration)
+    if (mirror1)     // If comparing mirror board, iterate backwards
     {
         idx1 = N - 1;
         step1 = -1;

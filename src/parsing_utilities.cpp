@@ -11,7 +11,6 @@
 #include "utilities.h"
 #include "fraction.h"
 
-
 using std::string, std::vector;
 
 /*
@@ -45,7 +44,6 @@ vector<string> get_string_tokens(const string& line,
 
     return split_string(new_line);
 }
-
 
 bool get_star(const vector<string>& string_tokens, size_t& idx, bool& val)
 {
@@ -98,7 +96,8 @@ bool get_win_loss(const vector<string>& string_tokens, size_t& idx, bool& win)
     return true;
 }
 
-bool get_player(const std::vector<std::string>& string_tokens, size_t& idx, ebw& player)
+bool get_player(const std::vector<std::string>& string_tokens, size_t& idx,
+                ebw& player)
 {
     const size_t N = string_tokens.size();
     if (!(idx < N))
@@ -231,7 +230,8 @@ bool get_fraction_list(const string& line, vector<fraction>& fracs)
     return true;
 }
 
-bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx, std::vector<run_command_t>& run_commands)
+bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx,
+                     std::vector<run_command_t>& run_commands)
 {
     const size_t N = string_tokens.size();
     if (!(idx < N))
@@ -277,7 +277,8 @@ bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx,
     return true;
 }
 
-bool get_run_command_list(const std::string& line, std::vector<run_command_t>& commands)
+bool get_run_command_list(const std::string& line,
+                          std::vector<run_command_t>& commands)
 {
     assert(commands.empty());
 

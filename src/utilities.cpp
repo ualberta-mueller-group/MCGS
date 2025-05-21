@@ -10,7 +10,6 @@
 #include <algorithm>
 #include "throw_assert.h"
 
-
 using std::vector, std::string, std::stringstream;
 
 ////////////////////////////////////////
@@ -104,7 +103,8 @@ uint64_t ms_since_epoch()
 {
     using namespace std::chrono;
 
-    milliseconds t = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+    milliseconds t =
+        duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     return t.count();
 }
 

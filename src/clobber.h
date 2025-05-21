@@ -9,7 +9,7 @@
 #include <string>
 #include <ostream>
 
-class clobber: public grid
+class clobber : public grid
 {
 public:
     clobber(int n_rows, int n_cols);
@@ -22,11 +22,11 @@ public:
     bool is_move(const int& from, const int& to, bw to_play) const;
 
 protected:
-    //split_result _split_impl() const override; // Disabled for now, too slow...
+    // Disabled for now, too slow...
+    // split_result _split_impl() const override;
 
 public:
     move_generator* create_move_generator(bw to_play) const override;
     void print(std::ostream& str) const override;
     game* inverse() const override; // caller takes ownership
 };
-

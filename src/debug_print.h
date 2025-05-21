@@ -15,5 +15,4 @@ std::ofstream& debug_stream();
 
 namespace mcgs_init {
 void init_debug_print(const std::string& filename);
-} // namespace mcgs_init 
-
+} // namespace mcgs_init

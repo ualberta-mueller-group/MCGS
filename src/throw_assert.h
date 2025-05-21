@@ -1,5 +1,5 @@
 #pragma once
-#include <string> // IWYU pragma: keep
+#include <string>    // IWYU pragma: keep
 #include <stdexcept> // IWYU pragma: keep
 
 // NOLINTBEGIN(readability-identifier-naming)

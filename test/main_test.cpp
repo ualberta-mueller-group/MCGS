@@ -41,7 +41,7 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include "safe_arithmetic_test.h"
 #include "fraction_test.h"
 #include "sumgame_map_view_test.h"
-//#include "custom_traits_test.h"
+// #include "custom_traits_test.h"
 #include "cgt_game_simplification_test.h"
 #include "hash_test.h"
 
@@ -141,7 +141,7 @@ int main(int argc, const char** argv)
     impartial_game_wrapper_test_all();
     impartial_minimax_test_all();
     impartial_sumgame_test_all();
-    
+
     file_parser_test_all();
     cli_options_test_all();
     simple_text_hash_test_all();
@@ -153,7 +153,7 @@ int main(int argc, const char** argv)
     sumgame_map_view_test_all();
 
     // NOTE: this test runs at compile time, not run time
-    //custom_traits_test_all();
+    // custom_traits_test_all();
 
     cgt_game_simplification_test_all();
 

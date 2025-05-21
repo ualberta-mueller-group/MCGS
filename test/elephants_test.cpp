@@ -29,7 +29,9 @@ void assert_same_moves(const game& g, bw to_play, vector<move>& expected)
 
     // Sort both move sets
     auto compare = [](const move& m1, const move& m2) -> bool
-    { return m1 < m2; };
+    {
+        return m1 < m2;
+    };
 
     std::sort(expected.begin(), expected.end(), compare);
     std::sort(moves.begin(), moves.end(), compare);
@@ -109,7 +111,9 @@ void simple1()
     vector<move> white_moves;
 
     auto add_move = [](vector<move>& vec, int from, int to) -> void
-    { vec.push_back(cgt_move::two_part_move(from, to)); };
+    {
+        vec.push_back(cgt_move::two_part_move(from, to));
+    };
 
     add_move(black_moves, 0, 1);
     add_move(black_moves, 2, 3);
@@ -137,7 +141,9 @@ void simple2()
     vector<move> white_moves;
 
     auto add_move = [](vector<move>& vec, int from, int to) -> void
-    { vec.push_back(cgt_move::two_part_move(from, to)); };
+    {
+        vec.push_back(cgt_move::two_part_move(from, to));
+    };
 
     add_move(black_moves, 0, 1);
     add_move(black_moves, 3, 4);
@@ -218,9 +224,11 @@ void inverse2()
 void test_is_move()
 {
     elephants pos(".XX.O.OO.X");
+
     unique_ptr<elephants_move_generator> gen_b(
         dynamic_cast<elephants_move_generator*>(
             pos.create_move_generator(BLACK)));
+
     unique_ptr<elephants_move_generator> gen_w(
         dynamic_cast<elephants_move_generator*>(
             pos.create_move_generator(WHITE)));

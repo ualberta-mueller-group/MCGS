@@ -17,12 +17,12 @@ using namespace std;
 ////////////////////////////////////////////////// cli_options
 cli_options::cli_options(const string& test_directory)
     : parser(nullptr),
-    dry_run(false),
-    should_exit(false),
-    run_tests(false),
-    test_directory(test_directory),
-    outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
-    test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
+      dry_run(false),
+      should_exit(false),
+      run_tests(false),
+      test_directory(test_directory),
+      outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
+      test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
 {
 }
 
@@ -74,21 +74,23 @@ void print_help_message(const string& exec_name)
                "Don't simplify basic CGT games (integer_game, dyadic_rational, "
                "up_star, switch_game, nimber).");
 
-    print_flag(global::tt_sumgame_idx_bits.flag() + " <# index bits>", 
-        "How many index bits to use for sumgame's transposition table. "
-        "0 disables transposition table. Default: " +
-        global::tt_sumgame_idx_bits.get_default_str() + ".");
+    print_flag(global::tt_sumgame_idx_bits.flag() + " <# index bits>",
+               "How many index bits to use for sumgame's transposition table. "
+               "0 disables transposition table. Default: " +
+                   global::tt_sumgame_idx_bits.get_default_str() + ".");
 
-    print_flag(global::tt_imp_sumgame_idx_bits.flag() + " <# index bits>",
+    print_flag(
+        global::tt_imp_sumgame_idx_bits.flag() + " <# index bits>",
         "How many index bits to use for impartial sumgame's transposition "
         "table. Must be at least 1. Default: " +
-        global::tt_imp_sumgame_idx_bits.get_default_str() + ".");
+            global::tt_imp_sumgame_idx_bits.get_default_str() + ".");
 
     cout << "Misc options flags:" << endl;
-    print_flag(global::random_table_seed.flag(), "Set seed for random "
+    print_flag(global::random_table_seed.flag(),
+               "Set seed for random "
                "tables used in game hashing. 0 means seed with current time "
                "since epoch. Default: " +
-               global::random_table_seed.get_default_str() + ".");
+                   global::random_table_seed.get_default_str() + ".");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -119,9 +121,10 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
 
-    print_flag(global::debug_file.flag(), "Set debug output filename. Empty "
-               "string disables debug output. Default: \""
-               + global::debug_file.get_default_str() + "\".");
+    print_flag(global::debug_file.flag(),
+               "Set debug output filename. Empty "
+               "string disables debug output. Default: \"" +
+                   global::debug_file.get_default_str() + "\".");
 
     print_flag("--dry-run",
                "Skip running games. Has no effect when using \"--run-tests\". "
@@ -135,8 +138,9 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     print_flag("--assert-correct-version",
                "Quit if a file version is found which doesn't match.");
 
-    print_flag(global::silence_warnings.flag(), "Don't print warnings to "
-        "stderr, i.e. random_table resize");
+    print_flag(global::silence_warnings.flag(),
+               "Don't print warnings to "
+               "stderr, i.e. random_table resize");
 }
 
 } // namespace
@@ -229,8 +233,9 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::debug_file.flag())
         {
             if (!(arg_idx + 1 < arg_n))
-                throw cli_options_exception("Error: got "
-                    + global::debug_file.flag() + " but no value");
+                throw cli_options_exception("Error: got " +
+                                            global::debug_file.flag() +
+                                            " but no value");
 
             global::debug_file.set(arg_next);
             arg_idx++;
@@ -328,7 +333,8 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
         if (arg == global::subgame_split.no_flag())
         {
-            //throw std::logic_error("TODO: remove or change sumgame splitting option");
+            // throw std::logic_error("TODO: remove or change sumgame splitting
+            // option");
             cerr << "TODO: remove or change sumgame splitting option" << endl;
             /*
                 TODO this either needs to be removed, or should only disable
@@ -350,7 +356,9 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             arg_idx++;
 
             if (!is_int(arg_next))
-                throw cli_options_exception("Error: " + global::tt_sumgame_idx_bits.flag() + " value not an int");
+                throw cli_options_exception(
+                    "Error: " + global::tt_sumgame_idx_bits.flag() +
+                    " value not an int");
 
             const size_t n_index_bits = atoi(arg_next.c_str());
 
@@ -363,7 +371,9 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             arg_idx++;
 
             if (!is_int(arg_next))
-                throw cli_options_exception("Error: " + global::tt_imp_sumgame_idx_bits.flag() + " value not an int");
+                throw cli_options_exception(
+                    "Error: " + global::tt_imp_sumgame_idx_bits.flag() +
+                    " value not an int");
 
             const size_t n_index_bits = atoi(arg_next.c_str());
 
@@ -378,7 +388,8 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
             arg_idx++;
             if (arg_next.size() == 0)
-                throw cli_options_exception("Error: got " + flag_text + " but no seed value");
+                throw cli_options_exception("Error: got " + flag_text +
+                                            " but no seed value");
 
             const char* str = arg_next.c_str();
             char* str_end = nullptr;
@@ -390,12 +401,16 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             if (errno == ERANGE)
             {
                 errno = 0;
-                throw cli_options_exception("Error: " + flag_text + " value out of range: \"" + arg_next + "\"");
+                throw cli_options_exception("Error: " + flag_text +
+                                            " value out of range: \"" +
+                                            arg_next + "\"");
             }
 
             if (str_end != expected_end)
             {
-                throw cli_options_exception("Error: " + flag_text + " value bad format: \"" + arg_next + "\"");
+                throw cli_options_exception("Error: " + flag_text +
+                                            " value bad format: \"" + arg_next +
+                                            "\"");
             }
 
             global::random_table_seed.set(seed);

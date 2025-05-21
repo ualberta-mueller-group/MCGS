@@ -15,17 +15,18 @@
 using namespace std;
 
 ////////////////////////////////////////////////// random_table
-std::uniform_int_distribution<unsigned long long> random_table::_dist(1, std::numeric_limits<unsigned long long>::max());
 bool random_table::_did_resize_warning = false;
 
-random_table::random_table(size_t n_positions, uint64_t seed)
-    : _n_positions(0)
+std::uniform_int_distribution<unsigned long long> random_table::_dist(
+    1, std::numeric_limits<unsigned long long>::max());
+
+random_table::random_table(size_t n_positions, uint64_t seed) : _n_positions(0)
 {
     while (seed == 0)
         seed = ms_since_epoch();
 
     // TODO: DEBUG PRINTING
-    //std::cout << "Random table constructing with seed " << seed << std::endl;
+    // std::cout << "Random table constructing with seed " << seed << std::endl;
 
     _init(seed, n_positions);
 }
@@ -36,7 +37,8 @@ void random_table::print_resize_warning()
         return;
 
     cerr << "WARNING: a random_table was resized 1 or more times during search."
-        " This may affect validity of reported times." << endl;
+            " This may affect validity of reported times."
+         << endl;
 }
 
 void random_table::_init(uint64_t seed, size_t n_positions)
@@ -48,8 +50,8 @@ void random_table::_init(uint64_t seed, size_t n_positions)
     _resize_to(n_positions);
 
     // TODO: DEBUG PRINTING
-    //std::cout << "Initialized with n_positions = " << n_positions << std::endl;
-    //std::cout << "Size is " << _number_table.size() << std::endl;
+    // std::cout << "Initialized with n_positions = " << n_positions <<
+    // std::endl; std::cout << "Size is " << _number_table.size() << std::endl;
 }
 
 void random_table::_resize_to(size_t new_n_positions)
@@ -67,7 +69,8 @@ void random_table::_resize_to(size_t new_n_positions)
     _number_table.resize(new_n_positions * _ELEMENTS_PER_POSITION);
 
     const size_t new_table_size = _number_table.size();
-    for (size_t i = old_n_positions * _ELEMENTS_PER_POSITION; i < new_table_size; i++)
+    for (size_t i = old_n_positions * _ELEMENTS_PER_POSITION;
+         i < new_table_size; i++)
     {
         _number_table[i] = get_number();
     }
@@ -80,11 +83,13 @@ std::vector<random_table> global_random_tables;
 void init_global_random_tables(uint64_t seed)
 {
     static_assert(sizeof(unsigned long long) >= sizeof(uint64_t));
-    std::uniform_int_distribution<unsigned long long> dist(1, std::numeric_limits<unsigned long long>::max());
+
+    std::uniform_int_distribution<unsigned long long> dist(
+        1, std::numeric_limits<unsigned long long>::max());
     std::mt19937_64 rng;
 
     // TODO: DEBUG PRINTING
-    //std::cout << "init_global_random_tables() seed: " << seed << endl;
+    // std::cout << "init_global_random_tables() seed: " << seed << endl;
 
     while (seed == 0)
         seed = ms_since_epoch();
@@ -215,4 +220,3 @@ hash_t global_hash::_get_modified_hash(size_t subgame_idx, game* g)
     random_table& rt = get_global_random_table(RANDOM_TABLE_MODIFIER);
     return rt.get_zobrist_val(subgame_idx, base_hash);
 }
-

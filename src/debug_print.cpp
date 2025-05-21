@@ -38,6 +38,4 @@ void init_debug_print(const std::string& filename)
 
     THROW_ASSERT(_debug_stream.is_open());
 }
-} // namespace mcgs_init 
-
-
+} // namespace mcgs_init

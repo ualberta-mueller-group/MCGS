@@ -7,7 +7,6 @@
         2. see the "Options" section at the bottom of global_options.cpp
 */
 
-
 // IWYU pragma: begin_exports
 #include <string>
 // IWYU pragma: end_exports
@@ -23,7 +22,8 @@ enum global_summary_enum
     GLOBAL_SUMMARY_EXCLUDE,
 };
 
-////////////////////////////////////////////////// abstract class global_option_base
+////////////////////////////////////////////////// abstract class
+///global_option_base
 class global_option_base
 {
 public:
@@ -31,21 +31,19 @@ public:
        Variable's name as it appears in the code, and whether or not this
        value is included in the config summary
     */
-    global_option_base(const std::string& name, global_summary_enum print_summary);
+    global_option_base(const std::string& name,
+                       global_summary_enum print_summary);
 
     virtual ~global_option_base();
 
-    inline const std::string& name() const
-    {
-        return _name;
-    }
+    inline const std::string& name() const { return _name; }
 
     // i.e. some_cli_arg --> "--some-cli-arg"
     std::string flag() const;
     // i.e. some_cli_arg --> "--no-some-cli-arg"
     std::string no_flag() const;
 
-    std::string virtual get_str() const = 0; // value as string
+    std::string virtual get_str() const = 0;         // value as string
     std::string virtual get_default_str() const = 0; // default value as string
 
     // i.e. "some_int: 21"
@@ -64,7 +62,7 @@ private:
 
 ////////////////////////////////////////////////// class global_option
 template <class T>
-class global_option final: public global_option_base
+class global_option final : public global_option_base
 {
 public:
     /*
@@ -87,15 +85,16 @@ public:
             }
 
     */
-    global_option(const std::string& name, const T& default_value, global_summary_enum print_summary = GLOBAL_SUMMARY_INCLUDE);
+    global_option(const std::string& name, const T& default_value,
+                  global_summary_enum print_summary = GLOBAL_SUMMARY_INCLUDE);
 
-    inline const T& get() const; // get current value
-    inline const T& operator()() const; // shorthand for get()
+    inline const T& get() const;          // get current value
+    inline const T& operator()() const;   // shorthand for get()
     std::string get_str() const override; // current value as string
 
     inline void set(const T& new_value);
 
-    inline const T& get_default() const; // default value
+    inline const T& get_default() const;          // default value
     std::string get_default_str() const override; // default value as string
 
 private:
@@ -105,10 +104,11 @@ private:
 
 ////////////////////////////////////////////////// global_option implementation
 template <class T>
-global_option<T>::global_option(const std::string& name, const T& default_value, global_summary_enum print_summary)
+global_option<T>::global_option(const std::string& name, const T& default_value,
+                                global_summary_enum print_summary)
     : global_option_base(name, print_summary),
-    _default_value(default_value),
-    _current_value(default_value)
+      _default_value(default_value),
+      _current_value(default_value)
 {
 }
 

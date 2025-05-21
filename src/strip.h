@@ -49,8 +49,8 @@ protected:
     relation _order_impl(const game* rhs) const override;
 
     static relation _compare_boards(const std::vector<int>& board1,
-                                      const std::vector<int>& board2,
-                                      bool mirror1 = false, bool mirror2 = false);
+                                    const std::vector<int>& board2,
+                                    bool mirror1 = false, bool mirror2 = false);
 
     void _mirror_self();
 

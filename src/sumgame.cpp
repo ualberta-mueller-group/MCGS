@@ -165,8 +165,7 @@ class assert_restore_sumgame
 {
 public:
     assert_restore_sumgame(const sumgame& sg)
-        : _sg(sg),
-          _initial_hash(sg.get_global_hash())
+        : _sg(sg), _initial_hash(sg.get_global_hash())
     {
     }
 
@@ -193,11 +192,11 @@ void sumgame::add(game* g)
     _subgames.push_back(g);
     assert(g->is_active());
 
-    if (                                              //
-        global::simplify_basic_cgt() &&               //
-        !_need_cgt_simplify &&                        //
-        is_simple_cgt(g)                              //
-        )                                             //
+    if (                                //
+        global::simplify_basic_cgt() && //
+        !_need_cgt_simplify &&          //
+        is_simple_cgt(g)                //
+        )                               //
         _need_cgt_simplify = true;
 }
 
@@ -257,12 +256,11 @@ optional<solve_result> sumgame::solve_with_timeout(
     std::promise<optional<solve_result>> promise;
     std::future<optional<solve_result>> future = promise.get_future();
 
-    std::thread thr(
-        [&]() -> void
-        {
-            optional<solve_result> result = sum._solve_with_timeout();
-            promise.set_value(result);
-        });
+    std::thread thr([&]() -> void
+    {
+        optional<solve_result> result = sum._solve_with_timeout();
+        promise.set_value(result);
+    });
 
     std::future_status status = std::future_status::ready;
 
@@ -285,7 +283,6 @@ optional<solve_result> sumgame::solve_with_timeout(
     thr.join();
 
     assert(future.valid());
-
 
     for (game* g : _subgames)
         g->undo_normalize();
@@ -507,7 +504,7 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 
         for (game* gp : *sr)
         {
-            add(gp); // no need to normalize, add() will do it
+            add(gp);             // no need to normalize, add() will do it
             record.add_game(gp); // save these games in the record for debugging
         }
     }
@@ -559,13 +556,13 @@ void sumgame::undo_move()
 
     const move subm = cgt_move::decode(s->last_move());
 
-    assert(                                                                   //
-            sm.m == subm ||                                                   //
-            (                                                                 //
-                (cgt_move::decode(sm.m) == subm) &&                           //
-                (s->game_type() == game_type<impartial_game_wrapper>())       //
-            )                                                                 //
-    );                                                                        //
+    assert(                                                         //
+        sm.m == subm ||                                             //
+        (                                                           //
+            (cgt_move::decode(sm.m) == subm) &&                     //
+            (s->game_type() == game_type<impartial_game_wrapper>()) //
+            )                                                       //
+    );                                                              //
 
     s->undo_move();
     alternating_move_game::undo_move();
@@ -691,7 +688,7 @@ bool sumgame::impartial() const
 {
     const int N = num_total_games();
     for (int i = 0; i < N; i++)
-        if (! subgame(i)->is_impartial())
+        if (!subgame(i)->is_impartial())
             return false;
 
     return true;

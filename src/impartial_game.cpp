@@ -12,26 +12,23 @@
 
 //---------------------------------------------------------------------------
 
-namespace{
+namespace {
 
 inline int search(game* subgame, impartial_tt& tt, const bool& over_time)
 {
-    const impartial_game* g =
-        static_cast<const impartial_game*>(subgame);
+    const impartial_game* g = static_cast<const impartial_game*>(subgame);
     assert(g == dynamic_cast<const impartial_game*>(subgame));
     return g->search_impartial_game_cancellable(tt, over_time);
 }
 
-inline void tt_store(impartial_tt& tt, impartial_game* g, 
-                     int nim_value)
+inline void tt_store(impartial_tt& tt, impartial_game* g, int nim_value)
 {
     const hash_t hash = g->get_local_hash();
     auto tt_it = tt.get_iterator(hash);
     tt_it.set_entry(impartial_ttable_entry(nim_value));
 }
 
-inline bool tt_lookup(impartial_tt& tt, impartial_game* g, 
-                     int& nim_value)
+inline bool tt_lookup(impartial_tt& tt, impartial_game* g, int& nim_value)
 {
     const hash_t hash = g->get_local_hash();
     auto tt_it = tt.get_iterator(hash);
@@ -41,11 +38,12 @@ inline bool tt_lookup(impartial_tt& tt, impartial_game* g,
     return is_valid;
 }
 } // namespace
+
 //---------------------------------------------------------------------------
 
 void impartial_game::set_solved(int nim_value)
 {
-    assert(! is_solved());
+    assert(!is_solved());
     assert(num_moves_played() == 0);
     _root_is_solved = true;
     _nim_value = nim_value;
@@ -64,8 +62,8 @@ int impartial_game::search_impartial_game(impartial_tt& tt) const
     return result;
 }
 
-int impartial_game::search_impartial_game_cancellable(impartial_tt& tt,
-                                                      const bool& over_time) const
+int impartial_game::search_impartial_game_cancellable(
+    impartial_tt& tt, const bool& over_time) const
 {
     if (over_time)
         return -1;
@@ -103,7 +101,7 @@ int impartial_game::search_impartial_game_cancellable(impartial_tt& tt,
         if (sr) // split found a sum
         {
             // search new games in sr, nim-add them
-            for (game* subgame: *sr)
+            for (game* subgame : *sr)
             {
                 int result = search(subgame, tt, over_time);
 
@@ -122,7 +120,6 @@ int impartial_game::search_impartial_game_cancellable(impartial_tt& tt,
                 g->undo_move();
                 return -1;
             }
-
         }
         else // no split, keep searching same subgame
         {
@@ -162,4 +159,3 @@ int impartial_game::mex(const std::set<int>& nimbers)
     }
     return i;
 }
-
