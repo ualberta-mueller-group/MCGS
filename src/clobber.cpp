@@ -4,68 +4,11 @@
 #include "game.h"
 #include "grid.h"
 #include <string>
-#include <utility>
 #include "cgt_move.h"
 #include <cstddef>
 #include <cassert>
 #include <vector>
 #include "grid_utils.h"
-
-/*
-
-    - Grids with one or more 0 dimensions are slightly awkward
-    - Clobber split will be super expensive, this is maybe unavoidable?
-
-    - Operations on points and coords involve multiplication and division, this is
-        avoidable
-*/
-
-
-/*
-
-namespace {
-
-enum clobber_dir
-{
-    CLOBBER_UP = 0,
-    CLOBBER_RIGHT,
-    CLOBBER_DOWN,
-    CLOBBER_LEFT,
-    CLOBBER_NO_DIR,
-};
-
-static constexpr clobber_dir CLOBBER_DIR_INITIAL = CLOBBER_UP;
-
-clobber_dir next_clobber_dir(clobber_dir d)
-{
-    static const clobber_dir NEXT_DIR[] = {CLOBBER_RIGHT, CLOBBER_DOWN, CLOBBER_LEFT, CLOBBER_NO_DIR, CLOBBER_NO_DIR};
-
-    assert(d >= 0 && d < (sizeof(NEXT_DIR) / sizeof(NEXT_DIR[0])));
-    assert(d != CLOBBER_NO_DIR);
-
-    return NEXT_DIR[d];
-}
-
-inline int_pair apply_clobber_dir(int_pair coord, clobber_dir dir)
-{
-    static const int_pair DELTA[] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}, {0, 0}};
-
-    assert(dir >= 0 && dir < (sizeof(DELTA) / sizeof(DELTA[0])));
-
-    const int_pair& d = DELTA[dir];
-    coord.first += d.first;
-    coord.second += d.second;
-
-    return coord;
-}
-
-
-static_assert(CLOBBER_DIR_INITIAL == 0);
-
-} // namespace
-
-*/
-
 
 ////////////////////////////////////////////////// move generator
 class clobber_move_generator: public move_generator
@@ -273,7 +216,7 @@ split_result clobber::_split_impl() const
         return result;
     }
 
-    return split_result(); // TODO
+    return split_result();
 }
 */
 
