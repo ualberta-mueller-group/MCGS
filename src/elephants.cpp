@@ -91,9 +91,9 @@ split_result elephants::_split_impl() const
 {
     vector<pair<int, int>> subgame_ranges;
 
-    // <g1> O <0 or more empty tiles> X <g2>
+    // Two types of splits: O\.*X, and XO
 
-    string board = board_as_string();
+    const string& board = board_as_string();
     const size_t N = board.size();
 
     size_t chunk_start = 0;
@@ -104,12 +104,11 @@ split_result elephants::_split_impl() const
     bool seen_black = false;
     size_t last_black = 0;
 
-    // game splits when last_black > last_white and both are > -1
 
     for (size_t i = 0; i < N; i++)
     {
         const char c = board[i];
-        int color = clobber_char_to_color(c);
+        const int color = clobber_char_to_color(c);
 
         if (color == BLACK)
         {
@@ -122,20 +121,46 @@ split_result elephants::_split_impl() const
             seen_white = true;
         }
 
-        // split game in two
-        if ((seen_white && seen_black) && last_white < last_black)
+        if (!(seen_black && seen_white))
+            continue;
+
+        // XO split
+        if (last_black + 1 == last_white)
         {
+            assert(last_white == i);
+
+            // Skip X
+            subgame_ranges.push_back(
+                {chunk_start, last_black - chunk_start});
+
+            // Skip O
+            chunk_start = i + 1;
+            seen_black = false;
+            seen_white = false;
+
+            continue;
+        }
+
+        // O\.*X split
+        if (last_white < last_black)
+        {
+            assert(last_black == i);
+
+            // keep O in "left" subgame
             subgame_ranges.push_back(
                 {chunk_start, last_white - chunk_start + 1});
 
+            // keep X in remainder
             chunk_start = i;
             seen_white = false;
             // keep last_black
+
+            continue;
         }
     }
 
-    // always have one more subgame
-    if (N > 0)
+    // maybe have one more subgame
+    if (N > 0 && chunk_start < N)
     {
         subgame_ranges.push_back(
             {chunk_start, (board.size() - 1) - chunk_start + 1});
@@ -151,6 +176,11 @@ split_result elephants::_split_impl() const
 
         for (const pair<int, int>& range : subgame_ranges)
         {
+            if (range.second == 0)
+                continue;
+
+            assert(range.second >= 1);
+
             result->push_back(
                 new elephants(board.substr(range.first, range.second)));
         }
