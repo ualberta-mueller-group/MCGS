@@ -1,6 +1,8 @@
 #include "game_case.h"
 #include "cgt_basics.h"
 #include "search_utils.h"
+#include <cassert>
+#include <utility>
 
 game_case::game_case()
 {

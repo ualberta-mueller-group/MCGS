@@ -8,6 +8,9 @@
 #include "throw_assert.h"
 #include <chrono>
 #include <ratio>
+#include <cassert>
+#include <cstdio>
+#include <stdexcept>
 
 using namespace std;
 

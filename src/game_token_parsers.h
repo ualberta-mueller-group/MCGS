@@ -5,6 +5,7 @@
 #include <cassert>
 #include <vector>
 #include <memory>
+#include <iostream>
 
 /*
     New games must have a corresponding call to file_parser::add_game_parser()

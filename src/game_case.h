@@ -5,6 +5,8 @@
 #include "simple_text_hash.h"
 // IWYU pragma: end_exports
 
+#include <vector>
+#include <string>
 #include "search_utils.h"
 
 /*

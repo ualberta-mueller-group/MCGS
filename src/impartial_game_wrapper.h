@@ -12,6 +12,7 @@
 #include "impartial_game.h"
 //#include "impartial_wrapper_move.h"
 #include <ostream>
+#include <cassert>
 
 //---------------------------------------------------------------------------
 class impartial_game_wrapper : public impartial_game

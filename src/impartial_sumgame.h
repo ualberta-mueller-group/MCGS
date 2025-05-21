@@ -17,6 +17,7 @@
 #include "sumgame.h"
 #include <optional>
 // IWYU pragma: end_exports
+#include <cstddef>
 
 // solve sumgame s - compute its nim_value
 int search_impartial_sumgame(const sumgame& s);

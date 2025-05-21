@@ -11,7 +11,8 @@
 #include <thread>
 #include <future>
 #include <chrono>
-#include "global_options.h"
+#include <cstddef>
+#include <cassert>
 
 namespace {
 

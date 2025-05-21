@@ -17,6 +17,7 @@
 #include "parsing_utilities.h"
 #include "utilities.h"
 #include <ios>
+#include <exception>
 
 /*
     NOTE: here we should usually throw instead of using assert() for many
