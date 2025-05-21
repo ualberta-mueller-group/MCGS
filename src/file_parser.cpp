@@ -59,7 +59,7 @@ int file_token_iterator::line_number() const
     // Don't call without getting a valid token first
     assert(_line_number >= 0);
 
-    return _line_number;
+    return _line_number + 1;
 }
 
 bool file_token_iterator::get_token(string& token)
@@ -504,7 +504,17 @@ bool file_parser::_parse_game()
 
     for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
     {
-        game* g = gp->parse_game(_token);
+        game* g = nullptr;
+
+        try
+        {
+            g = gp->parse_game(_token);
+        }
+        catch (exception& e)
+        {
+            cerr << _get_error_start() << e.what();
+            throw e;
+        }
 
         if (g == nullptr)
         {
