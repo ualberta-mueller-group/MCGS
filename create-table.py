@@ -545,6 +545,20 @@ def input_row_get_key(input_row):
     return tuple(key)
 
 
+def reader_get_duplicate_key_set(reader):
+    key_set = set()
+    duplicate_set = set()
+
+    for reader_row in reader:
+        input_row = reader_row_to_input_row(reader_row)
+        input_row_key = input_row_get_key(input_row)
+        if input_row_key in key_set:
+            duplicate_set.add(input_row_key)
+        key_set.add(input_row_key)
+
+    return duplicate_set
+
+
 comparison_file_key_sequence = []
 # Read all rows from the comparison file, if specified
 if comparison_file_name is not None:
@@ -574,8 +588,17 @@ for key in comparison_rows:
 
 # Start processing the input file
 infile = open(infile_name, "r")
+
+# Get row keys of duplicate tests, so that the first instance of a duplicate
+# test is also marked
+duplicate_input_row_key_set = reader_get_duplicate_key_set(csv.DictReader(infile))
+if len(duplicate_input_row_key_set) != 0:
+    warn_input_file_duplicate_tests()
+infile.seek(0)
+
 reader = csv.DictReader(infile)
 assert_correct_reader_fields(reader)
+
 
 # Start HTML table string
 table_string = "<table id=\"data-table\">\n"
@@ -596,17 +619,13 @@ table_string += "</tr>\n"
 # Read each input row, making an output row
 total_test_count = 0
 input_file_key_sequence = []
-seen_input_row_keys = set()
+
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
     total_test_count += 1
 
     input_row_key = input_row_get_key(input_row)
     input_file_key_sequence.append(input_row_key)
-
-    if input_row_key in seen_input_row_keys:
-        warn_input_file_duplicate_tests()
-    seen_input_row_keys.add(input_row_key)
 
     comparison_row_list = comparison_rows.get(input_row_key)
     comparison_row = None
@@ -619,6 +638,9 @@ for reader_row in reader:
 
     output_row = {}
     output_row["css_classes"] = ["row"]
+
+    if input_row_key in duplicate_input_row_key_set:
+        output_row["css_classes"].append("row-duplicate")
 
     for fn in row_functions:
         fn(input_rows, output_row)

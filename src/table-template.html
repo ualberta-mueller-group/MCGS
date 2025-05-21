@@ -148,6 +148,11 @@
                 cursor: pointer;
             }
 
+            /* ".row" for higher specificity, to override other bg colors */
+            .row.row-duplicate {
+                background-color: #ffb0ff;
+            }
+
 
         </style>
 
@@ -173,6 +178,7 @@
             <option value="diverging-result">Diverging results</option>
             <option value="timeout">Timeouts</option>
             <option value="hash">Bad hashes</option>
+            <option value="duplicate">Duplicate Tests</option>
             <option value="no-problem">No problems</option>
         </select>
     </div>

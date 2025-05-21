@@ -61,6 +61,11 @@ function setTableFilter() {
         showByClass(["row-bad-hash"], true);
     }
 
+    if (g_mode == "duplicate") {
+        showByClass(["row"], false);
+        showByClass(["row-duplicate"], true);
+    }
+
     if (g_mode == "no-problem") {
         showByClass(["row"], true);
         showByClass(["row-fail"], false);
