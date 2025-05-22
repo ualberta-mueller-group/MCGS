@@ -231,7 +231,11 @@ private:
 class assert_restore_sumgame: public assert_restore_alternating_game
 {
 public:
-    assert_restore_sumgame(const sumgame& sgame) {}
+    assert_restore_sumgame(const sumgame& sgame):
+        assert_restore_alternating_game(sgame)
+    {
+    }
+
     virtual ~assert_restore_sumgame() {}
 };
 

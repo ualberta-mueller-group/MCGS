@@ -3,47 +3,45 @@ CC = c++
 ##### Handle compiler flags, especially those for debugging.
 ##### See documentation below this section.
 
-# Default checks. Used when DEBUG is undefined, or DEBUG=1.
-MCGS_DEBUG_FLAGS_COMMON := -D_GLIBCXX_DEBUG -DNOGO_DEBUG -DASSERT_RESTORE_DEBUG
+# Basic checks
+DEBUG_FLAGS_COMMON := -g -D_GLIBCXX_DEBUG -DNOGO_DEBUG -DASSERT_RESTORE_DEBUG
 
-# Additional checks that are expensive and/or annoying. Used when DEBUG=1.
-MCGS_DEBUG_FLAGS_EXTRA := -DSUMGAME_DEBUG -DGAME_TYPE_DEBUG -DDEFAULT_IMPL_DEBUG
+# Additional checks that are expensive and/or annoying
+DEBUG_FLAGS_EXTRA := -DSUMGAME_DEBUG -DGAME_TYPE_DEBUG -DDEFAULT_IMPL_DEBUG
 
-MCGS_DEBUG_FLAGS_ALL := $(MCGS_DEBUG_FLAGS_COMMON) $(MCGS_DEBUG_FLAGS_EXTRA)
+DEBUG_FLAGS_ALL := $(DEBUG_FLAGS_COMMON) $(DEBUG_FLAGS_EXTRA)
 
-# All checks used by MCGS_test.
-MCGS_DEBUG_FLAGS_TEST := $(filter-out -DDEFAULT_IMPL_DEBUG,$(MCGS_DEBUG_FLAGS_ALL))
+# Default flags for MCGS and MCGS_test
+DEBUG_FLAGS_MCGS := $(DEBUG_FLAGS_COMMON)
+DEBUG_FLAGS_MCGS_TEST := $(filter-out -DDEFAULT_IMPL_DEBUG,$(DEBUG_FLAGS_ALL))
 
-NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread
-TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -g -pthread $(MCGS_DEBUG_FLAGS_TEST)
 
-# handle DEBUG variable
+### handle DEBUG and ASAN variables
 ifneq (,$(filter $(DEBUG),0 false)) # DEBUG=0 or DEBUG=false
-	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -DNDEBUG
-else
-    ifneq (,$(filter $(DEBUG),1 true)) # DEBUG=1 or DEBUG=true
-        NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -g $(MCGS_DEBUG_FLAGS_ALL)
-    else # DEBUG is undefined
-	    NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -g $(MCGS_DEBUG_FLAGS_COMMON)
-    endif
+	DEBUG_FLAGS_MCGS := -DNDEBUG
 endif
 
-# handle ASAN variable
-ifneq (,$(filter $(ASAN),leak address))
-	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN)
-	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) $(ASAN_FLAGS)
-	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) $(ASAN_FLAGS)
+ifneq (,$(filter $(DEBUG),1 true)) # DEBUG=1 or DEBUG=true
+	DEBUG_FLAGS_MCGS := $(DEBUG_FLAGS_ALL)
+	DEBUG_FLAGS_MCGS_TEST := $(DEBUG_FLAGS_ALL)
 endif
+
+ifneq (,$(filter $(ASAN),leak address)) # ASAN=leak or ASAN=address
+	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN)
+endif
+
+NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
+TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST)
 
 
 #         Makefile Variables
 #
 #     DEBUG (undefined, 0, 1)
-# Affects debugging flags used for MCGS executable, but not MCGS_test.
+# Affects debugging flags used for MCGS and MCGS_test executables.
 #
-# Undefined: use "common" flags.
-# 0: use no flags, and use DNDEBUG.
-# 1: use all flags.
+# Undefined: Use defaults.
+# 0: For MCGS use -DNDEBUG and no debug flags. No effect for MCGS_test.
+# 1: use all debug flags for both MCGS and MCGS_test.
 #
 #     ASAN (undefined, "leak", "address")
 # Affects MCGS and MCGS_test executables.
@@ -69,6 +67,7 @@ endif
 #     -DSUMGAME_DEBUG
 # Enable sumgame checks at the start of every minimax search step. Checks that
 # all games are unique objects, and uses assert_restore_sumgame.
+# Without this flag, assert_restore_sumgame is still used at the root of search.
 #
 #     -DGAME_TYPE_DEBUG
 # Make a game's game_type() function check that the cached game_type_t is
