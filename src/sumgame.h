@@ -132,7 +132,7 @@ private:
     void _push_undo_code(sumgame_undo_code code);
     void _pop_undo_code(sumgame_undo_code code);
 
-    std::optional<ttable_sumgame::iterator> _do_ttable_lookup() const;
+    std::optional<ttable_sumgame::search_result> _do_ttable_lookup() const;
 
     void _debug_extra() const;
     void _assert_games_unique() const;

@@ -5,13 +5,14 @@
 #include <cstddef>
 #include <cassert>
 #include <type_traits>
+#include <optional>
 
 ////////////////////////////////////////////////// class ttable
 template <class Entry>
 class ttable
 {
 public:
-    class iterator // TODO RENAME THIS?
+    class search_result
     {
     public:
         bool entry_valid() const;
@@ -23,14 +24,13 @@ public:
 
         void init_entry();
         void init_entry(const Entry& entry);
-        // void init_entry(const Entry&& entry); // TODO do we need this too?
 
         bool get_bool(size_t bool_idx) const;
         void set_bool(size_t bool_idx, bool new_val);
 
     private:
-        iterator() = delete;
-        iterator(ttable<Entry>& table, hash_t idx, hash_t tag,
+        search_result() = delete;
+        search_result(ttable<Entry>& table, hash_t idx, hash_t tag,
                  Entry* entry_ptr);
 
         ttable<Entry>& _table;
@@ -44,7 +44,10 @@ public:
     ttable(size_t index_bits, size_t entry_bools);
     ~ttable();
 
-    iterator get_iterator(hash_t hash);
+    search_result search(hash_t hash);
+
+    void store(hash_t hash, const Entry& entry);
+    std::optional<Entry> get(hash_t hash);
 
 private:
     inline hash_t _extract_index(hash_t hash) const;
@@ -148,7 +151,7 @@ ttable<Entry>::~ttable()
 }
 
 template <class Entry>
-typename ttable<Entry>::iterator ttable<Entry>::get_iterator(hash_t hash)
+typename ttable<Entry>::search_result ttable<Entry>::search(hash_t hash)
 {
     const hash_t index = _extract_index(hash);
     const hash_t tag = _extract_tag(hash);
@@ -156,7 +159,25 @@ typename ttable<Entry>::iterator ttable<Entry>::get_iterator(hash_t hash)
 
     Entry* entry_ptr = _get_entry_ptr(index);
 
-    return iterator(*this, index, tag, entry_ptr);
+    return search_result(*this, index, tag, entry_ptr);
+}
+
+template <class Entry>
+void ttable<Entry>::store(hash_t hash, const Entry& entry)
+{
+    ttable<Entry>::search_result tt_result = search(hash);
+    tt_result.set_entry(entry);
+}
+
+template <class Entry>
+std::optional<Entry> ttable<Entry>::get(hash_t hash)
+{
+    ttable<Entry>::search_result tt_result = search(hash);
+
+    if (tt_result.entry_valid())
+        return std::optional<Entry>(tt_result.get_entry());
+
+    return std::optional<Entry>();
 }
 
 template <class Entry>
@@ -289,16 +310,16 @@ void ttable<Entry>::_init_entry(hash_t index, hash_t tag, const Entry& entry)
     *entry_ptr = entry;
 }
 
-////////////////////////////////////////////////// ttable<Entry>::iterator
+////////////////////////////////////////////////// ttable<Entry>::search_result
 ///implementation
 template <class Entry>
-bool ttable<Entry>::iterator::entry_valid() const
+bool ttable<Entry>::search_result::entry_valid() const
 {
     return _table._get_tag(_entry_idx) == _entry_tag;
 }
 
 template <class Entry>
-Entry& ttable<Entry>::iterator::get_entry()
+Entry& ttable<Entry>::search_result::get_entry()
 {
     assert(entry_valid());
     assert(_entry_ptr != nullptr);
@@ -306,7 +327,7 @@ Entry& ttable<Entry>::iterator::get_entry()
 }
 
 template <class Entry>
-Entry& ttable<Entry>::iterator::get_entry() const
+Entry& ttable<Entry>::search_result::get_entry() const
 {
     assert(entry_valid());
     assert(_entry_ptr != nullptr);
@@ -314,7 +335,7 @@ Entry& ttable<Entry>::iterator::get_entry() const
 }
 
 template <class Entry>
-void ttable<Entry>::iterator::set_entry(const Entry& entry)
+void ttable<Entry>::search_result::set_entry(const Entry& entry)
 {
     if (!entry_valid())
     {
@@ -327,33 +348,33 @@ void ttable<Entry>::iterator::set_entry(const Entry& entry)
 }
 
 template <class Entry>
-void ttable<Entry>::iterator::init_entry()
+void ttable<Entry>::search_result::init_entry()
 {
     _table._init_entry(_entry_idx, _entry_tag, Entry());
 }
 
 template <class Entry>
-void ttable<Entry>::iterator::init_entry(const Entry& entry)
+void ttable<Entry>::search_result::init_entry(const Entry& entry)
 {
     _table._init_entry(_entry_idx, _entry_tag, entry);
 }
 
 template <class Entry>
-bool ttable<Entry>::iterator::get_bool(size_t bool_idx) const
+bool ttable<Entry>::search_result::get_bool(size_t bool_idx) const
 {
     assert(entry_valid());
     return _table._get_bool(_entry_idx, bool_idx);
 }
 
 template <class Entry>
-void ttable<Entry>::iterator::set_bool(size_t bool_idx, bool new_val)
+void ttable<Entry>::search_result::set_bool(size_t bool_idx, bool new_val)
 {
     assert(entry_valid());
     _table._set_bool(_entry_idx, bool_idx, new_val);
 }
 
 template <class Entry>
-ttable<Entry>::iterator::iterator(ttable<Entry>& table, hash_t idx, hash_t tag,
+ttable<Entry>::search_result::search_result(ttable<Entry>& table, hash_t idx, hash_t tag,
                                   Entry* entry_ptr)
     : _table(table), _entry_idx(idx), _entry_tag(tag), _entry_ptr(entry_ptr)
 {

@@ -333,11 +333,11 @@ optional<solve_result> sumgame::_solve_with_timeout()
     simplify_basic();
 
     // TODO this is quite ugly...
-    std::optional<ttable_sumgame::iterator> tt_iterator = _do_ttable_lookup();
-    if (tt_iterator)
+    std::optional<ttable_sumgame::search_result> tt_result = _do_ttable_lookup();
+    if (tt_result)
     {
-        if (tt_iterator->entry_valid())
-            return tt_iterator->get_bool(0);
+        if (tt_result->entry_valid())
+            return tt_result->get_bool(0);
     }
 
     const bw toplay = to_play();
@@ -379,24 +379,24 @@ optional<solve_result> sumgame::_solve_with_timeout()
         {
             /// undo_simplify_basic();
 
-            if (tt_iterator)
+            if (tt_result)
             {
-                assert(tt_iterator.has_value());
+                assert(tt_result.has_value());
 
-                tt_iterator->init_entry();
-                tt_iterator->set_bool(0, result.win);
+                tt_result->init_entry();
+                tt_result->set_bool(0, result.win);
             }
             return result;
         }
     }
 
     /// undo_simplify_basic();
-    if (tt_iterator)
+    if (tt_result)
     {
-        assert(tt_iterator.has_value());
+        assert(tt_result.has_value());
 
-        tt_iterator->init_entry();
-        tt_iterator->set_bool(0, false);
+        tt_result->init_entry();
+        tt_result->set_bool(0, false);
     }
 
     return solve_result(false);
@@ -414,15 +414,15 @@ void sumgame::_pop_undo_code(sumgame_undo_code code)
     _undo_code_stack.pop_back();
 }
 
-std::optional<ttable_sumgame::iterator> sumgame::_do_ttable_lookup() const
+std::optional<ttable_sumgame::search_result> sumgame::_do_ttable_lookup() const
 {
     if (global::tt_sumgame_idx_bits() == 0)
-        return std::optional<ttable_sumgame::iterator>();
+        return std::optional<ttable_sumgame::search_result>();
 
     assert(_tt != nullptr);
 
     const hash_t current_hash = get_global_hash();
-    return _tt->get_iterator(current_hash);
+    return _tt->search(current_hash);
 }
 
 void sumgame::_debug_extra() const

@@ -24,17 +24,17 @@ inline int search(game* subgame, impartial_tt& tt, const bool& over_time)
 inline void tt_store(impartial_tt& tt, impartial_game* g, int nim_value)
 {
     const hash_t hash = g->get_local_hash();
-    auto tt_it = tt.get_iterator(hash);
-    tt_it.set_entry(impartial_ttable_entry(nim_value));
+    auto tt_result = tt.search(hash);
+    tt_result.set_entry(impartial_ttable_entry(nim_value));
 }
 
 inline bool tt_lookup(impartial_tt& tt, impartial_game* g, int& nim_value)
 {
     const hash_t hash = g->get_local_hash();
-    auto tt_it = tt.get_iterator(hash);
-    const bool is_valid = tt_it.entry_valid();
+    auto tt_result = tt.search(hash);
+    const bool is_valid = tt_result.entry_valid();
     if (is_valid)
-        nim_value = tt_it.get_entry().nim_value;
+        nim_value = tt_result.get_entry().nim_value;
     return is_valid;
 }
 } // namespace
