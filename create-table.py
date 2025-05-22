@@ -660,7 +660,8 @@ for reader_row in reader:
             continue
         cell = output_row[alias]
         cell_class_string = " ".join(cell["css_classes"])
-        row_text += f"<td class=\"{cell_class_string}\"><div>"
+        col_title = output_field_dict[alias]
+        row_text += f"<td title=\"{col_title}\" class=\"{cell_class_string}\"><div>"
         row_text += cell["text"]
         row_text += "</div></td>\n"
     row_text += "</tr>\n"
