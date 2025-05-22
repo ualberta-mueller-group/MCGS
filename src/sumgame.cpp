@@ -160,24 +160,6 @@ bool is_simple_cgt(game* g)
 
 } // namespace
 
-// TODO use assert_restore_game in alternating_move_game.h instead
-class assert_restore_sumgame
-{
-public:
-    assert_restore_sumgame(const sumgame& sg)
-        : _sg(sg), _initial_hash(sg.get_global_hash())
-    {
-    }
-
-    ~assert_restore_sumgame()
-    {
-        assert(_sg.get_global_hash(true) == _initial_hash);
-    }
-
-private:
-    const sumgame& _sg;
-    const hash_t _initial_hash;
-};
 
 //---------------------------------------------------------------------------
 
@@ -222,7 +204,7 @@ const bool PRINT_SUBGAMES = false;
 // plus sumgame simplification
 bool sumgame::solve() const
 {
-    assert_restore_alternating_game ar(*this);
+    // No assert_restore_sumgame; downstream function will do it
     sumgame& sum = const_cast<sumgame&>(*this);
 
     optional<solve_result> result = sum.solve_with_timeout(0);
@@ -244,7 +226,7 @@ bool sumgame::solve() const
 optional<solve_result> sumgame::solve_with_timeout(
     unsigned long long timeout) const
 {
-    assert_restore_alternating_game ar(*this);
+    assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     _should_stop = false;
@@ -291,8 +273,7 @@ optional<solve_result> sumgame::solve_with_timeout(
 
 bool sumgame::solve_with_games(std::vector<game*>& gs) const
 {
-    assert_restore_alternating_game ar(*this);
-
+    assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     for (game* g : gs)
@@ -316,7 +297,7 @@ bool sumgame::solve_with_games(std::vector<game*>& gs) const
 
 bool sumgame::solve_with_games(game* g) const
 {
-    assert_restore_alternating_game ar(*this);
+    assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     sum.add(g);
@@ -333,7 +314,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
 {
 #ifdef SUMGAME_DEBUG
     _debug_extra();
-    assert_restore_sumgame ars(*this);
+    assert_restore_sumgame ars(*this); // must come before the stack unwinder
 #endif
 
     undo_stack_unwinder stack_unwinder(*this);
@@ -684,7 +665,7 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
     return _sumgame_hash.get_value();
 }
 
-bool sumgame::impartial() const
+bool sumgame::all_impartial() const
 {
     const int N = num_total_games();
     for (int i = 0; i < N; i++)
@@ -713,3 +694,29 @@ std::ostream& operator<<(std::ostream& out, const sumgame& s)
     s.print(out);
     return out;
 }
+
+//---------------------------------------------------------------------------
+
+#ifdef ASSERT_RESTORE_DEBUG
+assert_restore_sumgame::assert_restore_sumgame(const sumgame& sgame)
+    : assert_restore_alternating_game(sgame),
+    _sgame(sgame),
+    _global_hash(sgame.get_global_hash()),
+    _total_subgames(sgame.num_total_games()),
+    _undo_code_stack_size(sgame._undo_code_stack.size()),
+    _play_record_stack_size(sgame._play_record_stack.size()),
+    _change_record_stack_size(sgame._change_record_stack.size())
+{
+}
+
+assert_restore_sumgame::~assert_restore_sumgame()
+{
+    assert(_global_hash == _sgame.get_global_hash());
+    assert(_total_subgames == _sgame.num_total_games());
+    assert(_undo_code_stack_size == _sgame._undo_code_stack.size());
+    assert(_play_record_stack_size == _sgame._play_record_stack.size());
+    assert(_change_record_stack_size == _sgame._change_record_stack.size());
+}
+
+#endif
+

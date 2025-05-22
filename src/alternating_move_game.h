@@ -25,19 +25,21 @@ public:
     void set_to_play(bw color);
     virtual bool solve() const;
 
+    bool has_game_pos() const;
+
     game& game_pos()
     {
-        assert(_game);
+        has_game_pos();
         return *_game;
     }
 
     const game& game_pos() const
     {
-        assert(_game);
+        has_game_pos();
         return *_game;
     }
 
-    int game_hash() const;
+    hash_t game_hash() const;
 
     // Default just returns false, a specific game may override
     virtual bool find_static_winner(bool& success) const;
@@ -52,14 +54,15 @@ private:
 }; // class alternating_move_game
 
 inline alternating_move_game::alternating_move_game(bw color)
-    : _game(0), _to_play(color)
+    : _game(nullptr), _to_play(color)
 {
+    assert_black_white(color);
 }
 
-inline alternating_move_game::alternating_move_game(game& game, bw to_play)
-    : _game(&game), _to_play(to_play)
+inline alternating_move_game::alternating_move_game(game& game, bw color)
+    : _game(&game), _to_play(color)
 {
-    assert_black_white(to_play);
+    assert_black_white(color);
 }
 
 inline alternating_move_game::~alternating_move_game()
@@ -82,6 +85,11 @@ inline void alternating_move_game::set_to_play(bw to_play)
     _to_play = to_play;
 }
 
+inline bool alternating_move_game::has_game_pos() const
+{
+    return _game != nullptr;
+}
+
 inline void alternating_move_game::play(const move& m)
 {
     if (_game)
@@ -96,10 +104,10 @@ inline void alternating_move_game::undo_move()
     _to_play = ::opponent(_to_play);
 }
 
-inline int alternating_move_game::game_hash() const
+inline hash_t alternating_move_game::game_hash() const
 {
     if (_game)
-        return game_pos().game_hash();
+        return game_pos().get_local_hash();
     else // todo compute game hash for sum game
         return 0;
 }
@@ -110,13 +118,27 @@ inline bool alternating_move_game::find_static_winner(bool& success) const
 }
 
 //---------------------------------------------------------------------------
+#ifdef ASSERT_RESTORE_DEBUG
 class assert_restore_alternating_game
 {
 public:
     assert_restore_alternating_game(const alternating_move_game& game);
-    ~assert_restore_alternating_game();
+    virtual ~assert_restore_alternating_game();
 
 private:
     const alternating_move_game& _game;
-    const int _game_hash;
+
+    const assert_restore_game* _arg;
+    const bw _to_play;
+    const hash_t _game_hash;
 };
+
+#else
+class assert_restore_alternating_game
+{
+public:
+    assert_restore_alternating_game(const alternating_move_game& game) {}
+    virtual ~assert_restore_alternating_game() {}
+};
+
+#endif

@@ -23,6 +23,7 @@ typedef ttable<ttable_sumgame_entry> ttable_sumgame;
 
 //////////////////////////////////////// forward declarations
 class sumgame_move_generator;
+class assert_restore_sumgame;
 
 namespace sumgame_impl {
 class change_record;
@@ -116,9 +117,8 @@ public:
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
     void print(std::ostream& str) const;
 
-    // TODO: this method may be temporary
     hash_t get_global_hash(bool invalidate_game_hashes = false) const;
-    bool impartial() const;
+    bool all_impartial() const;
 
     // called by mcgs_init()
     static void init_ttable(size_t index_bits);
@@ -147,6 +147,8 @@ private:
     std::vector<sumgame_impl::change_record> _change_record_stack;
 
     static std::shared_ptr<ttable_sumgame> _tt;
+
+    friend class assert_restore_sumgame;
 };
 
 //////////////////////////////////////// sumgame_move_generator
@@ -207,3 +209,33 @@ inline bool sumgame::is_empty() const
 std::ostream& operator<<(std::ostream& out, const sumgame& s);
 
 //---------------------------------------------------------------------------
+#ifdef ASSERT_RESTORE_DEBUG
+class assert_restore_sumgame: public assert_restore_alternating_game
+{
+public:
+    assert_restore_sumgame(const sumgame& sgame);
+    virtual ~assert_restore_sumgame();
+
+private:
+    const sumgame& _sgame;
+
+    const hash_t _global_hash;
+    const int _total_subgames;
+
+    const size_t _undo_code_stack_size;
+    const size_t _play_record_stack_size;
+    const size_t _change_record_stack_size;
+};
+
+#else
+class assert_restore_sumgame: public assert_restore_alternating_game
+{
+public:
+    assert_restore_sumgame(const sumgame& sgame) {}
+    virtual ~assert_restore_sumgame() {}
+};
+
+#endif
+
+//---------------------------------------------------------------------------
+

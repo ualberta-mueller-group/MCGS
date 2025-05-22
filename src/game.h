@@ -35,10 +35,9 @@ public:
     bool is_active() const;
     void set_active(bool status);
     move last_move() const;
-    // Used to verify that game is restored after search
-    int game_hash() const; // TODO placeholder - do a proper implementation
     bool has_moves() const;
     int num_moves_played() const;
+    int undo_stack_size() const;
 
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
@@ -193,6 +192,11 @@ inline int game::num_moves_played() const
     return _move_stack.size();
 }
 
+inline int game::undo_stack_size() const
+{
+    return _undo_code_stack.size();
+}
+
 inline bool game::_hash_updatable() const
 {
     return _hash_state == HASH_STATE_NEED_UPDATE;
@@ -202,11 +206,6 @@ inline void game::_mark_hash_updated() const
 {
     assert(_hash_state == HASH_STATE_NEED_UPDATE);
     _hash_state = HASH_STATE_UP_TO_DATE;
-}
-
-inline int game::game_hash() const
-{
-    return num_moves_played(); // TODO placeholder only
 }
 
 inline std::ostream& operator<<(std::ostream& out, const game& g)
@@ -240,17 +239,30 @@ inline move_generator::move_generator(bw to_play) : _to_play(to_play)
 }
 
 //---------------------------------------------------------------------------
-
+#ifdef ASSERT_RESTORE_DEBUG
 class assert_restore_game
 {
 public:
     assert_restore_game(const game& g);
-    ~assert_restore_game();
+    virtual ~assert_restore_game();
 
 private:
     const game& _game;
-    const int _game_hash;
+
+    const hash_t _local_hash;
+    const int _move_stack_size;
+    const int _undo_stack_size;
 };
+
+#else
+class assert_restore_game
+{
+public:
+    assert_restore_game(const game& g) {}
+    virtual ~assert_restore_game() {}
+}
+
+#endif
 
 //---------------------------------------------------------------------------
 

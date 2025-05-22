@@ -227,7 +227,7 @@ search_result search_impartial(const sumgame& sum,
                                const search_value* expected_value,
                                unsigned long long timeout)
 {
-    if (!sum.impartial())
+    if (!sum.all_impartial())
         throw std::logic_error("Sum contains partizan games");
 
     search_result result;
