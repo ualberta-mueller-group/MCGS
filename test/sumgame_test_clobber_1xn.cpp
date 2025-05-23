@@ -1,4 +1,4 @@
-#include "sumgame_test_clobber.h"
+#include "sumgame_test_clobber_1xn.h"
 #include "clobber_1xn.h"
 #include <cassert>
 #include "test_utilities.h"
@@ -75,7 +75,7 @@ void test_inverses()
 
 } // namespace
 
-void sumgame_test_clobber_all()
+void sumgame_test_clobber_1xn_all()
 {
     sum_1();
     sum_2();

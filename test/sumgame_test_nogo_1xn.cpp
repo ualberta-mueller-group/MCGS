@@ -1,4 +1,4 @@
-#include "sumgame_test_nogo.h"
+#include "sumgame_test_nogo_1xn.h"
 #include "nogo_1xn.h"
 #include <cassert>
 #include "test_utilities.h"
@@ -75,7 +75,7 @@ void test_inverses()
 
 } // namespace
 
-void sumgame_test_nogo_all()
+void sumgame_test_nogo_1xn_all()
 {
     sum_1();
     sum_2();
