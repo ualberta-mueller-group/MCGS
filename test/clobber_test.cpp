@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
-#include <memory>
+#include "grid_test_utilities.h"
 
 using std::cout, std::endl, std::vector, std::string, std::tuple;
 using cgt_move::two_part_move;
@@ -153,29 +153,7 @@ void test_moves()
         const vector<string>& b_options = std::get<1>(test_case);
         const vector<string>& w_options = std::get<2>(test_case);
 
-        clobber c(board);
-        assert(c.board_as_string() == board);
-
-        for (const bw color : colors)
-        {
-            const vector<string>& options = color == BLACK ? b_options : w_options;
-            std::unique_ptr<move_generator> mg(c.create_move_generator(color));
-
-            size_t i = 0;
-            const size_t N = options.size();
-            for (; i < N; i++)
-            {
-                assert(*mg);
-                move m = mg->gen_move();
-                ++(*mg);
-                c.play(m, color);
-                assert(c.board_as_string() == options[i]);
-                c.undo_move();
-                assert(c.board_as_string() == board);
-            }
-
-            assert(!(*mg));
-        }
+        assert_grid_game_move_sequence<clobber>(board, b_options, w_options);
     }
 }
 
@@ -187,7 +165,6 @@ void test_from_file()
 
 void test_inverse()
 {
-
     vector<string> boards =
     {
         ".XOO|X.OX|...O|OXOO|X..X|OOO.|O..X|....",
@@ -212,24 +189,8 @@ void test_inverse()
         "..OX|OOO.|O...|OOX.|.O..|XX.O|..XX|.OOO",
     };
 
-    for (const string& board : boards)
-    {
-        string board_inv = board;
-        for (char& c : board_inv)
-        {
-            if (c == 'O')
-                c = 'X';
-            else if (c == 'X')
-                c = 'O';
-        }
-
-        clobber clob(board);
-        game* g = clob.inverse();
-        clobber* clob_inv = dynamic_cast<clobber*>(g);
-        assert(clob_inv != nullptr);
-        assert(clob_inv->board_as_string() == board_inv);
-        delete g;
-    }
+    for (const string& board : boards )
+        assert_grid_game_inverse<clobber>(board);
 }
 } // namespace
 

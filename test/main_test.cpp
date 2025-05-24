@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
-const bool RUN_OVERRIDE_TESTS = true;
+const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
 #include <string>
@@ -26,6 +26,7 @@ const bool RUN_OVERRIDE_TESTS = true;
 #include "impartial_sumgame_test.h"
 #include "kayles_test.h"
 #include "nogo_1xn_test.h"
+#include "nogo_test.h"
 #include "sumgame_test.h"
 #include "elephants_test.h"
 
@@ -48,17 +49,9 @@ const bool RUN_OVERRIDE_TESTS = true;
 
 using std::cout, std::endl, std::string;
 
-//
-#include "clobber_test.h"
-#include "split_test_clobber.h"
-#include "sumgame_test_clobber.h"
-//
 namespace {
 void override_tests()
 {
-    clobber_test_all();
-    split_test_clobber_all();
-    sumgame_test_clobber_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -141,6 +134,7 @@ int main(int argc, const char** argv)
         clobber_1xn_test_all();
         clobber_test_all();
         nogo_1xn_test_all();
+        nogo_test_all();
         elephants_test_all(); // takes several seconds
         sumgame_test_all();
     }
