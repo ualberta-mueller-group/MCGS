@@ -202,6 +202,7 @@ void global_hash::_resize_if_out_of_range(size_t subgame_idx)
         return;
 
     const size_t target_size = new_vector_capacity(subgame_idx, current_size);
+    assert(subgame_idx < target_size);
 
     _subgame_hashes.resize(target_size);
     _subgame_valid_mask.resize(target_size);

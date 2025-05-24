@@ -110,8 +110,6 @@ uint64_t ms_since_epoch()
 
 size_t new_vector_capacity(size_t access_idx, size_t current_capacity)
 {
-    assert(!(access_idx < current_capacity));
-
     size_t target_size = std::max(size_t(1), current_capacity);
 
     while (!(access_idx < target_size))

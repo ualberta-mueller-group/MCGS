@@ -120,6 +120,7 @@ inline void random_table::_resize_if_out_of_range(size_t idx)
         return;
 
     const size_t target_size = new_vector_capacity(idx, _n_positions);
+    assert(idx < target_size);
 
     _resize_to(target_size);
 

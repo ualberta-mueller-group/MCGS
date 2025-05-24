@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
-const bool RUN_OVERRIDE_TESTS = false;
+const bool RUN_OVERRIDE_TESTS = true;
 
 #include <cassert>
 #include <string>
@@ -52,6 +52,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
+    utilities_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
