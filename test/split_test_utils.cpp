@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <string>
 #include "strip.h"
+#include "grid.h"
 #include "game.h"
 #include <cassert>
 #include <cstddef>
@@ -36,6 +37,35 @@ void assert_strip_split_result(const strip* g, vector<string> expected)
         assert(expected[i] == got[i]);
     }
 }
+
+void assert_grid_split_result(const grid* g, vector<string> expected)
+{
+    split_result result = g->split();
+
+    assert(result);
+
+    vector<string> got;
+
+    for (game* g2 : *result)
+    {
+        grid* gs = dynamic_cast<grid*>(g2);
+        assert(gs != nullptr);
+
+        got.push_back(gs->board_as_string());
+
+        delete g2;
+    }
+
+    sort(expected.begin(), expected.end());
+    sort(got.begin(), got.end());
+
+    assert(expected.size() == got.size());
+    for (size_t i = 0; i < got.size(); i++)
+    {
+        assert(expected[i] == got[i]);
+    }
+}
+
 
 void assert_no_split(const game* g)
 {

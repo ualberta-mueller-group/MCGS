@@ -71,6 +71,7 @@ public:
     const int_pair& get_shape() const;
     const int_pair& get_coord() const;
     int get_point() const;
+    bool valid() const;
 
     // setters
     void set_shape(const int_pair& shape);
@@ -83,9 +84,12 @@ public:
 
     // mutators
     bool move(grid_dir direction);
-    bool increment_position();
+    void reset_position();
+    // precondition: valid() is true. May invalidate position
+    void increment_position();
 
     // static utility functions
+    static bool shape_is_empty(const int_pair& shape);
     static bool coord_in_shape(const int_pair& coord, const int_pair& shape);
     static bool point_in_shape(int point, const int_pair& shape);
 
@@ -99,6 +103,7 @@ public:
     static bool get_neighbor_point(int& neighbor_point, const int_pair& coord,
                                    grid_dir direction, const int_pair& shape);
 
+
 private:
     int_pair _shape;
     int_pair _coord;
@@ -110,25 +115,19 @@ std::ostream& operator<<(std::ostream& os, const int_pair& pr);
 inline grid_location::grid_location(const int_pair& shape)
     : _shape(shape), _coord(0, 0)
 {
-    // TODO 0 size grid is awkward...
-    assert(_shape.first > 0 && _shape.second > 0);
 }
 
 inline grid_location::grid_location(const int_pair& shape,
                                     const int_pair& coord)
     : _shape(shape), _coord(coord)
 {
-    // TODO 0 size grid is awkward...
-    assert(_shape.first > 0 && _shape.second > 0);
-    assert(coord_in_shape(_coord, _shape));
+    assert(valid());
 }
 
 inline grid_location::grid_location(const int_pair& shape, int point)
     : _shape(shape), _coord(point_to_coord(point, shape))
 {
-    // TODO 0 size grid is awkward...
-    assert(_shape.first > 0 && _shape.second > 0);
-    assert(coord_in_shape(_coord, _shape));
+    assert(valid());
 }
 
 inline const int_pair& grid_location::get_shape() const
@@ -138,53 +137,74 @@ inline const int_pair& grid_location::get_shape() const
 
 inline const int_pair& grid_location::get_coord() const
 {
+    assert(valid());
     return _coord;
+}
+
+inline bool grid_location::valid() const
+{
+    return coord_in_shape(_coord, _shape);
 }
 
 inline int grid_location::get_point() const
 {
+    assert(valid());
     return coord_to_point(_coord, _shape);
 }
 
 inline void grid_location::set_shape(const int_pair& shape)
 {
     _shape = shape;
-    assert(coord_in_shape(_coord, _shape));
+    assert(valid());
 }
 
 inline void grid_location::set_coord(const int_pair& coord)
 {
     _coord = coord;
-    assert(coord_in_shape(_coord, _shape));
+    assert(valid());
 }
 
 inline void grid_location::set_point(int point)
 {
     _coord = point_to_coord(point, _shape);
-    assert(coord_in_shape(_coord, _shape));
+    assert(valid());
 }
 
 inline bool grid_location::get_neighbor_coord(int_pair& neighbor_coord,
                                               grid_dir direction) const
 {
+    assert(valid());
     return get_neighbor_coord(neighbor_coord, _coord, direction, _shape);
 }
 
 inline bool grid_location::get_neighbor_point(int& neighbor_point,
                                               grid_dir direction) const
 {
+    assert(valid());
     return get_neighbor_point(neighbor_point, _coord, direction, _shape);
 }
 
 inline bool grid_location::move(grid_dir direction)
 {
+    assert(valid());
     return get_neighbor_coord(_coord, _coord, direction, _shape);
+}
+
+inline void grid_location::reset_position()
+{
+    _coord = {0, 0};
+}
+
+inline bool grid_location::shape_is_empty(const int_pair& shape)
+{
+    return (shape.first <= 0) || (shape.second <= 0);
 }
 
 inline bool grid_location::coord_in_shape(const int_pair& coord,
                                           const int_pair& shape)
 {
     return                             //
+        (!shape_is_empty(shape)) &&    //
         (coord.first >= 0) &&          //
         (coord.first < shape.first) && //
         (coord.second >= 0) &&         //
@@ -194,7 +214,7 @@ inline bool grid_location::coord_in_shape(const int_pair& coord,
 inline bool grid_location::point_in_shape(int point, const int_pair& shape)
 {
     const int grid_size = shape.first * shape.second;
-    return (point >= 0) && (point < grid_size);
+    return !shape_is_empty(shape) && (point >= 0) && (point < grid_size);
 }
 
 inline int grid_location::coord_to_point(const int_pair& coord,

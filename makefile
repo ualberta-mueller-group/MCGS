@@ -4,10 +4,10 @@ CC = c++
 ##### See documentation below this section.
 
 # Basic checks
-DEBUG_FLAGS_COMMON := -g -D_GLIBCXX_DEBUG -DNOGO_DEBUG -DASSERT_RESTORE_DEBUG
+DEBUG_FLAGS_COMMON := -g -DNOGO_DEBUG -DASSERT_RESTORE_DEBUG
 
 # Additional checks that are expensive and/or annoying
-DEBUG_FLAGS_EXTRA := -DSUMGAME_DEBUG -DGAME_TYPE_DEBUG -DDEFAULT_IMPL_DEBUG
+DEBUG_FLAGS_EXTRA := -DSUMGAME_DEBUG -DGAME_TYPE_DEBUG -DDEFAULT_IMPL_DEBUG -D_GLIBCXX_DEBUG
 
 DEBUG_FLAGS_ALL := $(DEBUG_FLAGS_COMMON) $(DEBUG_FLAGS_EXTRA)
 
@@ -31,7 +31,7 @@ ifneq (,$(filter $(ASAN),leak address)) # ASAN=leak or ASAN=address
 endif
 
 NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
-TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST)
+TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST) -DCLOBBER_SPLIT
 
 
 #         Makefile Variables

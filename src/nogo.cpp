@@ -87,10 +87,7 @@ bool nogo::is_legal() const
 
     int n_connected = 0; // legal IFF n_connected reaches N
 
-    grid_location start(grid_shape);
-
-    do
-    {
+    for (grid_location start(grid_shape); start.valid(); start.increment_position()) {
         // Find next EMPTY tile that hasn't been closed
         assert(open.empty());
         const int start_point = start.get_point();
@@ -137,7 +134,7 @@ bool nogo::is_legal() const
                     return true;
             }
         }
-    } while (start.increment_position());
+    }
 
     assert(n_connected <= N);
     return n_connected == N;

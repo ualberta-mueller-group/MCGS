@@ -6,9 +6,9 @@
 
 using std::cout, std::endl;
 
-bool grid_location::increment_position()
+void grid_location::increment_position()
 {
-    assert(coord_in_shape(_coord, _shape));
+    assert(valid());
 
     int_pair new_coord = _coord;
     new_coord.second++;
@@ -23,14 +23,14 @@ bool grid_location::increment_position()
         if (new_coord.first >= _shape.first)
         {
             assert(!coord_in_shape(new_coord, _shape));
-            return false;
+            _coord = new_coord;
+            return; // now invalid
         }
     }
 
     assert(coord_in_shape(new_coord, _shape));
 
     _coord = new_coord;
-    return true;
 }
 
 bool grid_location::get_neighbor_coord(int_pair& neighbor_coord,
@@ -38,6 +38,8 @@ bool grid_location::get_neighbor_coord(int_pair& neighbor_coord,
                                        grid_dir direction,
                                        const int_pair& shape)
 {
+    assert(coord_in_shape(coord, shape));
+
     const int_pair& delta = _GRID_DISPLACEMENTS[direction];
     assert(abs(delta.first) <= 1);
     assert(abs(delta.second) <= 1);
@@ -58,6 +60,8 @@ bool grid_location::get_neighbor_point(int& neighbor_point,
                                        grid_dir direction,
                                        const int_pair& shape)
 {
+    assert(coord_in_shape(coord, shape));
+
     int_pair neighbor_coord;
     bool success = get_neighbor_coord(neighbor_coord, coord, direction, shape);
 

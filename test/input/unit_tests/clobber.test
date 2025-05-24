@@ -1,0 +1,10 @@
+{version 1.1}
+/*_ This file is used for unit tests */
+
+[clobber]
+XO|OX {B win, W win}
+XOX|OXO|XOX {B win, W win}
+XOX|OXO {B loss, W loss}
+XO|OX|XO {B loss, W loss}
+X|X|O {B win, W loss}
+X|O|O {B loss, W win}

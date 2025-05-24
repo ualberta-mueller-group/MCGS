@@ -112,7 +112,7 @@ bool clobber::is_move(const int& from, const int& to, bw to_play) const
     return (at(from) == to_play) && (at(to) == opp);
 }
 
-/*
+#ifdef CLOBBER_SPLIT
 split_result clobber::_split_impl() const
 {
     if (size() == 0)
@@ -135,7 +135,6 @@ split_result clobber::_split_impl() const
     std::vector<std::vector<int>> component_vec;
     std::vector<int> component;
 
-    grid_location start(grid_shape);
 
     auto reset_vars = [&]() -> void
     {
@@ -152,8 +151,9 @@ split_result clobber::_split_impl() const
         }
     };
 
-    do
+    for (grid_location start(grid_shape); start.valid(); start.increment_position())
     {
+
         int start_point = start.get_point();
         if (closed_set[start_point])
             continue;
@@ -206,9 +206,8 @@ split_result clobber::_split_impl() const
             assert(component.empty());
         }
     }
-    while (start.increment_position());
 
-    if (component_vec.size() > 1)
+    if (component_vec.size() != 1)
     {
         for (const std::vector<int>& board : component_vec)
             result->push_back(new clobber(board, grid_shape));
@@ -218,7 +217,7 @@ split_result clobber::_split_impl() const
 
     return split_result();
 }
-*/
+#endif
 
 move_generator* clobber::create_move_generator(bw to_play) const
 {
@@ -263,6 +262,7 @@ clobber_move_generator::operator bool() const
 move clobber_move_generator::gen_move() const
 {
     assert(*this);
+    assert(_location.valid());
 
     return cgt_move::two_part_move(_location_point, _target_point);
 }
@@ -273,6 +273,9 @@ void clobber_move_generator::_next_move(bool init)
     assert(_dir_idx < GRID_DIRS_CARDINAL.size());
 
     _has_move = false;
+
+    if (!_location.valid())
+        return;
 
     if (!init && !_increment())
         return;
@@ -301,7 +304,8 @@ inline bool clobber_move_generator::_increment()
         return true;
 
     _dir_idx = 0;
-    return _location.increment_position();
+    _location.increment_position();
+    return _location.valid();
 }
 
 inline bool clobber_move_generator::_increment_dir()
