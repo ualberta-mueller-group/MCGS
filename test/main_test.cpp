@@ -46,13 +46,14 @@ const bool RUN_OVERRIDE_TESTS = true;
 // #include "custom_traits_test.h"
 #include "cgt_game_simplification_test.h"
 #include "hash_test.h"
+#include "hash_types_test.h"
 
 using std::cout, std::endl, std::string;
 
 namespace {
 void override_tests()
 {
-    utilities_test_all();
+    hash_types_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -162,6 +163,7 @@ int main(int argc, const char** argv)
     cgt_game_simplification_test_all();
 
     hash_test_all();
+    hash_types_test_all();
 
     cout << "SUCCESS" << endl;
 }

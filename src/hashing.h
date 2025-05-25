@@ -30,6 +30,10 @@ public:
     // seed 0 means seed with current system time
     random_table(size_t n_positions, uint64_t seed);
 
+    /*
+       Position of get_zobrist_val functions can be past
+           current_size() -- table will automatically grow
+    */
     // get a number from the random_table for zobrist hashing
     template <class T>
     hash_t get_zobrist_val(size_t position, const T& color);
@@ -37,9 +41,11 @@ public:
     // Because bool is invalid input to std::make_unsigned_t<T>
     inline hash_t get_zobrist_val(size_t position, bool color);
 
-    inline static bool did_resize_warning();
+    size_t current_size() const;
 
+    inline static bool did_resize_warning();
     static void print_resize_warning();
+
 
 private:
     void _init(uint64_t seed, size_t n_positions);
@@ -107,6 +113,11 @@ hash_t random_table::get_zobrist_val(size_t position, const T& color)
 inline hash_t random_table::get_zobrist_val(size_t position, bool color)
 {
     return get_zobrist_val(position, (uint8_t) color);
+}
+
+inline size_t random_table::current_size() const
+{
+    return _n_positions;
 }
 
 inline bool random_table::did_resize_warning()
