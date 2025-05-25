@@ -22,8 +22,7 @@ std::uniform_int_distribution<unsigned long long> random_table::_dist(
 
 random_table::random_table(size_t n_positions, uint64_t seed) : _n_positions(0)
 {
-    while (seed == 0)
-        seed = ms_since_epoch();
+    assert(seed != 0);
 
     // TODO: DEBUG PRINTING
     // std::cout << "Random table constructing with seed " << seed << std::endl;
@@ -82,6 +81,7 @@ std::vector<random_table> global_random_tables;
 
 void init_global_random_tables(uint64_t seed)
 {
+    assert(seed != 0);
     static_assert(sizeof(unsigned long long) >= sizeof(uint64_t));
 
     std::uniform_int_distribution<unsigned long long> dist(
@@ -91,8 +91,6 @@ void init_global_random_tables(uint64_t seed)
     // TODO: DEBUG PRINTING
     // std::cout << "init_global_random_tables() seed: " << seed << endl;
 
-    while (seed == 0)
-        seed = ms_since_epoch();
 
     rng.seed(seed);
 

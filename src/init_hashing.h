@@ -1,6 +1,5 @@
 #pragma once
-#include <cstdint>
 
 namespace mcgs_init {
-void init_hashing(uint64_t seed);
+void init_hashing();
 } // namespace mcgs_init

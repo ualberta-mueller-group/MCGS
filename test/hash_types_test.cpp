@@ -2,9 +2,12 @@
 #include <iostream>
 #include "hashing.h"
 #include <unordered_set>
+#include <optional>
 
+#include "transposition.h"
 #include "clobber.h"
 #include "clobber_1xn.h"
+
 
 using namespace std;
 
@@ -345,6 +348,61 @@ void test_to_play()
 }
 
 } // namespace global_hash_test
+namespace ttable_test {
+
+struct test_entry
+{
+    int val1;
+    char val2;
+
+    bool operator==(const test_entry& rhs) const
+    {
+        return (val1 == rhs.val1) && (val2 == rhs.val2);
+    }
+};
+
+typedef ttable<test_entry> tt_test;
+
+
+// Basic usage test
+void test_basic()
+{
+    tt_test tt(4, 0);
+    hash_t hash = 13;
+
+    tt_test::search_result sr = tt.search(hash);
+    assert(!sr.entry_valid());
+}
+
+void test_store_get()
+{
+    tt_test tt(4, 0);
+
+    test_entry ent = {41, 'D'};
+
+    hash_t hash = 13;
+
+    optional<test_entry> get1 = tt.get(hash);
+    assert(!get1.has_value());
+
+    tt.store(hash, ent);
+
+    optional<test_entry> get2 = tt.get(hash);
+    assert(get2.has_value());
+    assert(ent == get2.value());
+
+    for (hash_t i = 0; i < 4096; i++)
+    {
+        if (i == hash)
+            continue;
+
+        optional<test_entry> get3 = tt.get(i);
+        assert(!get3.has_value());
+    }
+}
+
+} // namespace ttable_test
+
 } // namespace
 
 void hash_types_test_all()
@@ -364,4 +422,7 @@ void hash_types_test_all()
     global_hash_test::test_reset();
     global_hash_test::test_repeated_games();
     global_hash_test::test_to_play();
+
+    ttable_test::test_basic();
+    ttable_test::test_store_get();
 }

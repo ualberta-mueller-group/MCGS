@@ -155,7 +155,7 @@ std::string global_option<T>::get_default_str() const
 //////////////////////////////////////////////////////////// Options
 namespace global {
 
-extern global_option<uint64_t> random_table_seed;
+extern global_option<uint64_t> random_seed;
 extern global_option<bool> subgame_split;
 extern global_option<bool> simplify_basic_cgt;
 extern global_option<size_t> tt_sumgame_idx_bits;

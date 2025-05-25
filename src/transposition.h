@@ -6,6 +6,7 @@
 #include <cassert>
 #include <type_traits>
 #include <optional>
+#include "random.h"
 
 ////////////////////////////////////////////////// class ttable
 template <class Entry>
@@ -18,7 +19,7 @@ public:
         bool entry_valid() const;
 
         Entry& get_entry();
-        Entry& get_entry() const;
+        const Entry& get_entry() const;
 
         void set_entry(const Entry& entry);
 
@@ -133,9 +134,26 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
          i++) // TODO: always explicitly construct?
         _entries_arr[i] = Entry();
 
+    /*
+       NOTE:
+       The tags array can't be filled with 0s, as entries have no "valid bit".
+       A ttable query is considered a hit if the queried hash's index and tag
+       both match the entry. A user of ttable could reasonably query the table
+       with a small integer, and this would result in incorrect table hits.
+    */
+
+    // First get random bits to fill tag bytes with
+    constexpr size_t N_RANDOM_BYTES = 32;
+    static_assert(is_power_of_2(N_RANDOM_BYTES)); // allow fast modulo below
+    uint8_t random_bytes[N_RANDOM_BYTES];
+    for (size_t i = 0; i < N_RANDOM_BYTES; i++)
+        random_bytes[i] = get_random_u8();
+
+    // Now fill the tags array with random-ish bits
     _tags_arr = new uint8_t[_tags_arr_size];
     for (size_t i = 0; i < _tags_arr_size; i++)
-        _tags_arr[i] = 0;
+        // i % N_RANDOM_BYTES (because latter number power of 2)
+        _tags_arr[i] = random_bytes[i & (N_RANDOM_BYTES - 1)];
 
     _bools_arr = new unsigned int[_bools_arr_size];
     for (size_t i = 0; i < _bools_arr_size; i++)
@@ -327,7 +345,7 @@ Entry& ttable<Entry>::search_result::get_entry()
 }
 
 template <class Entry>
-Entry& ttable<Entry>::search_result::get_entry() const
+const Entry& ttable<Entry>::search_result::get_entry() const
 {
     assert(entry_valid());
     assert(_entry_ptr != nullptr);

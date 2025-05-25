@@ -100,7 +100,7 @@ inline std::string global_option_base::_name_with_dashes() const
 namespace global {
 
 // These WILL be printed with ./MCGS --print-optimizations
-INIT_GLOBAL_WITH_SUMMARY(random_table_seed, uint64_t, 7753);
+INIT_GLOBAL_WITH_SUMMARY(random_seed, uint64_t, 7753);
 INIT_GLOBAL_WITH_SUMMARY(subgame_split, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(simplify_basic_cgt, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);

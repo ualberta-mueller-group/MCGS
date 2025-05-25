@@ -86,11 +86,11 @@ void print_help_message(const string& exec_name)
             global::tt_imp_sumgame_idx_bits.get_default_str() + ".");
 
     cout << "Misc options flags:" << endl;
-    print_flag(global::random_table_seed.flag(),
-               "Set seed for random "
-               "tables used in game hashing. 0 means seed with current time "
+    print_flag(global::random_seed.flag(),
+               "Set seed for main random generator. "
+               "0 means seed with current time "
                "since epoch. Default: " +
-                   global::random_table_seed.get_default_str() + ".");
+                   global::random_seed.get_default_str() + ".");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -382,9 +382,9 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         }
 
         // MISC OPTIONS
-        if (arg == global::random_table_seed.flag())
+        if (arg == global::random_seed.flag())
         {
-            const std::string& flag_text = global::random_table_seed.flag();
+            const std::string& flag_text = global::random_seed.flag();
 
             arg_idx++;
             if (arg_next.size() == 0)
@@ -413,7 +413,7 @@ cli_options parse_args(int argc, const char** argv, bool silent)
                                             "\"");
             }
 
-            global::random_table_seed.set(seed);
+            global::random_seed.set(seed);
 
             continue;
         }

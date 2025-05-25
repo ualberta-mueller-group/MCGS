@@ -152,7 +152,6 @@ enum global_random_table_id
     RANDOM_TABLE_PLAYER,      // for player color (i.e. "to_play")
 };
 
-// seed 0 means seed with current time
 void init_global_random_tables(uint64_t seed);
 random_table& get_global_random_table(global_random_table_id table_id);
 
