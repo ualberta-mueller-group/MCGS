@@ -6,7 +6,6 @@
 using namespace std;
 
 namespace {
-
 namespace random_table_test {
 
 // Check that global tables don't collide over some range
@@ -129,8 +128,90 @@ void test_resize()
 
 } // namespace random_table_test
 
+namespace local_hash_test {
 
+// Check that "toggle" functions actually toggle
+void test_toggle()
+{
+    local_hash h;
+    assert(h.get_value() == 0);
 
+    // Toggle type
+    h.toggle_type(1);
+    assert(h.get_value() != 0);
+    h.toggle_type(1);
+    assert(h.get_value() == 0);
+
+    // Toggle value
+    h.toggle_value(0, 21);
+    const hash_t v1 = h.get_value();
+    assert(v1 != 0);
+
+    h.toggle_value(1, 64);
+    const hash_t v2 = h.get_value();
+    assert(v2 != 0);
+
+    h.toggle_value(1, 64);
+    assert(h.get_value() == v1);
+    h.toggle_value(0, 21);
+    assert(h.get_value() == 0);
+}
+
+// Check that reset actually works, and that hashes are reproducible
+void test_reset()
+{
+    local_hash h;
+    assert(h.get_value() == 0);
+
+    h.toggle_value(0, 37);
+    const hash_t v1 = h.get_value();
+
+    h.toggle_type(6);
+    const hash_t v2 = h.get_value();
+    assert(v1 != v2);
+
+    h.reset();
+    assert(h.get_value() == 0);
+
+    h.toggle_value(0, 37);
+    assert(h.get_value() == v1);
+
+    h.toggle_type(6);
+    assert(h.get_value() == v2);
+}
+
+// Check that there are no collisions over some range
+void test_collision()
+{
+    unordered_set<hash_t> hashes;
+
+    local_hash h;
+
+    for (game_type_t type = 0; type < 5; type++)
+    {
+        h.reset();
+        h.toggle_type(type);
+        for (int color1 = 0; color1 < 64; color1++)
+        {
+            if (color1 > 0)
+                h.toggle_value(0, color1 - 1);
+            h.toggle_value(0, color1);
+
+            for (int color2 = 0; color2 < 64; color2++)
+            {
+                if (color2 > 0)
+                    h.toggle_value(1, color2 - 1);
+                h.toggle_value(1, color2);
+
+                hash_t hash = h.get_value();
+                auto it = hashes.insert(hash);
+                assert(it.second);
+            }
+        }
+    }
+}
+
+} // namespace local_hash_test
 } // namespace
 
 
@@ -142,4 +223,8 @@ void hash_types_test_all()
     random_table_test::test_collision_multiple_positions();
     random_table_test::test_collision_single_position();
     random_table_test::test_resize();
+
+    local_hash_test::test_toggle();
+    local_hash_test::test_reset();
+    local_hash_test::test_collision();
 }
