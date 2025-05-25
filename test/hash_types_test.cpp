@@ -3,6 +3,9 @@
 #include "hashing.h"
 #include <unordered_set>
 
+#include "clobber.h"
+#include "clobber_1xn.h"
+
 using namespace std;
 
 namespace {
@@ -212,8 +215,137 @@ void test_collision()
 }
 
 } // namespace local_hash_test
-} // namespace
 
+namespace global_hash_test {
+
+// Check adding and removing games, and that subgame order matters
+void test_add_remove()
+{
+    clobber_1xn c1("..");
+    clobber_1xn c2("...");
+
+    global_hash gh;
+
+    gh.reset();
+    gh.set_to_play(BLACK);
+    const hash_t v0 = gh.get_value();
+
+    gh.reset();
+    gh.set_to_play(BLACK);
+    gh.add_subgame(0, &c1);
+    const hash_t v1 = gh.get_value();
+
+    gh.reset();
+    gh.set_to_play(BLACK);
+    gh.add_subgame(1, &c2);
+    const hash_t v2 = gh.get_value();
+
+    gh.reset();
+    gh.set_to_play(BLACK);
+    gh.add_subgame(0, &c1);
+    gh.add_subgame(1, &c2);
+    const hash_t v3 = gh.get_value();
+
+    gh.reset();
+    gh.set_to_play(BLACK);
+    gh.add_subgame(0, &c2);
+    gh.add_subgame(1, &c1);
+    const hash_t v4 = gh.get_value();
+
+
+    unordered_set<hash_t> hashes {v0, v1, v2, v3, v4};
+    assert(hashes.size() == 5);
+
+    gh.reset();
+    gh.set_to_play(BLACK);
+    gh.add_subgame(0, &c1);
+    gh.add_subgame(1, &c2);
+    assert(gh.get_value() == v3);
+
+    gh.remove_subgame(0, &c1);
+    assert(gh.get_value() == v2);
+    gh.add_subgame(0, &c1);
+    assert(gh.get_value() == v3);
+    gh.remove_subgame(1, &c2);
+    assert(gh.get_value() == v1);
+    gh.remove_subgame(0, &c1);
+    assert(gh.get_value() == v0);
+}
+
+// Check that reset works, and that value is reproducible after reset
+void test_reset()
+{
+    global_hash gh;
+
+    gh.set_to_play(BLACK);
+    const hash_t v_black = gh.get_value();
+    gh.set_to_play(WHITE);
+    const hash_t v_white = gh.get_value();
+    assert(v_black != v_white);
+
+    gh.reset();
+
+    gh.set_to_play(WHITE);
+    assert(gh.get_value() == v_white);
+    gh.set_to_play(BLACK);
+    assert(gh.get_value() == v_black);
+}
+
+// Check for collisions for some range of repeated games
+void test_repeated_games()
+{
+    clobber clob_2d("...");
+    clobber_1xn clob_1d("...");
+
+    global_hash gh_2d;
+    global_hash gh_1d;
+    global_hash gh_mixed;
+
+    unordered_set<hash_t> hashes;
+
+    auto check_hash = [&](global_hash& gh) -> void
+    {
+        {
+            gh.set_to_play(BLACK);
+            auto it_black = hashes.insert(gh.get_value());
+            assert(it_black.second);
+        }
+        {
+            gh.set_to_play(WHITE);
+            auto it_white = hashes.insert(gh.get_value());
+            assert(it_white.second);
+        }
+    };
+
+    for (size_t i = 0; i < 400; i++)
+    {
+        gh_2d.add_subgame(i, &clob_2d);
+        gh_1d.add_subgame(i, &clob_1d);
+
+        gh_mixed.add_subgame(2 * i, &clob_2d);
+        gh_mixed.add_subgame(2 * i + 1, &clob_1d);
+
+        check_hash(gh_2d);
+        check_hash(gh_1d);
+        check_hash(gh_mixed);
+    }
+}
+
+// Check setting to_play
+void test_to_play()
+{
+    global_hash gh;
+
+    gh.set_to_play(BLACK);
+    const hash_t v_black = gh.get_value();
+    gh.set_to_play(WHITE);
+    const hash_t v_white = gh.get_value();
+
+    assert(v_black != v_white);
+}
+
+} // namespace global_hash_test
+} // namespace
 
 void hash_types_test_all()
 {
@@ -227,4 +359,9 @@ void hash_types_test_all()
     local_hash_test::test_toggle();
     local_hash_test::test_reset();
     local_hash_test::test_collision();
+
+    global_hash_test::test_add_remove();
+    global_hash_test::test_reset();
+    global_hash_test::test_repeated_games();
+    global_hash_test::test_to_play();
 }
