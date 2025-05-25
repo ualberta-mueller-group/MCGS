@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
-const bool RUN_OVERRIDE_TESTS = true;
+const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
 #include <string>
@@ -12,6 +12,7 @@ const bool RUN_OVERRIDE_TESTS = true;
 
 #include "mcgs_init.h"
 
+#include "random_test.h"
 #include "cgt_basics_test.h"
 #include "cgt_dyadic_rational_test.h"
 #include "cgt_integer_game_test.h"
@@ -86,8 +87,7 @@ int main(int argc, const char** argv)
     {
         override_tests();
         cout << "DONE. Remember to disable override tests (at top of "
-                "main_test.cpp)"
-             << endl;
+             << __FILE__ << ")" << endl;
         return 0;
     }
 
@@ -115,6 +115,8 @@ int main(int argc, const char** argv)
         print_usage(argv[0]);
         return 0;
     }
+
+    random_test_all();
 
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();

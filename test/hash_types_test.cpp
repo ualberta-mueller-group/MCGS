@@ -363,7 +363,6 @@ struct test_entry
 
 typedef ttable<test_entry> tt_test;
 
-
 // Basic usage test
 void test_basic()
 {
@@ -393,11 +392,11 @@ void test_store_get()
 
     for (hash_t i = 0; i < 4096; i++)
     {
-        if (i == hash)
-            continue;
-
         optional<test_entry> get3 = tt.get(i);
-        assert(!get3.has_value());
+        if (i == hash)
+            assert(get3.has_value());
+        else
+            assert(!get3.has_value());
     }
 }
 
@@ -407,8 +406,6 @@ void test_store_get()
 
 void hash_types_test_all()
 {
-    cout << __FILE__ << endl;
-
     random_table_test::test_global_tables();
     random_table_test::test_collision_multiple_positions();
     random_table_test::test_collision_single_position();
