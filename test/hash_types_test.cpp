@@ -427,33 +427,19 @@ void test_exceptions()
     assert(!sr.entry_valid());
 
     // These should throw
-    function<void()> illegal1 = [&]() -> void
-    {
+    ASSERT_DID_THROW(
         test_entry& ent = sr.get_entry();
         (void) ent; // avoid unused variable warning
-    };
+    );
 
-    function<void()> illegal2 = [&]() -> void
-    {
+    ASSERT_DID_THROW(
         const tt_test::search_result& sr_const = sr;
         const test_entry& ent = sr_const.get_entry();
         (void) ent; // avoid unused variable warning
-    };
+    );
 
-    function<void()> illegal3 = [&]() -> void
-    {
-        sr.get_bool(0);
-    };
-
-    function<void()> illegal4 = [&]() -> void
-    {
-        sr.set_bool(0, true);
-    };
-
-    assert(did_throw<exception>(illegal1));
-    assert(did_throw<exception>(illegal2));
-    assert(did_throw<exception>(illegal3));
-    assert(did_throw<exception>(illegal4));
+    ASSERT_DID_THROW(sr.get_bool(0));
+    ASSERT_DID_THROW(sr.set_bool(0, true));
 
     sr.set_entry(entry);
     assert(sr.entry_valid());
@@ -474,36 +460,23 @@ void test_exceptions()
     }
 
     // These should throw
-    function<void()> illegal5 = [&]() -> void
-    {
-        sr.get_bool(1);
-    };
+    ASSERT_DID_THROW(sr.get_bool(1));
 
-    function<void()> illegal6 = [&]() -> void
-    {
-        sr.set_bool(1, true);
-    };
+    ASSERT_DID_THROW(sr.set_bool(1, true));
 
-    assert(did_throw<exception>(illegal5));
-    assert(did_throw<exception>(illegal6));
 
-    function<void()> misc_illegal1 = []() -> void
-    {
+    ASSERT_DID_THROW(
         tt_test tt_zero(4, 0);
         tt_test::search_result sr = tt_zero.search(0);
         assert(!sr.entry_valid());
         sr.init_entry();
         sr.set_bool(0, true);
-    };
+    );
 
-    function<void()> misc_illegal2 = []() -> void
-    {
+    ASSERT_DID_THROW(
         tt_test tt_zero(4, 1);
         tt_zero.store(0, {}); // can't use store() if there are bools
-    };
-
-    assert(did_throw<exception>(misc_illegal1));
-    assert(did_throw<exception>(misc_illegal2));
+    );
 }
 
 void test_search_result()
@@ -629,33 +602,19 @@ void test_colliding_search_results()
     assert(sr2.get_bool(0) == true);
 
     // Check illegal operations through sr1
-    function<void()> illegal1 = [&]() -> void
-    {
+    ASSERT_DID_THROW(
         test_entry& ent = sr1.get_entry();
         (void) ent; // avoid unused variable warning
-    };
+    );
 
-    function<void()> illegal2 = [&]() -> void
-    {
+    ASSERT_DID_THROW(
         const tt_test::search_result& sr_const = sr1;
         const test_entry& ent = sr_const.get_entry();
         (void) ent; // avoid unused variable warning
-    };
+    );
 
-    function<void()> illegal3 = [&]() -> void
-    {
-        sr1.get_bool(0);
-    };
-
-    function<void()> illegal4 = [&]() -> void
-    {
-        sr1.set_bool(0, true);
-    };
-
-    assert(did_throw<exception>(illegal1));
-    assert(did_throw<exception>(illegal2));
-    assert(did_throw<exception>(illegal3));
-    assert(did_throw<exception>(illegal4));
+    ASSERT_DID_THROW(sr1.get_bool(0));
+    ASSERT_DID_THROW(sr1.set_bool(0, true));
 
     // Overwrite again through sr1
     sr1.init_entry();
@@ -711,8 +670,6 @@ void test_compatibility()
 
 void hash_types_test_all()
 {
-    std::cout << __FILE__ << std::endl;
-
     random_table_test::test_global_tables();
     random_table_test::test_collision_multiple_positions();
     random_table_test::test_collision_single_position();

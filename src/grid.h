@@ -10,6 +10,7 @@
 #include <utility>
 #include <string>
 #include <cassert>
+#include <ostream>
 
 //---------------------------------------------------------------------------
 
@@ -125,6 +126,12 @@ inline bool grid::coord_in_bounds(const int_pair& coord) const
 inline std::vector<int> grid::board() const
 {
     return _board;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const int_pair& pr)
+{
+    os << '(' << pr.first << ' ' << pr.second << ')';
+    return os;
 }
 
 //---------------------------------------------------------------------------

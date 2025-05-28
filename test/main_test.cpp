@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
-const bool RUN_OVERRIDE_TESTS = true;
+const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
 #include <string>
@@ -13,6 +13,7 @@ const bool RUN_OVERRIDE_TESTS = true;
 #include "mcgs_init.h"
 
 #include "random_test.h"
+#include "grid_utils_test.h"
 #include "cgt_basics_test.h"
 #include "cgt_dyadic_rational_test.h"
 #include "cgt_integer_game_test.h"
@@ -54,7 +55,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
-    hash_types_test_all();
+    grid_utils_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -117,6 +118,7 @@ int main(int argc, const char** argv)
     }
 
     random_test_all();
+    grid_utils_test_all();
 
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();

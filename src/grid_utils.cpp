@@ -1,14 +1,14 @@
 #include "grid_utils.h"
-#include <iostream>
 #include <cassert>
 #include <cmath>
 #include "grid.h"
+#include "throw_assert.h"
 
 using std::cout, std::endl;
 
 void grid_location::increment_position()
 {
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
 
     int_pair new_coord = _coord;
     new_coord.second++;
@@ -38,7 +38,7 @@ bool grid_location::get_neighbor_coord(int_pair& neighbor_coord,
                                        grid_dir direction,
                                        const int_pair& shape)
 {
-    assert(coord_in_shape(coord, shape));
+    THROW_ASSERT_DEBUG(coord_in_shape(coord, shape));
 
     const int_pair& delta = _GRID_DISPLACEMENTS[direction];
     assert(abs(delta.first) <= 1);
@@ -60,7 +60,7 @@ bool grid_location::get_neighbor_point(int& neighbor_point,
                                        grid_dir direction,
                                        const int_pair& shape)
 {
-    assert(coord_in_shape(coord, shape));
+    THROW_ASSERT_DEBUG(coord_in_shape(coord, shape));
 
     int_pair neighbor_coord;
     bool success = get_neighbor_coord(neighbor_coord, coord, direction, shape);
@@ -70,10 +70,4 @@ bool grid_location::get_neighbor_point(int& neighbor_point,
 
     neighbor_point = coord_to_point(neighbor_coord, shape);
     return true;
-}
-
-std::ostream& operator<<(std::ostream& os, const int_pair& pr)
-{
-    os << '(' << pr.first << ' ' << pr.second << ')';
-    return os;
 }

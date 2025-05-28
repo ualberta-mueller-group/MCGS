@@ -6,6 +6,7 @@
 
 #include <array>
 #include "grid.h"
+#include "throw_assert.h"
 #include <ostream>
 #include <cassert>
 
@@ -72,6 +73,7 @@ public:
     const int_pair& get_coord() const;
     int get_point() const;
     bool valid() const;
+    bool is_empty() const;
 
     // setters
     void set_shape(const int_pair& shape);
@@ -109,25 +111,25 @@ private:
     int_pair _coord;
 };
 
-std::ostream& operator<<(std::ostream& os, const int_pair& pr);
 
 ////////////////////////////////////////////////////////////
 inline grid_location::grid_location(const int_pair& shape)
     : _shape(shape), _coord(0, 0)
 {
+    THROW_ASSERT_DEBUG(_shape.first >= 0 && _shape.second >= 0);
 }
 
 inline grid_location::grid_location(const int_pair& shape,
                                     const int_pair& coord)
     : _shape(shape), _coord(coord)
 {
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
 }
 
 inline grid_location::grid_location(const int_pair& shape, int point)
     : _shape(shape), _coord(point_to_coord(point, shape))
 {
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
 }
 
 inline const int_pair& grid_location::get_shape() const
@@ -137,7 +139,7 @@ inline const int_pair& grid_location::get_shape() const
 
 inline const int_pair& grid_location::get_coord() const
 {
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
     return _coord;
 }
 
@@ -146,53 +148,59 @@ inline bool grid_location::valid() const
     return coord_in_shape(_coord, _shape);
 }
 
+inline bool grid_location::is_empty() const
+{
+    return shape_is_empty(_shape);
+}
+
 inline int grid_location::get_point() const
 {
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
     return coord_to_point(_coord, _shape);
 }
 
 inline void grid_location::set_shape(const int_pair& shape)
 {
     _shape = shape;
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
 }
 
 inline void grid_location::set_coord(const int_pair& coord)
 {
     _coord = coord;
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
 }
 
 inline void grid_location::set_point(int point)
 {
     _coord = point_to_coord(point, _shape);
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
 }
 
 inline bool grid_location::get_neighbor_coord(int_pair& neighbor_coord,
                                               grid_dir direction) const
 {
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
     return get_neighbor_coord(neighbor_coord, _coord, direction, _shape);
 }
 
 inline bool grid_location::get_neighbor_point(int& neighbor_point,
                                               grid_dir direction) const
 {
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
     return get_neighbor_point(neighbor_point, _coord, direction, _shape);
 }
 
 inline bool grid_location::move(grid_dir direction)
 {
-    assert(valid());
+    THROW_ASSERT_DEBUG(valid());
     return get_neighbor_coord(_coord, _coord, direction, _shape);
 }
 
 inline void grid_location::reset_position()
 {
     _coord = {0, 0};
+    THROW_ASSERT_DEBUG(valid());
 }
 
 inline bool grid_location::shape_is_empty(const int_pair& shape)
@@ -220,13 +228,13 @@ inline bool grid_location::point_in_shape(int point, const int_pair& shape)
 inline int grid_location::coord_to_point(const int_pair& coord,
                                          const int_pair& shape)
 {
-    assert(coord_in_shape(coord, shape));
+    THROW_ASSERT_DEBUG(coord_in_shape(coord, shape));
     return coord.first * shape.second + coord.second;
 }
 
 inline int_pair grid_location::point_to_coord(int point, const int_pair& shape)
 {
-    assert(point_in_shape(point, shape));
+    THROW_ASSERT_DEBUG(point_in_shape(point, shape));
     int r = point / shape.second;
     int c = point % shape.second;
     return {r, c};
