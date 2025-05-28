@@ -12,6 +12,16 @@
 // #include "impartial_wrapper_move.h"
 // using impartial_wrapper_move::encode_wrapped_move;
 
+game* impartial_game_wrapper::inverse() const
+{
+    return new impartial_game_wrapper(_game->inverse());
+}
+
+void impartial_game_wrapper::print(std::ostream& str) const
+{
+    str << "[impartial_game_wrapper of " << *_game << ']';
+}
+
 /*
     TODO: This greatly improves performance of games for which it's correct, but
     it's not always correct.
@@ -34,73 +44,73 @@
         !=
     impartial_wrapper(^^) + impartial_wrapper(*) == *0
 */
-// split_result impartial_game_wrapper::_split_impl() const
-//{
-//     split_result result = split_result(std::vector<game*>());
-//
-//     // Check if wrapper is solved
-//     if (is_solved())
-//     {
-//         assert(result->empty());
-//         result->push_back(new nimber(nim_value()));
-//         return result;
-//     }
-//
-//     // Check if wrapped game is solved
-//     if (_game->is_impartial())
-//     {
-//         impartial_game* game_imp = reinterpret_cast<impartial_game*>(_game);
-//         assert(dynamic_cast<impartial_game*>(_game) == game_imp);
-//
-//         if (game_imp->is_solved())
-//         {
-//             assert(result->empty());
-//             result->push_back(new nimber(game_imp->nim_value()));
-//             return result;
-//         }
-//     }
-//
-//     // Split wrapped game
-//     split_result wrapped_game_result = _game->split();
-//
-//     // No split happened
-//     if (!wrapped_game_result.has_value())
-//         return wrapped_game_result;
-//
-//     assert(result->empty());
-//     /*
-//         Check if games in the split are solved, and ensure they're all
-//         impartial... Don't leak memory!
-//
-//         TODO: are these only solved if they're already nimbers?
-//     */
-//     for (game* g : *wrapped_game_result)
-//     {
-//         // Must have impartial subgames
-//         if (!g->is_impartial())
-//             result->push_back(new impartial_game_wrapper(g, true));
-//         else
-//         {
-//             impartial_game* g_imp = reinterpret_cast<impartial_game*>(g);
-//             assert(dynamic_cast<impartial_game*>(g) == g_imp);
-//
-//             // subgame not a nimber, but already solved
-//             if (                                                     //
-//                 !(g_imp->game_type() == ::game_type<nimber>()) &&    //
-//                 (g_imp->is_solved())                                 //
-//                  )                                                   //
-//             {
-//                 result->push_back(new nimber(g_imp->nim_value()));
-//                 delete g_imp;
-//             } else
-//             {
-//                 result->push_back(g);
-//             }
-//         }
-//     }
-//
-//     return result;
-// }
+split_result impartial_game_wrapper::_split_impl() const
+{
+    split_result result = split_result(std::vector<game*>());
+
+    // Check if wrapper is solved
+    if (is_solved())
+    {
+        assert(result->empty());
+        result->push_back(new nimber(nim_value()));
+        return result;
+    }
+
+    // Check if wrapped game is solved
+    if (_game->is_impartial())
+    {
+        impartial_game* game_imp = reinterpret_cast<impartial_game*>(_game);
+        assert(dynamic_cast<impartial_game*>(_game) == game_imp);
+
+        if (game_imp->is_solved())
+        {
+            assert(result->empty());
+            result->push_back(new nimber(game_imp->nim_value()));
+            return result;
+        }
+    }
+
+    // Split wrapped game
+    split_result wrapped_game_result = _game->split();
+
+    // No split happened
+    if (!wrapped_game_result.has_value())
+        return wrapped_game_result;
+
+    assert(result->empty());
+    /*
+        Check if games in the split are solved, and ensure they're all
+        impartial... Don't leak memory!
+
+        TODO: are these only solved if they're already nimbers?
+    */
+    for (game* g : *wrapped_game_result)
+    {
+        // Must have impartial subgames
+        if (!g->is_impartial())
+            result->push_back(new impartial_game_wrapper(g, true));
+        else
+        {
+            impartial_game* g_imp = reinterpret_cast<impartial_game*>(g);
+            assert(dynamic_cast<impartial_game*>(g) == g_imp);
+
+            // subgame not a nimber, but already solved
+            if (                                                     //
+                !(g_imp->game_type() == ::game_type<nimber>()) &&    //
+                (g_imp->is_solved())                                 //
+                 )                                                   //
+            {
+                result->push_back(new nimber(g_imp->nim_value()));
+                delete g_imp;
+            } else
+            {
+                result->push_back(g);
+            }
+        }
+    }
+
+    return result;
+}
 
 void impartial_game_wrapper::_init_hash(local_hash& hash) const
 {
@@ -136,15 +146,6 @@ relation impartial_game_wrapper::_order_impl(const game* rhs) const
     return g1->order(g2);
 }
 
-game* impartial_game_wrapper::inverse() const
-{
-    return new impartial_game_wrapper(_game->inverse());
-}
-
-void impartial_game_wrapper::print(std::ostream& str) const
-{
-    str << "[impartial_game_wrapper of " << *_game << ']';
-}
 
 //---------------------------------------------------------------------------
 class ig_wrapper_move_generator : public move_generator

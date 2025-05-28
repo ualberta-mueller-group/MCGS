@@ -35,17 +35,18 @@ public:
     void play(const move& m, bw ignore_to_play) override;
     move_generator* create_move_generator(bw ignore_to_play) const override;
 
-    // split_result _split_impl() const override; // See note in .cpp file
-    void _init_hash(local_hash& hash) const override;
-
-    void _normalize_impl() override; // TODO these are maybe not always correct?
-    void _undo_normalize_impl() override;
-
-    relation _order_impl(const game* rhs) const override;
-
     game* wrapped_game() const { return _game; }
 
     game* inverse() const override; // caller takes ownership
+
+protected:
+    split_result _split_impl() const override; // See note in .cpp file
+    void _init_hash(local_hash& hash) const override;
+
+    void _normalize_impl() override;
+    void _undo_normalize_impl() override;
+
+    relation _order_impl(const game* rhs) const override;
 
 private:
     game* _game;
