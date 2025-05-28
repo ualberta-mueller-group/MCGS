@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <functional>
+#include <exception>
 
 inline void assert_move(move_generator& mg, int mv)
 {
@@ -95,3 +97,22 @@ const std::string UNIT_TEST_INPUT_DIR = "test/input/unit_tests/";
 
 void assert_solve_test_file(const std::string& file_name,
                             int expected_case_count);
+
+template <class T>
+bool did_throw(std::function<void()>& func)
+{
+    static_assert(std::is_base_of_v<std::exception, T>);
+
+    bool threw = false;
+    try
+    {
+        func();
+    }
+    catch (T& exc)
+    {
+        threw = true;
+    }
+
+    return threw;
+}
+

@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
-const bool RUN_OVERRIDE_TESTS = false;
+const bool RUN_OVERRIDE_TESTS = true;
 
 #include <cassert>
 #include <string>

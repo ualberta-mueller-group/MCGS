@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <optional>
 #include "random.h"
+#include "throw_assert.h"
 
 ////////////////////////////////////////////////// class ttable
 template <class Entry>
@@ -183,6 +184,8 @@ typename ttable<Entry>::search_result ttable<Entry>::search(hash_t hash)
 template <class Entry>
 void ttable<Entry>::store(hash_t hash, const Entry& entry)
 {
+    // avoid potentially resetting bools
+    THROW_ASSERT_DEBUG(_bools_per_entry == 0);
     ttable<Entry>::search_result tt_result = search(hash);
     tt_result.set_entry(entry);
 }
@@ -233,7 +236,7 @@ template <class Entry>
 bool ttable<Entry>::_get_bool(hash_t entry_idx, size_t bool_idx) const
 {
     assert(entry_idx < _n_entries);
-    assert(bool_idx < _bools_per_entry);
+    THROW_ASSERT_DEBUG(bool_idx < _bools_per_entry);
 
     size_t bools_arr_idx;
     size_t element_bit_no;
@@ -248,7 +251,7 @@ template <class Entry>
 void ttable<Entry>::_set_bool(hash_t entry_idx, size_t bool_idx, bool new_val)
 {
     assert(entry_idx < _n_entries);
-    assert(bool_idx < _bools_per_entry);
+    THROW_ASSERT_DEBUG(bool_idx < _bools_per_entry);
 
     size_t bools_arr_idx;
     size_t element_bit_no;
@@ -339,7 +342,7 @@ bool ttable<Entry>::search_result::entry_valid() const
 template <class Entry>
 Entry& ttable<Entry>::search_result::get_entry()
 {
-    assert(entry_valid());
+    THROW_ASSERT_DEBUG(entry_valid());
     assert(_entry_ptr != nullptr);
     return *_entry_ptr;
 }
@@ -347,7 +350,7 @@ Entry& ttable<Entry>::search_result::get_entry()
 template <class Entry>
 const Entry& ttable<Entry>::search_result::get_entry() const
 {
-    assert(entry_valid());
+    THROW_ASSERT_DEBUG(entry_valid());
     assert(_entry_ptr != nullptr);
     return *_entry_ptr;
 }
@@ -380,14 +383,14 @@ void ttable<Entry>::search_result::init_entry(const Entry& entry)
 template <class Entry>
 bool ttable<Entry>::search_result::get_bool(size_t bool_idx) const
 {
-    assert(entry_valid());
+    THROW_ASSERT_DEBUG(entry_valid());
     return _table._get_bool(_entry_idx, bool_idx);
 }
 
 template <class Entry>
 void ttable<Entry>::search_result::set_bool(size_t bool_idx, bool new_val)
 {
-    assert(entry_valid());
+    THROW_ASSERT_DEBUG(entry_valid());
     _table._set_bool(_entry_idx, bool_idx, new_val);
 }
 

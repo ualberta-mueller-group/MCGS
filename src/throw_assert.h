@@ -19,9 +19,21 @@
 // NOLINTEND(readability-identifier-naming)
 
 /*
-   THROW_ASSERT(condition);
-   THROW_ASSERT(condition, exception);
+    Throw in both release and debug builds:
+       THROW_ASSERT(condition);
+       THROW_ASSERT(condition, exception);
+
+    Throw only in debug builds:
+        THROW_ASSERT_DEBUG(condition);
+        THROW_ASSERT_DEBUG(condition, exception);
+
 */
 #define THROW_ASSERT(...)                                                      \
     _THROW_ASSERT_SELECTOR(__VA_ARGS__, _THROW_ASSERT_2,                       \
                            _THROW_ASSERT_1)(__VA_ARGS__)
+
+#ifndef NDEBUG
+#define THROW_ASSERT_DEBUG(...) THROW_ASSERT(__VA_ARGS__)
+#else
+#define THROW_ASSERT_DEBUG(...)
+#endif
