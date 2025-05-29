@@ -6,7 +6,7 @@
     CMPUT 655 project report, University of Alberta 2022
 */
 
-[impartial clobber]
+[impartial clobber_1xn]
 
 /* 0 pairs */
 {N 0}
@@ -42,4 +42,12 @@ XOXOXOXOXOXOXO
 /* 8 pairs */
 XOXOXOXOXOXOXOXO
 {N 3}
+
+/* 9 pairs */
+XOXOXOXOXOXOXOXOXO
+{N 1}
+
+/* 10 pairs */
+XOXOXOXOXOXOXOXOXOXO
+{N 4}
 

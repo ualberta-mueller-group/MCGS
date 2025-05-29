@@ -1,0 +1,27 @@
+{version 1.1}
+
+/*_
+    Results from: CGSuite
+*/
+
+[elephants]
+
+
+/* {-4* | -6*} --> R position (white wins) */
+X.......O.....XO.O.....X..OO.X.O.OOXO... {B loss, W win}
+
+/* {-27 | -29} --> R position (white wins) */
+X...XX.O...X.....OOOO..X...O.....O.O...O {B loss, W win}
+
+/* 3 --> L position (black wins) */
+X..X........O....X....O...O.......XO.X.. {B win, W loss}
+
+/* 0 --> P position (first loses) */
+.......X.....O..X.....O....... {B loss, W loss}
+
+/* 14 --> L position (black wins) */
+.OXO...O.O..O.X.X......X...X..OO..X....X {B win, W loss}
+
+/* -7 --> R position (white wins) */
+....OXO.....X......X.XOX..O...O...O.XXO. {B loss, W win}
+

@@ -15,6 +15,10 @@ OX|XO|OX|OX|OO|OO
 XXXXOO|XXOOXO
 	{B win, W loss}
 
+/* random filled 9x3 */
+XXX|OXO|OXO|OXX|OXO|XOX|OXX|XXX|XXX
+	{B win, W loss}
+
 /* random filled 2x8 */
 XXXOXXXO|XXOOOOXO
 	{B win, W win}
@@ -22,6 +26,14 @@ XXXOXXXO|XXOOOOXO
 /* random filled 4x4 */
 OXXX|XOXO|OXXX|OOOO
 	{B win, W win}
+
+/* random filled 7x4 */
+OOXX|XXOX|XOOX|OOOX|OOOO|OOOO|OXOO
+	{B loss, W win}
+
+/* random filled 8x3 */
+XXO|XXX|OXX|OXX|OOO|OXX|OOX|OXX
+	{B win, W loss}
 
 /* random filled 4x5 */
 XXXOO|XXOXO|OXXOO|OOXOO

@@ -196,7 +196,12 @@ function sortTable() {
 
         const initialRowOrderLength = initialRowOrder.length;
         for (let i = 0; i < initialRowOrderLength; i++)
+        {
+            const row = initialRowOrder[i];
+            if (row.hidden)
+                continue;
             table.appendChild(initialRowOrder[i]);
+        }
     }
 }
 

@@ -14,3 +14,7 @@ XO|OX
 XOX|OXO|XOX
     {N 1, B win, W win}
 
+/* 4x4 */
+XOXO|OXOX|XOXO|OXOX
+    {N 0, B loss, W loss}
+

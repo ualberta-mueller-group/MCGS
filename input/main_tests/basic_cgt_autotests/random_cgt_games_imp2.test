@@ -1,0 +1,118 @@
+{version 1.1}
+
+/*_
+    Results from: CGSuite
+*/
+
+/* Sum #0 */
+[impartial switch_game] (11/4, -41/2)
+[impartial nimber] 16
+[impartial switch_game] (43/16, -8/16)
+[impartial dyadic_rational] (-47/8)
+[impartial up_star] (-8)
+[impartial switch_game] (31/8, 14/2)
+[impartial switch_game] (-37/16, 1/2)
+[impartial up_star] (4)
+[impartial nimber] 11
+[impartial switch_game] (-7/16, -44/4)
+[impartial dyadic_rational] (18/32)
+[impartial dyadic_rational] (24/4)
+[impartial switch_game] (-44/2, 6/2)
+[impartial up_star] (-16)
+{N 27}
+
+/* Sum #1 */
+[impartial integer_game] 8
+[impartial up_star] (16)
+[impartial integer_game] -3
+[impartial integer_game] -3
+[impartial nimber] 14
+[impartial switch_game] (23/16, 13/32)
+[impartial dyadic_rational] (28/32)
+[impartial switch_game] (-34/8, 42/32)
+[impartial switch_game] (-16/2, -33/2)
+[impartial up_star] (11 *)
+[impartial nimber] 8
+[impartial dyadic_rational] (15/32)
+[impartial integer_game] -4
+[impartial dyadic_rational] (-17/16)
+{N 7}
+
+/* Sum #2 */
+[impartial up_star] (0)
+[impartial nimber] 0
+[impartial dyadic_rational] (28/8)
+[impartial nimber] 1
+[impartial integer_game] -8
+[impartial up_star] (10)
+[impartial integer_game] -10
+[impartial nimber] 9
+[impartial switch_game] (32/4, -22/32)
+[impartial integer_game] -10
+[impartial up_star] (-7)
+[impartial switch_game] (48/8, 26/2)
+[impartial switch_game] (8/2, 33/16)
+[impartial integer_game] -6
+{N 8}
+
+/* Sum #3 */
+[impartial integer_game] 8
+[impartial integer_game] 9
+[impartial up_star] (14)
+[impartial switch_game] (26/8, 19/1)
+[impartial integer_game] 3
+[impartial integer_game] 0
+[impartial switch_game] (-10/8, 39/16)
+[impartial up_star] (-4 *)
+[impartial integer_game] -10
+[impartial up_star] (-10)
+[impartial dyadic_rational] (-29/16)
+[impartial switch_game] (25/4, 47/2)
+[impartial nimber] 4
+[impartial switch_game] (26/32, -46/32)
+{N 7}
+
+/* Sum #4 */
+[impartial dyadic_rational] (36/32)
+[impartial switch_game] (42/32, 17/16)
+[impartial nimber] 10
+[impartial dyadic_rational] (22/2)
+[impartial switch_game] (-17/8, 43/4)
+[impartial switch_game] (12/16, 31/32)
+[impartial nimber] 0
+[impartial integer_game] 9
+[impartial up_star] (-11 *)
+[impartial dyadic_rational] (27/16)
+[impartial switch_game] (-38/2, 17/4)
+[impartial nimber] 3
+[impartial nimber] 6
+[impartial switch_game] (27/32, 14/16)
+{N 13}
+
+/* Sum #5 */
+[impartial switch_game] (-42/1, -38/4)
+[impartial switch_game] (-19/2, -12/1)
+[impartial up_star] (-20)
+[impartial switch_game] (8/2, -6/1)
+[impartial integer_game] 9
+[impartial nimber] 0
+[impartial switch_game] (-9/8, 22/32)
+[impartial dyadic_rational] (-38/2)
+[impartial integer_game] -4
+[impartial integer_game] 9
+[impartial up_star] (8 *)
+[impartial up_star] (-20 *)
+[impartial switch_game] (-12/16, -23/8)
+[impartial nimber] 1
+{N 1}
+
+
+/*_ CGSUITE INPUT
+[{nc(11/4) | nc(-41/2)}, nc(*16), {nc(43/16) | nc(-8/16)}, nc(-47/8), nc(^(-8)), {nc(31/8) | nc(14/2)}, {nc(-37/16) | nc(1/2)}, nc(^(4)), nc(*11), {nc(-7/16) | nc(-44/4)}, nc(18/32), nc(24/4), {nc(-44/2) | nc(6/2)}, nc(^(-16))],
+[nc(8), nc(^(16)), nc(-3), nc(-3), nc(*14), {nc(23/16) | nc(13/32)}, nc(28/32), {nc(-34/8) | nc(42/32)}, {nc(-16/2) | nc(-33/2)}, nc(^(11) + *), nc(*8), nc(15/32), nc(-4), nc(-17/16)],
+[nc(^(0)), nc(*0), nc(28/8), nc(*1), nc(-8), nc(^(10)), nc(-10), nc(*9), {nc(32/4) | nc(-22/32)}, nc(-10), nc(^(-7)), {nc(48/8) | nc(26/2)}, {nc(8/2) | nc(33/16)}, nc(-6)],
+[nc(8), nc(9), nc(^(14)), {nc(26/8) | nc(19/1)}, nc(3), nc(0), {nc(-10/8) | nc(39/16)}, nc(^(-4) + *), nc(-10), nc(^(-10)), nc(-29/16), {nc(25/4) | nc(47/2)}, nc(*4), {nc(26/32) | nc(-46/32)}],
+[nc(36/32), {nc(42/32) | nc(17/16)}, nc(*10), nc(22/2), {nc(-17/8) | nc(43/4)}, {nc(12/16) | nc(31/32)}, nc(*0), nc(9), nc(^(-11) + *), nc(27/16), {nc(-38/2) | nc(17/4)}, nc(*3), nc(*6), {nc(27/32) | nc(14/16)}],
+[{nc(-42/1) | nc(-38/4)}, {nc(-19/2) | nc(-12/1)}, nc(^(-20)), {nc(8/2) | nc(-6/1)}, nc(9), nc(*0), {nc(-9/8) | nc(22/32)}, nc(-38/2), nc(-4), nc(9), nc(^(8) + *), nc(^(-20) + *), {nc(-12/16) | nc(-23/8)}, nc(*1)],
+
+*/

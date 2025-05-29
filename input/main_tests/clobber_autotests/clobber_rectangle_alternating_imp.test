@@ -4,61 +4,52 @@
     Results from: MCGS and CGSuite
 */
 
-[clobber]
+[impartial clobber]
 
 /* 2x3 CGSuite */
 XOX|OXO
-	 {B loss, W loss}
+    {N 0}
 
 /* 2x4 CGSuite */
 XOXO|OXOX
-	 {B win, W win}
+    {N 0}
 
 /* 2x5 CGSuite */
 XOXOX|OXOXO
-	 {B win, W win}
+    {N 0}
 
 /* 2x6 CGSuite */
 XOXOXO|OXOXOX
-	 {B loss, W loss}
+    {N 0}
 
 /* 3x2 CGSuite */
 XO|OX|XO
-	 {B loss, W loss}
+    {N 0}
 
 /* 3x4 CGSuite */
 XOXO|OXOX|XOXO
-	 {B loss, W loss}
+    {N 0}
 
 /* 3x5 CGSuite */
 XOXOX|OXOXO|XOXOX
-	 {B win, W win}
-
-/* 3x6 MCGS */
-XOXOXO|OXOXOX|XOXOXO
-	 {B loss, W loss}
+    {N 1}
 
 /* 4x2 CGSuite */
 XO|OX|XO|OX
-	 {B win, W win}
+    {N 0}
 
 /* 4x3 CGSuite */
 XOX|OXO|XOX|OXO
-	 {B loss, W loss}
+    {N 0}
 
 /* 5x2 CGSuite */
 XO|OX|XO|OX|XO
-	 {B win, W win}
+    {N 0}
 
 /* 5x3 CGSuite */
 XOX|OXO|XOX|OXO|XOX
-	 {B win, W win}
+    {N 1}
 
 /* 6x2 CGSuite */
 XO|OX|XO|OX|XO|OX
-	 {B loss, W loss}
-
-/* 6x3 MCGS */
-XOX|OXO|XOX|OXO|XOX|OXO
-	 {B loss, W loss}
-
+    {N 0}

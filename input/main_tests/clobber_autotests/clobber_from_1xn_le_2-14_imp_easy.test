@@ -2,13 +2,16 @@
 
 /*_
     Results from: CGSuite
+
+    All cases 0-5s
 */
 
-[impartial clobber_1xn]
+[impartial clobber]
 
 XOXOXOXOXO {N 0, B loss, W loss}
 OXXXXXOX.OXO.XXXXOXOOOOXXXXX {N 3, B win, W win}
 XOXXXOOXO.OOXXOO.XOO.XO {N 3, B win, W win}
+XXOOOO.XXXXOXXO.XO.OX.OXXX.XXOOOOO.XO {N 0, B loss, W loss}
 OOX.OOX.OOXXXOO.XOOXOO.XOXXX {N 1, B win, W win}
 XOOOO.XXXO.XOXO.OXX.XOXX.XXO {N 2, B win, W win}
 OXXOXOXO.OXXXX.OXX.OX {N 0, B loss, W loss}
@@ -23,11 +26,11 @@ OXX.OX.OXOO.OX.XO.OOXOXXXXOOO.XO {N 1, B win, W win}
 XXOOX.XOO.XXO.XOOX.XXO.XOXOXXXX {N 2, B win, W win}
 OX.XOXOOX.OXX.XXOXOXXOO {N 6, B win, W win}
 XOOOXOXOOOOXXOXXOOXX.OX {N 2, B win, W win}
+XO.OOXXXOO.XXO.XOXXX.OX.XO.XOXOOO {N 6, B win, W win}
 XXOXXOXXOXXOXXOXXO {N 0, B loss, W loss}
 OXOXOXOXOXOX {N 2, B win, W win}
 XOXOXOX.OXOXOXO {N 0, B loss, W loss}
 XOXOXOXOXOXOX {N 2, B win, W win}
-OXXXOXX.OX.XO.XXXXOXOOOX.OXXOX {N 2, B win, W win}
 XOXOXOXOXOXOXO {N 0, B loss, W loss}
 OX.XOOO.OXOXOOXO.XOXOX.XO {N 4, B win, W win}
 XXOXXOXXOXXOXXOXXOXXO {N 8, B win, W win}
@@ -82,4 +85,3 @@ XXO.XOOOO.OXOOOOX.OOX.OX.XO {N 2, B win, W win}
 XXOOOOXXXXOXOOXXO.XOO {N 3, B win, W win}
 OXXXXX.XOXXOXXXXX.OXOO.XO {N 0, B loss, W loss}
 OX.XO.OOOOOOOXX.XXXOXOOXXXX.XO {N 7, B win, W win}
-
