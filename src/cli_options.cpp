@@ -118,11 +118,6 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
 
-    print_flag(global::debug_file.flag(),
-               "Set debug output filename. Empty "
-               "string disables debug output. Default: \"" +
-                   global::debug_file.get_default_str() + "\".");
-
     print_flag("--dry-run",
                "Skip running games. Has no effect when using \"--run-tests\". "
                "Instead, set the test timeout low (i.e. 1).");
@@ -225,19 +220,6 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             }
             opts.should_exit = true;
             break;
-        }
-
-        if (arg == global::debug_file.flag())
-        {
-            if (!(arg_idx + 1 < arg_n))
-                throw cli_options_exception("Error: got " +
-                                            global::debug_file.flag() +
-                                            " but no value");
-
-            global::debug_file.set(arg_next);
-            arg_idx++;
-
-            continue;
         }
 
         if (arg == "--dry-run")

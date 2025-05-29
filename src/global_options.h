@@ -162,6 +162,4 @@ extern global_option<size_t> tt_imp_sumgame_idx_bits;
 
 extern global_option<bool> silence_warnings;
 
-extern global_option<std::string> debug_file;
-
 } // namespace global

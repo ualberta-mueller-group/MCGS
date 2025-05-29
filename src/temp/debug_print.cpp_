@@ -1,3 +1,5 @@
+static_assert(false);
+
 #include "debug_print.h"
 #include <cassert>
 #include <cstdlib>

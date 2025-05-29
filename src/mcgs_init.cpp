@@ -4,7 +4,6 @@
 #include <cassert>
 #include "cli_options.h"
 
-#include "debug_print.h"
 #include "init_hashing.h"
 #include "init_sumgame.h"
 #include "init_impartial_sumgame.h"
@@ -20,7 +19,6 @@ void mcgs_init_all(const cli_options& opts)
     already_initialized = true;
 
     mcgs_init::init_random();
-    mcgs_init::init_debug_print(global::debug_file());
     mcgs_init::init_hashing();
     mcgs_init::init_sumgame(global::tt_sumgame_idx_bits());
     mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits());
