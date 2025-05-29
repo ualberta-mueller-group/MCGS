@@ -47,7 +47,6 @@ public:
     inline static bool did_resize_warning();
     static void print_resize_warning();
 
-
 private:
     void _init(uint64_t seed, size_t n_positions);
     void _resize_to(size_t new_n_positions);

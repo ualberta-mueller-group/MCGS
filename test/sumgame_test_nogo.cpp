@@ -8,21 +8,20 @@ void sumgame_test_nogo_all()
     assert_inverse_sum_zero(new nogo("..|.."));
 
     assert_sum_outcomes(true, false,
-    {
-        new nogo("X.|.X"),
-        new nogo("..|.."),
-    });
+                        {
+                            new nogo("X.|.X"),
+                            new nogo("..|.."),
+                        });
 
     assert_sum_outcomes(false, true,
-    {
-        new nogo("O.|.O"),
-        new nogo("..|.."),
-    });
-
+                        {
+                            new nogo("O.|.O"),
+                            new nogo("..|.."),
+                        });
 
     assert_sum_outcomes(false, false,
-    {
-        new nogo(".|."),
-        new nogo("..|.."),
-    });
+                        {
+                            new nogo(".|."),
+                            new nogo("..|.."),
+                        });
 }

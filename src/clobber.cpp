@@ -135,7 +135,6 @@ split_result clobber::_split_impl() const
     std::vector<std::vector<int>> component_vec;
     std::vector<int> component;
 
-
     auto reset_vars = [&]() -> void
     {
         assert(open_stack.empty());
@@ -144,14 +143,16 @@ split_result clobber::_split_impl() const
         if (component.empty())
         {
             component.resize(grid_size, EMPTY);
-        } else
+        }
+        else
         {
             for (int& val : component)
                 val = EMPTY;
         }
     };
 
-    for (grid_location start(grid_shape); start.valid(); start.increment_position())
+    for (grid_location start(grid_shape); start.valid();
+         start.increment_position())
     {
 
         int start_point = start.get_point();

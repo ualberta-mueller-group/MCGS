@@ -1,4 +1,4 @@
-#include  "clobber_test.h"
+#include "clobber_test.h"
 #include "cgt_move.h"
 #include "clobber.h"
 
@@ -9,25 +9,24 @@
 #include <tuple>
 #include "grid_test_utilities.h"
 
-using std::cout, std::endl, std::vector, std::string, std::tuple;
 using cgt_move::two_part_move;
+using std::cout, std::endl, std::vector, std::string, std::tuple;
 
 namespace {
 
 // check black/white outcomes: empty
 void test_outcomes1()
 {
-    vector<string> boards =
-    {
-        "", // 0x0
-        ".", // 1x1
-        "..", // 1x2
-        "...", // 1x3
-        ".|.", // 2x1
-        "..|..", // 2x2
-        "...|...", // 2x3
-        ".|.|.", // 3x1
-        "..|..|..", // 3x2
+    vector<string> boards = {
+        "",            // 0x0
+        ".",           // 1x1
+        "..",          // 1x2
+        "...",         // 1x3
+        ".|.",         // 2x1
+        "..|..",       // 2x2
+        "...|...",     // 2x3
+        ".|.|.",       // 3x1
+        "..|..|..",    // 3x2
         "...|...|...", // 3x3
     };
 
@@ -40,18 +39,19 @@ void test_outcomes1()
         assert_solve(c, WHITE, false);
         assert_num_moves(c, WHITE, 0);
     }
-
 }
 
 // check black/white outcomes: zero
 void test_outcomes2()
 {
+    // clang-format off
     vector<string> boards =
     {
         "XXO|...|OOX",
         "XO|XO",
         "XOXO|....|XO..|..XO|....|XOXO",
     };
+    // clang-format on
 
     for (const string& b : boards)
     {
@@ -67,12 +67,14 @@ void test_outcomes3()
 {
     typedef tuple<string, bool, bool> test_case_t;
 
+    // clang-format off
     vector<test_case_t> test_cases =
     {
         {"XO..|....|XXXO", true, false},
         {"XO..|....|OOOX|....", false, true},
         {"X|O|.|X", true, true},
     };
+    // clang-format on
 
     for (const test_case_t& test_case : test_cases)
     {
@@ -165,6 +167,7 @@ void test_from_file()
 
 void test_inverse()
 {
+    // clang-format off
     vector<string> boards =
     {
         ".XOO|X.OX|...O|OXOO|X..X|OOO.|O..X|....",
@@ -188,8 +191,9 @@ void test_inverse()
         "X.XX|OOXO|XO..|OOXX|..X.|O.XX|X..O|....",
         "..OX|OOO.|O...|OOX.|.O..|XX.O|..XX|.OOO",
     };
+    // clang-format on
 
-    for (const string& board : boards )
+    for (const string& board : boards)
         assert_grid_game_inverse<clobber>(board);
 }
 } // namespace

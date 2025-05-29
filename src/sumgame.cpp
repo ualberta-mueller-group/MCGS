@@ -160,7 +160,6 @@ bool is_simple_cgt(game* g)
 
 } // namespace
 
-
 //---------------------------------------------------------------------------
 
 sumgame::~sumgame()
@@ -333,7 +332,9 @@ optional<solve_result> sumgame::_solve_with_timeout()
     simplify_basic();
 
     // TODO this is quite ugly...
-    std::optional<ttable_sumgame::search_result> tt_result = _do_ttable_lookup();
+    std::optional<ttable_sumgame::search_result> tt_result =
+        _do_ttable_lookup();
+
     if (tt_result)
     {
         if (tt_result->entry_valid())
@@ -696,12 +697,12 @@ std::ostream& operator<<(std::ostream& out, const sumgame& s)
 #ifdef ASSERT_RESTORE_DEBUG
 assert_restore_sumgame::assert_restore_sumgame(const sumgame& sgame)
     : assert_restore_alternating_game(sgame),
-    _sgame(sgame),
-    _global_hash(sgame.get_global_hash()),
-    _total_subgames(sgame.num_total_games()),
-    _undo_code_stack_size(sgame._undo_code_stack.size()),
-    _play_record_stack_size(sgame._play_record_stack.size()),
-    _change_record_stack_size(sgame._change_record_stack.size())
+      _sgame(sgame),
+      _global_hash(sgame.get_global_hash()),
+      _total_subgames(sgame.num_total_games()),
+      _undo_code_stack_size(sgame._undo_code_stack.size()),
+      _play_record_stack_size(sgame._play_record_stack.size()),
+      _change_record_stack_size(sgame._change_record_stack.size())
 {
 }
 
@@ -715,4 +716,3 @@ assert_restore_sumgame::~assert_restore_sumgame()
 }
 
 #endif
-

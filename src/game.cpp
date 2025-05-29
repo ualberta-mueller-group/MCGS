@@ -201,9 +201,9 @@ void game::_pre_hash_update()
 #ifdef ASSERT_RESTORE_DEBUG
 assert_restore_game::assert_restore_game(const game& g)
     : _game(g),
-    _local_hash(g.get_local_hash()),
-    _move_stack_size(g.num_moves_played()),
-    _undo_stack_size(g.undo_stack_size())
+      _local_hash(g.get_local_hash()),
+      _move_stack_size(g.num_moves_played()),
+      _undo_stack_size(g.undo_stack_size())
 {
 }
 

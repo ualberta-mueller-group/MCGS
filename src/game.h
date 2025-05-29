@@ -259,6 +259,7 @@ class assert_restore_game
 {
 public:
     assert_restore_game(const game& g) {}
+
     virtual ~assert_restore_game() {}
 };
 

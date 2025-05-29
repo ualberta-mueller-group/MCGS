@@ -104,12 +104,10 @@ public:
     static bool get_neighbor_point(int& neighbor_point, const int_pair& coord,
                                    grid_dir direction, const int_pair& shape);
 
-
 private:
     int_pair _shape;
     int_pair _coord;
 };
-
 
 ////////////////////////////////////////////////////////////
 inline grid_location::grid_location(const int_pair& shape)

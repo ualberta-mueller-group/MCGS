@@ -6,60 +6,60 @@ namespace {
 void clobber_1xn_split1()
 {
     test_strip_split<clobber_1xn>(".XO.X.X...X.......O..O.XOXOX....O.O..OOX",
-                            {
-                                "XO",
-                                "XOXOX",
-                                "OOX",
-                            });
+                                  {
+                                      "XO",
+                                      "XOXOX",
+                                      "OOX",
+                                  });
 }
 
 void clobber_1xn_split2()
 {
 
     test_strip_split<clobber_1xn>(".XOO.O.OOO...O..OX.XXX.O......X.X.....X.",
-                            {
-                                "XOO",
-                                "OX",
-                            });
+                                  {
+                                      "XOO",
+                                      "OX",
+                                  });
 }
 
 void clobber_1xn_split3()
 {
     test_strip_split<clobber_1xn>("...OXOX.XOO.OO.XOX....O.X.........XXO...",
-                            {
-                                "OXOX",
-                                "XOO",
-                                "XOX",
-                                "XXO",
-                            });
+                                  {
+                                      "OXOX",
+                                      "XOO",
+                                      "XOX",
+                                      "XXO",
+                                  });
 }
 
 void clobber_1xn_split4()
 {
     test_strip_split<clobber_1xn>("X..OO.OO.X.XOOO.X....X.X....O....OX.X...",
-                            {
-                                "XOOO",
-                                "OX",
-                            });
+                                  {
+                                      "XOOO",
+                                      "OX",
+                                  });
 }
 
 void clobber_1xn_split5()
 {
     test_strip_split<clobber_1xn>("X.XO...X..O..O..O.OO......XXO.X..XO.O.X.",
-                            {
-                                "XO",
-                                "XXO",
-                                "XO",
-                            });
+                                  {
+                                      "XO",
+                                      "XXO",
+                                      "XO",
+                                  });
 }
 
 void clobber_1xn_split6()
 {
     test_strip_split<clobber_1xn>("..O....X..O.O.X..XXO..X...OXO.X..X.OO.O.",
-                            {
-                                "XXO",
-                                "OXO",
-                            });
+                                  {
+                                      "XXO",
+                                      "OXO",
+                                  });
 }
 
 void clobber_1xn_split7()

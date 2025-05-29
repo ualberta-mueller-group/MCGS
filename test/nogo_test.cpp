@@ -98,8 +98,8 @@ void test_moves()
         const vector<string>& black_options = get<1>(test_case);
         const vector<string>& white_options = get<2>(test_case);
 
-        assert_grid_game_move_sequence<nogo>(board,
-                                             black_options, white_options);
+        assert_grid_game_move_sequence<nogo>(board, black_options,
+                                             white_options);
     }
 }
 
@@ -110,6 +110,7 @@ void test_from_file()
 
 void test_inverse()
 {
+    // clang-format off
     vector<string> boards =
     {
         "X.O.|.O..|....|....",
@@ -142,6 +143,7 @@ void test_inverse()
         ".O...|XX...|.X..O|O..O.|X....",
         "X..O.|...X.|X....|X.OO.|O....",
     };
+    // clang-format on
 
     for (const string& board : boards)
         assert_grid_game_inverse<nogo>(board);
@@ -149,6 +151,7 @@ void test_inverse()
 
 void test_exceptions()
 {
+    // clang-format off
     vector<string> boards =
     {
         ".........X....XOX.XOO.X.X.O...",
@@ -187,6 +190,7 @@ void test_exceptions()
         "OX.X..|OXOX..|XXXOOX|.OO.O.|..X...|O..XO.",
         "OX.|X..",
     };
+    // clang-format on
 
     for (const string& board : boards)
     {
@@ -203,7 +207,6 @@ void test_exceptions()
 
         assert(did_throw);
     }
-
 }
 
 } // namespace

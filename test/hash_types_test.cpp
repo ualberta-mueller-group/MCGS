@@ -35,8 +35,8 @@ void test_global_tables()
         if (N > 1024)
         {
             cerr << "WARNING: random table size greater than 1024. "
-                "Reconsider test in " << __FILE__ << ": " << __LINE__
-                << endl;
+                    "Reconsider test in "
+                 << __FILE__ << ": " << __LINE__ << endl;
         }
 
         for (int color = 0; color < 256; color++)
@@ -259,7 +259,6 @@ void test_add_remove()
     gh.add_subgame(1, &c1);
     const hash_t v4 = gh.get_value();
 
-
     unordered_set<hash_t> hashes {v0, v1, v2, v3, v4};
     assert(hashes.size() == 5);
 
@@ -352,6 +351,7 @@ void test_to_play()
 }
 
 } // namespace global_hash_test
+
 namespace ttable_test {
 
 struct test_entry
@@ -428,16 +428,16 @@ void test_exceptions()
     assert(!sr.entry_valid());
 
     // These should throw
-    ASSERT_DID_THROW(
+    ASSERT_DID_THROW({
         test_entry& ent = sr.get_entry();
         (void) ent; // avoid unused variable warning
-    );
+    });
 
-    ASSERT_DID_THROW(
+    ASSERT_DID_THROW({
         const tt_test::search_result& sr_const = sr;
         const test_entry& ent = sr_const.get_entry();
         (void) ent; // avoid unused variable warning
-    );
+    });
 
     ASSERT_DID_THROW(sr.get_bool(0));
     ASSERT_DID_THROW(sr.set_bool(0, true));
@@ -465,19 +465,18 @@ void test_exceptions()
 
     ASSERT_DID_THROW(sr.set_bool(1, true));
 
-
-    ASSERT_DID_THROW(
+    ASSERT_DID_THROW({
         tt_test tt_zero(4, 0);
         tt_test::search_result sr = tt_zero.search(0);
         assert(!sr.entry_valid());
         sr.init_entry();
         sr.set_bool(0, true);
-    );
+    });
 
-    ASSERT_DID_THROW(
+    ASSERT_DID_THROW({
         tt_test tt_zero(4, 1);
         tt_zero.store(0, {}); // can't use store() if there are bools
-    );
+    });
 }
 
 void test_search_result()
@@ -502,13 +501,13 @@ void test_search_result()
     entry.val1++;
     sr.set_entry(entry);
     assert(sr.get_entry() == entry); // should be updated
-    assert(sr.get_bool(0) == true); // bool should be preserved
+    assert(sr.get_bool(0) == true);  // bool should be preserved
 
     // Empty init_entry()
     sr.init_entry();
     assert(sr.entry_valid());
     assert(sr.get_entry() == test_entry()); // should be default constructed
-    assert(sr.get_bool(0) == false); // bool should be reset
+    assert(sr.get_bool(0) == false);        // bool should be reset
     sr.set_bool(0, true);
     assert(sr.get_bool(0) == true);
 
@@ -603,16 +602,16 @@ void test_colliding_search_results()
     assert(sr2.get_bool(0) == true);
 
     // Check illegal operations through sr1
-    ASSERT_DID_THROW(
+    ASSERT_DID_THROW({
         test_entry& ent = sr1.get_entry();
         (void) ent; // avoid unused variable warning
-    );
+    });
 
-    ASSERT_DID_THROW(
+    ASSERT_DID_THROW({
         const tt_test::search_result& sr_const = sr1;
         const test_entry& ent = sr_const.get_entry();
         (void) ent; // avoid unused variable warning
-    );
+    });
 
     ASSERT_DID_THROW(sr1.get_bool(0));
     ASSERT_DID_THROW(sr1.set_bool(0, true));

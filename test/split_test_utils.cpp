@@ -66,7 +66,6 @@ void assert_grid_split_result(const grid* g, vector<string> expected)
     }
 }
 
-
 void assert_no_split(const game* g)
 {
     assert(!g->split().has_value());

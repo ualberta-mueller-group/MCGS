@@ -245,18 +245,17 @@ void test_alternating_mask()
     assert(alternating_mask<uint16_t>() == 0b0101010101010101);
 
     assert(alternating_mask<int64_t>() ==
-        0b0101010101010101010101010101010101010101010101010101010101010101);
+           0b0101010101010101010101010101010101010101010101010101010101010101);
 
     assert(alternating_mask<uint64_t>() ==
-        0b0101010101010101010101010101010101010101010101010101010101010101);
+           0b0101010101010101010101010101010101010101010101010101010101010101);
 }
 
 void test_rotate_functions()
 {
     typedef tuple<int, uint32_t, uint32_t, uint32_t, uint32_t> test_case_t;
 
-    vector<test_case_t> test_cases =
-    {
+    vector<test_case_t> test_cases = {
         {
             404,
             0b10111000010110101111000010001000,
@@ -370,8 +369,10 @@ void test_rotate_functions()
         assert(rotate_interleaved(input, distance) == exp_interleaved);
 
         assert(rotate_left((int32_t&) input, distance) == (int32_t&) exp_left);
-        assert(rotate_right((int32_t&) input, distance) == (int32_t&) exp_right);
-        assert(rotate_interleaved((int32_t&) input, distance) == (int32_t&) exp_interleaved);
+        assert(rotate_right((int32_t&) input, distance) ==
+               (int32_t&) exp_right);
+        assert(rotate_interleaved((int32_t&) input, distance) ==
+               (int32_t&) exp_interleaved);
     }
 }
 
@@ -379,6 +380,7 @@ void test_new_vector_capacity()
 {
     typedef tuple<size_t, size_t, size_t> test_case_t;
 
+    // clang-format off
     vector<test_case_t> test_cases =
     {
         {0, 0, 1},
@@ -400,6 +402,7 @@ void test_new_vector_capacity()
         {6, 8, 8},
         {21, 64, 64},
     };
+    // clang-format on
 
     for (const test_case_t& test_case : test_cases)
     {

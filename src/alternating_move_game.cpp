@@ -42,10 +42,10 @@ bool alternating_move_game::_solve()
 assert_restore_alternating_game::assert_restore_alternating_game(
     const alternating_move_game& game)
     : _game(game),
-    _arg(!game.has_game_pos()
-        ? nullptr : new assert_restore_game(game.game_pos())),
-    _to_play(game.to_play()),
-    _game_hash(game.game_hash())
+      _arg(!game.has_game_pos() ? nullptr
+                                : new assert_restore_game(game.game_pos())),
+      _to_play(game.to_play()),
+      _game_hash(game.game_hash())
 {
 }
 

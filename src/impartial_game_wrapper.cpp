@@ -96,14 +96,15 @@ split_result impartial_game_wrapper::_split_impl() const
             assert(dynamic_cast<impartial_game*>(g) == g_imp);
 
             // subgame not a nimber, but already solved
-            if (                                                     //
-                !(g_imp->game_type() == ::game_type<nimber>()) &&    //
-                (g_imp->is_solved())                                 //
-                 )                                                   //
+            if (                                                  //
+                !(g_imp->game_type() == ::game_type<nimber>()) && //
+                (g_imp->is_solved())                              //
+                )                                                 //
             {
                 result->push_back(new nimber(g_imp->nim_value()));
                 delete g_imp;
-            } else
+            }
+            else
             {
                 result->push_back(g);
             }
@@ -146,7 +147,6 @@ relation impartial_game_wrapper::_order_impl(const game* rhs) const
     // wrapped games
     return g1->order(g2);
 }
-
 
 //---------------------------------------------------------------------------
 class ig_wrapper_move_generator : public move_generator

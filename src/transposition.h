@@ -33,7 +33,7 @@ public:
     private:
         search_result() = delete;
         search_result(ttable<Entry>& table, hash_t idx, hash_t tag,
-                 Entry* entry_ptr);
+                      Entry* entry_ptr);
 
         ttable<Entry>& _table;
         const hash_t _entry_idx;
@@ -332,7 +332,7 @@ void ttable<Entry>::_init_entry(hash_t index, hash_t tag, const Entry& entry)
 }
 
 ////////////////////////////////////////////////// ttable<Entry>::search_result
-///implementation
+/// implementation
 template <class Entry>
 bool ttable<Entry>::search_result::entry_valid() const
 {
@@ -395,8 +395,8 @@ void ttable<Entry>::search_result::set_bool(size_t bool_idx, bool new_val)
 }
 
 template <class Entry>
-ttable<Entry>::search_result::search_result(ttable<Entry>& table, hash_t idx, hash_t tag,
-                                  Entry* entry_ptr)
+ttable<Entry>::search_result::search_result(ttable<Entry>& table, hash_t idx,
+                                            hash_t tag, Entry* entry_ptr)
     : _table(table), _entry_idx(idx), _entry_tag(tag), _entry_ptr(entry_ptr)
 {
 }

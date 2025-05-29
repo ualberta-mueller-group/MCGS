@@ -1,4 +1,5 @@
 #pragma once
+
 /*
     Initialize global random generator based on random_seed variable in
     globals.h. If seed is 0, seeds with time since epoch, and overwrites the

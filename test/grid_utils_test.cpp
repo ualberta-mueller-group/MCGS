@@ -42,7 +42,7 @@ void test_get_set()
 
     assert(gl3.get_shape() == int_pair(4, 5)); // shape changed
     assert(gl3.get_coord() == int_pair(1, 1)); // coord shouldn't change
-    assert(gl3.get_point() == 6); // point should change
+    assert(gl3.get_point() == 6);              // point should change
 
     // Change point
     gl3.set_point(9);
@@ -117,7 +117,7 @@ void test_mutators()
 
     // Test moves
     auto test_move = [](const grid_dir* dir_arr, size_t dir_arr_size,
-        const vector<int_pair>& expected_coords) -> void
+                        const vector<int_pair>& expected_coords) -> void
     {
         grid_location gl(int_pair(5, 5));
 
@@ -133,9 +133,8 @@ void test_mutators()
             assert(gl.get_neighbor_coord(coord, dir));
             assert(coord == expected);
             int_pair coord_static;
-            assert(grid_location::get_neighbor_coord(coord_static,
-                                                     gl.get_coord(),
-                                                     dir, gl.get_shape()));
+            assert(grid_location::get_neighbor_coord(
+                coord_static, gl.get_coord(), dir, gl.get_shape()));
             assert(coord_static == expected);
 
             // grid::move() method
@@ -150,36 +149,37 @@ void test_mutators()
             assert(gl.get_neighbor_point(point, dir));
             assert(point == expected_point);
             int point_static;
-            assert(grid_location::get_neighbor_point(point_static,
-                                                     gl.get_coord(),
-                                                     dir, gl.get_shape()));
+            assert(grid_location::get_neighbor_point(
+                point_static, gl.get_coord(), dir, gl.get_shape()));
             assert(point_static == expected_point);
         }
     };
 
-    vector<int_pair> expected_cardinal =
-    {
-        {1, 2}, {2, 3}, {3, 2}, {2, 1},
+    vector<int_pair> expected_cardinal = {
+        {1, 2},
+        {2, 3},
+        {3, 2},
+        {2, 1},
     };
 
-    vector<int_pair> expected_diagonal =
-    {
-        {1, 3}, {3, 3}, {3, 1}, {1, 1},
+    vector<int_pair> expected_diagonal = {
+        {1, 3},
+        {3, 3},
+        {3, 1},
+        {1, 1},
     };
 
-    vector<int_pair> expected_all =
-    {
+    vector<int_pair> expected_all = {
         {1, 2}, {1, 3}, {2, 3}, {3, 3}, {3, 2}, {3, 1}, {2, 1}, {1, 1},
     };
 
     test_move(GRID_DIRS_CARDINAL.data(), GRID_DIRS_CARDINAL.size(),
-        expected_cardinal);
+              expected_cardinal);
 
     test_move(GRID_DIRS_DIAGONAL.data(), GRID_DIRS_DIAGONAL.size(),
-        expected_diagonal);
+              expected_diagonal);
 
-    test_move(GRID_DIRS_ALL.data(), GRID_DIRS_ALL.size(),
-        expected_all);
+    test_move(GRID_DIRS_ALL.data(), GRID_DIRS_ALL.size(), expected_all);
 
     // Invalid moves
     for (grid_dir dir : GRID_DIRS_ALL)
@@ -195,10 +195,10 @@ void test_mutators()
         assert(!gl.get_neighbor_point(point, dir));
 
         assert(!grid_location::get_neighbor_coord(coord, gl.get_coord(), dir,
-               gl.get_shape()));
+                                                  gl.get_shape()));
 
         assert(!grid_location::get_neighbor_point(point, gl.get_coord(), dir,
-               gl.get_shape()));
+                                                  gl.get_shape()));
     }
 }
 
@@ -222,10 +222,10 @@ void test_exceptions()
         ASSERT_DID_THROW(gl.set_coord({-1, -1}));
         ASSERT_DID_THROW(gl.set_point(-1));
 
-        ASSERT_DID_THROW(
+        ASSERT_DID_THROW({
             int_pair coord;
             gl.get_neighbor_coord(coord, GRID_DIR_LEFT);
-        );
+        });
 
         ASSERT_DID_THROW(gl.move(GRID_DIR_UP));
         ASSERT_DID_THROW(gl.increment_position());
@@ -288,30 +288,30 @@ void test_exceptions()
         const int_pair invalid_coord(2, 3);
 
         // get neighbor coord
-        ASSERT_DID_THROW(
+        ASSERT_DID_THROW({
             int_pair coord;
             grid_location::get_neighbor_coord(coord, zero_coord, dir,
                                               empty_shape);
-        );
+        });
 
-        ASSERT_DID_THROW(
+        ASSERT_DID_THROW({
             int_pair coord;
             grid_location::get_neighbor_coord(coord, invalid_coord, dir,
                                               valid_shape);
-        );
+        });
 
         // get neighbor point
-        ASSERT_DID_THROW(
+        ASSERT_DID_THROW({
             int point;
             grid_location::get_neighbor_point(point, zero_coord, dir,
                                               empty_shape);
-        );
+        });
 
-        ASSERT_DID_THROW(
+        ASSERT_DID_THROW({
             int point;
             grid_location::get_neighbor_point(point, invalid_coord, dir,
                                               valid_shape);
-        );
+        });
     }
 }
 
@@ -323,6 +323,7 @@ void test_conversion()
     int_pair shape1(3, 4);
     int_pair shape2(2, 3);
 
+    // clang-format off
     vector<test_case_t> test_cases =
     {
         {shape1, {0, 0}, 0},
@@ -344,6 +345,7 @@ void test_conversion()
         {shape2, {1, 1}, 4},
         {shape2, {1, 2}, 5},
     };
+    // clang-format on
 
     for (const test_case_t& test_case : test_cases)
     {
@@ -351,11 +353,11 @@ void test_conversion()
         const int_pair& expected_coord = get<1>(test_case);
         const int& expected_point = get<2>(test_case);
 
-        assert(grid_location::coord_to_point(expected_coord, shape)
-                == expected_point);
+        assert(grid_location::coord_to_point(expected_coord, shape) ==
+               expected_point);
 
-        assert(grid_location::point_to_coord(expected_point, shape)
-                == expected_coord);
+        assert(grid_location::point_to_coord(expected_point, shape) ==
+               expected_coord);
     }
 
     ASSERT_DID_THROW(grid_location::coord_to_point({0, 0}, {-1, -1}));

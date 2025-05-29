@@ -91,7 +91,6 @@ void init_global_random_tables(uint64_t seed)
     // TODO: DEBUG PRINTING
     // std::cout << "init_global_random_tables() seed: " << seed << endl;
 
-
     rng.seed(seed);
 
     auto next_seed = [&]() -> uint64_t

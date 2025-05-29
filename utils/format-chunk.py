@@ -97,7 +97,7 @@ f.write(proc.stdout)
 f.close()
 
 if use_vim:
-    vim_files = ""
+    vim_files = "tabnew format_result.txt | "
     for f in chunk:
         ft = get_transformed(f)
         if exists(ft):

@@ -138,6 +138,7 @@ class assert_restore_alternating_game
 {
 public:
     assert_restore_alternating_game(const alternating_move_game& game) {}
+
     virtual ~assert_restore_alternating_game() {}
 };
 

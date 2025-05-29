@@ -61,6 +61,7 @@ void file()
 
 void exceptions()
 {
+    // clang-format off
     std::vector<std::string> boards =
     {
         ".........X....XOX.XOO.X.X.O...",
@@ -93,6 +94,7 @@ void exceptions()
         "XOX..XXOO..X.X........O.......",
         "XXOX.O.......X......OXO....X..",
     };
+    // clang-format on
 
     for (const std::string& board : boards)
     {
@@ -109,7 +111,6 @@ void exceptions()
 
         assert(did_throw);
     }
-
 }
 
 } // namespace nogo_1xn_test

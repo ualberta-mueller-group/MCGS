@@ -9,8 +9,8 @@
 #include "game.h"
 
 template <class T>
-void assert_grid_game_move_sequence(const std::string& board,
-    const std::vector<std::string>& black_options,
+void assert_grid_game_move_sequence(
+    const std::string& board, const std::vector<std::string>& black_options,
     const std::vector<std::string>& white_options);
 
 template <class T>
@@ -19,8 +19,8 @@ void assert_grid_game_inverse(const std::vector<std::string>& boards);
 ////////////////////////////////////////////////// template implementations
 
 template <class T>
-void assert_grid_game_move_sequence(const std::string& board,
-    const std::vector<std::string>& black_options,
+void assert_grid_game_move_sequence(
+    const std::string& board, const std::vector<std::string>& black_options,
     const std::vector<std::string>& white_options)
 {
     static_assert(std::is_base_of_v<grid, T>);
@@ -30,8 +30,8 @@ void assert_grid_game_move_sequence(const std::string& board,
     std::vector<bw> colors = {BLACK, WHITE};
     for (const bw color : colors)
     {
-        const std::vector<std::string>& options = color == BLACK ?
-            black_options : white_options;
+        const std::vector<std::string>& options =
+            color == BLACK ? black_options : white_options;
 
         std::unique_ptr<move_generator> mg(g_grid.create_move_generator(color));
 
@@ -73,4 +73,3 @@ void assert_grid_game_inverse(const std::string& board)
     assert(g_inv_grid->board_as_string() == board_inv);
     delete g_inv;
 }
-

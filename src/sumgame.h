@@ -210,7 +210,7 @@ std::ostream& operator<<(std::ostream& out, const sumgame& s);
 
 //---------------------------------------------------------------------------
 #ifdef ASSERT_RESTORE_DEBUG
-class assert_restore_sumgame: public assert_restore_alternating_game
+class assert_restore_sumgame : public assert_restore_alternating_game
 {
 public:
     assert_restore_sumgame(const sumgame& sgame);
@@ -228,11 +228,11 @@ private:
 };
 
 #else
-class assert_restore_sumgame: public assert_restore_alternating_game
+class assert_restore_sumgame : public assert_restore_alternating_game
 {
 public:
-    assert_restore_sumgame(const sumgame& sgame):
-        assert_restore_alternating_game(sgame)
+    assert_restore_sumgame(const sumgame& sgame)
+        : assert_restore_alternating_game(sgame)
     {
     }
 
@@ -242,4 +242,3 @@ public:
 #endif
 
 //---------------------------------------------------------------------------
-

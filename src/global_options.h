@@ -23,7 +23,7 @@ enum global_summary_enum
 };
 
 ////////////////////////////////////////////////// abstract class
-///global_option_base
+/// global_option_base
 class global_option_base
 {
 public:

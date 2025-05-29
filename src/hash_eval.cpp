@@ -312,7 +312,7 @@ void fraction_iterator::_set_frac()
 }
 
 //////////////////////////////////////////////////////////// test
-///implementations
+/// implementations
 
 namespace {
 namespace hash_tests {

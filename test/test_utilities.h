@@ -99,16 +99,16 @@ void assert_solve_test_file(const std::string& file_name,
 
 // static_assert forces a semicolon after usage of this macro
 #define ASSERT_DID_THROW(statements)                                           \
-{                                                                              \
-    bool threw = false;                                                        \
-    try                                                                        \
     {                                                                          \
-        statements;                                                            \
+        bool threw = false;                                                    \
+        try                                                                    \
+        {                                                                      \
+            statements;                                                        \
+        }                                                                      \
+        catch (exception & exc)                                                \
+        {                                                                      \
+            threw = true;                                                      \
+        }                                                                      \
+        assert(threw);                                                         \
     }                                                                          \
-    catch (exception& exc)                                                     \
-    {                                                                          \
-        threw = true;                                                          \
-    }                                                                          \
-    assert(threw);                                                             \
-}                                                                              \
-static_assert(true)
+    static_assert(true)

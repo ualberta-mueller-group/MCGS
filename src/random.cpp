@@ -14,22 +14,22 @@ std::mt19937_64 rng;
 // u64 distribution
 static_assert(sizeof(unsigned long long) >= sizeof(uint64_t));
 std::uniform_int_distribution<unsigned long long> dist_64(
-        1, std::numeric_limits<uint64_t>::max());
+    1, std::numeric_limits<uint64_t>::max());
 
 // u32 distribution
 static_assert(sizeof(unsigned int) >= sizeof(uint32_t));
 std::uniform_int_distribution<unsigned int> dist_32(
-        1, std::numeric_limits<uint32_t>::max());
+    1, std::numeric_limits<uint32_t>::max());
 
 // u16 distribution
 static_assert(sizeof(unsigned short) >= sizeof(uint16_t));
 std::uniform_int_distribution<unsigned short> dist_16(
-        1, std::numeric_limits<uint16_t>::max());
+    1, std::numeric_limits<uint16_t>::max());
 
 // u8 distribution
 static_assert(sizeof(unsigned short) >= sizeof(uint8_t));
 std::uniform_int_distribution<unsigned short> dist_8(
-        1, std::numeric_limits<uint8_t>::max());
+    1, std::numeric_limits<uint8_t>::max());
 
 } // namespace
 
