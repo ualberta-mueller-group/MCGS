@@ -510,6 +510,16 @@ else:
     add_row_function(row_style)
 
 
+time_column_index = -1
+
+for i, alias in enumerate(output_field_dict):
+    if alias == "time":
+        time_column_index = i
+        break
+
+assert time_column_index != -1
+
+
 ######################################## process rows
 
 # Validate row_match_key
@@ -751,7 +761,9 @@ html_template_string = html_template_file.read()
 html_template_file.close()
 
 script_file = open(src_dir + "/table-template.js", "r")
-script_string = script_file.read()
+script_string = ""
+script_string += f"const pyvar_timeColumnIndex = {time_column_index};"
+script_string += script_file.read()
 script_file.close()
 
 # Replace the smaller things first (order of these affects performance)
