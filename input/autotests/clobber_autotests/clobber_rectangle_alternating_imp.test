@@ -1,7 +1,7 @@
 {version 1.1}
 
 /*_
-    Results from: MCGS and CGSuite
+    Results from: MCGS (commit ebb1b89b) and CGSuite 2.1.1
 */
 
 [impartial clobber]
