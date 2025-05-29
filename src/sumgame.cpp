@@ -471,13 +471,10 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
     game* g = subgame(subg);
 
     g->play(mv, to_play);
-    split_result sr;
-    if (global::subgame_split())
-        sr = g->split();
+    split_result sr = g->split();
 
     if (sr) // split changed the sum
     {
-        assert(global::subgame_split());
         record.did_split = true;
 
         // g is no longer part of the sum
@@ -511,7 +508,6 @@ void sumgame::undo_move()
     // undo split (if necessary)
     if (record.did_split)
     {
-        assert(global::subgame_split());
         assert(!s->is_active()); // should have been deactivated on last split
 
         s->set_active(true);

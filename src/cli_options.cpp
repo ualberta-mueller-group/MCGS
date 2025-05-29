@@ -67,9 +67,6 @@ void print_help_message(const string& exec_name)
     cout << "\tThese flags toggle optimizations on/off." << endl;
     cout << endl;
 
-    print_flag(global::subgame_split.no_flag(),
-               "Don't split subgames after playing moves in them.");
-
     print_flag(global::simplify_basic_cgt.no_flag(),
                "Don't simplify basic CGT games (integer_game, dyadic_rational, "
                "up_star, switch_game, nimber).");
@@ -330,20 +327,6 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         }
 
         // OPTIMIZATION TOGGLES
-
-        if (arg == global::subgame_split.no_flag())
-        {
-            // throw std::logic_error("TODO: remove or change sumgame splitting
-            // option");
-            cerr << "TODO: remove or change sumgame splitting option" << endl;
-            /*
-                TODO this either needs to be removed, or should only disable
-                splitting games for which splitting is optional
-            */
-
-            global::subgame_split.set(false);
-            continue;
-        }
 
         if (arg == global::simplify_basic_cgt.no_flag())
         {
