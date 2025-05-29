@@ -49,7 +49,7 @@ public:
     search_result search(hash_t hash);
 
     void store(hash_t hash, const Entry& entry);
-    std::optional<Entry> get(hash_t hash);
+    std::optional<Entry> get(hash_t hash) const;
 
 private:
     inline hash_t _extract_index(hash_t hash) const;
@@ -191,9 +191,10 @@ void ttable<Entry>::store(hash_t hash, const Entry& entry)
 }
 
 template <class Entry>
-std::optional<Entry> ttable<Entry>::get(hash_t hash)
+std::optional<Entry> ttable<Entry>::get(hash_t hash) const
 {
-    ttable<Entry>::search_result tt_result = search(hash);
+    ttable<Entry>& tt_mutable = const_cast<ttable<Entry>&>(*this);
+    ttable<Entry>::search_result tt_result = tt_mutable.search(hash);
 
     if (tt_result.entry_valid())
         return std::optional<Entry>(tt_result.get_entry());

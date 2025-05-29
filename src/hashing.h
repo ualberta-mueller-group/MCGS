@@ -28,7 +28,6 @@ typedef uint64_t hash_t;
 class random_table
 {
 public:
-    // seed 0 means seed with current system time
     random_table(size_t n_positions, uint64_t seed);
 
     /*
