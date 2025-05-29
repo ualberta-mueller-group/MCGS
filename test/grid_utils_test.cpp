@@ -6,6 +6,7 @@
 #include <vector>
 #include <tuple>
 #include <cassert>
+#include <cstddef>
 
 using namespace std;
 

@@ -7,7 +7,6 @@
 #include <array>
 #include "grid.h"
 #include "throw_assert.h"
-#include <ostream>
 #include <cassert>
 
 enum grid_dir

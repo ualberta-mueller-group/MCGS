@@ -4,6 +4,7 @@
 #include "impartial_game_wrapper.h"
 
 #include <ostream>
+#include <vector>
 #include <cassert>
 #include "cgt_basics.h"
 #include "cgt_move.h"

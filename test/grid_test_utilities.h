@@ -3,7 +3,10 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cassert>
+#include <cstddef>
 #include "grid.h"
+#include "game.h"
 
 template <class T>
 void assert_grid_game_move_sequence(const std::string& board,

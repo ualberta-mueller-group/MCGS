@@ -1,6 +1,5 @@
 #include "sumgame_test_nogo.h"
 #include "nogo.h"
-#include <iostream>
 #include "test_utilities.h"
 
 void sumgame_test_nogo_all()

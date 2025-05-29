@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <random>
 #include <cassert>
+#include <limits>
 
 namespace {
 bool is_initialized = false;

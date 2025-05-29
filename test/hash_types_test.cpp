@@ -1,10 +1,11 @@
 #include "hash_types_test.h"
 #include <iostream>
 #include "hashing.h"
-#include <type_traits>
 #include <unordered_set>
 #include <optional>
-#include <functional>
+#include <vector>
+#include <cstddef>
+#include <cassert>
 
 #include "transposition.h"
 #include "clobber.h"

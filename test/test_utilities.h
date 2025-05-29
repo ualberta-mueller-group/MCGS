@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#include <exception> // IWYU pragma: keep
 
 #include <memory>
 #include "cgt_move.h"
@@ -12,8 +13,6 @@
 #include <string>
 #include <vector>
 #include <cassert>
-#include <functional>
-#include <exception>
 
 inline void assert_move(move_generator& mg, int mv)
 {

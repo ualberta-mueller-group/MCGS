@@ -3,6 +3,7 @@
 #include <tuple>
 #include <vector>
 #include <string>
+#include <cassert>
 #include "grid_test_utilities.h"
 #include "test_utilities.h"
 #include <exception>

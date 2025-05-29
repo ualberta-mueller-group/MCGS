@@ -5,6 +5,7 @@
 #include "nogo_1xn.h"
 
 #include <cassert>
+#include <vector>
 #include <exception>
 #include "test_utilities.h"
 

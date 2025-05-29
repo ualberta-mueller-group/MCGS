@@ -5,6 +5,7 @@
 #include "game.h"
 
 #include <memory>
+#include <cassert>
 
 // Solve combinatorial game - find winner
 // Game-independent implementation of basic boolean minimax

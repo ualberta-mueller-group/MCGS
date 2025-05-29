@@ -16,6 +16,7 @@
 #include "utilities.h"
 #include <random>
 #include <iostream>
+#include <cassert>
 #include "cgt_basics.h"
 #include "game_type.h"
 

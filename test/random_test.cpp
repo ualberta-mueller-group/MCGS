@@ -1,8 +1,9 @@
 #include "random_test.h"
-#include <iostream>
 #include "random.h"
 #include <unordered_set>
+#include <cstdint>
 #include <cassert>
+#include <cstddef>
 
 using namespace std;
 
