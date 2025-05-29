@@ -90,24 +90,28 @@ NORMAL_FLAGS := $(NORMAL_FLAGS_BASE) $(INC)
 TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC)
 
 # args: files, directory prefix, file extension
-OUTPATH = \
+FN_OUTPATH = \
 $(addsuffix $(3), \
 	$(addprefix $(2)/, \
 		$(basename $(1)) \
 	) \
 )
 
+# args: compiler flags
+FN_USE_ALL_DEBUG_FLAGS = $(filter-out $(DEBUG_FLAGS_ALL),$(1)) $(DEBUG_FLAGS_ALL)
+FN_TIDY_DEBUG_FLAGS = $(filter-out -D_GLIBCXX_DEBUG,$(call FN_USE_ALL_DEBUG_FLAGS,$(1)))
+
 ##### Target: MCGS
 MCGS_SRC = $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/main/*.cpp)
 MCGS_SRC_H = $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/main/*.h)
-MCGS_OBJS := $(call OUTPATH,$(MCGS_SRC),$(RELEASE_BUILD_DIR),.o)
-MCGS_DEPS := $(call OUTPATH,$(MCGS_SRC),$(RELEASE_BUILD_DIR),.d)
+MCGS_OBJS := $(call FN_OUTPATH,$(MCGS_SRC),$(RELEASE_BUILD_DIR),.o)
+MCGS_DEPS := $(call FN_OUTPATH,$(MCGS_SRC),$(RELEASE_BUILD_DIR),.d)
 
 ##### Target: MCGS_test
 MCGS_TEST_SRC = $(wildcard $(SRC_DIR)/*.cpp $(TEST_DIR)/*.cpp)
 MCGS_TEST_SRC_H = $(wildcard $(SRC_DIR)/*.h $(TEST_DIR)/*.h)
-MCGS_TEST_OBJS := $(call OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.o)
-MCGS_TEST_DEPS := $(call OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.d)
+MCGS_TEST_OBJS := $(call FN_OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.o)
+MCGS_TEST_DEPS := $(call FN_OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.d)
 
 #### For linter tooling
 ALL_SRC_FILES := $(MCGS_SRC) $(MCGS_SRC_H) $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H) 
@@ -144,23 +148,28 @@ endif
 
 # Tidy targets
 #$(eval LINT_FILES ?= $(ALL_SRC_FILES))
+
 tidy:
 	$(eval LINT_FILES ?= $(ALL_CPP_FILES))
+	$(eval NORMAL_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(NORMAL_FLAGS)))
 	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
 
 #$(eval LINT_FILES ?= $(MCGS_SRC) $(MCGS_SRC_H))
 tidy_release:
 	$(eval LINT_FILES ?= $(MCGS_SRC))
+	$(eval NORMAL_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(NORMAL_FLAGS)))
 	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
 
 #$(eval LINT_FILES ?= $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H))
 tidy_test:
 	$(eval LINT_FILES ?= $(MCGS_TEST_SRC))
+	$(eval TEST_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(TEST_FLAGS)))
 	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
 
 tidy_headers:
 	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 	$(eval LINT_FILES := $(filter %.h, $(LINT_FILES)))
+	$(eval NORMAL_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(NORMAL_FLAGS)))
 	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++-header 2>&1 | tee tidy_result.txt
 
 
