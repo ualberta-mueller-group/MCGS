@@ -4,7 +4,7 @@ CC = c++
 ##### See documentation below this section.
 
 # Basic checks
-DEBUG_FLAGS_COMMON := -g -DNOGO_DEBUG -DASSERT_RESTORE_DEBUG
+DEBUG_FLAGS_COMMON := -g -DNOGO_DEBUG -DASSERT_RESTORE_DEBUG -DGAME_UNDO_DEBUG
 
 # Additional checks that are expensive and/or annoying
 DEBUG_FLAGS_EXTRA := -DSUMGAME_DEBUG -DGAME_TYPE_DEBUG -DDEFAULT_IMPL_DEBUG -D_GLIBCXX_DEBUG

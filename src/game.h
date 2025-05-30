@@ -110,15 +110,6 @@ private:
         HASH_STATE_UP_TO_DATE,
     };
 
-    enum game_undo_code
-    {
-        GAME_UNDO_PLAY = 0,
-        GAME_UNDO_NORMALIZE,
-    };
-
-    void _push_undo_code(game_undo_code code);
-    void _pop_undo_code(game_undo_code code);
-
     void _pre_hash_update();
 
     std::vector<move> _move_stack;
@@ -127,7 +118,21 @@ private:
     mutable hash_state_enum _hash_state;
     mutable local_hash _hash;
 
+private:
+#ifdef GAME_UNDO_DEBUG
+    // NOLINTBEGIN(readability-identifier-naming)
+    enum game_undo_code
+    {
+        GAME_UNDO_PLAY = 0,
+        GAME_UNDO_NORMALIZE,
+    };
+
+    void __push_undo_code(game_undo_code code);
+    void __pop_undo_code(game_undo_code code);
+
     std::vector<game_undo_code> _undo_code_stack;
+    // NOLINTEND(readability-identifier-naming)
+#endif
 
 }; // class game
 
@@ -194,7 +199,11 @@ inline int game::num_moves_played() const
 
 inline int game::undo_stack_size() const
 {
+#ifdef GAME_UNDO_DEBUG
     return _undo_code_stack.size();
+#else
+    return 0;
+#endif
 }
 
 inline bool game::_hash_updatable() const

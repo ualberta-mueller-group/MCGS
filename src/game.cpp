@@ -66,13 +66,18 @@ void game::play(const move& m, int to_play)
     _move_stack.push_back(mc);
 
     _pre_hash_update();
-    _push_undo_code(GAME_UNDO_PLAY);
+
+#ifdef GAME_UNDO_DEBUG
+    __push_undo_code(GAME_UNDO_PLAY);
+#endif
 }
 
 void game::undo_move()
 {
     _pre_hash_update();
-    _pop_undo_code(GAME_UNDO_PLAY);
+#ifdef GAME_UNDO_DEBUG
+    __pop_undo_code(GAME_UNDO_PLAY);
+#endif
     _move_stack.pop_back();
 }
 
@@ -97,7 +102,9 @@ void game::normalize()
 {
     _pre_hash_update();
 
-    _push_undo_code(GAME_UNDO_NORMALIZE);
+#ifdef GAME_UNDO_DEBUG
+    __push_undo_code(GAME_UNDO_NORMALIZE);
+#endif
     _normalize_impl();
 }
 
@@ -106,7 +113,9 @@ void game::undo_normalize()
     _pre_hash_update();
 
     _undo_normalize_impl();
-    _pop_undo_code(GAME_UNDO_NORMALIZE);
+#ifdef GAME_UNDO_DEBUG
+    __pop_undo_code(GAME_UNDO_NORMALIZE);
+#endif
 }
 
 relation game::order(const game* rhs) const
@@ -176,17 +185,19 @@ relation game::_order_impl(const game* rhs) const
     return REL_UNKNOWN;
 }
 
-void game::_push_undo_code(game_undo_code code)
+#ifdef GAME_UNDO_DEBUG
+inline void game::__push_undo_code(game_undo_code code)
 {
     _undo_code_stack.push_back(code);
 }
 
-void game::_pop_undo_code(game_undo_code code)
+inline void game::__pop_undo_code(game_undo_code code)
 {
     assert(!_undo_code_stack.empty());
     assert(_undo_code_stack.back() == code);
     _undo_code_stack.pop_back();
 }
+#endif
 
 void game::_pre_hash_update()
 {
