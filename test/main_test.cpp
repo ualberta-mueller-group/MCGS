@@ -11,6 +11,7 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include <iostream>
 
 #include "mcgs_init.h"
+#include "normalize_test.h"
 
 #include "random_test.h"
 #include "grid_utils_test.h"
@@ -55,7 +56,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
-    grid_utils_test_all();
+    normalize_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -133,6 +134,7 @@ int main(int argc, const char** argv)
     safe_arithmetic_test_all();
     fraction_test_all();
 
+    normalize_test_all();
     split_test_all();
 
     if (do_slow_tests)
