@@ -98,17 +98,21 @@ template <class T>
 constexpr T alternating_mask() // TODO unit test
 {
     static_assert(std::is_integral_v<T>);
+    static_assert(CHAR_BIT == 8);
 
     constexpr uint8_t BYTE_MASK = 0x55; // 0101 0101
     constexpr size_t SIZE = sizeof(T);
 
     T val = BYTE_MASK;
 
-    // don't shift past width of variable
-    for (size_t i = 1; i < SIZE; i++)
+    // fix (false positive) compiler warning about shift overflow
+    if constexpr (SIZE > 1)
     {
-        val <<= 8;
-        val |= BYTE_MASK;
+        for (size_t i = 1; i < SIZE; i++)
+        {
+            val <<= 8;
+            val |= BYTE_MASK;
+        }
     }
 
     return val;
