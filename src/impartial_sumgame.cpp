@@ -22,7 +22,7 @@ std::optional<impartial_tt> tt_optional; // mcgs_init() must be called first
 int search_impartial_sumgame_cancellable(const sumgame& s,
                                          const bool& over_time)
 {
-    assert_restore_alternating_game ar(s);
+    assert_restore_sumgame ar(s);
     int sum_nim_value = 0;
 
     impartial_tt& tt = tt_optional.value();
@@ -71,6 +71,10 @@ std::optional<int> search_impartial_sumgame_with_timeout(
 {
     bool over_time = false;
 
+    assert_restore_sumgame ars(s);
+    for (game* g : s.subgames())
+        g->normalize();
+
     std::promise<int> promise;
     std::future<int> future = promise.get_future();
 
@@ -92,6 +96,9 @@ std::optional<int> search_impartial_sumgame_with_timeout(
 
     future.wait();
     thr.join();
+
+    for (game* g : s.subgames())
+        g->undo_normalize();
 
     assert(future.valid());
 

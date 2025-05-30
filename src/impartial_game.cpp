@@ -103,6 +103,8 @@ int impartial_game::search_impartial_game_cancellable(
             // search new games in sr, nim-add them
             for (game* subgame : *sr)
             {
+                // No need for subgame->undo_normalize() -- it will be deleted
+                subgame->normalize();
                 int result = search(subgame, tt, over_time);
 
                 if (over_time)
@@ -117,13 +119,16 @@ int impartial_game::search_impartial_game_cancellable(
 
             if (over_time)
             {
+                // g was not normalized, don't call undo_normalize()
                 g->undo_move();
                 return -1;
             }
         }
         else // no split, keep searching same subgame
         {
+            g->normalize();
             move_nimber = g->search_impartial_game_cancellable(tt, over_time);
+            g->undo_normalize();
 
             if (over_time)
             {

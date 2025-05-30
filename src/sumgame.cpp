@@ -478,12 +478,13 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
     {
         record.did_split = true;
 
-        // g is no longer part of the sum
+        // Don't normalize g, it's no longer part of the sum
         g->set_active(false);
 
         for (game* gp : *sr)
         {
-            add(gp);             // no need to normalize, add() will do it
+            gp->normalize();
+            add(gp);
             record.add_game(gp); // save these games in the record for debugging
         }
     }
@@ -522,6 +523,7 @@ void sumgame::undo_move()
             // a previous undo should have reactivated g
             assert(_subgames.back()->is_active());
 
+            // No need for g->undo_normalize() -- g is being deleted
             pop(g);
             delete g;
         }
