@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
-const bool RUN_OVERRIDE_TESTS = true;
+const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
 #include <string>
@@ -135,6 +135,7 @@ int main(int argc, const char** argv)
     safe_arithmetic_test_all();
     fraction_test_all();
 
+    order_test_all();
     normalize_test_all();
     split_test_all();
 
