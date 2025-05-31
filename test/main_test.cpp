@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
-const bool RUN_OVERRIDE_TESTS = false;
+const bool RUN_OVERRIDE_TESTS = true;
 
 #include <cassert>
 #include <string>
@@ -12,6 +12,7 @@ const bool RUN_OVERRIDE_TESTS = false;
 
 #include "mcgs_init.h"
 #include "normalize_test.h"
+#include "order_test.h"
 
 #include "random_test.h"
 #include "grid_utils_test.h"
@@ -56,7 +57,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
-    normalize_test_all();
+    order_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
