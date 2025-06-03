@@ -8,6 +8,8 @@
 #include "grid.h"
 #include "throw_assert.h"
 #include <cassert>
+#include <cstddef>
+#include <string>
 
 enum grid_dir
 {
@@ -272,19 +274,13 @@ inline int_pair grid_location::point_to_coord(int point, const int_pair& shape)
 
 ////////////////////////////////////////////////// grid_generator implementation
 inline grid_generator::grid_generator(size_t n_cols)
-    : _n_rows(1),
-      _n_cols(n_cols),
-      _current_rows(0),
-      _current_cols(0)
+    : _n_rows(1), _n_cols(n_cols), _current_rows(0), _current_cols(0)
 {
     assert(_n_rows >= 0 && _n_cols >= 0);
 }
 
 inline grid_generator::grid_generator(size_t n_rows, size_t n_cols)
-    : _n_rows(n_rows),
-      _n_cols(n_cols),
-      _current_rows(0),
-      _current_cols(0)
+    : _n_rows(n_rows), _n_cols(n_cols), _current_rows(0), _current_cols(0)
 {
     assert(_n_rows >= 0 && _n_cols >= 0);
 }
@@ -313,4 +309,3 @@ inline bool grid_generator::_has_zero_area() const
 {
     return (_current_rows <= 0) || (_current_cols <= 0);
 }
-

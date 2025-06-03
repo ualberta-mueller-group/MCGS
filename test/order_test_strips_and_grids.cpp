@@ -1,6 +1,8 @@
 #include "order_test_strips_and_grids.h"
 #include <vector>
 #include <iostream>
+#include <cstddef>
+#include <cassert>
 #include <exception>
 #include <functional>
 #include "game.h"
@@ -20,28 +22,17 @@ using namespace std;
 namespace {
 
 ////////////////////////////////////////////////// class dummy_game
-class dummy_game: public game
+class dummy_game : public game
 {
 public:
-    dummy_game()
-    {
-    }
+    dummy_game() {}
 
-    void play(const ::move& m, bw to_play) override
-    {
-        assert(false);
-    }
+    void play(const ::move& m, bw to_play) override { assert(false); }
 
-    void undo_move() override
-    {
-        assert(false);
-    }
+    void undo_move() override { assert(false); }
 
 protected:
-    void _init_hash(local_hash& hash) const override
-    {
-        assert(false);
-    }
+    void _init_hash(local_hash& hash) const override { assert(false); }
 
 public:
     move_generator* create_move_generator(bw to_play) const override
@@ -49,15 +40,9 @@ public:
         assert(false);
     }
 
-    void print(std::ostream& str) const override
-    {
-        str << "dummy_game";
-    }
+    void print(std::ostream& str) const override { str << "dummy_game"; }
 
-    game* inverse() const override
-    {
-        assert(false);
-    }
+    game* inverse() const override { assert(false); }
 };
 
 ////////////////////////////////////////////////// generator functions
@@ -83,7 +68,7 @@ void gen_nogo_1xn(vector<game*>& games, bool fewer)
         {
             games.push_back(new nogo_1xn(gen.gen_board()));
         }
-        catch (exception &exc)
+        catch (exception& exc)
         {
         }
     }
@@ -156,7 +141,6 @@ void test_generic(const vector<generator_function_t>& funcs)
     for (game* g : games)
         delete g;
 }
-
 
 } // namespace
 

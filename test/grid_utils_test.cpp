@@ -7,6 +7,7 @@
 #include <tuple>
 #include <cassert>
 #include <cstddef>
+#include <string>
 
 using namespace std;
 
@@ -326,24 +327,24 @@ void test_conversion()
     // clang-format off
     vector<test_case_t> test_cases =
     {
-        {shape1, {0, 0}, 0},
-        {shape1, {0, 1}, 1},
-        {shape1, {0, 2}, 2},
-        {shape1, {0, 3}, 3},
-        {shape1, {1, 0}, 4},
-        {shape1, {1, 1}, 5},
-        {shape1, {1, 2}, 6},
-        {shape1, {1, 3}, 7},
-        {shape1, {2, 0}, 8},
-        {shape1, {2, 1}, 9},
-        {shape1, {2, 2}, 10},
-        {shape1, {2, 3}, 11},
-        {shape2, {0, 0}, 0},
-        {shape2, {0, 1}, 1},
-        {shape2, {0, 2}, 2},
-        {shape2, {1, 0}, 3},
-        {shape2, {1, 1}, 4},
-        {shape2, {1, 2}, 5},
+        {shape1, {0, 0}, 0}, //
+        {shape1, {0, 1}, 1}, //
+        {shape1, {0, 2}, 2}, //
+        {shape1, {0, 3}, 3}, //
+        {shape1, {1, 0}, 4}, //
+        {shape1, {1, 1}, 5}, //
+        {shape1, {1, 2}, 6}, //
+        {shape1, {1, 3}, 7}, //
+        {shape1, {2, 0}, 8}, //
+        {shape1, {2, 1}, 9}, //
+        {shape1, {2, 2}, 10}, //
+        {shape1, {2, 3}, 11}, //
+        {shape2, {0, 0}, 0}, //
+        {shape2, {0, 1}, 1}, //
+        {shape2, {0, 2}, 2}, //
+        {shape2, {1, 0}, 3}, //
+        {shape2, {1, 1}, 4}, //
+        {shape2, {1, 2}, 5}, //
     };
     // clang-format on
 
@@ -436,21 +437,20 @@ void gen_for_dims(vector<string>& boards, int rows, int cols)
 
 void test_1x2()
 {
-    vector<string> expected =
-    {
-        "",
-        ".",
-        "X",
-        "O",
-        "..",
-        ".X",
-        ".O",
-        "X.",
-        "XX",
-        "XO",
-        "O.",
-        "OX",
-        "OO",
+    vector<string> expected = {
+        "",   //
+        ".",  //
+        "X",  //
+        "O",  //
+        "..", //
+        ".X", //
+        ".O", //
+        "X.", //
+        "XX", //
+        "XO", //
+        "O.", //
+        "OX", //
+        "OO", //
     };
 
     grid_generator gen1(2);
@@ -473,21 +473,20 @@ void test_1x2()
 
 void test_2x1()
 {
-    vector<string> expected =
-    {
-        "",
-        ".",
-        "X",
-        "O",
-        ".|.",
-        ".|X",
-        ".|O",
-        "X|.",
-        "X|X",
-        "X|O",
-        "O|.",
-        "O|X",
-        "O|O",
+    vector<string> expected = {
+        "",    //
+        ".",   //
+        "X",   //
+        "O",   //
+        ".|.", //
+        ".|X", //
+        ".|O", //
+        "X|.", //
+        "X|X", //
+        "X|O", //
+        "O|.", //
+        "O|X", //
+        "O|O", //
     };
 
     grid_generator gen(2, 1);
@@ -526,24 +525,23 @@ void test_empties()
     // rows, columns, expected
     typedef tuple<int, int, string> test_case_t;
 
-    vector<test_case_t> test_cases =
-    {
-        {0, 0, ""},
-        {0, 1, ""},
-        {1, 0, ""},
-
-        {1, 1, "."},
-        {1, 2, ".."},
-        {1, 3, "..."},
-
-        {2, 1, ".|."},
-        {2, 2, "..|.."},
-        {2, 3, "...|..."},
-
-
-        {3, 1, ".|.|."},
-        {3, 2, "..|..|.."},
-        {3, 3, "...|...|..."},
+    vector<test_case_t> test_cases = {
+        {0, 0, ""},            //
+        {0, 1, ""},            //
+        {1, 0, ""},            //
+                               //
+        {1, 1, "."},           //
+        {1, 2, ".."},          //
+        {1, 3, "..."},         //
+                               //
+        {2, 1, ".|."},         //
+        {2, 2, "..|.."},       //
+        {2, 3, "...|..."},     //
+                               //
+                               //
+        {3, 1, ".|.|."},       //
+        {3, 2, "..|..|.."},    //
+        {3, 3, "...|...|..."}, //
     };
 
     for (const test_case_t& test_case : test_cases)

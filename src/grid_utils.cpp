@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cmath>
 #include <string>
+#include <cstddef>
 #include "grid.h"
 #include "throw_assert.h"
 
@@ -15,7 +16,7 @@ bool increment_char(char& c)
         c == '.' || //
         c == 'X' || //
         c == 'O'    //
-        );          //
+    );              //
 
     if (c == '.')
         c = 'X';

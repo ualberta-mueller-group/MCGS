@@ -4,11 +4,10 @@
 #include <limits>
 #include <cstddef>
 #include <ostream>
+#include <utility>
 
 bit_array::bit_array(const bit_array& rhs)
-    : _n_bits(rhs._n_bits),
-      _vec_size(rhs._vec_size),
-      _vec(rhs._vec)
+    : _n_bits(rhs._n_bits), _vec_size(rhs._vec_size), _vec(rhs._vec)
 {
 }
 
@@ -38,7 +37,7 @@ void bit_array::set(size_t idx, bool new_value)
     size_t element_idx, shift_amount;
     _get_bit_indices(idx, element_idx, shift_amount);
 
-    const unsigned int BIT_MASK = ((unsigned int)(1)) << shift_amount;
+    const unsigned int BIT_MASK = ((unsigned int) (1)) << shift_amount;
     const unsigned int INV_BIT_MASK = ~BIT_MASK;
 
     unsigned int& element = _vec[element_idx];
@@ -89,8 +88,8 @@ void bit_array::_init(bool default_value)
 
     _vec.reserve(_vec_size);
 
-    const unsigned int init_element = default_value ? 
-        std::numeric_limits<unsigned int>::max() : 0;
+    const unsigned int init_element =
+        default_value ? std::numeric_limits<unsigned int>::max() : 0;
 
     for (size_t i = 0; i < _vec_size; i++)
         _vec.push_back(init_element);
@@ -106,7 +105,8 @@ void bit_array::_init(bool default_value)
     }
 }
 
-inline void bit_array::_get_bit_indices(size_t idx, size_t& element_idx, size_t& shift_amount) const
+inline void bit_array::_get_bit_indices(size_t idx, size_t& element_idx,
+                                        size_t& shift_amount) const
 {
     assert(_idx_in_range(idx));
 

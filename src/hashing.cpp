@@ -120,8 +120,9 @@ void init_global_random_tables(uint64_t seed)
 
 random_table& get_global_random_table(global_random_table_id table_id)
 {
-    THROW_ASSERT_DEBUG(table_id < global_random_tables.size(),
-                 std::logic_error("global random tables not initialized yet"));
+    THROW_ASSERT_DEBUG(
+        table_id < global_random_tables.size(),
+        std::logic_error("global random tables not initialized yet"));
 
     return global_random_tables[table_id];
 }

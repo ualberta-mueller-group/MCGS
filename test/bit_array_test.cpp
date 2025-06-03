@@ -4,6 +4,13 @@
 #include "test_utilities.h"
 
 #include <sstream>
+#include <string>
+#include <cassert>
+#include <cstddef>
+#include <utility>
+#include <cstdint>
+#include <vector>
+#include <tuple>
 
 using namespace std;
 
@@ -54,8 +61,8 @@ void test_get_set()
 
     // Set some values
     constexpr uint64_t BITS[] = {
-        0b1101111010110011011110100110001010101100001111001000010110000110,
-        0b1101111010110011011110100110001010101100001111001000010110000110,
+        0b1101111010110011011110100110001010101100001111001000010110000110, //
+        0b1101111010110011011110100110001010101100001111001000010110000110, //
     };
 
     constexpr size_t N_BITS = 128;
@@ -141,23 +148,22 @@ void test_compare()
     arr2.set(1, true);
 
     assert(arr5_0.compare(arr5_1) == BIT_ARRAY_ALL_OVERLAP); // 5 5
-    assert(arr5_0.compare(arr1) == BIT_ARRAY_SOME_OVERLAP); // 5 1
-    assert(arr5_0.compare(arr0) == BIT_ARRAY_NO_OVERLAP); // 5 0
-    assert(arr5_0.compare(arr2) == BIT_ARRAY_NO_OVERLAP); // 5 2
-    assert(arr0.compare(arr2) == BIT_ARRAY_NO_OVERLAP); // 0 2
+    assert(arr5_0.compare(arr1) == BIT_ARRAY_SOME_OVERLAP);  // 5 1
+    assert(arr5_0.compare(arr0) == BIT_ARRAY_NO_OVERLAP);    // 5 0
+    assert(arr5_0.compare(arr2) == BIT_ARRAY_NO_OVERLAP);    // 5 2
+    assert(arr0.compare(arr2) == BIT_ARRAY_NO_OVERLAP);      // 0 2
 }
 
 void test_print()
 {
     typedef tuple<uint16_t, string> test_case_t;
 
-    vector<test_case_t> test_cases =
-    {
-        {0, "[0000000000000000]"},
-        {5, "[0000000000000101]"},
-        {5396, "[0001010100010100]"},
-        {1669, "[0000011010000101]"},
-        {4234, "[0001000010001010]"},
+    vector<test_case_t> test_cases = {
+        {0, "[0000000000000000]"},    //
+        {5, "[0000000000000101]"},    //
+        {5396, "[0001010100010100]"}, //
+        {1669, "[0000011010000101]"}, //
+        {4234, "[0001000010001010]"}, //
     };
 
     for (const test_case_t& test_case : test_cases)

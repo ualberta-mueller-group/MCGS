@@ -3,6 +3,7 @@
 #include "game.h"
 #include <vector>
 #include <algorithm>
+#include <cstddef>
 #include <cassert>
 #include "bit_array.h"
 
@@ -12,11 +13,11 @@ namespace {
 
 void assert_relation_is_conclusive(relation rel)
 {
-    assert(                      //
-           rel == REL_LESS    || //
-           rel == REL_EQUAL   || //
-           rel == REL_GREATER    //
-            );                   //
+    assert(                 //
+        rel == REL_LESS ||  //
+        rel == REL_EQUAL || //
+        rel == REL_GREATER  //
+    );                      //
 }
 
 // smaller games first
@@ -35,7 +36,7 @@ void order_test_impl(vector<game*>& games)
     sort(games.begin(), games.end(), sort_key);
 
     const size_t N = games.size();
-    const size_t N2 = N*N;
+    const size_t N2 = N * N;
 
     // Store all pair-wise comparisons for later
     vector<relation> relations(N2, REL_UNKNOWN);
@@ -68,7 +69,6 @@ void order_test_impl(vector<game*>& games)
     vector<bit_array> equivalence_masks;
     for (size_t i = 0; i < N; i++)
         equivalence_masks.emplace_back(N);
-
 
     /*
         idx1 < idx2. Compares one pair of games, ensuring their relations are
@@ -104,7 +104,6 @@ void order_test_impl(vector<game*>& games)
         if (expect_not_equal)
             assert(!is_equal);
     };
-
 
     for (size_t i = 0; i < N; i++)
     {

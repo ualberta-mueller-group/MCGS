@@ -1,6 +1,8 @@
 #include "order_test_basic_cgt.h"
 #include <vector>
 #include <functional>
+#include <cassert>
+#include <cstddef>
 
 #include "order_test_utilities.h"
 

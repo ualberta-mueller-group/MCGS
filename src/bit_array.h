@@ -39,7 +39,8 @@ public:
 private:
     bool _idx_in_range(size_t idx) const;
     void _init(bool default_value);
-    void _get_bit_indices(size_t idx, size_t& element_idx, size_t& shift_amount) const;
+    void _get_bit_indices(size_t idx, size_t& element_idx,
+                          size_t& shift_amount) const;
 
     void _move_impl(bit_array&& rhs);
 
@@ -54,23 +55,20 @@ private:
 std::ostream& operator<<(std::ostream& os, const bit_array& arr);
 
 //////////////////////////////////////////////////
-inline bit_array::bit_array(size_t n_bits)
-    : _n_bits(n_bits),
-      _vec_size(0)
+inline bit_array::bit_array(size_t n_bits) : _n_bits(n_bits), _vec_size(0)
 {
     THROW_ASSERT_DEBUG(n_bits >= 0);
     _init(false);
 }
 
 inline bit_array::bit_array(size_t n_bits, bool default_value)
-    : _n_bits(n_bits),
-      _vec_size(0)
+    : _n_bits(n_bits), _vec_size(0)
 {
     THROW_ASSERT_DEBUG(n_bits >= 0);
     _init(default_value);
 }
 
-inline bit_array::bit_array(bit_array&& rhs): _n_bits(rhs._n_bits)
+inline bit_array::bit_array(bit_array&& rhs) : _n_bits(rhs._n_bits)
 {
     _move_impl(std::forward<bit_array>(rhs));
 }
@@ -90,4 +88,3 @@ inline bool bit_array::_idx_in_range(size_t idx) const
 {
     return (0 <= idx) && (idx < _n_bits);
 }
-
