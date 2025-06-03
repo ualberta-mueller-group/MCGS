@@ -57,7 +57,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
-    order_test_all();
+    grid_utils_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
