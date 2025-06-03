@@ -14,6 +14,7 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include "normalize_test.h"
 #include "order_test.h"
 
+#include "bit_array_test.h"
 #include "random_test.h"
 #include "grid_utils_test.h"
 #include "cgt_basics_test.h"
@@ -57,7 +58,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
-    grid_utils_test_all();
+    bit_array_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -121,6 +122,7 @@ int main(int argc, const char** argv)
 
     random_test_all();
     grid_utils_test_all();
+    bit_array_test_all();
 
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();

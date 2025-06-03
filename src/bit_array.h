@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cassert>
 #include "utilities.h"
+#include "throw_assert.h"
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -19,6 +20,9 @@ class bit_array
 public:
     bit_array(size_t n_bits); // default all bits to false
     bit_array(size_t n_bits, bool default_value);
+
+    bit_array(const bit_array& rhs);
+    bit_array& operator=(const bit_array& rhs);
 
     bit_array(bit_array&& rhs);
     bit_array& operator=(bit_array&& rhs);
@@ -39,7 +43,7 @@ private:
 
     void _move_impl(bit_array&& rhs);
 
-    const size_t _n_bits;
+    size_t _n_bits;
 
     static constexpr size_t _BITS_PER_ELEMENT = size_in_bits<unsigned int>();
     size_t _vec_size;
@@ -54,7 +58,7 @@ inline bit_array::bit_array(size_t n_bits)
     : _n_bits(n_bits),
       _vec_size(0)
 {
-    assert(n_bits >= 0);
+    THROW_ASSERT_DEBUG(n_bits >= 0);
     _init(false);
 }
 
@@ -62,7 +66,7 @@ inline bit_array::bit_array(size_t n_bits, bool default_value)
     : _n_bits(n_bits),
       _vec_size(0)
 {
-    assert(n_bits >= 0);
+    THROW_ASSERT_DEBUG(n_bits >= 0);
     _init(default_value);
 }
 

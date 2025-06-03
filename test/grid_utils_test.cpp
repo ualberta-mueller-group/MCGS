@@ -561,7 +561,6 @@ void test_empties()
 
 void grid_utils_test_all()
 {
-    cout << __FILE__ << endl;
     grid_location_test::test_get_set();
     grid_location_test::test_mutators();
     grid_location_test::test_exceptions();

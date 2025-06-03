@@ -1,12 +1,29 @@
 #include "bit_array.h"
+#include "throw_assert.h"
 #include <cassert>
 #include <limits>
 #include <cstddef>
 #include <ostream>
 
+bit_array::bit_array(const bit_array& rhs)
+    : _n_bits(rhs._n_bits),
+      _vec_size(rhs._vec_size),
+      _vec(rhs._vec)
+{
+}
+
+bit_array& bit_array::operator=(const bit_array& rhs)
+{
+    _n_bits = rhs._n_bits;
+    _vec_size = rhs._vec_size;
+    _vec = rhs._vec;
+
+    return *this;
+}
+
 bool bit_array::get(size_t idx) const
 {
-    assert(_idx_in_range(idx));
+    THROW_ASSERT_DEBUG(_idx_in_range(idx));
 
     size_t element_idx, shift_amount;
     _get_bit_indices(idx, element_idx, shift_amount);
@@ -16,7 +33,7 @@ bool bit_array::get(size_t idx) const
 
 void bit_array::set(size_t idx, bool new_value)
 {
-    assert(_idx_in_range(idx));
+    THROW_ASSERT_DEBUG(_idx_in_range(idx));
 
     size_t element_idx, shift_amount;
     _get_bit_indices(idx, element_idx, shift_amount);
@@ -34,7 +51,7 @@ void bit_array::set(size_t idx, bool new_value)
 
 bit_array_relation bit_array::compare(const bit_array& other) const
 {
-    assert(size() == other.size());
+    THROW_ASSERT_DEBUG(size() == other.size());
 
     if (size() == 0)
         return BIT_ARRAY_ALL_OVERLAP;
@@ -102,8 +119,12 @@ inline void bit_array::_get_bit_indices(size_t idx, size_t& element_idx, size_t&
 
 void bit_array::_move_impl(bit_array&& rhs)
 {
-    assert(_n_bits == rhs._n_bits);
+    _n_bits = rhs._n_bits;
+    rhs._n_bits = 0;
+
     _vec_size = std::move(rhs._vec_size);
+    rhs._vec_size = 0;
+
     _vec = std::move(rhs._vec);
 }
 
