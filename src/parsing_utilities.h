@@ -40,7 +40,7 @@ inline bool is_slash(const std::string& str)
         get_fraction
         get_run_command
 
-    TODO: Fix this?
+        TODO: Fix this later? OK for now
 */
 bool get_star(const std::vector<std::string>& string_tokens, size_t& idx,
               bool& val);

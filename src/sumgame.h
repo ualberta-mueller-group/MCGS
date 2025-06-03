@@ -121,7 +121,7 @@ public:
     bool all_impartial() const;
 
     // called by mcgs_init()
-    static void init_ttable(size_t index_bits);
+    static void init_sumgame(size_t index_bits);
 
 private:
     class undo_stack_unwinder;
@@ -152,7 +152,10 @@ private:
 };
 
 //////////////////////////////////////// sumgame_move_generator
-// TODO: Hide this in a namespace (i.e. __sumgame_impl) ???
+/*
+    TODO: Should this be semi-hidden in a namespace? Or leave it public?
+    Users of sumgame can't use the normal move_generator interface...
+*/
 
 class sumgame_move_generator : public move_generator
 {

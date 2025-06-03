@@ -135,27 +135,14 @@ sumgame_move sumgame_move_generator::gen_sum_move() const
 
 namespace {
 
-std::unordered_set<game_type_t> get_cgt_type_set()
+std::unordered_set<game_type_t> basic_cgt_type_set;
+
+bool is_simple_cgt(const game* g)
 {
-    std::unordered_set<game_type_t> cgt_set;
-
-    cgt_set.insert(game_type<dyadic_rational>());
-    cgt_set.insert(game_type<integer_game>());
-    cgt_set.insert(game_type<nimber>());
-    cgt_set.insert(game_type<switch_game>());
-    cgt_set.insert(game_type<up_star>());
-
-    return cgt_set;
-}
-
-bool is_simple_cgt(game* g)
-{
-    // TODO this should be initialized before time is counted
-    static const std::unordered_set<game_type_t> CGT_TYPE_SET =
-        get_cgt_type_set();
+    assert(!basic_cgt_type_set.empty());
 
     game_type_t type = g->game_type();
-    return CGT_TYPE_SET.find(type) != CGT_TYPE_SET.end();
+    return basic_cgt_type_set.find(type) != basic_cgt_type_set.end();
 }
 
 } // namespace
@@ -331,15 +318,17 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
     simplify_basic();
 
-    // TODO this is quite ugly...
+    /*      NOTE:
+       This is sort of a nested optional. If sumgame's ttable is disabled (i.e.
+       it uses 0 index bits), then tt_result doesn't hold a search_result.
+
+       If tt_result holds a search_result, the queried hash may still be a miss.
+    */
     std::optional<ttable_sumgame::search_result> tt_result =
         _do_ttable_lookup();
 
-    if (tt_result)
-    {
-        if (tt_result->entry_valid())
-            return tt_result->get_bool(0);
-    }
+    if (tt_result.has_value() && tt_result->entry_valid())
+        return tt_result->get_bool(0);
 
     const bw toplay = to_play();
 
@@ -361,29 +350,18 @@ optional<solve_result> sumgame::_solve_with_timeout()
         {
             optional<solve_result> child_result = _solve_with_timeout();
 
-            // TODO make a macro to check this and return?
-            if (child_result)
-            {
-                result.win = not child_result.value().win;
-            }
+            if (!child_result.has_value() || _over_time())
+                return solve_result::invalid();
+
+            result.win = not child_result.value().win;
         }
 
         undo_move();
 
-        if (_over_time())
-        {
-            /// undo_simplify_basic();
-            return solve_result::invalid();
-        }
-
         if (result.win)
         {
-            /// undo_simplify_basic();
-
-            if (tt_result)
+            if (tt_result.has_value())
             {
-                assert(tt_result.has_value());
-
                 tt_result->init_entry();
                 tt_result->set_bool(0, result.win);
             }
@@ -391,11 +369,8 @@ optional<solve_result> sumgame::_solve_with_timeout()
         }
     }
 
-    /// undo_simplify_basic();
-    if (tt_result)
+    if (tt_result.has_value())
     {
-        assert(tt_result.has_value());
-
         tt_result->init_entry();
         tt_result->set_bool(0, false);
     }
@@ -674,8 +649,18 @@ bool sumgame::all_impartial() const
     return true;
 }
 
-void sumgame::init_ttable(size_t index_bits)
+void sumgame::init_sumgame(size_t index_bits)
 {
+    // Call helper once so that its static member is already stored when we
+    // use it during search
+    assert(basic_cgt_type_set.empty());
+    basic_cgt_type_set.insert(game_type<dyadic_rational>());
+    basic_cgt_type_set.insert(game_type<integer_game>());
+    basic_cgt_type_set.insert(game_type<nimber>());
+    basic_cgt_type_set.insert(game_type<switch_game>());
+    basic_cgt_type_set.insert(game_type<up_star>());
+
+    // Now initialize ttable
     if (global::tt_sumgame_idx_bits() == 0)
         return;
 

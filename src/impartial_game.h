@@ -39,7 +39,7 @@ public:
     /*
         TODO: this method should probably be hidden somehow; it's an
         implementation detail and is used by
-        search_impartial_sumgame_with_timeout
+        search_impartial_sumgame_with_timeout (impartial_sumgame.cpp)
     */
     int search_impartial_game_cancellable(impartial_tt& tt,
                                           const bool& over_time) const;
@@ -92,13 +92,10 @@ inline int impartial_game::nim_value() const
 
 inline void impartial_game::play(const move& m)
 {
-    // ORIGINAL IMPLEMENTATION
-    // game::play(m, BLACK);
-
-    /* TODO: impartial_game_wrapper color hack
+    /* NOTE: impartial_game_wrapper color hack
 
        Preserves the color bit of m, because ig_wrapper_move_generator
-       may use it. No other games should do this
+       may use it. No other games should do this.
     */
     const move m_no_color = cgt_move::decode(m);
     const bw color = cgt_move::get_color(m);
@@ -108,18 +105,13 @@ inline void impartial_game::play(const move& m)
 
 inline void impartial_game::play(const move& m, bw to_play)
 {
-    impartial_game::play(m);
+    /* NOTE: impartial_game_wrapper color hack
 
-    /* TODO: impartial_game_wrapper color hack
-
-        m may use the color bit, but only if created by an
-        ig_wrapper_move_generator. The color in m is the color of the wrapped
-        partizan game's move generator used to generate m, whereas to_play is
-        the player to play in minimax search
-
-        The latter can be ignored, but the former must be used to play m
-        on the wrapped game
+    - to_play is the current minimax search player, and should be discarded.
+    - The color bit of m may be used by ig_wrapper_move_generator, therefore
+        it must be preserved.
     */
+    impartial_game::play(m);
 }
 
 inline move_generator* impartial_game::create_move_generator(

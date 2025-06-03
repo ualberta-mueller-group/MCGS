@@ -135,11 +135,20 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     // std::cout << "Estimated table size: " << byte_count_formatted;
     // std::cout << " MiB" << std::endl;
 
+
     //// Initialize arrays
     _entries_arr = new Entry[_entries_arr_size];
-    for (size_t i = 0; i < _entries_arr_size;
-         i++) // TODO: always explicitly construct?
+    for (size_t i = 0; i < _entries_arr_size; i++)
         _entries_arr[i] = Entry();
+    /* TODO: above loop could maybe be optimized using some type traits to
+       optionally remove it. It's there to reduce page faults during
+       search (by ensuring all pages of the array have been written to).
+
+       std::is_trivially_default_constructible_v<T> doesn't seem quite right
+       for this...
+
+       This is probably unimportant
+    */
 
     /*
        NOTE:

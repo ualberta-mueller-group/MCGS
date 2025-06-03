@@ -188,7 +188,7 @@ format_replace:
 
 # Grep targets
 find_todo:
-	grep -R -i "TODO" $(GREP_FILES)
+	grep -R -i -n "TODO" $(GREP_FILES)
 
 
 ifeq ($(CAN_BUILD), 1)

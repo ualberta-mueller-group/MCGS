@@ -285,7 +285,6 @@ void test_sum_order()
 */
 void test_sum_mutate()
 {
-    // TODO this could try permutations too? How to do this?
     clobber_1xn g1("X..O.X");
     up_star g2(0, false);
 
