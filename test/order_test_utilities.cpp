@@ -19,6 +19,7 @@ void assert_relation_is_conclusive(relation rel)
             );                   //
 }
 
+// smaller games first
 bool sort_key(const game* g1, const game* g2)
 {
     relation rel = g1->order(g2);
@@ -34,6 +35,31 @@ void order_test_impl(vector<game*>& games)
     sort(games.begin(), games.end(), sort_key);
 
     const size_t N = games.size();
+    const size_t N2 = N*N;
+
+    // Store all pair-wise comparisons for later
+    vector<relation> relations(N2, REL_UNKNOWN);
+
+    auto at = [&relations, &N](size_t i, size_t j) -> relation&
+    {
+        assert(0 <= i && i < N);
+        assert(0 <= j && j < N);
+        const size_t idx = i * N + j;
+        assert(0 <= idx && idx < relations.size());
+        return relations[idx];
+    };
+
+    for (size_t i = 0; i < N; i++)
+    {
+        const game* g1 = games[i];
+
+        for (size_t j = 0; j < N; j++)
+        {
+            const game* g2 = games[j];
+            at(i, j) = g1->order(g2);
+            at(j, i) = g2->order(g1);
+        }
+    }
 
     /*
        For each index pair i, j, game g_i's bit_array at index j will be
@@ -43,20 +69,18 @@ void order_test_impl(vector<game*>& games)
     for (size_t i = 0; i < N; i++)
         equivalence_masks.emplace_back(N);
 
+
     /*
         idx1 < idx2. Compares one pair of games, ensuring their relations are
-        conclusive, consistent, and checks that there's only one contiguous
-        block of equal games.
+        conclusive, consistent, and checks over several iterations that there's
+        only one contiguous block of equal games.
     */
     auto do_step = [&](size_t idx1, size_t idx2, bool& expect_not_equal) -> void
     {
         assert(idx1 < idx2);
 
-        const game* g1 = games[idx1];
-        const game* g2 = games[idx2];
-
-        relation rel_left = g1->order(g2);
-        relation rel_right = g2->order(g1);
+        const relation rel_left = at(idx1, idx2);
+        const relation rel_right = at(idx2, idx1);
 
         assert_relation_is_conclusive(rel_left);
         assert_relation_is_conclusive(rel_right);
@@ -81,10 +105,10 @@ void order_test_impl(vector<game*>& games)
             assert(!is_equal);
     };
 
+
     for (size_t i = 0; i < N; i++)
     {
-        const game* gi = games[i];
-        assert(gi->order(gi) == REL_EQUAL);
+        assert(at(i, i) == REL_EQUAL);
         equivalence_masks[i].set(i, true);
 
         // iterate left

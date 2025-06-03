@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <exception>
+#include <functional>
 #include "game.h"
 #include "grid_utils.h"
 #include "test_utilities.h"
@@ -59,27 +60,24 @@ public:
     }
 };
 
-//////////////////////////////////////////////////
-void test_clobber_1xn()
+////////////////////////////////////////////////// generator functions
+typedef function<void(vector<game*>&, bool)> generator_function_t;
+
+void gen_clobber_1xn(vector<game*>& games, bool fewer)
 {
-    vector<game*> games;
+    int range = fewer ? 3 : 4;
 
-    for (grid_generator gen(4); gen; ++gen)
+    for (grid_generator gen(range); gen; ++gen)
         games.push_back(new clobber_1xn(gen.gen_board()));
-
-    order_test_impl(games);
-
-    for (game* g : games)
-        delete g;
 }
 
-void test_nogo_1xn()
+void gen_nogo_1xn(vector<game*>& games, bool fewer)
 {
     ASSERT_DID_THROW(nogo_1xn("XO"));
 
-    vector<game*> games;
+    int range = fewer ? 3 : 5;
 
-    for (grid_generator gen(5); gen; ++gen)
+    for (grid_generator gen(range); gen; ++gen)
     {
         try
         {
@@ -91,45 +89,33 @@ void test_nogo_1xn()
     }
 
     assert(!games.empty());
-    order_test_impl(games);
-
-    for (game* g : games)
-        delete g;
 }
 
-void test_elephants()
+void gen_elephants(vector<game*>& games, bool fewer)
 {
-    vector<game*> games;
+    int range = fewer ? 3 : 4;
 
-    for (grid_generator gen(4); gen; ++gen)
+    for (grid_generator gen(range); gen; ++gen)
         games.push_back(new elephants(gen.gen_board()));
-
-    order_test_impl(games);
-
-    for (game* g : games)
-        delete g;
 }
 
-void test_clobber()
+void gen_clobber(vector<game*>& games, bool fewer)
 {
-    vector<game*> games;
+    int range_r = 2;
+    int range_c = fewer ? 2 : 3;
 
-    for (grid_generator gen(2, 3); gen; ++gen)
+    for (grid_generator gen(range_r, range_c); gen; ++gen)
         games.push_back(new clobber(gen.gen_board()));
-
-    order_test_impl(games);
-
-    for (game* g : games)
-        delete g;
 }
 
-void test_nogo()
+void gen_nogo(vector<game*>& games, bool fewer)
 {
     ASSERT_DID_THROW(nogo(".O.|OXO|.O."));
 
-    vector<game*> games;
+    int range_r = 2;
+    int range_c = fewer ? 2 : 3;
 
-    for (grid_generator gen(3, 3); gen; ++gen)
+    for (grid_generator gen(range_r, range_c); gen; ++gen)
     {
         try
         {
@@ -141,68 +127,28 @@ void test_nogo()
     }
 
     assert(!games.empty());
-
-    for (game* g : games)
-        delete g;
 }
 
-void test_dummy()
+void gen_dummy_game(vector<game*>& games, bool fewer)
 {
-    vector<game*> games;
-
-    games.push_back(new dummy_game());
-    games.push_back(new dummy_game());
-    games.push_back(new dummy_game());
-    games.push_back(new dummy_game());
-    games.push_back(new dummy_game());
-    games.push_back(new dummy_game());
-
-    order_test_impl(games);
-
-    for (game* g : games)
-        delete g;
-}
-
-
-void test_mixed()
-{
-    ASSERT_DID_THROW(nogo_1xn("XO"));
-    ASSERT_DID_THROW(nogo(".O.|OXO|.O."));
-
-    vector<game*> games;
-
-    for (size_t i = 0; i < 6; i++)
+    int count = fewer ? 5 : 10;
+    for (int i = 0; i < count; i++)
         games.push_back(new dummy_game());
+}
 
-    for (grid_generator gen(3); gen; ++gen)
+////////////////////////////////////////////////// generic test implementation
+void test_generic(const vector<generator_function_t>& funcs)
+{
+    assert(!funcs.empty());
+    bool fewer = funcs.size() > 1;
+
+    vector<game*> games;
+
+    for (const generator_function_t& func : funcs)
     {
-        const string& board = gen.gen_board();
-
-        games.push_back(new clobber_1xn(board));
-        games.push_back(new elephants(board));
-
-        try
-        {
-            games.push_back(new nogo_1xn(board));
-        }
-        catch (exception& exc)
-        {
-        }
-    }
-
-    for (grid_generator gen(2, 2); gen; ++gen)
-    {
-        const string& board = gen.gen_board();
-
-        games.push_back(new clobber(board));
-
-        try
-        {
-            games.push_back(new nogo(board));
-        }
-        catch (exception& exc)
-        {
-        }
+        const size_t N = games.size();
+        func(games, fewer);
+        assert(games.size() > N);
     }
 
     order_test_impl(games);
@@ -210,18 +156,26 @@ void test_mixed()
     for (game* g : games)
         delete g;
 }
+
 
 } // namespace
 
+//////////////////////////////////////////////////
 void order_test_strips_and_grids_all()
 {
-    cout << __FILE__ << endl;
+    test_generic({gen_clobber_1xn});
+    test_generic({gen_nogo_1xn});
+    test_generic({gen_elephants});
+    test_generic({gen_clobber});
+    test_generic({gen_nogo});
+    test_generic({gen_dummy_game});
 
-    test_clobber_1xn();
-    test_nogo_1xn();
-    test_elephants();
-    test_clobber();
-    test_nogo();
-    test_dummy();
-    test_mixed();
+    test_generic({
+        gen_clobber_1xn,
+        gen_nogo_1xn,
+        gen_elephants,
+        gen_clobber,
+        gen_nogo,
+        gen_dummy_game,
+    });
 }
