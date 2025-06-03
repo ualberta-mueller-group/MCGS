@@ -178,7 +178,6 @@ private:
 };
 
 ////////////////////////////////////////////////// global_hash
-
 class global_hash
 {
 public:

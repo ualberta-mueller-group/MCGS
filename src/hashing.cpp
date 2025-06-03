@@ -103,6 +103,7 @@ void init_global_random_tables(uint64_t seed)
     };
 
     assert(global_random_tables.empty());
+    global_random_tables.reserve(4);
 
     assert(RANDOM_TABLE_DEFAULT == 0);
     global_random_tables.emplace_back(1024, next_seed());
@@ -119,7 +120,7 @@ void init_global_random_tables(uint64_t seed)
 
 random_table& get_global_random_table(global_random_table_id table_id)
 {
-    THROW_ASSERT(table_id < global_random_tables.size(),
+    THROW_ASSERT_DEBUG(table_id < global_random_tables.size(),
                  std::logic_error("global random tables not initialized yet"));
 
     return global_random_tables[table_id];

@@ -46,6 +46,12 @@ public:
     ttable(size_t index_bits, size_t entry_bools);
     ~ttable();
 
+    // no copy/move
+    ttable(const ttable& rhs) = delete;
+    ttable& operator=(const ttable& rhs) = delete;
+    ttable(ttable&& rhs) = delete;
+    ttable& operator=(ttable&& rhs) = delete;
+
     search_result search(hash_t hash);
 
     void store(hash_t hash, const Entry& entry);
