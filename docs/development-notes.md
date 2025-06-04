@@ -1,7 +1,30 @@
-
-
 # Development notes
 This document includes more detailed information than `README.md`, including design choices and tradeoffs, version history, and implementation details.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Table of Contents
+
+- [Outstanding Issues](#outstanding-issues)
+- [Release Procedure](#release-procedure)
+- [Search and Solving a Game](#search-and-solving-a-game)
+- [Impartial Games](#impartial-games)
+- [Initialization (`mcgs_init.h`)](#initialization-mcgs_inith)
+- [Global Options (`global_options.h`)](#global-options-global_optionsh)
+- [Safe Arithmetic Functions (`safe_arithmetic.h`)](#safe-arithmetic-functions-safe_arithmetich)
+- [RTTI - Run-time type information (`game_type.h`)](#rtti---run-time-type-information-game_typeh)
+- [More on data types](#more-on-data-types)
+- [Hashing (`hashing.h`)](#hashing-hashingh)
+- [Adding Hashing To Games](#adding-hashing-to-games)
+- [Transposition Tables (`transposition.h`)](#transposition-tables-transpositionh)
+- [Bounds (`bounds.h`)](#bounds-boundsh)
+- [Sumgame Simplification (cgt_game_simplification.h)](#sumgame-simplification-cgt_game_simplificationh)
+- [Misc Future Optimizations](#misc-future-optimizations)
+- [Design Choices and Remaining Uglinesses](#design-choices-and-remaining-uglinesses)
+- [Versions](#versions)
+- [This text can probably be deleted](#this-text-can-probably-be-deleted)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Outstanding Issues
 ## Splitting Can Make Move Ordering Worse
@@ -91,6 +114,10 @@ See note at top of `create-table.py`
     - `style.md`
     - `todo.md`
     - `README.md`
+    - To create/update table of contents:
+      ```
+      doctoc --github --title "# Table of Contents" --maxlevel 1 development-notes.md
+      ```
 7. Prune relevant temp files (`src/temp`, `docs/temp`)
 8. Create github release. Include notes about new features
 
