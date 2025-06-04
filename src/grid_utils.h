@@ -66,7 +66,7 @@ class grid_location
 {
 public:
     // constructors
-    grid_location(const int_pair& shape);
+    grid_location(const int_pair& shape); // default location (0, 0)
     grid_location(const int_pair& shape, const int_pair& coord);
     grid_location(const int_pair& shape, int point);
 
@@ -149,19 +149,22 @@ inline grid_location::grid_location(const int_pair& shape)
     : _shape(shape), _coord(0, 0)
 {
     THROW_ASSERT_DEBUG(_shape.first >= 0 && _shape.second >= 0);
+    THROW_ASSERT_DEBUG(is_empty() || valid());
 }
 
 inline grid_location::grid_location(const int_pair& shape,
                                     const int_pair& coord)
-    : _shape(shape), _coord(coord)
+    : _shape(shape), _coord(shape_is_empty(shape) ? int_pair(0, 0) : coord)
 {
-    THROW_ASSERT_DEBUG(valid());
+    THROW_ASSERT_DEBUG(_shape.first >= 0 && _shape.second >= 0);
+    THROW_ASSERT_DEBUG(is_empty() || valid());
 }
 
 inline grid_location::grid_location(const int_pair& shape, int point)
-    : _shape(shape), _coord(point_to_coord(point, shape))
+    : _shape(shape), _coord(shape_is_empty(shape) ? int_pair(0, 0) : point_to_coord(point, shape))
 {
-    THROW_ASSERT_DEBUG(valid());
+    THROW_ASSERT_DEBUG(_shape.first >= 0 && _shape.second >= 0);
+    THROW_ASSERT_DEBUG(is_empty() || valid());
 }
 
 inline const int_pair& grid_location::get_shape() const

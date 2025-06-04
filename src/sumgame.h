@@ -118,7 +118,7 @@ public:
     void print(std::ostream& str) const;
 
     hash_t get_global_hash(bool invalidate_game_hashes = false) const;
-    bool all_impartial() const;
+    bool all_impartial() const; // considers inactive games
 
     // called by mcgs_init()
     static void init_sumgame(size_t index_bits);

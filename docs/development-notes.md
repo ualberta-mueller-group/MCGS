@@ -27,21 +27,22 @@ This document includes more detailed information than `README.md`, including des
 
 
 # Search and Solving a Game
-- Two classes implement game solving: `alternating_move_game` and `sumgame`
+- Two classes implement minimax game solving: `alternating_move_game` and `sumgame`
 - `alternating_move_game` is used for solving a single game, without splitting it into a sum of subgames
     - `alternating_move_game::solve` is a basic boolean negamax search
+    - Does not use a transposition table
 - `sumgame` is used to store and solve a sum of games.
     - It is derived from `alternating_move_game`
         - Reimplements `solve` method
     - Boolean negamax search, with optimizations
         - Splits a subgame into more subgames after playing a move in it
         - Simplifies "basic" CGT games
+        - Uses a transposition table
     - `sumgame::_solve_with_timeout`
         - `private` method implements most of the search algorithm
         - Runs until it either completes, or times out
         - A timeout of 0 means infinite time
         - All public `solve` methods within `sumgame` (see below) are implemented in terms of this method
-        - In the future we could use a macro to check if the result of a recursive call timed out (wrap recursive solve calls with some `CHECK` macro which will return from the function if the result is invalid)
     - `sumgame::solve_with_timeout`
         - Currently spawns a thread which calls `_solve_with_timeout`, and the main thread blocks until completion or timeout.
         - This may interfere with some performance profiling tools, but other implementations based on checking a clock seem to be costly.
@@ -55,21 +56,24 @@ This document includes more detailed information than `README.md`, including des
 - In both `alternating_move_game` and `sumgame`, the public `solve` methods are declared as `const`.
 - This means that while the game state may be modified during solve,
 it must be restored before the end of `solve` in any case, including timeout or other failure modes.
-- `class assert_restore_alternating_game` in `alternating_move_game.h` is a stub for
-checking that the state is restored
-    - a naive first implementation just checks the length of the move stack
-    - TODO it probably is broken for sumgame, since it uses a different stack
-    - TODO this check will be made functional after hash codes are implemented
+- Several "assert_restore_" types are defined, to ensure that game states are restored:
+    - `class assert_restore_game` (`game.h`)
+        - Ensures local_hash, and move/undo_code stack sizes are restored
+    - `class assert_restore_alternating_game` (`alternating_move_game.h`)
+        - Ensures to_play, and game hash (local_hash of contained game, or 0 if no game is contained) are restored
+        - If a game is contained within, creates and owns an `assert_restore_game` for that game
+    - `class assert_restore_sumgame` (`sumgame.h`)
+        - Derives from `assert_restore_alternating_game`
+        - Ensures global_hash, number of subgames (active or inactive), and undo_code/play_record/change_record stack sizes are all restored
 
-# More on data types
+# More On Data Types
 
 ## `cli_options` struct (`cli_options.h`)
-Holds values resulting from parsing command-line arguments
+- Holds values resulting from parsing command-line arguments
 - Returned by static method `cli_options::parse_args`
-- Holds optimization options as global/static fields of `cli_options::optimize`
 
 ## `sumgame_move` struct (`sumgame.h`)
-Represents a move made in a `sumgame`
+- Represents a move made in a `sumgame`
 - Contains a subgame index and the `move` made in the subgame
 - The index is into the vector `sumgame::_subgames`
 - The `move` is for the subgame stored there
@@ -121,6 +125,51 @@ It derives from `alternating_move_game` and reimplements the
     - These are stored as `vector<T>` instead of `vector<T*>` with the aim of reducing CPU cache misses
         - This seems to be slightly faster, but we should re-verify this when significantly changing the undo stack
 
+## `strip` class (`strip.h`)
+- Abstract class derived from `game`. Used for games played on a `1xN` strip
+- Provides default implementations for:
+    - `game::_init_hash()` (hash derived from only the board state)
+    - `game::_normalize_impl()` and `game::_undo_normalize_impl()` (reverse/un-reverse board based on lexicographical ordering)
+        - This assumes that reversing the board doesn't change the value of the game
+    - `game::_order_impl()` (lexicographical ordering)
+
+## `grid` class (`grid.h`)
+- Abstract class derived from `game`. Used for games played on an `MxN` grid. Analogous to `strip`
+- Row-major format. Coordinates and dimensions are `(row, column)` pairs
+- Implements `game::_init_hash()` and `game::_order_impl()` analogously to `strip`
+- Does not implement `game::_normalize_impl()` or `game::_undo_normalize_impl()`
+
+## `grid_generator` class (`grid_utils.h`)
+- Given `MxN` or `1xN` dimensions of a `grid` or `strip`, generates all strings representing boards for all less than or equal dimensions
+- i.e. given `1x1`, generates: "" (empty string), ".", "X", "O"
+- i.e. given `2x2`, generates strings for: `0x0`, `1x1`, `1x2`, `2x1`, `2x2`
+    - Width is incremented, and on overflow, width is set to 1 and height is incremented
+- Given `2x1`, `1x2` is omitted, as the width is greater than `2x1`
+
+## `grid_location` class (`grid_utils.h`)
+- Utility class for manipulating locations on a `grid`
+    - Internally uses "coordinate" (`int_pair`) representation instead of "point" (`int`) representation.
+        - "Point" representation corresponds to the 1D indices of the flattened 2D grid
+        - "Coordinate" representation is a `(row, column)` pair. This is invariant to width changes, unlike "point" representation
+        - Constructible with shape, and one of: coordinates (`int_pair`), a point (`int`), or no location (defaults to `(0, 0)`)
+    - Has some ugly logic for accomodating `0x0` grids. Detailed below
+        - TODO: perhaps this logic is confusing...
+- May represent a valid or invalid state. Check with `valid()` method
+- The state is valid IFF the current location is within the shape
+- Shape `0x0` is legal during construction. Shapes with negative dimensions are illegal and will raise exceptions
+    - Shape `0x0` is always invalid (but legal to construct)
+    - Constructing with shape `0x0` always sets the location to `(0, 0)`, regardless of given coordinates or point
+        - This is to be consistent with constructing from a point. Points can't be converted to coordinates if the shape is empty (this would require dividing by 0)
+
+- From a valid state, an operation is legal IFF it results in a valid state
+    - Except, `increment_position()` may result in an invalid state
+    - This means that `set_shape({0, 0})` is illegal
+- From an invalid state, the only legal operations are:
+    - `valid()`, `is_empty()`, `get_shape()`, and any single mutation resulting in a valid state
+- `increment_position()` is used to iterate over grid locations. May produce an invalid state
+- `move()` moves the location in a direction. May fail and return `false`, leaving the grid_location unchanged
+- `get_neighbor_coord()` and `get_neighbor_point()` produce a neighbor given some direction, leaving the `grid_location` unchanged. May fail and return `false`
+
 ## `fraction` class (`fraction.h`)
 - Simple and lightweight fraction type whose denominator must be a positive power of 2
     - Consists only of 2 private `int`s: `_top` and `_bottom`, making copying fast
@@ -162,14 +211,16 @@ It derives from `alternating_move_game` and reimplements the
 - Kinds are computed during construction using `fraction::get_relation()`
     - TODO: perhaps we should evaluate this lazily?
 
-## More on Extending the `game` Class
-- In every game implementation:
-    - `x::play()` must call `game::play()`
-    - `x::undo_move()` must call `game::undo_move()`
+# More on Extending the `game` Class
+- In every game `x`'s implementation:
+    - `x::play()` must immediately call `game::play()`
+    - `x::undo_move()` must immediately call `last_move()` and then `game::undo_move()`
 - Move generators are accessible only through the abstract game interface `create_move_generator`
     - Generators are dynamically allocated - wrap each use in a `std::unique_ptr`
-    - An example is in `alternating_move_game::solve`
+    - An example is in `alternating_move_game::_solve`
     - A game-specific move generator is declared and used only in `x.cpp`, not in a header file
+    - Moves returned by a `move_generator` must not use the color bit
+        - The exception to this is `impartial_game_wrapper`'s move generator
 - Game unit tests should cover at least:
     - `play` and `undo_move`
     - `solve` for both black and white

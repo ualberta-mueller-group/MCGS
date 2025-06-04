@@ -584,10 +584,8 @@ void sumgame::print(std::ostream& str) const
 hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 {
     if (invalidate_game_hashes)
-    {
         for (game* g : _subgames)
             g->invalidate_hash();
-    }
 
     _sumgame_hash.reset();
     _sumgame_hash.set_to_play(to_play());
