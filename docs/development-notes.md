@@ -1,3 +1,5 @@
+
+
 # Development notes
 This document includes more detailed information than `README.md`, including design choices and tradeoffs, version history, and implementation details.
 
@@ -24,40 +26,73 @@ Maybe we can have a subgame sorting pass which occasionally runs?
 See note at top of `create-table.py`
 
 # Release Procedure
-1. Run `make find_todo`. Resolve relevant "TODO"s
+1. Resolve relevant TODOs
+    ```
+    make find_todo
+    ```
 2. Fix clang-tidy errors
-    2.1 `make tidy_headers`
-    2.2 `make tidy`
-    - When completed, neither of these should produce errors. See `tidy_result.txt` after running one of these
+    - Check `tidy_result.txt` after each run. When complete, no errors should be produced by these commands
+    1. ```
+       make tidy_headers
+       ```
+    2. ```
+       make tidy
+       ```
 3. Apply clang-format
-    3.1 Option 1
-        - Use `make format` to render all formatted files
-            - Alternatively, `LINT_FILES="file1 file2 file3..." make format` can render a subset of files
-        - Edit original files until `make format` gives desired result. See `style.md`'s clang-format section for more information
-        - Use `make format_replace` to replace original files with their formatted versions (this uses the `mv` command)
-    3.2 Option 2
-        - Use `python3 utils/format-chunk.py` to see how many "chunks" (groups of 10 files) there are
-        - Use `python3 utils/format-chunk.py vim -<i>` where `<i>` is the chunk number. This will render the formatted files for the chunk, and open them in NeoVim
-            - You can edit the loop at the bottom of the script to work for your editor
-        - Edit original files, and re-render chunk until desired result is reached
-        - Run `make format_replace`, then render the next chunk
-    - When finished, `make format` should ideally not leave behind any formatted files (files with `___transformed.h` or `___transformed.cpp` suffixes)
-4. Run unit tests with `make test DEBUG=1 ASAN=address`
-5. Run game search tests.
-    5.1 Run default tests with AddressSanitizer and all debugging flags
-        - `make clean && make DEBUG=1 ASAN=address && ./MCGS --run-tests`
-        - `python3 create-table.py out.csv -o out.html`
-        - This will be quite slow
-    5.2 Run larger test set with default compilation flags
-        - `make clean && make && ./MCGS --run-tests --test-dir input/main_tests"
-        - `python3 create-table.py out.csv -o out.html`
-        - This will also be quite slow
-6. Update documentation. Prune outdated/resolved notes.
-    6.1 development-notes.md
-    6.2 style.md
-    6.3 todo.md
-    6.4 README.md
-7. Prune relevant temp files (src/temp, docs/temp)
+    - Basic procedure: edit original source files, then (re-)render formatted files. Repeat until desired result is achieved (see clang-format section of `style.md` for more information)
+    1. Option 1: Using `make format` target
+        - Render all formatted files:
+          ```
+          make format
+          ```
+          - See `format_result.txt` for diff of original vs rendered files
+          - NOTE: When formatted files are present, you cannot compile. `make format_delete` to delete all formatted files. You don't need to do this between re-renders
+        - Alternatively, render a subset of formatted files:
+          ```
+          LINT_FILES="file1 file2..." make format
+          ```
+        - Apply changes (simple replacement using `mv` command):
+          ```
+          make format_replace
+          ```
+    2. Option 2: Using `format-chunk.py`
+        - Check how many "chunks" (groups of 10 files) there are, then exit:
+          ```
+          python3 utils/format-chunk.py
+          ```
+        - Render a chunk (where `<i>` is a chunk number). This opens relevant files in NeoVim. You can edit the loop at the bottom of the script to use your editor, or omit the `vim` argument to skip opening an editor:
+          ```
+          python3 utils/format-chunk.py vim -<i>
+          ```
+        - Apply changes after each chunk gives desired result:
+          ```
+          make format_replace
+          ```
+    - When finished, `make format` should ideally leave behind no formatted files (files containing `___transformed` in their names) 
+4. Run unit tests with all debugging tools:
+   ```
+   make clean && make test DEBUG=1 ASAN=address
+   ```
+5. Run game search tests with different debugging tools
+    - Check results after each run (view resulting `out.html` in your web browser):
+      ```
+      python3 create-table.py out.csv -o out.html
+      ```
+    1. Run default tests with all debugging tools (this will be very slow):
+       ```
+       make clean && make DEBUG=1 ASAN=address && ./MCGS --run-tests
+       ```
+    2. Run larger test set with default compilation flags (also quite slow):
+       ```
+       make clean && make && ./MCGS --run-tests --test-dir input/main_tests
+       ```
+6. Update documentation. Prune outdated/resolved notes
+    - `development-notes.md`
+    - `style.md`
+    - `todo.md`
+    - `README.md`
+7. Prune relevant temp files (`src/temp`, `docs/temp`)
+8. Create github release. Include notes about new features
 
 # Search and Solving a Game
 - Two classes implement game solving: `alternating_move_game` and `sumgame`
