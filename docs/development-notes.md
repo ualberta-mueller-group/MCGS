@@ -5,127 +5,32 @@ This document includes more detailed information than `README.md`, including des
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 # Table of Contents
 
-- [Outstanding Issues](#outstanding-issues)
-- [Release Procedure](#release-procedure)
 - [Search and Solving a Game](#search-and-solving-a-game)
+- [More on data types](#more-on-data-types)
 - [Impartial Games](#impartial-games)
 - [Initialization (`mcgs_init.h`)](#initialization-mcgs_inith)
 - [Global Options (`global_options.h`)](#global-options-global_optionsh)
-- [Safe Arithmetic Functions (`safe_arithmetic.h`)](#safe-arithmetic-functions-safe_arithmetich)
 - [RTTI - Run-time type information (`game_type.h`)](#rtti---run-time-type-information-game_typeh)
-- [More on data types](#more-on-data-types)
 - [Hashing (`hashing.h`)](#hashing-hashingh)
 - [Adding Hashing To Games](#adding-hashing-to-games)
 - [Transposition Tables (`transposition.h`)](#transposition-tables-transpositionh)
-- [Bounds (`bounds.h`)](#bounds-boundsh)
+- [Safe Arithmetic Functions (`safe_arithmetic.h`)](#safe-arithmetic-functions-safe_arithmetich)
 - [Sumgame Simplification (cgt_game_simplification.h)](#sumgame-simplification-cgt_game_simplificationh)
-- [Misc Future Optimizations](#misc-future-optimizations)
+- [Bounds (`bounds.h`)](#bounds-boundsh)
+- [Outstanding Issues](#outstanding-issues)
 - [Design Choices and Remaining Uglinesses](#design-choices-and-remaining-uglinesses)
+- [Misc Future Optimizations](#misc-future-optimizations)
+- [Release Procedure](#release-procedure)
 - [Versions](#versions)
-- [This text can probably be deleted](#this-text-can-probably-be-deleted)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Outstanding Issues
-## Splitting Can Make Move Ordering Worse
-Splitting into subgames creates move ordering problems in some cases. 
-
-Consider:
-```
-[clobber_1xn] XOXOXOXOXO.XOXOXOXOXO
-[integer_game] 6
-```
-
-It is favorable to play in the clobber game. Without splitting, moves will
-first be tried in the clobber game. However, with splitting, a move will
-cause the clobber game to split into subgames, and those subgames will be placed
-at the end of the sum, meaning moves will be played on the integer game first.
-Without a transposition table, this increases run time from
-(5.49 ms black, 17.45 ms white) to (3557.94 ms black, 9807.72 ms white)
-
-Maybe we can have a subgame sorting pass which occasionally runs?
-
-## `ttable` Persistence Affects Tests
-See note at top of `create-table.py`
-
-# Release Procedure
-1. Resolve relevant TODOs
-    ```
-    make find_todo
-    ```
-2. Fix clang-tidy errors
-    - Check `tidy_result.txt` after each run. When complete, no errors should be produced by these commands
-    1. ```
-       make tidy_headers
-       ```
-    2. ```
-       make tidy
-       ```
-3. Apply clang-format
-    - Basic procedure: edit original source files, then (re-)render formatted files. Repeat until desired result is achieved (see clang-format section of `style.md` for more information)
-    1. Option 1: Using `make format` target
-        - Render all formatted files:
-          ```
-          make format
-          ```
-          - See `format_result.txt` for diff of original vs rendered files
-          - NOTE: When formatted files are present, you cannot compile. `make format_delete` to delete all formatted files. You don't need to do this between re-renders
-        - Alternatively, render a subset of formatted files:
-          ```
-          LINT_FILES="file1 file2..." make format
-          ```
-        - Apply changes (simple replacement using `mv` command):
-          ```
-          make format_replace
-          ```
-    2. Option 2: Using `format-chunk.py`
-        - Check how many "chunks" (groups of 10 files) there are, then exit:
-          ```
-          python3 utils/format-chunk.py
-          ```
-        - Render a chunk (where `<i>` is a chunk number). This opens relevant files in NeoVim. You can edit the loop at the bottom of the script to use your editor, or omit the `vim` argument to skip opening an editor:
-          ```
-          python3 utils/format-chunk.py vim -<i>
-          ```
-        - Apply changes after each chunk gives desired result:
-          ```
-          make format_replace
-          ```
-    - When finished, `make format` should ideally leave behind no formatted files (files containing `___transformed` in their names) 
-4. Run unit tests with all debugging tools:
-   ```
-   make clean && make test DEBUG=1 ASAN=address
-   ```
-5. Run game search tests with different debugging tools
-    - Check results after each run (view resulting `out.html` in your web browser):
-      ```
-      python3 create-table.py out.csv -o out.html
-      ```
-    1. Run default tests with all debugging tools (this will be very slow):
-       ```
-       make clean && make DEBUG=1 ASAN=address && ./MCGS --run-tests
-       ```
-    2. Run larger test set with default compilation flags (also quite slow):
-       ```
-       make clean && make && ./MCGS --run-tests --test-dir input/main_tests
-       ```
-6. Update documentation. Prune outdated/resolved notes
-    - `development-notes.md`
-    - `style.md`
-    - `todo.md`
-    - `README.md`
-    - To create/update table of contents:
-      ```
-      doctoc --github --title "# Table of Contents" --maxlevel 1 development-notes.md
-      ```
-7. Prune relevant temp files (`src/temp`, `docs/temp`)
-8. Create github release. Include notes about new features
 
 # Search and Solving a Game
 - Two classes implement game solving: `alternating_move_game` and `sumgame`
 - `alternating_move_game` is used for solving a single game, without splitting it into a sum of subgames
     - `alternating_move_game::solve` is a basic boolean negamax search
-- `sumgame` is used to store and solve a sum of games. 
+- `sumgame` is used to store and solve a sum of games.
     - It is derived from `alternating_move_game`
         - Reimplements `solve` method
     - Boolean negamax search, with optimizations
@@ -155,153 +60,6 @@ checking that the state is restored
     - a naive first implementation just checks the length of the move stack
     - TODO it probably is broken for sumgame, since it uses a different stack
     - TODO this check will be made functional after hash codes are implemented
-
-# Impartial Games
-- Impartial games support added in version 1.2
-- Main differences between `impartial_game` and `game`:
-    1. `play(m)` does not take a color argument
-    2. `move_generator` does not take a color argument
-    3. Completely different solving algorithms:
-        - Evaluate any impartial game to a nim value
-        - Can evaluate a sum one subgame at a time, no need
-          for "global search" of sum - just compute all nimbers
-          and nim-add them
-        - (implemented) brute force algorithm using mex rule
-        - (not yet) Lemoine and Viennot
-        - (not yet) Beling and Rogalski
-    4. Since `impartial_game` is a subclass of `game`,
-       such games can still be searched in minimax fashion 
-       as part of a regular `sumgame` - see the tests 
-       in `impartial_sumgame_test`
-- New game `kayles` - a simple and solved impartial game
-- Impartial game wrapper `impartial_game_wrapper`
-    - Allows any (partizan) game to be played in an 
-      impartial way
-    - Both players can play the moves of both BLACK and WHITE
-      in the underlying game
-    - In minimax search of such a game, the player making
-      the move in the impartial game may be different from the player
-      making a move in the wrapped game
-    - Test cases: impartial clobber, using the wrapper 
-      for `clobber_1xn` and comparison with Dai and Chen's 
-      results
-- Impartial sum game, `impartial_sumgame` - solve a sum 
-  of impartial games
-
-# Initialization (`mcgs_init.h`)
-Executables based on the C++ source code must call one of the `mcgs_init_all()`
-or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
-parsing command-line arguments. These functions initialize static data, i.e.
-`sumgame`'s transposition table, and global `random_table`s.
-
-# Global Options (`global_options.h`)
-This file defines the `global_option` class, representing a global variable
-which is part of MCGS's configuration.
-
-Specific global variables are also defined in this file, including those necessary to
-reproduce experiments (i.e. random seeds, table sizes), but also more general
-global values such as debug logging level.
-
-A `global_option` may optionally be included in the configuration summary
-printed by `./MCGS --print-optimizations`.
-
-To create a new global variable, first declare it at the bottom of
-`global_options.h`:
-```
-namespace global {
-extern global_option<double> some_variable;
-}
-```
-Then define it at the bottom of `global_options.cpp` (preferably using one of
-the macros defined there):
-```
-namespace global {
-// WILL be printed by config summary
-INIT_GLOBAL_WITH_SUMMARY(some_variable, double, 4.5);
-
-// or
-
-// WILL NOT be printed by config summary
-INIT_GLOBAL_WITHOUT_SUMMARY(some_variable, double, 4.5);
-}
-```
-
-A `global_option` has a `_name` field, which may show in the config summary, and
-is also used to define the value of `global_option::flag()`, a method giving
-the flag which should be used to set the option from the command line.
-The macros at the bottom of `global_options.cpp` initialize the `_name` field
-to the name of the variable in the source code.
-
-# Safe Arithmetic Functions (`safe_arithmetic.h`)
-This section uses the term "wrapping" to mean either underflow or overflow.
-
-- Defines template functions to do arithmetic without wrapping
-- Assumes underlying machine uses two's complement to represent integers (there's a `static_assert` to check this)
-- All functions return a `bool`
-    - When `true`, the operation was completed without wrapping
-    - When `false`, the operation would have wrapped. No operands were changed
-        - `false` is also returned on invalid arguments, i.e. negative bit shift amounts
-- Functions accept different types
-    - `int` denotes any integral type
-    - `num` denotes any integral or floating point type
-    - Both unsigned and signed types, unless stated otherwise
-
-These functions test whether an operation would wrap, without doing the operation:
-- `add_is_safe(const num x, const num y)`
-    - `true` iff `x + y` won't wrap
-- `subtract_is_safe(const num x, const num y)`
-    - `true` iff `x - y` won't wrap
-- `negate_is_safe(const signed int x)`
-    - `true` iff `-x` won't wrap
-
-These functions perform operations, and will only change the operands on success:
-- `safe_add(num& x, const num y)`
-    - `x := x + y`
-- `safe_add_negatable(signed int& x, const signed int y)`
-    - `x := x + y`, also fails if negating the resulting `x` would wrap (i.e. `-x`)
-- `safe_subtract(num& x, const num y)`
-    - `x := x - y`
-- `safe_subtract_negatable(signed int& x, const signed int y)`
-    - `x := x - y` also fails if negating the resulting `x` would wrap
-- `safe_negate(signed int& x)`
-    - `x := -x`
-- `safe_mul2_shift(signed int& x, const int exponent)`
-    - `x := x * 2^exponent` (implemented as left shift)
-    - Negative values of `x` are allowed
-    - also `false` when the operation would flip the sign
-    - On success, the resulting `x` is also negatable without wrapping
-- `safe_pow2_mod(signed int& x, const signed int pow2)`
-    - `x := x % pow2` (implemented as bitwise `&`)
-    - `false` if `pow2` is not a power of 2, or `pow2 <= 0`
-
-## safe_int<T> (future work?)
-This is not implemented, but described as a possible future task.
-- The user of safe arithmetic functions must still be careful to avoid errors
-- Ideally we would have a `safe_int<T>` type, for signed integral types
-    - Has two private fields: `T _value` and `bool _is_valid`
-    - Has range of `[T_MIN + 1, T_MAX]`, assuming `T_MIN + 1 == -T_MAX`
-    - Operations causing overflow will invalidate the result
-    - Operations using invalid operands give an invalid result
-    - Reading the value of an invalid result throws an exception
-        - Programmer has to check `is_valid()` method at the end of computation before reading value, to avoid an exception
-        - Ensures correctness; if no exception was thrown, the program is correct
-- Have a macro `CHECK_SAFE_INT(x, code)`
-    - If `x` is not valid, run `code` (allow cleanup and return from function)
-
-# RTTI - Run-time type information (`game_type.h`)
-- Defines interface class `i_game_type`
-    - Currently implements method `game_type_t game_type() const` ("concrete" non-virtual method)
-    - Also implements template function `game_type_t game_type<T>()`
-    - `game_type_t` is an unsigned integral type with a unique value for every class inheriting from `i_game_type`
-    - Both the template and method versions give the same result for the same `T`
-        - The value is determined at run-time, and is dependent on the order of `game_type()` calls
-    - Uses built-in C++ RTTI (`std::type_info` and `std::type_index`) to look up value in a `std::unordered_map`
-        - Template version is faster as it stores this value in a static variable after the first map lookup
-    - `game_type_t` is only defined for "concrete" games (non-abstract classes derived from `game`).
-        - `game_type<T>()` fails a static assert if `T` doesn't satisfy this condition
-        - `game_type() const` already satisfies this as it's not possible to instantiate an abstract type
-- `game.h` defines template `T* cast_game<T*>(game*)` acting as a `reinterpret_cast`, but uses
-`assert`s to verify that the game is not `nullptr`, is active, and is of type `T` (using its `game_type_t`)
 
 # More on data types
 
@@ -342,13 +100,13 @@ Represents a move made in a `sumgame`
     - Destructor iteratively pops undo stack, calling undo functions (i.e. `sumgame::undo_move()`, `sumgame::undo_simplify_basic()`) until it sees the marker
 
 ## `sumgame` class (`sumgame.h`)
-A `sumgame` represents a (possibly empty) set of subgames. 
+A `sumgame` represents a (possibly empty) set of subgames.
 It derives from `alternating_move_game` and reimplements the
 `solve` method to take advantage of sum structure
 - Main data structure: `vector<game*> _subgames`
     - TODO sumgame should be owner of these games? Use `std::unique_ptr`
     - TODO copy on add?
-- `sumgame` is derived from `alternating_move_game` but reimplements solve 
+- `sumgame` is derived from `alternating_move_game` but reimplements solve
     - It uses `sumgame_move`
     - It keeps its own `_play_record_stack` with sum-level info
     - Subgames keep their own stacks with local moves as well
@@ -419,11 +177,103 @@ It derives from `alternating_move_game` and reimplements the
     - Write test cases in file, read and solve
     - Game-specific move generator
         - Count the number of moves and details of moves generated, such as move order and specific moves
-- `play()` may not assume alternating colors, since a game can be a subgame 
-in a sum. 
-- The color of the player is encoded as part of the move 
-and is stored in the move stack. 
+- `play()` may not assume alternating colors, since a game can be a subgame
+in a sum.
+- The color of the player is encoded as part of the move
+and is stored in the move stack.
 - `undo_move` must respect and use the move player color information in the stack.
+
+# Impartial Games
+- Impartial games support added in version 1.2
+- Main differences between `impartial_game` and `game`:
+    1. `play(m)` does not take a color argument
+    2. `move_generator` does not take a color argument
+    3. Completely different solving algorithms:
+        - Evaluate any impartial game to a nim value
+        - Can evaluate a sum one subgame at a time, no need
+          for "global search" of sum - just compute all nimbers
+          and nim-add them
+        - (implemented) brute force algorithm using mex rule
+        - (not yet) Lemoine and Viennot
+        - (not yet) Beling and Rogalski
+    4. Since `impartial_game` is a subclass of `game`,
+       such games can still be searched in minimax fashion
+       as part of a regular `sumgame` - see the tests
+       in `impartial_sumgame_test`
+- New game `kayles` - a simple and solved impartial game
+- Impartial game wrapper `impartial_game_wrapper`
+    - Allows any (partizan) game to be played in an
+      impartial way
+    - Both players can play the moves of both BLACK and WHITE
+      in the underlying game
+    - In minimax search of such a game, the player making
+      the move in the impartial game may be different from the player
+      making a move in the wrapped game
+    - Test cases: impartial clobber, using the wrapper
+      for `clobber_1xn` and comparison with Dai and Chen's
+      results
+- Impartial sum game, `impartial_sumgame` - solve a sum
+  of impartial games
+
+# Initialization (`mcgs_init.h`)
+Executables based on the C++ source code must call one of the `mcgs_init_all()`
+or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
+parsing command-line arguments. These functions initialize static data, i.e.
+`sumgame`'s transposition table, and global `random_table`s.
+
+# Global Options (`global_options.h`)
+This file defines the `global_option` class, representing a global variable
+which is part of MCGS's configuration.
+
+Specific global variables are also defined in this file, including those necessary to
+reproduce experiments (i.e. random seeds, table sizes), but also more general
+global values such as debug logging level.
+
+A `global_option` may optionally be included in the configuration summary
+printed by `./MCGS --print-optimizations`.
+
+To create a new global variable, first declare it at the bottom of
+`global_options.h`:
+```
+namespace global {
+extern global_option<double> some_variable;
+}
+```
+Then define it at the bottom of `global_options.cpp` (preferably using one of
+the macros defined there):
+```
+namespace global {
+// WILL be printed by config summary
+INIT_GLOBAL_WITH_SUMMARY(some_variable, double, 4.5);
+
+// or
+
+// WILL NOT be printed by config summary
+INIT_GLOBAL_WITHOUT_SUMMARY(some_variable, double, 4.5);
+}
+```
+
+A `global_option` has a `_name` field, which may show in the config summary, and
+is also used to define the value of `global_option::flag()`, a method giving
+the flag which should be used to set the option from the command line.
+The macros at the bottom of `global_options.cpp` initialize the `_name` field
+to the name of the variable in the source code.
+
+# RTTI - Run-time type information (`game_type.h`)
+- Defines interface class `i_game_type`
+    - Currently implements method `game_type_t game_type() const` ("concrete" non-virtual method)
+    - Also implements template function `game_type_t game_type<T>()`
+    - `game_type_t` is an unsigned integral type with a unique value for every class inheriting from `i_game_type`
+    - Both the template and method versions give the same result for the same `T`
+        - The value is determined at run-time, and is dependent on the order of `game_type()` calls
+    - Uses built-in C++ RTTI (`std::type_info` and `std::type_index`) to look up value in a `std::unordered_map`
+        - Template version is faster as it stores this value in a static variable after the first map lookup
+    - `game_type_t` is only defined for "concrete" games (non-abstract classes derived from `game`).
+        - `game_type<T>()` fails a static assert if `T` doesn't satisfy this condition
+        - `game_type() const` already satisfies this as it's not possible to instantiate an abstract type
+- `game.h` defines template `T* cast_game<T*>(game*)` acting as a `reinterpret_cast`, but uses
+`assert`s to verify that the game is not `nullptr`, is active, and is of type `T` (using its `game_type_t`)
+
 
 # Hashing (`hashing.h`)
 Defines main data types for game hashing:
@@ -556,6 +406,7 @@ Methods:
 - `get_value()`
     - Get the current `hash_t` value. Must first set `p`
 
+
 # Adding Hashing To Games
 Important:
 1. A game's `play` method should call `game::play` at the START of the method
@@ -662,7 +513,7 @@ following values:
 - `REL_GREATER`
 - `REL_UNKNOWN`
     - This is returned by `game`'s default implementation
-    
+
 i.e. return `REL_LESS` if `this` is lexicographically less than `rhs`.
 
 
@@ -768,6 +619,117 @@ tt_it.init_entry();
 tt_it.set_bool(0, search_result);
 ```
 
+# Safe Arithmetic Functions (`safe_arithmetic.h`)
+This section uses the term "wrapping" to mean either underflow or overflow.
+
+- Defines template functions to do arithmetic without wrapping
+- Assumes underlying machine uses two's complement to represent integers (there's a `static_assert` to check this)
+- All functions return a `bool`
+    - When `true`, the operation was completed without wrapping
+    - When `false`, the operation would have wrapped. No operands were changed
+        - `false` is also returned on invalid arguments, i.e. negative bit shift amounts
+- Functions accept different types
+    - `int` denotes any integral type
+    - `num` denotes any integral or floating point type
+    - Both unsigned and signed types, unless stated otherwise
+
+These functions test whether an operation would wrap, without doing the operation:
+- `add_is_safe(const num x, const num y)`
+    - `true` iff `x + y` won't wrap
+- `subtract_is_safe(const num x, const num y)`
+    - `true` iff `x - y` won't wrap
+- `negate_is_safe(const signed int x)`
+    - `true` iff `-x` won't wrap
+
+These functions perform operations, and will only change the operands on success:
+- `safe_add(num& x, const num y)`
+    - `x := x + y`
+- `safe_add_negatable(signed int& x, const signed int y)`
+    - `x := x + y`, also fails if negating the resulting `x` would wrap (i.e. `-x`)
+- `safe_subtract(num& x, const num y)`
+    - `x := x - y`
+- `safe_subtract_negatable(signed int& x, const signed int y)`
+    - `x := x - y` also fails if negating the resulting `x` would wrap
+- `safe_negate(signed int& x)`
+    - `x := -x`
+- `safe_mul2_shift(signed int& x, const int exponent)`
+    - `x := x * 2^exponent` (implemented as left shift)
+    - Negative values of `x` are allowed
+    - also `false` when the operation would flip the sign
+    - On success, the resulting `x` is also negatable without wrapping
+- `safe_pow2_mod(signed int& x, const signed int pow2)`
+    - `x := x % pow2` (implemented as bitwise `&`)
+    - `false` if `pow2` is not a power of 2, or `pow2 <= 0`
+
+## safe_int<T> (future work?)
+This is not implemented, but described as a possible future task.
+- The user of safe arithmetic functions must still be careful to avoid errors
+- Ideally we would have a `safe_int<T>` type, for signed integral types
+    - Has two private fields: `T _value` and `bool _is_valid`
+    - Has range of `[T_MIN + 1, T_MAX]`, assuming `T_MIN + 1 == -T_MAX`
+    - Operations causing overflow will invalidate the result
+    - Operations using invalid operands give an invalid result
+    - Reading the value of an invalid result throws an exception
+        - Programmer has to check `is_valid()` method at the end of computation before reading value, to avoid an exception
+        - Ensures correctness; if no exception was thrown, the program is correct
+- Have a macro `CHECK_SAFE_INT(x, code)`
+    - If `x` is not valid, run `code` (allow cleanup and return from function)
+
+
+# Sumgame Simplification (cgt_game_simplification.h)
+`sumgame::simplify_basic()` simplifies the sumgame by summing together basic CGT games and simplifying switches, (and `sumgame::undo_simplify_basic()` undoes this). Each step handles a different game type. Run-time type information is used to distinguish game types. To ensure that new games produced by a previous step may be included in the next step, steps happen in the following order:
+
+1. `nimber`
+2. `switch_game`
+3. `up_star`
+4. `integer_game` and `dyadic_rational` together
+
+Steps producing no useful simplification will not modify the `sumgame`. i.e. if the `sumgame` has only one non-zero `up_star` game, the game will be left alone, rather than duplicated with one inactive copy.
+
+These steps are run at the start of `sumgame::_solve_with_timeout()`, when:
+- At the root of minimax search
+- A "basic" CGT game has been added
+- After undoing a simplification
+    - Calls to `simplify_basic()` which don't change the `sumgame` don't trigger an undo
+
+
+## `nimber` Simplification
+- All `nimber`s are summed together using `nimber::nim_sum()`
+- This step only has an effect if the sum contains at least 2 nimbers, or contains 1 nimber with `value() <= 1`
+- May add 1 `nimber`, or 1 star (as `up_star`), or nothing
+- Overflow is not a concern, as nimber addition is an XOR operation
+
+## `switch_game` Simplification
+`switch_game`s are of the form `{X | Y}` for some rationals `X` and `Y`.
+
+First, all `switch_game`s are separated based on their `switch_kind`. Only `SWITCH_KIND_PROPER` and `SWITCH_KIND_CONVERTIBLE_NUMBER` are used. `SWITCH_KIND_RATIONAL` and `SWITCH_KIND_PROPER_NORMALIZED` are left alone. There are two major cases (with some subcases), described in the next subsections.
+
+Note that operations involve the `fraction` class, and when arithmetic overflow would have occurred during simplification of a given `switch_game` object, this particular `switch_game` object is skipped and left untouched.
+
+### Proper switch
+Proper switches are `switch_game`s where `X > Y`. These games are normalized to produce a sum `M + {A | -A}`, for fractions `M` and `A`, where `M` is the mean of `X` and `Y`, and `A > -A`. `M` is added to the `sumgame` as a `dyadic_rational`, and `{A | -A}` is added to the `sumgame` as a `switch_game`.
+
+This step only happens if there is at least one `integer_game` or `dyadic_rational` in the sum. This is to avoid the problem of switch normalization increasing the number of moves that can be played at a search step, leading to worse performance than if basic CGT simplification was disabled.
+
+### Convertible number
+Switches representing numbers are `switch_game`s where `X <= Y`. Several subcases occur:
+
+- If `X < 0` and `Y > 0`, the game is 0 (so it is just deactivated)
+- If `X == Y`, the game is replaced with `X + *` (a `dyadic_rational` and `up_star`)
+- Otherwise the game is replaced by the "simplest" `dyadic_rational` `U`, `X < U < Y`
+
+The simplest such value is the unique rational `U = i/2^j` for some integers `i` and `j`, `j >= 0`, having minimal `j`, or if `j == 0`, having `i` with smallest absolute value. This value is found by iteratively increasing `j` and checking if some multiple of `1/2^j` occurs between `X` and `Y`, and if it does, the specific multiple representing `U` is then found.
+
+## `integer_game` and `dyadic_rational` Simplification
+All `integer_game`s are summed together, then all `dyadic_rational`s are summed together. The two resulting sums are then summed into a combined sum. Within each of these 3 summations, summands which would cause overflow are skipped.
+
+For each sum, no useful work was done if the sum is the result of less than 2 games, and the sum is non-zero. Otherwise the sum is useful.
+- If the combined sum is useful, it replaces all games used to produce the sum
+- Otherwise, the integer and rational sums individually replace the games used to produce them (only when the sums are useful)
+
+## `up_star` Simplification
+`up_star`s are summed together similarly to `integer_game`s and `dyadic_rational`s, and the resulting sum replaces the games used to produce it, only when the sum is useful (as explained in the previous subsection).
+
 # Bounds (`bounds.h`)
 Defines functions and types used for finding lower and upper bounds of games.
 
@@ -825,59 +787,44 @@ Searching for bounds is faster within smaller intervals. When finding bounds for
 
 Maybe bound generation in the database should be done using a sliding window of statistics for the last `N` games to help size intervals appropriately.
 
-# Sumgame Simplification (cgt_game_simplification.h)
-`sumgame::simplify_basic()` simplifies the sumgame by summing together basic CGT games and simplifying switches, (and `sumgame::undo_simplify_basic()` undoes this). Each step handles a different game type. Run-time type information is used to distinguish game types. To ensure that new games produced by a previous step may be included in the next step, steps happen in the following order:
+# Outstanding Issues
+## Splitting Can Make Move Ordering Worse
+Splitting into subgames creates move ordering problems in some cases.
 
-1. `nimber`
-2. `switch_game`
-3. `up_star`
-4. `integer_game` and `dyadic_rational` together
+Consider:
+```
+[clobber_1xn] XOXOXOXOXO.XOXOXOXOXO
+[integer_game] 6
+```
 
-Steps producing no useful simplification will not modify the `sumgame`. i.e. if the `sumgame` has only one non-zero `up_star` game, the game will be left alone, rather than duplicated with one inactive copy.
+It is favorable to play in the clobber game. Without splitting, moves will
+first be tried in the clobber game. However, with splitting, a move will
+cause the clobber game to split into subgames, and those subgames will be placed
+at the end of the sum, meaning moves will be played on the integer game first.
+Without a transposition table, this increases run time from
+(5.49 ms black, 17.45 ms white) to (3557.94 ms black, 9807.72 ms white)
 
-These steps are run at the start of `sumgame::_solve_with_timeout()`, when:
-- At the root of minimax search
-- A "basic" CGT game has been added
-- After undoing a simplification
-    - Calls to `simplify_basic()` which don't change the `sumgame` don't trigger an undo
+Maybe we can have a subgame sorting pass which occasionally runs?
 
+# Design Choices and Remaining Uglinesses
+## A `move` must be implemented as an `int`
+- It is challenging to make a generic abstract move class, in a "nice" and efficient way.
+- Future Plan: probably keep it this way unless we find an elegant general solution
+- It will break for games which have complex move descriptions
+    - Possible way out: support partial moves which fit an integer
 
-## `nimber` Simplification
-- All `nimber`s are summed together using `nimber::nim_sum()`
-- This step only has an effect if the sum contains at least 2 nimbers, or contains 1 nimber with `value() <= 1`
-- May add 1 `nimber`, or 1 star (as `up_star`), or nothing
-- Overflow is not a concern, as nimber addition is an XOR operation
+## `move_generator` objects are dynamically allocated
+- This is ugly but it is unclear how to solve it in a better way.
+- It would be best to have move generators defined just as local variables.
+- A workaround to prevent memory leaks is to always wrap
+a move generator in a `std::unique_ptr`
+    - See the example in `alternating_move_game::solve`
 
-## `switch_game` Simplification
-`switch_game`s are of the form `{X | Y}` for some rationals `X` and `Y`.
-
-First, all `switch_game`s are separated based on their `switch_kind`. Only `SWITCH_KIND_PROPER` and `SWITCH_KIND_CONVERTIBLE_NUMBER` are used. `SWITCH_KIND_RATIONAL` and `SWITCH_KIND_PROPER_NORMALIZED` are left alone. There are two major cases (with some subcases), described in the next subsections.
-
-Note that operations involve the `fraction` class, and when arithmetic overflow would have occurred during simplification of a given `switch_game` object, this particular `switch_game` object is skipped and left untouched.
-
-### Proper switch
-Proper switches are `switch_game`s where `X > Y`. These games are normalized to produce a sum `M + {A | -A}`, for fractions `M` and `A`, where `M` is the mean of `X` and `Y`, and `A > -A`. `M` is added to the `sumgame` as a `dyadic_rational`, and `{A | -A}` is added to the `sumgame` as a `switch_game`.
-
-This step only happens if there is at least one `integer_game` or `dyadic_rational` in the sum. This is to avoid the problem of switch normalization increasing the number of moves that can be played at a search step, leading to worse performance than if basic CGT simplification was disabled.
-
-### Convertible number
-Switches representing numbers are `switch_game`s where `X <= Y`. Several subcases occur:
-
-- If `X < 0` and `Y > 0`, the game is 0 (so it is just deactivated)
-- If `X == Y`, the game is replaced with `X + *` (a `dyadic_rational` and `up_star`)
-- Otherwise the game is replaced by the "simplest" `dyadic_rational` `U`, `X < U < Y`
-
-The simplest such value is the unique rational `U = i/2^j` for some integers `i` and `j`, `j >= 0`, having minimal `j`, or if `j == 0`, having `i` with smallest absolute value. This value is found by iteratively increasing `j` and checking if some multiple of `1/2^j` occurs between `X` and `Y`, and if it does, the specific multiple representing `U` is then found.
-
-## `integer_game` and `dyadic_rational` Simplification
-All `integer_game`s are summed together, then all `dyadic_rational`s are summed together. The two resulting sums are then summed into a combined sum. Within each of these 3 summations, summands which would cause overflow are skipped.
-
-For each sum, no useful work was done if the sum is the result of less than 2 games, and the sum is non-zero. Otherwise the sum is useful.
-- If the combined sum is useful, it replaces all games used to produce the sum
-- Otherwise, the integer and rational sums individually replace the games used to produce them (only when the sums are useful)
-
-## `up_star` Simplification
-`up_star`s are summed together similarly to `integer_game`s and `dyadic_rational`s, and the resulting sum replaces the games used to produce it, only when the sum is useful (as explained in the previous subsection).
+## Reimplementation/duplication of `game` concepts in `sumgame`
+- This is a consequence of the design choice above: `move` must be an `int`
+- A move in a sumgame is specified in `struct sumgame_move` by two parts: the index of the subgame in the `_subgames` vector, and the move inside the subgame (encoded in a game-specific way)
+- `play()` in sumgame takes a `sumgame_move` as argument, not a `move`
+- `solve()` also uses `sumgame_move`
 
 # Misc Future Optimizations
 - We should be able to compile with `-DNDEBUG` at some point
@@ -893,25 +840,78 @@ For each sum, no useful work was done if the sum is the result of less than 2 ga
     where run-time errors may occur.
 - `game_type()` could possibly be faster if we eliminated the `unordered_map` lookup
 
-# Design Choices and Remaining Uglinesses
-## A `move` must be implemented as an `int` 
-- It is challenging to make a generic abstract move class, in a "nice" and efficient way.
-- Future Plan: probably keep it this way unless we find an elegant general solution
-- It will break for games which have complex move descriptions
-    - Possible way out: support partial moves which fit an integer
-
-## `move_generator` objects are dynamically allocated
-- This is ugly but it is unclear how to solve it in a better way. 
-- It would be best to have move generators defined just as local variables.
-- A workaround to prevent memory leaks is to always wrap 
-a move generator in a `std::unique_ptr` 
-    - See the example in `alternating_move_game::solve`
-
-## Reimplementation/duplication of `game` concepts in `sumgame`
-- This is a consequence of the design choice above: `move` must be an `int`
-- A move in a sumgame is specified in `struct sumgame_move` by two parts: the index of the subgame in the `_subgames` vector, and the move inside the subgame (encoded in a game-specific way)
-- `play()` in sumgame takes a `sumgame_move` as argument, not a `move`
-- `solve()` also uses `sumgame_move`
+# Release Procedure
+1. Resolve relevant TODOs
+    ```
+    make find_todo
+    ```
+2. Fix clang-tidy errors
+    - Check `tidy_result.txt` after each run. When complete, no errors should be produced by these commands
+    1. ```
+       make tidy_headers
+       ```
+    2. ```
+       make tidy
+       ```
+3. Apply clang-format
+    - Basic procedure: edit original source files, then (re-)render formatted files. Repeat until desired result is achieved (see clang-format section of `style.md` for more information)
+    1. Option 1: Using `make format` target
+        - Render all formatted files:
+          ```
+          make format
+          ```
+          - See `format_result.txt` for diff of original vs rendered files
+          - NOTE: When formatted files are present, you cannot compile. `make format_delete` to delete all formatted files. You don't need to do this between re-renders
+        - Alternatively, render a subset of formatted files:
+          ```
+          LINT_FILES="file1 file2..." make format
+          ```
+        - Apply changes (simple replacement using `mv` command):
+          ```
+          make format_replace
+          ```
+    2. Option 2: Using `format-chunk.py`
+        - Check how many "chunks" (groups of 10 files) there are, then exit:
+          ```
+          python3 utils/format-chunk.py
+          ```
+        - Render a chunk (where `<i>` is a chunk number). This opens relevant files in NeoVim. You can edit the loop at the bottom of the script to use your editor, or omit the `vim` argument to skip opening an editor:
+          ```
+          python3 utils/format-chunk.py vim -<i>
+          ```
+        - Apply changes after each chunk gives desired result:
+          ```
+          make format_replace
+          ```
+    - When finished, `make format` should ideally leave behind no formatted files (files containing `___transformed` in their names)
+4. Run unit tests with all debugging tools:
+   ```
+   make clean && make test DEBUG=1 ASAN=address
+   ```
+5. Run game search tests with different debugging tools
+    - Check results after each run (view resulting `out.html` in your web browser):
+      ```
+      python3 create-table.py out.csv -o out.html
+      ```
+    1. Run default tests with all debugging tools (this will be very slow):
+       ```
+       make clean && make DEBUG=1 ASAN=address && ./MCGS --run-tests
+       ```
+    2. Run larger test set with default compilation flags (also quite slow):
+       ```
+       make clean && make && ./MCGS --run-tests --test-dir input/main_tests
+       ```
+6. Update documentation. Prune outdated/resolved notes
+    - `development-notes.md`
+    - `style.md`
+    - `todo.md`
+    - `README.md`
+    - To create/update table of contents:
+      ```
+      doctoc --github --title "# Table of Contents" --maxlevel 1 docs/development-notes.md
+      ```
+7. Prune relevant temp files (`src/temp`, `docs/temp`)
+8. Create github release. Include notes about new features
 
 # Versions
 ## Version 0 completed
@@ -937,7 +937,7 @@ a move generator in a `std::unique_ptr`
 - removed `nim` class and moved functionality such as nim sum to `nimber`
 - implemented `game::inverse()` for all game types
 
-### Version 1.1 completed 
+### Version 1.1 completed
 - More cleanup and Tools and Components for Database
     - Code formatting tools and checks, "lint"-like
     - `scale` S such as multiples of up, or up+star, or integers
@@ -952,7 +952,7 @@ a move generator in a `std::unique_ptr`
 ## Future: Smaller Step Versions 1.x to Prepare for Version 2
 - change read from string functions to directly create sumgame
     - this would require `sumgame` to be the sole owner of its games
-    - OR, the `game_case` produced by `file_parser::parse_chunk` could own 
+    - OR, the `game_case` produced by `file_parser::parse_chunk` could own
     the games in a `vector<unique_ptr<game>>`
 - compare G with a simpler game H, replace in S if equal
 - compare G1+G2 with a simpler H, replace in S if equal
@@ -961,112 +961,4 @@ a move generator in a `std::unique_ptr`
 - general sum simplifications
     - remove/deactivate 0
     - find inverse pairs and deactivate
-
-# This text can probably be deleted
-
-## Regarding `game` "Hooks"
-- A `game`'s `local_hash` is computed lazily by `game::get_local_hash()`, and then possibly incrementally updated afterward
-- The hash is computed from scratch by abstract method `game::_init_hash(local_hash&) = 0`, implemented by each game
-- Hashes can optionally be incrementally updated by a game's play(), undo_move(), normalize(), and undo_normalize() methods
-    - These methods can check if the hash has been computed via `_hash_valid()`, then update the hash and call `_mark_hash_updated()`
-    - But this requires `game` to do record keeping before these methods interact with the hash
-        - play() must immediately call `game::play()`
-        - undo_move() must immediately get the previous move from the stack, and call `game::undo_move()`
-        - normalize() must immediately call `game::normalize()`
-        - undo_normalize() must immediately call `game::undo_normalize()`
-        - If any of these methods fail to call the corresponding base class method, search will be incorrect
-
-- An alternative is to use "hooks", i.e. have `game::play()` be a non-virtual method which calls abstract method `game::_play_hook() = 0`
-    - With this, it's impossible for the user to forget to call base class methods
-    - But multiple levels of inheritance can make hooks confusing
-        - With "c" for "color" and "nc" for "no color":
-            - `void game::play_c()` and `virtual void game::_play_c_hook() = 0`
-            - `void impartial_game::play_nc()` and `virtual void impartial_game::_play_nc_hook() = 0`
-            - A 3rd abstract class, inherting from `impartial_game`, would make this worse
-        - Harder to trace execution
-            - Your game's play() method isn't called directly when you do `g.play(...)`
-                - Can't trace execution just by looking at your play() method
-                - Multiple methods called before the game's play() method
-            - The code has more functions, making it harder to understand
-            - See call graph example below
-
-### Call graphs for `impartial_game`s, using hook solution
-```
-kayles k(...);
-k.play_c(...);
-```
-game::play_c()
-    impartial_game::_play_c_hook() final
-        kayles::_play_nc_hook() override
-
-
-```
-kayles k(...);
-k.play_nc(...);
-```
-impartial_game::play_nc()
-    game::play_c()
-        impartial_game::_play_c_hook() final
-            kayles::_play_nc_hook() override
-
-
-### Proposal
-Have some methods be hooks, and others not. `game::play()` and
-`game::undo_move()` should stay how they were before, but normalize and
-undo_normalize can be hooks; these methods are unlikely to result in confusing
-chains of virtual methods
-
-## `game` Hooks Related to Hashing
-`game` has several virtual methods related to hashing, some of which have
-default implementations.
-
-Non-virtual `game::order(const game*)` returns a `relation` enum value, indicating the
-ordering of two games. Considering two games `g1` and `g2`, `g1 < g2` (for
-ordering) when:
-- `g1`'s `game_type_t` is less than `g2`'s
-- If `g1` and `g2` are of the same type, the returned value is
-    `g1._order_impl(g2)`
-    - If `_order_impl` returns `REL_UNKNOWN`, the value returned by
-        `game::order` is instead `REL_EQUAL`
-
-Hooks without default implementations:
-- `game::_init_hash(local_hash& hash)`
-    - When called, `hash` has been reset, and has had its type set. The
-        implementer must compute the full hash for their game.
-
-Hooks with default implementations:
-- `game::_order_impl(const game*)`
-    - Only called on two games of the same type. Returns ordering of the games,
-        as a `relation` enum value. Default returns `REL_UNKNOWN`
-    - Implementer should cast the game pointer argument to their game's type,
-        i.e. `clobber_1xn::_order_impl` should cast from `const game*` to
-        `const clobber_1xn*`
-- `game::_normalize_impl()`
-    - Normalize a game. Default does nothing
-- `game::_undo_normalize_impl()`
-    - Undo normalization of a game. Default does nothing
-
-`strip` provides default implementations:
-- `strip::_init_hash(local_hash& hash)`
-    - Computes hash of the board. Assumes that the board contains all of the
-        game's state
-- `strip::_normalize_impl()` and `strip::_undo_normalize_impl()`
-    - Potentially reverses the board based on lexicographical order
-- `strip::_order_impl(const game* rhs)`
-    - Ordering based on lexicographical ordering of boards
-
-### Incremental Hash Updates
-`game`s can optionally incrementally update their hashes in the following methods:
-- `play()`
-- `undo_move()`
-- `_normalize_impl()`
-- `_undo_normalize_impl()`
-
-To incrementally update a hash, follow these steps:
-1. If `_hash_updatable()` returns `true`, the hash can be updated, otherwise it cannot
-2. Get a reference to the `local_hash` through `_get_hash_ref()`
-3. Remove relevant previous state from the hash, and add the new state, using `local_hash::toggle_value(position, color)` to do both
-4. Call `_mark_hash_updated()`. If this function is not called, the hash will be discarded, to be recomputed later by `_init_hash()` as needed
-    - Some games/methods opt to discard hashes, when updating them isn't worth the cost
-
 
