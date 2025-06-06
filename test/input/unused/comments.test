@@ -1,4 +1,4 @@
-{version 1.1}
+{version 1.2}
 /* This comment should appear in both cases */
 /* This comment should also appear in both cases */
 /*#0 This comment should only appear in the first case */

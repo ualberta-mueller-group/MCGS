@@ -1,4 +1,4 @@
-{version 1.1}
+{version 1.2}
 /* This is a comment */
 
 /*_ This file is valid input to MCGS, and describes the input syntax. You can
@@ -17,6 +17,11 @@ There are 5 types of 'things' that appear in input:
         a new section title is encountered.
 
         i.e. '[clobber_1xn]'
+        Additionally, you can create impartial versions of games like so:
+        '[impartial clobber_1xn]'
+        Creating an impartial version of an already impartial game has no
+        effect. i.e.
+        '[impartial kayles]'
  
     Commands
         Enclosed by '{' and '}', commands are used to solve sums of games for 
@@ -24,10 +29,10 @@ There are 5 types of 'things' that appear in input:
         Commands are also used to specify what version of the input language
         is used by a file. The version command must be present in files, but
         can be omitted from input read from stdin or passed as a command line
-        argument to MCGS. The current version is 1.1.
+        argument to MCGS. The current version is 1.2.
             i.e.
             Version command:
-                {version 1.1}
+                {version 1.2}
 
             Solve the current game sum for black, without expecting a particular
             result:
@@ -38,9 +43,16 @@ There are 5 types of 'things' that appear in input:
             Solve the current game sum for white, then black, expecting
             white to lose and black to win.
                 {W loss, B win}
+            Solve the current game, getting its nim value. Only legal if sum
+            contains no partizan games.
+                {N}
+            Same as above, but expect nim value of 5.
+                {N 5}
+            You can mix N with B and W, so long as N is legal:
+            {B win, N 2, W win}
 
-            'Solve' commands can solve a game sum up to 2 times, i.e.
-            {B, W, B} is illegal
+            'Solve' commands can solve a game sum up to 3 times, i.e.
+            {B, W, B, N} is illegal
 
     Bracketed games
         Enclosed by '(' and ')', text inside a bracketed game defines a single
@@ -73,6 +85,11 @@ There are 5 types of 'things' that appear in input:
         3 switch_game games
     Twice: once for black, then white. Then it solves an 
     empty sum for black, expecting a loss.
+
+    Then solves a sum of:
+        1 kayles game
+        1 impartial clobber_1xn game
+    For black, and then gets its nim value.
 */
 
 
@@ -93,6 +110,11 @@ XOXOO...XO
 
 /*Now the current game sum is empty. The next line solves an empty sum*/
 {B loss}
+
+/* When using N, all games must be impartial */
+[kayles] 2
+[impartial clobber_1xn] XOXO
+{B, N}
 
 
 /*_
@@ -132,7 +154,7 @@ XOXOO...XO
             Contiguous sequence of '.', 'X', 'O', and '|'. A flattened row-major
             representation of 2D board with '|' separating the rows.
 
-        [integer_game], and [nimber]:
+        [integer_game], [nimber], and [kayles]:
             A single int.
 
         [dyadic_rational]:
@@ -143,6 +165,10 @@ XOXOO...XO
 
         [up_star]:
             A non-empty list of at most one star, and at most one int.
+
+        [impartial <GAME_NAME>]
+            An impartial version of a game with name <GAME_NAME>. Accepts same
+            input as partizan version.
 */
 
 /*_
@@ -154,8 +180,8 @@ XOXOO...XO
 
     If a comment starts with '_', it will not be included in output.
 
-    If a comment starts with '#0' or '#1', it will only be included in 
-    output for the 1st or 2nd '(sum, player)' pair corresponding to the
+    If a comment starts with '#0', '#1', or '#2', it will only be included in 
+    output for the 1st, 2nd, or 3rd '(sum, player)' pair corresponding to the
     next 'solve' command.
 
 

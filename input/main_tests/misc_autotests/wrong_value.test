@@ -1,4 +1,4 @@
-{version 1.1}
+{version 1.2}
 
 /*  This test should fail due to having a wrong expected value  */
 [clobber_1xn]

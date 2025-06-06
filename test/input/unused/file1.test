@@ -1,4 +1,4 @@
-{version 1.1}
+{version 1.2}
 /*This comment should be included for both game cases*/
 [clobber_1xn]
 XOXOXOXO {B win, W win}
