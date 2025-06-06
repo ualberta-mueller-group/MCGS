@@ -2,6 +2,7 @@
 #include "cgt_basics.h"
 #include "warn_default.h"
 
+#include <array>
 #include <cassert>
 #include <limits>
 #include <memory>
@@ -208,6 +209,45 @@ void game::_pre_hash_update()
 }
 
 //---------------------------------------------------------------------------
+
+void print_options(std::ostream& os, game* g, bool endline)
+{
+    const std::array<bw, 2> COLORS = {BLACK, WHITE};
+    os << *g << ": ";
+
+    os << '{';
+
+    move_generator* mg = nullptr;
+    for (bw color : COLORS)
+    {
+        mg = g->create_move_generator(color);
+
+        bool first = true;
+        while (*mg)
+        {
+            if (first)
+                first = false;
+            else
+                os << ',' << ' ';
+
+            move m = mg->gen_move();
+            ++(*mg);
+            g->play(m, color);
+
+            os << *g;
+            g->undo_move();
+        }
+        
+        delete mg;
+
+        if (color == BLACK)
+            os << " | ";
+    }
+
+    os << '}';
+    if (endline)
+        os << std::endl;
+}
 
 #ifdef ASSERT_RESTORE_DEBUG
 assert_restore_game::assert_restore_game(const game& g)

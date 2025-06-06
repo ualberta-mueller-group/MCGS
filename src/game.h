@@ -278,6 +278,10 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const split_result& split);
 
+void print_options(std::ostream& os, game* g, bool endline = true);
+
+//---------------------------------------------------------------------------
+
 template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
 constexpr bool is_concrete_game_v =
     !std::is_abstract_v<T> && std::is_base_of_v<game, T>;
