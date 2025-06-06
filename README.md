@@ -1,4 +1,4 @@
-# MCGS V1.1
+# MCGS V1.2
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
@@ -67,7 +67,7 @@ For information about MCGS test options such as timeout duration, input director
 ./MCGS --help
 ```
 
-The `input` directory of MCGS includes other sample input files. For example, the `input/hard` directory contains tests that run more slowly in the current MCGS version than the ones in `input/autotests`.
+The `input` directory of MCGS includes other sample input files. For example, the `input/main_tests` directory contains a larger set of tests than `input/autotests`.
 
 ## Source Code and Extending MCGS
 The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new games, and define a text input format for them. The following sections first describe key internal data types, and then describe the steps for adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
@@ -89,6 +89,10 @@ This will compile source files with either the `-fsanitize=leak` or `-fsanitize=
 
 See: [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html) for more information.
 
+Additionally, the `DEBUG` makefile variable adds or removes debugging checks, to the extent that's sensible (you can't build MCGS_test with NDEBUG).
+- `make DEBUG=0` removes debugging code
+- `make DEBUG=1` adds more debugging code
+- `make` (leaving `DEBUG` undefined) builds with default debugging code
 
 ### MCGS data types
 #### game (game.h)
@@ -96,6 +100,9 @@ The abstract base type for all combinatorial games supported by MCGS.
 
 #### strip (strip.h)
 An abstract game type derived from `game`, for games played on a "line" (1 dimensional board), consisting of black stones, white stones, and empty tiles. The games `clobber_1xn`, `nogo_1xn`, and `elephants` extend `strip` and can be used as examples for new implementations.
+
+#### grid (grid.h)
+Analogue of `strip` for games played on an `MxN` grid. Used by `clobber` and `nogo`.
 
 #### move (cgt_move.h)
 Represents a move that can be played within a `game`. In this version, `move` is an integer with at least 32 bits. Each game defines the encoding of legal moves into `move`. The highest order bit is always used to encode the color of the player making the move, leaving 31 bits for the move itself. File `cgt_move.h` defines utility functions for packing and unpacking `move`s, to deal with the color bit and the "rest" of each `move`. This includes functions to encode and decode a `move` consisting of two smaller integers, for example to store a "from" and a "to" coordinate, or to encode a fraction.
@@ -116,7 +123,8 @@ Abstract type converting input tokens into `game`s.
 To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
 - Define `class x` in `x.h`, derive from `game` or `strip`.
-- Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, and `inverse()`. See comments in `game.h` for notes on important implementation details.
+- Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, `inverse()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
+    - For notes on `_init_hash`, see [development-notes.md](docs/development-notes.md)
 - Define `class x_move_generator`, derive from `move_generator`.
 - At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h` and `game_token_parsers.cpp`).
 - Document the syntax for your game in `input/info.test`, in the `Game syntax` section in the lower half of the file.

@@ -1013,6 +1013,7 @@ a move generator in a `std::unique_ptr`
     - `development-notes.md`
     - `style.md`
     - `todo.md`
+    - `info.test`
     - `README.md`
     - To create/update table of contents:
       ```
