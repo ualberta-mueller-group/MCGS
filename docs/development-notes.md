@@ -70,7 +70,7 @@ it must be restored before the end of `solve` in any case, including timeout or 
 
 ## `cli_options` struct (`cli_options.h`)
 - Holds values resulting from parsing command-line arguments
-- Returned by static method `cli_options::parse_args`
+- Returned by function `parse_args`
 
 ## `sumgame_move` struct (`sumgame.h`)
 - Represents a move made in a `sumgame`
@@ -263,14 +263,41 @@ and is stored in the move stack.
     - Test cases: impartial clobber, using the wrapper
       for `clobber_1xn` and comparison with Dai and Chen's
       results
-- Impartial sum game, `impartial_sumgame` - solve a sum
-  of impartial games
+    - Its move generator `ig_wrapper_move_generator` uses the color bit of
+    moves it generates to encode the color of the move played on the wrapped
+    game. Other move generators must not use this bit
+    - It's illegal to wrap an already impartial game. An assert checks this
+    - Assumes that the wrapped `game`'s `_split_impl()`, `_normalize_impl()`,
+    and `_undo_normalize_impl()` methods all behave "nicely". They must not change
+    the available moves, as this will change the nim value of the wrapper
+        - i.e. `^*` must not split into `^` and `*`, because the combined game
+        is in canonical form
+        - i.e. `{1/4 | 2}` must not normalize itself to `1`
+
+- `impartial_sumgame.h` defines functions for solving sums of impartial games.
+Two functions do this: `search_impartial_sumgame` and
+`search_impartial_sumgame_with_timeout`. The latter uses a timeout just like
+`sumgame'`s `solve_with_timeout`
+    - These functions use a persistent transposition table, just like `sumgame`,
+    but their table is completely independent from `sumgame`'s
+
 
 # Initialization (`mcgs_init.h`)
 Executables based on the C++ source code must call one of the `mcgs_init_all()`
 or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
-parsing command-line arguments. These functions initialize static data, i.e.
-`sumgame`'s transposition table, and global `random_table`s.
+parsing command-line arguments. These functions initialize static data:
+- `random.h`'s random seed
+- Global `random_table`s
+- `sumgame`'s transposition table
+- `impartial_sumgame.h`'s transposition table
+- In the future, will assign `game_type_t`s to specific games, so that they're
+    not assigned based on input
+
+# Random (`random.h`)
+- Defines functions to get random numbers for different integral types
+    - `get_random_uXX()` where `XX` is one of `64`, `32`, `16`, `8`
+    - `0` is never returned by these functions
+- `mcgs_init()` must be called first
 
 # Global Options (`global_options.h`)
 This file defines the `global_option` class, representing a global variable
@@ -319,6 +346,9 @@ to the name of the variable in the source code.
         - The value is determined at run-time, and is dependent on the order of `game_type()` calls
     - Uses built-in C++ RTTI (`std::type_info` and `std::type_index`) to look up value in a `std::unordered_map`
         - Template version is faster as it stores this value in a static variable after the first map lookup
+        - Method version does a map lookup the first time it's called on a game object. Value is cached after.
+        If called during object construction, by a constructor that isn't of the most derived type, the cached
+        value will be incorrect. There's an assert to check this in debug mode
     - `game_type_t` is only defined for "concrete" games (non-abstract classes derived from `game`).
         - `game_type<T>()` fails a static assert if `T` doesn't satisfy this condition
         - `game_type() const` already satisfies this as it's not possible to instantiate an abstract type
@@ -440,6 +470,7 @@ To compute the `global_hash` value for a `sumgame` `S`:
 TODO: Currently `sumgame::get_global_hash()` sorts all of the `sumgame`'s games
 every time it's called. `sumgame` could maintain an ordering of its games to
 prevent this.
+- NOTE: Something like this was tried, but didn't seem beneficial
 
 ### `global_hash` Methods
 Methods:
@@ -480,7 +511,7 @@ void dyadic_rational::_init_hash(local_hash& hash)
 }
 ```
 
-A default implementation is provided by `strip`.
+Default implementations are provided by `strip` and `grid`.
 
 ## 2. Optional `_normalize_impl` and `_undo_normalize_impl` Methods
 Games can optionally implement `game::_normalize_impl()` and
@@ -504,6 +535,10 @@ void strip::_normalize_impl()
 ```
 
 `game` provides trivial default implementations which preserve the current state.
+
+IMPORTANT: Your function must not modify the available moves, i.e. simplifying
+`{1/4 | 2}` to be `1`. This results in incorrect values when wrapped by
+`impartial_game_wrapper`.
 
 ## 3. Optional Incremental Hash Updates
 Some of a game's methods may incrementally update the hash:
@@ -567,12 +602,29 @@ following values:
 
 i.e. return `REL_LESS` if `this` is lexicographically less than `rhs`.
 
+Example in `integer_game` (note the cast):
+```
+relation integer_game::_order_impl(const game* rhs) const
+{
+    const integer_game* other = reinterpret_cast<const integer_game*>(rhs);
+    assert(dynamic_cast<const integer_game*>(rhs) == other);
+
+    const int& val1 = value();
+    const int& val2 = other->value();
+
+    if (val1 != val2)
+        return val1 < val2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
+}
+```
+
 
 # Transposition Tables (`transposition.h`)
 Defines types for transposition tables:
 - `ttable<Entry>` class
     - A transposition table whose entries are of type `Entry`
-- `ttable<Entry>::iterator` class
+- `ttable<Entry>::search_result` class
     - The value returned by querying the transposition table with a `hash_t`.
         Refers to a (possibly absent) table entry and its associated data.
         Used to access, modify, or insert the table entry (and its associated
@@ -587,13 +639,18 @@ A `ttable<Entry>` is constructed with two arguments:
 - `size_t entry_bools`
     - Quantity of extra `bool`s to associate with each entry, stored outside
         of the `Entry` in a tightly packed bit vector, and accessed through
-        the `ttable<Entry>::iterator` type
+        the `ttable<Entry>::search_result` type
 
 `ttable<Entry>` methods:
-- `ttable<Entry>::iterator get_iterator(hash_t hash)`
-    - Returns an entry iterator corresponding to the queried hash
+- `ttable<Entry>::search_result search(hash_t hash)`
+    - Returns a `search_result` corresponding to the queried hash
+- "simpler" but slower methods not using `search_result`:
+    - `void store(hash_t hash, const Entry& entry)`
+        - Store the given entry using the hash
+    - `std::optional<Entry> get(hash_t hash) const`
+        - Query with hash. If not found, the returned value is absent
 
-`ttable<Entry>::iterator` methods:
+`ttable<Entry>::search_result` methods:
 - Methods which are always valid:
     - `bool entry_valid() const`
         - `true` IFF the queried table entry is present in the table
@@ -633,15 +690,15 @@ struct ttable_entry
 // 24 bit index, no extra bools associated with entry
 ttable<ttable_entry> tt(24, 0);
 
-ttable<ttable_entry>::iterator tt_it = tt.get_iterator(hash);
+ttable<ttable_entry>::search_result sr = tt.search(hash);
 
 // At start of minimax search
-if (tt_it.entry_valid())
-    return tt_it.get_entry().win;
+if (sr.entry_valid())
+    return sr.get_entry().win;
 
-// Later in minimax search function, when result is known ("search_result" is some bool)
-ttable_entry entry = {search_result};
-tt_it.set_entry(entry);
+// Later in minimax search function, when result is known ("win" is some bool)
+ttable_entry entry = {win};
+sr.set_entry(entry);
 ```
 
 ## `ttable` Example 2
@@ -659,15 +716,15 @@ struct empty_struct
 // 24 bit index, every entry has 1 additional bool stored outside of it
 ttable<empty_struct> tt(24, 1);
 
-ttable<empty_struct>::iterator tt_it = tt.get_iterator(hash);
+ttable<empty_struct>::search_result sr = tt.search(hash);
 
 // Start of minimax search
-if (tt_it.entry_valid())
-    return tt_it.get_bool(0);
+if (sr.entry_valid())
+    return sr.get_bool(0);
 
-// Later in minimax search function, when result is known ("search_result" is some bool)
-tt_it.init_entry();
-tt_it.set_bool(0, search_result);
+// Later in minimax search function, when result is known ("win" is some bool)
+sr.init_entry();
+sr.set_bool(0, win);
 ```
 
 # Safe Arithmetic Functions (`safe_arithmetic.h`)
