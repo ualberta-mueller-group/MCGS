@@ -124,7 +124,7 @@ To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
 - Define `class x` in `x.h`, derive from `game` or `strip`.
 - Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, `inverse()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
-    - For notes on `_init_hash`, see [development-notes.md](docs/development-notes.md)
+    - For notes on `_init_hash`, see [development-notes.md (Adding Hashing to Games, subsection 1)](docs/development-notes.md#adding-hashing-to-games).
 - Define `class x_move_generator`, derive from `move_generator`.
 - At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h` and `game_token_parsers.cpp`).
 - Document the syntax for your game in `input/info.test`, in the `Game syntax` section in the lower half of the file.
@@ -134,7 +134,7 @@ To implement a new game `x`:
 The `test/input` directory contains input files used by unit tests. Add your new tests there.
 
 ### Implementing Game-Specific Optimizations
-Currently there are two game-specific optimizations. More will be added in future versions. Optimizations are enabled by default, and can be toggled off (see `./MCGS --help` for details on disabling optimizations). Some optimizations introduce significant overhead.
+Currently there are two game-specific optimizations. More will be added in future versions. Optimizations are enabled by default, and some can be toggled off (see `./MCGS --help` for details on disabling optimizations). Some optimizations introduce significant overhead.
 
 #### Splitting Into Subgames (`subgame_split`)
 In your game `x`, override and implement `game::split_implementation()`. See `game.h` for important implementation details, and add unit tests.
