@@ -1,3 +1,4 @@
+// NOTE: This test uses n^2 space
 #pragma once
 #include "game.h"
 #include <vector>

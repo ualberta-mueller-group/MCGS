@@ -125,6 +125,7 @@ To implement a new game `x`:
 - Define `class x` in `x.h`, derive from `game` or `strip`.
 - Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, `inverse()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
     - For notes on `_init_hash`, see [development-notes.md (Adding Hashing to Games, subsection 1)](docs/development-notes.md#adding-hashing-to-games).
+    - (OPTIONAL): subsection 3 describes how to incrementally update your hash in `play()` and `undo_move()`
 - Define `class x_move_generator`, derive from `move_generator`.
 - At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h` and `game_token_parsers.cpp`).
     - This will automatically create the impartial variant of your game.

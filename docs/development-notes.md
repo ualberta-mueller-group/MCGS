@@ -6,9 +6,11 @@ This document includes more detailed information than `README.md`, including des
 # Table of Contents
 
 - [Search and Solving a Game](#search-and-solving-a-game)
-- [More on data types](#more-on-data-types)
+- [More On Data Types](#more-on-data-types)
+- [More on Extending the `game` Class](#more-on-extending-the-game-class)
 - [Impartial Games](#impartial-games)
 - [Initialization (`mcgs_init.h`)](#initialization-mcgs_inith)
+- [Random (`random.h`)](#random-randomh)
 - [Global Options (`global_options.h`)](#global-options-global_optionsh)
 - [RTTI - Run-time type information (`game_type.h`)](#rtti---run-time-type-information-game_typeh)
 - [Hashing (`hashing.h`)](#hashing-hashingh)
@@ -49,7 +51,7 @@ This document includes more detailed information than `README.md`, including des
     - `sumgame::solve`
         - runs until completion, without timing out
     - `sumgame::solve_with_games`
-        - Temporarily adds `games` to the sum, calls `sumgame::solve`, then removes `games` and returns the result.
+        - Temporarily adds `game`s to the sum, calls `sumgame::solve`, then removes `game`s and returns the result.
         - Useful for playing a difference game
 
 ## "Logically `const`" Interface for Solving Games
@@ -138,13 +140,19 @@ It derives from `alternating_move_game` and reimplements the
 - Row-major format. Coordinates and dimensions are `(row, column)` pairs
 - Implements `game::_init_hash()` and `game::_order_impl()` analogously to `strip`
 - Does not implement `game::_normalize_impl()` or `game::_undo_normalize_impl()`
+    - TODO: In most cases there are 8 equal representations of a grid
+    (4 rotations, and their transposes). We could make `grid` maintain some
+    subset of these 8, whenever it modifies the state, and have `_normalize_impl()`
+    simply change which of them is the currently "active" board. This could be
+    reasonably fast if we maintain hashes for the boards as they're modified, and
+    pick the one with the smallest hash to be active?
 
 ## `grid_generator` class (`grid_utils.h`)
 - Given `MxN` or `1xN` dimensions of a `grid` or `strip`, generates all strings representing boards for all less than or equal dimensions
 - i.e. given `1x1`, generates: "" (empty string), ".", "X", "O"
 - i.e. given `2x2`, generates strings for: `0x0`, `1x1`, `1x2`, `2x1`, `2x2`
-    - Width is incremented, and on overflow, width is set to 1 and height is incremented
-- Given `2x1`, `1x2` is omitted, as the width is greater than `2x1`
+    - On each step, width is incremented, and on overflow, width is set to 1 and height is incremented
+- Given `2x1`, `1x2` is omitted, as its width is greater than `2x1`'s
 
 ## `grid_location` class (`grid_utils.h`)
 - Utility class for manipulating locations on a `grid`
@@ -153,7 +161,7 @@ It derives from `alternating_move_game` and reimplements the
         - "Coordinate" representation is a `(row, column)` pair. This is invariant to width changes, unlike "point" representation
         - Constructible with shape, and one of: coordinates (`int_pair`), a point (`int`), or no location (defaults to `(0, 0)`)
     - Has some ugly logic for accomodating `0x0` grids. Detailed below
-        - TODO: perhaps this logic is confusing...
+        - TODO: perhaps this logic is confusing... Maybe remove some features until this goes away?
 - May represent a valid or invalid state. Check with `valid()` method
 - The state is valid IFF the current location is within the shape
 - Shape `0x0` is legal during construction. Shapes with negative dimensions are illegal and will raise exceptions
@@ -272,14 +280,14 @@ and is stored in the move stack.
     the available moves, as this will change the nim value of the wrapper
         - i.e. `^*` must not split into `^` and `*`, because the combined game
         is in canonical form
-        - i.e. `{1/4 | 2}` must not normalize itself to `1`
+        - i.e. `{1/4 | 2}` must not normalize to `1`
 
 - `impartial_sumgame.h` defines functions for solving sums of impartial games.
 Two functions do this: `search_impartial_sumgame` and
 `search_impartial_sumgame_with_timeout`. The latter uses a timeout just like
 `sumgame'`s `solve_with_timeout`
     - These functions use a persistent transposition table, just like `sumgame`,
-    but their table is completely independent from `sumgame`'s
+    but both tables are independent from each other
 
 
 # Initialization (`mcgs_init.h`)
@@ -290,8 +298,8 @@ parsing command-line arguments. These functions initialize static data:
 - Global `random_table`s
 - `sumgame`'s transposition table
 - `impartial_sumgame.h`'s transposition table
-- In the future, will assign `game_type_t`s to specific games, so that they're
-    not assigned based on input
+- In the future, will assign `game_type_t`s to specific games, so that their
+    assignments are not dependent on input
 
 # Random (`random.h`)
 - Defines functions to get random numbers for different integral types
@@ -371,9 +379,8 @@ Defines main data types for game hashing:
 ## `random_table` Class
 A `random_table` is constructed with two arguments: `n_positions`, and `seed`,
 specifying how many positions (i.e. stones in a strip game) are
-represented in the table, and the seed for the random numbers in the table. A
-seed of 0 seeds the table with the current time (in ms) since the system
-clock's epoch.
+represented in the table, and the seed for the random numbers in the table. 0 is
+an invalid seed.
 
 A `random_table` is indexed via the `get_zobrist_val()` template method, by a pair
 of integral values, (`position`, and `color`), returning a `hash_t`. `color` can
@@ -491,10 +498,10 @@ Methods:
 
 # Adding Hashing To Games
 Important:
-1. A game's `play` method should call `game::play` at the START of the method
-2. A game's `undo_move` method should call `game::undo_move` at the START of the method (after getting the last move from the stack)
+1. A game's `play` method must call `game::play` at the START of the method
+2. A game's `undo_move` method must call `game::undo_move` at the START of the method (after getting the last move from the stack)
 
-These base class methods do some record keeping around local hashes.
+This is because these base class methods do some record keeping around local hashes.
 
 ## 1. Mandatory `_init_hash` Method
 All games must implement `game::_init_hash(local_hash& hash)`. In this method,
@@ -619,6 +626,9 @@ relation integer_game::_order_impl(const game* rhs) const
 }
 ```
 
+You can simplify unit tests for ordering by using
+`void order_test_impl(std::vector<game*>& games)` from `test/order_test_utilities.h`.
+
 
 # Transposition Tables (`transposition.h`)
 Defines types for transposition tables:
@@ -679,6 +689,8 @@ constructor.
 #include "hashing.h"
 #include "transposition.h"
 
+...
+
 clobber_1xn g("XOXO");
 const hash_t hash  = g.get_local_hash();
 
@@ -705,6 +717,8 @@ sr.set_entry(entry);
 ```
 #include "hashing.h"
 #include "transposition.h"
+
+...
 
 clobber_1xn g("XOXO");
 const hash_t hash = g.get_local_hash();
