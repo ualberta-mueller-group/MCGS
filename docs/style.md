@@ -274,6 +274,8 @@ You should use the following makefile targets before opening a pull request:
 - `tidy`
 - `tidy_headers`
 - `format`
+    - You can use `utils/format-chunk.py` to format 10 files at a time
+    - Still run `make format` to verify that files are properly formatted
 
 When files are formatted correctly according to the `clang-format` config, the `format` target probably shouldn't leave files other than `format_result.txt` after completion.
 
@@ -303,6 +305,8 @@ void some_func(const T& some_t)
 Specify checks to disable to avoid disabling all of them.
 
 ## clang-format Targets
+NOTE: Consider using `utils/format-chunk.py` to format smaller numbers of files at a time.
+
 3 targets are used to invoke clang-format, using `.clang-format` as the config file:
 
 - format
