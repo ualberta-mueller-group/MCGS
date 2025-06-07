@@ -71,6 +71,8 @@ For information about MCGS test options such as timeout duration, input director
 
 The `input` directory of MCGS includes other sample input files. For example, the `input/main_tests` directory contains a larger set of tests than `input/autotests`.
 
+NOTE: in the HTML output, 2 tests are expected to fail, as they intentionally have incorrect expected results.
+
 ## Source Code and Extending MCGS
 The following sections are for programmers who wish to add functionality to MCGS. MCGS has a modular design, allowing users to implement new games, and define a text input format for them. The following sections first describe key internal data types, and then describe the steps for adding a new game. The reader is assumed to be familiar with C++, the programming language MCGS is written in.
 
