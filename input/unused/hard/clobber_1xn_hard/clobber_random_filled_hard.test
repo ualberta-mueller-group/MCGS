@@ -1,0 +1,20 @@
+{version 1.2}
+
+[clobber]
+
+/* random filled 8x3 */
+XOX|OOO|XXX|XOO|XXO|XOO|OXO|XXO
+	{B, W}
+
+/* random filled 4x7 */
+OXXOOXO|XOOOXOX|XXXOXOX|XXOXOOX
+	{B, W}
+
+/* random filled 3x10 */
+OOOXXOOOOX|OXOXOOXXOO|OXXOOXOXXO
+	{B, W}
+
+/* random filled 7x4 */
+OOXX|OOXX|XOOO|OXXO|OOXO|OXXX|OXOX
+	{B, W}
+

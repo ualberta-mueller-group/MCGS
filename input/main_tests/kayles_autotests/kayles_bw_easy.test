@@ -1,0 +1,74 @@
+{version 1.2}
+
+/*_
+    Results from: CGSuite 2.1.1
+
+    Octal: 0.77
+    From CGSuite:
+        Period: 12
+        Preperiod: 71
+*/
+
+[kayles]
+
+0 {B loss, W loss}
+1 {B win, W win}
+2 {B win, W win}
+3 {B win, W win}
+4 {B win, W win}
+5 {B win, W win}
+6 {B win, W win}
+7 {B win, W win}
+8 {B win, W win}
+9 {B win, W win}
+10 {B win, W win}
+11 {B win, W win}
+12 {B win, W win}
+13 {B win, W win}
+14 {B win, W win}
+15 {B win, W win}
+16 {B win, W win}
+17 {B win, W win}
+18 {B win, W win}
+19 {B win, W win}
+20 {B win, W win}
+21 {B win, W win}
+22 {B win, W win}
+23 {B win, W win}
+24 {B win, W win}
+25 {B win, W win}
+26 {B win, W win}
+27 {B win, W win}
+28 {B win, W win}
+29 {B win, W win}
+30 {B win, W win}
+31 {B win, W win}
+32 {B win, W win}
+33 {B win, W win}
+34 {B win, W win}
+35 {B win, W win}
+36 {B win, W win}
+37 {B win, W win}
+38 {B win, W win}
+39 {B win, W win}
+40 {B win, W win}
+41 {B win, W win}
+42 {B win, W win}
+43 {B win, W win}
+44 {B win, W win}
+45 {B win, W win}
+46 {B win, W win}
+47 {B win, W win}
+48 {B win, W win}
+49 {B win, W win}
+50 {B win, W win}
+51 {B win, W win}
+52 {B win, W win}
+53 {B win, W win}
+54 {B win, W win}
+55 {B win, W win}
+56 {B win, W win}
+57 {B win, W win}
+58 {B win, W win}
+59 {B win, W win}
+60 {B win, W win}

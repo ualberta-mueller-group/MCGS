@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#include <exception> // IWYU pragma: keep
 
 #include <memory>
 #include "cgt_move.h"
@@ -11,6 +12,7 @@
 #include "file_parser.h"
 #include <string>
 #include <vector>
+#include <cassert>
 
 inline void assert_move(move_generator& mg, int mv)
 {
@@ -38,7 +40,6 @@ inline void assert_two_part_move(move_generator& mg, int from, int to)
 }
 
 void assert_solve(game& pos, bw to_play, const bool expected_result);
-
 void assert_solve_sum(sumgame& g, bw to_play, const bool expected_result);
 
 void test_sum(sumgame& sum, bool res_b, bool res_w);
@@ -95,3 +96,19 @@ const std::string UNIT_TEST_INPUT_DIR = "test/input/unit_tests/";
 
 void assert_solve_test_file(const std::string& file_name,
                             int expected_case_count);
+
+// static_assert forces a semicolon after usage of this macro
+#define ASSERT_DID_THROW(statements)                                           \
+    {                                                                          \
+        bool threw = false;                                                    \
+        try                                                                    \
+        {                                                                      \
+            statements;                                                        \
+        }                                                                      \
+        catch (exception & exc)                                                \
+        {                                                                      \
+            threw = true;                                                      \
+        }                                                                      \
+        assert(threw);                                                         \
+    }                                                                          \
+    static_assert(true)

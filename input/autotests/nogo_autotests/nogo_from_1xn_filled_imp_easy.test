@@ -1,0 +1,22 @@
+{version 1.2}
+
+/*_
+    Results from: MCGS (commit ebb1b89b)
+*/
+
+[impartial nogo]
+.....OO.....XO.. {N 5}
+O..XX....O.....X {N 6}
+...X...O.O...O.. {N 6}
+X.......XO..O.X. {N 1}
+......X.O.O..O.. {N 5}
+X.O........X.O.. {N 5}
+X..X.O...O.O...X {N 6}
+.O..........XXX. {N 3}
+X..........X.O.. {N 2}
+X......O..X..... {N 2}
+...X...OX....... {N 1}
+X....X...OX..OO. {N 1}
+X.O....O.......O {N 0}
+X.......X....O.O {N 3}
+

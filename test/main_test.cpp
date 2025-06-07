@@ -3,12 +3,20 @@
 // Imports all unit tests
 //---------------------------------------------------------------------------
 
+#include "global_options.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
 #include <string>
 #include <iostream>
 
+#include "mcgs_init.h"
+#include "normalize_test.h"
+#include "order_test.h"
+
+#include "bit_array_test.h"
+#include "random_test.h"
+#include "grid_utils_test.h"
 #include "cgt_basics_test.h"
 #include "cgt_dyadic_rational_test.h"
 #include "cgt_integer_game_test.h"
@@ -16,8 +24,14 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include "cgt_nimber_test.h"
 #include "cgt_switch_test.h"
 #include "cgt_up_star_test.h"
+#include "clobber_test.h"
 #include "clobber_1xn_test.h"
+#include "impartial_game_wrapper_test.h"
+#include "impartial_minimax_test.h"
+#include "impartial_sumgame_test.h"
+#include "kayles_test.h"
 #include "nogo_1xn_test.h"
+#include "nogo_test.h"
 #include "sumgame_test.h"
 #include "elephants_test.h"
 
@@ -34,15 +48,17 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include "safe_arithmetic_test.h"
 #include "fraction_test.h"
 #include "sumgame_map_view_test.h"
-#include "custom_traits_test.h"
+// #include "custom_traits_test.h"
 #include "cgt_game_simplification_test.h"
+#include "hash_test.h"
+#include "hash_types_test.h"
 
 using std::cout, std::endl, std::string;
 
 namespace {
 void override_tests()
 {
-    file_parser_test_all();
+    bit_array_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -68,12 +84,14 @@ void print_usage(const char* exec_name)
 
 int main(int argc, const char** argv)
 {
+    global::silence_warnings.set(true);
+    mcgs_init_all();
+
     if (RUN_OVERRIDE_TESTS)
     {
         override_tests();
         cout << "DONE. Remember to disable override tests (at top of "
-                "main_test.cpp)"
-             << endl;
+             << __FILE__ << ")" << endl;
         return 0;
     }
 
@@ -102,6 +120,10 @@ int main(int argc, const char** argv)
         return 0;
     }
 
+    random_test_all();
+    grid_utils_test_all();
+    bit_array_test_all();
+
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
@@ -115,15 +137,25 @@ int main(int argc, const char** argv)
     safe_arithmetic_test_all();
     fraction_test_all();
 
+    order_test_all();
+    normalize_test_all();
     split_test_all();
 
     if (do_slow_tests)
     {
         clobber_1xn_test_all();
+        clobber_test_all();
         nogo_1xn_test_all();
+        nogo_test_all();
         elephants_test_all(); // takes several seconds
         sumgame_test_all();
     }
+
+    // Impartial games
+    kayles_test_all();
+    impartial_game_wrapper_test_all();
+    impartial_minimax_test_all();
+    impartial_sumgame_test_all();
 
     file_parser_test_all();
     cli_options_test_all();
@@ -136,9 +168,12 @@ int main(int argc, const char** argv)
     sumgame_map_view_test_all();
 
     // NOTE: this test runs at compile time, not run time
-    custom_traits_test_all();
+    // custom_traits_test_all();
 
     cgt_game_simplification_test_all();
+
+    hash_test_all();
+    hash_types_test_all();
 
     cout << "SUCCESS" << endl;
 }

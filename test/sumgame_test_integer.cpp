@@ -3,6 +3,7 @@
 #include "cgt_integer_game.h"
 #include <cassert>
 #include "test_utilities.h"
+#include <memory>
 
 namespace {
 void test_empty()

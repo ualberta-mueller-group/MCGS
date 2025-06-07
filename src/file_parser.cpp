@@ -5,13 +5,19 @@
 #include <cassert>
 #include <string>
 #include <istream>
+#include <unordered_map>
+#include <memory>
+#include <vector>
 #include <fstream>
 #include <utility>
 #include "cgt_basics.h"
 #include "all_game_headers.h"
+#include "game_case.h"
 #include "game_token_parsers.h"
+#include "parsing_utilities.h"
 #include "utilities.h"
 #include <ios>
+#include <exception>
 
 /*
     NOTE: here we should usually throw instead of using assert() for many
@@ -54,7 +60,7 @@ int file_token_iterator::line_number() const
     // Don't call without getting a valid token first
     assert(_line_number >= 0);
 
-    return _line_number;
+    return _line_number + 1;
 }
 
 bool file_token_iterator::get_token(string& token)
@@ -246,66 +252,6 @@ void strip_enclosing(string& str, const string& open, const string& close)
 
 } // namespace
 
-//////////////////////////////////////////////////////////// game_case
-
-game_case::game_case()
-{
-    release_games(); // sets variables to defaults
-}
-
-game_case::~game_case()
-{
-    // Caller should have cleaned up games...
-    assert(games.size() == 0);
-}
-
-game_case::game_case(game_case&& other) noexcept
-{
-    _move_impl(std::forward<game_case>(other));
-}
-
-game_case& game_case::operator=(game_case&& other) noexcept
-{
-    _move_impl(std::forward<game_case>(other));
-
-    return *this;
-}
-
-void game_case::cleanup_games()
-{
-    for (game* g : games)
-    {
-        delete g;
-    }
-
-    release_games();
-}
-
-// resets game_case, releasing ownership of its games without deleting them
-void game_case::release_games()
-{
-    to_play = EMPTY;
-    expected_outcome = TEST_RESULT_UNSPECIFIED;
-
-    games.clear();
-
-    comments.clear();
-    hash.clear();
-}
-
-void game_case::_move_impl(game_case&& other) noexcept
-{
-    assert(games.size() == 0);
-
-    to_play = std::move(other.to_play);
-    expected_outcome = std::move(other.expected_outcome);
-    games = std::move(other.games);
-    comments = std::move(other.comments);
-    hash = std::move(other.hash);
-
-    other.release_games();
-}
-
 ////////////////////////////////////////////////// file_parser
 
 // Private constructor -- use static functions instead
@@ -352,16 +298,34 @@ void file_parser::_add_game_parser(const string& game_title,
 {
     assert(gp != nullptr);
 
-    if (_game_map.find(game_title) != _game_map.end())
-    {
-        delete gp;
+    auto it = _game_map.insert({game_title, shared_ptr<game_token_parser>(gp)});
 
+    if (!it.second)
+    {
         string why = "Tried to add game parser \"" + game_title +
                      "\" but it already exists";
         throw parser_exception(why, DUPLICATE_GAME_PARSER);
     }
 
-    _game_map.insert({game_title, shared_ptr<game_token_parser>(gp)});
+    _add_game_parser_impartial(game_title, it.first->second);
+}
+
+void file_parser::_add_game_parser_impartial(
+    const string& game_title, shared_ptr<game_token_parser>& gp_shared)
+{
+    assert(gp_shared.get() != nullptr);
+
+    string impartial_title = "impartial " + game_title;
+    shared_ptr<game_token_parser> impartial_parser(
+        new impartial_game_token_parser_wrapper(gp_shared));
+
+    auto it = _game_map.insert({impartial_title, impartial_parser});
+    if (!it.second)
+    {
+        string why = "Tried to add impartial game parser for \"" + game_title +
+                     "\" but it already exists";
+        throw parser_exception(why, DUPLICATE_GAME_PARSER);
+    }
 }
 
 /*
@@ -541,7 +505,17 @@ bool file_parser::_parse_game()
 
     for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
     {
-        game* g = gp->parse_game(_token);
+        game* g = nullptr;
+
+        try
+        {
+            g = gp->parse_game(_token);
+        }
+        catch (exception& e)
+        {
+            cerr << _get_error_start() << e.what();
+            throw e;
+        }
 
         if (g == nullptr)
         {
@@ -568,203 +542,45 @@ bool file_parser::_parse_game()
     return true;
 }
 
-void file_parser::_validate_command(const string& token_copy)
-{
-    // First strip whitespace from the input token, where appropriate
-    stringstream stream(token_copy);
-    string got = "";
-
-    {
-        bool first_chunk = true;
-
-        string chunk;
-        while (stream >> chunk)
-        {
-            if (!first_chunk)
-            {
-                got += " ";
-            }
-            first_chunk = false;
-
-            got += chunk;
-        }
-    }
-
-    // Generate expected format
-    string expected = "";
-    for (int i = 0; i < _case_count; i++)
-    {
-        game_case& gc = _cases[i];
-
-        string player(1, color_char(gc.to_play));
-        test_result result = gc.expected_outcome;
-
-        expected += player;
-
-        if (result != TEST_RESULT_UNSPECIFIED)
-        {
-            expected += " ";
-            expected += ((result == TEST_RESULT_WIN) ? "win" : "loss");
-        }
-
-        if (i + 1 < _case_count)
-        {
-            expected += ", ";
-        }
-    }
-
-    if (got != expected)
-    {
-        string why = _get_error_start();
-        why += "invalid command format";
-        throw parser_exception(why, parser_exception_code::FAILED_CASE_COMMAND);
-    }
-}
-
-// parse current token as a command
 bool file_parser::_parse_command()
 {
-    const string token_copy = _token;
-
-    // previous cases should have been consumed and reset
     assert(_case_count == 0);
 
-    /*
-        The version command is handled elsewhere right now, so the only command
-            we have is to run games
-    */
+    vector<run_command_t> command_list;
+    bool success = get_run_command_list(_token, command_list);
 
-    if (file_parser::debug_printing)
+    if (!success)
     {
-        cout << "PARSING COMMAND " << _token << endl;
-    }
-
-    // remove commas, then split by whitespace
-    {
-        const int N = _token.size();
-
-        for (int i = 0; i < N; i++)
-        {
-            if (_token[i] == ',')
-            {
-                _token[i] = ' ';
-            }
-        }
-    }
-
-    vector<string> chunks = split_string(_token);
-    size_t chunk_idx = 0;
-
-    int to_play = EMPTY;
-    test_result expected_outcome = TEST_RESULT_UNSPECIFIED;
-
-    // check if chunks[i] is some allowed word
-    auto chunk_is_allowed =
-        [&chunks](size_t i, const vector<string>& allowed_words) -> bool
-    {
-        // valid index?
-        // if (i < 0 || !(i < chunks.size()))
-        if (!(i < chunks.size()))
-        {
-            return false;
-        }
-
-        const string& chunk = chunks[i];
-
-        for (const string& allowed : allowed_words)
-        {
-            if (chunk == allowed)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    };
-
-    // extract a case out of "chunks"
-    auto get_case = [&]() -> bool
-    {
-        to_play = EMPTY;
-        expected_outcome = TEST_RESULT_UNSPECIFIED;
-
-        // player always comes first
-        if (chunk_is_allowed(chunk_idx, {"B", "W"}))
-        {
-            const char c = chunks[chunk_idx][0];
-            chunk_idx++;
-            to_play = char_to_color(c);
-        }
-        else
-        {
-            return false;
-        }
-
-        // optional outcome
-        if (chunk_is_allowed(chunk_idx, {"win", "loss"}))
-        {
-            const string& chunk = chunks[chunk_idx];
-            chunk_idx++;
-            expected_outcome =
-                (chunk == "win") ? TEST_RESULT_WIN : TEST_RESULT_LOSS;
-        }
-
-        return true;
-    };
-
-    // max 2 cases (run command allows 1 or 2 runs)
-    for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
-    {
-        // are there remaining unconsumed chunks?
-        if (!(chunk_idx < chunks.size()))
-        {
-            break;
-        }
-
-        // chunks remain but don't make up a case
-        if (!get_case())
-        {
-            break;
-        }
-
-        if (_case_count >= FILE_PARSER_MAX_CASES)
-        {
-            string why = _get_error_start() +
-                         "run command has too many cases, maximum is: ";
-            why += to_string(FILE_PARSER_MAX_CASES);
-            throw parser_exception(why, CASE_LIMIT_EXCEEDED);
-
-            return false;
-        }
-
-        game_case& gc = _cases[_case_count];
-        gc.to_play = to_play;
-        gc.expected_outcome = expected_outcome;
-
-        // Update hash
-        string player_string = string(1, gc.to_play);
-        string hashable_chunk = "PLAYER" + player_string;
-        gc.hash.update(hashable_chunk);
-
-        _case_count++;
-    }
-
-    // chunks remain but aren't part of a case...
-    if (chunk_idx < chunks.size())
-    {
-        string why = _get_error_start() + "failed to parse case command";
+        string why = "failed to parse run command: \"" + _token + "\"";
         throw parser_exception(why, FAILED_CASE_COMMAND);
-
-        return false;
     }
 
-    if (_case_count == 0)
+    if (command_list.empty())
     {
-        string why = _get_error_start() + "\"run\" command with no cases";
+        string why = "run command with no cases";
         throw parser_exception(why, EMPTY_CASE_COMMAND);
     }
 
-    _validate_command(token_copy);
+    if (command_list.size() > FILE_PARSER_MAX_CASES)
+    {
+        string why =
+            _get_error_start() + "run command has too many cases, maximum is: ";
+        why += to_string(FILE_PARSER_MAX_CASES);
+        throw parser_exception(why, CASE_LIMIT_EXCEEDED);
+    }
+
+    const size_t n_commands = command_list.size();
+    for (size_t i = 0; i < n_commands; i++)
+    {
+        run_command_t& rc = command_list[i];
+        game_case& gc = _cases[i];
+
+        gc.impartial = rc.player == EMPTY;
+        gc.to_play = rc.player;
+        gc.expected_value = rc.expected_value;
+
+        _case_count++;
+    }
 
     return true;
 }
@@ -979,13 +795,17 @@ bool file_parser::warned_wrong_version()
     Will cause games in the section denoted by "[clobber_1xn]" to be
         created as the clobber_1xn class.
 
+    Additionally, this will automatically create the section
+        "[impartial clobber_1xn]", whose games are the result of wrapping the
+        game produced by the parser passed to add_game_parser, with an
+        impartial_game_wrapper.
 */
 void file_parser::_init_game_parsers()
 {
     assert(_game_map.size() == 0);
 
     _add_game_parser("clobber_1xn", new basic_parser<clobber_1xn>());
-    _add_game_parser("nogo_1xn", new basic_parser<nogo_1xn>());
+    _add_game_parser("nogo_1xn", new basic_parser_with_check<nogo_1xn>());
     _add_game_parser("elephants", new basic_parser<elephants>());
 
     _add_game_parser("integer_game", new int_parser<integer_game>());
@@ -995,4 +815,9 @@ void file_parser::_init_game_parsers()
     _add_game_parser("switch_game", new switch_game_parser());
 
     _add_game_parser("up_star", new up_star_parser());
+
+    _add_game_parser("nogo", new basic_parser_with_check<nogo>());
+    _add_game_parser("clobber", new basic_parser<clobber>());
+
+    _add_game_parser("kayles", new int_parser<kayles>());
 }

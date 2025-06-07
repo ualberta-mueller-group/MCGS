@@ -1,0 +1,45 @@
+{version 1.2}
+
+/*_ 
+    Results from: J. Dai and X. Chen, 
+    Impartial Clobber Solver,
+    CMPUT 655 project report, University of Alberta 2022
+*/
+
+[impartial clobber]
+
+/* 0 pairs */
+{N 0}
+
+/* 1 pairs */
+XO
+{N 1}
+
+/* 2 pairs */
+XOXO
+{N 3}
+
+/* 3 pairs */
+XOXOXO
+{N 0}
+
+/* 4 pairs */
+XOXOXOXO
+{N 2}
+
+/* 5 pairs */
+XOXOXOXOXO
+{N 0}
+
+/* 6 pairs */
+XOXOXOXOXOXO
+{N 2}
+
+/* 7 pairs */
+XOXOXOXOXOXOXO
+{N 0}
+
+/* 8 pairs */
+XOXOXOXOXOXOXOXO
+{N 3}
+

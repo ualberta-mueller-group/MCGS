@@ -11,6 +11,8 @@
 #include <limits>
 #include <cassert>
 #include <memory>
+#include <vector>
+#include <utility>
 
 using namespace std;
 
@@ -566,7 +568,9 @@ relation bounds_finder::_get_step_comparison(sumgame& sum,
     };
 
     auto is_conclusive = [&]() -> bool
-    { return (le_known && is_le) || (ge_known && is_ge); };
+    {
+        return (le_known && is_le) || (ge_known && is_ge);
+    };
 
     if (below_midpoint)
     {

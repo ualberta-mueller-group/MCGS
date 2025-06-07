@@ -25,15 +25,15 @@ minWhiteStones = int(einput("Min white stones: "))
 maxWhiteStones = int(einput("Max white stones: "))
 count = int(einput("Number of cases: "))
 
-blackStones = random.randint(minBlackStones, maxBlackStones)
-whiteStones = random.randint(minWhiteStones, maxWhiteStones)
-
-
-assert blackStones + whiteStones <= boardLen
-
+assert minBlackStones <= maxBlackStones
+assert minWhiteStones <= maxWhiteStones
+assert maxBlackStones + maxWhiteStones <= boardLen
 
 for i in range(count):
     strip = [EMPTY for i in range(boardLen)]
+
+    blackStones = random.randint(minBlackStones, maxBlackStones)
+    whiteStones = random.randint(minWhiteStones, maxWhiteStones)
 
     # Randomly add stones
     remainingB = blackStones

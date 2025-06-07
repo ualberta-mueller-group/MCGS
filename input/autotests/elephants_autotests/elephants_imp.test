@@ -1,0 +1,14 @@
+{version 1.2}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[impartial elephants]
+
+X.......O.....XO.O.....X..OO.X.O.OOXO... {N 1, B win, W win}
+X..X........O....X....O...O.......XO.X.. {N 1, B win, W win}
+.......X.....O..X.....O....... {N 0, B loss, W loss}
+.OXO...O.O..O.X.X......X...X..OO..X....X {N 0, B loss, W loss}
+....OXO.....X......X.XOX..O...O...O.XXO. {N 1, B win, W win}
+

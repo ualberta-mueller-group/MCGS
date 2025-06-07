@@ -3,12 +3,18 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "cgt_basics.h"
-#include "cgt_dyadic_rational.h"
+// IWYU pragma: begin_exports
 #include "game.h"
+// IWYU pragma: end_exports
+
+#include "cgt_basics.h"
 #include "safe_arithmetic.h"
+#include "cgt_dyadic_rational.h"
 #include "throw_assert.h"
 #include <memory>
+#include <cassert>
+#include <ostream>
+#include <cstddef>
 
 //---------------------------------------------------------------------------
 
@@ -32,7 +38,11 @@ public:
     void undo_move() override;
 
 protected:
-    split_result _split_implementation() const override;
+    split_result _split_impl() const override;
+
+    void _init_hash(local_hash& hash) const override;
+
+    relation _order_impl(const game* rhs) const override;
 
 public:
     move_generator* create_move_generator(bw to_play) const override;

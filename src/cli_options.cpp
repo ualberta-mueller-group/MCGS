@@ -1,11 +1,16 @@
 #include "cli_options.h"
+#include <cerrno>
+#include <cstdlib>
 #include <filesystem>
-#include <unistd.h>
+#include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
+#include <cstdint>
 #include "file_parser.h"
+#include "global_options.h"
 #include "utilities.h"
-#include "optimization_options.h"
+#include <cassert>
 
 using namespace std;
 
@@ -62,12 +67,27 @@ void print_help_message(const string& exec_name)
     cout << "\tThese flags toggle optimizations on/off." << endl;
     cout << endl;
 
-    print_flag("--no-subgame-split",
-               "Don't split subgames after playing moves in them.");
-
-    print_flag("--no-simplify-basic-cgt",
+    print_flag(global::simplify_basic_cgt.no_flag(),
                "Don't simplify basic CGT games (integer_game, dyadic_rational, "
                "up_star, switch_game, nimber).");
+
+    print_flag(global::tt_sumgame_idx_bits.flag() + " <# index bits>",
+               "How many index bits to use for sumgame's transposition table. "
+               "0 disables transposition table. Default: " +
+                   global::tt_sumgame_idx_bits.get_default_str() + ".");
+
+    print_flag(
+        global::tt_imp_sumgame_idx_bits.flag() + " <# index bits>",
+        "How many index bits to use for impartial sumgame's transposition "
+        "table. Must be at least 1. Default: " +
+            global::tt_imp_sumgame_idx_bits.get_default_str() + ".");
+
+    cout << "Misc options flags:" << endl;
+    print_flag(global::random_seed.flag(),
+               "Set seed for main random generator. "
+               "0 means seed with current time "
+               "since epoch. Default: " +
+                   global::random_seed.get_default_str() + ".");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -109,12 +129,16 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag("--assert-correct-version",
                "Quit if a file version is found which doesn't match.");
+
+    print_flag(global::silence_warnings.flag(),
+               "Don't print warnings to "
+               "stderr, i.e. random_table resize");
 }
 
 } // namespace
 
 //////////////////////////////////////// exported functions
-cli_options parse_cli_args(int argc, const char** argv, bool silent)
+cli_options parse_args(int argc, const char** argv, bool silent)
 {
     bool print_optimizations = false;
 
@@ -223,6 +247,12 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == global::silence_warnings.flag())
+        {
+            global::silence_warnings.set(true);
+            continue;
+        }
+
         if (arg == "--run-tests")
         {
             opts.run_tests = true;
@@ -280,15 +310,76 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
 
         // OPTIMIZATION TOGGLES
 
-        if (arg == "--no-subgame-split")
+        if (arg == global::simplify_basic_cgt.no_flag())
         {
-            optimization_options::set_subgame_split(false);
+            global::simplify_basic_cgt.set(false);
             continue;
         }
 
-        if (arg == "--no-simplify-basic-cgt")
+        if (arg == global::tt_sumgame_idx_bits.flag())
         {
-            optimization_options::set_simplify_basic_cgt(false);
+            arg_idx++;
+
+            if (!is_int(arg_next))
+                throw cli_options_exception(
+                    "Error: " + global::tt_sumgame_idx_bits.flag() +
+                    " value not an int");
+
+            const size_t n_index_bits = atoi(arg_next.c_str());
+
+            global::tt_sumgame_idx_bits.set(n_index_bits);
+            continue;
+        }
+
+        if (arg == global::tt_imp_sumgame_idx_bits.flag())
+        {
+            arg_idx++;
+
+            if (!is_int(arg_next))
+                throw cli_options_exception(
+                    "Error: " + global::tt_imp_sumgame_idx_bits.flag() +
+                    " value not an int");
+
+            const size_t n_index_bits = atoi(arg_next.c_str());
+
+            global::tt_imp_sumgame_idx_bits.set(n_index_bits);
+            continue;
+        }
+
+        // MISC OPTIONS
+        if (arg == global::random_seed.flag())
+        {
+            const std::string& flag_text = global::random_seed.flag();
+
+            arg_idx++;
+            if (arg_next.size() == 0)
+                throw cli_options_exception("Error: got " + flag_text +
+                                            " but no seed value");
+
+            const char* str = arg_next.c_str();
+            char* str_end = nullptr;
+            const char* expected_end = str + arg_next.size();
+            int base = 0;
+
+            const uint64_t seed = strtoull(str, &str_end, base);
+
+            if (errno == ERANGE)
+            {
+                errno = 0;
+                throw cli_options_exception("Error: " + flag_text +
+                                            " value out of range: \"" +
+                                            arg_next + "\"");
+            }
+
+            if (str_end != expected_end)
+            {
+                throw cli_options_exception("Error: " + flag_text +
+                                            " value bad format: \"" + arg_next +
+                                            "\"");
+            }
+
+            global::random_seed.set(seed);
+
             continue;
         }
 
@@ -328,7 +419,8 @@ cli_options parse_cli_args(int argc, const char** argv, bool silent)
 
     if (print_optimizations)
     {
-        cout << optimization_options::get_summary() << endl;
+        cout << "Options: " << endl;
+        cout << global_option_base::get_summary_all() << endl;
     }
 
     return opts;

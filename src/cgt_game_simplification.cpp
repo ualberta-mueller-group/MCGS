@@ -10,6 +10,12 @@
 #include "cgt_up_star.h"
 #include "cgt_switch.h"
 #include "throw_assert.h"
+#include "sumgame_map_view.h"
+#include <cassert>
+#include <utility>
+#include "utilities.h"
+#include <vector>
+#include <cstddef>
 
 using namespace std;
 

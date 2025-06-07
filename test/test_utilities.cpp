@@ -3,11 +3,22 @@
 //---------------------------------------------------------------------------
 #include "test_utilities.h"
 #include "file_parser.h"
+#include <string>
+#include <vector>
+#include <sstream>
+#include "game.h"
+#include "search_utils.h"
+#include "sumgame.h"
+#include "alternating_move_game.h"
+#include <cassert>
+#include <cstddef>
+#include <memory>
 
 using std::vector, std::string, std::stringstream;
 
 void assert_solve(game& pos, bw to_play, const bool expected_result)
 {
+    assert_restore_game r(pos);
     assert_black_white(to_play);
     alternating_move_game g(pos, to_play);
     const bool result = g.solve();
@@ -138,7 +149,7 @@ void assert_file_parser_output(file_parser* parser,
         case_idx++;
 
         assert(gc.to_play == expected.to_play);
-        assert(gc.expected_outcome == expected.expected_outcome);
+        assert(gc.expected_value == expected.expected_value);
         assert(gc.games.size() == expected.games.size());
 
         for (size_t i = 0; i < gc.games.size(); i++)
@@ -191,7 +202,7 @@ void assert_solve_test_file(const std::string& file_name,
         case_count += 1;
 
         // Should probably define a meaningful expected result for unit tests...
-        assert(gc.expected_outcome != TEST_RESULT_UNSPECIFIED);
+        assert(gc.expected_value.type() == SEARCH_VALUE_TYPE_WINLOSS);
 
         sumgame s(gc.to_play);
 
@@ -201,7 +212,7 @@ void assert_solve_test_file(const std::string& file_name,
         }
 
         bool result = s.solve();
-        assert(result == gc.expected_outcome);
+        assert(result == gc.expected_value.win());
 
         gc.cleanup_games();
     }

@@ -4,9 +4,13 @@
 
 #pragma once
 
-#include "cgt_basics.h"
+// IWYU pragma: begin_exports
 #include "game.h"
+// IWYU pragma: end_exports
+
 #include "fraction.h"
+#include <cassert>
+#include <ostream>
 
 class fraction;
 
@@ -29,7 +33,11 @@ public:
     void undo_move() override;
 
 protected:
-    split_result _split_implementation() const override;
+    split_result _split_impl() const override;
+
+    void _init_hash(local_hash& hash) const override;
+
+    relation _order_impl(const game* rhs) const override;
 
 public:
     game* inverse() const override;

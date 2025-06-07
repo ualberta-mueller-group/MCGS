@@ -97,11 +97,11 @@ f.write(proc.stdout)
 f.close()
 
 if use_vim:
-    vim_files = ""
+    vim_files = "tabnew format_result.txt | "
     for f in chunk:
         ft = get_transformed(f)
-        vim_files += f"tabnew {f} | "
         if exists(ft):
+            vim_files += f"tabnew {f} | "
             vim_files += f"vsplit {ft} | "
 
     vim_command = ["nvim", "format_stdout.txt", f"+{vim_files}tabnext"]

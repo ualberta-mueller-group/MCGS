@@ -1,0 +1,46 @@
+Utils();
+
+////////////////////////////////////////////////// Constants
+OCTAL := "0.77";
+MAX_PERIODICITY_SEARCH := 1000;
+N_VALUES := 300;
+
+//////////////////////////////////////////////////
+
+print(OCTAL);
+
+R := game.heap.TakeAndBreak(OCTAL);
+periodicity := R.CheckPeriodicity(MAX_PERIODICITY_SEARCH);
+is_periodic := periodicity != Nothing;
+
+if not is_periodic then
+    print("Game isn't periodic, or MAX_PERIODICITY_SEARCH is too small");
+else
+    print(periodicity);
+end
+
+lines_nimber := MutableList();
+lines_winloss := MutableList();
+
+values := R.NimValueSequence(N_VALUES);
+
+for i from 1 to N_VALUES do
+    if is_periodic and i > periodicity.Preperiod and (i % periodicity.Period == 0) then
+        period_number := integer_divide(i - periodicity.Preperiod, periodicity.Period);
+        line := join(["/* Start of period #", period_number, "*/"], "");
+        lines_nimber.Add(line);
+        lines_winloss.Add(line);
+    end
+
+    nim_value := values[i];
+    win_string := if nim_value > 0 then "win" else "loss" end;
+
+    line_nimber := join([i, " {N ", nim_value, "}"], "");
+    line_winloss := join([i, " {B ", win_string, ", W ", win_string, "}"], "");
+
+    lines_nimber.Add(line_nimber);
+    lines_winloss.Add(line_winloss);
+end
+
+print(join(lines_nimber, "<NEWLINE>"));
+print(join(lines_winloss, "<NEWLINE>"));

@@ -3,6 +3,7 @@
 #include "cgt_dyadic_rational.h"
 #include <cassert>
 #include "test_utilities.h"
+#include <memory>
 
 namespace {
 

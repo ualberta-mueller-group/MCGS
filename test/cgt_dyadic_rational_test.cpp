@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include "test_utilities.h"
+#include "utilities.h"
 
 namespace {
 namespace cgt_dyadic_rational_test {

@@ -1,0 +1,17 @@
+{version 1.2}
+
+/*_
+    Results from: MCGS (commit ebb1b89b)
+
+    At least one case 5-30s
+*/
+
+[nogo_1xn]
+.....O..O..OO..XX....X..X.X..X {B win, W loss}
+.O....X..X...O..O...X...OX.XX. {B win, W loss}
+.O..O.O.......X.XXX..O.X...X.. {B win, W win}
+
+[impartial nogo_1xn]
+......X..........O {N 5}
+X............O.... {N 5}
+O..........X...... {N 5}

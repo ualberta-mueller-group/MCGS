@@ -4,6 +4,9 @@
 #include "file_parser.h"
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <cassert>
+#include <ios>
 
 using std::cout, std::endl, std::string, std::ifstream, std::stringstream;
 using std::vector;
@@ -180,9 +183,9 @@ void e2e_test10()
 void e2e_test11()
 {
     assert_throw_status_file("invalid_command2.test", true,
-                             FAILED_CASE_COMMAND);
+                             CASE_LIMIT_EXCEEDED);
     assert_throw_status_string("invalid_command2.test", true,
-                               FAILED_CASE_COMMAND);
+                               CASE_LIMIT_EXCEEDED);
 }
 
 void e2e_test12()
@@ -331,7 +334,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_WIN;
+        gc->expected_value.set_win(true);
         gc->games.push_back(new nogo_1xn("X..O"));
     }
 
@@ -340,7 +343,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = WHITE;
-        gc->expected_outcome = TEST_RESULT_WIN;
+        gc->expected_value.set_win(true);
         gc->games.push_back(new nogo_1xn("X..O"));
     }
 
@@ -349,7 +352,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_LOSS;
+        gc->expected_value.set_win(false);
         gc->games.push_back(new integer_game(4));
         gc->games.push_back(new integer_game(-5));
     }
@@ -359,7 +362,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = WHITE;
-        gc->expected_outcome = TEST_RESULT_WIN;
+        gc->expected_value.set_win(true);
         gc->games.push_back(new integer_game(4));
         gc->games.push_back(new integer_game(-5));
     }
@@ -369,7 +372,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_WIN;
+        gc->expected_value.set_win(true);
         gc->games.push_back(new clobber_1xn("XOXOXOXO"));
     }
 
@@ -378,7 +381,6 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = WHITE;
-        gc->expected_outcome = TEST_RESULT_UNSPECIFIED;
         gc->games.push_back(new clobber_1xn("XOXOXOXO"));
     }
 
@@ -387,7 +389,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_LOSS;
+        gc->expected_value.set_win(false);
     }
 
     {
@@ -395,7 +397,7 @@ void e2e_test21()
         cases.push_back(gc);
 
         gc->to_play = WHITE;
-        gc->expected_outcome = TEST_RESULT_LOSS;
+        gc->expected_value.set_win(false);
     }
 
     assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames1.test", cases);
@@ -442,7 +444,7 @@ void e2e_test24()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_LOSS;
+        gc->expected_value.set_win(false);
         gc->games.push_back(new clobber_1xn("XOOX"));
     }
 

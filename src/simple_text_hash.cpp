@@ -2,6 +2,9 @@
 #include <cstring>
 #include <cassert>
 #include <vector>
+#include <utility>
+#include <cstdint>
+#include <cstdio>
 
 using namespace std;
 

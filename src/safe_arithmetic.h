@@ -2,6 +2,8 @@
 #include <limits>
 #include <type_traits>
 #include "utilities.h"
+#include <cstdint>
+#include <cassert>
 
 // Some functions in this file assume two's complement (i.e. for bit shifts)
 static_assert(int32_t(-1) == int32_t(0xFFFFFFFF), "Not two's complement");

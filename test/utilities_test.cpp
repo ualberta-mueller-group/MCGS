@@ -3,6 +3,12 @@
 #include "utilities.h"
 #include <cstdint>
 #include <sstream>
+#include <cstddef>
+#include <tuple>
+#include <cassert>
+#include <string>
+#include <vector>
+#include <climits>
 
 using namespace std;
 
@@ -224,6 +230,192 @@ void test_is_power_of_2()
     }
 }
 
+void test_alternating_mask()
+{
+    assert(alternating_mask<int8_t>() == 0b01010101);
+    assert(alternating_mask<uint8_t>() == 0b01010101);
+
+    assert(alternating_mask<int16_t>() == 0b0101010101010101);
+    assert(alternating_mask<uint16_t>() == 0b0101010101010101);
+
+    assert(alternating_mask<int32_t>() == 0b01010101010101010101010101010101);
+    assert(alternating_mask<uint32_t>() == 0b01010101010101010101010101010101);
+
+    assert(alternating_mask<int16_t>() == 0b0101010101010101);
+    assert(alternating_mask<uint16_t>() == 0b0101010101010101);
+
+    assert(alternating_mask<int64_t>() ==
+           0b0101010101010101010101010101010101010101010101010101010101010101);
+
+    assert(alternating_mask<uint64_t>() ==
+           0b0101010101010101010101010101010101010101010101010101010101010101);
+}
+
+void test_rotate_functions()
+{
+    typedef tuple<int, uint32_t, uint32_t, uint32_t, uint32_t> test_case_t;
+
+    vector<test_case_t> test_cases = {
+        {
+            404,
+            0b10111000010110101111000010001000,
+            0b00001000100010111000010110101111,
+            0b10101111000010001000101110000101,
+            0b10101010000010011000111110000101,
+        },
+        {
+            218,
+            0b11011100000000010000001100011100,
+            0b01110011011100000000010000001100,
+            0b00000000010000001100011100110111,
+            0b01010001010100001000011000100110,
+        },
+        {
+            536,
+            0b01000011000100110000111000000000,
+            0b00000000010000110001001100001110,
+            0b00010011000011100000000001000011,
+            0b00000010010010110001000100000110,
+        },
+        {
+            460,
+            0b11001001110001101000000110000101,
+            0b01101000000110000101110010011100,
+            0b00011000010111001001110001101000,
+            0b01001000000110001101110000111100,
+        },
+        {
+            618,
+            0b00010111111100110000010100100100,
+            0b11001100000101001001000001011111,
+            0b01001001000001011111110011000001,
+            0b01001100000101001011100011010101,
+        },
+        {
+            854,
+            0b10001011001101110000000000100010,
+            0b00001000101000101100110111000000,
+            0b11011100000000001000101000101100,
+            0b10001000000000001100111101101000,
+        },
+        {
+            729,
+            0b11111001111001100001100110001000,
+            0b00010001111100111100110000110011,
+            0b11110011000011001100010001111100,
+            0b01010001101001101100110001110110,
+        },
+        {
+            391,
+            0b11010100000110101111100100101011,
+            0b00001101011111001001010111101010,
+            0b01010111101010000011010111110010,
+            0b01011101001010001001010111111010,
+        },
+        {
+            260,
+            0b00101111011111111100110011011011,
+            0b11110111111111001100110110110010,
+            0b10110010111101111111110011001101,
+            0b11110111111101101110110110011000,
+        },
+        {
+            548,
+            0b00000111101110011110110001100010,
+            0b01111011100111101100011000100000,
+            0b00100000011110111001111011000110,
+            0b01110001001111101100111010000010,
+        },
+        {
+            5,
+            0b10101100000111010111000011100011,
+            0b10000011101011100001110001110101,
+            0b00011101011000001110101110000111,
+            0b10010111111010100100100100100101,
+        },
+        {
+            2,
+            0b00011001111101100001011001000101,
+            0b01100111110110000101100100010100,
+            0b01000110011111011000010110010001,
+            0b01000111011110001101000110010100,
+        },
+        {
+            22,
+            0b10011101000001000000011110110001,
+            0b11101100011001110100000100000001,
+            0b00010000000111101100011001110100,
+            0b01000100010011111100001100100001,
+        },
+        {
+            0,
+            0b11001010101001111001101010010001,
+            0b11001010101001111001101010010001,
+            0b11001010101001111001101010010001,
+            0b11001010101001111001101010010001,
+        },
+    };
+
+    for (const test_case_t& test_case : test_cases)
+    {
+        const int& distance = get<0>(test_case);
+        const uint32_t& input = get<1>(test_case);
+        const uint32_t& exp_left = get<2>(test_case);
+        const uint32_t& exp_right = get<3>(test_case);
+        const uint32_t& exp_interleaved = get<4>(test_case);
+
+        assert(rotate_left(input, distance) == exp_left);
+        assert(rotate_right(input, distance) == exp_right);
+        assert(rotate_interleaved(input, distance) == exp_interleaved);
+
+        assert(rotate_left((int32_t&) input, distance) == (int32_t&) exp_left);
+        assert(rotate_right((int32_t&) input, distance) ==
+               (int32_t&) exp_right);
+        assert(rotate_interleaved((int32_t&) input, distance) ==
+               (int32_t&) exp_interleaved);
+    }
+}
+
+void test_new_vector_capacity()
+{
+    typedef tuple<size_t, size_t, size_t> test_case_t;
+
+    // clang-format off
+    vector<test_case_t> test_cases =
+    {
+        {0, 0, 1},
+        {3, 0, 4},
+        {4, 0, 8},
+        {7, 0, 8},
+        {63, 0, 64},
+        {64, 0, 128},
+        {0, 3, 3},
+        {3, 3, 6},
+        {4, 3, 6},
+        {7, 3, 12},
+        {2, 1, 4},
+        {6, 1, 8},
+        {21, 1, 32},
+        {40, 1, 64},
+        {0, 1, 1},
+        {3, 7, 7},
+        {6, 8, 8},
+        {21, 64, 64},
+    };
+    // clang-format on
+
+    for (const test_case_t& test_case : test_cases)
+    {
+        const size_t& index = get<0>(test_case);
+        const size_t& capacity = get<1>(test_case);
+        const size_t& exp_new_capacity = get<2>(test_case);
+
+        const size_t new_capacity = new_vector_capacity(index, capacity);
+
+        assert(new_capacity == exp_new_capacity);
+    }
+}
+
 void test_relation_from_search_results()
 {
     typedef tuple<bool, bool, bool, bool, relation> test_case_t;
@@ -272,5 +464,9 @@ void utilities_test_all()
     test_is_int();
     test_string_starts_ends_with();
     test_is_power_of_2();
+
+    test_alternating_mask();
+    test_rotate_functions();
+    test_new_vector_capacity();
     test_relation_from_search_results();
 }

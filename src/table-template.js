@@ -4,6 +4,14 @@ let g_filterText = "";
 let g_include = true;
 let g_regex = false;
 let g_searchColumn = -1;
+let g_sortByTime = false;
+
+const initialRowOrder = [];
+
+function showTable() {
+    const table = document.getElementById("data-table");
+    table.style.visibility = "visible";
+}
 
 function showHideIndices() {
     const indexRow = document.getElementById("col-indices");
@@ -59,6 +67,11 @@ function setTableFilter() {
     if (g_mode == "hash") {
         showByClass(["row"], false);
         showByClass(["row-bad-hash"], true);
+    }
+
+    if (g_mode == "duplicate") {
+        showByClass(["row"], false);
+        showByClass(["row-duplicate"], true);
     }
 
     if (g_mode == "no-problem") {
@@ -130,18 +143,89 @@ function setTableFilterText() {
     }
 }
 
+function sortTableByTime() {
+    const table = document.getElementById("data-table");
+    const tableRows = table.rows;
+
+    const dataRows = [];
+
+    const tableRowsLength = tableRows.length;
+    for (let i = 2; i < tableRowsLength; i++) {
+        const row = tableRows[i];
+
+        if (row.hidden)
+            continue;
+
+        dataRows.push(row);
+    }
+
+    dataRows.sort((row1, row2) => {
+        const cells1 = row1.cells;
+        const cells2 = row2.cells;
+
+        const timeString1 = cells1[pyvar_timeColumnIndex].innerText;
+        const timeString2 = cells2[pyvar_timeColumnIndex].innerText;
+
+        const time1 = Number.parseFloat(timeString1);
+        const time2 = Number.parseFloat(timeString2);
+
+        if (isNaN(time1) && isNaN(time2))
+            return 0;
+
+        if (isNaN(time1))
+            return -1;
+        else if (isNaN(time2))
+            return 1;
+
+        if (time1 == time2)
+            return 0;
+
+        return time1 > time2 ? -1 : 1;
+    });
+
+    const dataRowsLength = dataRows.length;
+    for (let i = 0; i < dataRowsLength; i++)
+        table.appendChild(dataRows[i]);
+}
+
+function sortTable() {
+    if (g_sortByTime)
+        sortTableByTime();
+    else {
+        const table = document.getElementById("data-table");
+
+        const initialRowOrderLength = initialRowOrder.length;
+        for (let i = 0; i < initialRowOrderLength; i++)
+        {
+            const row = initialRowOrder[i];
+            if (row.hidden)
+                continue;
+            table.appendChild(initialRowOrder[i]);
+        }
+    }
+}
+
 /*
     The bottleneck here is how long it takes the browser to re-render the table
         after the DOM changes.
 */
 function refresh() {
+    showTable();
     showHideIndices();
     setTableFilter();
     setTableFilterText();
+    sortTable();
 }
 
 // Wait for the document to finish loading before doing anything
 document.addEventListener("DOMContentLoaded", () => {
+    const table = document.getElementById("data-table");
+    const tableRows = table.rows;
+    const tableRowsLength = tableRows.length;
+    for (let i = 2; i < tableRowsLength; i++)
+        initialRowOrder.push(tableRows[i]);
+
+
     const dropdown = document.getElementById("outcome-filter-dropdown");
     //const table = document.getElementById("data-table");
 
@@ -149,6 +233,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterTextExclude = document.getElementById("filter-text-exclude");
     const filterTextRegex = document.getElementById("filter-text-regex");
     const filterColumnSelect = document.getElementById("filter-text-column-select");
+    const sortByTimeCheckbox = document.getElementById("sort-by-time-checkbox");
+
 
     const problemSummary = document.getElementById("problem-summary");
 
@@ -216,6 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
     g_include = !filterTextExclude.checked;
     g_regex = filterTextRegex.checked;
     g_searchColumn = filterColumnSelect.value;
+    g_sortByTime = sortByTimeCheckbox.checked;
 
 
     filterTextInput.addEventListener("input", (e) => {
@@ -243,8 +330,12 @@ document.addEventListener("DOMContentLoaded", () => {
         refresh();
     });
 
-    refresh();
+    sortByTimeCheckbox.addEventListener("change", (e) => {
+        g_sortByTime = e.target.checked;
+        refresh();
+    });
 
+    refresh();
 
     const indexRow = document.getElementById("col-indices");
     const indexRowCells = indexRow.getElementsByTagName("th"); 

@@ -1,5 +1,14 @@
 #include "utilities.h"
 #include <sstream>
+#include <chrono>
+#include <string>
+#include <cstddef>
+#include <cctype>
+#include <cassert>
+#include <cstdint>
+#include "cgt_basics.h"
+#include <algorithm>
+#include "throw_assert.h"
 
 using std::vector, std::string, std::stringstream;
 
@@ -88,6 +97,29 @@ bool string_ends_with(const std::string& str, const std::string& word)
     }
 
     return true;
+}
+
+uint64_t ms_since_epoch()
+{
+    using namespace std::chrono;
+
+    milliseconds t =
+        duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+    return t.count();
+}
+
+size_t new_vector_capacity(size_t access_idx, size_t current_capacity)
+{
+    size_t target_size = std::max(size_t(1), current_capacity);
+
+    while (!(access_idx < target_size))
+    {
+        const size_t next_target_size = target_size * 2;
+        THROW_ASSERT(next_target_size > target_size);
+        target_size = next_target_size;
+    }
+
+    return target_size;
 }
 
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,

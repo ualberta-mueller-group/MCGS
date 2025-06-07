@@ -1,0 +1,18 @@
+{version 1.2}
+
+/*_
+    Results from: MCGS (commit ebb1b89b)
+
+    At least one case 5-30s
+*/
+
+[impartial clobber]
+
+/* 3x7 random */
+XXXXXOO|XXXXXOX|XXOOOXO
+    {N 0}
+
+/* 4x6 random */
+OXOXOO|XXXXXO|OOXXOO|XXOOOO
+	{B loss, W loss}
+

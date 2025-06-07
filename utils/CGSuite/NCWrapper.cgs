@@ -1,0 +1,22 @@
+/*  Non-Canonical Wrapper
+
+    Prevents sums and ExplicitGames from automatically being converted to
+    canonical form, by wrapping games and their options, so that operands
+    don't derive from CanonicalShortGame.
+
+    Utils.cgs provides "nc(g)" function which is shorthand for NCWrapper(g).
+
+    Example usage:
+        {NCWrapper(1/4) | NCWrapper(2)}
+    The above expression equals 1, but won't automatically be converted to 1.
+*/
+
+singleton class NCWrapper extends Ruleset
+    class Position(game as Game) extends Game
+        override def Options(player as Player) begin
+            [Position(opt) for opt in game.Options(player)];
+        end
+    end
+
+    def Eval(game as Game) := Position(game);
+end

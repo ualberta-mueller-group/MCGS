@@ -1,0 +1,154 @@
+{version 1.2}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+/* Sum #0 */
+[integer_game] 5
+[dyadic_rational] (5/4)
+[dyadic_rational] (-39/2)
+[integer_game] -1
+[nimber] 4
+[switch_game] (-45/2, 16/8)
+[up_star] (4 *)
+[nimber] 3
+[nimber] 6
+[up_star] (3)
+[up_star] (6 *)
+[switch_game] (-27/8, -44/8)
+[dyadic_rational] (-48/4)
+[switch_game] (-4/1, -42/32)
+[dyadic_rational] (-23/16)
+[dyadic_rational] (10/4)
+[nimber] 4
+[nimber] 12
+[up_star] (-9)
+[switch_game] (-28/16, 29/16)
+{B loss, W win}
+
+/* Sum #1 */
+[up_star] (17)
+[nimber] 4
+[dyadic_rational] (39/1)
+[up_star] (-14)
+[switch_game] (-36/16, 18/2)
+[nimber] 6
+[dyadic_rational] (48/16)
+[up_star] (-10 *)
+[switch_game] (14/4, 30/16)
+[integer_game] -7
+[up_star] (4)
+[up_star] (3 *)
+[up_star] (1 *)
+[dyadic_rational] (-18/8)
+[nimber] 2
+[dyadic_rational] (33/2)
+[nimber] 9
+[up_star] (-12 *)
+[switch_game] (6/2, -4/32)
+[integer_game] 4
+{B win, W loss}
+
+/* Sum #2 */
+[dyadic_rational] (25/4)
+[switch_game] (38/8, 28/16)
+[dyadic_rational] (-23/2)
+[dyadic_rational] (-43/1)
+[integer_game] -9
+[switch_game] (36/32, -13/8)
+[dyadic_rational] (40/32)
+[switch_game] (33/16, 12/16)
+[integer_game] 6
+[switch_game] (32/1, -46/4)
+[nimber] 11
+[nimber] 1
+[switch_game] (-3/32, -15/4)
+[integer_game] 2
+[nimber] 9
+[dyadic_rational] (-43/32)
+[dyadic_rational] (-43/32)
+[integer_game] -9
+[up_star] (7)
+[up_star] (11 *)
+{B loss, W win}
+
+/* Sum #3 */
+[integer_game] 5
+[dyadic_rational] (-2/2)
+[dyadic_rational] (-21/16)
+[up_star] (-13)
+[switch_game] (8/1, -44/1)
+[switch_game] (-44/4, -8/1)
+[switch_game] (39/2, 22/1)
+[integer_game] -1
+[switch_game] (38/1, 10/1)
+[switch_game] (-22/32, 48/32)
+[nimber] 2
+[integer_game] -4
+[switch_game] (-8/32, -46/4)
+[nimber] 6
+[nimber] 14
+[nimber] 12
+[switch_game] (5/2, -44/4)
+[dyadic_rational] (47/2)
+[dyadic_rational] (38/8)
+[nimber] 10
+{B win, W loss}
+
+/* Sum #4 */
+[up_star] (-10 *)
+[dyadic_rational] (12/8)
+[dyadic_rational] (-24/32)
+[dyadic_rational] (9/4)
+[up_star] (-20 *)
+[dyadic_rational] (38/16)
+[switch_game] (-47/16, -28/16)
+[integer_game] 2
+[up_star] (13 *)
+[nimber] 15
+[up_star] (11)
+[switch_game] (-8/2, -8/2)
+[nimber] 7
+[dyadic_rational] (-16/2)
+[integer_game] -1
+[up_star] (13 *)
+[switch_game] (-23/16, 26/32)
+[dyadic_rational] (16/2)
+[dyadic_rational] (1/16)
+[switch_game] (-1/2, -36/16)
+{B loss, W win}
+
+/* Sum #5 */
+[switch_game] (29/8, 4/32)
+[nimber] 4
+[up_star] (2)
+[nimber] 7
+[integer_game] -1
+[up_star] (-1 *)
+[nimber] 7
+[nimber] 1
+[dyadic_rational] (-41/4)
+[dyadic_rational] (-42/2)
+[up_star] (-13 *)
+[up_star] (-4)
+[dyadic_rational] (13/2)
+[integer_game] -9
+[dyadic_rational] (-44/16)
+[nimber] 13
+[switch_game] (10/4, 24/2)
+[up_star] (-10)
+[switch_game] (-1/32, 10/8)
+[integer_game] 10
+{B loss, W win}
+
+
+/*_ CGSUITE INPUT
+[nc(5), nc(5/4), nc(-39/2), nc(-1), nc(*4), {nc(-45/2) | nc(16/8)}, nc(^(4) + *), nc(*3), nc(*6), nc(^(3)), nc(^(6) + *), {nc(-27/8) | nc(-44/8)}, nc(-48/4), {nc(-4/1) | nc(-42/32)}, nc(-23/16), nc(10/4), nc(*4), nc(*12), nc(^(-9)), {nc(-28/16) | nc(29/16)}],
+[nc(^(17)), nc(*4), nc(39/1), nc(^(-14)), {nc(-36/16) | nc(18/2)}, nc(*6), nc(48/16), nc(^(-10) + *), {nc(14/4) | nc(30/16)}, nc(-7), nc(^(4)), nc(^(3) + *), nc(^(1) + *), nc(-18/8), nc(*2), nc(33/2), nc(*9), nc(^(-12) + *), {nc(6/2) | nc(-4/32)}, nc(4)],
+[nc(25/4), {nc(38/8) | nc(28/16)}, nc(-23/2), nc(-43/1), nc(-9), {nc(36/32) | nc(-13/8)}, nc(40/32), {nc(33/16) | nc(12/16)}, nc(6), {nc(32/1) | nc(-46/4)}, nc(*11), nc(*1), {nc(-3/32) | nc(-15/4)}, nc(2), nc(*9), nc(-43/32), nc(-43/32), nc(-9), nc(^(7)), nc(^(11) + *)],
+[nc(5), nc(-2/2), nc(-21/16), nc(^(-13)), {nc(8/1) | nc(-44/1)}, {nc(-44/4) | nc(-8/1)}, {nc(39/2) | nc(22/1)}, nc(-1), {nc(38/1) | nc(10/1)}, {nc(-22/32) | nc(48/32)}, nc(*2), nc(-4), {nc(-8/32) | nc(-46/4)}, nc(*6), nc(*14), nc(*12), {nc(5/2) | nc(-44/4)}, nc(47/2), nc(38/8), nc(*10)],
+[nc(^(-10) + *), nc(12/8), nc(-24/32), nc(9/4), nc(^(-20) + *), nc(38/16), {nc(-47/16) | nc(-28/16)}, nc(2), nc(^(13) + *), nc(*15), nc(^(11)), {nc(-8/2) | nc(-8/2)}, nc(*7), nc(-16/2), nc(-1), nc(^(13) + *), {nc(-23/16) | nc(26/32)}, nc(16/2), nc(1/16), {nc(-1/2) | nc(-36/16)}],
+[{nc(29/8) | nc(4/32)}, nc(*4), nc(^(2)), nc(*7), nc(-1), nc(^(-1) + *), nc(*7), nc(*1), nc(-41/4), nc(-42/2), nc(^(-13) + *), nc(^(-4)), nc(13/2), nc(-9), nc(-44/16), nc(*13), {nc(10/4) | nc(24/2)}, nc(^(-10)), {nc(-1/32) | nc(10/8)}, nc(10)],
+
+*/

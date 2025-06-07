@@ -6,6 +6,9 @@
 #include "file_parser.h"
 #include "test/test_utilities.h"
 #include <cassert>
+#include <vector>
+#include <string>
+#include <ios>
 
 constexpr const char* EXEC_NAME = "./MCGS_test";
 
@@ -27,7 +30,7 @@ cli_options call_parse(const vector<string>& args)
         argv[i] = args[i].c_str();
     }
 
-    return parse_cli_args(argc, argv.data(), true);
+    return parse_args(argc, argv.data(), true);
 }
 
 // empty args gives correct options
@@ -154,7 +157,7 @@ void cli_opts_test8()
         cases.push_back(gc);
 
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_WIN;
+        gc->expected_value.set_win(true);
         gc->games.push_back(new nogo_1xn("X..O"));
         gc->games.push_back(new nogo_1xn("X...O..X"));
     }
@@ -182,9 +185,8 @@ void cli_opts_test9()
     {
         game_case* gc = new game_case();
         cases.push_back(gc);
-
         gc->to_play = BLACK;
-        gc->expected_outcome = TEST_RESULT_LOSS;
+        gc->expected_value.set_win(false);
         gc->games.push_back(new clobber_1xn("XOOX"));
     }
 

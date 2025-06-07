@@ -3,6 +3,8 @@
 #include "cgt_move.h"
 #include "strip.h"
 #include <vector>
+#include <cassert>
+#include <cstddef>
 
 using std::string, std::cout, std::endl, std::pair;
 using std::vector;
@@ -27,9 +29,9 @@ elephants::elephants(const vector<int>& board) : strip(board)
 
 void elephants::play(const move& m, bw to_play)
 {
-    assert_black_white(to_play);
-
     game::play(m, to_play);
+
+    assert_black_white(to_play);
 
     int from = cgt_move::from(m);
     int to = cgt_move::to(m);
@@ -37,6 +39,19 @@ void elephants::play(const move& m, bw to_play)
     assert(checked_is_color(from, to_play));
     assert(checked_is_color(to, EMPTY));
     assert((to - from) == player_dir(to_play)); // correct direction
+
+    // incremental hash
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_value(from, to_play);
+        hash.toggle_value(to, EMPTY);
+
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, to_play);
+
+        _mark_hash_updated();
+    }
 
     play_stone(to, to_play);
     remove_stone(from);
@@ -52,20 +67,33 @@ void elephants::undo_move()
     int from = cgt_move::decode3(mc, &to, &to_play);
 
     assert(is_black_white(to_play));
-    assert(checked_is_color(to, to_play));
     assert(checked_is_color(from, EMPTY));
+    assert(checked_is_color(to, to_play));
+
+    // incremental hash
+    if (_hash_updatable())
+    {
+        local_hash& hash = _get_hash_ref();
+        hash.toggle_value(from, EMPTY);
+        hash.toggle_value(to, to_play);
+
+        hash.toggle_value(from, to_play);
+        hash.toggle_value(to, EMPTY);
+
+        _mark_hash_updated();
+    }
 
     play_stone(from, to_play);
     remove_stone(to);
 }
 
-split_result elephants::_split_implementation() const
+split_result elephants::_split_impl() const
 {
     vector<pair<int, int>> subgame_ranges;
 
-    // <g1> O <0 or more empty tiles> X <g2>
+    // Two types of splits: O\.*X, and XO
 
-    string board = board_as_string();
+    const string& board = board_as_string();
     const size_t N = board.size();
 
     size_t chunk_start = 0;
@@ -76,12 +104,10 @@ split_result elephants::_split_implementation() const
     bool seen_black = false;
     size_t last_black = 0;
 
-    // game splits when last_black > last_white and both are > -1
-
     for (size_t i = 0; i < N; i++)
     {
         const char c = board[i];
-        int color = clobber_char_to_color(c);
+        const int color = clobber_char_to_color(c);
 
         if (color == BLACK)
         {
@@ -94,20 +120,45 @@ split_result elephants::_split_implementation() const
             seen_white = true;
         }
 
-        // split game in two
-        if ((seen_white && seen_black) && last_white < last_black)
+        if (!(seen_black && seen_white))
+            continue;
+
+        // XO split
+        if (last_black + 1 == last_white)
         {
+            assert(last_white == i);
+
+            // Skip X
+            subgame_ranges.push_back({chunk_start, last_black - chunk_start});
+
+            // Skip O
+            chunk_start = i + 1;
+            seen_black = false;
+            seen_white = false;
+
+            continue;
+        }
+
+        // O\.*X split
+        if (last_white < last_black)
+        {
+            assert(last_black == i);
+
+            // keep O in "left" subgame
             subgame_ranges.push_back(
                 {chunk_start, last_white - chunk_start + 1});
 
+            // keep X in remainder
             chunk_start = i;
             seen_white = false;
             // keep last_black
+
+            continue;
         }
     }
 
-    // always have one more subgame
-    if (N > 0)
+    // maybe have one more subgame
+    if (N > 0 && chunk_start < N)
     {
         subgame_ranges.push_back(
             {chunk_start, (board.size() - 1) - chunk_start + 1});
@@ -123,12 +174,31 @@ split_result elephants::_split_implementation() const
 
         for (const pair<int, int>& range : subgame_ranges)
         {
+            if (range.second == 0)
+                continue;
+
+            assert(range.second >= 1);
+
             result->push_back(
                 new elephants(board.substr(range.first, range.second)));
         }
 
         return result;
     }
+}
+
+void elephants::_normalize_impl()
+{
+    // Already normalized
+    if (_hash_updatable())
+        _mark_hash_updated();
+}
+
+void elephants::_undo_normalize_impl()
+{
+    // Nothing to undo
+    if (_hash_updatable())
+        _mark_hash_updated();
 }
 
 move_generator* elephants::create_move_generator(bw to_play) const

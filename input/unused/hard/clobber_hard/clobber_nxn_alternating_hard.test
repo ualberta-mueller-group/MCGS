@@ -1,0 +1,16 @@
+{version 1.2}
+
+/*_
+    These tests time out
+*/
+
+[clobber]
+
+/* 5x5 alternating */
+XOXOX|OXOXO|XOXOX|OXOXO|XOXOX
+    {B, W}
+
+/* 6x6 alternating */
+XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO|OXOXOX
+    {B, W}
+

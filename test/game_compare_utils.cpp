@@ -2,6 +2,9 @@
 
 #include "game.h"
 #include <sstream>
+#include <cstdint>
+#include <string>
+#include <functional>
 
 namespace compare_games_by_print {
 

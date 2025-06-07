@@ -2,6 +2,8 @@
 
 #include "file_parser.h"
 #include <memory>
+#include <string>
+#include <exception>
 
 /*
     Variables resulting from command line options. "parser" may be nullptr
@@ -26,13 +28,6 @@ struct cli_options
     static constexpr const unsigned long long DEFAULT_TEST_TIMEOUT = 500;
 };
 
-/*
-    Parses CLI options and returns them. May or may not include a file_parser
-
-    When "silent" is true, don't print to stdout (useful for unit testing)
-*/
-cli_options parse_cli_args(int argc, const char** argv, bool silent = false);
-
 // Thrown on bad input
 class cli_options_exception : public std::exception
 {
@@ -47,3 +42,9 @@ public:
 private:
     std::string _why;
 };
+
+/*
+    Parses CLI options and returns them. May or may not include a file_parser
+    When "silent" is true, don't print to stdout (useful for unit testing)
+*/
+cli_options parse_args(int argc, const char** argv, bool silent = false);

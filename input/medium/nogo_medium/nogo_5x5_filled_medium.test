@@ -1,0 +1,12 @@
+{version 1.2}
+
+/*_
+    Results from: Modified SBHSolver
+
+    At least one case 5-30s
+*/
+
+[nogo]
+OO...|.X...|.X...|...O.|.XXO. {B win, W win}
+.....|.....|X.XO.|O..OX|O...X {B win, W win}
+O.X..|O....|..XX.|O....|.X..O {B win, W loss}

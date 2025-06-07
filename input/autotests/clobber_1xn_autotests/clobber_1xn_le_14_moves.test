@@ -1,5 +1,9 @@
-{version 1.1}
-/* These results only validated by the late November 2022 Linear Clobber solver */
+{version 1.2}
+
+/*_
+    Results from: Taylor linear Clobber solver
+*/
+
 [clobber_1xn]
 
 /* 15.39 ms */
@@ -55,12 +59,6 @@ XOXOXOXOXOXOXOX {B loss}
 
 /* 16.81 ms */
 XOXOXOXOXOXOXOX {W win}
-
-/* 16.93 ms */
-XO.OXXXOOOOXOOXX.OOXO.OX.XXOOXOXO {B win}
-
-/* 16.51 ms */
-XO.OXXXOOOOXOOXX.OOXO.OX.XXOOXOXO {W loss}
 
 /* 15.94 ms */
 OXOX.OXOOXXX.XOOX.XO.OXXXOX.XO.XO {B win}

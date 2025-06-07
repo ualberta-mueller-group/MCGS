@@ -1,7 +1,10 @@
 #include "split_test_switch_game.h"
 #include "cgt_switch.h"
+#include "cgt_dyadic_rational.h"
 
 #include <memory>
+#include "fraction.h"
+#include <cassert>
 
 using std::unique_ptr;
 

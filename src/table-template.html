@@ -139,10 +139,23 @@
                 font-weight: bold;
             }
 
+            #python-warnings ul {
+                list-style-type: square;
+                padding-left: 1em;
+            }
+
             .th-index {
                 cursor: pointer;
             }
 
+            /* ".row" for higher specificity, to override other bg colors */
+            .row.row-duplicate {
+                background-color: #ffb0ff;
+            }
+
+            #data-table {
+                visibility: hidden;
+            }
 
         </style>
 
@@ -157,6 +170,7 @@
         <!-- REPLACE WITH METADATA -->
 
     <p id="problem-summary"></p>
+    <!-- REPLACE WITH PYTHON WARNINGS -->
 
     <div class="select-div">
         <label for="outcome-filter-dropdown">Show rows: </label>
@@ -167,6 +181,7 @@
             <option value="diverging-result">Diverging results</option>
             <option value="timeout">Timeouts</option>
             <option value="hash">Bad hashes</option>
+            <option value="duplicate">Duplicate Tests</option>
             <option value="no-problem">No problems</option>
         </select>
     </div>
@@ -192,6 +207,11 @@
         <select id="filter-text-column-select">
             <!-- REPLACE WITH COLUMN OPTIONS -->
         </select>
+
+        <div class="sep"></div>
+
+        <label for="sort-by-time-checkbox">Sort by time</label>
+        <input type="checkbox" id="sort-by-time-checkbox">
 
     </div>
 

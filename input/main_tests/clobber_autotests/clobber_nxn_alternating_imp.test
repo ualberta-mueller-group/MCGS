@@ -1,0 +1,20 @@
+{version 1.2}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[impartial clobber]
+
+/* 2x2 */
+XO|OX
+    {N 0, B loss, W loss}
+
+/* 3x3 */
+XOX|OXO|XOX
+    {N 1, B win, W win}
+
+/* 4x4 */
+XOXO|OXOX|XOXO|OXOX
+    {N 0, B loss, W loss}
+

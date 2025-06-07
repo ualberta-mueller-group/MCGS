@@ -1,0 +1,15 @@
+{version 1.2}
+
+/*_
+    Results from: CGSuite
+
+    At least one case times out
+*/
+
+[elephants]
+
+[impartial elephants]
+
+.O..XX...X.....O.....OX......OO.O......O {N 2, B win, W win}
+XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO {N 1, B win, W win}
+X...XX.O...X.....OOOO..X...O.....O.O...O {N 0, B loss, W loss}

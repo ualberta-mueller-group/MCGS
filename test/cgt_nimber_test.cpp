@@ -10,15 +10,13 @@ namespace cgt_nimber_test {
 void test1()
 {
     nimber g(0);
-    assert_solve(g, BLACK, false);
-    assert_solve(g, WHITE, false);
+    test_one_game(g, false, false);
 }
 
 void test2()
 {
     nimber g(3);
-    assert_solve(g, BLACK, true);
-    assert_solve(g, WHITE, true);
+    test_one_game(g, true, true);
 }
 
 } // namespace cgt_nimber_test

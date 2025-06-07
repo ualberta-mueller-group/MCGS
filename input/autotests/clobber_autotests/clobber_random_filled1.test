@@ -1,0 +1,16 @@
+{version 1.2}
+
+/*_
+    Results from: MCGS (commit ebb1b89b)
+*/
+
+[clobber]
+
+/* 3x7 random */
+XXXXXOO|XXXXXOX|XXOOOXO
+	{B win, W loss}
+
+/* 3x8 random */
+XOXOXXXO|XXXXOXXO|OOXXXXOX
+	{B win, W loss}
+

@@ -1,0 +1,167 @@
+////////////////////////////////////////////////// Utility functions
+def assert(condition, message ? "Assertion failed") begin
+    if not condition then
+        System.Error(message);
+    end
+end
+
+def print(obj) begin
+    System.Print(obj);
+end
+
+def to_string(obj) begin
+    if obj is String then
+        obj;
+    else
+        obj.ToString;
+    end
+end
+
+def join(collection, separator_string ? "") begin
+    assert(collection is Collection);
+    assert(separator_string is String);
+
+    line := "";
+
+    as_list := collection.ToList;
+    for i from 1 to as_list.Size do
+        line := line.Concat(to_string(as_list[i]));
+
+        if (i + 1) <= as_list.Size then
+            line := line.Concat(separator_string);
+        end
+    end
+
+    line;
+end
+
+def integer_divide(a, b) begin
+    assert(a is game.Integer);
+    assert(b is game.Integer);
+    (a - (a % b)) / b;
+end
+
+def mcgs_to_elephants(mcgs_string) begin
+    assert(mcgs_string is String);
+    mcgs_string.Replace("X", "t").Replace("O", "f");
+end
+
+def sum_games(games) begin
+    assert(games is Collection);
+
+    for g in games do
+        assert(g is game.Game);
+    end
+
+    if games.Size == 0 then
+        0;
+    end
+
+    sum := games[1];
+    for i from 2 to games.Size do
+        sum := sum + games[i];
+    end
+
+    sum;
+end
+
+def make_impartial(g) begin
+    assert(g is game.Game);
+    game.variant.ImpartialVariantGame(g);
+end
+
+def bool_to_winloss(b) begin
+    assert(b is Boolean);
+
+    if b then
+        "win";
+    else
+        "loss";
+    end
+end
+
+def outcome_class_to_bools(oc) begin
+    assert(oc is game.OutcomeClass);
+
+    if oc == game.OutcomeClass.N then
+        [true, true];
+    elseif oc == game.OutcomeClass.P then
+        [false, false];
+    elseif oc == game.OutcomeClass.L then
+        [true, false];
+    elseif oc == game.OutcomeClass.R then
+        [false, true];
+    else
+        assert(false);
+    end
+end
+
+def canonical_game_to_command(cg) begin
+    assert(cg is game.CanonicalShortGame);
+
+    oc := cg.OutcomeClass;
+    vals := [bool_to_winloss(b) for b in outcome_class_to_bools(oc)];
+    join(["{B ", vals[1], ", W ", vals[2], "}"], "");
+end
+
+def canonical_impgame_to_command(cg, include_winloss ? true) begin
+    assert(cg is game.CanonicalShortGame);
+    assert(cg is game.Nimber or cg is game.Zero);
+    assert(include_winloss is Boolean);
+
+    val := cg.NimValue;
+    is_win := val > 0;
+    winloss := bool_to_winloss(is_win); 
+
+    if include_winloss then
+        join(["{N ", val, ", B ", winloss, ", W ", winloss, "}"], "");
+    else
+        join(["{N ", val, "}"], "");
+    end
+end
+
+def print_opts(g) begin
+    assert(g is game.Game);
+
+    left := join(g.LeftOptions, ", ");
+    right := join(g.RightOptions, ", ");
+
+    print(join(["{", left, " | ", right, "}"], ""));
+end
+
+////////////////////////////////////////////////// Games and shorthands
+def elephants(board) begin
+    assert(board is String);
+
+    cgs_board := mcgs_to_elephants(board);
+
+    for i from 1 to cgs_board.Length do
+        c := cgs_board[i];
+        assert((c == "t") or (c == "f") or (c == "."));
+    end
+
+    game.strip.ElephantsAndRhinos(cgs_board);
+end
+
+def clobber(board) begin
+    assert(board is String);
+    game.grid.Clobber(board);
+end
+
+def cf(g) begin
+    assert(g is Game);
+    g.CanonicalForm;
+end
+
+def imp(g) begin
+    assert(g is Game);
+    make_impartial(g);
+end
+
+def nc(g) begin
+    assert(g is Game);
+    NCWrapper(g);
+end
+
+;
+

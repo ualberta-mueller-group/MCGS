@@ -1,8 +1,11 @@
 #pragma once
 #include "game.h"
 #include "utilities.h"
-#include <cctype>
 #include <string>
+#include <cassert>
+#include <vector>
+#include <memory>
+#include <iostream>
 
 /*
     New games must have a corresponding call to file_parser::add_game_parser()
@@ -37,6 +40,27 @@ public:
     game* parse_game(const std::string& game_token) const override
     {
         return new T(game_token);
+    }
+};
+
+// forwards the string as-is to the game constructor, then calls is_legal()
+template <class T>
+class basic_parser_with_check : public game_token_parser
+{
+public:
+    game* parse_game(const std::string& game_token) const override
+    {
+        T* g = new T(game_token);
+
+        if (!g->is_legal())
+        {
+            std::cerr << "ERROR: game not legal!" << std::endl;
+
+            delete g;
+            return nullptr;
+        }
+
+        return g;
     }
 };
 
@@ -104,4 +128,23 @@ class dyadic_rational_parser : public game_token_parser
 {
 public:
     game* parse_game(const std::string& game_token) const override;
+};
+
+////////////////////////////////////////////////// impartial games
+class impartial_game_token_parser_wrapper : public game_token_parser
+{
+public:
+    impartial_game_token_parser_wrapper(
+        std::shared_ptr<game_token_parser>& parser)
+        : _parser(parser)
+    {
+        assert(parser.get() != nullptr);
+    }
+
+    virtual ~impartial_game_token_parser_wrapper() {}
+
+    game* parse_game(const std::string& game_token) const override;
+
+private:
+    std::shared_ptr<game_token_parser> _parser;
 };

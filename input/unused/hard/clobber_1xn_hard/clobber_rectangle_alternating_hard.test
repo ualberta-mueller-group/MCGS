@@ -1,0 +1,23 @@
+{version 1.2}
+
+/*_
+    These tests timeout
+*/
+
+[clobber]
+
+/* 4x6 */
+XOXOXO|OXOXOX|XOXOXO|OXOXOX
+	 {B, W}
+
+/* 5x6 */
+XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO
+	 {B, W}
+
+/* 6x4 */
+XOXO|OXOX|XOXO|OXOX|XOXO|OXOX
+	 {B, W}
+
+/* 6x5 */
+XOXOX|OXOXO|XOXOX|OXOXO|XOXOX|OXOXO
+	 {B, W}

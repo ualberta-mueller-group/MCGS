@@ -1,0 +1,68 @@
+{version 1.2}
+
+/*_
+    Results from: Taylor linear Clobber solver
+*/
+
+[clobber]
+
+/* 15.39 ms */
+XOXOXOXOXOXOXO {B win}
+
+/* 15.46 ms */
+XOXOXOXOXOXOXO {W win}
+
+/* 14.82 ms */
+XO.XXXO.OXO.OOX.OXOX.OX.XXXXO.XO.OOX.OX {B win}
+
+/* 17.39 ms */
+XO.XXXO.OXO.OOX.OXOX.OX.XXXXO.XO.OOX.OX {W loss}
+
+/* 14.87 ms */
+XXO.XOXO.XO.OXOOXXXO.OOX.OOXXOX {B win}
+
+/* 15.12 ms */
+XXO.XOXO.XO.OXOOXXXO.OOX.OOXXOX {W win}
+
+/* 16.41 ms */
+XXOOXO.XO.XOOXOOXXXXOX.XOOX.OOOXX {B win}
+
+/* 15.98 ms */
+XXOOXO.XO.XOOXOOXXXXOX.XOOX.OOOXX {W win}
+
+/* 15.38 ms */
+OX.XOOO.OXOXOOXO.XOXOX.XO {B loss}
+
+/* 16.62 ms */
+OX.XOOO.OXOXOOXO.XOXOX.XO {W win}
+
+/* 15.68 ms */
+OXOOXOOX.XXXOOOOO.OXXXXOXO.OX.OXXOOO {B win}
+
+/* 16.44 ms */
+OXOOXOOX.XXXOOOOO.OXXXXOXO.OX.OXXOOO {W win}
+
+/* 19.02 ms */
+XXOXXOXXOXXOXXOXXOXXO {B win}
+
+/* 16.85 ms */
+XXOXXOXXOXXOXXOXXOXXO {W loss}
+
+/* 15.46 ms */
+OXOXOXOXOXOXOX {B win}
+
+/* 16.79 ms */
+OXOXOXOXOXOXOX {W win}
+
+/* 16.47 ms */
+XOXOXOXOXOXOXOX {B loss}
+
+/* 16.81 ms */
+XOXOXOXOXOXOXOX {W win}
+
+/* 15.94 ms */
+OXOX.OXOOXXX.XOOX.XO.OXXXOX.XO.XO {B win}
+
+/* 16.31 ms */
+OXOX.OXOOXXX.XOOX.XO.OXXXOX.XO.XO {W loss}
+

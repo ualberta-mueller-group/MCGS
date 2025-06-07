@@ -1,0 +1,74 @@
+{version 1.2}
+
+/*_
+    Results from: Taylor linear Clobber solver
+*/
+
+[clobber]
+
+/* 15.00 ms */
+XOXO {B win}
+
+/* 16.24 ms */
+XOXO {W win}
+
+/* 16.13 ms */
+OOX.XXOOO.OOOX {B loss}
+
+/* 15.73 ms */
+OOX.XXOOO.OOOX {W win}
+
+/* 17.25 ms */
+XXO.OOXX.XO {B win}
+
+/* 15.50 ms */
+XXO.OOXX.XO {W win}
+
+/* 17.04 ms */
+..XOXO {B win}
+
+/* 15.71 ms */
+..XOXO {W win}
+
+/* 16.65 ms */
+XXOXXO {B win}
+
+/* 17.51 ms */
+XXOXXO {W loss}
+
+/* 17.40 ms */
+OXOX {B win}
+
+/* 16.34 ms */
+OXOX {W win}
+
+/* 17.04 ms */
+XOXOX {B loss}
+
+/* 17.18 ms */
+XOXOX {W win}
+
+/* 16.19 ms */
+OX.OX.OXO {B win}
+
+/* 15.82 ms */
+OX.OX.OXO {W win}
+
+/* 14.50 ms */
+OXX.XXXXOOXXO {B win}
+
+/* 15.55 ms */
+OXX.XXXXOOXXO {W loss}
+
+/* 16.78 ms */
+XXO.XO.XXO.OOX {B win}
+
+/* 17.07 ms */
+XXO.XO.XXO.OOX {W win}
+
+/* 14.88 ms */
+XO.OXXOO.XO {B win}
+
+/* 15.49 ms */
+XO.OXXOO.XO {W loss}
+

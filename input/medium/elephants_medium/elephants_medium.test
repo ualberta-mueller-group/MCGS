@@ -1,0 +1,17 @@
+{version 1.2}
+
+/*_
+    Results from: CGSuite 2.1.1
+
+    At least one case 5-30s
+*/
+
+[elephants]
+
+/* ?? --> N position from book, (first wins) */
+XX...XO.O.X..X.O..O.O.X.O.X..X..X.....O..OOO {B win, W win}
+
+[impartial elephants]
+...OXO....OX....O..XXX......X..X........ {N 1, B win, W win}
+X.XX.....O..O.O...X.............O.X....O {N 0, B loss, W loss}
+X...O.O...X..X.........O........O.OO...X {N 3, B win, W win}

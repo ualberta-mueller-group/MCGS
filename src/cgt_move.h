@@ -7,8 +7,10 @@
 
 #pragma once
 
-#include <string>
 #include "cgt_basics.h"
+
+#include <string>
+#include <cassert>
 
 // Currently all moves must be encoded as int, and decoded from int
 // There is no abstract move class here.
@@ -27,9 +29,19 @@ const int MOVE_MAX_SIZE = (1 << BITS_PER_MOVE_PART);
 const int MOVE_BITS = MOVE_MAX_SIZE - 1;
 static_assert(sizeof(int) >= 4);
 
+inline int get_bit(move m, int bit)
+{
+    return (m >> bit) & 1;
+}
+
+inline int set_bit(move m, int bit)
+{
+    return m | (1 << bit);
+}
+
 inline bw get_color(move m) // BLACK = 0, WHITE = 1
 {
-    return (m >> COLOR_BIT) & 1;
+    return get_bit(m, COLOR_BIT);
 }
 
 inline int get_sign(move m)
@@ -101,4 +113,6 @@ inline move encode3(int first, int second, bw color)
 }
 
 std::string print(const move& m);
+std::string print_two_part_move(const move& m);
+
 } // namespace cgt_move

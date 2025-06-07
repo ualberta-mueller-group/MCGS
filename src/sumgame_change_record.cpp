@@ -1,7 +1,8 @@
 #include "sumgame_change_record.h"
 #include "game.h"
-#include <climits>
 #include <vector>
+#include <cassert>
+#include <utility>
 #include "sumgame_map_view.h"
 #include "cgt_game_simplification.h"
 

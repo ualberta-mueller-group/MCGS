@@ -4,6 +4,9 @@
 #include "sum_of_nimbers.h"
 
 #include "cgt_nimber.h"
+#include <vector>
+#include <cassert>
+#include "sumgame.h"
 
 std::vector<int> get_nim_heaps(const sumgame& s)
 {

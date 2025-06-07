@@ -10,11 +10,14 @@
 #include "safe_arithmetic.h"
 
 #include <iostream>
+#include <cassert>
+
 using std::cout;
 using std::endl;
 
 void switch_game::play(const move& m, bw to_play)
 {
+    game::play(m, to_play);
 
     if (is_rational())
     {
@@ -30,15 +33,16 @@ void switch_game::play(const move& m, bw to_play)
     }
 
     _move_depth++;
-    game::play(m, to_play);
 }
 
 void switch_game::undo_move()
 {
+    const int m = cgt_move::decode(last_move());
+    game::undo_move();
+
     assert(is_rational());
     assert(_move_depth >= 1);
 
-    const int m = cgt_move::decode(last_move());
     if (_move_depth == 1) // back from integer to switch
     {
         assert(m == SWITCH_MOVE_CODE);
@@ -50,10 +54,9 @@ void switch_game::undo_move()
     }
 
     _move_depth--;
-    game::undo_move();
 }
 
-split_result switch_game::_split_implementation() const
+split_result switch_game::_split_impl() const
 {
     if (!is_rational())
     {
@@ -63,6 +66,70 @@ split_result switch_game::_split_implementation() const
     {
         return split_result({new dyadic_rational(value())});
     }
+}
+
+void switch_game::_init_hash(local_hash& hash) const
+{
+    if (!is_rational())
+    {
+        hash.toggle_value(0, 0);
+        hash.toggle_value(1, _left.top());
+        hash.toggle_value(2, _left.bottom());
+
+        hash.toggle_value(3, _right.top());
+        hash.toggle_value(4, _right.bottom());
+    }
+    else
+    {
+        const fraction& f = value();
+        hash.toggle_value(0, 1);
+        hash.toggle_value(5, f.top());
+        hash.toggle_value(6, f.bottom());
+    }
+}
+
+relation switch_game::_order_impl(const game* rhs) const
+{
+    const switch_game* other = reinterpret_cast<const switch_game*>(rhs);
+    assert(dynamic_cast<const switch_game*>(rhs) == other);
+
+    const switch_kind& kind1 = this->kind();
+    const switch_kind& kind2 = other->kind();
+
+    if (kind1 != kind2)
+        return kind1 < kind2 ? REL_LESS : REL_GREATER;
+
+    const bool rational = this->is_rational();
+    assert(other->is_rational() == rational);
+
+    if (rational)
+    {
+        const fraction& f1 = this->value();
+        const fraction& f2 = other->value();
+
+        return fraction::get_lexicographic_relation(f1, f2);
+    }
+    else
+    {
+        const fraction& f1_left = this->left();
+        const fraction& f2_left = other->left();
+
+        relation rel_left =
+            fraction::get_lexicographic_relation(f1_left, f2_left);
+
+        if (rel_left != REL_EQUAL)
+            return rel_left;
+
+        const fraction& f1_right = this->right();
+        const fraction& f2_right = other->right();
+
+        relation rel_right =
+            fraction::get_lexicographic_relation(f1_right, f2_right);
+
+        return rel_right;
+    }
+
+    return REL_EQUAL;
 }
 
 game* switch_game::inverse() const

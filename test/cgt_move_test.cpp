@@ -1,6 +1,7 @@
 #include "cgt_move_test.h"
 #include "cgt_move.h"
 #include <cassert>
+#include "cgt_basics.h"
 
 using namespace cgt_move;
 

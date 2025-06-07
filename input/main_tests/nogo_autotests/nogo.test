@@ -1,0 +1,25 @@
+{version 1.2}
+
+/*_
+    Results from: Modified SBHSolver
+*/
+
+[nogo]
+
+. {B loss, W loss}
+
+.. {B win, W win}
+
+.|. {B win, W win}
+
+... {B win, W win}
+
+.|.|. {B win, W win}
+
+.... {B loss, W loss}
+
+..|.. {B win, W win}
+
+...|...|... {B win, W win}
+
+....|..OX|OX..|.... {B loss, W loss}

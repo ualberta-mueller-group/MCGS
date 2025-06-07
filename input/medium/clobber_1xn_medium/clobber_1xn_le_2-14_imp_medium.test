@@ -1,0 +1,16 @@
+{version 1.2}
+
+/*_
+    Results from: CGSuite 2.1.1
+
+    At least one case 5-30s
+*/
+
+[impartial clobber_1xn]
+
+OXO.OXXXXX.XXO.OX.OOOXX.OX.XO.OOOXOX.XO {N 6, B win, W win}
+OXX.OXXO.OXXOOXXOXXO.XOOX.OX {N 2, B win, W win}
+OXXXOXOXO.OX.XO.XOOOXXXO.XOO {N 3, B win, W win}
+XXO.XOXO.XO.OXOOXXXO.OOX.OOXXOX {N 3, B win, W win}
+OXOX.OXOOXXX.XOOX.XO.OXXXOX.XO.XO {N 3, B win, W win}
+OXXXX.XO.OXXXOXOXXOO.OOOX.OXXO {N 2, B win, W win}

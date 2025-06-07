@@ -5,6 +5,7 @@
 #include "clobber_1xn.h"
 
 #include <cassert>
+#include <memory>
 #include <iostream>
 #include "cgt_move.h"
 #include "test_utilities.h"
