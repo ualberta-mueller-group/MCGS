@@ -39,7 +39,7 @@ public:
         return *_game;
     }
 
-    hash_t game_hash() const;
+    virtual hash_t game_hash() const;
 
     // Default just returns false, a specific game may override
     virtual bool find_static_winner(bool& success) const;
@@ -108,7 +108,7 @@ inline hash_t alternating_move_game::game_hash() const
 {
     if (_game)
         return game_pos().get_local_hash();
-    else // todo compute game hash for sum game
+    else
         return 0;
 }
 

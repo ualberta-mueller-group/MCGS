@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // Performance tests for Impartial Clobber on a 1-dimensional strip
 //---------------------------------------------------------------------------
-#include "performance_test_clobber.h"
+#include "performance_test_impartial_clobber_1xn.h"
 
 #include <cassert>
 #include <chrono>
@@ -38,7 +38,7 @@ void test_nim_value(const string& s, int nim_value)
 }
 } // namespace
 
-void performance_test_clobber()
+void performance_test_impartial_clobber_1xn()
 {
     static int dai_chen_result[] = // -1 means they could not solve it
         {

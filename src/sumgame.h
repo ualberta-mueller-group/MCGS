@@ -118,6 +118,11 @@ public:
     void print(std::ostream& str) const;
 
     hash_t get_global_hash(bool invalidate_game_hashes = false) const;
+
+    // TODO this function is strange, as alternating_move_game could have a
+    // game...
+    hash_t game_hash() const override;
+
     bool all_impartial() const; // considers inactive games
 
     // called by mcgs_init()
@@ -205,6 +210,11 @@ inline bool sumgame::is_empty() const
         if (g->is_active())
             return false;
     return true;
+}
+
+inline hash_t sumgame::game_hash() const
+{
+    return get_global_hash();
 }
 
 //---------------------------------------------------------------------------

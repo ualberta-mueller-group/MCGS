@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // Performance tests for Impartial NoGo on a 1-dimensional strip
 //---------------------------------------------------------------------------
-#include "performance_test_nogo.h"
+#include "performance_test_impartial_nogo_1xn.h"
 
 #include <cassert>
 #include <string>
@@ -39,7 +39,7 @@ void test_nogo(const string& s, int nim_value)
 
 } // namespace
 
-void performance_test_nogo()
+void performance_test_impartial_nogo_1xn()
 {
     static int expected[] = // computed with this same program
         {

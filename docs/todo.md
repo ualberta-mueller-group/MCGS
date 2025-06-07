@@ -2,27 +2,10 @@
 - none known
 
 ### Remaining Issues from merging impartial-games branch into v1.2-develop
-- `assert_restore_game`
-    - before merge, `assert_restore_game` was defined for 
-    `alternating_move_game` only
-    - in impartial-games, the old class was renamed to
-    `assert_restore_alternating_game`, and a new 
-    `assert_restore_game` was defined for `game` in `game.h`
-    - Probably this should be changed by making `assert_restore_game`
-    a base class and overriding it in subclasses
-    - Especially, the `assert_restore_alternating_game` should
-    just become a specialized implementation
-    - Importantly, other classes such as `sumgame` could do a lot more
-    class-specific checks to make sure that everything is restored
-- `game::game_hash` - this is a placeholder from before hashing was added.
-    It is used in `assert_restore_game` and `assert_restore_alternating_game`
-    Those classes should test the both the size of the move stack and
-    the real hash code are restored. And probably more things.
-- all notes should be updated/pruned. Some documentation should go into readme? V1.2 done notes should move out of todo (and everything else that has been done already)
 - Needs review: in impartial games, there are still too many "two version" 
   methods and move generators,
   both with and without a color argument.
-- Needs review: `impartial_game` stores a `_nim_value_` after it is solved.
+- Needs review: `impartial_game` stores a `_nim_value` after it is solved.
   Do we need it, or should we make the game object smaller and 
   just use the hash table to store the value?
   It is a bit confusing since a `impartial_game` is an
@@ -57,24 +40,21 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
                 - Solver can stop at a win, even if the winning move is not "optimal"
 
 # Current tasks
+## "V1.3"
+- database
+    - design DB
+    - plan DB implementation steps
+    - "Hierarchical hash buckets" default case?
+    - DB diff tool?
+    - Add "DB lookup" command to input language?
+- gather other solvers into one repository
+    - SBHSolver needs some slight modification
+    - use CGSuite for impartial 2D nogo
 
 # Future tasks
-## V1.2
-### V1.2 done - move out of todo.md
-- hashing for games and sum games
-- `grid` and `nogo` on a grid classes
-- impartial games and simple impartial game solver
-- kayles, a simple impartial game
-- Impartial game wrapper to play impartial version of any `game`
-- transposition table
 
-### V1.2 to do
-- merge cleanup branch
-
-## V1.3
+## V1.3 (?)
 - transposition table
-    - design documentation?
-    - compare to discussion in design document
     - Replacement policy?
 - performance testing
     - with/without table
@@ -105,7 +85,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 ### Test framework improvements
 - More detailed timeouts
     - Per file? Per test?
-- Sort rows by column value (ascending/descending)
 - Look into improving table performance for large data sets
     - Bottleneck is UI reflow/repaint, not search time
     - May need to paginate results, which may be undesired. Could also disable automatic update and add "Search" button
@@ -116,6 +95,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Clobber: from graduate course in `~/Projects/ualberta-mueller-group/combinatorial_game_solver/PriorWork`
 - Random test generation
     - Totally independent .py tool? Or partly built into MCGS?
+        - We have some scripts for this in the `utils` directory
         - Could add `random_game()` function to game class?
             - Size parameter? `random_game(size)`
     - Use other solvers to validate results with "adapter" functions/scripts
@@ -141,7 +121,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Write test cases and documentation for these.
 
 ### Resolve Code Problems
-
 - Consider alternatives to `move` being an int?
     - Pass around pointers to heap-allocated moves, whose actual types
     are defined by each game?
@@ -172,11 +151,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 ## Version 2 and beyond
 - Grab a CGT seminar spot to talk about MCGS and give a demo
-- Databases
-    - "Hierarchical hash buckets" default case?
-    - Only in memory, or dynamic loading of "chunks" from disk?
-    - DB diff tool
-    - Add "DB lookup" command to input language
 
 ## Beyond Version 2
 - Search heuristics
@@ -247,7 +221,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Small todo's
     - Remove duplication between performance and unit tests:
       Move tables of expected results into new header file.
-    - performance tests should have "impartial" in the name
 - Search algorithms
     - Lemoine and Viennot, Nimbers are inevitable (2012)
     - Also see, compare with 2022 course report
