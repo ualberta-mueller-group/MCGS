@@ -127,6 +127,7 @@ To implement a new game `x`:
     - For notes on `_init_hash`, see [development-notes.md (Adding Hashing to Games, subsection 1)](docs/development-notes.md#adding-hashing-to-games).
 - Define `class x_move_generator`, derive from `move_generator`.
 - At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h` and `game_token_parsers.cpp`).
+    - This will automatically create the impartial variant of your game.
 - Document the syntax for your game in `input/info.test`, in the `Game syntax` section in the lower half of the file.
 - In `test/x_test.cpp`, write a function `x_test_all` to call all unit tests for your game. Add the declaration in `test/x_test.h` 
 - Call `x_test_all` from `test/main_test.cpp`.

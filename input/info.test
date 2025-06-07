@@ -21,15 +21,15 @@ There are 5 types of 'things' that appear in input:
         '[impartial clobber_1xn]'
         Creating an impartial version of an already impartial game has no
         effect. i.e.
-        '[impartial kayles]'
+        '[impartial kayles]' is effectively the same as '[kayles]'
  
     Commands
         Enclosed by '{' and '}', commands are used to solve sums of games for 
-        one or more players, optionally defining an expected result (win/loss).
-        Commands are also used to specify what version of the input language
-        is used by a file. The version command must be present in files, but
-        can be omitted from input read from stdin or passed as a command line
-        argument to MCGS. The current version is 1.2.
+        one or more players, optionally defining an expected result
+        (win/loss/nim value). Commands are also used to specify what version of
+        the input language is used by a file. The version command must be
+        present in files, but can be omitted from input read from stdin or
+        passed as a command line argument to MCGS. The current version is 1.2.
             i.e.
             Version command:
                 {version 1.2}
@@ -150,7 +150,7 @@ XOXOO...XO
         [clobber_1xn], [nogo_1xn], and [elephants]:
             Contiguous sequence of '.', 'X', and 'O'.
         
-        [nogo]
+        [nogo], and [clobber]
             Contiguous sequence of '.', 'X', 'O', and '|'. A flattened row-major
             representation of 2D board with '|' separating the rows.
 
@@ -194,4 +194,6 @@ XOXOO...XO
 
     Names of sections, i.e. [clobber_1xn] are defined by the
     add_game_parser() function of the file_parser class in file_parser.h
+    After registering your game, its impartial variant will automatically exist,
+    i.e. [impartial YOUR_GAME_NAME]
 */
