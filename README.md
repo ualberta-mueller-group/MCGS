@@ -20,6 +20,8 @@ The overall approach and future plans will be described in a forthcoming documen
   - [Implementing Game-Specific Optimizations](#implementing-game-specific-optimizations)
     - [Splitting Into Subgames](#splitting-into-subgames-subgame_split)
     - [Simplifying Sums of Games](#simplifying-sums-of-games-simplify_basic_cgt)
+    - [Hashing-Related Hooks](#hashing-related-hooks)
+
 
 ### Building MCGS
 First download this repository, and enter its directory.
@@ -90,7 +92,7 @@ This will compile source files with either the `-fsanitize=leak` or `-fsanitize=
 See: [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html) for more information.
 
 Additionally, the `DEBUG` makefile variable adds or removes debugging checks, to the extent that's sensible (you can't build MCGS_test with NDEBUG).
-- `make DEBUG=0` removes debugging code
+- `make DEBUG=0` removes debugging code (expects lots of warnings -- this is still experimental)
 - `make DEBUG=1` adds more debugging code
 - `make` (leaving `DEBUG` undefined) builds with default debugging code
 
@@ -124,8 +126,7 @@ To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
 - Define `class x` in `x.h`, derive from `game` or `strip`.
 - Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, `inverse()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
-    - For notes on `_init_hash`, see [development-notes.md (Adding Hashing to Games, subsection 1)](docs/development-notes.md#adding-hashing-to-games).
-    - (OPTIONAL): subsection 3 describes how to incrementally update your hash in `play()` and `undo_move()`
+    - For notes on `_init_hash()`, see [development-notes.md (Adding Hashing to Games, subsection 1)](docs/development-notes.md#adding-hashing-to-games).
 - Define `class x_move_generator`, derive from `move_generator`.
 - At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h` and `game_token_parsers.cpp`).
     - This will automatically create the impartial variant of your game.
@@ -136,13 +137,18 @@ To implement a new game `x`:
 The `test/input` directory contains input files used by unit tests. Add your new tests there.
 
 ### Implementing Game-Specific Optimizations
-Currently there are two game-specific optimizations. More will be added in future versions. Optimizations are enabled by default, and some can be toggled off (see `./MCGS --help` for details on disabling optimizations). Some optimizations introduce significant overhead.
+There are several game-specific optimizations. More will be added in future versions. Optimizations are enabled by default, and some can be toggled off (see `./MCGS --help` for details on disabling optimizations). Some optimizations introduce significant overhead.
 
 #### Splitting Into Subgames (`subgame_split`)
 In your game `x`, override and implement `game::split_implementation()`. See `game.h` for important implementation details, and add unit tests.
 `split_implementation()` is used to break apart a `game` into a list of subgames whose sum is equal to the original `game`. This may speed up search by allowing MCGS to reason about smaller independent subproblems.
 
-This optimization has significant overhead, and in the current version is unlikely to be useful unless your game splits into "basic" CGT games, and `simplify_basic_cgt` remains enabled.
+This optimization has significant overhead. It should improve performance if your game splits into "basic" CGT games, and `simplify_basic_cgt` remains enabled, or when using
+the `{N}` solve command to get its nim value (assuming the game is either already impartial, or created as its impartial variant (i.e. `[impartial YOUR_GAME_NAME]` in
+input.
+
+NOTE: `clobber`'s split method is especially slow, and is only enabled for the `MCGS_test` executable, or when building with `DEBUG=1`. You can re-enable it by editing the
+makefile, to include `-DCLOBBER_SPLIT` as a compilation argument. `clobber_1xn`'s split method remains enabled.
 
 #### Simplifying Sums of Games (`simplify_basic_cgt`)
 Currently MCGS simplifies sums containing "basic" CGT games (`integer_game`, `dyadic_rational`, `up_star`, `switch_game`, and `nimber`), by summing together their values, resulting in fewer subgames. If your game's `split_implementation()` method returns subgames of these types, they will be included in this simplification step. 
@@ -153,3 +159,11 @@ Currently there is no hook to write your own similar simplification steps, but y
 - `simplify_basic_all` (cgt_game_simplification.cpp)
 
 This optimization has low overhead, as MCGS avoids running these steps unless necessary.
+
+#### Hashing-Related Hooks
+`game`s must implement `_init_hash()`, but there are other (optional) optimizations to be implemented by `game`s:
+- `_order_impl()` implements lexicographical ordering of `game`s of the same type. It's used to sort `game`s before hashing sums, increasing the frequency of transposition table hits.
+- `_normalize_impl()` and `_undo_normalize_impl()` transpose the `game`'s state, so that equivalent states produce the same hashes. This also increases the frequency of transposition table hits.
+- Methods which modify the state of a `game` can incrementally update the hash, so that it need not be recomputed in its entirety after every state change.
+
+For complete details, with examples, see [development-notes.md (Adding Hashing to Games)](docs/development-notes.md#adding-hashing-to-games).

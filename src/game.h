@@ -73,6 +73,11 @@ protected:
 
         To create an absent split_result:
             split_result sr = split_result();
+
+       IMPORTANT: This function must not change the available options, i.e.
+       by pruning or adding (even irrelevant) options. For example,
+       (^+*) must not split into ^ and *, as the combined game is in
+       canonical form, but the split form is not.
     */
     virtual split_result _split_impl() const;
 
