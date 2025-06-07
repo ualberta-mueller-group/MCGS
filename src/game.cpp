@@ -237,7 +237,7 @@ void print_options(std::ostream& os, game* g, bool endline)
             os << *g;
             g->undo_move();
         }
-        
+
         delete mg;
 
         if (color == BLACK)

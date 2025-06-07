@@ -161,7 +161,9 @@ inline grid_location::grid_location(const int_pair& shape,
 }
 
 inline grid_location::grid_location(const int_pair& shape, int point)
-    : _shape(shape), _coord(shape_is_empty(shape) ? int_pair(0, 0) : point_to_coord(point, shape))
+    : _shape(shape),
+      _coord(shape_is_empty(shape) ? int_pair(0, 0)
+                                   : point_to_coord(point, shape))
 {
     THROW_ASSERT_DEBUG(_shape.first >= 0 && _shape.second >= 0);
     THROW_ASSERT_DEBUG(is_empty() || valid());

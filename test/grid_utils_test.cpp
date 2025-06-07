@@ -252,10 +252,10 @@ void test_exceptions()
     // TODO 0x0 shape is a problem...
 
     // Invalid coords
-    //ASSERT_DID_THROW(grid_location({0, 0}, {0, 0}));
-    //ASSERT_DID_THROW(grid_location({0, 0}, {-1, 0}));
-    //ASSERT_DID_THROW(grid_location({0, 0}, {0, -1}));
-    //ASSERT_DID_THROW(grid_location({0, 0}, {-1, -1}));
+    // ASSERT_DID_THROW(grid_location({0, 0}, {0, 0}));
+    // ASSERT_DID_THROW(grid_location({0, 0}, {-1, 0}));
+    // ASSERT_DID_THROW(grid_location({0, 0}, {0, -1}));
+    // ASSERT_DID_THROW(grid_location({0, 0}, {-1, -1}));
     ASSERT_DID_THROW(grid_location({1, 1}, {0, 1}));
     ASSERT_DID_THROW(grid_location({1, 1}, {1, 0}));
     ASSERT_DID_THROW(grid_location({1, 1}, {-1, 0}));
@@ -263,9 +263,9 @@ void test_exceptions()
     ASSERT_DID_THROW(grid_location({1, 1}, {-1, -1}));
 
     // Invalid points
-    //ASSERT_DID_THROW(grid_location({0, 0}, 0));
-    //ASSERT_DID_THROW(grid_location({0, 0}, -1));
-    //ASSERT_DID_THROW(grid_location({0, 0}, 1));
+    // ASSERT_DID_THROW(grid_location({0, 0}, 0));
+    // ASSERT_DID_THROW(grid_location({0, 0}, -1));
+    // ASSERT_DID_THROW(grid_location({0, 0}, 1));
     ASSERT_DID_THROW(grid_location({1, 1}, -1));
     ASSERT_DID_THROW(grid_location({1, 1}, 1));
 

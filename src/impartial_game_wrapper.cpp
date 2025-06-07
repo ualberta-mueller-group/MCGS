@@ -77,10 +77,10 @@ split_result impartial_game_wrapper::_split_impl() const
             assert(dynamic_cast<impartial_game*>(g) == g_imp);
 
             // subgame not a nimber, but already solved
-            if (                                                  //
-                (g_imp->is_solved()) &&                           //
-                !(g_imp->game_type() == ::game_type<nimber>())    //
-                )                                                 //
+            if (                                               //
+                (g_imp->is_solved()) &&                        //
+                !(g_imp->game_type() == ::game_type<nimber>()) //
+                )                                              //
             {
                 result->push_back(new nimber(g_imp->nim_value()));
                 delete g_imp;
