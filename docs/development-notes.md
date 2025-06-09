@@ -1060,17 +1060,58 @@ a move generator in a `std::unique_ptr`
 - removed `nim` class and moved functionality such as nim sum to `nimber`
 - implemented `game::inverse()` for all game types
 
-### Version 1.1 completed
+## Version 1.1 completed
+### New Features
+- `simplify_basic_cgt` solver optimization
+    - simplify "basic" games of same type in a `sumgame`, e.g.
+        - add up integers/rationals
+        - add ups+stars
+        - add nimbers
+- New MCGS CLI flags
+- Input language version: `1.0` --> `1.1`
+    - C-like comment syntax
+    - `dyadic_rational` and `switch_game` now expect fractions
+    - Syntax for all games is documented in [input/info.test](input/info.test)
+- More input files in `input` directory
+
+### Major Code Additions
+- Bounds search implementation
+- RTTI implementation (`game_type_t`)
+- `sumgame` improvements and helper classes
+- New utility classes/functions
+    - `fraction`
+    - `safe_arithmetic.h`
+- Various scripts in `utils` directory (i.e. to generate random input files)
 - More cleanup and Tools and Components for Database
     - Code formatting tools and checks, "lint"-like
+        - Applied `clang-format` and `clang-tidy` to all source files
     - `scale` S such as multiples of up, or up+star, or integers
         - binary search to find upper/lower bounds for a game G on scale S
         - simplify `game` G in `sumgame` S
             - compare with/without subgame split
-- simplify games of same type in S, e.g.
-    - add up integers/rationals
-    - add ups+stars
-    - add nimbers
+
+## Version 1.2 completed
+### New Features
+- Transposition tables speed up search
+- Impartial games support
+    - Impartial game solving algorithm
+    - Input language version `1.1` --> `1.2`
+        - Impartial game variants are automatically created for all games i.e. `[impartial clobber_1xn]`
+        - New solve command for impartial sums: `{N 2}` computes nim-value, expects it to be `2`
+- More games: `nogo`, `clobber`, `kayles`
+- More `.test` files. Most have been verified by external solvers
+
+### Major Code Additions
+- `game` and `sumgame` hashing
+    - Several hashing-related hooks for `game`s to implement
+- `grid` class
+    - `grid` helper classes (`grid_utils.h`)
+- `impartial_game` class
+- `mcgs_init()` initializes global data
+- More code safety (clang-tidy checks, debugging checks)
+- More scripts in the `utils` directory
+    - CGSuite scripts
+    - More random game generation scripts
 
 ## Future: Smaller Step Versions 1.x to Prepare for Version 2
 - change read from string functions to directly create sumgame
@@ -1079,6 +1120,32 @@ a move generator in a `std::unique_ptr`
     the games in a `vector<unique_ptr<game>>`
 - compare G with a simpler game H, replace in S if equal
 - compare G1+G2 with a simpler H, replace in S if equal
+
+## Version 1.3 (In Progress)
+- Database design and planning
+- First database implementation
+    - Modular enough to change details later
+        - Have basic DB "skeleton"
+        - Data structures could change
+        - Hashes used to locate DB entries could change
+    - Some components may be simpler than we plan them to eventually be
+    - Single `game` queries (no `sumgame` queries yet)
+    - Basic database entries
+        - Support partizan games. Store either win/loss, or outcome class
+        - Use this data to improve solving
+    - May consist of smaller incremental versions
+        - Only support strip games first. Add other games in next "small" version
+
+## After Version 1.3 (Future)
+- Improve database
+    - Support querying sums
+    - Impartial game support
+    - Utilities
+        - Tool to compare database files
+    - Possibly dynamically load/unload database chunks
+    - More data in entries
+        - Link to "simpler" equal game
+        - Dominated move list
 
 ### Version 2
 - general sum simplifications

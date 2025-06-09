@@ -22,6 +22,28 @@ The overall approach and future plans will be described in a forthcoming documen
     - [Simplifying Sums of Games](#simplifying-sums-of-games-simplify_basic_cgt)
     - [Hashing-Related Hooks](#hashing-related-hooks)
 
+### Version 1.2 Additions
+#### New Features
+- Transposition tables speed up search
+- Impartial games support
+    - Impartial game solving algorithm
+    - Input language version `1.1` --> `1.2`
+        - Impartial game variants are automatically created for all games i.e. `[impartial clobber_1xn]`
+        - New solve command for impartial sums: `{N 2}` computes nim-value, expects it to be `2`
+- More games: `nogo`, `clobber`, `kayles`
+- More `.test` files. Most have been verified by external solvers
+
+#### Major Code Additions
+- `game` and `sumgame` hashing
+    - Several hashing-related hooks for `game`s to implement
+- `grid` class
+    - `grid` helper classes (`grid_utils.h`)
+- `impartial_game` class
+- `mcgs_init()` initializes global data
+- More code safety (clang-tidy checks, debugging checks)
+- More scripts in the `utils` directory
+    - CGSuite scripts
+    - More random game generation scripts
 
 ### Building MCGS
 First download this repository, and enter its directory.
