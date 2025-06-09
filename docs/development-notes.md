@@ -1037,7 +1037,7 @@ a move generator in a `std::unique_ptr`
 8. Create github release. Include notes about new features
 
 # Versions
-## Version 0 completed
+## Version 0 (Completed)
 - `move` and `game` classes, `alternating_move_game`
 - Nim: `nim` implementation done
 - Utility class `strip` for 1xn boards
@@ -1047,7 +1047,7 @@ a move generator in a `std::unique_ptr`
 - Nogo on a strip: `nogo_1xn` class
 - Simple game classes: integer, dyadic rational, up-star, switch, nimber
 
-## Version 1 completed
+## Version 1 (Completed)
 - `sumgame` class
     - game-dependent `split` into 0,1,2 or more subgames after a move
     - supports both keeping the old `game`, and replacing it after a `split`
@@ -1060,7 +1060,7 @@ a move generator in a `std::unique_ptr`
 - removed `nim` class and moved functionality such as nim sum to `nimber`
 - implemented `game::inverse()` for all game types
 
-## Version 1.1 completed
+## Version 1.1 (Completed)
 ### New Features
 - `simplify_basic_cgt` solver optimization
     - simplify "basic" games of same type in a `sumgame`, e.g.
@@ -1090,7 +1090,7 @@ a move generator in a `std::unique_ptr`
         - simplify `game` G in `sumgame` S
             - compare with/without subgame split
 
-## Version 1.2 completed
+## Version 1.2 (Completed)
 ### New Features
 - Transposition tables speed up search
 - Impartial games support
@@ -1147,7 +1147,7 @@ a move generator in a `std::unique_ptr`
         - Link to "simpler" equal game
         - Dominated move list
 
-### Version 2
+## Version 2 (Future)
 - general sum simplifications
     - remove/deactivate 0
     - find inverse pairs and deactivate
