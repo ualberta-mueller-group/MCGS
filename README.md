@@ -11,6 +11,7 @@ The overall approach and future plans will be described in a forthcoming documen
 
 
 ### Sections
+- [Version 1.2 Additions](#version-12-additions)
 - [Building MCGS](#building-mcgs)
 - [Using MCGS](#using-mcgs)
 - [Using the Testing Framework](#using-the-testing-framework)
