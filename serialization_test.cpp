@@ -1,62 +1,44 @@
 /*
-    Prototype of serialization. General solution. This file is self-contained.
+    Prototype of serialization. Handles both polymorphic and non-polymorphic
+    types. This file is self contained.
 
-    1. Make your type inherit from i_serializable
+    Reading and writing of primitive data types is done through
+    fmt_write/fmt_read functions:
+        fmt_write_u32(some_ostream, some_uint32_t);
+        int64_t some_int = fmt_read_i64(some_istream);
 
-    2. Implement the following method and static function:
-        void T::serialize(std::ostream&) const;
-        static T* T::deserialize(std::istream&);
+    Reading and writing of other objects is done through serializers:
+        serializer<vector<game*>>::serialize(some_ostream, some_games_vec);
+        vector<game*> games = serializer<vector<game*>>::deserialize(some_istream);
 
-    3. In the init() function, add function call:
-        make_serializable<T>();
-    If you don't have this call, your code will still compile, but an assert
-    will fire if your object is serialized/deserialized (in practice should
-    probably throw...)
+    Polymorphic types, such as games, need to implement some functions:
 
-    4. Now your type is serializable:
-        std::fstream& fs1 = SOME BINARY FILE
-        game* g = new game_a(5, 1);
-        g->serialize(fs1);
-        ...
-        std::fstream& fs2 = SOME (OTHER?) BINARY FILE
-        i_serializable* gs = i_serializable::deserialize(fs2);
-        game* g_cast = dynamic_cast<game*>(gs);
+    1. Inherit from class "serializable" (game already does this)
 
---------------------------------------------------------------------------------
-    How it works
+    2. For a type, clobber, implement:
+        void clobber::serialize_impl(std::ostream&) const;
+        static clobber* clobber::deserialize_impl(std::istream&);
 
-    make_serializable<T>():
-        - Assuming T inherits from i_serializable, this registers it with the
-            system.
+    3. In the init() function, register your type:
+        make_serializable<clobber>();
 
-        - Assigns T a serializer_id (uint32_t), its unique type ID for the
-            purposes of the serialization system.
+    Now your type is serializable:
+        serializer<clobber*>::serialize(some_ostream, some_clobber_ptr);
+        clobber* ptr = serializer<clobber*>::deserialize(some_istream);
 
-        - Creates a serializer<T> and stores it in a vector, to be indexed by
-            serializer_id.
+        OR
 
-    i_type_table: Generalization of game_type_t (from MCGS code), providing a
-        struct instead of just an int.
+        serializer<game*>::serialize(some_ostream, some_clobber_ptr);
+        game* ptr = serializer<game*>::deserialize(some_istream);
 
-        It's used to store an object's serializer_id.
+        OR
 
-    i_serializer: Abstract type declaring function bindings to your type's
-        serialize/deserialize functions.
+        serializer<serializable*>::serialize(some_ostream, some_clobber_ptr);
+        serializable* ptr = serializer<serializable*>::deserialize(some_istream);
 
-    serializer<T>: Implements i_serializer, by calling T's functions.
-        Checks that:
-            1. T inherits from i_serializable
-            2. T's serialize/deserialize have exactly the correct signatures
+        The serializer template is defined for all T*, where T is derived from
+        "serializable"
 
-    i_serializable: Base class of serializable types.
-
-        serialize() method uses the serializer_id of an object (from its
-        type_table_t*) to use the correct serializer<T> from the aforementioned
-        vector. Writes the serializer_id to the ostream, before the object data.
-
-        deserialize() static function uses the serializer_id read from an
-        istream to find the correct serializer<T>, which then reads object
-        data from the istream.
 */
 #include <fstream>
 #include <iostream>
@@ -70,6 +52,80 @@
 #include <cstdint>
 
 namespace {
+
+////////////////////////////////////////////////// std::vector printing
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
+{
+    const size_t size = vec.size();
+
+    os << "[";
+    for (size_t i = 0; i < size; i++)
+    {
+        os << vec[i];
+
+        if (i + 1 < size)
+            os << ", ";
+    }
+    os << "]";
+
+    return os;
+}
+
+// dereference pointers in vector
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T*>& vec)
+{
+    const size_t size = vec.size();
+
+    os << "[";
+    for (size_t i = 0; i < size; i++)
+    {
+        os << *vec[i];
+
+        if (i + 1 < size)
+            os << ", ";
+    }
+    os << "]";
+
+    return os;
+}
+
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<std::shared_ptr<T>>& vec)
+{
+    const size_t size = vec.size();
+
+    os << "[";
+    for (size_t i = 0; i < size; i++)
+    {
+        os << *vec[i];
+
+        if (i + 1 < size)
+            os << ", ";
+    }
+    os << "]";
+
+    return os;
+}
+
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<std::unique_ptr<T>>& vec)
+{
+    const size_t size = vec.size();
+
+    os << "[";
+    for (size_t i = 0; i < size; i++)
+    {
+        os << *vec[i];
+
+        if (i + 1 < size)
+            os << ", ";
+    }
+    os << "]";
+
+    return os;
+}
 
 ////////////////////////////////////////////////// format write/read
 //////////////////////////////////////// implementations
@@ -87,7 +143,7 @@ inline void __fmt_write(std::ostream& str, const T& val)
     {
         const uint8_t byte = (uint8_t) (val_uns >> (i * 8));
         assert(str);
-        str << byte;
+        str.write(reinterpret_cast<const char*>(&byte), 1);
     }
     assert(str);
 }
@@ -107,7 +163,7 @@ inline T __fmt_read(std::istream& str)
     for (size_t i = 0; i < N_BYTES; i++)
     {
         assert(str);
-        str >> byte;
+        str.read(reinterpret_cast<char*>(&byte), 1);
         byte_longer = byte;
         val |= (byte_longer << (i * 8));
     }
@@ -199,19 +255,23 @@ inline int64_t fmt_read_i64(std::istream& str)
 }
 
 ////////////////////////////////////////////////// serialization type traits
-//////////////////////////////////////// has_serialize<T>
+// Forward declarations
+class i_dynamic_serializer;
+class serializable;
+
+//////////////////////////////////////// has_serialize_impl<T>
 template <class T, class Enable = void>
-struct has_serialize
+struct has_serialize_impl
 {
     static constexpr bool value = false;
 };
 
 template <class T>
-struct has_serialize<T,
+struct has_serialize_impl<T,
     std::enable_if_t<
         std::is_same_v<
             void (T::*)(std::ostream&) const,
-            decltype(&T::serialize)
+            decltype(&T::serialize_impl)
         >,
         void
     >
@@ -221,21 +281,21 @@ struct has_serialize<T,
 };
 
 template <class T>
-static constexpr bool has_serialize_v = has_serialize<T>::value;
+static constexpr bool has_serialize_impl_v = has_serialize_impl<T>::value;
 
-//////////////////////////////////////// has_deserialize<T>
+//////////////////////////////////////// has_deserialize_impl<T>
 template <class T, class Enable = void>
-struct has_deserialize
+struct has_deserialize_impl
 {
     static constexpr bool value = false;
 };
 
 template <class T>
-struct has_deserialize<T,
+struct has_deserialize_impl<T,
     std::enable_if_t<
         std::is_same_v<
             T* (*)(std::istream&),
-            decltype(&T::deserialize)
+            decltype(&T::deserialize_impl)
         >,
         void
     >
@@ -245,11 +305,14 @@ struct has_deserialize<T,
 };
 
 template <class T>
-static constexpr bool has_deserialize_v = has_deserialize<T>::value;
+static constexpr bool has_deserialize_impl_v = has_deserialize_impl<T>::value;
 
 ////////////////////////////////////////////////// i_type_table
 typedef unsigned int type_num_t; // analogue of game_type_t
-typedef uint32_t serializer_id; // serializable object's unique type ID
+
+// polymorphic serializable object's unique type ID
+typedef uint32_t dynamic_serializer_id;
+
 
 struct type_table_t
 {
@@ -258,7 +321,7 @@ struct type_table_t
     }
 
     type_num_t num;
-    serializer_id sid;
+    dynamic_serializer_id sid;
 };
 
 type_num_t __next_type_num = 1;
@@ -320,107 +383,104 @@ type_table_t* type_table()
 }
 
 ////////////////////////////////////////////////// serialization
-// Forward declarations
-class i_serializer;
-class i_serializable;
 
 //////////////////////////////////////// most of serialization system's data
-std::vector<std::shared_ptr<i_serializer>> __serializer_list;
-serializer_id __next_serializer_id = 1;
+std::vector<std::shared_ptr<i_dynamic_serializer>> __dynamic_serializers;
+dynamic_serializer_id __next_dynamic_serializer_id = 1;
 
-const i_serializer* get_serializer_from_list(serializer_id sid)
+const i_dynamic_serializer* get_dynamic_serializer(dynamic_serializer_id sid)
 {
     assert(sid > 0);
     sid--;
-    assert(sid < __serializer_list.size());
-    return __serializer_list[sid].get();
+    assert(sid < __dynamic_serializers.size());
+    return __dynamic_serializers[sid].get();
 }
 
 template <class T>
-serializer_id __get_serializer_id_impl() // to only check assert one time
+dynamic_serializer_id __get_dynamic_serializer_id_impl() // to only check assert one time
 {
-    static_assert(std::is_base_of_v<i_serializable, T>);
-    serializer_id sid = type_table<T>()->sid;
+    static_assert(std::is_base_of_v<serializable, T>);
+    dynamic_serializer_id sid = type_table<T>()->sid;
     assert(sid > 0);
     return sid;
 }
 
 template <class T>
-serializer_id get_serializer_id()
+dynamic_serializer_id get_dynamic_serializer_id()
 {
-    static_assert(std::is_base_of_v<i_serializable, T>);
-    static const serializer_id SID = __get_serializer_id_impl<T>();
+    static_assert(std::is_base_of_v<serializable, T>);
+    static const dynamic_serializer_id SID = __get_dynamic_serializer_id_impl<T>();
     return SID;
 }
 
 //////////////////////////////////////// serialization types
-class i_serializer
+class i_dynamic_serializer
 {
 public:
-    i_serializer(serializer_id id): _id(id)
+    i_dynamic_serializer(dynamic_serializer_id id): _id(id)
     {
     }
 
-    virtual ~i_serializer()
+    virtual ~i_dynamic_serializer()
     {
     }
 
-    serializer_id get_id() const
+    dynamic_serializer_id get_id() const
     {
         return _id;
     }
 
-    virtual void serialize(std::ostream&, const i_serializable*) const = 0;
-    virtual i_serializable* deserialize(std::istream&) const = 0;
+    virtual void serialize(std::ostream&, const serializable*) const = 0;
+    virtual serializable* deserialize(std::istream&) const = 0;
 
 private:
-    const serializer_id _id;
+    const dynamic_serializer_id _id;
 };
 
-class i_serializable: public i_type_table
+class serializable: public i_type_table
 {
 public:
-    virtual ~i_serializable()
+    virtual ~serializable()
     {
     }
 
-    inline serializer_id get_serializer_id() const
+    inline dynamic_serializer_id get_dynamic_serializer_id() const
     {
         return type_table()->sid;
     }
 
-    inline static serializer_id extract_serializer_id_from_stream(std::istream& str)
+    inline static dynamic_serializer_id extract_dynamic_serializer_id_from_stream(std::istream& str)
     {
-        static_assert(std::is_same_v<serializer_id, uint32_t>);
-        serializer_id sid = fmt_read_u32(str);
+        static_assert(std::is_same_v<dynamic_serializer_id, uint32_t>);
+        dynamic_serializer_id sid = fmt_read_u32(str);
         return sid;
     }
 
-    inline static void insert_serializer_id_to_stream(std::ostream& str, serializer_id sid)
+    inline static void insert_dynamic_serializer_id_to_stream(std::ostream& str, dynamic_serializer_id sid)
     {
-        static_assert(std::is_same_v<serializer_id, uint32_t>);
+        static_assert(std::is_same_v<dynamic_serializer_id, uint32_t>);
         fmt_write_u32(str, sid);
     }
 
-    void serialize(std::ostream& str) const
+    void __serialize(std::ostream& str) const
     {
-        const serializer_id sid = get_serializer_id();
+        const dynamic_serializer_id sid = get_dynamic_serializer_id();
         assert(sid > 0);
-        const i_serializer* ser = get_serializer_from_list(sid);
+        const i_dynamic_serializer* ser = get_dynamic_serializer(sid);
         assert(ser != nullptr);
 
-        insert_serializer_id_to_stream(str, sid);
+        insert_dynamic_serializer_id_to_stream(str, sid);
         ser->serialize(str, this);
     }
 
-    static i_serializable* deserialize(std::istream& str)
+    static serializable* __deserialize(std::istream& str)
     {
         assert(str);
 
-        const serializer_id sid = extract_serializer_id_from_stream(str);
+        const dynamic_serializer_id sid = extract_dynamic_serializer_id_from_stream(str);
         assert(sid > 0);
 
-        const i_serializer* ser = get_serializer_from_list(sid);
+        const i_dynamic_serializer* ser = get_dynamic_serializer(sid);
         assert(ser != nullptr);
 
         return ser->deserialize(str);
@@ -429,35 +489,35 @@ public:
 
 // Created when registering a serializable object in the init() function
 template <class T>
-class serializer: public i_serializer
+class dynamic_serializer: public i_dynamic_serializer
 {
-    static_assert(std::is_base_of_v<i_serializable, T>);
-    static_assert(has_serialize_v<T>);
-    static_assert(has_deserialize_v<T>);
+    static_assert(std::is_base_of_v<serializable, T>);
+    static_assert(has_serialize_impl_v<T>);
+    static_assert(has_deserialize_impl_v<T>);
 
 public:
-    serializer(serializer_id sid): i_serializer(sid)
+    dynamic_serializer(dynamic_serializer_id sid): i_dynamic_serializer(sid)
     {
     }
 
-    virtual ~serializer()
+    virtual ~dynamic_serializer()
     {
     }
 
-    void serialize(std::ostream& str, const i_serializable* obj) const override
+    void serialize(std::ostream& str, const serializable* obj) const override
     {
-        assert(obj->get_serializer_id() == get_serializer_id<T>());
+        assert(obj->get_dynamic_serializer_id() == get_dynamic_serializer_id<T>());
 
         const T* obj_casted = static_cast<const T*>(obj);
         assert(dynamic_cast<const T*>(obj) == obj_casted);
 
-        obj_casted->serialize(str);
+        obj_casted->serialize_impl(str);
     }
 
-    i_serializable* deserialize(std::istream& str) const override
+    serializable* deserialize(std::istream& str) const override
     {
-        i_serializable* obj = T::deserialize(str);
-        assert(obj->get_serializer_id() == get_serializer_id<T>());
+        serializable* obj = T::deserialize_impl(str);
+        assert(obj->get_dynamic_serializer_id() == get_dynamic_serializer_id<T>());
         return obj;
     }
 };
@@ -466,27 +526,155 @@ public:
 template <class T>
 void make_serializable()
 {
-    static_assert(std::is_base_of_v<i_serializable, T>);
+    static_assert(std::is_base_of_v<serializable, T>);
 
     type_table_t* table = type_table<T>();
     assert(table->sid == 0);
 
-    serializer_id sid = __next_serializer_id++;
+    dynamic_serializer_id sid = __next_dynamic_serializer_id++;
     table->sid = sid;
 
-    __serializer_list.emplace_back(new serializer<T>(sid));
-    assert(get_serializer_from_list(sid)->get_id() == sid);
+    __dynamic_serializers.emplace_back(new dynamic_serializer<T>(sid));
+    assert(get_dynamic_serializer(sid)->get_id() == sid);
 }
 
-////////////////////////////////////////////////// games
-class game: public i_serializable
+////////////////////////////////////////////////// game
+class game: public serializable
 {
 public:
     virtual ~game()
     {
     }
+
+    virtual void print(std::ostream& os) const = 0;
 };
 
+std::ostream& operator<<(std::ostream& os, const game& g)
+{
+    g.print(os);
+    return os;
+}
+
+////////////////////////////////////////////////// manual serialization
+template <class T, class Enable = void>
+struct serializer
+{
+    static_assert(false, "Not implemented!");
+    static void serialize(std::ostream& os, const T& val);
+    static T deserialize(std::istream& is);
+};
+
+//////////////////////////////////////// pointers
+
+// Only matches pointer types derived from serializable
+template <class T>
+struct serializer<T*,
+    std::enable_if_t<
+        std::is_base_of_v<serializable, T>,
+        void
+    >
+>
+{
+    static void serialize(std::ostream& os, const serializable* ptr)
+    {
+        ptr->__serialize(os);
+    }
+
+    static T* deserialize(std::istream& is)
+    {
+        serializable* ptr = serializable::__deserialize(is);
+        assert(dynamic_cast<T*>(ptr) != nullptr);
+        return static_cast<T*>(ptr);
+    }
+};
+
+//////////////////////////////////////// shared_ptr<T>
+template <class T>
+struct serializer<std::shared_ptr<T>>
+{
+    static void serialize(std::ostream& os, const std::shared_ptr<T>& ptr)
+    {
+        serializer<T*>::serialize(os, ptr.get());
+    }
+
+    static std::shared_ptr<T> deserialize(std::istream& is)
+    {
+        T* ptr = serializer<T*>::deserialize(is);
+        return std::shared_ptr<T>(ptr);
+    }
+};
+
+//////////////////////////////////////// unique_ptr<T>
+template <class T>
+struct serializer<std::unique_ptr<T>>
+{
+    static void serialize(std::ostream& os, const std::unique_ptr<T>& ptr)
+    {
+        serializer<T*>::serialize(os, ptr.get());
+    }
+
+    static std::unique_ptr<T> deserialize(std::istream& is)
+    {
+        T* ptr = serializer<T*>::deserialize(is);
+        return std::unique_ptr<T>(ptr);
+    }
+};
+
+//////////////////////////////////////// std::string
+template <>
+struct serializer<std::string>
+{
+    static void serialize(std::ostream& os, const std::string& str)
+    {
+        const size_t size = str.size();
+        fmt_write_u32(os, size);
+
+        for (size_t i = 0; i < size; i++)
+            fmt_write_i8(os, str[i]);
+    }
+
+    static std::string deserialize(std::istream& is)
+    {
+        std::string str;
+
+        const size_t size = fmt_read_u32(is);
+        str.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+            str.push_back(fmt_read_i8(is));
+
+        return str;
+    }
+};
+
+//////////////////////////////////////// std::vector<T>
+template <class T>
+struct serializer<std::vector<T>>
+{
+    static void serialize(std::ostream& os, const std::vector<T>& vec)
+    {
+        const size_t size = vec.size();
+        fmt_write_u32(os, size);
+
+        for (size_t i = 0; i < size; i++)
+            serializer<T>::serialize(os, vec[i]);
+    }
+
+    static std::vector<T> deserialize(std::istream& is)
+    {
+        std::vector<T> vec;
+
+        const size_t size = fmt_read_u32(is);
+        vec.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+            vec.emplace_back(serializer<T>::deserialize(is));
+
+        return vec;
+    }
+};
+
+////////////////////////////////////////////////// games
 class game_a: public game
 {
 public:
@@ -494,12 +682,17 @@ public:
     {
     }
 
-    void serialize(std::ostream& str) const
+    void print(std::ostream& os) const override
+    {
+        os << "game_a: " << val;
+    }
+
+    void serialize_impl(std::ostream& str) const
     {
         fmt_write_i32(str, val);
     }
 
-    static game_a* deserialize(std::istream& str)
+    static game_a* deserialize_impl(std::istream& str)
     {
         int32_t val = fmt_read_i32(str);
         return new game_a(val);
@@ -522,14 +715,22 @@ public:
     {
     }
 
-    void serialize(std::ostream& os) const
+    void print(std::ostream& os) const override
+    {
+        os << "game_b: [";
+        os << x << " ";
+        os << y << " ";
+        os << z << "]";
+    }
+
+    void serialize_impl(std::ostream& os) const
     {
         fmt_write_i32(os, x);
         fmt_write_i32(os, y);
         fmt_write_i32(os, z);
     }
 
-    static game_b* deserialize(std::istream& is)
+    static game_b* deserialize_impl(std::istream& is)
     {
         int x = fmt_read_i32(is);
         int y = fmt_read_i32(is);
@@ -552,8 +753,51 @@ std::ostream& operator<<(std::ostream& os, const game_b& g)
     return os;
 }
 
-} // namespace
 
+class game_c: public game
+{
+public:
+
+    game_c(const std::string& board): _board(board)
+    {
+    }
+
+    virtual ~game_c()
+    {
+    }
+
+    void print(std::ostream& os) const override
+    {
+        os << "game_c: \"" << _board << "\"";
+    }
+
+    void serialize_impl(std::ostream& os) const
+    {
+        serializer<std::string>::serialize(os, _board);
+    }
+
+    static game_c* deserialize_impl(std::istream& is)
+    {
+        std::string board = serializer<std::string>::deserialize(is);
+        return new game_c(board);
+    }
+
+private:
+
+    friend std::ostream& operator<<(std::ostream& os, const game_c& g);
+    std::string _board;
+};
+
+std::ostream& operator<<(std::ostream& os, const game_c& g)
+{
+    os << "game_c: \"";
+    os << g._board;
+    os << "\"";
+
+    return os;
+}
+
+} // namespace
 
 //////////////////////////////////////////////////
 
@@ -563,50 +807,53 @@ void init()
 {
     make_serializable<game_a>();
     make_serializable<game_b>();
+    make_serializable<game_c>();
+}
+
+std::fstream open_file(const std::string& filename, bool trunc)
+{
+    std::fstream::openmode om =
+        std::fstream::binary |
+        std::fstream::in     |
+        std::fstream::out;
+
+    if (trunc)
+        om |= std::fstream::trunc;
+
+    std::fstream fs(filename, om);
+
+    assert(fs.is_open());
+    return fs;
 }
 
 int main()
 {
     init();
 
-    game* ga = new game_a(134);
-    game* gb = new game_b(4, 0, 3);
+    // Write
+    {
+        vector<unique_ptr<game>> games;
 
-    std::fstream fs1("data.bin",
-                    std::fstream::trunc  |
-                    std::fstream::in     |
-                    std::fstream::out    |
-                    std::fstream::binary
-                );
+        games.push_back(unique_ptr<game>(new game_a(5)));
+        games.push_back(unique_ptr<game>(new game_b(1, 6, 2)));
+        games.push_back(unique_ptr<game>(new game_c("This is some text")));
 
-    assert(fs1.is_open());
+        std::fstream fs = open_file("data.bin", true);
 
-    ga->serialize(fs1);
-    gb->serialize(fs1);
-    fs1.close();
+        serializer<vector<unique_ptr<game>>>::serialize(fs, games);
 
+        fs.close();
+    }
 
-    std::fstream fs2("data.bin",
-                     std::fstream::in    |
-                     std::fstream::binary
-                    );
-    assert(fs2.is_open());
+    // Read
+    {
+        std::fstream fs = open_file("data.bin", false);
 
-    i_serializable* g1s = i_serializable::deserialize(fs2);
-    i_serializable* g2s = i_serializable::deserialize(fs2);
+        vector<unique_ptr<game>> games = serializer<vector<unique_ptr<game>>>::deserialize(fs);
 
+        cout << games << endl;
 
-    game_a* g1 = dynamic_cast<game_a*>(g1s);
-    assert(g1 != nullptr);
+        fs.close();
+    }
 
-    game_b* g2 = dynamic_cast<game_b*>(g2s);
-    assert(g2 != nullptr);
-
-
-    cout << "Got back: " << *g1 << " " << *g2 << endl;
-
-
-    fs2.close();
-
-    return 0;
 }
