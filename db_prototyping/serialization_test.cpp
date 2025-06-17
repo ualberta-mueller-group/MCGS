@@ -8,50 +8,122 @@
         int64_t some_int = fmt_read_i64(some_istream);
 
     Reading and writing of other objects is done through serializers:
-        serializer<vector<game*>>::serialize(some_ostream, some_games_vec);
-        vector<game*> games = serializer<vector<game*>>::deserialize(some_istream);
+        serializer<vector<game*>>::save(some_ostream, some_games_vec);
+        vector<game*> games = serializer<vector<game*>>::load(some_istream);
 
     Polymorphic types, such as games, need to implement some functions:
 
     1. Inherit from class "serializable" (game already does this)
 
     2. For a type, clobber, implement:
-        void clobber::serialize_impl(std::ostream&) const;
-        static clobber* clobber::deserialize_impl(std::istream&);
+        void clobber::save_impl(std::ostream&) const;
+        static clobber* clobber::load_impl(std::istream&);
 
     3. In the init() function, register your type:
         make_serializable<clobber>();
 
     Now your type is serializable:
-        serializer<clobber*>::serialize(some_ostream, some_clobber_ptr);
-        clobber* ptr = serializer<clobber*>::deserialize(some_istream);
+        serializer<clobber*>::save(some_ostream, some_clobber_ptr);
+        clobber* ptr = serializer<clobber*>::load(some_istream);
 
         OR
 
-        serializer<game*>::serialize(some_ostream, some_clobber_ptr);
-        game* ptr = serializer<game*>::deserialize(some_istream);
+        serializer<game*>::save(some_ostream, some_clobber_ptr);
+        game* ptr = serializer<game*>::load(some_istream);
 
         OR
 
-        serializer<serializable*>::serialize(some_ostream, some_clobber_ptr);
-        serializable* ptr = serializer<serializable*>::deserialize(some_istream);
+        serializer<serializable*>::save(some_ostream, some_clobber_ptr);
+        serializable* ptr = serializer<serializable*>::load(some_istream);
 
         The serializer template is defined for all T*, where T is derived from
-        "serializable"
+        "serializable". You may need to write serializers for types which
+        don't have them
 
 */
+#include <climits>
+#include <ctime>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <memory>
+#include <random>
+#include <stdexcept>
 #include <type_traits>
 #include <typeindex>
 #include <typeinfo>
 #include <vector>
 #include <unordered_map>
+#include <map>
+#include <unordered_set>
+#include <set>
 #include <cassert>
 #include <cstdint>
+#include <chrono>
+#include <ratio>
 
 namespace {
+
+////////////////////////////////////////////////// timing
+
+uint64_t ms_since_epoch()
+{
+    using namespace std::chrono;
+
+    milliseconds t =
+        duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+    return t.count();
+}
+
+
+////////////////////////////////////////////////// random
+static_assert(sizeof(unsigned long long) >= sizeof(uint64_t));
+
+
+std::mt19937_64 rng;
+
+std::uniform_int_distribution<unsigned long long> random_dist(
+    0, std::numeric_limits<unsigned long long>::max());
+
+uint64_t __rng_seed = 0;
+
+uint64_t random_u64()
+{
+    return (uint64_t) random_dist(rng);
+}
+
+uint32_t random_u32()
+{
+    return (uint32_t) random_dist(rng);
+}
+
+uint16_t random_u16()
+{
+    return (uint16_t) random_dist(rng);
+}
+
+uint8_t random_u8()
+{
+    return (uint8_t) random_dist(rng);
+}
+
+////////////////////////////////////////////////// misc types
+typedef uint64_t hash_t;
+
+//////////////////////////////////////// element_t
+typedef std::pair<hash_t, uint32_t> element_t;
+
+inline bool operator<(const element_t& elem1, const element_t& elem2)
+{
+    return elem1.first < elem2.first;
+}
+
+std::ostream& operator<<(std::ostream& os, const element_t& elem)
+{
+    os << '{' << elem.first << '}';
+    return os;
+}
+
 
 ////////////////////////////////////////////////// std::vector printing
 template <class T>
@@ -261,17 +333,17 @@ class serializable;
 
 //////////////////////////////////////// has_serialize_impl<T>
 template <class T, class Enable = void>
-struct has_serialize_impl
+struct has_save_impl
 {
     static constexpr bool value = false;
 };
 
 template <class T>
-struct has_serialize_impl<T,
+struct has_save_impl<T,
     std::enable_if_t<
         std::is_same_v<
             void (T::*)(std::ostream&) const,
-            decltype(&T::serialize_impl)
+            decltype(&T::save_impl)
         >,
         void
     >
@@ -281,21 +353,21 @@ struct has_serialize_impl<T,
 };
 
 template <class T>
-static constexpr bool has_serialize_impl_v = has_serialize_impl<T>::value;
+static constexpr bool has_save_impl_v = has_save_impl<T>::value;
 
 //////////////////////////////////////// has_deserialize_impl<T>
 template <class T, class Enable = void>
-struct has_deserialize_impl
+struct has_load_impl
 {
     static constexpr bool value = false;
 };
 
 template <class T>
-struct has_deserialize_impl<T,
+struct has_load_impl<T,
     std::enable_if_t<
         std::is_same_v<
             T* (*)(std::istream&),
-            decltype(&T::deserialize_impl)
+            decltype(&T::load_impl)
         >,
         void
     >
@@ -305,7 +377,7 @@ struct has_deserialize_impl<T,
 };
 
 template <class T>
-static constexpr bool has_deserialize_impl_v = has_deserialize_impl<T>::value;
+static constexpr bool has_load_impl_v = has_load_impl<T>::value;
 
 ////////////////////////////////////////////////// i_type_table
 typedef unsigned int type_num_t; // analogue of game_type_t
@@ -430,8 +502,8 @@ public:
         return _id;
     }
 
-    virtual void serialize(std::ostream&, const serializable*) const = 0;
-    virtual serializable* deserialize(std::istream&) const = 0;
+    virtual void save(std::ostream&, const serializable*) const = 0;
+    virtual serializable* load(std::istream&) const = 0;
 
 private:
     const dynamic_serializer_id _id;
@@ -462,7 +534,7 @@ public:
         fmt_write_u32(str, sid);
     }
 
-    void __serialize(std::ostream& str) const
+    void __save(std::ostream& str) const
     {
         const dynamic_serializer_id sid = get_dynamic_serializer_id();
         assert(sid > 0);
@@ -470,10 +542,10 @@ public:
         assert(ser != nullptr);
 
         insert_dynamic_serializer_id_to_stream(str, sid);
-        ser->serialize(str, this);
+        ser->save(str, this);
     }
 
-    static serializable* __deserialize(std::istream& str)
+    static serializable* __load(std::istream& str)
     {
         assert(str);
 
@@ -483,7 +555,7 @@ public:
         const i_dynamic_serializer* ser = get_dynamic_serializer(sid);
         assert(ser != nullptr);
 
-        return ser->deserialize(str);
+        return ser->load(str);
     }
 };
 
@@ -492,8 +564,8 @@ template <class T>
 class dynamic_serializer: public i_dynamic_serializer
 {
     static_assert(std::is_base_of_v<serializable, T>);
-    static_assert(has_serialize_impl_v<T>);
-    static_assert(has_deserialize_impl_v<T>);
+    static_assert(has_save_impl_v<T>);
+    static_assert(has_load_impl_v<T>);
 
 public:
     dynamic_serializer(dynamic_serializer_id sid): i_dynamic_serializer(sid)
@@ -504,19 +576,19 @@ public:
     {
     }
 
-    void serialize(std::ostream& str, const serializable* obj) const override
+    void save(std::ostream& str, const serializable* obj) const override
     {
         assert(obj->get_dynamic_serializer_id() == get_dynamic_serializer_id<T>());
 
         const T* obj_casted = static_cast<const T*>(obj);
         assert(dynamic_cast<const T*>(obj) == obj_casted);
 
-        obj_casted->serialize_impl(str);
+        obj_casted->save_impl(str);
     }
 
-    serializable* deserialize(std::istream& str) const override
+    serializable* load(std::istream& str) const override
     {
-        serializable* obj = T::deserialize_impl(str);
+        serializable* obj = T::load_impl(str);
         assert(obj->get_dynamic_serializer_id() == get_dynamic_serializer_id<T>());
         return obj;
     }
@@ -560,8 +632,8 @@ template <class T, class Enable = void>
 struct serializer
 {
     static_assert(false, "Not implemented!");
-    static void serialize(std::ostream& os, const T& val);
-    static T deserialize(std::istream& is);
+    static void save(std::ostream& os, const T& val);
+    static T load(std::istream& is);
 };
 
 //////////////////////////////////////// pointers
@@ -575,14 +647,14 @@ struct serializer<T*,
     >
 >
 {
-    static void serialize(std::ostream& os, const serializable* ptr)
+    static void save(std::ostream& os, const serializable* ptr)
     {
-        ptr->__serialize(os);
+        ptr->__save(os);
     }
 
-    static T* deserialize(std::istream& is)
+    static T* load(std::istream& is)
     {
-        serializable* ptr = serializable::__deserialize(is);
+        serializable* ptr = serializable::__load(is);
         assert(dynamic_cast<T*>(ptr) != nullptr);
         return static_cast<T*>(ptr);
     }
@@ -592,14 +664,14 @@ struct serializer<T*,
 template <class T>
 struct serializer<std::shared_ptr<T>>
 {
-    static void serialize(std::ostream& os, const std::shared_ptr<T>& ptr)
+    static void save(std::ostream& os, const std::shared_ptr<T>& ptr)
     {
-        serializer<T*>::serialize(os, ptr.get());
+        serializer<T*>::save(os, ptr.get());
     }
 
-    static std::shared_ptr<T> deserialize(std::istream& is)
+    static std::shared_ptr<T> load(std::istream& is)
     {
-        T* ptr = serializer<T*>::deserialize(is);
+        T* ptr = serializer<T*>::load(is);
         return std::shared_ptr<T>(ptr);
     }
 };
@@ -608,14 +680,14 @@ struct serializer<std::shared_ptr<T>>
 template <class T>
 struct serializer<std::unique_ptr<T>>
 {
-    static void serialize(std::ostream& os, const std::unique_ptr<T>& ptr)
+    static void save(std::ostream& os, const std::unique_ptr<T>& ptr)
     {
-        serializer<T*>::serialize(os, ptr.get());
+        serializer<T*>::save(os, ptr.get());
     }
 
-    static std::unique_ptr<T> deserialize(std::istream& is)
+    static std::unique_ptr<T> load(std::istream& is)
     {
-        T* ptr = serializer<T*>::deserialize(is);
+        T* ptr = serializer<T*>::load(is);
         return std::unique_ptr<T>(ptr);
     }
 };
@@ -624,7 +696,7 @@ struct serializer<std::unique_ptr<T>>
 template <>
 struct serializer<std::string>
 {
-    static void serialize(std::ostream& os, const std::string& str)
+    static void save(std::ostream& os, const std::string& str)
     {
         const size_t size = str.size();
         fmt_write_u32(os, size);
@@ -633,7 +705,7 @@ struct serializer<std::string>
             fmt_write_i8(os, str[i]);
     }
 
-    static std::string deserialize(std::istream& is)
+    static std::string load(std::istream& is)
     {
         std::string str;
 
@@ -651,16 +723,16 @@ struct serializer<std::string>
 template <class T>
 struct serializer<std::vector<T>>
 {
-    static void serialize(std::ostream& os, const std::vector<T>& vec)
+    static void save(std::ostream& os, const std::vector<T>& vec)
     {
         const size_t size = vec.size();
         fmt_write_u32(os, size);
 
         for (size_t i = 0; i < size; i++)
-            serializer<T>::serialize(os, vec[i]);
+            serializer<T>::save(os, vec[i]);
     }
 
-    static std::vector<T> deserialize(std::istream& is)
+    static std::vector<T> load(std::istream& is)
     {
         std::vector<T> vec;
 
@@ -668,7 +740,7 @@ struct serializer<std::vector<T>>
         vec.reserve(size);
 
         for (size_t i = 0; i < size; i++)
-            vec.emplace_back(serializer<T>::deserialize(is));
+            vec.emplace_back(serializer<T>::load(is));
 
         return vec;
     }
@@ -687,12 +759,12 @@ public:
         os << "game_a: " << val;
     }
 
-    void serialize_impl(std::ostream& str) const
+    void save_impl(std::ostream& str) const
     {
         fmt_write_i32(str, val);
     }
 
-    static game_a* deserialize_impl(std::istream& str)
+    static game_a* load_impl(std::istream& str)
     {
         int32_t val = fmt_read_i32(str);
         return new game_a(val);
@@ -723,14 +795,14 @@ public:
         os << z << "]";
     }
 
-    void serialize_impl(std::ostream& os) const
+    void save_impl(std::ostream& os) const
     {
         fmt_write_i32(os, x);
         fmt_write_i32(os, y);
         fmt_write_i32(os, z);
     }
 
-    static game_b* deserialize_impl(std::istream& is)
+    static game_b* load_impl(std::istream& is)
     {
         int x = fmt_read_i32(is);
         int y = fmt_read_i32(is);
@@ -771,14 +843,14 @@ public:
         os << "game_c: \"" << _board << "\"";
     }
 
-    void serialize_impl(std::ostream& os) const
+    void save_impl(std::ostream& os) const
     {
-        serializer<std::string>::serialize(os, _board);
+        serializer<std::string>::save(os, _board);
     }
 
-    static game_c* deserialize_impl(std::istream& is)
+    static game_c* load_impl(std::istream& is)
     {
-        std::string board = serializer<std::string>::deserialize(is);
+        std::string board = serializer<std::string>::load(is);
         return new game_c(board);
     }
 
@@ -800,8 +872,6 @@ std::ostream& operator<<(std::ostream& os, const game_c& g)
 } // namespace
 
 //////////////////////////////////////////////////
-
-using namespace std;
 
 void init()
 {
@@ -826,6 +896,8 @@ std::fstream open_file(const std::string& filename, bool trunc)
     return fs;
 }
 
+
+/*
 int main()
 {
     init();
@@ -840,7 +912,7 @@ int main()
 
         std::fstream fs = open_file("data.bin", true);
 
-        serializer<vector<unique_ptr<game>>>::serialize(fs, games);
+        serializer<vector<unique_ptr<game>>>::save(fs, games);
 
         fs.close();
     }
@@ -849,11 +921,207 @@ int main()
     {
         std::fstream fs = open_file("data.bin", false);
 
-        vector<unique_ptr<game>> games = serializer<vector<unique_ptr<game>>>::deserialize(fs);
+        vector<unique_ptr<game>> games = serializer<vector<unique_ptr<game>>>::load(fs);
 
         cout << games << endl;
 
         fs.close();
     }
 
+}
+*/
+
+
+namespace {
+
+
+////////////////////////////////////////////////// helper functions
+
+void check_no_collisions(const std::vector<element_t>& vec)
+{
+    std::unordered_set<hash_t> hashes;
+
+    const size_t size = vec.size();
+    for (size_t i = 0; i < size; i++)
+    {
+        auto it = hashes.insert(vec[i].first);
+        if (!it.second)
+            throw std::logic_error("Hash collision");
+    }
+}
+
+inline bool binary_search(const std::vector<element_t>& bucket, const hash_t& query_hash, hash_t& found_idx)
+{
+    found_idx = 0;
+
+    const size_t N = bucket.size();
+
+    if (N == 0)
+        return false;
+
+    size_t low = 0;
+    size_t high = N - 1;
+
+    while (low <= high)
+    {
+        const size_t idx = (low + high) / 2;
+        found_idx = low;
+
+        const hash_t elem_hash = bucket[idx].first;
+
+        if (elem_hash < query_hash)
+        {
+            low = idx + 1;
+            found_idx = low;
+        }
+        else if (elem_hash > query_hash)
+        {
+            if (idx == 0)
+                return false;
+
+            high = idx - 1;
+        } else
+        {
+            found_idx = idx;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+template <class T>
+bool is_sorted(const std::vector<T>& vec)
+{
+    const size_t N = vec.size();
+
+    if (N < 2)
+        return true;
+
+    for (size_t i = 0; i < N - 1; i++)
+        if (!(vec[i] < vec[i + 1]))
+            return false;
+
+    return true;
+}
+
+class index
+{
+public:
+    index(size_t n_bits)
+        : _sum(0),
+          _n_bits(n_bits),
+          _bit_mask(hash_t(-1) << (sizeof(hash_t) * CHAR_BIT - n_bits)),
+          _n_buckets(1 << n_bits)
+    {
+        assert(0 < n_bits && n_bits < sizeof(hash_t) * CHAR_BIT);
+
+        _buckets.resize(_n_buckets);
+
+        for (size_t i = 0; i < _n_buckets; i++)
+            _buckets[i].reserve(21);
+    }
+
+    void insert(const element_t& elem)
+    {
+        const hash_t hash = elem.first;
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+        std::vector<element_t>& bucket = _buckets[bucket_idx];
+
+        size_t idx = 0;
+        bool found = binary_search(bucket, hash, idx);
+
+        if (!found)
+            _sum++;
+
+        bucket.insert(bucket.begin() + idx, elem);
+
+        //std::cout << bucket << std::endl;
+        //assert(is_sorted(bucket));
+    }
+
+    inline int get_sum() const
+    {
+        return _sum;
+    }
+
+private:
+
+    inline hash_t _hash_to_bucket_idx(const hash_t& hash) const
+    {
+        return hash >> ((sizeof(hash_t) * CHAR_BIT) - _n_bits);
+    }
+
+    int _sum;
+
+    const size_t _n_bits;
+    const hash_t _bit_mask;
+    const size_t _n_buckets;
+    std::vector<std::vector<element_t>> _buckets;
+};
+
+int test_unordered_map(const std::vector<element_t>& elements)
+{
+    std::unordered_map<hash_t, uint32_t> m;
+
+    const size_t N = elements.size();
+
+    m.reserve(N);
+
+    int sum = 0;
+
+    for (size_t i = 0; i < N; i++)
+    {
+        auto it = m.insert(elements[i]);
+        sum += it.second;
+    }
+
+    return sum;
+}
+
+int test_index(const std::vector<element_t>& elements)
+{
+    index m(22);
+
+    const size_t N = elements.size();
+
+    for (size_t i = 0; i < N; i++)
+        m.insert(elements[i]);
+
+    return m.get_sum();
+}
+} // namespace
+
+
+using namespace std;
+
+int main()
+{
+    rng.seed(std::time(0));
+
+    const uint64_t n_items = 80000000;
+
+    vector<element_t> elements;
+    elements.reserve(n_items);
+
+    for (size_t i = 0; i < n_items; i++)
+        elements.emplace_back(random_u64(), random_u32());
+
+    //check_no_collisions(elements);
+
+    int s = 0;
+    //////////////////////////////////////////////////
+    const uint64_t start = ms_since_epoch();
+
+    s = test_unordered_map(elements);
+    //s = test_index(elements);
+
+    const uint64_t end = ms_since_epoch();
+    /////////////////////////////////////////////////
+
+    cout << s << endl;
+
+    cout << "TIME: " << (end - start) << " ms" << endl;
+
+    return 0;
 }
