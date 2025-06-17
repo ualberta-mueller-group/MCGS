@@ -123,7 +123,11 @@ std::ostream& operator<<(std::ostream& os, const element_t& elem)
     os << '{' << elem.first << '}';
     return os;
 }
-
+ 
+inline bool operator==(const element_t& elem1, const element_t& elem2)
+{
+    return (elem1.first == elem2.first) && (elem1.second == elem2.second);
+}
 
 ////////////////////////////////////////////////// std::vector printing
 template <class T>
@@ -202,7 +206,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<std::unique_ptr<T>>
 ////////////////////////////////////////////////// format write/read
 //////////////////////////////////////// implementations
 template <class T>
-inline void __fmt_write(std::ostream& str, const T& val)
+inline void __fmt_write(std::ostream& str, const T val)
 {
     static_assert(std::is_integral_v<T>);
 
@@ -746,6 +750,27 @@ struct serializer<std::vector<T>>
     }
 };
 
+//////////////////////////////////////// element_t
+template <>
+struct serializer<element_t>
+{
+    static void save(std::ostream& os, const element_t& elem)
+    {
+        fmt_write_u64(os, elem.first);
+        fmt_write_u32(os, elem.second);
+    }
+
+    static element_t load(std::istream& is)
+    {
+        element_t elem;
+
+        elem.first = fmt_read_u64(is);
+        elem.second = fmt_read_u32(is);
+
+        return elem;
+    }
+};
+
 ////////////////////////////////////////////////// games
 class game_a: public game
 {
@@ -1005,13 +1030,12 @@ bool is_sorted(const std::vector<T>& vec)
     return true;
 }
 
-class index
+class index: public serializable
 {
 public:
     index(size_t n_bits)
         : _sum(0),
           _n_bits(n_bits),
-          _bit_mask(hash_t(-1) << (sizeof(hash_t) * CHAR_BIT - n_bits)),
           _n_buckets(1 << n_bits)
     {
         assert(0 < n_bits && n_bits < sizeof(hash_t) * CHAR_BIT);
@@ -1045,8 +1069,46 @@ public:
         return _sum;
     }
 
-private:
+    void save_impl(std::ostream& os) const
+    {
+        fmt_write_u8(os, _n_bits);
+        fmt_write_u64(os, _n_buckets);
+        for (size_t i = 0; i < _n_buckets; i++)
+            serializer<std::vector<element_t>>::save(os, _buckets[i]);
+    }
 
+    static index* load_impl(std::istream& is)
+    {
+        uint8_t n_bits = fmt_read_u8(is);
+        uint64_t n_buckets = fmt_read_u64(is);
+
+        index* obj = new index(n_bits);
+
+        for (size_t i = 0; i < n_buckets; i++)
+        {
+            std::vector<element_t> bucket = serializer<std::vector<element_t>>::load(is);
+            const size_t N = bucket.size();
+
+            for (size_t j = 0; j < N; j++)
+                obj->insert(bucket[j]);
+        }
+
+        return obj;
+    }
+
+    bool operator==(const index& rhs) const
+    {
+        if (_n_buckets != rhs._n_buckets)
+            return false;
+
+        for (size_t i = 0; i < _n_buckets; i++)
+            if (_buckets[i] != rhs._buckets[i])
+                return false;
+
+        return true;
+    }
+
+private:
     inline hash_t _hash_to_bucket_idx(const hash_t& hash) const
     {
         return hash >> ((sizeof(hash_t) * CHAR_BIT) - _n_bits);
@@ -1055,7 +1117,6 @@ private:
     int _sum;
 
     const size_t _n_bits;
-    const hash_t _bit_mask;
     const size_t _n_buckets;
     std::vector<std::vector<element_t>> _buckets;
 };
@@ -1098,8 +1159,10 @@ using namespace std;
 int main()
 {
     rng.seed(std::time(0));
+    make_serializable<index>();
 
-    const uint64_t n_items = 80000000;
+    //const uint64_t n_items = 80000000;
+    const uint64_t n_items = 16000000;
 
     vector<element_t> elements;
     elements.reserve(n_items);
@@ -1113,8 +1176,28 @@ int main()
     //////////////////////////////////////////////////
     const uint64_t start = ms_since_epoch();
 
-    s = test_unordered_map(elements);
+    //s = test_unordered_map(elements);
     //s = test_index(elements);
+
+    index ind(20);
+
+    for (const element_t& elem : elements)
+        ind.insert(elem);
+
+    fstream fs = open_file("data.bin", true);
+
+    serializer<index*>::save(fs, &ind);
+
+    fs.close();
+
+
+    {
+        fs = open_file("data.bin", false);
+        index* ind2 = serializer<index*>::load(fs);
+        assert(ind == *ind2);
+        delete ind2;
+        fs.close();
+    }
 
     const uint64_t end = ms_since_epoch();
     /////////////////////////////////////////////////
