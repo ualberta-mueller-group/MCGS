@@ -322,3 +322,28 @@ structures section instead...
 
 - Can integer_games really be excluded from DB queries by sumgame? Is there an
     instance of some `game + integer` that gives a useful DB query?
+
+C++ integer problem:
+- Types like `int` have variable width (depending on compiler/machine), but we
+    want our DB files to be cross-platform compatible. This is a big problem,
+    because if an `int` is 4 bytes, then it's impossible to distinguish between
+    `int` and `int32_t`, but on another machine, `int` could be 2 or even 8
+    bytes.
+    - `static_assert(!std::is_same_v<int, int32_t>)` fails
+    - Template specizaliation/function overloading can't distinguish between
+        them
+    - Compiler doesn't print a warning when an `int` is passed to a function
+        taking an `int32_t` (-Wall, -Wpedantic, -Wextra)
+    - It's not possible to use placeholder structs i.e. `struct i8`,
+        `struct i32`, etc, enforce their usage in place of ints, and use a
+        template to recursively replace the placeholders with the correct int
+        types. For example, `unordered_map<int8_t, int8_t>` is not the
+        same as `resolve_placeholders<unordered_map<i8, i8>>::type`,
+        because the template containing the placeholder types is resolved
+        to an actual type before `resolve_placeholders` can modify it
+One solution:
+    - Encode integer widths into the output file, preceding lists of integers,
+        then catch mismatches as a runtime error
+    - May require `iobuffer` operations to keep some kind of state
+    - In the future, see if we can write a clang-tidy check to enforce not
+        passing non-fixed-width integers to serialization functions?

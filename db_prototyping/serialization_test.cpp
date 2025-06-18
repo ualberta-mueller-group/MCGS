@@ -683,10 +683,70 @@ struct serializer<T*,
     }
 };
 
+//////////////////////////////////////// integers
+template <class T>
+struct serializer<T,
+    std::enable_if_t<
+        std::is_integral_v<T>,
+        void
+    >
+>
+{
+    static void save(std::ostream& os, const T& val)
+    {
+        __fmt_write(os, val);
+    }
+
+    static T load(std::istream& is)
+    {
+        return __fmt_read<T>(is);
+    }
+
+};
+
+//////////////////////////////////////// pair<T1, T2>
+template <class T1, class T2>
+struct serializer<std::pair<T1, T2>>
+{
+    static void save(std::ostream& os, const std::pair<T1, T2>& p)
+    {
+        serializer<T1>::save(os, p.first);
+        serializer<T2>::save(os, p.second);
+    }
+
+    static std::pair<T1, T2> load(std::istream& is)
+    {
+        const T1 val1 = serializer<T1>::load(is);
+        const T2 val2 = serializer<T2>::load(is);
+        return {val1, val2};
+    }
+};
+
 //////////////////////////////////////// unordered_map<T1, T2>
 template <class T1, class T2>
 struct serializer<std::unordered_map<T1, T2>>
 {
+    static void save(std::ostream& os, const std::unordered_map<T1, T2>& m)
+    {
+        const size_t size = m.size();
+        fmt_write_u32(os, size);
+
+        for (const std::pair<T1, T2>& p : m)
+            serializer<std::pair<T1, T2>>::save(os, p);
+    }
+
+    static std::unordered_map<T1, T2> load(std::istream& is)
+    {
+        const size_t size = fmt_read_u32(is);
+
+        std::unordered_map<T1, T2> m;
+        m.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+           m.emplace(serializer<std::pair<T1, T2>>::load(is));
+
+        return m;
+    }
 };
 
 //////////////////////////////////////// shared_ptr<T>
@@ -775,26 +835,6 @@ struct serializer<std::vector<T>>
     }
 };
 
-//////////////////////////////////////// element_t
-template <>
-struct serializer<element_t>
-{
-    static void save(std::ostream& os, const element_t& elem)
-    {
-        fmt_write_u64(os, elem.first);
-        fmt_write_u32(os, elem.second);
-    }
-
-    static element_t load(std::istream& is)
-    {
-        element_t elem;
-
-        elem.first = fmt_read_u64(is);
-        elem.second = fmt_read_u32(is);
-
-        return elem;
-    }
-};
 
 ////////////////////////////////////////////////// games
 class game_a: public game
@@ -1182,7 +1222,8 @@ int test_index(const std::vector<element_t>& elements)
     return m.get_sum();
 }
 
-void bar();
+void bar(); //
+
 
 } // namespace
 
@@ -1194,8 +1235,7 @@ int main()
     rng.seed(std::time(0));
     make_serializable<index>();
 
-    //const uint64_t n_items = 80000000;
-    const uint64_t n_items = 16000000;
+    const uint64_t n_items = 4000000;
 
     vector<element_t> elements;
     elements.reserve(n_items);
@@ -1210,25 +1250,28 @@ int main()
     //s = test_unordered_map(elements);
     //s = test_index(elements);
 
-    //index ind(20);
-    unordered_map<hash_t, uint32_t> m;
+    index ind(20);
 
     for (const element_t& elem : elements)
-        m.insert(elem);
+        ind.insert(elem);
 
     //////////////////////////////////////////////////
     const uint64_t start = ms_since_epoch();
 
     fstream fs = open_file("data.bin", true);
-    serializer<unordered_map<hash_t, uint32_t>>::save(fs, &m);
+    serializer<index*>::save(fs, &ind);
     fs.close();
 
-    //fs = open_file("data.bin", false);
-    //index* ind2 = serializer<index*>::load(fs);
-    //fs.close();
+    fs = open_file("data.bin", false);
+    shared_ptr<index> ind2 = serializer<shared_ptr<index>>::load(fs);
+    fs.close();
 
     const uint64_t end = ms_since_epoch();
     /////////////////////////////////////////////////
+
+    assert(ind == *ind2);
+
+
 
     //if (ind != *ind2)
     //    throw logic_error("Indexes differ...");
@@ -1295,8 +1338,6 @@ struct foo: public foo_impl<pack<Ts...>>
 
 void bar()
 {
-    std::cout << foo<int*>::name << std::endl;
-    std::cout << foo<float*>::name << std::endl;
 }
 
 //////////////////////////////////////////////////
