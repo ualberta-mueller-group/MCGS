@@ -205,6 +205,25 @@ std::ostream& operator<<(std::ostream& os, const std::vector<std::unique_ptr<T>>
 
 ////////////////////////////////////////////////// format write/read
 //////////////////////////////////////// implementations
+/*
+    TODO: I don't think we can distinguish between fixed-width and
+    non-fixed-width integral types. This may cause subtle bugs when
+    DB files are shared across machines...
+
+    i.e. supposing int is 32 bits, then int and int32_t are
+    indistinguishable...
+
+    One idea: use a macro and look at the string representation of the type,
+    but this doesn't work either, i.e. "typedef int int32_t" without including
+    cstdint...
+
+    This is a problem for serializer templates, i.e.
+
+    serializer<vector<int>>
+
+
+*/
+
 template <class T>
 inline void __fmt_write(std::ostream& str, const T val)
 {
@@ -664,6 +683,12 @@ struct serializer<T*,
     }
 };
 
+//////////////////////////////////////// unordered_map<T1, T2>
+template <class T1, class T2>
+struct serializer<std::unordered_map<T1, T2>>
+{
+};
+
 //////////////////////////////////////// shared_ptr<T>
 template <class T>
 struct serializer<std::shared_ptr<T>>
@@ -1108,6 +1133,11 @@ public:
         return true;
     }
 
+    bool operator!=(const index& rhs) const
+    {
+        return !(*this == rhs);
+    }
+
 private:
     inline hash_t _hash_to_bucket_idx(const hash_t& hash) const
     {
@@ -1151,10 +1181,13 @@ int test_index(const std::vector<element_t>& elements)
 
     return m.get_sum();
 }
+
+void bar();
+
 } // namespace
 
-
 using namespace std;
+
 
 int main()
 {
@@ -1173,34 +1206,33 @@ int main()
     //check_no_collisions(elements);
 
     int s = 0;
-    //////////////////////////////////////////////////
-    const uint64_t start = ms_since_epoch();
 
     //s = test_unordered_map(elements);
     //s = test_index(elements);
 
-    index ind(20);
+    //index ind(20);
+    unordered_map<hash_t, uint32_t> m;
 
     for (const element_t& elem : elements)
-        ind.insert(elem);
+        m.insert(elem);
+
+    //////////////////////////////////////////////////
+    const uint64_t start = ms_since_epoch();
 
     fstream fs = open_file("data.bin", true);
-
-    serializer<index*>::save(fs, &ind);
-
+    serializer<unordered_map<hash_t, uint32_t>>::save(fs, &m);
     fs.close();
 
-
-    {
-        fs = open_file("data.bin", false);
-        index* ind2 = serializer<index*>::load(fs);
-        assert(ind == *ind2);
-        delete ind2;
-        fs.close();
-    }
+    //fs = open_file("data.bin", false);
+    //index* ind2 = serializer<index*>::load(fs);
+    //fs.close();
 
     const uint64_t end = ms_since_epoch();
     /////////////////////////////////////////////////
+
+    //if (ind != *ind2)
+    //    throw logic_error("Indexes differ...");
+    //delete ind2;
 
     cout << s << endl;
 
@@ -1208,3 +1240,64 @@ int main()
 
     return 0;
 }
+
+namespace {
+//////////////////////////////////////////////////
+/*
+    TODO: Can we guarantee that serializer only needs to take one template
+    parameter? This example with struct foo is really messy for users,
+    as SFINAE is especially janky when used with parameter packs (?).
+    Having this for one template parameter is already potentially confusing...
+*/
+
+// compile-time hack to hide parameter pack in one template parameter
+template <class... Ts>
+struct pack
+{
+};
+
+// default case
+template <class Pack, class Enable = void>
+struct foo_impl
+{
+    static_assert(false, "Not implemented!");
+};
+
+// match non integral pointers
+template <class T>
+struct foo_impl<pack<T*>,
+    std::enable_if_t<
+        !std::is_integral_v<T>,
+        void
+    >
+>
+{
+    static constexpr const char* name = "Non-integral pointer type";
+};
+
+// match integral pointers
+template <class T>
+struct foo_impl<pack<T*>,
+    std::enable_if_t<
+        std::is_integral_v<T>,
+        void
+    >
+>
+{
+    static constexpr const char* name = "Integral pointer type";
+};
+
+// "hide" parameter pack, and prevent "Enable" from showing up in foo usage...
+template <class... Ts>
+struct foo: public foo_impl<pack<Ts...>>
+{
+};
+
+void bar()
+{
+    std::cout << foo<int*>::name << std::endl;
+    std::cout << foo<float*>::name << std::endl;
+}
+
+//////////////////////////////////////////////////
+} // namespace
