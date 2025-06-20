@@ -57,8 +57,15 @@ Things to prioritize in the design of our databases.
     3. Run length encoding
         - Smaller hashes for games with repeating contents (i.e. checkers)
 
-- "Gray codes" are probably not useful for our purposes
-    - If we have a sparse hash, this doesn't make it into a dense one
+- "Gray codes" could improve locality of hashes?
+    - TODO: needs elaboration
+    - Unclear whether or not this is useful. The purpose of gray codes is to change
+        only one code bit to get to the next decimal value. But, for two game
+        boards treated as gray codes, if they differ by only one tile, then their
+        corresponding decimal numbers may still be far apart
+    - Maybe try some experiments with this?
+
+- TODO: look into locality-sensitive hashing
 
 ### Use cases of hash types
 Zobrist hashes:
@@ -347,3 +354,5 @@ One solution:
     - May require `iobuffer` operations to keep some kind of state
     - In the future, see if we can write a clang-tidy check to enforce not
         passing non-fixed-width integers to serialization functions?
+
+- How to serialize floats/doubles in a portable way?

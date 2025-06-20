@@ -39,11 +39,14 @@
         The serializer template is defined for all T*, where T is derived from
         "serializable". You may need to write serializers for types which
         don't have them
-
 */
+#include <algorithm>
 #include <climits>
 #include <ctime>
+
+
 #include <fstream>
+//#include "robin_hood.h"
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -53,6 +56,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <vector>
+#include <stdfloat>
 #include <unordered_map>
 #include <map>
 #include <unordered_set>
@@ -64,8 +68,10 @@
 
 namespace {
 
-////////////////////////////////////////////////// timing
+#define STALL() {std::cout << "Stalling" << std::endl; while (1) {}} \
+static_assert(true)
 
+////////////////////////////////////////////////// timing
 uint64_t ms_since_epoch()
 {
     using namespace std::chrono;
@@ -75,10 +81,8 @@ uint64_t ms_since_epoch()
     return t.count();
 }
 
-
 ////////////////////////////////////////////////// random
 static_assert(sizeof(unsigned long long) >= sizeof(uint64_t));
-
 
 std::mt19937_64 rng;
 
@@ -220,8 +224,6 @@ std::ostream& operator<<(std::ostream& os, const std::vector<std::unique_ptr<T>>
     This is a problem for serializer templates, i.e.
 
     serializer<vector<int>>
-
-
 */
 
 template <class T>
@@ -354,7 +356,7 @@ inline int64_t fmt_read_i64(std::istream& str)
 class i_dynamic_serializer;
 class serializable;
 
-//////////////////////////////////////// has_serialize_impl<T>
+//////////////////////////////////////// has_save_impl<T>
 template <class T, class Enable = void>
 struct has_save_impl
 {
@@ -378,7 +380,7 @@ struct has_save_impl<T,
 template <class T>
 static constexpr bool has_save_impl_v = has_save_impl<T>::value;
 
-//////////////////////////////////////// has_deserialize_impl<T>
+//////////////////////////////////////// has_load_impl<T>
 template <class T, class Enable = void>
 struct has_load_impl
 {
@@ -407,7 +409,6 @@ typedef unsigned int type_num_t; // analogue of game_type_t
 
 // polymorphic serializable object's unique type ID
 typedef uint32_t dynamic_serializer_id;
-
 
 struct type_table_t
 {
@@ -987,11 +988,21 @@ std::fstream open_file(const std::string& filename, bool trunc)
 }
 
 
-/*
+using namespace std;
+
+void test1();
+void test2();
+
 int main()
 {
     init();
 
+    test1();
+    test2();
+}
+
+void test1()
+{
     // Write
     {
         vector<unique_ptr<game>> games;
@@ -1017,9 +1028,7 @@ int main()
 
         fs.close();
     }
-
 }
-*/
 
 
 namespace {
@@ -1040,11 +1049,97 @@ void check_no_collisions(const std::vector<element_t>& vec)
     }
 }
 
-inline bool binary_search(const std::vector<element_t>& bucket, const hash_t& query_hash, hash_t& found_idx)
+inline bool linear_search(const std::vector<element_t>& bucket, const hash_t& query_hash, hash_t& found_idx)
+{
+    const size_t N = bucket.size();
+
+    for (found_idx = 0; found_idx < N; found_idx++)
+        if (bucket[found_idx].first == query_hash)
+            return true;
+
+    return false;
+}
+
+inline bool linear_search_quick(const std::vector<element_t>& bucket, const hash_t& query_hash, hash_t& found_idx)
+{
+    const size_t N = bucket.size();
+
+    const hash_t low = bucket[0].first;
+    const hash_t high = bucket[N - 1].first;
+
+    //const hash_t step = (high - low) / N;
+    //const int guess = (query_hash - low) / step;
+
+    const int guess = N * (query_hash - low) / (high - low);
+
+    const int max_radius = std::max((int) (N - guess + 1), (int) (guess + 1));
+
+    for (int i = 0; i < max_radius; i++)
+    {
+        const int i_left = guess - i;
+        const int i_right = guess + i;
+
+        if (i_left > 0 && query_hash == bucket[i_left].first)
+        {
+            found_idx = i_left;
+            return true;
+        }
+
+        if (i_right < N && query_hash == bucket[i_right].first)
+        {
+            found_idx = i_right;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool binary_search(const std::vector<element_t>& bucket, const hash_t& query_hash, size_t& found_idx)
 {
     found_idx = 0;
 
     const size_t N = bucket.size();
+
+    if (N == 0)
+        return false;
+
+    size_t low = 0;
+    size_t high = N - 1;
+
+    while (low <= high)
+    {
+        const size_t idx = (low + high) / 2;
+        found_idx = low;
+
+        const hash_t elem_hash = bucket[idx].first;
+
+        if (elem_hash < query_hash)
+        {
+            low = idx + 1;
+            found_idx = low;
+        }
+        else if (elem_hash > query_hash)
+        {
+            if (idx == 0)
+                return false;
+
+            high = idx - 1;
+        } else
+        {
+            found_idx = idx;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool binary_search_flat(const element_t* bucket, size_t bucket_size, const hash_t& query_hash, size_t& found_idx)
+{
+    found_idx = 0;
+
+    const size_t N = bucket_size;
 
     if (N == 0)
         return false;
@@ -1095,10 +1190,10 @@ bool is_sorted(const std::vector<T>& vec)
     return true;
 }
 
-class index: public serializable
+class zobrist_index: public serializable
 {
 public:
-    index(size_t n_bits)
+    zobrist_index(size_t n_bits)
         : _sum(0),
           _n_bits(n_bits),
           _n_buckets(1 << n_bits)
@@ -1108,7 +1203,19 @@ public:
         _buckets.resize(_n_buckets);
 
         for (size_t i = 0; i < _n_buckets; i++)
-            _buckets[i].reserve(21);
+            _buckets[i].reserve(20);
+
+        _offsets = nullptr;
+        _flattened = nullptr;
+    }
+
+    ~zobrist_index()
+    {
+        if (_offsets != nullptr)
+            free(_offsets);
+
+        if (_flattened != nullptr)
+            free(_flattened);
     }
 
     void insert(const element_t& elem)
@@ -1129,6 +1236,86 @@ public:
         //assert(is_sorted(bucket));
     }
 
+    uint32_t search(hash_t hash) const
+    {
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+        const std::vector<element_t>& bucket = _buckets[bucket_idx];
+
+        size_t idx = 0;
+        bool found = false;
+
+        if (bucket.size() <= 7)
+            found = linear_search(bucket, hash, idx);
+        else
+            found = binary_search(bucket, hash, idx);
+
+        //bool found = linear_search_quick(bucket, hash, idx);
+
+        if (!found)
+            throw std::logic_error("Not found");
+
+        return bucket[idx].second;
+    }
+
+    uint32_t search_flat(hash_t hash) const
+    {
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+
+        size_t idx = 0;
+        bool found = false;
+
+        const size_t offset = _offsets[2 * bucket_idx];
+        const size_t size = _offsets[2 * bucket_idx + 1];
+
+        const element_t* bucket = _flattened + offset;
+
+        //if (bucket.size() <= 7)
+        //    found = linear_search(bucket, hash, idx);
+        //else
+        //    found = binary_search(bucket, hash, idx);
+
+        found = binary_search_flat(bucket, size, hash, idx);
+
+        if (!found)
+            throw std::logic_error("Not found");
+
+        return bucket[idx].second;
+    }
+
+
+    void flatten()
+    {
+        assert(_offsets == nullptr && _flattened == nullptr);
+
+        _offsets = (size_t*) malloc(2 * sizeof(size_t) * _n_buckets);
+
+        size_t total_elements = 0;
+        for (const vector<element_t>& bucket : _buckets)
+            total_elements += bucket.size();
+
+        _flattened = (element_t*) malloc(total_elements * sizeof(element_t));
+
+        size_t cumulative = 0;
+        for (size_t i = 0; i < _n_buckets; i++)
+        {
+            vector<element_t>& bucket = _buckets[i];
+            const size_t bucket_size = bucket.size();
+
+            _offsets[2 * i] = cumulative;
+            _offsets[2 * i + 1] = bucket_size;
+
+            for (size_t j = 0; j < bucket_size; j++)
+                _flattened[cumulative++] = bucket[j];
+
+            bucket.clear();
+        }
+
+        if (cumulative != total_elements)
+            throw std::logic_error("Bad element count");
+        
+        _buckets.clear();
+    }
+
     inline int get_sum() const
     {
         return _sum;
@@ -1142,12 +1329,12 @@ public:
             serializer<std::vector<element_t>>::save(os, _buckets[i]);
     }
 
-    static index* load_impl(std::istream& is)
+    static zobrist_index* load_impl(std::istream& is)
     {
         uint8_t n_bits = fmt_read_u8(is);
         uint64_t n_buckets = fmt_read_u64(is);
 
-        index* obj = new index(n_bits);
+        zobrist_index* obj = new zobrist_index(n_bits);
 
         for (size_t i = 0; i < n_buckets; i++)
         {
@@ -1161,7 +1348,7 @@ public:
         return obj;
     }
 
-    bool operator==(const index& rhs) const
+    bool operator==(const zobrist_index& rhs) const
     {
         if (_n_buckets != rhs._n_buckets)
             return false;
@@ -1173,7 +1360,7 @@ public:
         return true;
     }
 
-    bool operator!=(const index& rhs) const
+    bool operator!=(const zobrist_index& rhs) const
     {
         return !(*this == rhs);
     }
@@ -1189,10 +1376,18 @@ private:
     const size_t _n_bits;
     const size_t _n_buckets;
     std::vector<std::vector<element_t>> _buckets;
+
+    size_t* _offsets;
+    element_t* _flattened;
 };
 
-int test_unordered_map(const std::vector<element_t>& elements)
+int test_unordered_map(const std::vector<element_t>& elements,
+                       const std::vector<hash_t>& queries)
 {
+    cout << "unordered_map test" << endl;
+
+    // Insertion
+    uint64_t start = ms_since_epoch();
     std::unordered_map<hash_t, uint32_t> m;
 
     const size_t N = elements.size();
@@ -1207,81 +1402,162 @@ int test_unordered_map(const std::vector<element_t>& elements)
         sum += it.second;
     }
 
-    return sum;
+    uint64_t end = ms_since_epoch();
+    cout << "Insertion time (ms): " << (end - start) << endl;
+
+    if (sum != elements.size())
+        throw std::logic_error("Hash collision");
+
+
+    // Search
+    uint64_t start2 = ms_since_epoch();
+    int sum2 = 0;
+
+    const size_t N2 = queries.size();
+    for (size_t i = 0; i < N2; i++)
+    {
+        auto it = m.find(queries[i]);
+        sum2 += it->second;
+    }
+
+    uint64_t end2 = ms_since_epoch();
+    cout << "Search time (ms): " << (end2 - start2) << endl;
+
+    return sum2;
 }
 
-int test_index(const std::vector<element_t>& elements)
+int test_zobrist_index(const std::vector<element_t>& elements,
+               const std::vector<hash_t>& queries)
 {
-    index m(22);
+    cout << "zobrist_index test" << endl;
+
+    // Insertion
+    uint64_t start = ms_since_epoch();
+    zobrist_index m(22);
 
     const size_t N = elements.size();
 
     for (size_t i = 0; i < N; i++)
         m.insert(elements[i]);
 
-    return m.get_sum();
+    int s = m.get_sum();
+    uint64_t end = ms_since_epoch();
+
+    if (s != elements.size())
+        throw std::logic_error("Hash collision");
+
+    cout << "Insertion time (ms): " << (end - start) << endl;
+
+
+    //m.flatten();
+
+    // Search
+    start = ms_since_epoch();
+    int sum = 0;
+
+    const size_t N2 = queries.size();
+    for (size_t i = 0; i < N2; i++)
+        //sum += m.search_flat(queries[i]);
+        sum += m.search(queries[i]);
+    end = ms_since_epoch();
+    cout << "Search time (ms): " << (end - start) << endl;
+
+    return sum;
 }
+
+/*
+int test_robinhood(const std::vector<element_t>& elements,
+                const std::vector<hash_t>& queries)
+{
+    cout << "robinhood::unordered_map test" << endl;
+
+    // Insertion
+    uint64_t start = ms_since_epoch();
+    //std::unordered_map<hash_t, uint32_t> m;
+    robin_hood::unordered_map<hash_t, uint32_t> m;
+
+    const size_t N = elements.size();
+
+    m.reserve(N);
+
+    int sum = 0;
+
+    for (size_t i = 0; i < N; i++)
+    {
+        auto it = m.emplace(elements[i].first, elements[i].second);
+        sum += it.second;
+    }
+
+    uint64_t end = ms_since_epoch();
+    cout << "Insertion time (ms): " << (end - start) << endl;
+
+    if (sum != elements.size())
+        throw std::logic_error("Hash collision");
+
+    // Search
+    uint64_t start2 = ms_since_epoch();
+    int sum2 = 0;
+
+    const size_t N2 = queries.size();
+    for (size_t i = 0; i < N2; i++)
+    {
+        auto it = m.find(queries[i]);
+        sum2 += it->second;
+    }
+
+    uint64_t end2 = ms_since_epoch();
+    cout << "Search time (ms): " << (end2 - start2) << endl;
+
+    return sum2;
+}
+*/
+
 
 void bar(); //
 
 
 } // namespace
 
-using namespace std;
-
-
-int main()
+void test2()
 {
     rng.seed(std::time(0));
-    make_serializable<index>();
+    make_serializable<zobrist_index>();
 
-    const uint64_t n_items = 4000000;
+    const uint64_t n_items = 16000000;
 
     vector<element_t> elements;
     elements.reserve(n_items);
 
+    vector<hash_t> queries;
+    queries.reserve(n_items);
+
     for (size_t i = 0; i < n_items; i++)
-        elements.emplace_back(random_u64(), random_u32());
+    {
+        const hash_t hash = random_u64();
+        const uint32_t val = random_u32();
+        elements.emplace_back(hash, val);
+        queries.push_back(hash);
+    }
+
+    std::shuffle(queries.begin(), queries.end(), rng);
 
     //check_no_collisions(elements);
 
-    int s = 0;
+    
+    int s;
 
-    //s = test_unordered_map(elements);
-    //s = test_index(elements);
+    cout << endl;
+    s = test_zobrist_index(elements, queries);
+    cout << "Element sum : " << s << endl;
 
-    index ind(20);
+    cout << endl;
+    s = test_unordered_map(elements, queries);
+    cout << "Element sum: " << s << endl;
 
-    for (const element_t& elem : elements)
-        ind.insert(elem);
+    //cout << endl;
+    //s = test_robinhood(elements, queries);
+    //cout << "Element sum: " << s << endl;
 
-    //////////////////////////////////////////////////
-    const uint64_t start = ms_since_epoch();
-
-    fstream fs = open_file("data.bin", true);
-    serializer<index*>::save(fs, &ind);
-    fs.close();
-
-    fs = open_file("data.bin", false);
-    shared_ptr<index> ind2 = serializer<shared_ptr<index>>::load(fs);
-    fs.close();
-
-    const uint64_t end = ms_since_epoch();
-    /////////////////////////////////////////////////
-
-    assert(ind == *ind2);
-
-
-
-    //if (ind != *ind2)
-    //    throw logic_error("Indexes differ...");
-    //delete ind2;
-
-    cout << s << endl;
-
-    cout << "TIME: " << (end - start) << " ms" << endl;
-
-    return 0;
 }
 
 namespace {
