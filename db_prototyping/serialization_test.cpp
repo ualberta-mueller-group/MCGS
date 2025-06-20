@@ -46,7 +46,7 @@
 
 
 #include <fstream>
-//#include "robin_hood.h"
+#include "robin_hood.h"
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -1060,6 +1060,19 @@ inline bool linear_search(const std::vector<element_t>& bucket, const hash_t& qu
     return false;
 }
 
+
+int max_size = 0;
+
+inline bool linear_search_flat(const element_t* bucket, int bucket_size, const hash_t& query_hash, int& found_idx)
+{
+#pragma unroll(8)
+    for (found_idx = 0; found_idx < bucket_size; found_idx++)
+        if (bucket[found_idx].first == query_hash)
+            return true;
+
+    return false;
+}
+
 inline bool linear_search_quick(const std::vector<element_t>& bucket, const hash_t& query_hash, hash_t& found_idx)
 {
     const size_t N = bucket.size();
@@ -1135,39 +1148,29 @@ inline bool binary_search(const std::vector<element_t>& bucket, const hash_t& qu
     return false;
 }
 
-inline bool binary_search_flat(const element_t* bucket, size_t bucket_size, const hash_t& query_hash, size_t& found_idx)
+inline bool binary_search_flat(const element_t* bucket, int bucket_size, const hash_t& query_hash, int& found_idx)
 {
-    found_idx = 0;
+    //if (N == 0)
+    //    return false;
 
-    const size_t N = bucket_size;
-
-    if (N == 0)
-        return false;
-
-    size_t low = 0;
-    size_t high = N - 1;
+    int low = 0;
+    int high = bucket_size - 1;
 
     while (low <= high)
     {
-        const size_t idx = (low + high) / 2;
-        found_idx = low;
+        found_idx = (low + high) / 2;
 
-        const hash_t elem_hash = bucket[idx].first;
+        const hash_t elem_hash = bucket[found_idx].first;
 
         if (elem_hash < query_hash)
         {
-            low = idx + 1;
-            found_idx = low;
+            low = found_idx + 1;
         }
         else if (elem_hash > query_hash)
         {
-            if (idx == 0)
-                return false;
-
-            high = idx - 1;
+            high = found_idx - 1;
         } else
         {
-            found_idx = idx;
             return true;
         }
     }
@@ -1190,13 +1193,20 @@ bool is_sorted(const std::vector<T>& vec)
     return true;
 }
 
+struct offset_t
+{
+    element_t* arr;
+    int size;
+};
+
 class zobrist_index: public serializable
 {
 public:
     zobrist_index(size_t n_bits)
         : _sum(0),
           _n_bits(n_bits),
-          _n_buckets(1 << n_bits)
+          _n_buckets(1 << n_bits),
+          _shift_width(sizeof(hash_t) * CHAR_BIT - _n_bits)
     {
         assert(0 < n_bits && n_bits < sizeof(hash_t) * CHAR_BIT);
 
@@ -1212,10 +1222,16 @@ public:
     ~zobrist_index()
     {
         if (_offsets != nullptr)
+        {
+            for (size_t i = 0; i < _n_buckets; i++)
+                free(_offsets[i].arr);
+
             free(_offsets);
+        }
 
         if (_flattened != nullptr)
             free(_flattened);
+
     }
 
     void insert(const element_t& elem)
@@ -1261,23 +1277,26 @@ public:
     {
         const hash_t bucket_idx = _hash_to_bucket_idx(hash);
 
-        size_t idx = 0;
-        bool found = false;
 
-        const size_t offset = _offsets[2 * bucket_idx];
-        const size_t size = _offsets[2 * bucket_idx + 1];
+        const offset_t& of = _offsets[bucket_idx];
+        const element_t* bucket = of.arr;
+        const int& size = of.size;
 
-        const element_t* bucket = _flattened + offset;
+        /*
+           Getting a bool AND an index seems faster than getting just an index
+           (???)
+        */
+        int idx;
 
-        //if (bucket.size() <= 7)
-        //    found = linear_search(bucket, hash, idx);
-        //else
-        //    found = binary_search(bucket, hash, idx);
-
-        found = binary_search_flat(bucket, size, hash, idx);
-
-        if (!found)
-            throw std::logic_error("Not found");
+        /*
+           Checking this condition and calling an inline function is faster
+           than using a stored function pointer
+        */
+        bool found;
+        if (size > 8)
+            found = binary_search_flat(bucket, size, hash, idx);
+        else
+            found = linear_search_flat(bucket, size, hash, idx);
 
         return bucket[idx].second;
     }
@@ -1287,31 +1306,34 @@ public:
     {
         assert(_offsets == nullptr && _flattened == nullptr);
 
-        _offsets = (size_t*) malloc(2 * sizeof(size_t) * _n_buckets);
+        _offsets = (offset_t*) malloc(sizeof(offset_t) * _n_buckets);
 
-        size_t total_elements = 0;
-        for (const vector<element_t>& bucket : _buckets)
-            total_elements += bucket.size();
+        //size_t total_elements = 0;
+        //for (const vector<element_t>& bucket : _buckets)
+        //    total_elements += bucket.size();
 
-        _flattened = (element_t*) malloc(total_elements * sizeof(element_t));
+        //_flattened = (element_t*) malloc(total_elements * sizeof(element_t));
 
-        size_t cumulative = 0;
+        //int cumulative = 0;
         for (size_t i = 0; i < _n_buckets; i++)
         {
             vector<element_t>& bucket = _buckets[i];
             const size_t bucket_size = bucket.size();
 
-            _offsets[2 * i] = cumulative;
-            _offsets[2 * i + 1] = bucket_size;
+            offset_t& of = _offsets[i];
+            //of.first = _flattened + cumulative;
+            of.arr = (element_t*) malloc(bucket_size * sizeof(element_t));
+            of.size = bucket_size;
 
             for (size_t j = 0; j < bucket_size; j++)
-                _flattened[cumulative++] = bucket[j];
+                of.arr[j] = bucket[j];
+                //_flattened[cumulative++] = bucket[j];
 
             bucket.clear();
         }
 
-        if (cumulative != total_elements)
-            throw std::logic_error("Bad element count");
+        //if (cumulative != total_elements)
+        //    throw std::logic_error("Bad element count");
         
         _buckets.clear();
     }
@@ -1368,7 +1390,7 @@ public:
 private:
     inline hash_t _hash_to_bucket_idx(const hash_t& hash) const
     {
-        return hash >> ((sizeof(hash_t) * CHAR_BIT) - _n_bits);
+        return hash >> _shift_width;
     }
 
     int _sum;
@@ -1377,8 +1399,10 @@ private:
     const size_t _n_buckets;
     std::vector<std::vector<element_t>> _buckets;
 
-    size_t* _offsets;
+    //int* _offsets;
+    offset_t* _offsets;
     element_t* _flattened;
+    int _shift_width;
 };
 
 int test_unordered_map(const std::vector<element_t>& elements,
@@ -1433,7 +1457,7 @@ int test_zobrist_index(const std::vector<element_t>& elements,
 
     // Insertion
     uint64_t start = ms_since_epoch();
-    zobrist_index m(22);
+    zobrist_index m(23);
 
     const size_t N = elements.size();
 
@@ -1449,7 +1473,7 @@ int test_zobrist_index(const std::vector<element_t>& elements,
     cout << "Insertion time (ms): " << (end - start) << endl;
 
 
-    //m.flatten();
+    m.flatten();
 
     // Search
     start = ms_since_epoch();
@@ -1457,15 +1481,16 @@ int test_zobrist_index(const std::vector<element_t>& elements,
 
     const size_t N2 = queries.size();
     for (size_t i = 0; i < N2; i++)
-        //sum += m.search_flat(queries[i]);
-        sum += m.search(queries[i]);
+        sum += m.search_flat(queries[i]);
+        //sum += m.search(queries[i]);
     end = ms_since_epoch();
     cout << "Search time (ms): " << (end - start) << endl;
+
+    cout << "MAX BUCKET SIZE: " << max_size << endl;
 
     return sum;
 }
 
-/*
 int test_robinhood(const std::vector<element_t>& elements,
                 const std::vector<hash_t>& queries)
 {
@@ -1510,8 +1535,6 @@ int test_robinhood(const std::vector<element_t>& elements,
 
     return sum2;
 }
-*/
-
 
 void bar(); //
 
@@ -1554,9 +1577,9 @@ void test2()
     s = test_unordered_map(elements, queries);
     cout << "Element sum: " << s << endl;
 
-    //cout << endl;
-    //s = test_robinhood(elements, queries);
-    //cout << "Element sum: " << s << endl;
+    cout << endl;
+    s = test_robinhood(elements, queries);
+    cout << "Element sum: " << s << endl;
 
 }
 
