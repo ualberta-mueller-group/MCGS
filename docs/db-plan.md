@@ -183,6 +183,22 @@ Main types:
     - Encode into DB as vector's length, followed by its values?
     - TODO: Check if this makes sense for all games, not just clobber
 
+From prototyping:
+- `class zobrist_index`
+    - First attempt at map for database
+    - Compare to `std::unordered_map`, and `robin_hood::unordered_map` (faster
+        than `std`)
+    - For search: comparable to `robin_hood`, but still slightly slower
+    - For insertion: TODO
+    - Empirically: choose n_bits such that `1 <= average_bucket_size < 2`
+        - `average_bucket_size := N / (1 << n_bits)`, where `N` is number of
+            elements
+        - This keeps memory overhead reasonable, and gives fast lookup
+    - Linear probing for `bucket_size <= 8`, otherwise binary search
+    - To search: use `n_bits` most significant bits of query hash to index bucket
+        list. Then search bucket
+    - Memory overhead: TODO
+
 ## Serialization
 - Need to consider buffering for disk I/O
     - fread() vs read() vs fstream

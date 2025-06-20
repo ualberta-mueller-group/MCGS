@@ -1277,7 +1277,6 @@ public:
     {
         const hash_t bucket_idx = _hash_to_bucket_idx(hash);
 
-
         const offset_t& of = _offsets[bucket_idx];
         const element_t* bucket = of.arr;
         const int& size = of.size;
@@ -1293,10 +1292,13 @@ public:
            than using a stored function pointer
         */
         bool found;
-        if (size > 8)
+        if (size > 8) [[ unlikely ]]
             found = binary_search_flat(bucket, size, hash, idx);
         else
             found = linear_search_flat(bucket, size, hash, idx);
+
+        if (!found)
+            return 0;
 
         return bucket[idx].second;
     }
@@ -1308,32 +1310,45 @@ public:
 
         _offsets = (offset_t*) malloc(sizeof(offset_t) * _n_buckets);
 
-        //size_t total_elements = 0;
-        //for (const vector<element_t>& bucket : _buckets)
-        //    total_elements += bucket.size();
+        vector<int> histogram;
 
-        //_flattened = (element_t*) malloc(total_elements * sizeof(element_t));
+        auto histogram_insert = [&histogram](int size) -> void
+        {
+            if (size >= histogram.size())
+                histogram.resize(size + 1);
 
-        //int cumulative = 0;
+            histogram[size]++;
+        };
+
         for (size_t i = 0; i < _n_buckets; i++)
         {
             vector<element_t>& bucket = _buckets[i];
             const size_t bucket_size = bucket.size();
 
+            histogram_insert(bucket_size);
+
             offset_t& of = _offsets[i];
-            //of.first = _flattened + cumulative;
             of.arr = (element_t*) malloc(bucket_size * sizeof(element_t));
             of.size = bucket_size;
 
             for (size_t j = 0; j < bucket_size; j++)
                 of.arr[j] = bucket[j];
-                //_flattened[cumulative++] = bucket[j];
 
             bucket.clear();
         }
 
-        //if (cumulative != total_elements)
-        //    throw std::logic_error("Bad element count");
+        cout << "HISTOGRAM:" << endl;
+        int total = 0;
+        for (int x : histogram)
+            total += x;
+
+        for (size_t i = 0; i < histogram.size(); i++)
+        {
+            cout << "(" << i << " : " << histogram[i] << " ";
+            cout << 100.0 * ((double) histogram[i] / (double) total) << "%";
+            cout << ")" << endl;
+        }
+        cout << endl;
         
         _buckets.clear();
     }
@@ -1547,6 +1562,7 @@ void test2()
     make_serializable<zobrist_index>();
 
     const uint64_t n_items = 16000000;
+    //const uint64_t n_items = 8000000;
 
     vector<element_t> elements;
     elements.reserve(n_items);
