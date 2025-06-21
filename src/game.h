@@ -7,7 +7,7 @@
 // IWYU pragma: begin_exports
 #include "cgt_basics.h"
 #include "cgt_move.h"
-#include "game_type.h"
+#include "type_table.h"
 #include "hashing.h"
 // IWYU pragma: end_exports
 
@@ -25,7 +25,7 @@ class game;
 //---------------------------------------------------------------------------
 typedef std::optional<std::vector<game*>> split_result;
 
-class game : public i_game_type
+class game : public i_type_table
 {
 public:
     game();
@@ -55,6 +55,8 @@ public:
     void invalidate_hash() const; // for debugging
 
     virtual bool is_impartial() const;
+
+    inline game_type_t game_type() const;
 
 protected:
     /*
@@ -123,6 +125,11 @@ private:
     mutable hash_state_enum _hash_state;
     mutable local_hash _hash;
 
+    static game_type_t _next_game_type;
+
+    template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
+    friend game_type_t __game_type_impl();
+
 private:
 #ifdef GAME_UNDO_DEBUG
     // NOLINTBEGIN(readability-identifier-naming)
@@ -189,6 +196,42 @@ inline split_result game::split() const
 inline bool game::is_impartial() const
 {
     return false;
+}
+
+template <class T>
+game_type_t __game_type_impl()
+{
+    static_assert(!std::is_abstract_v<T>);
+    static_assert(std::is_base_of_v<game, T>);
+
+    type_table_t* table = type_table<T>();
+    game_type_t& gt = table->game_type();
+
+    if (gt == 0) [[ unlikely ]]
+        gt = game::_next_game_type++;
+
+    return gt;
+}
+
+template <class T>
+inline game_type_t game_type()
+{
+    static_assert(!std::is_abstract_v<T>);
+    static_assert(std::is_base_of_v<game, T>);
+
+    static const game_type_t GT = __game_type_impl<T>();
+    return GT;
+}
+
+inline game_type_t game::game_type() const
+{
+    type_table_t* table = type_table();
+    game_type_t& gt = table->game_type();
+
+    if (gt == 0) [[ unlikely ]]
+        gt = _next_game_type++;
+
+    return gt;
 }
 
 inline local_hash& game::_get_hash_ref() const

@@ -11,6 +11,8 @@
 
 using std::unique_ptr;
 
+game_type_t game::_next_game_type = 1;
+
 std::ostream& operator<<(std::ostream& os, const split_result& split)
 {
 

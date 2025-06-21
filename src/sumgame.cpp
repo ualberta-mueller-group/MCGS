@@ -4,7 +4,6 @@
 #include "sumgame.h"
 #include "cgt_move.h"
 #include "game.h"
-#include "game_type.h"
 
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"

@@ -2,7 +2,6 @@
 #include "sumgame.h"
 #include "sumgame_change_record.h"
 #include "game.h"
-#include "game_type.h"
 #include <vector>
 #include <utility>
 #include <cassert>

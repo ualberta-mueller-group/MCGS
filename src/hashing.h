@@ -18,7 +18,7 @@
 #include <iostream>
 #include <cassert>
 #include "cgt_basics.h"
-#include "game_type.h"
+#include "type_table.h"
 
 class game;
 
