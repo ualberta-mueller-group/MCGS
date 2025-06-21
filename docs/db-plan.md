@@ -184,12 +184,15 @@ Main types:
     - TODO: Check if this makes sense for all games, not just clobber
 
 From prototyping:
-- `class zobrist_index`
+- `class zobrist_index`/`class better_zobrist_index`
     - First attempt at map for database
     - Compare to `std::unordered_map`, and `robin_hood::unordered_map` (faster
         than `std`)
     - For search: comparable to `robin_hood`, but still slightly slower
-    - For insertion: TODO
+        - `zobrist_index` faster than `better_zobrist_index`? (not sure why)
+    - For insertion:
+        - `better_zobrist_index`: much faster than `std`, but not as fast as
+            `robin_hood`
     - Empirically: choose n_bits such that `1 <= average_bucket_size < 2`
         - `average_bucket_size := N / (1 << n_bits)`, where `N` is number of
             elements
@@ -197,7 +200,15 @@ From prototyping:
     - Linear probing for `bucket_size <= 8`, otherwise binary search
     - To search: use `n_bits` most significant bits of query hash to index bucket
         list. Then search bucket
-    - Memory overhead: TODO
+    - Memory overhead (bucket_t is 16 bytes, element_t is 12 bytes)
+        - 16 million elements, initial bucket size 4: 439.279 MB overhead
+        - 16 million elements, initial bucket size 2: 250.905 MB overhead
+        - 1 million elements, initial bucket size 4: 27.4444 MB overhead 
+        - 1 million elements, initial bucket size 2: 15.6693 MB overhead 
+    - NOTE: when deserializing the index from disk, the `bucket_t` shouldn't own
+        its data -- it should point to some "flat" array, so that
+        loading/unloading doesn't require a malloc/free for each bucket. This
+        may require a "read only" mode. Or maybe this doesn't matter...
 
 ## Serialization
 - Need to consider buffering for disk I/O

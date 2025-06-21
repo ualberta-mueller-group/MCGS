@@ -42,6 +42,7 @@
 */
 #include <algorithm>
 #include <climits>
+#include <cstring>
 #include <ctime>
 
 
@@ -70,6 +71,49 @@ namespace {
 
 #define STALL() {std::cout << "Stalling" << std::endl; while (1) {}} \
 static_assert(true)
+
+////////////////////////////////////////////////// histogram
+class histogram
+{
+public:
+    histogram() {}
+
+    void count(unsigned int val)
+    {
+        if (val >= _counts.size())
+            _counts.resize(val + 1);
+
+        _counts[val]++;
+    }
+
+private:
+    friend std::ostream& operator<<(std::ostream&, const histogram&);
+
+    std::vector<unsigned int> _counts;
+};
+
+std::ostream& operator<<(std::ostream& os, const histogram& hist)
+{
+    const std::vector<unsigned int>& counts = hist._counts;
+
+    unsigned int total = 0;
+    for (const unsigned int& count : counts)
+        total += count;
+
+    const size_t N = counts.size();
+
+    for (size_t i = 0; i < N; i++)
+    {
+        os << "(" << i << " : " << counts[i] << " ";
+        os << 100.0 * ((double) counts[i] / (double) total) << "%";
+        os << ")";
+
+        if (i + 1 < N)
+            os << '\n';
+    }
+
+    return os;
+}
 
 ////////////////////////////////////////////////// timing
 uint64_t ms_since_epoch()
@@ -1178,6 +1222,42 @@ inline bool binary_search_flat(const element_t* bucket, int bucket_size, const h
     return false;
 }
 
+inline bool binary_search_flat_insert(const element_t* bucket, int bucket_size, const hash_t& query_hash, int& found_idx)
+{
+    found_idx = 0;
+
+    if (bucket_size == 0)
+        return false;
+
+    int low = 0;
+    int high = bucket_size - 1;
+
+    while (low <= high)
+    {
+        const int idx = (low + high) / 2;
+        found_idx = low;
+
+        const hash_t elem_hash = bucket[idx].first;
+
+        if (elem_hash < query_hash)
+        {
+            low = idx + 1;
+            found_idx = low;
+        }
+        else if (elem_hash > query_hash)
+        {
+            high = idx - 1;
+        } else
+        {
+            found_idx = idx;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 template <class T>
 bool is_sorted(const std::vector<T>& vec)
 {
@@ -1310,22 +1390,14 @@ public:
 
         _offsets = (offset_t*) malloc(sizeof(offset_t) * _n_buckets);
 
-        vector<int> histogram;
-
-        auto histogram_insert = [&histogram](int size) -> void
-        {
-            if (size >= histogram.size())
-                histogram.resize(size + 1);
-
-            histogram[size]++;
-        };
+        histogram hist;
 
         for (size_t i = 0; i < _n_buckets; i++)
         {
             vector<element_t>& bucket = _buckets[i];
             const size_t bucket_size = bucket.size();
 
-            histogram_insert(bucket_size);
+            hist.count(bucket_size);
 
             offset_t& of = _offsets[i];
             of.arr = (element_t*) malloc(bucket_size * sizeof(element_t));
@@ -1337,18 +1409,8 @@ public:
             bucket.clear();
         }
 
-        cout << "HISTOGRAM:" << endl;
-        int total = 0;
-        for (int x : histogram)
-            total += x;
-
-        for (size_t i = 0; i < histogram.size(); i++)
-        {
-            cout << "(" << i << " : " << histogram[i] << " ";
-            cout << 100.0 * ((double) histogram[i] / (double) total) << "%";
-            cout << ")" << endl;
-        }
-        cout << endl;
+        //cout << "HISTOGRAM:" << endl;
+        //cout << hist << endl;
         
         _buckets.clear();
     }
@@ -1418,6 +1480,173 @@ private:
     offset_t* _offsets;
     element_t* _flattened;
     int _shift_width;
+};
+
+struct bucket_t
+{
+    element_t* arr;
+    int max_size;
+    int size;
+};
+
+void assert_is_sorted(const element_t* arr, unsigned int size)
+{
+    if (size == 0)
+        return;
+
+    for (unsigned int i = 0; i < size - 1; i++)
+        if (!(arr[i] < arr[i + 1]))
+        {
+            cout << "SIZE FAIL: " << size << endl;
+            throw std::logic_error("NOT SORTED");
+        }
+}
+
+class better_zobrist_index
+{
+public:
+    better_zobrist_index(unsigned int n_bits)
+        : _n_bits(n_bits),
+          _n_buckets(1 << n_bits),
+          _hash_shift_width(sizeof(hash_t) * CHAR_BIT - n_bits),
+          _buckets(nullptr)
+    {
+        assert(0 < n_bits && n_bits <= 30);
+
+        cout << "Using n_bits: " << n_bits << endl;
+
+        //_buckets = (bucket_t*) malloc(_n_buckets * sizeof(bucket_t));
+        _buckets = (bucket_t*) calloc(_n_buckets, sizeof(bucket_t));
+
+        for (unsigned int i = 0; i < _n_buckets; i++)
+        {
+            bucket_t& bucket = _buckets[i];
+            bucket.size = 0;
+            bucket.max_size = INITIAL_BUCKET_SIZE;
+            //bucket.arr = (element_t*) calloc(bucket.max_size, sizeof(element_t));
+            bucket.arr = (element_t*) calloc(bucket.max_size, sizeof(element_t));
+        }
+    }
+
+    ~better_zobrist_index()
+    {
+        assert(_buckets != nullptr);
+
+        uint64_t overhead = 0;
+        overhead += sizeof(bucket_t) * _n_buckets;
+
+        histogram hist;
+
+        for (unsigned int i = 0; i < _n_buckets; i++)
+        {
+            bucket_t& bucket = _buckets[i];
+            overhead += sizeof(element_t) * (bucket.max_size - bucket.size);
+
+            hist.count(bucket.size);
+
+            assert(bucket.arr != nullptr);
+            free(bucket.arr);
+        }
+
+        free(_buckets);
+
+        cout << "Overhead (MB): " << ((double) overhead) / (1000.0 * 1000.0) << endl;
+        cout << "Histogram: " << endl << hist << endl;
+    }
+
+    bool insert(const element_t& elem)
+    {
+        const hash_t hash = elem.first;
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+
+        bucket_t& bucket = _buckets[bucket_idx];
+        element_t*& arr = bucket.arr;
+        int& size = bucket.size;
+
+        int idx;
+        bool found;
+
+        if (size > 8) [[ unlikely ]]
+            found = binary_search_flat_insert(bucket.arr, size, hash, idx);
+        else
+            found = linear_search_flat(bucket.arr, size, hash, idx);
+
+        if (found) [[ unlikely ]]
+            return false;
+
+        if (size == bucket.max_size) [[ unlikely ]]
+            _grow_bucket(bucket);
+
+        if (size <= 8) [[ likely ]]
+        {
+            arr[size] = elem;
+            size++;
+
+            if (size == 9) [[ unlikely ]]
+                std::sort(arr, arr + size);
+
+        }
+        else [[ unlikely ]]
+        {
+            for (unsigned int i = size; i > idx; i--)
+                arr[i] = arr[i - 1];
+
+            arr[idx] = elem;
+            size++;
+        }
+
+        return true;
+    }
+
+    uint32_t search(const hash_t hash) const
+    {
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+
+        const bucket_t& bucket = _buckets[bucket_idx];
+        const element_t* arr = bucket.arr;
+        const unsigned int& size = bucket.size;
+
+        int idx;
+        bool found;
+
+        if (size > 8) [[ unlikely ]]
+            found = binary_search_flat(arr, size, hash, idx);
+        else
+            found = linear_search_flat(arr, size, hash, idx);
+
+        if (!found)
+            return 0;
+
+        return arr[idx].second;
+    }
+
+private:
+    inline hash_t _hash_to_bucket_idx(const hash_t hash) const
+    {
+        return hash >> _hash_shift_width;
+    }
+
+    inline void _grow_bucket(bucket_t& bucket)
+    {
+        const unsigned int new_max_size = bucket.max_size << 1;
+        element_t* new_arr = (element_t*) calloc(new_max_size, sizeof(element_t));
+
+        for (unsigned int i = 0; i < bucket.size; i++)
+            new_arr[i] = bucket.arr[i];
+
+        free(bucket.arr);
+
+        bucket.arr = new_arr;
+        bucket.max_size = new_max_size;
+    }
+
+    static constexpr unsigned int INITIAL_BUCKET_SIZE = 2;
+
+    unsigned int _n_bits;
+    unsigned int _n_buckets;
+    unsigned int _hash_shift_width;
+
+    bucket_t* _buckets;
 };
 
 int test_unordered_map(const std::vector<element_t>& elements,
@@ -1506,6 +1735,54 @@ int test_zobrist_index(const std::vector<element_t>& elements,
     return sum;
 }
 
+int test_better_zobrist_index(const std::vector<element_t>& elements,
+               const std::vector<hash_t>& queries)
+{
+    cout << "better_zobrist_index test" << endl;
+
+    // Insertion
+    uint64_t start = ms_since_epoch();
+
+    const size_t N = elements.size();
+
+
+    /*
+        Stop when:
+        (1 << n_bits ) >= N / 2
+            OR:
+        2 >= N / (1 << n_bits)
+    */
+    unsigned int n_bits = 1;
+    while ((1 << n_bits) < (N >> 1))
+        n_bits++;
+
+    better_zobrist_index m(n_bits);
+
+
+    for (size_t i = 0; i < N; i++)
+        m.insert(elements[i]);
+
+    uint64_t end = ms_since_epoch();
+
+
+    cout << "Insertion time (ms): " << (end - start) << endl;
+
+    // Search
+    start = ms_since_epoch();
+    int sum = 0;
+
+    const size_t N2 = queries.size();
+    for (size_t i = 0; i < N2; i++)
+        sum += m.search(queries[i]);
+    end = ms_since_epoch();
+    cout << "Search time (ms): " << (end - start) << endl;
+
+    cout << "MAX BUCKET SIZE: " << max_size << endl;
+
+    return sum;
+}
+
+
 int test_robinhood(const std::vector<element_t>& elements,
                 const std::vector<hash_t>& queries)
 {
@@ -1562,6 +1839,7 @@ void test2()
     make_serializable<zobrist_index>();
 
     const uint64_t n_items = 16000000;
+    //const uint64_t n_items = 1000000;
     //const uint64_t n_items = 8000000;
 
     vector<element_t> elements;
@@ -1584,6 +1862,10 @@ void test2()
 
     
     int s;
+
+    cout << endl;
+    s = test_better_zobrist_index(elements, queries);
+    cout << "Element sum : " << s << endl;
 
     cout << endl;
     s = test_zobrist_index(elements, queries);
