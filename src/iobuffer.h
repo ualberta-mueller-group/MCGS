@@ -63,43 +63,15 @@ inline T __fmt_read(std::istream& is)
     return val;
 }
 
+////////////////////////////////////////////////// ibuffer/obuffer
+/*
+    TODO: both ibuffer and obuffer give templates for generic ints,
+    making it easier to read/write non-fixed width integers like int (this is
+    a problem...)
 
-////////////////////////////////////////////////// obuffer/ibuffer
-class obuffer
-{
-public:
-    obuffer(const std::string& file_name): _fs(file_name, OPEN_MODE)
-    {
-        assert(_fs.is_open());
-    }
-
-    virtual ~obuffer()
-    {
-    }
-
-    inline void close()
-    {
-        assert(_fs.is_open());
-        _fs.close();
-        assert(!_fs.is_open());
-    }
-
-    void write_u8(const uint8_t& val);
-    void write_u16(const uint16_t& val);
-    void write_u32(const uint32_t& val);
-    void write_u64(const uint64_t& val);
-    void write_i8(const int8_t& val);
-    void write_i16(const int16_t& val);
-    void write_i32(const int32_t& val);
-    void write_i64(const int64_t& val);
-
-private:
-    static constexpr std::ofstream::openmode OPEN_MODE = //
-        std::ofstream::binary |                          //
-        std::ofstream::trunc;                            //
-
-    std::ofstream _fs;
-};
+    This template method is useful for the "serialize" template struct, and
+    still at least enforces consistent endianness
+*/
 
 class ibuffer
 {
@@ -129,10 +101,59 @@ public:
     int32_t read_i32();
     int64_t read_i64();
 
+    template <class T>
+    T __read()
+    {
+        return __fmt_read<T>(_fs);
+    }
+
+
 private:
     static constexpr std::ifstream::openmode OPEN_MODE = std::ifstream::binary;
 
     std::ifstream _fs;
+};
+
+class obuffer
+{
+public:
+    obuffer(const std::string& file_name): _fs(file_name, OPEN_MODE)
+    {
+        assert(_fs.is_open());
+    }
+
+    virtual ~obuffer()
+    {
+    }
+
+    inline void close()
+    {
+        assert(_fs.is_open());
+        _fs.close();
+        assert(!_fs.is_open());
+    }
+
+    void write_u8(const uint8_t& val);
+    void write_u16(const uint16_t& val);
+    void write_u32(const uint32_t& val);
+    void write_u64(const uint64_t& val);
+    void write_i8(const int8_t& val);
+    void write_i16(const int16_t& val);
+    void write_i32(const int32_t& val);
+    void write_i64(const int64_t& val);
+
+    template <class T>
+    void __write(const T& val)
+    {
+        __fmt_write(_fs, val);
+    }
+
+private:
+    static constexpr std::ofstream::openmode OPEN_MODE = //
+        std::ofstream::binary |                          //
+        std::ofstream::trunc;                            //
+
+    std::ofstream _fs;
 };
 
 // NOLINTEND(readability-identifier-naming)
