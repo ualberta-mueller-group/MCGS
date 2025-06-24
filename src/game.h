@@ -201,11 +201,10 @@ inline bool game::is_impartial() const
 template <class T>
 game_type_t __game_type_impl()
 {
-    static_assert(!std::is_abstract_v<T>);
     static_assert(std::is_base_of_v<game, T>);
+    static_assert(!std::is_abstract_v<T>);
 
-    type_table_t* table = type_table<T>();
-    game_type_t& gt = table->game_type();
+    game_type_t& gt = type_table<T>()->game_type_ref();
 
     if (gt == 0) [[ unlikely ]]
         gt = game::_next_game_type++;
@@ -216,8 +215,8 @@ game_type_t __game_type_impl()
 template <class T>
 inline game_type_t game_type()
 {
-    static_assert(!std::is_abstract_v<T>);
     static_assert(std::is_base_of_v<game, T>);
+    static_assert(!std::is_abstract_v<T>);
 
     static const game_type_t GT = __game_type_impl<T>();
     return GT;
@@ -225,8 +224,7 @@ inline game_type_t game_type()
 
 inline game_type_t game::game_type() const
 {
-    type_table_t* table = type_table();
-    game_type_t& gt = table->game_type();
+    game_type_t& gt = type_table()->game_type_ref();
 
     if (gt == 0) [[ unlikely ]]
         gt = _next_game_type++;

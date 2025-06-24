@@ -7,7 +7,7 @@ CC = c++
 DEBUG_FLAGS_COMMON := -g -DNOGO_DEBUG -DASSERT_RESTORE_DEBUG -DGAME_UNDO_DEBUG
 
 # Additional checks that are expensive and/or annoying
-DEBUG_FLAGS_EXTRA := -DSUMGAME_DEBUG -DGAME_TYPE_DEBUG -DDEFAULT_IMPL_DEBUG -D_GLIBCXX_DEBUG
+DEBUG_FLAGS_EXTRA := -DSUMGAME_DEBUG -DTYPE_TABLE_DEBUG -DDEFAULT_IMPL_DEBUG -D_GLIBCXX_DEBUG
 
 DEBUG_FLAGS_ALL := $(DEBUG_FLAGS_COMMON) $(DEBUG_FLAGS_EXTRA)
 
@@ -69,10 +69,10 @@ TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCG
 # all games are unique objects, and uses assert_restore_sumgame.
 # Without this flag, assert_restore_sumgame is still used at the root of search.
 #
-#     -DGAME_TYPE_DEBUG
-# Make a game's game_type() function check that the cached game_type_t is
-# correct. It could be incorrect if game_type() is called before the constructor
-# of a game's most derived type runs.
+#     -DTYPE_TABLE_DEBUG
+# Make the i_type_table::type_table() method check that the cached
+# type_table_t* is correct. It could be incorrect if type_table() is called
+# before the constructor of a class most derived type runs.
 #
 #     -DDEFAULT_IMPL_DEBUG
 # Print warnings to stderr whenever a game relies on a default implementation.

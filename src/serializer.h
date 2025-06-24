@@ -7,6 +7,8 @@
     templates, i.e. put templates for STL containers in another file
 
     TODO: how to handle floating point values?
+
+    TODO: Explain SFINAE ("Enable" template parameter)
 */
 
 ////////////////////////////////////////////////// serialize<T>
@@ -35,8 +37,6 @@ struct serializer<T,
         return is.__read<T>();
     }
 };
-
-//////////////////////////////////////// TODO: serializable* (and derived *)
 
 //////////////////////////////////////// vector<T>
 template <class T>
