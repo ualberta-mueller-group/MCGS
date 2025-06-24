@@ -7,6 +7,7 @@
 #include "throw_assert.h"
 #include <cassert>
 #include <cstdlib>
+#include <limits>
 #include <vector>
 #include <utility>
 #include "warn_default.h"
@@ -220,6 +221,37 @@ void strip::_mirror_self()
         _board[idx] = *it;
         idx++;
     }
+}
+
+void strip::_save_board(obuffer& os, const std::vector<int>& board)
+{
+    const size_t size = board.size();
+    os.write_u64(size);
+
+    for (size_t i = 0; i < size; i++)
+    {
+        const int& tile = board[i];
+
+        THROW_ASSERT(                                             //
+            (int) std::numeric_limits<uint8_t>::min() <= tile &&  //
+            tile <= (int) std::numeric_limits<uint8_t>::max()     //
+            );                                                    //
+
+        os.write_u8(board[i]);
+    }
+}
+
+std::vector<int> strip::_load_board(ibuffer& is)
+{
+    std::vector<int> board;
+
+    const size_t size = is.read_u64();
+    board.reserve(size);
+
+    for (size_t i = 0; i < size; i++)
+        board.push_back(is.read_u8());
+
+    return board;
 }
 
 void strip::_check_legal() const

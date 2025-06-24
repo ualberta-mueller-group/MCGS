@@ -23,6 +23,10 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
+    // Serialization
+    void save_impl(obuffer& os) const override;
+    static dyn_serializable* load_impl(ibuffer& is);
+
 protected:
     split_result _split_impl() const override;
 

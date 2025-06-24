@@ -37,6 +37,7 @@ public:
     std::vector<int> inverse_board() const;
     std::vector<int> inverse_mirror_board() const;
     std::string board_as_string() const;
+    const std::vector<int>& board_const() const;
 
     // void print(std::ostream& str) const { str << board_as_string();}
 
@@ -53,6 +54,9 @@ protected:
                                     bool mirror1 = false, bool mirror2 = false);
 
     void _mirror_self();
+
+    static void _save_board(obuffer& os, const std::vector<int>& board);
+    static std::vector<int> _load_board(ibuffer& is);
 
 private:
     void _check_legal() const;
@@ -98,6 +102,11 @@ inline void strip::replace(int p, int color)
     assert_range(p, 0, size());
     assert_empty_black_white(color);
     _board[p] = color;
+}
+
+inline const std::vector<int>& strip::board_const() const
+{
+    return _board;
 }
 
 //---------------------------------------------------------------------------

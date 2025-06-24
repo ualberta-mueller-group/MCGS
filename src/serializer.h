@@ -2,6 +2,7 @@
 #include "iobuffer.h"
 #include <type_traits>
 #include <vector>
+#include <memory>
 /*
     TODO break this into multiple files. Consider separating serialize
     templates, i.e. put templates for STL containers in another file
@@ -64,3 +65,22 @@ struct serializer<std::vector<T>>
         return vec;
     }
 };
+
+//////////////////////////////////////// shared_ptr<T>
+template <class T>
+struct serializer<std::shared_ptr<T>>
+{
+    static inline void save(obuffer& os, const std::shared_ptr<T>& smart_ptr)
+    {
+        const T* ptr = smart_ptr.get();
+        serializer<T*>::save(os, ptr);
+    }
+
+    static inline std::shared_ptr<T> load(ibuffer& is)
+    {
+        T* ptr = serializer<T*>::load(is);
+        return std::shared_ptr<T>(ptr);
+    }
+};
+
+//////////////////////////////////////// unique_ptr<T>

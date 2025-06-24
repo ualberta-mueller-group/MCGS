@@ -87,6 +87,16 @@ void elephants::undo_move()
     remove_stone(to);
 }
 
+void elephants::save_impl(obuffer& os) const
+{
+    _save_board(os, board_const());
+}
+
+dyn_serializable* elephants::load_impl(ibuffer& is)
+{
+    return new elephants(_load_board(is));
+}
+
 split_result elephants::_split_impl() const
 {
     vector<pair<int, int>> subgame_ranges;

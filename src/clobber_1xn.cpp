@@ -77,6 +77,16 @@ void clobber_1xn::undo_move()
     replace(to, opponent(player));
 }
 
+void clobber_1xn::save_impl(obuffer& os) const
+{
+    _save_board(os, board_const());
+}
+
+dyn_serializable* clobber_1xn::load_impl(ibuffer& is)
+{
+    return new clobber_1xn(_load_board(is));
+}
+
 split_result clobber_1xn::_split_impl() const
 {
     vector<pair<int, int>> chunk_ranges;

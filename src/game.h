@@ -7,7 +7,7 @@
 // IWYU pragma: begin_exports
 #include "cgt_basics.h"
 #include "cgt_move.h"
-#include "type_table.h"
+#include "dynamic_serializable.h"
 #include "hashing.h"
 // IWYU pragma: end_exports
 
@@ -25,7 +25,7 @@ class game;
 //---------------------------------------------------------------------------
 typedef std::optional<std::vector<game*>> split_result;
 
-class game : public i_type_table
+class game : public dyn_serializable
 {
 public:
     game();

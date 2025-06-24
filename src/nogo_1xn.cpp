@@ -129,6 +129,16 @@ void nogo_1xn::undo_move()
     replace(to, EMPTY);
 }
 
+void nogo_1xn::save_impl(obuffer& os) const
+{
+    _save_board(os, board_const());
+}
+
+dyn_serializable* nogo_1xn::load_impl(ibuffer& is)
+{
+    return new nogo_1xn(_load_board(is));
+}
+
 /*
    implements "xo split" from
    Henry's paper

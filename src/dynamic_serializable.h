@@ -164,7 +164,7 @@ struct serializer<T*,
         dyn_serializable_id_t sid = is.read_u32();
 
         load_fn_ptr_t load_fn = __dyn_serializable_impl::get_load_function(sid);
-        assert(load_fn) != nullptr;
+        assert(load_fn != nullptr);
 
         dyn_serializable* obj = load_fn(is);
 
