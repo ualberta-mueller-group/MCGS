@@ -31,6 +31,8 @@ private:
 /*
    TODO this is inefficient -- shouldn't have to create game objects,
    especially not with operator new...
+
+   Maybe it's OK?
 */
 
 template <class T>
@@ -100,8 +102,7 @@ bool strip_db_game_generator<T>::_current_board_valid() const
 
         sr = g.split();
 
-        if (!sr.has_value())
-            valid = true;
+        valid = !(sr.has_value() && sr->size() > 1);
     }
     catch (std::exception& exc)
     {

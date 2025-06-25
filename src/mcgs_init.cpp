@@ -9,6 +9,7 @@
 #include "init_hashing.h"
 #include "init_sumgame.h"
 #include "init_impartial_sumgame.h"
+#include "init_database.h"
 
 namespace {
 bool already_initialized = false;
@@ -24,6 +25,7 @@ void mcgs_init_all(const cli_options& opts)
     mcgs_init::init_hashing();
     mcgs_init::init_sumgame(global::tt_sumgame_idx_bits());
     mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits());
+    //mcgs_init::init_database();
 }
 
 void mcgs_init_all()

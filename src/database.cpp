@@ -6,17 +6,13 @@
     probably just the generic integer serializer template? It is very easy
     to write unsafe code with this...
 */
-
 #include "database.h"
-#include <iostream>
-#include <memory>
-
 #include "sumgame.h"
-#include "grid_utils.h"
 #include "clobber_1xn.h"
 
 using namespace std;
 
+////////////////////////////////////////////////// helper functions
 namespace {
 outcome_class bools_to_outcome_class(bool black_wins, bool white_wins)
 {
@@ -32,15 +28,15 @@ outcome_class bools_to_outcome_class(bool black_wins, bool white_wins)
     assert(false);
 }
 
-} //
+} // namespace
 
-//////////////////////////////////////////////////
+////////////////////////////////////////////////// test function
 void db_test()
 {
 }
 
-////////////////////////////////////////////////// implementation
-database::database(const std::string& filename): _filename(filename)
+////////////////////////////////////////////////// database methods
+database::database()
 {
 }
 
@@ -50,7 +46,7 @@ void database::set_partizan(const game& g, const db_entry_partizan& entry)
     const hash_t hash = g.get_local_hash();
     auto it = _tree_partizan[gt].emplace(hash, entry);
 
-    assert(it.second); // not already found
+    THROW_ASSERT(it.second); // not already found
 }
 
 void database::set_impartial(const game& g, const db_entry_impartial& entry)
@@ -59,7 +55,7 @@ void database::set_impartial(const game& g, const db_entry_impartial& entry)
     const hash_t hash = g.get_local_hash();
     auto it = _tree_impartial[gt].emplace(hash, entry);
 
-    assert(it.second); // not already found
+    THROW_ASSERT(it.second); // not already found
 }
 
 std::optional<db_entry_partizan> database::get_partizan(const game& g) const
@@ -96,9 +92,9 @@ std::optional<db_entry_impartial> database::get_impartial(const game& g) const
     return it2->second;
 }
 
-void database::save() const
+void database::save(const std::string& filename) const
 {
-    obuffer os(_filename);
+    obuffer os(filename);
 
     serializer<tree_partizan_t>::save(os, _tree_partizan);
     serializer<tree_impartial_t>::save(os, _tree_impartial);
@@ -106,12 +102,12 @@ void database::save() const
     os.close();
 }
 
-void database::load()
+void database::load(const std::string& filename)
 {
     assert(_tree_partizan.empty());
     assert(_tree_impartial.empty());
 
-    ibuffer is(_filename);
+    ibuffer is(filename);
 
     _tree_partizan = serializer<tree_partizan_t>::load(is);
     _tree_impartial = serializer<tree_impartial_t>::load(is);
@@ -129,10 +125,17 @@ void database::generate_entries(db_game_generator& gen)
 {
     sumgame s(BLACK);
 
+    uint64_t game_count = 0;
+
     while (gen)
     {
         game* g = gen.gen_game();
         ++gen;
+
+        if ((game_count % 16) == 0)
+            cout << "Game #" << game_count << " " << *g << endl;
+
+        ++game_count;
 
         assert(s.num_total_games() == 0);
         s.add(g);
@@ -157,3 +160,27 @@ void database::generate_entries(db_game_generator& gen)
 
     assert(s.num_total_games() == 0);
 }
+
+
+//////////////////////////////////////////////////
+std::ostream& operator<<(std::ostream& os, const database& db)
+{
+    os << "Partizan game types: " << db._tree_partizan.size() << '\n';
+    for (const auto& it : db._tree_partizan)
+    {
+        os << "Game type: " << it.first << ' ';
+        os << "Count: " << it.second.size() << '\n';
+    }
+
+    os << '\n';
+
+    os << "Impartial game types: " << db._tree_impartial.size() << '\n';
+    for (const auto& it : db._tree_impartial)
+    {
+        os << "Game type: " << it.first << ' ';
+        os << "Count: " << it.second.size() << '\n';
+    }
+
+    return os;
+}
+
