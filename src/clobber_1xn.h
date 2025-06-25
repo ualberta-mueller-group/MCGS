@@ -9,6 +9,7 @@
 #include "strip.h"
 // IWYU pragma: end_exports
 
+#include "db_game_generator.h"
 #include <vector>
 #include <ostream>
 
@@ -24,6 +25,8 @@ public:
     // Serialization
     void save_impl(obuffer& os) const override;
     static dyn_serializable* load_impl(ibuffer& is);
+
+    static db_game_generator* create_db_game_generator();
 
 protected:
     split_result _split_impl() const override;

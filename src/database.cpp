@@ -9,6 +9,7 @@
 
 #include "database.h"
 #include <iostream>
+#include <memory>
 
 #include "sumgame.h"
 #include "grid_utils.h"
@@ -122,4 +123,37 @@ void database::clear()
 {
     _tree_partizan.clear();
     _tree_impartial.clear();
+}
+
+void database::generate_entries(db_game_generator& gen)
+{
+    sumgame s(BLACK);
+
+    while (gen)
+    {
+        game* g = gen.gen_game();
+        ++gen;
+
+        assert(s.num_total_games() == 0);
+        s.add(g);
+
+        s.set_to_play(BLACK);
+        bool black_wins = s.solve();
+
+        s.set_to_play(WHITE);
+        bool white_wins = s.solve();
+
+        s.pop(g);
+
+        outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
+
+        db_entry_partizan entry;
+        entry.outcome = oc;
+
+        set_partizan(*g, entry);
+
+        delete g;
+    }
+
+    assert(s.num_total_games() == 0);
 }

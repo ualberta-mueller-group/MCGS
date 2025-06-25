@@ -6,13 +6,18 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "strip_db_game_generator.h"
 #include "strip.h"
 #include <cassert>
 #include <cstddef>
 #include <ostream>
 
+class clobber_1xn_db_game_generator;
+
 using std::string, std::pair, std::vector;
 
+
+//////////////////////////////////////////////////
 clobber_1xn::clobber_1xn(const vector<int>& board) : strip(board)
 {
 }
@@ -85,6 +90,11 @@ void clobber_1xn::save_impl(obuffer& os) const
 dyn_serializable* clobber_1xn::load_impl(ibuffer& is)
 {
     return new clobber_1xn(_load_board(is));
+}
+
+db_game_generator* clobber_1xn::create_db_game_generator()
+{
+    return new strip_db_game_generator<clobber_1xn>(6);
 }
 
 split_result clobber_1xn::_split_impl() const

@@ -68,7 +68,7 @@ inline T __fmt_read(std::istream& is)
         val |= (byte_longer << (i * 8));
     }
 
-    assert(is || is.eof());
+    assert(is);
 
     return val;
 }

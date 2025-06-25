@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "cgt_basics.h"
 #include "game.h"
+#include "db_game_generator.h"
 
 ////////////////////////////////////////////////// test function
 void db_test();
@@ -33,7 +34,6 @@ struct serializer<db_entry_partizan>
     }
 };
 
-
 ////////////////////////////////////////////////// db_entry_impartial
 struct db_entry_impartial
 {
@@ -60,7 +60,6 @@ struct serializer<db_entry_impartial>
     }
 };
 
-
 ////////////////////////////////////////////////// class database
 #define DB_MAP_T std::unordered_map
 
@@ -79,6 +78,12 @@ public:
     void load();
 
     void clear();
+    bool empty() const;
+
+    void generate_entries(db_game_generator& gen);
+
+    template <class T>
+    void generate_entries_for_game();
 
 private:
 public:
@@ -96,3 +101,26 @@ private:
     tree_partizan_t _tree_partizan;
     tree_impartial_t _tree_impartial;
 };
+
+////////////////////////////////////////////////// database methods
+inline bool database::empty() const
+{
+    return _tree_partizan.empty() && _tree_impartial.empty();
+}
+
+template <class T>
+void database::generate_entries_for_game()
+{
+    /*
+        TODO these static asserts should be more descriptive...
+
+        The type trait isn't really useful if it doesn't result in a
+        nice error message
+    */
+    static_assert(has_create_db_game_generator_v<T>);
+
+    db_game_generator* gen = T::create_db_game_generator();
+    generate_entries(*gen);
+    delete gen;
+}
+
