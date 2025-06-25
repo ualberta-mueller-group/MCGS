@@ -1,4 +1,5 @@
 #include "type_mapper.h"
+#include "utilities.h"
 
 void type_mapper::register_type(const std::string& type_name, game_type_t runtime_type)
 {

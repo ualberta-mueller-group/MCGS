@@ -3,7 +3,6 @@
 #include "serializer.h"
 #include "throw_assert.h"
 #include "type_table.h"
-#include "utilities.h"
 
 ////////////////////////////////////////////////// class type_mapper
 class type_mapper
@@ -15,7 +14,6 @@ public:
 
     void register_type(const std::string& type_name, game_type_t runtime_type);
     game_type_t translate_type(game_type_t runtime_type) const;
-
 
 private:
     game_type_t& _type_remapping_ref(game_type_t runtime_type);
