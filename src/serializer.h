@@ -1,6 +1,7 @@
 #pragma once
 #include "iobuffer.h"
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 #include <memory>
 /*
@@ -39,7 +40,7 @@ struct serializer<T,
     }
 };
 
-//////////////////////////////////////// vector<T>
+//////////////////////////////////////// std::vector<T>
 template <class T>
 struct serializer<std::vector<T>>
 {
@@ -66,7 +67,7 @@ struct serializer<std::vector<T>>
     }
 };
 
-//////////////////////////////////////// shared_ptr<T>
+//////////////////////////////////////// std::shared_ptr<T>
 template <class T>
 struct serializer<std::shared_ptr<T>>
 {
@@ -83,4 +84,69 @@ struct serializer<std::shared_ptr<T>>
     }
 };
 
-//////////////////////////////////////// unique_ptr<T>
+//////////////////////////////////////// std::unique_ptr<T>
+template <class T>
+struct serializer<std::unique_ptr<T>>
+{
+    static inline void save(obuffer& os, const std::unique_ptr<T>& smart_ptr)
+    {
+        const T* ptr = smart_ptr.get();
+        serializer<T*>::save(os, ptr);
+    }
+
+    static inline std::unique_ptr<T> load(ibuffer& is)
+    {
+        T* ptr = serializer<T*>::load(is);
+        return std::unique_ptr<T>(ptr);
+    }
+};
+
+
+////////////////////////////////////////////////// std::pair<T1, T2>
+template <class T1, class T2>
+struct serializer<std::pair<T1, T2>>
+{
+    inline static void save(obuffer& os, const std::pair<T1, T2>& p)
+    {
+        serializer<T1>::save(os, p.first);
+        serializer<T2>::save(os, p.second);
+    }
+
+    inline static std::pair<T1, T2> load(ibuffer& is)
+    {
+        T1 first = serializer<T1>::load(is);
+        T2 second = serializer<T2>::load(is);
+        return std::pair<T1, T2>(first, second);
+    }
+};
+
+////////////////////////////////////////////////// std::unordered_map<T1, T2>
+/*
+    TODO: std::unordered_map has many more template parameters. Change this
+    to handle them all...
+*/
+template <class T1, class T2>
+struct serializer<std::unordered_map<T1, T2>>
+{
+    inline static void save(obuffer& os, const std::unordered_map<T1, T2>& m)
+    {
+        const size_t size = m.size();
+        os.write_u64(size);
+
+        for (auto it = m.begin(); it != m.end(); it++)
+            serializer<std::pair<T1, T2>>::save(os, *it);
+    }
+
+    inline static std::unordered_map<T1, T2> load(ibuffer& is)
+    {
+        std::unordered_map<T1, T2> m;
+
+        const uint64_t size = is.read_u64();
+        m.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+            m.emplace(serializer<std::pair<T1, T2>>::load(is));
+
+        return m;
+    }
+};

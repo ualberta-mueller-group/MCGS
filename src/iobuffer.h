@@ -38,7 +38,9 @@ inline void __fmt_write(std::ostream& os, T val)
         assert(os);
 
         uint8_t byte = (uint8_t) (val_uns >> (i * 8));
-        os << byte;
+
+        // Don't use insertion operator (control codes mess up the data)
+        os.write((const char*) &byte, 1);
     }
 
     assert(os);
@@ -59,12 +61,14 @@ inline T __fmt_read(std::istream& is)
     {
         assert(is);
 
-        is >> byte;
+        // Don't use extraction operator (control codes mess up the data)
+        is.read((char*) &byte, 1);
+
         const T byte_longer = byte;
         val |= (byte_longer << (i * 8));
     }
 
-    assert(is);
+    assert(is || is.eof());
 
     return val;
 }
