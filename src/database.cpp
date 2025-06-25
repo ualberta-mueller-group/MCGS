@@ -39,10 +39,9 @@ void db_test()
 database::database()
 {
 }
-
 void database::set_partizan(const game& g, const db_entry_partizan& entry)
 {
-    const game_type_t gt = g.game_type();
+    const game_type_t gt = _mapper.translate_type(g.game_type());
     const hash_t hash = g.get_local_hash();
     auto it = _tree_partizan[gt].emplace(hash, entry);
 
@@ -51,7 +50,7 @@ void database::set_partizan(const game& g, const db_entry_partizan& entry)
 
 void database::set_impartial(const game& g, const db_entry_impartial& entry)
 {
-    const game_type_t gt = g.game_type();
+    const game_type_t gt = _mapper.translate_type(g.game_type());
     const hash_t hash = g.get_local_hash();
     auto it = _tree_impartial[gt].emplace(hash, entry);
 
@@ -60,7 +59,7 @@ void database::set_impartial(const game& g, const db_entry_impartial& entry)
 
 std::optional<db_entry_partizan> database::get_partizan(const game& g) const
 {
-    const game_type_t gt = g.game_type();
+    const game_type_t gt = _mapper.translate_type(g.game_type());
     auto it1 = _tree_partizan.find(gt);
     if (it1 == _tree_partizan.end())
         return {};
@@ -77,7 +76,7 @@ std::optional<db_entry_partizan> database::get_partizan(const game& g) const
 
 std::optional<db_entry_impartial> database::get_impartial(const game& g) const
 {
-    const game_type_t gt = g.game_type();
+    const game_type_t gt = _mapper.translate_type(g.game_type());
     auto it1 = _tree_impartial.find(gt);
     if (it1 == _tree_impartial.end())
         return {};
@@ -98,6 +97,7 @@ void database::save(const std::string& filename) const
 
     serializer<tree_partizan_t>::save(os, _tree_partizan);
     serializer<tree_impartial_t>::save(os, _tree_impartial);
+    serializer<type_mapper>::save(os, _mapper);
 
     os.close();
 }
@@ -111,6 +111,7 @@ void database::load(const std::string& filename)
 
     _tree_partizan = serializer<tree_partizan_t>::load(is);
     _tree_impartial = serializer<tree_impartial_t>::load(is);
+    _mapper = serializer<type_mapper>::load(is);
 
     is.close();
 }
@@ -119,6 +120,7 @@ void database::clear()
 {
     _tree_partizan.clear();
     _tree_impartial.clear();
+    _mapper.clear();
 }
 
 void database::generate_entries(db_game_generator& gen)

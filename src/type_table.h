@@ -1,13 +1,12 @@
 #pragma once
 #include <cassert>
 #include <type_traits>
+#include <cstdint>
 #include <typeinfo>
 
 ////////////////////////////////////////////////// typedefs
-
-// TODO: do these need to be fixed width too?
-typedef unsigned int dyn_serializable_id_t;
-typedef unsigned int game_type_t;
+typedef uint32_t dyn_serializable_id_t;
+typedef uint32_t game_type_t;
 
 ////////////////////////////////////////////////// struct type_table_t
 struct type_table_t

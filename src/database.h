@@ -4,6 +4,7 @@
 #include "cgt_basics.h"
 #include "game.h"
 #include "db_game_generator.h"
+#include "type_mapper.h"
 
 ////////////////////////////////////////////////// test function
 void db_test();
@@ -76,6 +77,8 @@ public:
     std::optional<db_entry_partizan> get_partizan(const game& g) const;
     std::optional<db_entry_impartial> get_impartial(const game& g) const;
 
+    void register_type(const std::string& type_name, game_type_t runtime_type);
+
     void save(const std::string& filename) const;
     void load(const std::string& filename);
 
@@ -100,9 +103,16 @@ private:
 
     tree_partizan_t _tree_partizan;
     tree_impartial_t _tree_impartial;
+
+    type_mapper _mapper;
 };
 
 ////////////////////////////////////////////////// database methods
+inline void database::register_type(const std::string& type_name, game_type_t runtime_type)
+{
+    _mapper.register_type(type_name, runtime_type);
+}
+
 inline bool database::empty() const
 {
     return _tree_partizan.empty() && _tree_impartial.empty();

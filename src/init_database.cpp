@@ -8,7 +8,16 @@
 #include "nogo_1xn.h"
 #include "strip_db_game_generator.h"
 
+#define DATABASE_REGISTER_TYPE(db, game_class_name) \
+db.register_type(#game_class_name, game_type<game_class_name>())
+
 using namespace std;
+
+namespace {
+
+
+} // namespace
+
 
 namespace mcgs_init {
 
@@ -23,6 +32,10 @@ void init_database()
 
     database& db = get_global_database();
     assert(db.empty());
+
+    DATABASE_REGISTER_TYPE(db, clobber_1xn);
+    DATABASE_REGISTER_TYPE(db, nogo_1xn);
+    DATABASE_REGISTER_TYPE(db, elephants);
 
     std::vector<db_game_generator*> generators =
     {

@@ -40,6 +40,37 @@ struct serializer<T,
     }
 };
 
+//////////////////////////////////////// std::string
+/*
+    TODO: Is this actually correct? Check if control codes are correctly
+    dealt with...
+*/
+template <>
+struct serializer<std::string>
+{
+    inline static void save(obuffer& os, const std::string& str)
+    {
+        const size_t size = str.size();
+        os.write_u64(size);
+
+        for (size_t i = 0; i < size; i++)
+            os.write_i8(str[i]);
+    }
+
+    inline static std::string load(ibuffer& is)
+    {
+        std::string str;
+
+        const uint64_t size = is.read_u64();
+        str.reserve(size);
+
+        for (uint64_t i = 0; i < size; i++)
+            str.push_back(is.read_i8());
+
+        return str;
+    }
+};
+
 //////////////////////////////////////// std::vector<T>
 template <class T>
 struct serializer<std::vector<T>>
