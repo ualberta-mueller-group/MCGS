@@ -3,10 +3,21 @@
 //---------------------------------------------------------------------------
 #include "impartial_lemoine_viennot.h"
 
+#include <vector>
+#include <optional>
 #include "cgt_nimber.h"
 #include "hashing.h"
 #include "impartial_game.h"
 #include "transposition.h"
+
+namespace {
+    // TODO implement some subgame complexity heuristic?
+    game* find_hardest(const std::vector<game*>& subgames)
+    {
+        return subgames.back();
+    }
+
+} // namespace
 
 namespace lemoine_viennot{
 
@@ -31,11 +42,12 @@ inline hash_t combined_hash(const impartial_game* g, int nim_value)
 
 inline void tt_store(lemoine_viennot_tt& tt,
                      const impartial_game* g,
-                     int nim_value)
+                     int nim_value,
+                     bool result)
 {
     const hash_t hash = combined_hash(g, nim_value);
     auto tt_result = tt.search(hash);
-    tt_result.set_entry(lv_ttable_entry(nim_value));
+    tt_result.set_entry(lv_ttable_entry(result));
 }
 
 inline bool tt_lookup(lemoine_viennot_tt& tt,
@@ -57,11 +69,99 @@ int search_with_tt(const impartial_game& g, int tt_size)
     return search_impartial_game(g, tt);
 }
 
+// Compute n such that g = *n. "Algorithm 3" in Lemoine and Viennot.
 int search_impartial_game(const impartial_game& g, lemoine_viennot_tt& tt)
 {
-    int result = 0;
-    assert(result >= 0);
-    return result;
+    int n = 0;
+    for (; ; ++n)
+        if (! search_g_plus_nimber(g, n, tt))
+            break;
+    assert(n >= 0);
+    return n;
+}
+
+// Boolean solver for g + *n. "Algorithm 1" in Lemoine and Viennot
+bool search_g_plus_nimber(const impartial_game& g, int n,
+                          lemoine_viennot_tt& tt)
+{
+    bool result;
+    if (tt_lookup(tt, &g, n, result))
+        return result;
+
+    // Part A: search all position options Gi + *n 
+    // If any option is a loss, then G + *n is a win
+    std::unique_ptr<move_generator> mgp(g.create_move_generator());
+    for (move_generator& mg = *mgp; mg; ++mg)
+    {
+        assert_restore_game arm(g);
+        auto g_nonconst = const_cast<impartial_game*>(&g);
+        move m = mg.gen_move();
+        g_nonconst->play(m);
+        split_result sr = g_nonconst->split();
+        if (sr) // split found a sum
+        {
+            const bool move_result = search_sum_plus_nimber(sr, n, tt);
+// TODO?            for (game* subgame : *sr)
+//                 delete subgame;
+            tt_store(tt, g_nonconst, n, move_result);
+
+            // g_nonconst was not normalized, don't call undo_normalize()
+            g_nonconst->undo_move();
+
+            if (! move_result)
+                return true;
+        }
+        else // no split, solve same subgame
+        {
+            g_nonconst->normalize();
+            const bool move_result = search_g_plus_nimber(*g_nonconst, n, tt);
+            tt_store(tt, g_nonconst, n, move_result);
+            g_nonconst->undo_normalize();
+            if (! move_result)
+                return true;
+        }
+        g_nonconst->undo_move();
+    }
+
+    // Part B: search all nimber options P + *i, i<n.
+    for(int i = 0; i < n; ++i)
+    {
+        const bool move_result = search_g_plus_nimber(g, i, tt);
+        tt_store(tt, &g, i, move_result);
+        if (! move_result)
+            return true;
+    }
+
+    // Final result when g + *n is a loss - store and return
+    tt_store(tt, &g, n, false);
+    return false;
+}
+
+// Boolean solver for sum(g_i) + *n. "Algorithm 2" in Lemoine and Viennot
+bool search_sum_plus_nimber(split_result& subgames, int n,
+                            lemoine_viennot_tt& tt)
+{
+    assert(subgames);
+    assert(subgames->size() >= 2);
+    // TODO can it have just one? If yes, just use Alg. 1 in that case
+    
+    game* hardest = find_hardest(*subgames);
+    int nim_sum = n;
+    for (game* subgame : *subgames)
+    {
+        if (subgame != hardest)
+        {
+            const impartial_game* g = 
+               static_cast<const impartial_game*>(subgame);
+        // TODO? g->normalize();
+            const int subgame_nimber = search_impartial_game(*g, tt);
+            nimber::add_nimber(nim_sum, subgame_nimber);
+        }
+    }
+    const impartial_game* h = 
+       static_cast<const impartial_game*>(hardest);
+        // TODO?        h->normalize();
+    return search_g_plus_nimber(*h, nim_sum, tt);
 }
 
 } // namespace lemoine_viennot
