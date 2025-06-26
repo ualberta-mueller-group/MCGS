@@ -42,6 +42,8 @@ database::database()
 void database::set_partizan(const game& g, const db_entry_partizan& entry)
 {
     const game_type_t gt = _mapper.translate_type(g.game_type());
+    THROW_ASSERT(gt > 0);
+
     const hash_t hash = g.get_local_hash();
     auto it = _tree_partizan[gt].emplace(hash, entry);
 
@@ -51,6 +53,8 @@ void database::set_partizan(const game& g, const db_entry_partizan& entry)
 void database::set_impartial(const game& g, const db_entry_impartial& entry)
 {
     const game_type_t gt = _mapper.translate_type(g.game_type());
+    THROW_ASSERT(gt > 0);
+
     const hash_t hash = g.get_local_hash();
     auto it = _tree_impartial[gt].emplace(hash, entry);
 
@@ -60,6 +64,9 @@ void database::set_impartial(const game& g, const db_entry_impartial& entry)
 std::optional<db_entry_partizan> database::get_partizan(const game& g) const
 {
     const game_type_t gt = _mapper.translate_type(g.game_type());
+    if (gt == 0)
+        return {};
+
     auto it1 = _tree_partizan.find(gt);
     if (it1 == _tree_partizan.end())
         return {};
@@ -77,6 +84,9 @@ std::optional<db_entry_partizan> database::get_partizan(const game& g) const
 std::optional<db_entry_impartial> database::get_impartial(const game& g) const
 {
     const game_type_t gt = _mapper.translate_type(g.game_type());
+    if (gt == 0)
+        return {};
+
     auto it1 = _tree_impartial.find(gt);
     if (it1 == _tree_impartial.end())
         return {};
@@ -134,7 +144,7 @@ void database::generate_entries(db_game_generator& gen)
         game* g = gen.gen_game();
         ++gen;
 
-        if ((game_count % 16) == 0)
+        if ((game_count % 128) == 0)
             cout << "Game #" << game_count << " " << *g << endl;
 
         ++game_count;

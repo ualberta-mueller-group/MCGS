@@ -3,6 +3,8 @@
 //---------------------------------------------------------------------------
 #include "sumgame.h"
 #include "cgt_move.h"
+#include "database.h"
+#include "global_database.h"
 #include "game.h"
 
 #include "cgt_dyadic_rational.h"
@@ -28,6 +30,7 @@
 
 #include "global_options.h"
 #include "hashing.h"
+#include "sumgame_change_record.h"
 #include "sumgame_undo_stack_unwinder.h"
 #include "impartial_game_wrapper.h"
 
@@ -315,6 +318,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
         print(cout);
     }
 
+    simplify_db();
     simplify_basic();
 
     /*      NOTE:
@@ -560,6 +564,52 @@ void sumgame::undo_simplify_basic()
     change_record& record = _change_record_stack.back();
     record.undo_simplify_basic(*this);
 
+    _change_record_stack.pop_back();
+}
+
+void sumgame::simplify_db()
+{
+    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_DB);
+    _change_record_stack.emplace_back();
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    database& db = get_global_database();
+
+    // Search all active games
+    const int N = num_total_games();
+    for (int i = 0; i < N; i++)
+    {
+        game* g = subgame(i);
+        if (!g->is_active() || g->is_impartial())
+            continue;
+
+        std::optional<db_entry_partizan> entry = db.get_partizan(*g);
+
+        if (!entry.has_value())
+            continue;
+
+        if (entry->outcome == outcome_class::P)
+        {
+            cr.deactivated_games.push_back(g);
+            g->set_active(false);
+        }
+    }
+}
+
+void sumgame::undo_simplify_db()
+{
+    _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_DB);
+
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+    assert(cr.added_games.empty());
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+
+    cr.deactivated_games.clear();
     _change_record_stack.pop_back();
 }
 

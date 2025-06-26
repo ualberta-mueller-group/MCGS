@@ -63,6 +63,12 @@ inline void type_mapper::clear()
 inline game_type_t type_mapper::translate_type(game_type_t runtime_type) const
 {
     // If fails, the game's type wasn't registered
-    THROW_ASSERT(runtime_type < _type_remappings.size() && _type_remappings[runtime_type] > 0);
+    //THROW_ASSERT(runtime_type < _type_remappings.size() && _type_remappings[runtime_type] > 0);
+
+    // TODO should print warnings...
+
+    if (!(runtime_type < _type_remappings.size()))
+        return 0;
+
     return _type_remappings[runtime_type];
 }

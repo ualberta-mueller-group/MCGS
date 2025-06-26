@@ -34,6 +34,7 @@ enum sumgame_undo_code
     SUMGAME_UNDO_STACK_FRAME = 0,
     SUMGAME_UNDO_SIMPLIFY_BASIC,
     SUMGAME_UNDO_PLAY,
+    SUMGAME_UNDO_SIMPLIFY_DB,
 };
 
 //////////////////////////////////////// sumgame_move
@@ -86,6 +87,9 @@ public:
     void undo_move() override;
     void simplify_basic();
     void undo_simplify_basic();
+
+    void simplify_db();
+    void undo_simplify_db();
 
     void add(game* g);
     void add(std::vector<game*>& gs);
