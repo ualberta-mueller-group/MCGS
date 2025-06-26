@@ -43,3 +43,16 @@ game_type_t& type_mapper::_type_remapping_ref(game_type_t runtime_type)
     assert(runtime_type < _type_remappings.size());
     return _type_remappings[runtime_type];
 }
+
+//////////////////////////////////////////////////
+std::ostream& operator<<(std::ostream& os, const type_mapper& mapper)
+{
+
+    os << "Types in mapper: \n";
+    for (const auto& it : mapper._disk_types)
+    {
+        os << it.first << " -> " << it.second << '\n';
+    }
+
+    return os;
+}

@@ -24,6 +24,7 @@ private:
     std::vector<game_type_t> _type_remappings;
 
     friend serializer<type_mapper>;
+    friend std::ostream& operator<<(std::ostream& os, const type_mapper& mapper);
 };
 
 //////////////////////////////////////// serializer<type_mapper>

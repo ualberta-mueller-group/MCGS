@@ -167,6 +167,8 @@ void database::generate_entries(db_game_generator& gen)
 //////////////////////////////////////////////////
 std::ostream& operator<<(std::ostream& os, const database& db)
 {
+    os << db._mapper << '\n';
+
     os << "Partizan game types: " << db._tree_partizan.size() << '\n';
     for (const auto& it : db._tree_partizan)
     {
