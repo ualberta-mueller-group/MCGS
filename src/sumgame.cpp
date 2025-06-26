@@ -2,6 +2,7 @@
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
 #include "sumgame.h"
+#include "cgt_basics.h"
 #include "cgt_move.h"
 #include "database.h"
 #include "global_database.h"
@@ -567,7 +568,71 @@ void sumgame::undo_simplify_basic()
     _change_record_stack.pop_back();
 }
 
-void sumgame::simplify_db()
+namespace {
+std::vector<unsigned int> get_oc_indexable_vector()
+{
+    std::vector<unsigned int> vec;
+
+    constexpr outcome_class OC_MAX = std::max(
+    {
+        outcome_class::U,
+        outcome_class::L,
+        outcome_class::R,
+        outcome_class::P,
+        outcome_class::N,
+    });
+
+    vec.resize(OC_MAX + 1, 0);
+    return vec;
+}
+
+/*
+    Conclusive:
+    - Only Ls
+    - Only Rs
+    - One N, all others non-negative for to_play
+*/
+ebw analyze_outcome_count_vector(
+    const std::vector<unsigned int>& counts, const bw player)
+{
+    assert(is_black_white(player));
+
+    const bool has_u = counts[outcome_class::U] > 0;
+    if (has_u)
+        return EMPTY;
+
+    const bool only_l =
+        counts[outcome_class::L] > 0 &&
+        counts[outcome_class::R] == 0 &&
+        counts[outcome_class::N] == 0;
+
+    if (only_l)
+        return BLACK;
+
+    const bool only_r =
+        counts[outcome_class::L] == 0 &&
+        counts[outcome_class::R] > 0 &&
+        counts[outcome_class::N] == 0;
+
+    if (only_r)
+        return WHITE;
+
+    const bool one_n = counts[outcome_class::N] == 1;
+
+    const outcome_class negative_class =
+        (player == BLACK) ? outcome_class::R : outcome_class::L;
+
+    const bool no_negative = counts[negative_class] == 0;
+
+    if (one_n && no_negative)
+        return player;
+
+    return EMPTY;
+}
+
+} // namespace
+
+std::optional<solve_result> sumgame::simplify_db()
 {
     _push_undo_code(SUMGAME_UNDO_SIMPLIFY_DB);
     _change_record_stack.emplace_back();
@@ -575,25 +640,38 @@ void sumgame::simplify_db()
 
     database& db = get_global_database();
 
+    std::vector<unsigned int> counts = get_oc_indexable_vector();
+
     // Search all active games
     const int N = num_total_games();
     for (int i = 0; i < N; i++)
     {
         game* g = subgame(i);
-        if (!g->is_active() || g->is_impartial())
+        if (!g->is_active())
             continue;
+
+        outcome_class oc = outcome_class::U;
 
         std::optional<db_entry_partizan> entry = db.get_partizan(*g);
 
-        if (!entry.has_value())
-            continue;
+        if (entry.has_value())
+            oc = entry->outcome;
 
-        if (entry->outcome == outcome_class::P)
+        counts[oc]++;
+
+        if (oc == outcome_class::P)
         {
             cr.deactivated_games.push_back(g);
             g->set_active(false);
         }
     }
+
+    const ebw winner = analyze_outcome_count_vector(counts, to_play());
+
+    if (winner == EMPTY)
+        return {};
+
+    return solve_result(winner == to_play());
 }
 
 void sumgame::undo_simplify_db()

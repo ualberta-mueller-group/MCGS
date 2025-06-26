@@ -88,7 +88,7 @@ public:
     void simplify_basic();
     void undo_simplify_basic();
 
-    void simplify_db();
+    std::optional<solve_result> simplify_db();
     void undo_simplify_db();
 
     void add(game* g);
