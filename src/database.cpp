@@ -9,6 +9,7 @@
 #include "database.h"
 #include "sumgame.h"
 #include "clobber_1xn.h"
+#include <unordered_set>
 
 using namespace std;
 
@@ -139,10 +140,28 @@ void database::generate_entries(db_game_generator& gen)
 
     uint64_t game_count = 0;
 
+    std::unordered_set<hash_t> hashes;
+
     while (gen)
     {
-        game* g = gen.gen_game();
+        std::unique_ptr<game> g(gen.gen_game());
         ++gen;
+
+        // Skip if game splits
+        split_result sr = g->split();
+        if (sr.has_value())
+        {
+            for (game* g : *sr)
+                delete g;
+
+            continue;
+        }
+
+        // Normalize, skip if duplicate
+        g->normalize();
+        if (hashes.find(g->get_local_hash()) != hashes.end())
+            continue;
+        hashes.insert(g->get_local_hash());
 
         if ((game_count % 128) == 0)
             cout << "Game #" << game_count << " " << *g << endl;
@@ -150,7 +169,7 @@ void database::generate_entries(db_game_generator& gen)
         ++game_count;
 
         assert(s.num_total_games() == 0);
-        s.add(g);
+        s.add(g.get());
 
         s.set_to_play(BLACK);
         bool black_wins = s.solve();
@@ -158,7 +177,7 @@ void database::generate_entries(db_game_generator& gen)
         s.set_to_play(WHITE);
         bool white_wins = s.solve();
 
-        s.pop(g);
+        s.pop(g.get());
 
         outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
 
@@ -166,8 +185,6 @@ void database::generate_entries(db_game_generator& gen)
         entry.outcome = oc;
 
         set_partizan(*g, entry);
-
-        delete g;
     }
 
     assert(s.num_total_games() == 0);

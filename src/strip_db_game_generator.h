@@ -81,9 +81,6 @@ bool strip_db_game_generator<T>::_current_board_valid() const
 {
     assert(_grid_gen);
 
-    split_result sr;
-    bool valid = false;
-
     /*
         nogo_1xn may or may not throw during construction when the board is
         illegal (depending on whether NOGO_DEBUG is defined).
@@ -94,24 +91,17 @@ bool strip_db_game_generator<T>::_current_board_valid() const
     */
     try
     {
+        // Reject illegal boards
         T g(_grid_gen.gen_board());
 
         if constexpr (std::is_same_v<T, nogo_1xn>)
             if (!g.is_legal())
                 return false;
-
-        sr = g.split();
-
-        valid = !(sr.has_value() && sr->size() > 1);
     }
     catch (std::exception& exc)
     {
-        valid = false;
+        return false;
     }
 
-    if (sr.has_value())
-        for (game* g : *sr)
-            delete g;
-
-    return valid;
+    return true;
 }
