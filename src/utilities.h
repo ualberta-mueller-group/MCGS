@@ -139,3 +139,19 @@ size_t new_vector_capacity(size_t access_idx, size_t current_capacity);
 ////////////////////////////////////////
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,
                                       bool is_ge);
+
+template <class T>
+std::vector<T> vector_substr(const std::vector<T>& vec, size_t start, size_t length)
+{
+    assert(length <= vec.size());
+
+    std::vector<T> result;
+    result.reserve(length);
+
+    const size_t end = start + length;
+
+    for (size_t i = start; i < end; i++)
+        result.emplace_back(vec[i]);
+
+    return result;
+}

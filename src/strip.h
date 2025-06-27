@@ -55,6 +55,9 @@ protected:
 
     void _mirror_self();
 
+    void _set_board(const std::vector<int>& new_board);
+    void _set_board(const std::vector<int>&& new_board);
+
     static void _save_board(obuffer& os, const std::vector<int>& board);
     static std::vector<int> _load_board(ibuffer& is);
 
@@ -108,5 +111,17 @@ inline const std::vector<int>& strip::board_const() const
 {
     return _board;
 }
+
+inline void strip::_set_board(const std::vector<int>& new_board)
+{
+    _board = new_board;
+}
+
+inline void strip::_set_board(const std::vector<int>&& new_board)
+{
+    // TODO: Do I move the rvalue reference again, or do I just assign it?
+    _board = std::move(new_board);
+}
+
 
 //---------------------------------------------------------------------------
