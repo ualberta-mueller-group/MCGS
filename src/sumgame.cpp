@@ -319,7 +319,13 @@ optional<solve_result> sumgame::_solve_with_timeout()
         print(cout);
     }
 
-    simplify_db();
+    {
+        std::optional<solve_result> result = simplify_db();
+
+        if (result.has_value())
+            return result;
+    }
+
     simplify_basic();
 
     /*      NOTE:
