@@ -16,13 +16,13 @@ void normalize_test_nogo_1xn()
     // clang-format off
     vector<test_case_t> test_cases =
     {
-        {"", ""},
         {".", "."},
-        {"....OO.XXO..X.X.OO.O", "O.OO.X.X..OXX.OO...."},
-        {"O.OXXX...X..OX.XX..X", "X..XX.XO..X...XXXO.O"},
-        {"..O..OOX..XX.OX.X..O", "O..X.XO.XX..XOO..O.."},
-        {"OO.X.O...OXXX.XXO.XX", "XX.OXX.XXXO...O.X.OO"},
-        {"OOO.XO..X...X.O....O", "OOO.XO..X...X.O....O"},
+        {"....OO.XXO..X.X.OO.O", "....O.XO..X.X.O.O"},
+        {"O.OXXX...X..OX.XX..X", "O.OX...X..OX.X..X"},
+        {"..O..OOX..XX.OX.X..O", "..O..OX..X.OX.X..O"},
+        {"OO.X.O...OXXX.XXO.XX", "O.X.O...OX.XO.X"},
+        {"OOO.XO..X...X.O....O", "O.XO..X...X.O....O"},
+
     };
     // clang-format on
 

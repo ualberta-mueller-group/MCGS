@@ -10,29 +10,29 @@
 #include <cassert>
 #include <ostream>
 #include "throw_assert.h"
+#include "utilities.h"
 
 using std::string, std::pair, std::unique_ptr;
 using std::vector;
 
 //////////////////////////////////////// helper functions
 namespace {
-string block_simplify(const string& board)
+vector<int> block_simplify(const vector<int>& board)
 {
-    string result;
+    vector<int> result;
     const int N = board.size();
-    const char empty_char = color_to_clobber_char(EMPTY);
-    char prev_tile = empty_char;
+    result.reserve(N);
+
+    int prev = EMPTY;
 
     for (int i = 0; i < N; i++)
     {
-        const char tile = board[i];
+        const int& tile = board[i];
 
-        if (tile == empty_char || tile != prev_tile)
-        {
+        if (tile == EMPTY || tile != prev)
             result.push_back(tile);
-        }
 
-        prev_tile = tile;
+        prev = tile;
     }
 
     return result;
@@ -140,64 +140,84 @@ dyn_serializable* nogo_1xn::load_impl(ibuffer& is)
 }
 
 /*
-   implements "xo split" from
+   implements "XO split" from
    Henry's paper
 
 */
 split_result nogo_1xn::_split_impl() const
 {
-    // NOTE: don't use checked_is_color here -- it accesses the board before
-    // block simplification
+    if (board_const().empty())
+        return {};
 
-    string board = board_as_string();
-    board = block_simplify(board);
+    vector<int> simplified = block_simplify(board_const());
+    const size_t N = simplified.size();
 
-    const int N = board.size();
-    vector<pair<int, int>> subgame_ranges;
-    int subgame_start = 0;
+    vector<pair<size_t, size_t>> subgame_ranges;
+    size_t subgame_start = 0;
 
-    for (int i = 0; i < N; i++)
+    for (size_t i = 0; i < N; i++)
     {
-        const int color = clobber_char_to_color(board[i]);
+        const int& color = simplified[i];
+        const int& color_prev = i > 0 ? simplified[i - 1] : EMPTY;
 
-        const bool prev_in_range = i - 1 >= 0;
-        const int color_prev =
-            prev_in_range ? clobber_char_to_color(board[i - 1]) : EMPTY;
-
-        if (color != EMPTY                   //
-            && prev_in_range                 //
-            && color_prev == opponent(color) //
-            )                                //
+        if (color != EMPTY && color_prev == opponent(color))
         {
             // found an XO or OX split
-            subgame_ranges.push_back(
-                {subgame_start, (i - 1) - subgame_start + 1});
+            subgame_ranges.emplace_back(subgame_start, i - subgame_start);
             subgame_start = i;
         }
     }
 
     // remainder at end
     if (N > 0)
+        subgame_ranges.emplace_back(subgame_start, N - subgame_start);
+
+    if (subgame_ranges.size() < 2)
+        return {};
+
+    split_result result = split_result(vector<game*>());
+
+    for (const pair<size_t, size_t>& range : subgame_ranges)
+        result->push_back(new nogo_1xn(vector_substr(simplified,
+                                                     range.first,
+                                                     range.second)));
+
+    return result;
+}
+
+void nogo_1xn::_normalize_impl()
+{
+    std::vector<int> simplified = block_simplify(board_const());
+
+    if (simplified.size() == board_const().size())
     {
-        subgame_ranges.push_back({subgame_start, (N - 1) - subgame_start + 1});
+        if (_hash_updatable())
+            _mark_hash_updated();
+
+        _normalize_did_change.push_back(false);
+        return;
     }
 
-    if (subgame_ranges.size() == 1)
-    {
-        return split_result(); // no split
-    }
-    else
-    {
-        split_result result = split_result(vector<game*>());
+    _normalize_did_change.push_back(true);
+    _normalize_boards.push_back(board_const());
+    _set_board(simplified);
+}
 
-        for (const pair<int, int>& range : subgame_ranges)
-        {
-            game* g = new nogo_1xn(board.substr(range.first, range.second));
-            result->push_back(g);
-        }
+void nogo_1xn::_undo_normalize_impl()
+{
+    const bool did_change = _normalize_did_change.back();
+    _normalize_did_change.pop_back();
 
-        return result;
+    if (!did_change)
+    {
+        if (_hash_updatable())
+            _mark_hash_updated();
+
+        return;
     }
+
+    _set_board(_normalize_boards.back());
+    _normalize_boards.pop_back();
 }
 
 game* nogo_1xn::inverse() const

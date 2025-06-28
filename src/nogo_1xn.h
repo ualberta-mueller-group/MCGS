@@ -30,6 +30,13 @@ public:
 protected:
     split_result _split_impl() const override;
 
+    void _normalize_impl() override;
+    void _undo_normalize_impl() override;
+
+private:
+    std::vector<bool> _normalize_did_change;
+    std::vector<std::vector<int>> _normalize_boards;
+
 public:
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;
