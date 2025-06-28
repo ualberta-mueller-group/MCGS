@@ -25,7 +25,7 @@ void mcgs_init_all(const cli_options& opts)
     mcgs_init::init_hashing();
     mcgs_init::init_sumgame(global::tt_sumgame_idx_bits());
     mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits());
-    mcgs_init::init_database("database.bin", INIT_DATABASE_AUTO);
+    //mcgs_init::init_database("database.bin", INIT_DATABASE_AUTO);
 }
 
 void mcgs_init_all()

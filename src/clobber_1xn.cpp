@@ -211,14 +211,7 @@ void clobber_1xn::_normalize_impl()
     const bool do_mirror = _compare_boards(new_board, new_board, true, false) == REL_LESS;
     if (do_mirror)
     {
-        const size_t new_board_size = new_board.size();
-
-        vector<int> new_board_mirrored;
-        new_board_mirrored.reserve(new_board_size);
-
-        for (size_t i = 0; i < new_board_size; i++)
-            new_board_mirrored.push_back(new_board[new_board_size - 1 - i]);
-
+        vector<int> new_board_mirrored = vector_reversed(new_board);
         _set_board(new_board_mirrored);
         return;
     }

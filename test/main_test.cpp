@@ -4,6 +4,8 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
+#include "test/normalize_test_elephants.h"
+#include "test/split_test_elephants.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
@@ -58,7 +60,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
-    bit_array_test_all();
+    split_test_elephants_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
