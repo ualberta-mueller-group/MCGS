@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // Implementation of impartial games,
 // and algorithms to solve them.
-// See `development-notes.md` impartial games section for details
+// See `development-notes.md`, impartial games section, for details
 //---------------------------------------------------------------------------
 #pragma once
 
