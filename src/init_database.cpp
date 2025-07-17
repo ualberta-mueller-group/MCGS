@@ -28,9 +28,9 @@ void fill_database(database& db)
 {
     std::vector<db_game_generator*> generators =
     {
-        new strip_db_game_generator<clobber_1xn>(15),
-        new strip_db_game_generator<nogo_1xn>(15),
-        new strip_db_game_generator<elephants>(15),
+        new strip_db_game_generator<clobber_1xn>(12),
+        new strip_db_game_generator<nogo_1xn>(12),
+        new strip_db_game_generator<elephants>(12),
     };
 
     for (db_game_generator* gen : generators)

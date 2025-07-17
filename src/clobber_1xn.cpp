@@ -182,6 +182,17 @@ void clobber_1xn::_normalize_impl()
             )                                  //
        )                                       //
     {
+        const bool do_mirror = _compare_boards(board, board, true, false) == REL_LESS;
+
+        if (do_mirror)
+        {
+            _normalize_did_change.push_back(true);
+            _normalize_boards.emplace_back(board);
+
+            _set_board(vector_reversed(board));
+            return;
+        }
+
         if (_hash_updatable())
             _mark_hash_updated();
 
