@@ -231,7 +231,7 @@ def checkout(hash):
     assert type(hash) is str
     assert_target_dir()
 
-    run_command(f"git checkout -f {hash}")
+    run_command(f"git checkout -f {hash}", 0)
 
 
 def save_output(commit_hash):
