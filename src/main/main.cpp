@@ -39,9 +39,7 @@ int main(int argc, char** argv)
 
         while (opts.parser->parse_chunk(gc))
         {
-            if (first_case)
-                first_case = false;
-            else
+            if (!first_case)
                 cout << endl;
 
             for (game* g : gc.games)
@@ -57,6 +55,9 @@ int main(int argc, char** argv)
                 cout << "Not running search..." << endl;
             else
             {
+                if (global::clear_tt() && !first_case)
+                    sumgame::reset_ttable();
+
                 search_result sr = gc.run(0);
                 cout << "Got: " << sr.value_str() << endl;
                 cout << "Time (ms): " << sr.duration_str() << endl;
@@ -67,6 +68,7 @@ int main(int argc, char** argv)
                 cout << "\"" << gc.comments << "\"" << endl;
 
             gc.cleanup_games();
+            first_case = false;
         }
     }
 

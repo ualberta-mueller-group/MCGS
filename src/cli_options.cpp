@@ -82,6 +82,8 @@ void print_help_message(const string& exec_name)
         "table. Must be at least 1. Default: " +
             global::tt_imp_sumgame_idx_bits.get_default_str() + ".");
 
+    print_flag(global::use_db.no_flag(), "Disable database usage.");
+
     cout << "Misc options flags:" << endl;
     print_flag(global::random_seed.flag(),
                "Set seed for main random generator. "
@@ -114,6 +116,10 @@ void print_help_message(const string& exec_name)
                "Set timeout duration for tests, in \
 milliseconds. Timeout of 0 means tests never time out. Default is " +
                    to_string(cli_options::DEFAULT_TEST_TIMEOUT) + ".");
+
+    print_flag(global::clear_tt.flag(),
+               "Clear ttable between test runs. Default: " +
+               global::clear_tt.get_default_str() + ".");
 
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
@@ -308,6 +314,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == global::clear_tt.flag())
+        {
+            global::clear_tt.set(true);
+            continue;
+        }
+
         // OPTIMIZATION TOGGLES
 
         if (arg == global::simplify_basic_cgt.no_flag())
@@ -343,6 +355,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             const size_t n_index_bits = atoi(arg_next.c_str());
 
             global::tt_imp_sumgame_idx_bits.set(n_index_bits);
+            continue;
+        }
+
+        if (arg == global::use_db.no_flag())
+        {
+            global::use_db.set(false);
             continue;
         }
 

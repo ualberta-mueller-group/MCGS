@@ -7,6 +7,7 @@
 #include "cgt_move.h"
 #include "game.h"
 #include <ctime>
+#include "global_options.h"
 #include "sumgame_change_record.h"
 #include "transposition.h"
 #include <memory>
@@ -133,6 +134,7 @@ public:
 
     // called by mcgs_init()
     static void init_sumgame(size_t index_bits);
+    static void reset_ttable();
 
 private:
     class undo_stack_unwinder;
@@ -246,6 +248,21 @@ inline bool sumgame::is_empty() const
 inline hash_t sumgame::game_hash() const
 {
     return get_global_hash();
+}
+
+inline void sumgame::reset_ttable()
+{
+    assert(global::clear_tt());
+
+    if (_tt.get() == nullptr)
+    {
+        assert(global::tt_sumgame_idx_bits() == 0);
+        return;
+    }
+
+    const size_t index_bits = _tt->n_index_bits();
+    const size_t entry_bools = _tt->n_entry_bools();
+    _tt.reset(new ttable_sumgame(index_bits, entry_bools));
 }
 
 //---------------------------------------------------------------------------

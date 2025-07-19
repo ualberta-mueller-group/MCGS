@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include "file_parser.h"
+#include "global_options.h"
 #include "search_utils.h"
 #include "throw_assert.h"
 #include <vector>
@@ -99,6 +100,7 @@ void run_autotests(const string& test_directory, const string& outfile_name,
                    unsigned long long test_timeout)
 {
     THROW_ASSERT(test_directory.size() > 0);
+    bool first_case = true;
 
     ofstream outfile(outfile_name); // CSV file
 
@@ -153,7 +155,11 @@ void run_autotests(const string& test_directory, const string& outfile_name,
         {
             cout << file_name << " " << case_number << endl;
 
+            if (global::clear_tt() && !first_case)
+                sumgame::reset_ttable();
+
             search_result sr = gc.run(test_timeout);
+            first_case = false;
 
             append_field(outfile, relative_file_path.string(), true);
             append_field(outfile, to_string(case_number), true);

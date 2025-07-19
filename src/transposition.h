@@ -57,6 +57,9 @@ public:
     void store(hash_t hash, const Entry& entry);
     std::optional<Entry> get(hash_t hash) const;
 
+    size_t n_index_bits() const;
+    size_t n_entry_bools() const;
+
 private:
     inline hash_t _extract_index(hash_t hash) const;
     inline hash_t _extract_tag(hash_t hash) const;
@@ -214,6 +217,18 @@ std::optional<Entry> ttable<Entry>::get(hash_t hash) const
         return std::optional<Entry>(tt_result.get_entry());
 
     return std::optional<Entry>();
+}
+
+template <class Entry>
+inline size_t ttable<Entry>::n_index_bits() const
+{
+    return _n_index_bits;
+}
+
+template <class Entry>
+inline size_t ttable<Entry>::n_entry_bools() const
+{
+    return _bools_per_entry;
 }
 
 template <class Entry>

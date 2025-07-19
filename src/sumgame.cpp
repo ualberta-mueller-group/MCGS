@@ -755,6 +755,10 @@ ebw analyze_outcome_count_vector(
 std::optional<solve_result> sumgame::simplify_db()
 {
     _push_undo_code(SUMGAME_UNDO_SIMPLIFY_DB);
+
+    if (!global::use_db())
+        return {};
+
     _change_record_stack.emplace_back();
     sumgame_impl::change_record& cr = _change_record_stack.back();
 
@@ -797,6 +801,9 @@ std::optional<solve_result> sumgame::simplify_db()
 void sumgame::undo_simplify_db()
 {
     _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_DB);
+
+    if (!global::use_db())
+        return;
 
     sumgame_impl::change_record& cr = _change_record_stack.back();
     assert(cr.added_games.empty());
