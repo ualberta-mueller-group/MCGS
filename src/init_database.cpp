@@ -1,10 +1,13 @@
 #include "init_database.h"
 #include "clobber_1xn.h"
+#include "clobber.h"
 #include "database.h"
 #include "db_game_generator.h"
 #include "elephants.h"
 #include "global_database.h"
-#include "strip_db_game_generator.h"
+#include "nogo_1xn.h"
+#include "nogo.h"
+#include "gridlike_db_game_generator.h"
 #include <filesystem>
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name) \
@@ -22,15 +25,19 @@ void register_types(database& db)
     DATABASE_REGISTER_TYPE(db, clobber_1xn);
     DATABASE_REGISTER_TYPE(db, nogo_1xn);
     DATABASE_REGISTER_TYPE(db, elephants);
+    DATABASE_REGISTER_TYPE(db, clobber);
+    DATABASE_REGISTER_TYPE(db, nogo);
 }
 
 void fill_database(database& db)
 {
     std::vector<db_game_generator*> generators =
     {
-        new strip_db_game_generator<clobber_1xn>(12),
-        new strip_db_game_generator<nogo_1xn>(12),
-        new strip_db_game_generator<elephants>(12),
+        new gridlike_db_game_generator<clobber_1xn>(12),
+        new gridlike_db_game_generator<nogo_1xn>(12),
+        new gridlike_db_game_generator<elephants>(12),
+        new gridlike_db_game_generator<clobber>(3, 3),
+        new gridlike_db_game_generator<nogo>(3, 3),
     };
 
     for (db_game_generator* gen : generators)

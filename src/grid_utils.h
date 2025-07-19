@@ -130,6 +130,8 @@ public:
 
     static std::string get_empty_board(size_t rows, size_t cols);
 
+    const int_pair get_shape() const;
+
 private:
     bool _increment_board();
     void _increment_dimensions();
@@ -308,6 +310,11 @@ inline const std::string& grid_generator::gen_board() const
 {
     assert(*this);
     return _board;
+}
+
+inline const int_pair grid_generator::get_shape() const
+{
+    return {_current_rows, _current_cols};
 }
 
 inline bool grid_generator::_has_zero_area() const
