@@ -11,6 +11,7 @@
 #include "transposition.h"
 #include <memory>
 #include <vector>
+#include <set>
 #include <optional>
 #include <ostream>
 #include <cassert>
@@ -173,20 +174,42 @@ public:
     ~sumgame_move_generator();
 
     void operator++() override;
+
+    // TODO make private
     void next_move(bool init);
+
     operator bool() const override;
     sumgame_move gen_sum_move() const;
 
     move gen_move() const override { assert(false); }
 
 private:
-    const game* _current() const { return _game.subgame(_subgame_idx); }
+    std::pair<int, const game*> _current() const;
 
     const sumgame& _game;
     const int _num_subgames;
+
+    std::vector<std::pair<int, const game*>> _skipped_games;
+    bool _use_skipped_games;
+
+    std::set<hash_t> _seen_games;
+
+    /*
+       When _use_skipped_games is true, this is an index into our list of
+       skipped games, and not the sumgame
+    */
     int _subgame_idx;
+
     move_generator* _subgame_generator;
 };
+
+inline std::pair<int, const game*> sumgame_move_generator::_current() const
+{
+    if (_use_skipped_games)
+        return _skipped_games[_subgame_idx];
+    else
+        return {_subgame_idx, _game.subgame(_subgame_idx)};
+}
 
 //---------------------------------------------------------------------------
 

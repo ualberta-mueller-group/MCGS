@@ -41,6 +41,20 @@ using std::optional;
 using sumgame_impl::change_record;
 
 std::shared_ptr<ttable_sumgame> sumgame::_tt(nullptr);
+//---------------------------------------------------------------------------
+
+// Helpers
+namespace {
+inline bool game_is_number(const game* g)
+{
+    const game_type_t g_type = g->game_type();
+
+    return                                        //
+        (g_type == game_type<integer_game>()) ||  //
+        (g_type == game_type<dyadic_rational>()); //
+}
+
+} // namespace
 
 //---------------------------------------------------------------------------
 
@@ -48,6 +62,8 @@ sumgame_move_generator::sumgame_move_generator(const sumgame& game, bw to_play)
     : move_generator(to_play),
       _game(game),
       _num_subgames(game.num_total_games()),
+      _skipped_games(),
+      _use_skipped_games(false),
       _subgame_idx(0),
       _subgame_generator(nullptr)
 {
@@ -67,6 +83,7 @@ sumgame_move_generator::~sumgame_move_generator()
 void sumgame_move_generator::operator++()
 {
     // scroll to next move
+    assert(*this);
     next_move(false);
 }
 
@@ -78,10 +95,7 @@ void sumgame_move_generator::next_move(bool init)
         ++(*_subgame_generator);
 
         if (*_subgame_generator)
-        {
-            // we have a move
-            return;
-        }
+            return; // we have a move
     }
 
     // discard generator
@@ -93,44 +107,72 @@ void sumgame_move_generator::next_move(bool init)
 
     // scroll until we have an active subgame AND its generator has a move
     _subgame_idx = init ? 0 : _subgame_idx + 1;
-
     assert(_subgame_generator == nullptr);
-    for (; _subgame_idx < _num_subgames; _subgame_idx++)
+
+    const int N = _use_skipped_games ? _skipped_games.size() : _num_subgames;
+
+    for (; _subgame_idx < N; _subgame_idx++)
     {
         assert(_subgame_generator == nullptr);
-        const game* g = _current();
+        std::pair<int, const game*> p = _current();
+        const game* g = p.second;
 
         // inactive game
         if (!g->is_active())
-        {
             continue;
+
+        // Skip integers and rationals
+        if (!_use_skipped_games && game_is_number(g))
+        {
+                _skipped_games.push_back({_subgame_idx, g});
+                continue;
         }
+
+        // Skip already seen games
+        const hash_t hash = g->get_local_hash();
+        const bool already_seen = !_seen_games.insert(hash).second;
+
+        if (already_seen)
+            continue;
 
         _subgame_generator = g->create_move_generator(to_play());
 
         if (*_subgame_generator)
-        {
-            // found move
-            return;
-        }
+            return; // found move
         else
         {
             delete _subgame_generator;
             _subgame_generator = nullptr;
         }
     }
+
+    if (!_use_skipped_games)
+    {
+        _use_skipped_games = true;
+        assert(_subgame_generator == nullptr);
+        next_move(true);
+    }
 }
 
 sumgame_move_generator::operator bool() const
 {
     // do we have a move?
-    return _subgame_idx < _num_subgames;
+    if (_use_skipped_games)
+        // TODO sumgame has a few of these casts. Either convince ourselves
+        // it's OK, or just use size_t?
+        return _subgame_idx < static_cast<int>(_skipped_games.size());
+    else
+        return _subgame_idx < _num_subgames;
 }
 
 sumgame_move sumgame_move_generator::gen_sum_move() const
 {
     assert(_subgame_generator);
-    return sumgame_move(_subgame_idx, _subgame_generator->gen_move());
+    if (_use_skipped_games)
+        return sumgame_move(_skipped_games[_subgame_idx].first,
+                            _subgame_generator->gen_move());
+    else
+        return sumgame_move(_subgame_idx, _subgame_generator->gen_move());
 }
 
 //---------------------------------------------------------------------------
