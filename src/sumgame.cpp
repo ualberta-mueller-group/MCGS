@@ -260,10 +260,10 @@ optional<solve_result> sumgame::solve_with_timeout(
     assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
+    sum._pre_solve_pass();
+
     _should_stop = false;
     _need_cgt_simplify = true;
-    for (game* g : _subgames)
-        g->normalize();
 
     // spawn a thread, then wait with a timeout for it to complete
     std::promise<optional<solve_result>> promise;
@@ -297,8 +297,8 @@ optional<solve_result> sumgame::solve_with_timeout(
 
     assert(future.valid());
 
-    for (game* g : _subgames)
-        g->undo_normalize();
+    sum._undo_pre_solve_pass();
+
     return future.get();
 }
 
@@ -474,7 +474,79 @@ void sumgame::_assert_games_unique() const
 bool sumgame::_over_time() const
 {
     return _should_stop;
-};
+}
+
+void sumgame::_pre_solve_pass() {
+    _push_undo_code(SUMGAME_UNDO_PRE_SOLVE_PASS);
+
+    // TODO change records are used in several places, but are kind of messy...
+    // make this better
+    _change_record_stack.push_back({});
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    const int N = num_total_games();
+    for (int i = 0; i < N; i++)
+    {
+        game* g = subgame(i);
+
+        if (!g->is_active())
+            continue;
+
+        split_result sr = g->split();
+
+        if (!sr.has_value())
+            g->normalize();
+        else
+        {
+            g->set_active(false);
+            cr.deactivated_games.push_back(g);
+
+            for (game* sg : *sr)
+            {
+                sg->normalize();
+
+                add(sg);
+                cr.added_games.push_back(sg);
+            }
+        }
+    }
+}
+
+void sumgame::_undo_pre_solve_pass() {
+    _pop_undo_code(SUMGAME_UNDO_PRE_SOLVE_PASS);
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    const int N = num_total_games();
+    for (int i = 0; i < N; i++)
+    {
+        game* g = subgame(i);
+
+        if (!g->is_active())
+            continue;
+
+        g->undo_normalize();
+    }
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+
+    for (auto it = cr.added_games.rbegin(); it != cr.added_games.rend(); it++)
+    {
+        game* g = *it;
+        assert(g->is_active());
+
+        pop(g);
+        delete g;
+    }
+
+    cr.added_games.clear();
+    cr.deactivated_games.clear();
+
+    _change_record_stack.pop_back();
+}
 
 game* sumgame::_pop_game()
 {

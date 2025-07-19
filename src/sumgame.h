@@ -36,6 +36,7 @@ enum sumgame_undo_code
     SUMGAME_UNDO_SIMPLIFY_BASIC,
     SUMGAME_UNDO_PLAY,
     SUMGAME_UNDO_SIMPLIFY_DB,
+    SUMGAME_UNDO_PRE_SOLVE_PASS,
 };
 
 //////////////////////////////////////// sumgame_move
@@ -135,6 +136,9 @@ public:
 
 private:
     class undo_stack_unwinder;
+
+    void _pre_solve_pass();
+    void _undo_pre_solve_pass();
 
     bool _over_time() const;
     game* _pop_game();
