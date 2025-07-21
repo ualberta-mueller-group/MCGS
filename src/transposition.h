@@ -2,6 +2,7 @@
 #include "utilities.h"
 
 #include "hashing.h"
+#include "solver_stats.h"
 #include <cstddef>
 #include <cassert>
 #include <type_traits>
@@ -130,13 +131,19 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
 
     //// Estimate memory cost
     // TODO: DEBUG PRINTING
-    // uint64_t byte_count = 0;
-    // byte_count += _entries_arr_size * sizeof(Entry);
-    // byte_count += _tags_arr_size * sizeof(uint8_t);
-    // byte_count += _bools_arr_size * sizeof(unsigned int);
-    // double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
-    // std::cout << "Estimated table size: " << byte_count_formatted;
-    // std::cout << " MiB" << std::endl;
+    if (global::print_ttable_size())
+    {
+        uint64_t byte_count = 0;
+        byte_count += _entries_arr_size * sizeof(Entry);
+        byte_count += _tags_arr_size * sizeof(uint8_t);
+        byte_count += _bools_arr_size * sizeof(unsigned int);
+        //double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
+        //std::cout << "Estimated table size: " << byte_count_formatted;
+        //std::cout << " MiB" << std::endl;
+
+        std::cout << "Estimated table size: " << byte_count;
+        std::cout << " B" << std::endl;
+    }
 
     //// Initialize arrays
     _entries_arr = new Entry[_entries_arr_size];

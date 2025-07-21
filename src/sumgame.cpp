@@ -31,6 +31,7 @@
 
 #include "global_options.h"
 #include "hashing.h"
+#include "solver_stats.h"
 #include "sumgame_change_record.h"
 #include "sumgame_undo_stack_unwinder.h"
 #include "impartial_game_wrapper.h"
@@ -262,6 +263,12 @@ optional<solve_result> sumgame::solve_with_timeout(
 
     sum._pre_solve_pass();
 
+    {
+        const int active = sum.num_active_games();
+        THROW_ASSERT(active >= 0);
+        stats::set_n_subgames(static_cast<uint64_t>(active));
+    }
+
     _should_stop = false;
     _need_cgt_simplify = true;
 
@@ -271,7 +278,7 @@ optional<solve_result> sumgame::solve_with_timeout(
 
     std::thread thr([&]() -> void
     {
-        optional<solve_result> result = sum._solve_with_timeout();
+        optional<solve_result> result = sum._solve_with_timeout(0);
         promise.set_value(result);
     });
 
@@ -341,7 +348,7 @@ bool sumgame::solve_with_games(game* g) const
     return result;
 }
 
-optional<solve_result> sumgame::_solve_with_timeout()
+optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
 {
 #ifdef SUMGAME_DEBUG
     _debug_extra();
@@ -351,9 +358,11 @@ optional<solve_result> sumgame::_solve_with_timeout()
     undo_stack_unwinder stack_unwinder(*this);
 
     if (_over_time())
-    {
         return solve_result::invalid();
-    }
+
+    depth++;
+    stats::inc_node_count();
+    stats::update_search_depth(depth);
 
     if (PRINT_SUBGAMES)
     {
@@ -400,7 +409,7 @@ optional<solve_result> sumgame::_solve_with_timeout()
 
         if (!found)
         {
-            optional<solve_result> child_result = _solve_with_timeout();
+            optional<solve_result> child_result = _solve_with_timeout(depth);
 
             if (!child_result.has_value() || _over_time())
                 return solve_result::invalid();
@@ -445,12 +454,18 @@ void sumgame::_pop_undo_code(sumgame_undo_code code)
 std::optional<ttable_sumgame::search_result> sumgame::_do_ttable_lookup() const
 {
     if (global::tt_sumgame_idx_bits() == 0)
-        return std::optional<ttable_sumgame::search_result>();
+        return {};
 
     assert(_tt != nullptr);
 
     const hash_t current_hash = get_global_hash();
-    return _tt->search(current_hash);
+
+    std::optional<ttable_sumgame::search_result> sr = _tt->search(current_hash);
+    assert(sr.has_value());
+
+    stats::tt_access((*sr).entry_valid());
+
+    return sr;
 }
 
 void sumgame::_debug_extra() const
@@ -777,6 +792,7 @@ std::optional<solve_result> sumgame::simplify_db()
         outcome_class oc = outcome_class::U;
 
         std::optional<db_entry_partizan> entry = db.get_partizan(*g);
+        stats::db_access(entry.has_value());
 
         if (entry.has_value())
             oc = entry->outcome;

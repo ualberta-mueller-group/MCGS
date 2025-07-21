@@ -109,5 +109,6 @@ INIT_GLOBAL_WITH_SUMMARY(clear_tt, bool, false);
 
 // These WILL NOT be printed with ./MCGS --print-optimizations
 INIT_GLOBAL_WITHOUT_SUMMARY(silence_warnings, bool, false);
+INIT_GLOBAL_WITHOUT_SUMMARY(print_ttable_size, bool, false);
 
 } // namespace global

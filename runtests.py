@@ -135,6 +135,7 @@ def run_all_tests():
 
     stdout_stream_list = [s.get_stdout()[0] for s in solvers]
     stdout_file_list = [s.get_stdout()[1] for s in solvers]
+    buffers = [bytes() for s in solvers]
 
     ready_solver_ids = []
 
@@ -150,22 +151,32 @@ def run_all_tests():
                 print(f"Using solver {sid}")
                 break
 
-            # Check if any solvers are ready
+            # Wait for output from one of the solvers
             ready, _, _ = select.select(stdout_stream_list, [], [])
 
             for stream in ready:
                 sid = stream._mcgs_id
                 assert type(sid) is int
 
-                stdout_file = stdout_file_list[sid]
+                # Don't use any other read functions -- they buffer data which
+                # select doesn't see, causing a deadlock...
+                char = os.read(stream.fileno(), 1)
 
-                # Check for ready message
-                line = stream.readline().decode("utf-8").rstrip()
-                if line == READY_TEXT:
-                    assert sid not in ready_solver_ids
-                    ready_solver_ids.append(sid)
+                if char != b'\n':
+                    buffers[sid] += char
                 else:
-                    stdout_file.write(line + "\n")
+                    buf = buffers[sid]
+                    buffers[sid] = bytes()
+                    line = buf.decode("utf-8").strip()
+
+                    if (line == READY_TEXT):
+                        assert sid not in ready_solver_ids
+                        ready_solver_ids.append(sid)
+                    else:
+                        f = stdout_file_list[sid]
+                        f.write(line)
+                        f.write("\n")
+                        f.flush()
 
     tests.close()
 

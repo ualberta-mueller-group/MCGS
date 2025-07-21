@@ -143,6 +143,10 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     print_flag(global::silence_warnings.flag(),
                "Don't print warnings to "
                "stderr, i.e. random_table resize");
+
+    print_flag(global::print_ttable_size.flag(),
+               "Print ttable size to stdout.");
+
 }
 
 } // namespace
@@ -260,6 +264,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::silence_warnings.flag())
         {
             global::silence_warnings.set(true);
+            continue;
+        }
+
+        if (arg == global::print_ttable_size.flag())
+        {
+            global::print_ttable_size.set(true);
             continue;
         }
 

@@ -163,5 +163,6 @@ extern global_option<bool> use_db;
 extern global_option<bool> clear_tt;
 
 extern global_option<bool> silence_warnings;
+extern global_option<bool> print_ttable_size;
 
 } // namespace global

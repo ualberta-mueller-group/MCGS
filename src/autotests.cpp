@@ -1,4 +1,5 @@
 #include "autotests.h"
+#include "solver_stats.h"
 
 #include <cstdio>
 #include <ios>
@@ -38,7 +39,7 @@ namespace {
 
 inline void print_ready_signal()
 {
-    cout << "READY FOR TEST CASE" << endl;
+    cout << "\nREADY FOR TEST CASE" << endl;
 }
 
 // convert game list to string
@@ -223,23 +224,38 @@ void run_autotests_stdin(const string& outfile_name,
     append_field(outfile, "Time (ms)", true);
     append_field(outfile, "Status", true);
     append_field(outfile, "Comments", true);
+
+    append_field(outfile, "Node Count", true);
+    append_field(outfile, "TT Hits", true);
+    append_field(outfile, "TT Misses", true);
+    append_field(outfile, "DB Hits", true);
+    append_field(outfile, "DB Misses", true);
+    append_field(outfile, "Max Depth", true);
+    append_field(outfile, "# Subgames", true);
+
     append_field(outfile, "Input hash", false);
     outfile << NEWLINE;
+
+    print_ready_signal(); // READY
 
     unique_ptr<file_parser> parser(file_parser::from_stdin());
 
     game_case gc;
-    int case_number = 0;
-
-    print_ready_signal(); // READY
+    uint64_t case_number = 0;
 
     while (parser->parse_chunk(gc))
     {
+        if (case_number % 20 == 0)
+            outfile.flush();
+
         if (global::clear_tt() && !first_case)
             sumgame::reset_ttable();
 
+        stats::reset_stats();
         search_result sr = gc.run(test_timeout);
         first_case = false;
+
+        const solver_stats& st = stats::get_global_stats();
 
         append_field(outfile, "stdin", true);
         append_field(outfile, to_string(case_number), true);
@@ -250,6 +266,15 @@ void run_autotests_stdin(const string& outfile_name,
         append_field(outfile, sr.duration_str(), true);
         append_field(outfile, sr.status_str(), true);
         append_field(outfile, gc.comments, true);
+
+        append_field(outfile, to_string(st.node_count), true); //
+        append_field(outfile, to_string(st.tt_hits), true); //
+        append_field(outfile, to_string(st.tt_misses), true); //
+        append_field(outfile, to_string(st.db_hits), true); //
+        append_field(outfile, to_string(st.db_misses), true); //
+        append_field(outfile, to_string(st.search_depth), true); //
+        append_field(outfile, to_string(st.n_subgames), true); //
+
         append_field(outfile, gc.hash.get_string(), false);
         outfile << NEWLINE;
 
