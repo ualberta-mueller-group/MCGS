@@ -137,12 +137,12 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
         byte_count += _entries_arr_size * sizeof(Entry);
         byte_count += _tags_arr_size * sizeof(uint8_t);
         byte_count += _bools_arr_size * sizeof(unsigned int);
-        //double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
-        //std::cout << "Estimated table size: " << byte_count_formatted;
-        //std::cout << " MiB" << std::endl;
+        double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
+        std::cout << "Estimated table size: " << byte_count_formatted;
+        std::cout << " MiB" << std::endl;
 
-        std::cout << "Estimated table size: " << byte_count;
-        std::cout << " B" << std::endl;
+        //std::cout << "Estimated table size: " << byte_count;
+        //std::cout << " B" << std::endl;
     }
 
     //// Initialize arrays

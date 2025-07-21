@@ -17,6 +17,8 @@ struct cli_options
     bool dry_run;     // Do dry run without running games
     bool should_exit; // Exit from main() i.e. when "--help" used
 
+    bool gen_experiments;
+
     bool run_tests; // Run autotests
     bool run_tests_stdin; // Run autotests from stdin
 

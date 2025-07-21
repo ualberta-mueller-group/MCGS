@@ -186,8 +186,8 @@ public:
     void reset();
     hash_t get_value() const;
 
-    void add_subgame(size_t subgame_idx, game* g);
-    void remove_subgame(size_t subgame_idx, game* g);
+    void add_subgame(size_t subgame_idx, const game* g);
+    void remove_subgame(size_t subgame_idx, const game* g);
 
     void set_to_play(bw to_play);
 
@@ -196,7 +196,7 @@ private:
     void _reserve_space(size_t capacity);
 
     // hash modifier of a local_hash based on subgame index
-    hash_t _get_modified_hash(size_t subgame_idx, game* g);
+    hash_t _get_modified_hash(size_t subgame_idx, const game* g);
 
     hash_t _value;
 

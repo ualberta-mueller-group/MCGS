@@ -5,14 +5,19 @@ import shutil
 import pathlib
 
 ############################################################ Edit these
-tt_idx_bits = 10
+tt_idx_bits = 26
 out_dir = "experiment_results"
-n_solvers = 5
-test_file = "tests.test2"
+n_solvers_without_ttable = 15
+n_solvers_with_ttable = 5
+
+test_file = "experiments.test2"
+
+TEST_TIMEOUT = 20_000
 
 ############################################################ Don't touch these
 solvers = []
 outfiles = []
+n_solvers = None
 
 READY_TEXT = "READY FOR TEST CASE"
 
@@ -84,7 +89,7 @@ def spawn_solver(thread_number, use_tt, use_db):
     args = [
         "--run-tests-stdin",
         "--clear-tt",
-        "--test-timeout 10000",
+        f"--test-timeout {TEST_TIMEOUT}",
         f"--out-file {csv_name}",
         f"--tt-sumgame-idx-bits {use_idx_bits}",
         "--tt-imp-sumgame-idx-bits 1", # Must be at least 1
@@ -155,15 +160,18 @@ def run_all_tests():
     ready_solver_ids = []
 
     tests = open(test_file, "r")
+    test_number = 0
 
     for t in tests:
+        test_number += 1
+
         while True:
             # Use a solver that's ready
             if len(ready_solver_ids) > 0:
                 sid = ready_solver_ids.pop()
                 s = solvers[sid]
                 s.solve(t)
-                print(f"Using solver {sid}")
+                print(f"Using solver {sid} (test #{test_number})")
                 break
 
             # Wait for output from one of the solvers
@@ -228,11 +236,14 @@ assert file_exists(test_file)
 init_out_dir()
 
 # Run all the tests
+n_solvers = n_solvers_with_ttable
+
 print("Running with all optimizations")
 spawn_run_and_close(True, True)
 
 print("Running without DB")
 spawn_run_and_close(True, False)
 
+n_solvers = n_solvers_without_ttable
 print("Running without TT or DB")
 spawn_run_and_close(False, False)

@@ -152,7 +152,7 @@ hash_t global_hash::get_value() const
     return _value;
 }
 
-void global_hash::add_subgame(size_t subgame_idx, game* g)
+void global_hash::add_subgame(size_t subgame_idx, const game* g)
 {
     _resize_if_out_of_range(subgame_idx);
     assert(!_subgame_valid_mask[subgame_idx]);
@@ -165,7 +165,7 @@ void global_hash::add_subgame(size_t subgame_idx, game* g)
     _value ^= modified_hash;
 }
 
-void global_hash::remove_subgame(size_t subgame_idx, game* g)
+void global_hash::remove_subgame(size_t subgame_idx, const game* g)
 {
     _resize_if_out_of_range(subgame_idx);
     assert(_subgame_valid_mask[subgame_idx]);
@@ -213,7 +213,7 @@ void global_hash::_reserve_space(size_t capacity)
     _subgame_valid_mask.reserve(capacity);
 }
 
-hash_t global_hash::_get_modified_hash(size_t subgame_idx, game* g)
+hash_t global_hash::_get_modified_hash(size_t subgame_idx, const game* g)
 {
     hash_t base_hash = g->get_local_hash();
 

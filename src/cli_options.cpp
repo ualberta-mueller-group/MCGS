@@ -19,6 +19,7 @@ cli_options::cli_options(const string& test_directory)
     : parser(nullptr),
       dry_run(false),
       should_exit(false),
+      gen_experiments(false),
       run_tests(false),
       run_tests_stdin(false),
       test_directory(test_directory),
@@ -97,6 +98,10 @@ void print_help_message(const string& exec_name)
     cout << "\tThese flags only have an effect when using \"--run-tests\"."
          << endl;
     cout << endl;
+
+    print_flag("--gen-experiments", "Generate .test file for ICGA paper. See "
+               "gen_experiments.cpp");
+
 
     print_flag("--run-tests",
                "Run all autotests. By default, reads tests from \"" +
@@ -270,6 +275,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::print_ttable_size.flag())
         {
             global::print_ttable_size.set(true);
+            continue;
+        }
+
+        if (arg == "--gen-experiments")
+        {
+            opts.gen_experiments = true;
             continue;
         }
 

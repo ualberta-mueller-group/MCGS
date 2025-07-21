@@ -7,6 +7,7 @@
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
+#include "gen_experiments.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
@@ -33,12 +34,15 @@ int main(int argc, char** argv)
 
     if (opts.run_tests_stdin)
     {
-
         run_autotests_stdin(opts.outfile_name, opts.test_timeout);
         return 0;
     }
 
-
+    if (opts.gen_experiments)
+    {
+        gen_experiments();
+        return 0;
+    }
 
     // Run sums from input
     if (opts.parser)
