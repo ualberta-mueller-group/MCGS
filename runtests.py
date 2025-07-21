@@ -4,13 +4,13 @@ import select
 import shutil
 import pathlib
 
-############################################################
+############################################################ Edit these
 tt_idx_bits = 10
 out_dir = "experiment_results"
 n_solvers = 5
 test_file = "tests.test2"
 
-############################################################
+############################################################ Don't touch these
 solvers = []
 outfiles = []
 
@@ -66,21 +66,32 @@ class SolverThread:
         return [self._proc.stdout, self._stdout_file]
 
 
-def spawn_solver(thread_number):
+def spawn_solver(thread_number, use_tt, use_db):
     assert type(thread_number) is int
+    assert type(use_tt) is bool
+    assert type(use_db) is bool
     global outfiles
 
-    csv_name = f"{out_dir}/{thread_number}.csv"
-    stdout_name = f"{out_dir}/{thread_number}_stdout.txt"
-    stderr_name = f"{out_dir}/{thread_number}_stderr.txt"
+    # i.e. 11, 10, 00
+    opt_label = "".join([str(int(use_tt)), str(int(use_db))])
+
+    csv_name = f"{out_dir}/{thread_number}_{opt_label}.csv"
+    stdout_name = f"{out_dir}/{thread_number}_{opt_label}_stdout.txt"
+    stderr_name = f"{out_dir}/{thread_number}_{opt_label}_stderr.txt"
+
+    use_idx_bits = tt_idx_bits if use_tt else 0
 
     args = [
         "--run-tests-stdin",
         "--clear-tt",
         "--test-timeout 10000",
         f"--out-file {csv_name}",
-        f"--tt-sumgame-idx-bits {tt_idx_bits}",
+        f"--tt-sumgame-idx-bits {use_idx_bits}",
+        "--tt-imp-sumgame-idx-bits 1", # Must be at least 1
     ]
+
+    if not use_db:
+        args.append("--no-use-db")
 
     args = " ".join(args)
 
@@ -106,6 +117,8 @@ def close_files():
     for f in outfiles:
         f.close()
 
+    outfiles.clear()
+
 
 def close_solvers():
     global solvers
@@ -113,6 +126,8 @@ def close_solvers():
     for s in solvers:
         assert type(s) is SolverThread
         s.finalize()
+
+    solvers.clear()
 
 
 def init_out_dir():
@@ -152,7 +167,10 @@ def run_all_tests():
                 break
 
             # Wait for output from one of the solvers
-            ready, _, _ = select.select(stdout_stream_list, [], [])
+            ready, _, failures = select.select(stdout_stream_list, [],
+                                               stdout_stream_list)
+
+            assert len(failures) == 0
 
             for stream in ready:
                 sid = stream._mcgs_id
@@ -161,6 +179,9 @@ def run_all_tests():
                 # Don't use any other read functions -- they buffer data which
                 # select doesn't see, causing a deadlock...
                 char = os.read(stream.fileno(), 1)
+
+                # Probably EOF, this probably means the process crashed
+                assert len(char) > 0
 
                 if char != b'\n':
                     buffers[sid] += char
@@ -181,6 +202,24 @@ def run_all_tests():
     tests.close()
 
 
+def spawn_run_and_close(use_tt, use_db):
+    global solvers, outfiles
+
+    assert type(use_tt) is bool and type(use_db) is bool
+    assert len(solvers) == 0 and len(outfiles) == 0
+
+    # Spawn solvers
+    for i in range(n_solvers):
+        solvers.append(spawn_solver(i, use_tt, use_db))
+
+    # Read input file, solve tests
+    run_all_tests()
+
+    # Close everything
+    close_solvers()
+    close_files()
+
+
 ############################################################ Main script
 # Sanity checks
 assert file_exists(test_file)
@@ -188,17 +227,12 @@ assert file_exists(test_file)
 # Initialize output directory
 init_out_dir()
 
-# Spawn solvers
-assert len(solvers) == 0
+# Run all the tests
+print("Running with all optimizations")
+spawn_run_and_close(True, True)
 
-for i in range(n_solvers):
-    solvers.append(spawn_solver(i))
+print("Running without DB")
+spawn_run_and_close(True, False)
 
-# Read input file, solve tests
-run_all_tests()
-
-# Close everything
-close_solvers()
-close_files()
-
-
+print("Running without TT or DB")
+spawn_run_and_close(False, False)
