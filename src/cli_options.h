@@ -18,6 +18,7 @@ struct cli_options
     bool should_exit; // Exit from main() i.e. when "--help" used
 
     bool run_tests; // Run autotests
+    bool run_tests_stdin; // Run autotests from stdin
 
     std::string test_directory;
     std::string outfile_name;        // CSV output file

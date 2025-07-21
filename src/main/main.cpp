@@ -31,6 +31,15 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    if (opts.run_tests_stdin)
+    {
+
+        run_autotests_stdin(opts.outfile_name, opts.test_timeout);
+        return 0;
+    }
+
+
+
     // Run sums from input
     if (opts.parser)
     {

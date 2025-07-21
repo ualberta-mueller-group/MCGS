@@ -20,6 +20,7 @@ cli_options::cli_options(const string& test_directory)
       dry_run(false),
       should_exit(false),
       run_tests(false),
+      run_tests_stdin(false),
       test_directory(test_directory),
       outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
       test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
@@ -102,6 +103,9 @@ void print_help_message(const string& exec_name)
                    string(cli_options::DEFAULT_RELATIVE_TEST_PATH) +
                    "\". Causes other input (i.e. from file, stdin etc) to be "
                    "ignored.");
+
+    print_flag("--run-tests-stdin", "Like --run-tests, but read from stdin.");
+
 
     print_flag("--test-dir <directory name>",
                "Sets input directory for --run-tests. Default is \"" +
@@ -262,6 +266,13 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == "--run-tests")
         {
             opts.run_tests = true;
+            continue;
+        }
+
+
+        if (arg == "--run-tests-stdin")
+        {
+            opts.run_tests_stdin = true;
             continue;
         }
 
