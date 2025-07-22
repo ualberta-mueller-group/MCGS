@@ -182,7 +182,7 @@ void clobber_1xn::_normalize_impl()
             )                                  //
        )                                       //
     {
-        const bool do_mirror = _compare_boards(board, board, true, false) == REL_LESS;
+        const bool do_mirror = strip::_should_mirror(board);
 
         if (do_mirror)
         {
@@ -219,7 +219,7 @@ void clobber_1xn::_normalize_impl()
             new_board.push_back(EMPTY);
     }
 
-    const bool do_mirror = _compare_boards(new_board, new_board, true, false) == REL_LESS;
+    const bool do_mirror = strip::_should_mirror(new_board);
     if (do_mirror)
     {
         vector<int> new_board_mirrored = vector_reversed(new_board);

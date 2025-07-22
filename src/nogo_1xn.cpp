@@ -189,7 +189,10 @@ void nogo_1xn::_normalize_impl()
 {
     std::vector<int> simplified = block_simplify(board_const());
 
-    if (simplified.size() == board_const().size())
+    const bool size_changed = simplified.size() != board_const().size();
+    const bool do_mirror = strip::_should_mirror(simplified);
+
+    if (!size_changed && !do_mirror)
     {
         if (_hash_updatable())
             _mark_hash_updated();
@@ -197,6 +200,9 @@ void nogo_1xn::_normalize_impl()
         _normalize_did_change.push_back(false);
         return;
     }
+
+    if (do_mirror)
+        simplified = vector_reversed(simplified);
 
     _normalize_did_change.push_back(true);
     _normalize_boards.push_back(board_const());

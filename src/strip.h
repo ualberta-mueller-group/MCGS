@@ -53,6 +53,9 @@ protected:
                                     const std::vector<int>& board2,
                                     bool mirror1 = false, bool mirror2 = false);
 
+    static bool _should_mirror(const std::vector<int>& board);
+
+
     void _mirror_self();
 
     void _set_board(const std::vector<int>& new_board);
@@ -110,6 +113,11 @@ inline void strip::replace(int p, int color)
 inline const std::vector<int>& strip::board_const() const
 {
     return _board;
+}
+
+inline bool strip::_should_mirror(const std::vector<int>& board)
+{
+    return _compare_boards(board, board, true, false) == REL_LESS;
 }
 
 inline void strip::_set_board(const std::vector<int>& new_board)

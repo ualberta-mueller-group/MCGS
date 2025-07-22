@@ -4,15 +4,22 @@ import select
 import shutil
 import pathlib
 
+# FIRE POINT: 64 GiB, 32 CPU
+# FIRE CREEK: 48 GiB, 24 CPU
+
 ############################################################ Edit these
-tt_idx_bits = 26
+# LOCAL: 27 bits (~656 MiB), 15 without, 9 with
+# FIRE POINT: 28 bits (~1312 MiB), 30 without, 28 with
+# FIRE CREEK: 28 bits (~1312 MiB), 22 without, 20 with
+
+tt_idx_bits = 27
 out_dir = "experiment_results"
 n_solvers_without_ttable = 15
 n_solvers_with_ttable = 9
 
 test_file = "experiments.test2"
 
-TEST_TIMEOUT = 60_000
+TEST_TIMEOUT = 30_000
 
 ############################################################ Don't touch these
 solvers = []

@@ -37,31 +37,13 @@ struct generated_game
     string board;
     bw player;
 
-    size_t move_count;
+    size_t x_axis;
     hash_t hash;
 
     game_type_t type;
 };
 
-struct generation_parameters
-{
-    // Universal
-    size_t min_move_count;
-    size_t max_move_count;
-
-    uint16_t large_board_min_size;
-    uint16_t large_board_max_size;
-
-    // clobber_1xn
-    uint16_t min_empties;
-    uint16_t max_empties;
-
-    // nogo_1xn
-    uint16_t max_black_stones;
-    uint16_t max_white_stones;
-};
-
-typedef generated_game (gen_func_t)(const generation_parameters&);
+typedef generated_game (gen_func_t)();
 
 ////////////////////////////////////////////////// Forward declarations
 string board_to_string(const vector<int>& board);
@@ -149,7 +131,7 @@ void write_game(const generated_game& gg, int diagram_id)
     str << "/*";
     str << "diagram::" << diagram_id << " ";
     str << "game::" << game_name << " ";
-    str << "x::" << gg.move_count << " ";
+    str << "x::" << gg.x_axis << " ";
     str << "*/ ";
 
     str << "[" << game_name << "] " << gg.board << " {" << player_char << "}";
@@ -182,16 +164,13 @@ void init()
     game_type_to_name = init_game_names();
 }
 
-generated_game gen_large_clobber_1xn(const generation_parameters& param)
+generated_game gen_large_clobber_1xn()
 {
+    // move count: 0-14
     generated_game gen_game;
 
-    const uint16_t size = rng->get_u16(param.large_board_min_size,
-                                       param.large_board_max_size);
-
-    const uint16_t n_empties = rng->get_u16(param.min_empties,
-                                            param.max_empties);
-
+    const uint16_t size = rng->get_u16(16, 35);
+    const uint16_t n_empties = rng->get_u16(0, 3);
 
     // Board
     vector<int> board(size, 0);
@@ -229,7 +208,7 @@ generated_game gen_large_clobber_1xn(const generation_parameters& param)
     gen_game.board = board_string;
     gen_game.player = player;
 
-    gen_game.move_count = move_count;
+    gen_game.x_axis = move_count;
     gen_game.hash = hash;
 
     gen_game.type = type;
@@ -237,16 +216,17 @@ generated_game gen_large_clobber_1xn(const generation_parameters& param)
     return gen_game;
 }
 
-optional<generated_game> gen_large_nogo_1xn_impl(
-    const generation_parameters& param)
+optional<generated_game> gen_large_nogo_1xn_impl()
 {
+    // MOVES: 0-14
     generated_game gen_game;
 
-    const uint16_t size = rng->get_u16(param.large_board_min_size,
-                                       param.large_board_max_size);
+    const uint16_t size = rng->get_u16(16, 35);
 
-    const uint16_t n_black_stones = rng->get_u16(0, param.max_black_stones);
-    const uint16_t n_white_stones = rng->get_u16(0, param.max_white_stones);
+    const uint16_t max_stones_per_player = 10;
+
+    const uint16_t n_black_stones = rng->get_u16(0, max_stones_per_player);
+    const uint16_t n_white_stones = rng->get_u16(0, max_stones_per_player);
     const uint16_t n_total_stones = n_black_stones + n_white_stones;
 
     if (n_total_stones >= size)
@@ -267,7 +247,6 @@ optional<generated_game> gen_large_nogo_1xn_impl(
     shuffle(board.begin(), board.end(), rng->get_rng());
 
     string board_string = board_to_string(board);
-
 
     // Player
     bw player = get_random_bw();
@@ -288,7 +267,7 @@ optional<generated_game> gen_large_nogo_1xn_impl(
         gen_game.board = board_string;
         gen_game.player = player;
 
-        gen_game.move_count = move_count;
+        gen_game.x_axis = move_count;
         gen_game.hash = hash;
 
         gen_game.type = type;
@@ -301,34 +280,28 @@ optional<generated_game> gen_large_nogo_1xn_impl(
     }
 }
 
-generated_game gen_large_nogo_1xn(const generation_parameters& param)
+generated_game gen_large_nogo_1xn()
 {
     while (true)
     {
-        optional<generated_game> gen_game = gen_large_nogo_1xn_impl(param);
+        optional<generated_game> gen_game = gen_large_nogo_1xn_impl();
 
         if (gen_game.has_value())
             return *gen_game;
     }
 }
 
-optional<generated_game> gen_large_elephants_impl(const generation_parameters& param)
+optional<generated_game> gen_large_elephants_impl()
 {
     generated_game gen_game;
 
-    const uint16_t size = rng->get_u16(param.large_board_min_size,
-                                       param.large_board_max_size);
-
-    //const uint16_t n_black_stones = rng->get_u16(0, param.max_black_stones);
-    //const uint16_t n_white_stones = rng->get_u16(0, param.max_white_stones);
-    //const uint16_t n_total_stones = n_black_stones + n_white_stones;
-
-    const uint16_t n_black_stones = param.max_black_stones;
-    const uint16_t n_white_stones = param.max_white_stones;
+    const uint16_t n_black_stones = rng->get_u16(0, 4);
+    const uint16_t n_white_stones = rng->get_u16(0, 4);
     const uint16_t n_total_stones = n_black_stones + n_white_stones;
 
-    if (n_total_stones >= size)
-        return {};
+    const uint16_t size = n_total_stones * 4;
+
+    THROW_ASSERT(size >= n_total_stones);
 
     // Board
     vector<int> board(size, EMPTY);
@@ -346,14 +319,13 @@ optional<generated_game> gen_large_elephants_impl(const generation_parameters& p
 
     string board_string = board_to_string(board);
 
-
     // Player
     bw player = get_random_bw();
 
     // Move count, hash, type
     elephants g(board_string);
 
-    size_t move_count = count_moves_for(g, player);
+    //size_t move_count = count_moves_for(g, player);
     hash_t hash = get_hash(g, player);
     game_type_t type = game_type<elephants>();
 
@@ -361,7 +333,7 @@ optional<generated_game> gen_large_elephants_impl(const generation_parameters& p
     gen_game.board = board_string;
     gen_game.player = player;
 
-    gen_game.move_count = move_count;
+    gen_game.x_axis = n_total_stones;
     gen_game.hash = hash;
 
     gen_game.type = type;
@@ -369,79 +341,22 @@ optional<generated_game> gen_large_elephants_impl(const generation_parameters& p
     return gen_game;
 }
 
-generated_game gen_large_elephants(const generation_parameters& param)
+generated_game gen_large_elephants()
 {
     while (true)
     {
-        optional<generated_game> gen_game = gen_large_elephants_impl(param);
+        optional<generated_game> gen_game = gen_large_elephants_impl();
 
         if (gen_game.has_value())
             return *gen_game;
     }
 }
 
-generation_parameters default_clobber_1xn_parameters()
-{
-    generation_parameters gp;
-
-    //gp.min_move_count = 0;
-    //gp.max_move_count = 20;
-
-    gp.min_move_count = 0;
-    gp.max_move_count = 14;
-
-    gp.large_board_min_size = 16;
-    gp.large_board_max_size = 35;
-
-    gp.min_empties = 0;
-    gp.max_empties = 3;
-
-    return gp;
-}
-
-generation_parameters default_nogo_1xn_parameters()
-{
-    generation_parameters gp;
-
-    //gp.min_move_count = 0;
-    //gp.max_move_count = 20;
-
-    gp.min_move_count = 0;
-    gp.max_move_count = 14;
-
-    gp.large_board_min_size = 16;
-    gp.large_board_max_size = 35;
-
-    gp.max_black_stones = 10;
-    gp.max_white_stones = 10;
-
-    return gp;
-}
-
-generation_parameters default_elephants_parameters()
-{
-    generation_parameters gp;
-
-    //gp.min_move_count = 0;
-    //gp.max_move_count = 20;
-
-    gp.min_move_count = 0;
-    gp.max_move_count = 8;
-
-    gp.large_board_min_size = 16;
-    gp.large_board_max_size = 46;
-
-    gp.max_black_stones = 8;
-    gp.max_white_stones = 8;
-
-    return gp;
-}
-
-void gen_impl(const generation_parameters& param, uint64_t max_attempts,
-              uint64_t bucket_size, gen_func_t& gen_func, int diagram_id)
+void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
+              int diagram_id, size_t min_x, size_t max_x)
 {
     // Variables
-    histogram hist(param.max_move_count);
+    histogram hist(max_x);
     unordered_set<hash_t> seen_hashes;
 
     // Lambdas
@@ -450,9 +365,9 @@ void gen_impl(const generation_parameters& param, uint64_t max_attempts,
         const bool seen = seen_hashes.find(gg.hash) != seen_hashes.end();
 
         const bool hist_ok =
-            (param.min_move_count <= gg.move_count) &&
-            (gg.move_count <= param.max_move_count) &&
-            (hist.get_count(gg.move_count) < bucket_size);
+            (min_x <= gg.x_axis) &&
+            (gg.x_axis <= max_x) &&
+            (hist.get_count(gg.x_axis) < bucket_size);
 
         return !seen && hist_ok;
     };
@@ -464,7 +379,7 @@ void gen_impl(const generation_parameters& param, uint64_t max_attempts,
         THROW_ASSERT(it.second);
 
         // Histogram
-        hist.count(gg.move_count);
+        hist.count(gg.x_axis);
     };
 
     // Main code
@@ -472,7 +387,7 @@ void gen_impl(const generation_parameters& param, uint64_t max_attempts,
     // Try "large" games
     for (uint64_t attempt = 0; attempt < max_attempts; attempt++)
     {
-        generated_game gen_game = gen_func(param);
+        generated_game gen_game = gen_func();
 
         if (!game_usable(gen_game))
             continue;
@@ -495,26 +410,29 @@ void gen_experiments()
 {
     init();
 
-    const uint64_t max_attempts = 1000000;
-    const uint64_t bucket_size = 100;
+    const uint64_t max_attempts = 24000000;
+    const uint64_t bucket_size = 2000;
+
+    //const uint64_t max_attempts = 1000000;
+    //const uint64_t bucket_size = 50;
 
     int next_diagram_id = 0;
 
     // clobber_1xn
-    //gen_impl(default_clobber_1xn_parameters(), max_attempts, bucket_size,
-    //         gen_large_clobber_1xn, next_diagram_id);
+    gen_impl(max_attempts, bucket_size, gen_large_clobber_1xn, next_diagram_id,
+             0, 15);
 
     next_diagram_id++;
 
     // nogo_1xn
-    //gen_impl(default_nogo_1xn_parameters(), max_attempts, bucket_size,
-    //         gen_large_nogo_1xn, next_diagram_id);
+    gen_impl(max_attempts, bucket_size, gen_large_nogo_1xn, next_diagram_id,
+             0, 15);
 
     next_diagram_id++;
 
     // elephants
-    gen_impl(default_elephants_parameters(), max_attempts, bucket_size,
-             gen_large_elephants, next_diagram_id);
+    gen_impl(max_attempts, bucket_size, gen_large_elephants, next_diagram_id,
+             0, 8);
 
     next_diagram_id++;
 }

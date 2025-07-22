@@ -36,8 +36,8 @@ void fill_database(database& db)
         new gridlike_db_game_generator<clobber_1xn>(16),
         new gridlike_db_game_generator<nogo_1xn>(16),
         new gridlike_db_game_generator<elephants>(16),
-        //new gridlike_db_game_generator<clobber>(3, 3),
-        //new gridlike_db_game_generator<nogo>(3, 3),
+        new gridlike_db_game_generator<clobber>(3, 3),
+        new gridlike_db_game_generator<nogo>(3, 3),
     };
 
     for (db_game_generator* gen : generators)
