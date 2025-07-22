@@ -1,28 +1,34 @@
 #include "gen_experiments.h"
 #include <cstdint>
 #include <fstream>
+#include <optional>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 
 // 1D
-#include "cgt_basics.h"
 #include "clobber_1xn.h"
-#include "grid_utils.h"
-#include "hashing.h"
+#include "global_options.h"
 #include "nogo_1xn.h"
 #include "elephants.h"
 
 // 2D
 #include "clobber.h"
 #include "nogo.h"
-#include "random.h"
+
+// Other includes
+#include "grid_utils.h"
+#include "hashing.h"
+#include "cgt_basics.h"
 #include "strip.h"
 #include "throw_assert.h"
+#include "random_generator.h"
 
 using namespace std;
 
 namespace {
+
+std::optional<random_generator> rng;
 
 string board_to_string(const vector<int>& board);
 ////////////////////
@@ -59,7 +65,7 @@ size_t count_moves_for(const game& g, bw player)
 
 inline bw get_random_bw()
 {
-    return (get_random_u8() % 2) == 0 ? BLACK : WHITE;
+    return (rng->get_u8() % 2) == 0 ? BLACK : WHITE;
 }
 
 void init_game_names()
@@ -121,6 +127,7 @@ string board_to_string(const vector<int>& board)
 */
 void gen_experiments()
 {
+    rng = random_generator(global::experiment_seed());
     init_game_names();
 
     ofstream outfile("experiments.test2");
@@ -152,7 +159,7 @@ void gen_experiments()
 
     while (games_found < target_games)
     {
-        const uint16_t size = get_random_u16() % max_board_size;
+        const uint16_t size = rng->get_u16() % max_board_size;
         const bw player = get_random_bw();
 
         board.resize(size);

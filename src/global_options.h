@@ -161,6 +161,7 @@ extern global_option<size_t> tt_sumgame_idx_bits;
 extern global_option<size_t> tt_imp_sumgame_idx_bits;
 extern global_option<bool> use_db;
 extern global_option<bool> clear_tt;
+extern global_option<uint64_t> experiment_seed;
 
 extern global_option<bool> silence_warnings;
 extern global_option<bool> print_ttable_size;

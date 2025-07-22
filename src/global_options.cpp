@@ -106,6 +106,7 @@ INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);
 INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 24);
 INIT_GLOBAL_WITH_SUMMARY(use_db, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(clear_tt, bool, false);
+INIT_GLOBAL_WITH_SUMMARY(experiment_seed, uint64_t, 0);
 
 // These WILL NOT be printed with ./MCGS --print-optimizations
 INIT_GLOBAL_WITHOUT_SUMMARY(silence_warnings, bool, false);

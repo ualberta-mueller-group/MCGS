@@ -93,6 +93,10 @@ void print_help_message(const string& exec_name)
                "since epoch. Default: " +
                    global::random_seed.get_default_str() + ".");
 
+    print_flag(global::experiment_seed.flag(), "Set seed for experiment data "
+               "generation. 0 means seed with current time. Default: " +
+               global::experiment_seed.get_default_str());
+
     cout << "Testing framework flags:" << endl;
     cout << endl;
     cout << "\tThese flags only have an effect when using \"--run-tests\"."
@@ -430,6 +434,19 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
             global::random_seed.set(seed);
 
+            continue;
+        }
+
+        if (arg == global::experiment_seed.flag())
+        {
+            arg_idx++;
+
+            const char* arg_next_ptr = arg_next.c_str();
+            char* end = nullptr;
+
+            const uint64_t seed = strtoull(arg_next_ptr, &end, 10);
+
+            global::experiment_seed.set(seed);
             continue;
         }
 
