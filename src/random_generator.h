@@ -42,6 +42,8 @@ public:
     int16_t get_i16(int16_t min = INT16_MIN, int16_t max = INT16_MAX);
     int8_t get_i8(int8_t min = INT8_MIN, int8_t max = INT8_MAX);
 
+    std::mt19937_64& get_rng();
+
 private:
     std::mt19937_64 _rng;
 
@@ -57,7 +59,10 @@ private:
 };
 
 ////////////////////////////////////////////////// random_generator methods
-
+inline std::mt19937_64& random_generator::get_rng()
+{
+    return _rng;
+}
 
 //////////////////////////////////////// Unsigned values
 inline uint64_t random_generator::get_u64(uint64_t min, uint64_t max)

@@ -8,11 +8,11 @@ import pathlib
 tt_idx_bits = 26
 out_dir = "experiment_results"
 n_solvers_without_ttable = 15
-n_solvers_with_ttable = 5
+n_solvers_with_ttable = 9
 
 test_file = "experiments.test2"
 
-TEST_TIMEOUT = 20_000
+TEST_TIMEOUT = 60_000
 
 ############################################################ Don't touch these
 solvers = []
@@ -43,7 +43,7 @@ class SolverThread:
         self._proc = proc
         self._stdout_name = stdout_name
 
-        assert not pathlib.Path(self._stdout_name).exists()
+        assert not file_exists(self._stdout_name)
         self._stdout_file = open(self._stdout_name, "w")
 
     def finalize(self):

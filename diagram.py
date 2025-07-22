@@ -34,6 +34,17 @@ class WrappedReader:
         return self._reader
 
 
+def assert_group_format(group):
+    assert type(group) is dict
+
+    expected_fields = set(["pattern", "color", "label"])
+    actual_fields = set([key for key in group])
+    assert expected_fields == actual_fields
+
+    for v in group.values():
+        assert type(v) is str
+
+
 def csv_files(pattern):
     assert type(pattern) is str
     return input_dir.glob(pattern)
@@ -105,9 +116,12 @@ def row_in_timeout_set(row):
     return input_hash in timed_out
 
 
-def process_files(file_list, label):
-    assert type(file_list) is list
-    assert type(label) is str
+def process_files(group, diagram_id, title):
+    assert_group_format(group)
+    assert type(diagram_id) is int
+    assert type(title) is str
+
+    file_list = pattern_to_file_list(group["pattern"])
 
     data = []
     n_timeouts = 0
@@ -118,6 +132,10 @@ def process_files(file_list, label):
         reader = wrapped.reader()
 
         for line in reader:
+            metadata = parse_comment(line["Comments"])
+            if metadata["diagram"] != diagram_id:
+                continue
+
             n_cases += 1
 
             #if not row_did_complete(line):
@@ -125,7 +143,6 @@ def process_files(file_list, label):
                 n_timeouts += 1
                 continue
 
-            metadata = parse_comment(line["Comments"])
 
             x = metadata["x"]
             y = math.log(int(line["Node Count"]))
@@ -147,11 +164,14 @@ def process_files(file_list, label):
     means = [np.mean(data_y[data_x == xi]) for xi in x_scale]
     errors = [np.std(data_y[data_x == xi]) for xi in x_scale]
 
-    plt.errorbar(x_scale, means, yerr=errors, fmt="o", label=label)
-    plt.title("clobber_1xn")
+    plt.errorbar(x_scale, means, yerr=errors, fmt="o", label=group["label"],
+                 color=group["color"], capsize=3)
+
+    plt.title(title)
     plt.legend()
     plt.xlabel("# Moves For Player")
     plt.ylabel("# Nodes (log)")
+    plt.xticks(x_scale)
 
     plt.show(block=False)
 
@@ -162,18 +182,46 @@ def pattern_to_file_list(pattern):
 
 
 ############################################################
-patterns = [
-    "*_00.csv",
-    "*_10.csv",
-    "*_11.csv",
+groups = [
+    {
+        "pattern": "*_00.csv",
+        "color": "tab:blue",
+        "label": "No TT, no DB",
+    },
+
+    {
+        "pattern": "*_10.csv",
+        "color": "tab:orange",
+        "label": "TT, no DB",
+    },
+
+    {
+        "pattern": "*_11.csv",
+        "color": "tab:green",
+        "label": "TT, DB",
+    },
 ]
 
-for p in patterns:
-    file_list = pattern_to_file_list(p)
+for g in groups:
+    assert_group_format(g)
+
+for g in groups:
+    file_list = pattern_to_file_list(g["pattern"])
     prune_timeouts(file_list)
 
-for p in patterns:
-    file_list = pattern_to_file_list(p)
-    process_files(file_list, p)
 
-x = input("")
+titles = [
+    "clobber_1xn",
+    "nogo_1xn",
+    "elephants",
+]
+
+for i in range(len(titles)):
+    title = titles[i]
+
+    for g in groups:
+        process_files(g, i, title)
+
+    _ = input("")
+    plt.close()
+
