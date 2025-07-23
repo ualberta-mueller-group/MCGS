@@ -5,15 +5,42 @@ import pathlib
 import math
 import sys
 
+
 ############################################################
 args = sys.argv
 argc = len(sys.argv)
-assert argc == 2
+assert argc >= 2
 
 input_dir = pathlib.Path(args[1])
 assert input_dir.exists() and input_dir.is_dir()
 
+show_figures = True
+
 timed_out = set()
+
+output_dir = None
+
+def find(l, val):
+    assert type(l) is list
+
+    for i in range(len(l)):
+        if l[i] == val:
+            return i
+    return -1
+
+save_arg_idx = find(args, "--save")
+if save_arg_idx != -1:
+    output_path_idx = save_arg_idx + 1
+    assert output_path_idx < argc
+
+    output_dir = pathlib.Path(args[output_path_idx])
+    assert not output_dir.exists()
+
+    output_dir.mkdir()
+    assert output_dir.exists()
+
+    show_figures = False
+
 
 ############################################################
 class WrappedReader:
@@ -173,7 +200,8 @@ def process_files(group, diagram_id, title):
     plt.ylabel("# Nodes (log)")
     plt.xticks(x_scale)
 
-    plt.show(block=False)
+    if show_figures:
+        plt.show(block=False)
 
 
 def pattern_to_file_list(pattern):
@@ -216,12 +244,17 @@ titles = [
     "elephants",
 ]
 
+
 for i in range(len(titles)):
     title = titles[i]
 
     for g in groups:
         process_files(g, i, title)
 
-    _ = input("")
+    if output_dir is not None:
+        plt.savefig(f"{output_dir.absolute() / title}.png")
+    else:
+        _ = input("")
+
     plt.close()
 
