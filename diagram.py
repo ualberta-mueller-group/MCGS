@@ -143,11 +143,12 @@ def row_in_timeout_set(row):
     return input_hash in timed_out
 
 
-def process_files(group, diagram_id, title):
+def process_files(group, diagram_id, label_set):
     assert_group_format(group)
     assert type(diagram_id) is int
-    assert type(title) is str
+    assert type(label_set) is list and len(label_set) == 2
 
+    title, x_axis_name = label_set
     file_list = pattern_to_file_list(group["pattern"])
 
     data = []
@@ -196,7 +197,7 @@ def process_files(group, diagram_id, title):
 
     plt.title(title)
     plt.legend()
-    plt.xlabel("# Moves For Player")
+    plt.xlabel(x_axis_name)
     plt.ylabel("# Nodes (log)")
     plt.xticks(x_scale)
 
@@ -238,18 +239,19 @@ for g in groups:
     prune_timeouts(file_list)
 
 
-titles = [
-    "clobber_1xn",
-    "nogo_1xn",
-    "elephants",
+labels = [
+    ["clobber_1xn", "# Moves For Player"],
+    ["nogo_1xn", "# Moves For Player"],
+    ["elephants", "Total Stones"],
 ]
 
 
-for i in range(len(titles)):
-    title = titles[i]
+for i in range(len(labels)):
+    label_set = labels[i]
+    title = label_set[0]
 
     for g in groups:
-        process_files(g, i, title)
+        process_files(g, i, label_set)
 
     if output_dir is not None:
         plt.savefig(f"{output_dir.absolute() / title}.png")
