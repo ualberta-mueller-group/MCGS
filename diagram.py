@@ -1,4 +1,5 @@
 import csv
+import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pathlib
@@ -16,9 +17,10 @@ assert input_dir.exists() and input_dir.is_dir()
 
 show_figures = True
 
-timed_out = set()
+timed_out_set = set()
 
 output_dir = None
+
 
 def find(l, val):
     assert type(l) is list
@@ -117,21 +119,69 @@ def row_did_complete(row):
     return options.index(status) == 1
 
 
-def prune_timeouts(file_list):
-    assert type(file_list) is list
+def process_timeouts(groups, diagram_id, label_set):
+    # Asserts
+    assert type(groups) is list
+    for g in groups:
+        assert_group_format(g)
 
-    for f in file_list:
-        wrapped = WrappedReader(f)
-        reader = wrapped.reader()
+    assert type(diagram_id) is int
 
-        for line in reader:
-            if not row_did_complete(line):
-                input_hash = line["Input hash"]
-                assert type(input_hash) is str
+    assert type(label_set) is list and len(label_set) == 2
 
-                timed_out.add(input_hash)
+    # Find timeouts
+    global timed_out_set
 
-        wrapped.close()
+    title = label_set[0] + " timeouts"
+
+    timed_out_set.clear()
+
+    data_sets = []
+
+    for g in groups:
+        data = []
+
+        file_list = pattern_to_file_list(g["pattern"])
+        for f in file_list:
+            wrapped = WrappedReader(f)
+            reader = wrapped.reader()
+
+            for line in reader:
+                meta = parse_comment(line["Comments"])
+                if meta["diagram"] != diagram_id:
+                    continue
+
+                x = meta["x"]
+                timed_out = not row_did_complete(line)
+
+                if timed_out:
+                    data.append(x)
+                    timed_out_set.add(line["Input hash"])
+
+            wrapped.close()
+
+        min_x = min(data) if len(data) != 0 else 0
+        max_x = max(data) if len(data) != 0 else 1
+        data_sets.append([data, min_x, max_x])
+
+        #label = g["label"]
+        #color = g["color"]
+
+        #plt.hist(data, label=label, color=color, bins=(max_x - min_x + 1))
+        #plt.title(title)
+        #plt.legend()
+    min_x_global = min([x[1] for x in data_sets])
+    max_x_global = max([x[2] for x in data_sets])
+    bins = [x for x in range(min_x_global, max_x_global + 1)]
+    for i in range(len(groups)):
+        g = groups[i]
+        ds = data_sets[i]
+
+        label = g["label"]
+        color = g["color"]
+        plt.hist(ds[0], label=label, color=color, bins=bins)
+        plt.title(title)
+        plt.legend()
 
 
 def row_in_timeout_set(row):
@@ -140,7 +190,12 @@ def row_in_timeout_set(row):
     input_hash = row["Input hash"]
     assert type(input_hash) is str
 
-    return input_hash in timed_out
+    return input_hash in timed_out_set
+
+def pattern_to_file_list(pattern):
+    assert type(pattern) is str
+    return [f for f in input_dir.glob(pattern)]
+
 
 
 def process_files(group, diagram_id, label_set):
@@ -205,9 +260,6 @@ def process_files(group, diagram_id, label_set):
         plt.show(block=False)
 
 
-def pattern_to_file_list(pattern):
-    assert type(pattern) is str
-    return [f for f in input_dir.glob(pattern)]
 
 
 ############################################################
@@ -234,21 +286,25 @@ groups = [
 for g in groups:
     assert_group_format(g)
 
-for g in groups:
-    file_list = pattern_to_file_list(g["pattern"])
-    prune_timeouts(file_list)
-
-
 labels = [
     ["clobber_1xn", "# Moves For Player"],
     ["nogo_1xn", "# Moves For Player"],
     ["elephants", "Total Stones"],
+    ["2xn clobber", "# Columns"],
+    ["clobber_1xn with holes", "# of Subgames"],
 ]
 
 
 for i in range(len(labels)):
     label_set = labels[i]
     title = label_set[0]
+
+    process_timeouts(groups, i, label_set)
+    if output_dir is not None:
+        plt.savefig(f"{output_dir.absolute() / title}_timeouts.png")
+    else:
+        _ = input("")
+    plt.close()
 
     for g in groups:
         process_files(g, i, label_set)

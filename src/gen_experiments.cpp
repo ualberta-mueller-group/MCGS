@@ -10,6 +10,7 @@
 // 1D
 #include "clobber_1xn.h"
 #include "global_options.h"
+#include "grid.h"
 #include "histogram.h"
 #include "nogo_1xn.h"
 #include "elephants.h"
@@ -52,6 +53,7 @@ unordered_map<game_type_t, string> init_game_names();
 ////////////////////////////////////////////////// Variables
 optional<random_generator> rng;
 optional<ofstream> outfile;
+optional<ofstream> histogram_file;
 unordered_map<game_type_t, string> game_type_to_name;
 
 ////////////////////////////////////////////////// Helper functions
@@ -93,6 +95,31 @@ size_t count_moves_for(const game& g, bw player)
 
     delete mg;
     return n;
+}
+
+size_t count_subgames_for(const game& g)
+{
+    size_t n_subgames = 0;
+
+    split_result sr = g.split();
+
+    if (sr.has_value())
+    {
+        for (game* g : *sr)
+        {
+            delete g;
+            n_subgames++;
+        }
+
+        return n_subgames;
+    }
+
+    // Either 0 or 1 depending on move count
+    const size_t b_moves = count_moves_for(g, BLACK);
+    const size_t w_moves = count_moves_for(g, WHITE);
+    const size_t total_moves = b_moves + w_moves;
+
+    return total_moves == 0 ? 0 : 1;
 }
 
 inline bw get_random_bw()
@@ -158,7 +185,9 @@ void init()
     rng = random_generator(global::experiment_seed());
 
     outfile = ofstream("experiments.test2");
+    histogram_file = ofstream("experiments_histogram.txt");
     THROW_ASSERT(outfile->is_open());
+    THROW_ASSERT(histogram_file->is_open());
 
     THROW_ASSERT(game_type_to_name.empty());
     game_type_to_name = init_game_names();
@@ -295,11 +324,11 @@ optional<generated_game> gen_large_elephants_impl()
 {
     generated_game gen_game;
 
-    const uint16_t n_black_stones = rng->get_u16(0, 4);
-    const uint16_t n_white_stones = rng->get_u16(0, 4);
+    const uint16_t n_black_stones = rng->get_u16(0, 10);
+    const uint16_t n_white_stones = rng->get_u16(0, 10);
     const uint16_t n_total_stones = n_black_stones + n_white_stones;
 
-    const uint16_t size = n_total_stones * 4;
+    const uint16_t size = n_total_stones * 3;
 
     THROW_ASSERT(size >= n_total_stones);
 
@@ -352,6 +381,118 @@ generated_game gen_large_elephants()
     }
 }
 
+generated_game gen_large_clobber()
+{
+    generated_game gen_game;
+
+    const uint16_t rows = rng->get_u16(2, 2);
+    const uint16_t cols = rng->get_u16(7, 12);
+    const int_pair shape(rows, cols);
+
+    const uint16_t total_tiles = rows * cols;
+
+    const uint16_t n_empties = rng->get_u16(2, 3);
+    //const uint16_t n_empties = 0;
+
+    // Board
+    vector<int> board(total_tiles, 0);
+
+    for (int& tile : board)
+        tile = get_random_bw();
+
+    vector<size_t> empty_choices;
+    empty_choices.reserve(board.size());
+
+    for (size_t i = 0; i < board.size(); i++)
+        empty_choices.push_back(i);
+
+    shuffle(empty_choices.begin(), empty_choices.end(), rng->get_rng());
+
+    for (uint16_t i = 0; i < n_empties; i++)
+    {
+        board[empty_choices.back()] = EMPTY;
+        empty_choices.pop_back();
+    }
+
+    // Player
+    bw player = get_random_bw();
+
+    // Move count, hash, type
+    clobber g(board, shape);
+
+    size_t move_count = count_moves_for(g, player);
+    hash_t hash = get_hash(g, player);
+    game_type_t type = game_type<clobber>();
+
+
+    string board_string = g.board_as_string();
+
+    // Assign fields
+    gen_game.board = board_string;
+    gen_game.player = player;
+
+    gen_game.x_axis = cols;
+    gen_game.hash = hash;
+
+    gen_game.type = type;
+
+    return gen_game;
+}
+
+generated_game gen_large_clobber_1xn_subgames()
+{
+    // move count: 0-14
+    generated_game gen_game;
+
+    //const uint16_t size = rng->get_u16(16, 35);
+    const uint16_t size = rng->get_u16(28, 28);
+    const uint16_t n_empties = rng->get_u16(0, 10);
+
+    // Board
+    vector<int> board(size, 0);
+
+    for (int& tile : board)
+        tile = get_random_bw();
+
+    vector<size_t> empty_choices;
+    empty_choices.reserve(board.size());
+
+    for (size_t i = 0; i < board.size(); i++)
+        empty_choices.push_back(i);
+
+    shuffle(empty_choices.begin(), empty_choices.end(), rng->get_rng());
+
+    for (uint16_t i = 0; i < n_empties; i++)
+    {
+        board[empty_choices.back()] = EMPTY;
+        empty_choices.pop_back();
+    }
+
+    string board_string = board_to_string(board);
+
+    // Player
+    bw player = get_random_bw();
+
+    // Move count, hash, type
+    clobber_1xn g(board_string);
+
+    size_t move_count = count_moves_for(g, player);
+    hash_t hash = get_hash(g, player);
+    game_type_t type = game_type<clobber_1xn>();
+
+    // Assign fields
+    gen_game.board = board_string;
+    gen_game.player = player;
+
+    gen_game.x_axis = count_subgames_for(g);
+    gen_game.hash = hash;
+
+    gen_game.type = type;
+
+    return gen_game;
+}
+
+
 void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
               int diagram_id, size_t min_x, size_t max_x)
 {
@@ -399,6 +540,7 @@ void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
     // Now use remaining "small" games
 
     cout << hist << endl;
+    *histogram_file << hist << '\n' << endl;
 }
 
 
@@ -410,17 +552,23 @@ void gen_experiments()
 {
     init();
 
-    const uint64_t max_attempts = 24000000;
-    const uint64_t bucket_size = 2000;
+    // EXPERIMENT VALUES
+    //const uint64_t max_attempts = 24000000;
+    //const uint64_t bucket_size = 2000;
+
+    const uint64_t max_attempts = 6000000;
+    const uint64_t bucket_size = 30;
+
 
     //const uint64_t max_attempts = 1000000;
     //const uint64_t bucket_size = 50;
 
     int next_diagram_id = 0;
 
+
     // clobber_1xn
     gen_impl(max_attempts, bucket_size, gen_large_clobber_1xn, next_diagram_id,
-             0, 15);
+             0, 13);
 
     next_diagram_id++;
 
@@ -430,9 +578,21 @@ void gen_experiments()
 
     next_diagram_id++;
 
-    // elephants
+    // elephants (was 13)
     gen_impl(max_attempts, bucket_size, gen_large_elephants, next_diagram_id,
-             0, 8);
+             0, 14);
+
+    next_diagram_id++;
+
+    // clobber
+    gen_impl(max_attempts, bucket_size, gen_large_clobber, next_diagram_id,
+             7, 20);
+
+    next_diagram_id++;
+
+    // clobber_1xn subgames
+    gen_impl(max_attempts, bucket_size, gen_large_clobber_1xn_subgames,
+             next_diagram_id, 1, 30);
 
     next_diagram_id++;
 }

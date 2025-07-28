@@ -14,12 +14,12 @@ import pathlib
 
 tt_idx_bits = 27
 out_dir = "experiment_results"
-n_solvers_without_ttable = 15
-n_solvers_with_ttable = 9
+n_solvers_without_ttable = 13
+n_solvers_with_ttable = 7
 
 test_file = "experiments.test2"
 
-TEST_TIMEOUT = 30_000
+TEST_TIMEOUT = 50_000
 
 ############################################################ Don't touch these
 solvers = []

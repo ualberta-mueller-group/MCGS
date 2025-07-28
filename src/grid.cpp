@@ -129,6 +129,11 @@ std::string grid::board_as_string() const
     return board_to_string(_board, _shape);
 }
 
+const std::vector<int>& grid::board_const() const
+{
+    return _board;
+}
+
 void grid::_init_hash(local_hash& hash) const
 {
     WARN_DEFAULT_IMPL();

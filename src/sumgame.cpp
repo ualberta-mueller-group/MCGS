@@ -374,6 +374,8 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
         std::optional<solve_result> result = simplify_db();
 
         if (result.has_value())
+
+        if (result.has_value())
             return result;
     }
 
