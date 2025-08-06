@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pathlib
 import math
+from collections import Counter
 import sys
 
 
@@ -172,14 +173,19 @@ def process_timeouts(groups, diagram_id, label_set):
         #plt.legend()
     min_x_global = min([x[1] for x in data_sets])
     max_x_global = max([x[2] for x in data_sets])
-    bins = [x for x in range(min_x_global, max_x_global + 1)]
+    bins = [x for x in range(min_x_global - 1, max_x_global + 2)]
     for i in range(len(groups)):
         g = groups[i]
         ds = data_sets[i]
 
         label = g["label"]
         color = g["color"]
-        plt.hist(ds[0], label=label, color=color, bins=bins)
+
+        counts = Counter(ds[0])
+        counts = [counts[x] for x in bins]
+        #plt.hist(ds[0], label=label, color=color, bins=bins)
+        plt.bar(bins, counts)
+        plt.xticks(bins)
         plt.title(title)
         plt.legend()
 
@@ -192,10 +198,10 @@ def row_in_timeout_set(row):
 
     return input_hash in timed_out_set
 
+
 def pattern_to_file_list(pattern):
     assert type(pattern) is str
     return [f for f in input_dir.glob(pattern)]
-
 
 
 def process_files(group, diagram_id, label_set):
@@ -225,7 +231,6 @@ def process_files(group, diagram_id, label_set):
             if row_in_timeout_set(line):
                 n_timeouts += 1
                 continue
-
 
             x = metadata["x"]
             y = math.log(int(line["Node Count"]))
@@ -299,6 +304,7 @@ for i in range(len(labels)):
     label_set = labels[i]
     title = label_set[0]
 
+    plt.close()
     process_timeouts(groups, i, label_set)
     if output_dir is not None:
         plt.savefig(f"{output_dir.absolute() / title}_timeouts.png")
