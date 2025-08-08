@@ -441,11 +441,10 @@ generated_game gen_large_clobber()
 
 generated_game gen_large_clobber_1xn_subgames()
 {
-    // move count: 0-14
     generated_game gen_game;
 
     //const uint16_t size = rng->get_u16(16, 35);
-    const uint16_t size = rng->get_u16(28, 28);
+    const uint16_t size = rng->get_u16(24, 24);
     const uint16_t n_empties = rng->get_u16(0, 10);
 
     // Board
@@ -454,19 +453,10 @@ generated_game gen_large_clobber_1xn_subgames()
     for (int& tile : board)
         tile = get_random_bw();
 
-    vector<size_t> empty_choices;
-    empty_choices.reserve(board.size());
-
-    for (size_t i = 0; i < board.size(); i++)
-        empty_choices.push_back(i);
-
-    shuffle(empty_choices.begin(), empty_choices.end(), rng->get_rng());
-
     for (uint16_t i = 0; i < n_empties; i++)
-    {
-        board[empty_choices.back()] = EMPTY;
-        empty_choices.pop_back();
-    }
+        board.push_back(EMPTY);
+
+    shuffle(board.begin(), board.end(), rng->get_rng());
 
     string board_string = board_to_string(board);
 
@@ -557,7 +547,7 @@ void gen_experiments()
     //const uint64_t bucket_size = 2000;
 
     const uint64_t max_attempts = 6000000;
-    const uint64_t bucket_size = 30;
+    const uint64_t bucket_size = 50;
 
 
     //const uint64_t max_attempts = 1000000;

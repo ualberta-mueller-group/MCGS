@@ -19,7 +19,7 @@ n_solvers_with_ttable = 7
 
 test_file = "experiments.test2"
 
-TEST_TIMEOUT = 50_000
+TEST_TIMEOUT = 40_000
 
 ############################################################ Don't touch these
 solvers = []
@@ -30,6 +30,79 @@ READY_TEXT = "READY FOR TEST CASE"
 
 
 ############################################################
+opts = {
+    "use_tt": True,
+    "use_db": True,
+    "normsplit": False,
+}
+
+opt_level = -1
+
+
+def assert_opt_format(opt):
+    fields = set(["use_tt", "normsplit", "use_db"])
+
+    assert type(opt) is dict
+    assert fields == set([key for key in opt])
+
+    for x in opt.values():
+        assert type(x) is bool
+
+# 0 -- No TT, no DB
+# 1 -- TT, no DB (no norm/split)
+# 2 -- TT, no DB
+# 3 -- TT, DB
+
+def __set_opt_impl(level):
+    assert type(level) is int and level >= 0 and level <= 3
+    global opts
+
+    if (level == 0):
+        opts = {
+            "use_tt": False,
+            "normsplit": False,
+            "use_db": False,
+        }
+        return
+
+    if (level == 1):
+        opts = {
+            "use_tt": True,
+            "normsplit": False,
+            "use_db": False,
+        }
+        return
+
+    if (level == 2):
+        opts = {
+            "use_tt": True,
+            "normsplit": True,
+            "use_db": False,
+        }
+        return
+
+    if (level == 3):
+        opts = {
+            "use_tt": True,
+            "normsplit": True,
+            "use_db": True,
+        }
+        return
+
+
+def set_opt_level(level):
+    assert type(level) is int
+    global opts, n_solvers, opt_level
+
+    __set_opt_impl(level)
+    opt_level = level
+
+    if opts["use_tt"]:
+        n_solvers = n_solvers_with_ttable
+    else:
+        n_solvers = n_solvers_without_ttable
+
+
 def file_exists(file_path):
     return pathlib.Path(file_path).exists()
 
@@ -78,14 +151,18 @@ class SolverThread:
         return [self._proc.stdout, self._stdout_file]
 
 
-def spawn_solver(thread_number, use_tt, use_db):
+def spawn_solver(thread_number):
     assert type(thread_number) is int
-    assert type(use_tt) is bool
-    assert type(use_db) is bool
-    global outfiles
+    global outfiles, opts
+    assert_opt_format(opts)
 
-    # i.e. 11, 10, 00
-    opt_label = "".join([str(int(use_tt)), str(int(use_db))])
+    use_tt = opts["use_tt"]
+    normsplit = opts["normsplit"]
+    use_db = opts["use_db"]
+
+    # i.e. 000, 100, 110, 111
+    #opt_label = "".join(str(int(x)) for x in [use_tt, normsplit, use_db])
+    opt_label = str(opt_level)
 
     csv_name = f"{out_dir}/{thread_number}_{opt_label}.csv"
     stdout_name = f"{out_dir}/{thread_number}_{opt_label}_stdout.txt"
@@ -100,10 +177,15 @@ def spawn_solver(thread_number, use_tt, use_db):
         f"--out-file {csv_name}",
         f"--tt-sumgame-idx-bits {use_idx_bits}",
         "--tt-imp-sumgame-idx-bits 1", # Must be at least 1
+        "--no-dedupe-movegen",
     ]
 
     if not use_db:
         args.append("--no-use-db")
+
+    if not normsplit:
+        args.append("--no-play-split")
+        args.append("--no-play-normalize")
 
     args = " ".join(args)
 
@@ -217,15 +299,13 @@ def run_all_tests():
     tests.close()
 
 
-def spawn_run_and_close(use_tt, use_db):
+def spawn_run_and_close():
     global solvers, outfiles
-
-    assert type(use_tt) is bool and type(use_db) is bool
     assert len(solvers) == 0 and len(outfiles) == 0
 
     # Spawn solvers
     for i in range(n_solvers):
-        solvers.append(spawn_solver(i, use_tt, use_db))
+        solvers.append(spawn_solver(i))
 
     # Read input file, solve tests
     run_all_tests()
@@ -243,14 +323,9 @@ assert file_exists(test_file)
 init_out_dir()
 
 # Run all the tests
-n_solvers = n_solvers_with_ttable
+levels = [x for x in range(3, -1, -1)]
 
-print("Running with all optimizations")
-spawn_run_and_close(True, True)
-
-print("Running without DB")
-spawn_run_and_close(True, False)
-
-n_solvers = n_solvers_without_ttable
-print("Running without TT or DB")
-spawn_run_and_close(False, False)
+for opt_level in levels:
+    print(f"Running with opt level {opt_level}")
+    set_opt_level(opt_level)
+    spawn_run_and_close()

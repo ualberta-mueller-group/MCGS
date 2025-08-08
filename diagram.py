@@ -270,21 +270,27 @@ def process_files(group, diagram_id, label_set):
 ############################################################
 groups = [
     {
-        "pattern": "*_00.csv",
-        "color": "tab:blue",
-        "label": "No TT, no DB",
+        "pattern": "*_0.csv",
+        "color": "tab:red",
+        "label": "No TT, no SN, no DB",
     },
 
     {
-        "pattern": "*_10.csv",
+        "pattern": "*_1.csv",
         "color": "tab:orange",
-        "label": "TT, no DB",
+        "label": "TT, no SN, no DB",
     },
 
     {
-        "pattern": "*_11.csv",
+        "pattern": "*_2.csv",
+        "color": "tab:blue",
+        "label": "TT, SN, no DB",
+    },
+
+    {
+        "pattern": "*_3.csv",
         "color": "tab:green",
-        "label": "TT, DB",
+        "label": "TT, SN, DB",
     },
 ]
 
