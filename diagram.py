@@ -22,6 +22,8 @@ timed_out_set = set()
 
 output_dir = None
 
+node_rate = True
+
 
 def find(l, val):
     assert type(l) is list
@@ -216,6 +218,9 @@ def process_files(group, diagram_id, label_set):
     n_timeouts = 0
     n_cases = 0
 
+    total_time = 0
+    total_nodes = 0
+
     for file_name in file_list:
         wrapped = WrappedReader(file_name)
         reader = wrapped.reader()
@@ -232,8 +237,14 @@ def process_files(group, diagram_id, label_set):
                 n_timeouts += 1
                 continue
 
+            y_raw = int(line["Node Count"])
+            time_ms = float(line["Time (ms)"])
+
+            total_time += time_ms
+            total_nodes += y_raw
+
+            y = math.log(y_raw)
             x = metadata["x"]
-            y = math.log(int(line["Node Count"]))
             #y = int(line["Node Count"])
 
             data.append((x, y))
@@ -241,6 +252,11 @@ def process_files(group, diagram_id, label_set):
         wrapped.close()
 
     print(f"{n_timeouts} timeouts of {n_cases} cases")
+
+    if node_rate:
+        total_time /= 1000
+        print(f"{title} {group["label"]}: {total_nodes / total_time} nodes per "
+              "second")
 
     data_x = [val[0] for val in data]
     data_y = [val[1] for val in data]
