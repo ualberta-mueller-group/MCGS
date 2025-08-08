@@ -318,7 +318,7 @@ labels = [
     ["nogo_1xn", "# Moves For Player"],
     ["elephants", "Total Stones"],
     ["2xn clobber", "# Columns"],
-    ["clobber_1xn with holes", "# of Subgames"],
+    ["clobber_1xn subgames", "# of Subgames"],
 ]
 
 
