@@ -546,8 +546,8 @@ void gen_experiments()
     //const uint64_t max_attempts = 24000000;
     //const uint64_t bucket_size = 2000;
 
-    const uint64_t max_attempts = 6000000;
-    const uint64_t bucket_size = 50;
+    const uint64_t max_attempts = 24000000;
+    const uint64_t bucket_size = 2000;
 
 
     //const uint64_t max_attempts = 1000000;

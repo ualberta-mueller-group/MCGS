@@ -177,6 +177,7 @@ def process_timeouts(groups, diagram_id, label_set):
     max_x_global = max([x[2] for x in data_sets])
     bins = [x for x in range(min_x_global - 1, max_x_global + 2)]
     for i in range(len(groups)):
+
         g = groups[i]
         ds = data_sets[i]
 
@@ -184,9 +185,14 @@ def process_timeouts(groups, diagram_id, label_set):
         color = g["color"]
 
         counts = Counter(ds[0])
+        if i == 0:
+            max_key = max([k for k in counts.keys()], key=lambda x: counts[x])
+            print(f"{title} Max timeout bin: {max_key}, timeouts: {counts[max_key]}")
         counts = [counts[x] for x in bins]
+
+
         #plt.hist(ds[0], label=label, color=color, bins=bins)
-        plt.bar(bins, counts)
+        plt.bar(bins, counts, label=label, color=color)
         plt.xticks(bins)
         plt.title(title)
         plt.legend()

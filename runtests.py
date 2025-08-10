@@ -12,14 +12,14 @@ import pathlib
 # FIRE POINT: 28 bits (~1312 MiB), 30 without, 28 with
 # FIRE CREEK: 28 bits (~1312 MiB), 22 without, 20 with
 
-tt_idx_bits = 27
+tt_idx_bits = 28
 out_dir = "experiment_results"
-n_solvers_without_ttable = 13
-n_solvers_with_ttable = 7
+n_solvers_without_ttable = 26
+n_solvers_with_ttable = 26
 
 test_file = "experiments.test2"
 
-TEST_TIMEOUT = 40_000
+TEST_TIMEOUT = 60_000
 
 ############################################################ Don't touch these
 solvers = []
