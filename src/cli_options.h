@@ -22,6 +22,8 @@ struct cli_options
     bool run_tests; // Run autotests
     bool run_tests_stdin; // Run autotests from stdin
 
+    bool nogo_test;
+
     std::string test_directory;
     std::string outfile_name;        // CSV output file
     unsigned long long test_timeout; // ms

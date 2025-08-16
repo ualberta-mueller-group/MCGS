@@ -33,10 +33,10 @@ void fill_database(database& db)
 {
     std::vector<db_game_generator*> generators =
     {
-        new gridlike_db_game_generator<clobber_1xn>(15),
-        new gridlike_db_game_generator<nogo_1xn>(15),
-        new gridlike_db_game_generator<elephants>(15),
-        new gridlike_db_game_generator<clobber>(2, 5),
+        new gridlike_db_game_generator<clobber_1xn>(12),
+        new gridlike_db_game_generator<nogo_1xn>(12),
+        new gridlike_db_game_generator<elephants>(12),
+        new gridlike_db_game_generator<clobber>(3, 3),
         //new gridlike_db_game_generator<nogo>(3, 3),
     };
 

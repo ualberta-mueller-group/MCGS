@@ -13,6 +13,8 @@
 #include "global_options.h"
 #include "search_utils.h"
 
+#include "sbhsolver_test.h"
+
 using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
@@ -24,6 +26,12 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_all(opts);
+
+    if (opts.nogo_test)
+    {
+        nogo_sbhsolver_test();
+        return 0;
+    }
 
     if (opts.run_tests)
     {

@@ -21,6 +21,7 @@ public:
     operator bool() const override;
     void operator++() override;
     game* gen_game() const override;
+    int_pair get_shape() const;
 
 private:
     void _next(bool init);
@@ -74,6 +75,13 @@ inline game* gridlike_db_game_generator<T>::gen_game() const
 {
     assert(*this);
     return new T(_grid_gen.gen_board());
+}
+
+template <class T>
+inline int_pair gridlike_db_game_generator<T>::get_shape() const
+{
+    assert(*this);
+    return _grid_gen.get_shape();
 }
 
 template <class T>
