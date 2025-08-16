@@ -87,6 +87,15 @@ void print_help_message(const string& exec_name)
 
     print_flag(global::use_db.no_flag(), "Disable database usage.");
 
+    print_flag(global::play_split.no_flag(), "Don't split games after "
+               "playing a move.");
+
+    print_flag(global::play_normalize.no_flag(), "Don't normalize subgames "
+               "after playing a move.");
+
+    print_flag(global::dedupe_movegen.no_flag(), "Don't skip move generators "
+               "for duplicate subgames.");
+
     cout << "Misc options flags:" << endl;
     print_flag(global::random_seed.flag(),
                "Set seed for main random generator. "
@@ -409,6 +418,24 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::use_db.no_flag())
         {
             global::use_db.set(false);
+            continue;
+        }
+
+        if (arg == global::play_split.no_flag())
+        {
+            global::play_split.set(false);
+            continue;
+        }
+
+        if (arg == global::play_normalize.no_flag())
+        {
+            global::play_normalize.set(false);
+            continue;
+        }
+
+        if (arg == global::dedupe_movegen.no_flag())
+        {
+            global::dedupe_movegen.set(false);
             continue;
         }
 

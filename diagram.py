@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pathlib
 import math
+from collections import Counter
 import sys
 
 
@@ -20,6 +21,8 @@ show_figures = True
 timed_out_set = set()
 
 output_dir = None
+
+node_rate = True
 
 
 def find(l, val):
@@ -172,14 +175,25 @@ def process_timeouts(groups, diagram_id, label_set):
         #plt.legend()
     min_x_global = min([x[1] for x in data_sets])
     max_x_global = max([x[2] for x in data_sets])
-    bins = [x for x in range(min_x_global, max_x_global + 1)]
+    bins = [x for x in range(min_x_global - 1, max_x_global + 2)]
     for i in range(len(groups)):
+
         g = groups[i]
         ds = data_sets[i]
 
         label = g["label"]
         color = g["color"]
-        plt.hist(ds[0], label=label, color=color, bins=bins)
+
+        counts = Counter(ds[0])
+        if i == 0:
+            max_key = max([k for k in counts.keys()], key=lambda x: counts[x])
+            print(f"{title} Max timeout bin: {max_key}, timeouts: {counts[max_key]}")
+        counts = [counts[x] for x in bins]
+
+
+        #plt.hist(ds[0], label=label, color=color, bins=bins)
+        plt.bar(bins, counts, label=label, color=color)
+        plt.xticks(bins)
         plt.title(title)
         plt.legend()
 
@@ -192,10 +206,10 @@ def row_in_timeout_set(row):
 
     return input_hash in timed_out_set
 
+
 def pattern_to_file_list(pattern):
     assert type(pattern) is str
     return [f for f in input_dir.glob(pattern)]
-
 
 
 def process_files(group, diagram_id, label_set):
@@ -209,6 +223,9 @@ def process_files(group, diagram_id, label_set):
     data = []
     n_timeouts = 0
     n_cases = 0
+
+    total_time = 0
+    total_nodes = 0
 
     for file_name in file_list:
         wrapped = WrappedReader(file_name)
@@ -226,9 +243,14 @@ def process_files(group, diagram_id, label_set):
                 n_timeouts += 1
                 continue
 
+            y_raw = int(line["Node Count"])
+            time_ms = float(line["Time (ms)"])
 
+            total_time += time_ms
+            total_nodes += y_raw
+
+            y = math.log(y_raw)
             x = metadata["x"]
-            y = math.log(int(line["Node Count"]))
             #y = int(line["Node Count"])
 
             data.append((x, y))
@@ -236,6 +258,11 @@ def process_files(group, diagram_id, label_set):
         wrapped.close()
 
     print(f"{n_timeouts} timeouts of {n_cases} cases")
+
+    if node_rate:
+        total_time /= 1000
+        print(f"{title} {group["label"]}: {total_nodes / total_time} nodes per "
+              "second")
 
     data_x = [val[0] for val in data]
     data_y = [val[1] for val in data]
@@ -265,21 +292,27 @@ def process_files(group, diagram_id, label_set):
 ############################################################
 groups = [
     {
-        "pattern": "*_00.csv",
-        "color": "tab:blue",
-        "label": "No TT, no DB",
+        "pattern": "*_0.csv",
+        "color": "tab:red",
+        "label": "No TT, no SN, no DB",
     },
 
     {
-        "pattern": "*_10.csv",
+        "pattern": "*_1.csv",
         "color": "tab:orange",
-        "label": "TT, no DB",
+        "label": "TT, no SN, no DB",
     },
 
     {
-        "pattern": "*_11.csv",
+        "pattern": "*_2.csv",
+        "color": "tab:blue",
+        "label": "TT, SN, no DB",
+    },
+
+    {
+        "pattern": "*_3.csv",
         "color": "tab:green",
-        "label": "TT, DB",
+        "label": "TT, SN, DB",
     },
 ]
 
@@ -291,7 +324,7 @@ labels = [
     ["nogo_1xn", "# Moves For Player"],
     ["elephants", "Total Stones"],
     ["2xn clobber", "# Columns"],
-    ["clobber_1xn with holes", "# of Subgames"],
+    ["clobber_1xn subgames", "# of Subgames"],
 ]
 
 
@@ -299,6 +332,7 @@ for i in range(len(labels)):
     label_set = labels[i]
     title = label_set[0]
 
+    plt.close()
     process_timeouts(groups, i, label_set)
     if output_dir is not None:
         plt.savefig(f"{output_dir.absolute() / title}_timeouts.png")

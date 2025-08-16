@@ -130,11 +130,14 @@ void sumgame_move_generator::next_move(bool init)
         }
 
         // Skip already seen games
-        const hash_t hash = g->get_local_hash();
-        const bool already_seen = !_seen_games.insert(hash).second;
+        if (global::dedupe_movegen())
+        {
+            const hash_t hash = g->get_local_hash();
+            const bool already_seen = !_seen_games.insert(hash).second;
 
-        if (already_seen)
-            continue;
+            if (already_seen)
+                continue;
+        }
 
         _subgame_generator = g->create_move_generator(to_play());
 
@@ -588,10 +591,14 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
     game* g = subgame(subg);
 
     g->play(mv, to_play);
-    split_result sr = g->split();
+    split_result sr;
+
+    if (global::play_split())
+        sr = g->split();
 
     if (sr) // split changed the sum
     {
+        assert(global::play_split());
         record.did_split = true;
 
         // Don't normalize g, it's no longer part of the sum
@@ -599,14 +606,16 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 
         for (game* gp : *sr)
         {
-            gp->normalize();
+            if (global::play_normalize())
+                gp->normalize();
+
             add(gp);
             record.add_game(gp); // save these games in the record for debugging
         }
     }
     else
     {
-        if (global::tt_sumgame_idx_bits() > 0)
+        if (global::play_normalize())
             g->normalize();
     }
 
@@ -626,6 +635,7 @@ void sumgame::undo_move()
     // undo split (if necessary)
     if (record.did_split)
     {
+        assert(global::play_split());
         assert(!s->is_active()); // should have been deactivated on last split
 
         s->set_active(true);
@@ -646,7 +656,7 @@ void sumgame::undo_move()
     }
     else
     {
-        if (global::tt_sumgame_idx_bits() > 0)
+        if (global::play_normalize())
             s->undo_normalize();
     }
 

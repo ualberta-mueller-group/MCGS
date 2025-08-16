@@ -1,5 +1,6 @@
 #include "game.h"
 #include "cgt_basics.h"
+#include "throw_assert.h"
 #include "warn_default.h"
 
 #include <array>
