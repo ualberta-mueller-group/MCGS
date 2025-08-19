@@ -1,3 +1,3 @@
 #pragma once
 
-void nogo_sbhsolver_test();
+void nogo_split_test();

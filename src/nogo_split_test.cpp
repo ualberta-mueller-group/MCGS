@@ -1,4 +1,4 @@
-#include "sbhsolver_test.h"
+#include "nogo_split_test.h"
 #include "gridlike_db_game_generator.h"
 #include "nogo.h"
 #include "sumgame.h"
@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void nogo_sbhsolver_test()
+void nogo_split_test()
 {
     sumgame s(BLACK);
     gridlike_db_game_generator<nogo> gen(4, 4);

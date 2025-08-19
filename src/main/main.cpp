@@ -13,7 +13,8 @@
 #include "global_options.h"
 #include "search_utils.h"
 
-#include "sbhsolver_test.h"
+#include "nogo_split_test.h"
+#include "grid_generator_new.h"
 
 using std::cout, std::endl, std::string;
 
@@ -27,9 +28,12 @@ int main(int argc, char** argv)
 
     mcgs_init_all(opts);
 
+    test_grid_generator_new();
+    return 0;
+
     if (opts.nogo_test)
     {
-        nogo_sbhsolver_test();
+        nogo_split_test();
         return 0;
     }
 
