@@ -137,9 +137,23 @@ bool grid_mask::_increment_by_adding()
     return true;
 }
 
+// TODO why can't this just use the template from utilities.h? Header problem?
 std::ostream& operator<<(std::ostream& os, const grid_mask& mask)
 {
-    os << mask._mask;
+    const vector<bool>& vec = mask._mask;
+
+    os << '[';
+
+    const size_t N = vec.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        os << vec[i];
+
+        if (i + 1 < N)
+            os << ", ";
+    }
+
+    os << ']';
     return os;
 }
 
@@ -270,14 +284,14 @@ bool ggen_default::_increment_board()
 {
     bool carry = true;
 
-    const size_t board_size = _board.size();
-
-    for (size_t i = 0; i < board_size; i++)
+    for (auto it = _board.rbegin(); it != _board.rend(); it++)
     {
-        if (_board[i] == '|')
+        char& c = *it;
+
+        if (c == '|')
             continue;
 
-        carry = !increment_char_clobber_bwe(_board[i]);
+        carry = !increment_char_clobber_bwe(c);
 
         if (!carry)
             break;
@@ -339,14 +353,12 @@ bool ggen_nogo::_increment_board()
 //////////////////////////////////////////////////
 void test_grid_generator_new()
 {
-    ggen_default gen(int_pair(2, 2));
+    ggen_nogo gen(int_pair(2, 2));
 
     while (gen)
     {
         cout << gen.gen_board() << endl;
         ++gen;
     }
-
-
 }
 

@@ -8,9 +8,43 @@
 #include "strip.h"
 
 ////////////////////////////////////////////////// grid_mask
-
 namespace ggen_impl {
+/*
+    Mask for grid tiles, excluding SEP ('|').
 
+    Used to define clobber and nogo generator orderings:
+        Clobber iterates in order of increasing number of stones (stones on
+        the true spaces).
+
+        NoGo iterates in order of decreasing number of stones (stones on the
+        false spaces).
+
+    Example sequence for 2x2:
+        [0, 0, 0, 0]
+
+        [1, 0, 0, 0]
+        [0, 1, 0, 0]
+        [0, 0, 1, 0]
+        [0, 0, 0, 1]
+
+        [1, 1, 0, 0]
+        [1, 0, 1, 0]
+        [1, 0, 0, 1]
+        [0, 1, 1, 0]
+        [0, 1, 0, 1]
+        [0, 0, 1, 1]
+
+        [1, 1, 1, 0]
+        [1, 1, 0, 1]
+        [1, 0, 1, 1]
+        [0, 1, 1, 1]
+
+        [1, 1, 1, 1]
+
+    Note that the row separator is missing, meaning the same index cannot be
+    used for both the mask and the string representation of a grid game (if
+    the game has at least 2 rows).
+*/
 class grid_mask
 {
 public:
