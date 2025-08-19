@@ -1,110 +1,49 @@
 #include "grid_generator_new.h"
-#include "cgt_basics.h"
-#include "strip.h"
+#include "grid_utils.h"
 
-////////////////////////////////////////////////// classes
-class ggen_mask
+using namespace std;
+
+////////////////////////////////////////////////// helper functions
+namespace {
+
+bool increment_char_clobber_bw(char& c)
 {
-public:
-    ggen_mask() {}
+    if (c == 'X')
+    {
+        c = 'O';
+        return true;
+    }
 
-    size_t size() const;
-    bool operator[](const size_t idx) const;
-    void set_shape(const int_pair& shape);
-    bool increment();
-
-protected:
-    std::vector<bool> _mask;
-    std::vector<size_t> _indices;
-
-    bool _increment_by_moving(size_t marker_idx, size_t max_pos);
-    bool _increment_by_adding();
-
-private:
-    friend std::ostream& operator<<(std::ostream& os, const ggen_mask& mask);
-};
-
-class ggen
-{
-public:
-    ggen(const int_pair& max_shape);
-    virtual ~ggen() {}
-
-    // Methods
-    operator bool() const;
-    const std::string& gen_board() const;
-    void operator++();
-    const int_pair get_shape() const;
-
-protected:
-    // Data
-    const int_pair _max_shape;
-
-    int_pair _shape;
-    ggen_mask _mask;
-    std::string _board;
-
-    // Helpers
-    static bool _increment_shape_helper(int_pair& shape, const int_pair& max_shape);
-
-    static void _init_board_helper(std::string& board, const int_pair& shape,
-                                   const ggen_mask& mask, const char true_char,
-                                   const char false_char);
-
-    // Methods
-    virtual bool _increment_shape();
-    virtual bool _increment_mask();
-
-    // Abstract methods
-    virtual void _init_board() = 0;
-    virtual bool _increment_board() = 0;
-};
-
-class ggen_clobber: public ggen
-{
-public:
-    ggen_clobber(const int_pair& max_shape);
-
-protected:
-    void _init_board() override;
-    bool _increment_board() override;
-};
-
-class ggen_nogo: public ggen
-{
-public:
-    ggen_nogo(const int_pair& max_shape);
-
-protected:
-    void _init_board() override;
-    bool _increment_board() override;
-};
-
-class ggen_default: public ggen
-{
-public:
-    ggen_default(const int_pair& max_shape);
-
-protected:
-    void _init_board() override;
-    bool _increment_board() override;
-
-    bool _increment_mask() override;
-};
-
-////////////////////////////////////////////////// methods
-//////////////////////////////////////// ggen_mask
-size_t ggen_mask::size() const
-{
-    return _mask.size();
+    assert(c == 'O');
+    c = 'X';
+    return false;
 }
 
-bool ggen_mask::operator[](const size_t idx) const
+bool increment_char_clobber_bwe(char& c)
 {
-    return _mask[idx];
+    if (c == '.')
+    {
+        c = 'X';
+        return true;
+    }
+
+    if (c == 'X')
+    {
+        c = 'O';
+        return true;
+    }
+
+    assert(c == 'O');
+    c = '.';
+    return false;
 }
 
-void ggen_mask::set_shape(const int_pair& shape)
+} // namespace
+
+////////////////////////////////////////////////// grid_mask methods
+namespace ggen_impl {
+
+void grid_mask::set_shape(const int_pair& shape)
 {
     assert(shape.first >= 0 && shape.second >= 0);
 
@@ -118,7 +57,7 @@ void ggen_mask::set_shape(const int_pair& shape)
     _indices.reserve(mask_size);
 }
 
-bool ggen_mask::increment()
+bool grid_mask::increment()
 {
     // At most as many markers as the board would allow
     assert(_indices.size() <= _mask.size());
@@ -135,7 +74,7 @@ bool ggen_mask::increment()
     return _increment_by_adding();
 }
 
-bool ggen_mask::_increment_by_moving(size_t marker_number, size_t max_pos)
+bool grid_mask::_increment_by_moving(size_t marker_number, size_t max_pos)
 {
     assert(max_pos >= marker_number);
 
@@ -172,7 +111,7 @@ bool ggen_mask::_increment_by_moving(size_t marker_number, size_t max_pos)
     return false;
 }
 
-bool ggen_mask::_increment_by_adding()
+bool grid_mask::_increment_by_adding()
 {
     // No space for another marker
     if (_indices.size() >= _mask.size())
@@ -198,55 +137,15 @@ bool ggen_mask::_increment_by_adding()
     return true;
 }
 
-std::ostream& operator<<(std::ostream& os, const ggen_mask& mask)
+std::ostream& operator<<(std::ostream& os, const grid_mask& mask)
 {
     os << mask._mask;
     return os;
 }
 
-//////////////////////////////////////// ggen
-ggen::ggen(const int_pair& max_shape): _max_shape(max_shape)
-{
-}
+} // namespace ggen_impl
 
-ggen::operator bool() const
-{
-    return _shape.first <= _max_shape.first;
-}
-
-const std::string& ggen::gen_board() const
-{
-    assert(*this);
-    return _board;
-}
-
-void ggen::operator++()
-{
-    assert(*this);
-
-    if (_increment_board())
-        return;
-
-    if (_increment_mask())
-    {
-        _init_board();
-        return;
-    }
-
-    if (_increment_shape())
-    {
-        _mask.set_shape(_shape);
-        _init_board();
-        return;
-    }
-}
-
-const int_pair ggen::get_shape() const
-{
-    assert(*this);
-    return _shape;
-}
-
+////////////////////////////////////////////////// ggen methods
 bool ggen::_increment_shape_helper(int_pair& shape, const int_pair& max_shape)
 {
     assert((shape.first <= max_shape.first) && (shape.second <= max_shape.second));
@@ -267,8 +166,74 @@ bool ggen::_increment_shape_helper(int_pair& shape, const int_pair& max_shape)
 }
 
 void ggen::_init_board_helper(std::string& board, const int_pair& shape,
-                              const ggen_mask& mask, const char true_char,
-                              const char false_char)
+                              char init_char)
+{
+    assert(shape.first >= 0 && shape.second >= 0);
+
+    size_t board_size = shape.first * shape.second;
+    if (board_size > 0)
+        board_size += shape.first - 1;
+
+    board.resize(board_size);
+
+    size_t col_idx = 0;
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (col_idx == shape.second)
+        {
+            // TODO use ROW_SEP instead of literal
+            board[i] = '|';
+            col_idx = 0;
+            continue;
+        }
+
+        board[i] = init_char;
+        col_idx++;
+    }
+}
+
+////////////////////////////////////////////////// ggen_basic methods
+void ggen_basic::operator++()
+{
+    assert(*this);
+
+    if (_increment_board())
+        return;
+
+    if (_increment_shape())
+    {
+        _init_board();
+        return;
+    }
+}
+
+////////////////////////////////////////////////// ggen_masked methods
+void ggen_masked::operator++()
+{
+    assert(*this);
+
+    if (_increment_board())
+        return;
+
+    if (_increment_mask())
+    {
+        _init_board();
+        return;
+    }
+
+    if (_increment_shape())
+    {
+        _init_mask();
+        _init_board();
+        return;
+    }
+}
+
+void ggen_masked::_init_board_helper_masked(std::string& board,
+                                            const int_pair& shape,
+                                            const ggen_impl::grid_mask& mask,
+                                            char true_char, char false_char)
 {
     assert(shape.first >= 0 && shape.second >= 0);
 
@@ -297,68 +262,31 @@ void ggen::_init_board_helper(std::string& board, const int_pair& shape,
         mask_idx++;
         col_idx++;
     }
-
-}
-
-bool ggen::_increment_shape()
-{
-    return _increment_shape_helper(_shape, _max_shape);
-}
-
-bool ggen::_increment_mask()
-{
-    return _mask.increment();
 }
 
 
-
-//////////////////////////////////////// ggen_clobber
-namespace {
-bool increment_char_clobber_bw(char& c)
+////////////////////////////////////////////////// ggen_default methods
+bool ggen_default::_increment_board()
 {
-    if (c == 'X')
+    bool carry = true;
+
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
     {
-        c = 'O';
-        return true;
+        if (_board[i] == '|')
+            continue;
+
+        carry = !increment_char_clobber_bwe(_board[i]);
+
+        if (!carry)
+            break;
     }
 
-    assert(c == 'O');
-    c = 'X';
-    return false;
+    return !carry;
 }
 
-bool increment_char_clobber_bwe(char& c)
-{
-    if (c == '.')
-    {
-        c = 'X';
-        return true;
-    }
-
-    if (c == 'X')
-    {
-        c = 'O';
-        return true;
-    }
-
-    assert(c == 'O');
-    c = '.';
-    return false;
-}
-
-} // namespace
-
-ggen_clobber::ggen_clobber(const int_pair& max_shape): ggen(max_shape)
-{
-}
-
-void ggen_clobber::_init_board()
-{
-    const char char_black = color_to_clobber_char(BLACK);
-    const char char_empty = color_to_clobber_char(EMPTY);
-    _init_board_helper(_board, _shape, _mask, char_black, char_empty);
-}
-
+////////////////////////////////////////////////// ggen_clobber methods
 bool ggen_clobber::_increment_board()
 {
     bool carry = true;
@@ -383,18 +311,7 @@ bool ggen_clobber::_increment_board()
     return !carry;
 }
 
-//////////////////////////////////////// ggen_nogo
-ggen_nogo::ggen_nogo(const int_pair& max_shape): ggen(max_shape)
-{
-}
-
-void ggen_nogo::_init_board()
-{
-    const char char_black = color_to_clobber_char(BLACK);
-    const char char_empty = color_to_clobber_char(EMPTY);
-    _init_board_helper(_board, _shape, _mask, char_empty, char_black);
-}
-
+////////////////////////////////////////////////// ggen_nogo methods
 bool ggen_nogo::_increment_board()
 {
     bool carry = true;
@@ -419,48 +336,7 @@ bool ggen_nogo::_increment_board()
     return !carry;
 }
 
-//////////////////////////////////////// ggen_default
-
-ggen_default::ggen_default(const int_pair& max_shape): ggen(max_shape)
-{
-}
-
-void ggen_default::_init_board()
-{
-    const char char_empty = color_to_clobber_char(EMPTY);
-    _init_board_helper(_board, _shape, _mask, char_empty, char_empty);
-}
-
-bool ggen_default::_increment_board()
-{
-    bool carry = true;
-
-    const size_t board_size = _board.size();
-
-    for (size_t i = 0; i < board_size; i++)
-    {
-        if (_board[i] == '|')
-            continue;
-
-        carry = !increment_char_clobber_bwe(_board[i]);
-
-        if (!carry)
-            break;
-    }
-
-    return !carry;
-}
-
-bool ggen_default::_increment_mask()
-{
-    return false;
-}
-
-
 //////////////////////////////////////////////////
-
-using namespace std;
-
 void test_grid_generator_new()
 {
     ggen_default gen(int_pair(2, 2));

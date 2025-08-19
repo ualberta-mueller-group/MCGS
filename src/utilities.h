@@ -1,13 +1,15 @@
 #pragma once
+#include <vector>
+#include <iostream>
 #include <climits>
 #include <type_traits>
-#include <vector>
 #include <cassert>
 #include <string>
 #include "cgt_basics.h"
 #include <cstdint>
 #include <cstddef>
 #include <ostream>
+
 
 //////////////////////////////////////// general utility functions
 template <class T>

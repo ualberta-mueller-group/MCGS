@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <string>
+
+#include "grid_generator_new.h"
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
@@ -14,7 +16,6 @@
 #include "search_utils.h"
 
 #include "nogo_split_test.h"
-#include "grid_generator_new.h"
 
 using std::cout, std::endl, std::string;
 
