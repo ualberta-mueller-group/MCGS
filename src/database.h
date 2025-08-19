@@ -3,11 +3,9 @@
 #include <unordered_map>
 #include "cgt_basics.h"
 #include "game.h"
+#include "sumgame.h"
 #include "db_game_generator.h"
 #include "type_mapper.h"
-
-////////////////////////////////////////////////// test function
-void db_test();
 
 ////////////////////////////////////////////////// struct db_entry_partizan
 struct db_entry_partizan
@@ -101,6 +99,12 @@ private:
     typedef DB_MAP_T<game_type_t, terminal_layer_partizan_t> tree_partizan_t;
     typedef DB_MAP_T<game_type_t, terminal_layer_impartial_t> tree_impartial_t;
 
+    std::unique_ptr<sumgame> _sum;
+    uint64_t _game_count;
+
+    sumgame& _get_sumgame();
+    void _generate_entry_single(game* g);
+
     tree_partizan_t _tree_partizan;
     tree_impartial_t _tree_impartial;
 
@@ -133,3 +137,12 @@ void database::generate_entries_for_game()
     generate_entries(*gen);
     delete gen;
 }
+
+inline sumgame& database::_get_sumgame()
+{
+    if (_sum.get() == nullptr)
+        _sum.reset(new sumgame(BLACK));
+
+    return *_sum;
+}
+

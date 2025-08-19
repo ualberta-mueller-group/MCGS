@@ -208,7 +208,7 @@ split_result nogo::_split_impl() const
 game* nogo::inverse() const
 {
     std::vector<int> new_immortal = immortal();
-    int N = size();
+    const int N = size();
     for (int p = 0; p < N; p++) {
         if (is_black_white(new_immortal[p])) {
             new_immortal[p] = opponent(new_immortal[p]);

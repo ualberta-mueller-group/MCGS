@@ -31,15 +31,11 @@ outcome_class bools_to_outcome_class(bool black_wins, bool white_wins)
 
 } // namespace
 
-////////////////////////////////////////////////// test function
-void db_test()
+////////////////////////////////////////////////// database methods
+database::database(): _sum(nullptr), _game_count(0)
 {
 }
 
-////////////////////////////////////////////////// database methods
-database::database()
-{
-}
 void database::set_partizan(const game& g, const db_entry_partizan& entry)
 {
     const game_type_t gt = _mapper.translate_type(g.game_type());
@@ -136,57 +132,60 @@ void database::clear()
 
 void database::generate_entries(db_game_generator& gen)
 {
-    sumgame s(BLACK);
-
-    uint64_t game_count = 0;
-
-    std::unordered_set<hash_t> hashes;
-
     while (gen)
     {
         std::unique_ptr<game> g(gen.gen_game());
         ++gen;
 
-        // Skip if game splits
+        // If game splits, handle subgames
         split_result sr = g->split();
         if (sr.has_value())
         {
-            for (game* g : *sr)
-                delete g;
+            for (game* sg : *sr)
+            {
+                sg->normalize();
+                _generate_entry_single(sg);
+                delete sg;
+            }
 
             continue;
         }
 
-        // Normalize, skip if duplicate
+        // Normalize, handle g
         g->normalize();
-        if (hashes.find(g->get_local_hash()) != hashes.end())
-            continue;
-        hashes.insert(g->get_local_hash());
-
-        if ((game_count % 128) == 0)
-            cout << "Game #" << game_count << " " << *g << endl;
-
-        ++game_count;
-
-        assert(s.num_total_games() == 0);
-        s.add(g.get());
-
-        s.set_to_play(BLACK);
-        bool black_wins = s.solve();
-
-        s.set_to_play(WHITE);
-        bool white_wins = s.solve();
-
-        s.pop(g.get());
-
-        outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
-
-        db_entry_partizan entry;
-        entry.outcome = oc;
-
-        set_partizan(*g, entry);
+        _generate_entry_single(g.get());
     }
+}
 
+
+void database::_generate_entry_single(game* g)
+{
+    if (get_partizan(*g).has_value())
+        return;
+
+    if ((_game_count % 128) == 0)
+        cout << "Game # " << _game_count << ": " << *g << endl;
+    _game_count++;
+
+    sumgame& s = _get_sumgame();
+    assert(s.num_total_games() == 0);
+
+    s.add(g);
+
+    s.set_to_play(BLACK);
+    bool black_wins = s.solve();
+
+    s.set_to_play(WHITE);
+    bool white_wins = s.solve();
+
+    s.pop(g);
+
+    outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
+
+    db_entry_partizan entry;
+    entry.outcome = oc;
+
+    set_partizan(*g, entry);
     assert(s.num_total_games() == 0);
 }
 

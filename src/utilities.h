@@ -170,3 +170,22 @@ std::vector<T> vector_reversed(const std::vector<T>& vec)
 
     return rev;
 }
+
+// vector printing
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
+{
+    os << '[';
+
+    const size_t N = vec.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        os << vec[i];
+
+        if (i + 1 < N)
+            os << ", ";
+    }
+
+    os << ']';
+    return os;
+}

@@ -26,6 +26,7 @@ public:
 
     std::vector<int> immortal() const { return _immortal; }
 
+
 protected:
     void _init_hash(local_hash& hash) const override;
     split_result _split_impl() const override;
