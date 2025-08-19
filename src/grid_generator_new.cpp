@@ -52,8 +52,8 @@ protected:
                                    const char false_char);
 
     // Methods
-    bool _increment_shape();
-    bool _increment_mask();
+    virtual bool _increment_shape();
+    virtual bool _increment_mask();
 
     // Abstract methods
     virtual void _init_board() = 0;
@@ -78,6 +78,18 @@ public:
 protected:
     void _init_board() override;
     bool _increment_board() override;
+};
+
+class ggen_default: public ggen
+{
+public:
+    ggen_default(const int_pair& max_shape);
+
+protected:
+    void _init_board() override;
+    bool _increment_board() override;
+
+    bool _increment_mask() override;
 };
 
 ////////////////////////////////////////////////// methods
@@ -302,7 +314,7 @@ bool ggen::_increment_mask()
 
 //////////////////////////////////////// ggen_clobber
 namespace {
-bool increment_char_clobber(char& c)
+bool increment_char_clobber_bw(char& c)
 {
     if (c == 'X')
     {
@@ -312,6 +324,25 @@ bool increment_char_clobber(char& c)
 
     assert(c == 'O');
     c = 'X';
+    return false;
+}
+
+bool increment_char_clobber_bwe(char& c)
+{
+    if (c == '.')
+    {
+        c = 'X';
+        return true;
+    }
+
+    if (c == 'X')
+    {
+        c = 'O';
+        return true;
+    }
+
+    assert(c == 'O');
+    c = '.';
     return false;
 }
 
@@ -343,7 +374,7 @@ bool ggen_clobber::_increment_board()
         if (!_mask[mask_idx++])
             continue;
 
-        carry = !increment_char_clobber(_board[i]);
+        carry = !increment_char_clobber_bw(_board[i]);
 
         if (!carry)
             break;
@@ -379,13 +410,50 @@ bool ggen_nogo::_increment_board()
         if (_mask[mask_idx++])
             continue;
 
-        carry = !increment_char_clobber(_board[i]);
+        carry = !increment_char_clobber_bw(_board[i]);
 
         if (!carry)
             break;
     }
 
     return !carry;
+}
+
+//////////////////////////////////////// ggen_default
+
+ggen_default::ggen_default(const int_pair& max_shape): ggen(max_shape)
+{
+}
+
+void ggen_default::_init_board()
+{
+    const char char_empty = color_to_clobber_char(EMPTY);
+    _init_board_helper(_board, _shape, _mask, char_empty, char_empty);
+}
+
+bool ggen_default::_increment_board()
+{
+    bool carry = true;
+
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        carry = !increment_char_clobber_bwe(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
+bool ggen_default::_increment_mask()
+{
+    return false;
 }
 
 
@@ -395,7 +463,7 @@ using namespace std;
 
 void test_grid_generator_new()
 {
-    ggen_nogo gen(int_pair(2, 2));
+    ggen_default gen(int_pair(2, 2));
 
     while (gen)
     {
