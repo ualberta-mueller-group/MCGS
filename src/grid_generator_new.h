@@ -1,10 +1,12 @@
 #pragma once
 
 #include <iostream>
+#include <type_traits>
 #include <vector>
 #include <cstddef>
 #include "grid.h"
 #include "strip.h"
+#include "db_game_generator.h"
 
 /*
    TODO some of these probably have edge cases when some functions are
@@ -14,6 +16,7 @@
    Both _init and _increment functions should return bools and be allowed to
    fail
 
+   TODO why aren't these game orderings faster?
 */
 
 ////////////////////////////////////////////////// grid_mask
@@ -253,6 +256,41 @@ protected:
     bool _increment_board() override;
 };
 
+////////////////////////////////////////////////// gridlike_game_generator
+template <class Game_T, class Generator_T>
+class gridlike_game_generator: public db_game_generator
+{
+    static_assert(                                 //
+        std::is_base_of_v<grid, Game_T> ||         //
+        std::is_base_of_v<strip, Game_T>,          //
+        "Game must be derived from grid or strip." //
+    );                                             //
+
+    static_assert(!std::is_abstract_v<Game_T>, "Game must not be abstract.");
+
+    static_assert(                              //
+        std::is_base_of_v<ggen, Generator_T> && //
+        !std::is_abstract_v<Generator_T>        //
+    );                                          //
+
+public:
+    virtual ~gridlike_game_generator() {}
+
+    gridlike_game_generator(int max_cols);
+    gridlike_game_generator(int max_rows, int max_cols);
+
+    operator bool() const override;
+    void operator++() override;
+    game* gen_game() const override;
+
+protected:
+    Generator_T _gen;
+
+    void _init();
+    bool _game_legal() const;
+
+};
+
 ////////////////////////////////////////////////// grid_mask methods
 namespace ggen_impl {
 
@@ -369,6 +407,127 @@ inline void ggen_nogo::_init_board()
     const char black_char = color_to_clobber_char(BLACK);
     const char empty_char = color_to_clobber_char(EMPTY);
     _init_board_helper_masked(_board, _shape, _mask, empty_char, black_char);
+}
+
+
+////////////////////////////////////////////////// has_is_legal_v<T>
+// True IFF T has method: bool is_legal() const
+
+// NOLINTBEGIN(readability-identifier-naming)
+template <class T, class Enable = void>
+struct has_is_legal
+{
+    static constexpr bool value = false;
+};
+
+template <class T>
+struct has_is_legal<
+    T,
+    std::enable_if_t<
+        std::is_same_v<
+            bool (T::*)() const,
+            decltype(&T::is_legal)
+        >,
+        void
+    >
+>
+{
+    static constexpr bool value = true;
+};
+
+template <class T>
+static constexpr bool has_is_legal_v = has_is_legal<T>::value;
+// NOLINTEND(readability-identifier-naming)
+
+//////////////////////////////////////////////////
+// gridlike_game_generator methods
+
+template <class Game_T, class Generator_T>
+gridlike_game_generator<Game_T, Generator_T>::gridlike_game_generator(
+    int max_cols)
+    : _gen(int_pair(1, max_cols))
+{
+    assert(max_cols >= 0);
+    _init();
+}
+
+template <class Game_T, class Generator_T>
+gridlike_game_generator<Game_T, Generator_T>::gridlike_game_generator(
+    int max_rows, int max_cols)
+    : _gen(int_pair(max_rows, max_cols))
+{
+    static_assert(std::is_base_of_v<grid, Game_T>,
+                  "This constructor is for grids");
+
+    assert(max_rows >= 0 && max_cols >= 0);
+    _init();
+}
+
+template <class Game_T, class Generator_T>
+inline gridlike_game_generator<Game_T, Generator_T>::operator bool() const
+{
+    return _gen;
+}
+
+template <class Game_T, class Generator_T>
+void gridlike_game_generator<Game_T, Generator_T>::operator++()
+{
+    assert(*this);
+
+    do
+    {
+        assert(_gen);
+        ++_gen;
+    }
+    while (_gen && !_game_legal());
+}
+
+
+template <class Game_T, class Generator_T>
+game* gridlike_game_generator<Game_T, Generator_T>::gen_game() const
+{
+    assert(*this);
+    return new Game_T(_gen.gen_board());
+}
+
+template <class Game_T, class Generator_T>
+void gridlike_game_generator<Game_T, Generator_T>::_init()
+{
+    if (!_gen)
+    {
+        assert(!*this);
+        return;
+    }
+
+    if (_game_legal())
+    {
+        assert(*this);
+        return;
+    }
+
+    ++(*this);
+}
+
+template <class Game_T, class Generator_T>
+bool gridlike_game_generator<Game_T, Generator_T>::_game_legal() const
+{
+    assert(_gen);
+
+    try
+    {
+        Game_T g(_gen.gen_board());
+
+        if constexpr (has_is_legal_v<Game_T>)
+            return g.is_legal();
+
+        return true;
+    }
+    catch (std::exception& e)
+    {
+        return false;
+    }
+
+    assert(false);
 }
 
 //////////////////////////////////////////////////

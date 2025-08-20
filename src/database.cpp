@@ -163,8 +163,11 @@ void database::_generate_entry_single(game* g)
     if (get_partizan(*g).has_value())
         return;
 
-    if ((_game_count % 128) == 0)
-        cout << "Game # " << _game_count << ": " << *g << endl;
+    //bool print_game = true;
+    bool print_game = (_game_count % 128) == 0;
+
+    if (print_game)
+        cout << "Game # " << _game_count << ": " << *g << std::flush;
     _game_count++;
 
     sumgame& s = _get_sumgame();
@@ -187,6 +190,9 @@ void database::_generate_entry_single(game* g)
 
     set_partizan(*g, entry);
     assert(s.num_total_games() == 0);
+
+    if (print_game)
+        cout << " DONE" << endl;
 }
 
 

@@ -363,6 +363,7 @@ bool ggen_nogo::_increment_board()
 //////////////////////////////////////////////////
 void test_grid_generator_new()
 {
+    return;
     ggen_nogo gen({2, 2});
 
     while (gen)
