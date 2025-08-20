@@ -3,16 +3,28 @@
 #include <iostream>
 #include <vector>
 #include <cstddef>
-#include "utilities.h"
 #include "grid.h"
 #include "strip.h"
+
+/*
+   TODO some of these probably have edge cases when some functions are
+   overridden. The virtual functions probably suggest more generality than
+   is implemented, particularly around _init and _increment virtual functions
+
+   Both _init and _increment functions should return bools and be allowed to
+   fail
+
+*/
 
 ////////////////////////////////////////////////// grid_mask
 namespace ggen_impl {
 /*
-    Mask for grid tiles, excluding SEP ('|').
+    Boolean mask generator for grids.
 
-    Used to define clobber and nogo generator orderings:
+    The mask is flattened and doesn't represent row separators (SEP '|'). i.e.
+    for a 3x3 grid, the mask is a flat array of 9 bools.
+
+    Used to define clobber and nogo database game generator orderings:
         Clobber iterates in order of increasing number of stones (stones on
         the true spaces).
 
@@ -41,22 +53,29 @@ namespace ggen_impl {
 
         [1, 1, 1, 1]
 
-    Note that the row separator is missing, meaning the same index cannot be
-    used for both the mask and the string representation of a grid game (if
-    the game has at least 2 rows).
+    Note that because the row separator is not represented, indexing doesn't
+    align between the string representation of a grid, and the mask (when the
+    grid has at least 2 rows).
 */
 class grid_mask
 {
 public:
-    size_t size() const;
+    grid_mask();
+    grid_mask(const int_pair& shape);
+
+    size_t size() const; // number of tiles (excluding SEP)
     void set_shape(const int_pair& shape);
 
     bool operator[](size_t idx) const;
-    bool increment();
+
+    operator bool() const;
+    void operator++();
 
 protected:
+    size_t _marker_count_end;
+
     std::vector<bool> _mask;
-    std::vector<size_t> _indices;
+    std::vector<size_t> _indices; // locations of each marker in the mask
 
     bool _increment_by_moving(size_t marker_idx, size_t max_pos);
     bool _increment_by_adding();
@@ -71,6 +90,9 @@ std::ostream& operator<<(std::ostream& os, const grid_mask& mask);
 
 
 ////////////////////////////////////////////////// ggen
+/*
+   Interface class for grid generators
+*/
 class ggen
 {
 public:
@@ -80,9 +102,10 @@ public:
     virtual void operator++() = 0;
 
     virtual const std::string& gen_board() const = 0;
-    virtual const int_pair get_shape() const = 0;
+    virtual int_pair get_shape() const = 0;
 
 protected:
+    // Helper functions likely to be useful for most grid generators
     static bool _increment_shape_helper(int_pair& shape,
                                         const int_pair& max_shape);
 
@@ -90,18 +113,32 @@ protected:
                                    char init_char);
 };
 
-////////////////////////////////////////////////// ggen_basic
-class ggen_basic: public ggen
+////////////////////////////////////////////////// ggen_base
+/*
+    Abstract grid generator providing basic functionality to be used by
+    most grid generator types
+
+    Iterates over shapes i.e. for max_shape of 3x3:
+        0x0 -> 1x1 -> 1x2 -> 1x3 -> 2x1 -> 2x2 -> ... -> 3x2 -> 3x3
+
+    Derived type must implement:
+        _init_board()
+            Initialize board string for current shape, i.e.
+            for 2x2: "XX|XX" or "..|.."
+        _increment_board()
+            Increment current string board (i.e "XX|XX" -> "OX|XX")
+*/
+class ggen_base: public ggen
 {
 public:
-    ggen_basic(const int_pair& max_shape);
-    virtual ~ggen_basic() {}
+    ggen_base(const int_pair& max_shape);
+    virtual ~ggen_base() {}
 
     operator bool() const override;
     void operator++() override;
 
     const std::string& gen_board() const override;
-    const int_pair get_shape() const override;
+    int_pair get_shape() const override;
 
 protected:
     const int_pair _max_shape;
@@ -116,7 +153,18 @@ protected:
 };
 
 ////////////////////////////////////////////////// ggen_masked
-class ggen_masked: public ggen_basic
+/*
+    Abstract grid generator adding mask functionality. Used for
+    clobber and nogo generators (i.e. to iterate in order of increasing or
+    decreasing number of stones)
+
+    See ggen_base for mandatory functions to implement. Implementations should
+    account for the current mask state
+
+    _init_mask() and _increment_mask() are provided. See grid_mask class
+    for ordering. Overrides operator++() to account for mask
+*/
+class ggen_masked: public ggen_base
 {
 public:
     ggen_masked(const int_pair& max_shape);
@@ -127,6 +175,10 @@ public:
 protected:
     ggen_impl::grid_mask _mask;
 
+    /*
+       i.e. true/false characters for clobber: 'X' and '.'
+       for nogo: '.' and 'X'
+    */
     static void _init_board_helper_masked(std::string& board,
                                           const int_pair& shape,
                                           const ggen_impl::grid_mask& mask,
@@ -137,7 +189,14 @@ protected:
 };
 
 ////////////////////////////////////////////////// ggen_default
-class ggen_default: public ggen_basic
+/*
+   Non-abstract basic grid generator.
+
+   i.e for max_shape 2x2:
+       "" -> "." -> "X" -> "O" -> ".." -> ... -> 
+       "..|.." -> "..|.X" -> "..|.O" -> "..|X." -> "..|XX" -> ... -> "OO|OO"
+*/
+class ggen_default: public ggen_base
 {
 public:
     ggen_default(const int_pair& max_shape);
@@ -149,6 +208,17 @@ protected:
 };
 
 ////////////////////////////////////////////////// ggen_clobber
+/*
+   Non-abstract grid generator for Clobber ordering
+
+   i.e. for max_shape 2x2 (empties on the false part of the grid_mask):
+
+    "" -> "." -> "X" -> "O" -> ".." -> ... ->
+    "..|.." -> "X.|.." -> "O.|.." -> ".X|.." ->
+    ".O|.." -> "..|X." -> "..|O." -> "..|.X" -> "..|.O" -> "XX|.." -> "OX|.." ->
+    "XO|.." -> "OO|.." -> "X.|X." -> "O.|X." -> "X.|O." -> "O.|O." -> "X.|.X" ->
+    "O.|.X" -> "X.|.O" -> "O.|.O" -> ".X|X." -> ... -> "OO|OO"
+*/
 class ggen_clobber: public ggen_masked
 {
 public:
@@ -162,6 +232,16 @@ protected:
 
     
 ////////////////////////////////////////////////// ggen_nogo
+/*
+   Non-abstract grid generator for NoGo ordering
+
+    i.e. for max_shape 2x2 (empties on the true part of the grid_mask):
+
+   "" -> "X" -> "O" -> "." -> "XX" -> "OX" -> "XO" -> "OO" -> ".X" -> ".O" ->
+   "X." -> "O." -> ".." -> ... -> "X.|O." -> "O.|O." -> "XX|.." -> "OX|.." ->
+   "XO|.." -> "OO|.." -> "..|.X" -> "..|.O" -> "..|X." -> "..|O." -> ".X|.." ->
+   ".O|.." -> "X.|.." -> "O.|.." -> "..|.." -> 
+*/
 class ggen_nogo: public ggen_masked
 {
 public:
@@ -176,53 +256,69 @@ protected:
 ////////////////////////////////////////////////// grid_mask methods
 namespace ggen_impl {
 
+inline grid_mask::grid_mask()
+    : _marker_count_end(0)
+{
+}
+
+inline grid_mask::grid_mask(const int_pair& shape)
+{
+    set_shape(shape);
+}
+
 inline size_t grid_mask::size() const
 {
+    assert(*this);
     return _mask.size();
 }
 
 inline bool grid_mask::operator[](size_t idx) const
 {
+    assert(*this);
     return _mask[idx];
 }
 
+inline grid_mask::operator bool() const
+{
+    return _indices.size() < _marker_count_end;
+}
 
 } // namespace ggen_impl
 
-
-////////////////////////////////////////////////// ggen_basic methods
-inline ggen_basic::ggen_basic(const int_pair& max_shape)
+////////////////////////////////////////////////// ggen_base methods
+inline ggen_base::ggen_base(const int_pair& max_shape)
     : _max_shape(max_shape),
       _shape(0, 0)
 {
 }
 
-inline ggen_basic::operator bool() const
+inline ggen_base::operator bool() const
 {
     return (_shape.first <= _max_shape.first) && //
            (_shape.second <= _max_shape.second); //
 }
 
-inline const std::string& ggen_basic::gen_board() const
+inline const std::string& ggen_base::gen_board() const
 {
     assert(*this);
     return _board;
 }
 
-inline const int_pair ggen_basic::get_shape() const
+inline int_pair ggen_base::get_shape() const
 {
     assert(*this);
     return _shape;
 }
 
-inline bool ggen_basic::_increment_shape()
+inline bool ggen_base::_increment_shape()
 {
     return _increment_shape_helper(_shape, _max_shape);
 }
 
 ////////////////////////////////////////////////// ggen_masked methods
 inline ggen_masked::ggen_masked(const int_pair& max_shape)
-    : ggen_basic(max_shape)
+    : ggen_base(max_shape),
+      _mask(int_pair(0, 0))
 {
 }
 
@@ -233,12 +329,13 @@ inline void ggen_masked::_init_mask()
 
 inline bool ggen_masked::_increment_mask()
 {
-    return _mask.increment();
+    ++_mask;
+    return _mask;
 }
 
 ////////////////////////////////////////////////// ggen_default methods
 inline ggen_default::ggen_default(const int_pair& max_shape)
-    : ggen_basic(max_shape)
+    : ggen_base(max_shape)
 {
 }
 

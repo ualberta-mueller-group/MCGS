@@ -6,6 +6,7 @@ using namespace std;
 ////////////////////////////////////////////////// helper functions
 namespace {
 
+// 'X' --true--> 'O' --false--> 'X'
 bool increment_char_clobber_bw(char& c)
 {
     if (c == 'X')
@@ -19,6 +20,7 @@ bool increment_char_clobber_bw(char& c)
     return false;
 }
 
+// '.' --true--> 'X' --true--> 'O' --false--> '.'
 bool increment_char_clobber_bwe(char& c)
 {
     if (c == '.')
@@ -48,6 +50,7 @@ void grid_mask::set_shape(const int_pair& shape)
     assert(shape.first >= 0 && shape.second >= 0);
 
     const int mask_size = shape.first * shape.second;
+    _marker_count_end = mask_size + 1;
 
     _mask.resize(mask_size);
     for (size_t i = 0; i < mask_size; i++)
@@ -57,10 +60,10 @@ void grid_mask::set_shape(const int_pair& shape)
     _indices.reserve(mask_size);
 }
 
-bool grid_mask::increment()
+void grid_mask::operator++()
 {
     // At most as many markers as the board would allow
-    assert(_indices.size() <= _mask.size());
+    assert(*this);
 
     // If there is at least one marker, try to move right, starting with last
     // marker
@@ -68,10 +71,15 @@ bool grid_mask::increment()
         (_indices.size() > 0) &&                                    //
         _increment_by_moving(_indices.size() - 1, _mask.size() - 1) //
         )                                                           //
-        return true;
+        return;
 
     // Otherwise add another marker and reset positions of all markers
-    return _increment_by_adding();
+    if (!_increment_by_adding())
+    {
+        // Ensure operator bool() returns false
+        _marker_count_end = 0;
+        assert(!*this);
+    }
 }
 
 bool grid_mask::_increment_by_moving(size_t marker_number, size_t max_pos)
@@ -113,7 +121,9 @@ bool grid_mask::_increment_by_moving(size_t marker_number, size_t max_pos)
 
 bool grid_mask::_increment_by_adding()
 {
-    // No space for another marker
+    assert(*this);
+
+    // No space for another marker, but push marker anyway (for operator bool())
     if (_indices.size() >= _mask.size())
         return false;
 
@@ -207,8 +217,8 @@ void ggen::_init_board_helper(std::string& board, const int_pair& shape,
     }
 }
 
-////////////////////////////////////////////////// ggen_basic methods
-void ggen_basic::operator++()
+////////////////////////////////////////////////// ggen_base methods
+void ggen_base::operator++()
 {
     assert(*this);
 
@@ -353,11 +363,11 @@ bool ggen_nogo::_increment_board()
 //////////////////////////////////////////////////
 void test_grid_generator_new()
 {
-    ggen_nogo gen(int_pair(2, 2));
+    ggen_nogo gen({2, 2});
 
     while (gen)
     {
-        cout << gen.gen_board() << endl;
+        cout << '|' << gen.gen_board() << endl;
         ++gen;
     }
 }
