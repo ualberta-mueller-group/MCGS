@@ -64,6 +64,26 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Important or good to have before V2
 - Medium priority
 
+### Text interface to play game vs MCGS
+- Initialise a game
+- Keep and update state during game
+- Show state
+- Prompt and accept human's move
+- Compute a winning reply
+- At end, show final result
+- Show strip, grid as simple text. How about Kayles? Can also show as strip?
+
+### More games
+- Domineering/Cram
+- Amazons
+
+### Define some student course projects using MCGS
+- Implement more games
+- Port more algorithms to MCGS? Which?
+    - Kao's temperature
+    - Dai/Chen impartial linear clobber
+    - Impartial NoGo
+
 ### Move ordering heuristics
 - Can we define some in a game-independent way?
 - Play in the middle heuristic
