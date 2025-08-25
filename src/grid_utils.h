@@ -112,40 +112,6 @@ private:
     int_pair _coord;
 };
 
-////////////////////////////////////////////////// class grid_generator
-class grid_generator
-{
-public:
-    // strips
-    grid_generator(size_t n_cols);
-
-    // grids
-    grid_generator(size_t n_rows, size_t n_cols);
-    grid_generator(const int_pair& dims);
-
-    operator bool() const;
-    const std::string& gen_board() const;
-
-    void operator++();
-
-    static std::string get_empty_board(size_t rows, size_t cols);
-
-    const int_pair get_shape() const;
-
-private:
-    bool _increment_board();
-    void _increment_dimensions();
-    bool _has_zero_area() const;
-
-    const size_t _n_rows;
-    const size_t _n_cols;
-
-    size_t _current_rows;
-    size_t _current_cols;
-
-    std::string _board;
-};
-
 ////////////////////////////////////////////////// grid_location implementation
 inline grid_location::grid_location(const int_pair& shape)
     : _shape(shape), _coord(0, 0)
@@ -279,45 +245,3 @@ inline int_pair grid_location::point_to_coord(int point, const int_pair& shape)
     return {r, c};
 }
 
-////////////////////////////////////////////////// grid_generator implementation
-inline grid_generator::grid_generator(size_t n_cols)
-    : _n_rows(1), _n_cols(n_cols), _current_rows(0), _current_cols(0)
-{
-    assert(_n_rows >= 0 && _n_cols >= 0);
-}
-
-inline grid_generator::grid_generator(size_t n_rows, size_t n_cols)
-    : _n_rows(n_rows), _n_cols(n_cols), _current_rows(0), _current_cols(0)
-{
-    assert(_n_rows >= 0 && _n_cols >= 0);
-}
-
-inline grid_generator::grid_generator(const int_pair& dims)
-    : _n_rows(dims.first),
-      _n_cols(dims.second),
-      _current_rows(0),
-      _current_cols(0)
-{
-    assert(_n_rows >= 0 && _n_cols >= 0);
-}
-
-inline grid_generator::operator bool() const
-{
-    return (_current_rows <= _n_rows) && (_current_cols <= _n_cols);
-}
-
-inline const std::string& grid_generator::gen_board() const
-{
-    assert(*this);
-    return _board;
-}
-
-inline const int_pair grid_generator::get_shape() const
-{
-    return {_current_rows, _current_cols};
-}
-
-inline bool grid_generator::_has_zero_area() const
-{
-    return (_current_rows <= 0) || (_current_cols <= 0);
-}

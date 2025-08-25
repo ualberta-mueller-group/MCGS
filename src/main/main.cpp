@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 
-#include "grid_generator_new.h"
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
@@ -28,9 +27,6 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_all(opts);
-
-    test_grid_generator_new();
-    return 0;
 
     if (opts.nogo_test)
     {

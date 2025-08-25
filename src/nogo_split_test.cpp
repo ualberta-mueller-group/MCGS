@@ -10,7 +10,7 @@ using namespace std;
 void nogo_split_test()
 {
     sumgame s(BLACK);
-    gridlike_db_game_generator<nogo> gen(4, 4);
+    gridlike_db_game_generator<nogo, grid_generator_default> gen(4, 4);
 
     uint64_t game_number = 0;
     while (gen)

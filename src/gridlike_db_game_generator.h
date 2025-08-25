@@ -3,135 +3,137 @@
 #include <type_traits>
 #include "db_game_generator.h"
 #include "grid_utils.h"
+#include "grid_generator.h"
 #include "nogo_1xn.h"
+#include "custom_traits.h"
 #include "nogo.h"
 #include "strip.h"
 
-////////////////////////////////////////////////// class gridlike_db_game_generator<T>
-template <class T>
+
+////////////////////////////////////////////////// gridlike_game_generator
+template <class Game_T, class Generator_T>
 class gridlike_db_game_generator: public db_game_generator
 {
-    static_assert(std::is_base_of_v<strip, T> || std::is_base_of_v<grid, T>);
-    static_assert(!std::is_abstract_v<T>);
+    static_assert(                                 //
+        std::is_base_of_v<grid, Game_T> ||         //
+        std::is_base_of_v<strip, Game_T>,          //
+        "Game must be derived from grid or strip." //
+    );                                             //
+
+    static_assert(!std::is_abstract_v<Game_T>, "Game must not be abstract.");
+
+    static_assert(                              //
+        std::is_base_of_v<grid_generator, Generator_T> && //
+        !std::is_abstract_v<Generator_T>        //
+    );                                          //
 
 public:
-    gridlike_db_game_generator(int strip_size);
-    gridlike_db_game_generator(int n_rows, int n_cols);
+    virtual ~gridlike_db_game_generator() {}
+
+    gridlike_db_game_generator(int max_cols);
+    gridlike_db_game_generator(int max_rows, int max_cols);
 
     operator bool() const override;
     void operator++() override;
     game* gen_game() const override;
-    int_pair get_shape() const;
 
-private:
-    void _next(bool init);
-    bool _current_board_valid() const;
-    bool _game_is_legal(const T* g) const;
+protected:
+    Generator_T _gen;
 
-    grid_generator _grid_gen;
+    void _init();
+    bool _game_legal() const;
+
 };
 
-////////////////////////////////////////////////// gridlike_db_game_generator methods
-/*
-   TODO this is inefficient -- shouldn't have to create game objects,
-   especially not with operator new...
 
-   Maybe it's OK?
-*/
+//////////////////////////////////////////////////
+// gridlike_db_game_generator methods
 
-template <class T>
-inline gridlike_db_game_generator<T>::gridlike_db_game_generator(int strip_size)
-    : _grid_gen(strip_size)
+template <class Game_T, class Generator_T>
+gridlike_db_game_generator<Game_T, Generator_T>::gridlike_db_game_generator(
+    int max_cols)
+    : _gen(int_pair(1, max_cols))
 {
-    assert(strip_size >= 0);
-    _next(true);
+    assert(max_cols >= 0);
+    _init();
 }
 
-template <class T>
-inline gridlike_db_game_generator<T>::gridlike_db_game_generator(int n_rows, int n_cols)
-    : _grid_gen(n_rows, n_cols)
+template <class Game_T, class Generator_T>
+gridlike_db_game_generator<Game_T, Generator_T>::gridlike_db_game_generator(
+    int max_rows, int max_cols)
+    : _gen(int_pair(max_rows, max_cols))
 {
-    static_assert(std::is_base_of_v<grid, T>, "This function is only for grids");
-    assert(n_rows >= 0 && n_cols >= 0);
-    _next(true);
+    static_assert(std::is_base_of_v<grid, Game_T>,
+                  "This constructor is for grids");
+
+    assert(max_rows >= 0 && max_cols >= 0);
+    _init();
 }
 
-
-template <class T>
-inline gridlike_db_game_generator<T>::operator bool() const
+template <class Game_T, class Generator_T>
+inline gridlike_db_game_generator<Game_T, Generator_T>::operator bool() const
 {
-    return _grid_gen;
+    return _gen;
 }
 
-template <class T>
-inline void gridlike_db_game_generator<T>::operator++()
+template <class Game_T, class Generator_T>
+void gridlike_db_game_generator<Game_T, Generator_T>::operator++()
 {
     assert(*this);
-    _next(false);
+
+    do
+    {
+        assert(_gen);
+        ++_gen;
+    }
+    while (_gen && !_game_legal());
 }
 
-template <class T>
-inline game* gridlike_db_game_generator<T>::gen_game() const
+
+template <class Game_T, class Generator_T>
+game* gridlike_db_game_generator<Game_T, Generator_T>::gen_game() const
 {
     assert(*this);
-    return new T(_grid_gen.gen_board());
+    return new Game_T(_gen.gen_board());
 }
 
-template <class T>
-inline int_pair gridlike_db_game_generator<T>::get_shape() const
+template <class Game_T, class Generator_T>
+void gridlike_db_game_generator<Game_T, Generator_T>::_init()
 {
-    assert(*this);
-    return _grid_gen.get_shape();
+    if (!_gen)
+    {
+        assert(!*this);
+        return;
+    }
+
+    if (_game_legal())
+    {
+        assert(*this);
+        return;
+    }
+
+    ++(*this);
 }
 
-template <class T>
-void gridlike_db_game_generator<T>::_next(bool init)
+template <class Game_T, class Generator_T>
+bool gridlike_db_game_generator<Game_T, Generator_T>::_game_legal() const
 {
-    assert(init || *this);
-    assert(_grid_gen);
+    assert(_gen);
 
-    if (!init)
-        ++_grid_gen;
-
-    while (_grid_gen && !_current_board_valid())
-        ++_grid_gen;
-}
-
-template <class T>
-bool gridlike_db_game_generator<T>::_current_board_valid() const
-{
-    assert(_grid_gen);
-
-    /*
-        nogo_1xn may or may not throw during construction when the board is
-        illegal (depending on whether NOGO_DEBUG is defined).
-
-        If it doesn't throw, is_legal() will still filter the illegal boards
-
-        TODO: Fix this...
-    */
     try
     {
-        // Reject illegal boards
-        T g(_grid_gen.gen_board());
+        Game_T g(_gen.gen_board());
 
-        if (!_game_is_legal(&g))
-            return false;
+        if constexpr (has_is_legal_v<Game_T>)
+            return g.is_legal();
+
+        return true;
     }
-    catch (std::exception& exc)
+    catch (std::exception& e)
     {
         return false;
     }
 
-    return true;
+    assert(false);
 }
 
-
-template <class T>
-inline bool gridlike_db_game_generator<T>::_game_is_legal(const T* g) const
-{
-    if constexpr (std::is_same_v<T, nogo_1xn> || std::is_same_v<T, nogo>)
-        return g->is_legal();
-
-    return true;
-}

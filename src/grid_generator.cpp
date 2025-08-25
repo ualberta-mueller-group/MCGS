@@ -1,4 +1,4 @@
-#include "grid_generator_new.h"
+#include "grid_generator.h"
 #include "grid_utils.h"
 
 using namespace std;
@@ -43,7 +43,7 @@ bool increment_char_clobber_bwe(char& c)
 } // namespace
 
 ////////////////////////////////////////////////// grid_mask methods
-namespace ggen_impl {
+namespace grid_generator_impl {
 
 void grid_mask::set_shape(const int_pair& shape)
 {
@@ -167,10 +167,10 @@ std::ostream& operator<<(std::ostream& os, const grid_mask& mask)
     return os;
 }
 
-} // namespace ggen_impl
+} // namespace grid_generator_impl
 
-////////////////////////////////////////////////// ggen methods
-bool ggen::_increment_shape_helper(int_pair& shape, const int_pair& max_shape)
+////////////////////////////////////////////////// grid_generator methods
+bool grid_generator::increment_shape_helper(int_pair& shape, const int_pair& max_shape)
 {
     assert((shape.first <= max_shape.first) && (shape.second <= max_shape.second));
 
@@ -189,7 +189,7 @@ bool ggen::_increment_shape_helper(int_pair& shape, const int_pair& max_shape)
     return (shape.first <= max_shape.first) && (shape.second <= max_shape.second);
 }
 
-void ggen::_init_board_helper(std::string& board, const int_pair& shape,
+void grid_generator::init_board_helper(std::string& board, const int_pair& shape,
                               char init_char)
 {
     assert(shape.first >= 0 && shape.second >= 0);
@@ -217,8 +217,8 @@ void ggen::_init_board_helper(std::string& board, const int_pair& shape,
     }
 }
 
-////////////////////////////////////////////////// ggen_base methods
-void ggen_base::operator++()
+////////////////////////////////////////////////// grid_generator_base methods
+void grid_generator_base::operator++()
 {
     assert(*this);
 
@@ -232,8 +232,8 @@ void ggen_base::operator++()
     }
 }
 
-////////////////////////////////////////////////// ggen_masked methods
-void ggen_masked::operator++()
+////////////////////////////////////////////////// grid_generator_masked methods
+void grid_generator_masked::operator++()
 {
     assert(*this);
 
@@ -254,9 +254,9 @@ void ggen_masked::operator++()
     }
 }
 
-void ggen_masked::_init_board_helper_masked(std::string& board,
+void grid_generator_masked::init_board_helper_masked(std::string& board,
                                             const int_pair& shape,
-                                            const ggen_impl::grid_mask& mask,
+                                            const grid_generator_impl::grid_mask& mask,
                                             char true_char, char false_char)
 {
     assert(shape.first >= 0 && shape.second >= 0);
@@ -289,8 +289,8 @@ void ggen_masked::_init_board_helper_masked(std::string& board,
 }
 
 
-////////////////////////////////////////////////// ggen_default methods
-bool ggen_default::_increment_board()
+////////////////////////////////////////////////// grid_generator_default methods
+bool grid_generator_default::_increment_board()
 {
     bool carry = true;
 
@@ -310,8 +310,8 @@ bool ggen_default::_increment_board()
     return !carry;
 }
 
-////////////////////////////////////////////////// ggen_clobber methods
-bool ggen_clobber::_increment_board()
+////////////////////////////////////////////////// grid_generator_clobber methods
+bool grid_generator_clobber::_increment_board()
 {
     bool carry = true;
 
@@ -335,8 +335,8 @@ bool ggen_clobber::_increment_board()
     return !carry;
 }
 
-////////////////////////////////////////////////// ggen_nogo methods
-bool ggen_nogo::_increment_board()
+////////////////////////////////////////////////// grid_generator_nogo methods
+bool grid_generator_nogo::_increment_board()
 {
     bool carry = true;
 
@@ -359,17 +359,3 @@ bool ggen_nogo::_increment_board()
 
     return !carry;
 }
-
-//////////////////////////////////////////////////
-void test_grid_generator_new()
-{
-    return;
-    ggen_nogo gen({2, 2});
-
-    while (gen)
-    {
-        cout << '|' << gen.gen_board() << endl;
-        ++gen;
-    }
-}
-
