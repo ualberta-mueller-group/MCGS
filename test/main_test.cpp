@@ -85,6 +85,7 @@ void print_usage(const char* exec_name)
 int main(int argc, const char** argv)
 {
     global::silence_warnings.set(true);
+    global::use_db.set(false);
     mcgs_init_all();
 
     if (RUN_OVERRIDE_TESTS)
