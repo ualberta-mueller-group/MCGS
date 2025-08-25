@@ -489,7 +489,7 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg.size() > 0 && arg.front() != '-')
+        if (arg.size() >= 0 && arg.front() != '-')
         {
             // the rest of args is input to the file_parser
 
