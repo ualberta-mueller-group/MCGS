@@ -551,7 +551,8 @@ void gen_experiments()
 {
 
     cerr << "WARNING: May not produce same input as used for the paper. "
-        "Use the commit mentioned in the paper instead..." << endl;
+        "Use the commit mentioned in the paper instead "
+        "(4113a903b24744b901173e5d18f06484887415ba)" << endl;
 
     init();
 
