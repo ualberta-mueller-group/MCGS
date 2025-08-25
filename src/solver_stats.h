@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <string>
 #include <algorithm>
 
 //////////////////////////////////////////////////

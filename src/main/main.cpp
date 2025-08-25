@@ -15,6 +15,7 @@
 #include "search_utils.h"
 
 #include "nogo_split_test.h"
+#include "sumgame.h"
 
 using std::cout, std::endl, std::string;
 

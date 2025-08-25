@@ -14,6 +14,8 @@
 #include <vector>
 #include <set>
 #include <optional>
+#include <cstdint>
+#include <utility>
 #include <ostream>
 #include <cassert>
 

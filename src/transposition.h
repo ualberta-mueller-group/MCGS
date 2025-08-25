@@ -2,13 +2,14 @@
 #include "utilities.h"
 
 #include "hashing.h"
-#include "solver_stats.h"
 #include <cstddef>
 #include <cassert>
 #include <type_traits>
 #include <optional>
+#include <iostream>
 #include "random.h"
 #include "throw_assert.h"
+#include "global_options.h"
 
 ////////////////////////////////////////////////// class ttable
 template <class Entry>

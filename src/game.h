@@ -15,8 +15,9 @@
 #include <vector>
 #include <optional>
 #include <cassert>
-
 #include <type_traits>
+
+#include "type_table.h"
 
 //---------------------------------------------------------------------------
 

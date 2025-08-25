@@ -12,6 +12,8 @@
 #include <vector>
 #include <ostream>
 
+#include "iobuffer.h"
+
 class clobber_1xn : public strip
 {
 public:

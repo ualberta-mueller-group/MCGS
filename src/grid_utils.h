@@ -8,8 +8,6 @@
 #include "grid.h"
 #include "throw_assert.h"
 #include <cassert>
-#include <cstddef>
-#include <string>
 
 enum grid_dir
 {

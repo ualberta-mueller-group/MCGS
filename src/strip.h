@@ -12,6 +12,9 @@
 #include "cgt_basics.h"
 #include <vector>
 #include <cassert>
+#include <utility>
+
+#include "iobuffer.h"
 
 //---------------------------------------------------------------------------
 

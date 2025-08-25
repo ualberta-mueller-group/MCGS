@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <ostream>
+#include <cstddef>
 
 class nogo : public grid
 {

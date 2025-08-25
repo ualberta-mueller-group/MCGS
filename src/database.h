@@ -1,8 +1,16 @@
 #pragma once
 #include <string>
+#include <iostream>
 #include <unordered_map>
+#include <memory>
+#include <cstdint>
+#include <optional>
+
 #include "cgt_basics.h"
+#include "type_table.h"
 #include "game.h"
+#include "serializer.h"
+#include "iobuffer.h"
 #include "sumgame.h"
 #include "db_game_generator.h"
 #include "type_mapper.h"

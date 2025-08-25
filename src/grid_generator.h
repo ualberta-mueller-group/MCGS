@@ -1,12 +1,11 @@
 #pragma once
 
 #include <iostream>
-#include <type_traits>
 #include <vector>
+#include <cassert>
 #include <cstddef>
 #include "grid.h"
 #include "strip.h"
-#include "db_game_generator.h"
 
 /*
    TODO some of these probably have edge cases when some functions are

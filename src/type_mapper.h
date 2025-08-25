@@ -1,8 +1,11 @@
 #pragma once
 #include <string>
+#include <unordered_map>
+#include <vector>
+#include <iostream>
 #include "serializer.h"
-#include "throw_assert.h"
 #include "type_table.h"
+#include "iobuffer.h"
 
 ////////////////////////////////////////////////// class type_mapper
 class type_mapper
