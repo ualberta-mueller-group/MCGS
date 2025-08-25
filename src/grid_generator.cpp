@@ -200,15 +200,23 @@ bool grid_generator::increment_shape_helper(int_pair& shape, const int_pair& max
 
    But this requires two types of grid generators, one for strips and one
        for grids...
-
-    NOTE: not quite correct for NxM, N != M
 */
 /*
 bool grid_generator::increment_shape_helper(int_pair& shape,
                                             const int_pair& max_shape)
 {
-    assert((shape.first <= max_shape.first) && 
-            (shape.second <= max_shape.second));
+      assert(
+          ((shape.first <= max_shape.first) && 
+          (shape.second <= max_shape.second))
+
+          ||
+
+          ((shape.first <= max_shape.second) && 
+          (shape.second <= max_shape.first))
+          );
+
+    const int max_dim = max(max_shape.first, max_shape.second);
+    const int min_dim = min(max_shape.first, max_shape.second);
 
     if (shape.first == 0 && shape.second == 0)
         shape = int_pair(1, 1);
@@ -219,16 +227,18 @@ bool grid_generator::increment_shape_helper(int_pair& shape,
         swap(shape.first, shape.second);
         shape.second++;
 
-        if (shape.second > max_shape.second)
+        if (shape.second > max_dim)
         {
-            const int next = min(shape.first, shape.second) + 1;
-            shape.first = next;
-            shape.second = next;
+            const int next_val = min(shape.first, shape.second) + 1;
+            shape.first = next_val;
+            shape.second = next_val;
         }
     }
 
-    return (shape.first <= max_shape.first) && 
-            (shape.second <= max_shape.second);
+    const bool both_le_max = (shape.first <= max_dim) && (shape.second <= max_dim);
+    const bool one_le_min = (shape.first <= min_dim) || (shape.second <= min_dim);
+
+    return both_le_max && one_le_min;
 }
 */
 
