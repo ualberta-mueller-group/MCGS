@@ -189,6 +189,41 @@ bool grid_generator::increment_shape_helper(int_pair& shape, const int_pair& max
     return (shape.first <= max_shape.first) && (shape.second <= max_shape.second);
 }
 
+/*
+   TODO use this other function to generate transposes at some point
+
+   But this requires two types of grid generators, one for strips and one
+       for grids...
+*/
+/*
+bool grid_generator::increment_shape_helper(int_pair& shape,
+                                            const int_pair& max_shape)
+{
+    assert((shape.first <= max_shape.first) && 
+            (shape.second <= max_shape.second));
+
+    if (shape.first == 0 && shape.second == 0)
+        shape = int_pair(1, 1);
+    else if (shape.first < shape.second)
+        swap(shape.first, shape.second);
+    else
+    {
+        swap(shape.first, shape.second);
+        shape.second++;
+
+        if (shape.second > max_shape.second)
+        {
+            const int next = min(shape.first, shape.second) + 1;
+            shape.first = next;
+            shape.second = next;
+        }
+    }
+
+    return (shape.first <= max_shape.first) && 
+            (shape.second <= max_shape.second);
+}
+*/
+
 void grid_generator::init_board_helper(std::string& board, const int_pair& shape,
                               char init_char)
 {
