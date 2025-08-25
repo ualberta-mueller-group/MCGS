@@ -200,6 +200,8 @@ bool grid_generator::increment_shape_helper(int_pair& shape, const int_pair& max
 
    But this requires two types of grid generators, one for strips and one
        for grids...
+
+    NOTE: not quite correct for NxM, N != M
 */
 /*
 bool grid_generator::increment_shape_helper(int_pair& shape,
