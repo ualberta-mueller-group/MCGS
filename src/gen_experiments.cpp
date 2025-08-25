@@ -76,7 +76,7 @@ inline const string& get_game_name(game_type_t type)
     return it->second;
 }
 
-const string& get_game_name(const game& g)
+[[ maybe_unused ]] const string& get_game_name(const game& g) 
 {
     return get_game_name(g.game_type());
 }
@@ -420,7 +420,7 @@ generated_game gen_large_clobber()
     // Move count, hash, type
     clobber g(board, shape);
 
-    size_t move_count = count_moves_for(g, player);
+    //size_t move_count = count_moves_for(g, player);
     hash_t hash = get_hash(g, player);
     game_type_t type = game_type<clobber>();
 
@@ -466,7 +466,7 @@ generated_game gen_large_clobber_1xn_subgames()
     // Move count, hash, type
     clobber_1xn g(board_string);
 
-    size_t move_count = count_moves_for(g, player);
+    //size_t move_count = count_moves_for(g, player);
     hash_t hash = get_hash(g, player);
     game_type_t type = game_type<clobber_1xn>();
 

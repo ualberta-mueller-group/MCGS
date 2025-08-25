@@ -53,7 +53,7 @@ void grid_mask::set_shape(const int_pair& shape)
     _marker_count_end = mask_size + 1;
 
     _mask.resize(mask_size);
-    for (size_t i = 0; i < mask_size; i++)
+    for (int i = 0; i < mask_size; i++)
         _mask[i] = false;
 
     _indices.clear();
@@ -202,9 +202,11 @@ void grid_generator::init_board_helper(std::string& board, const int_pair& shape
 
     size_t col_idx = 0;
 
+    const unsigned int col_count = shape.second;
+
     for (size_t i = 0; i < board_size; i++)
     {
-        if (col_idx == shape.second)
+        if (col_idx == col_count)
         {
             // TODO use ROW_SEP instead of literal
             board[i] = '|';
@@ -270,9 +272,11 @@ void grid_generator_masked::init_board_helper_masked(std::string& board,
     size_t mask_idx = 0;
     size_t col_idx = 0;
 
+    const unsigned int col_count = shape.second;
+
     for (size_t i = 0; i < board_size; i++)
     {
-        if (col_idx == shape.second)
+        if (col_idx == col_count)
         {
             // TODO use ROW_SEP instead of literal
             board[i] = '|';

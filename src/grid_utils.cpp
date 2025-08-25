@@ -8,31 +8,6 @@
 
 using namespace std;
 
-////////////////////////////////////////////////// helper functions
-namespace {
-bool increment_char(char& c)
-{
-    assert(         //
-        c == '.' || //
-        c == 'X' || //
-        c == 'O'    //
-    );              //
-
-    if (c == '.')
-        c = 'X';
-    else if (c == 'X')
-        c = 'O';
-    else if (c == 'O')
-    {
-        c = '.';
-        return false;
-    }
-
-    return true;
-}
-
-} // namespace
-
 ////////////////////////////////////////////////// grid_location functions
 void grid_location::increment_position()
 {
