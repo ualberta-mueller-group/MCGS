@@ -8,7 +8,10 @@
 #include "game.h"
 #include "strip.h"
 #include "utilities.h"
+#include "iobuffer.h"
 #include <cassert>
+#include <utility>
+#include <vector>
 #include <cstddef>
 #include <ostream>
 

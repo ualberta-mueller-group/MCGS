@@ -5,6 +5,7 @@
 #include "cgt_nimber.h"
 #include <cassert>
 #include <array>
+#include <vector>
 #include "test_utilities.h"
 
 using std::vector;

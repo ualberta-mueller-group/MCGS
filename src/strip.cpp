@@ -3,15 +3,18 @@
 //---------------------------------------------------------------------------
 #include "strip.h"
 
-#include "cgt_basics.h"
-#include "throw_assert.h"
 #include <cassert>
 #include <cstdlib>
 #include <limits>
 #include <vector>
 #include <utility>
-#include "warn_default.h"
+#include <cstdint>
 #include <cstddef>
+
+#include "iobuffer.h"
+#include "warn_default.h"
+#include "cgt_basics.h"
+#include "throw_assert.h"
 
 //---------------------------------------------------------------------------
 

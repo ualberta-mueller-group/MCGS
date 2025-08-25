@@ -1,4 +1,11 @@
 #include "init_database.h"
+
+#include <filesystem>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <cassert>
+
 #include "clobber_1xn.h"
 #include "clobber.h"
 #include "database.h"
@@ -8,7 +15,6 @@
 #include "nogo_1xn.h"
 #include "nogo.h"
 #include "gridlike_db_game_generator.h"
-#include <filesystem>
 #include "grid_generator.h"
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name) \

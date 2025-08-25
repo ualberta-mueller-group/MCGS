@@ -1,6 +1,7 @@
 #include "hashing.h"
 #include "global_options.h"
 #include "utilities.h"
+#include "type_table.h"
 #include <iostream>
 #include "game.h"
 #include <limits>

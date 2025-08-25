@@ -1,9 +1,15 @@
 #include "nogo_split_test.h"
-#include "gridlike_db_game_generator.h"
-#include "nogo.h"
-#include "sumgame.h"
+
 #include <memory>
 #include <vector>
+#include <cstdint>
+#include <iostream>
+
+#include "gridlike_db_game_generator.h"
+#include "throw_assert.h"
+#include "nogo.h"
+#include "grid_generator.h"
+#include "sumgame.h"
 
 using namespace std;
 

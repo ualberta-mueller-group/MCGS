@@ -5,6 +5,7 @@
 #include "grid_utils.h"
 #include "grid_generator.h"
 #include "nogo_1xn.h"
+#include "type_table.h"
 #include "custom_traits.h"
 #include "nogo.h"
 #include "strip.h"

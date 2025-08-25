@@ -198,7 +198,7 @@ inline bool game::is_impartial() const
     return false;
 }
 
-template <class T>
+template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
 game_type_t __game_type_impl()
 {
     static_assert(std::is_base_of_v<game, T>);

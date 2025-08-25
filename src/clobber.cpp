@@ -7,6 +7,8 @@
 #include "cgt_move.h"
 #include <cstddef>
 #include <cassert>
+#include <algorithm>
+#include <utility>
 #include <vector>
 #include "grid_utils.h"
 

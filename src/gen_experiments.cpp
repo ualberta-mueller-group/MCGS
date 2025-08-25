@@ -4,8 +4,13 @@
 #include <optional>
 #include <algorithm>
 #include <sstream>
+#include <vector>
+#include <cassert>
+#include <exception>
+#include <iostream>
 #include <unordered_map>
 #include <unordered_set>
+#include <cstddef>
 
 // 1D
 #include "clobber_1xn.h"
@@ -20,12 +25,11 @@
 #include "nogo.h"
 
 // Other includes
-#include "grid_utils.h"
 #include "hashing.h"
 #include "cgt_basics.h"
-#include "random.h"
 #include "strip.h"
 #include "throw_assert.h"
+#include "type_table.h"
 #include "random_generator.h"
 
 using namespace std;

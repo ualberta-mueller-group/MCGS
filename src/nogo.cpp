@@ -3,15 +3,17 @@
 //---------------------------------------------------------------------------
 #include "nogo.h"
 
+#include <string>
+#include <cstddef>
+#include <vector>
+#include <iostream>
+#include <cassert>
+#include <ostream>
+
+#include "throw_assert.h"
 #include "cgt_basics.h"
 #include "game.h"
 #include "grid.h"
-#include <string>
-#include <vector>
-#include <cassert>
-#include <ostream>
-#include "grid_utils.h"
-#include "throw_assert.h"
 
 namespace {
 // Remove extra rows and columns of BORDER
@@ -100,7 +102,7 @@ void nogo::play(const move& m, bw to_play)
     if (_hash_updatable())
     {
         local_hash& hash = _get_hash_ref();
-        int N = size();
+        const int N = size();
 
         hash.toggle_value(2 + to, EMPTY);                   // update board
         hash.toggle_value(2 + to, to_play);
@@ -119,7 +121,7 @@ void nogo::undo_move()
     const int to = cgt_move::decode(mc);
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
-    int N = size();
+    const int N = size();
 
     replace(to, EMPTY);
     
@@ -140,7 +142,7 @@ void nogo::undo_move()
 
 bool nogo::is_legal() const
 {
-    int N = size();
+    const int N = size();
     const nogo_board cboard(board(), immortal(), shape());  // board copy
 
     std::vector<bool> checked(N, false);
@@ -365,7 +367,7 @@ void split_by_nogo::identify_walls(const nogo_board& board, const std::vector<in
 void split_by_nogo::mark_wall_at_nogo(const nogo_board& board, int p, int color, const std::vector<int>& point_markers, std::vector<bool>& wall_markers)
 {
     int size = board.size;
-    int C_GO = (color == BLACK) ? split_by_nogo::B_GO : split_by_nogo::W_GO;
+    const int C_GO = (color == BLACK) ? split_by_nogo::B_GO : split_by_nogo::W_GO;
     std::vector<int> playable_empty_points;
 
     std::vector<bool> stack_markers(size, false);

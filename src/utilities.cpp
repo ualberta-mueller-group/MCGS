@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cctype>
 #include <cassert>
+#include <vector>
 #include <cstdint>
 #include "cgt_basics.h"
 #include <algorithm>

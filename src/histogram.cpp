@@ -1,5 +1,10 @@
 #include "histogram.h"
 
+#include <iostream>
+#include <vector>
+#include <cstdint>
+#include <cstddef>
+
 std::ostream& operator<<(std::ostream& os, const histogram& hist)
 {
     const std::vector<uint64_t>& counts = hist._counts;

@@ -5,12 +5,14 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "strip.h"
+#include "iobuffer.h"
 #include "utilities.h"
 #include <vector>
 #include <cassert>
+#include <utility>
 #include <cstddef>
 
-using std::string, std::cout, std::endl, std::pair;
+using std::string, std::pair;
 using std::vector;
 
 //////////////////////////////////////// helper functions

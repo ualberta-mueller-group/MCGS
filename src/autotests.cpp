@@ -10,6 +10,7 @@
 #include "global_options.h"
 #include "search_utils.h"
 #include "throw_assert.h"
+#include "sumgame.h"
 #include <vector>
 #include <sstream>
 #include "hashing.h"

@@ -1,5 +1,9 @@
-#include "dynamic_serializable.h"
 #include <vector>
+#include <cassert>
+
+#include "dynamic_serializable.h"
+#include "type_table.h"
+#include "throw_assert.h"
 
 namespace {
 

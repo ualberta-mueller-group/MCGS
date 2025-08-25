@@ -1,5 +1,12 @@
 #include "type_mapper.h"
+
+#include <string>
+#include <cassert>
+#include <cstddef>
+#include <iostream>
 #include "utilities.h"
+#include "type_table.h"
+#include "throw_assert.h"
 
 void type_mapper::register_type(const std::string& type_name, game_type_t runtime_type)
 {

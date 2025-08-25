@@ -1,6 +1,7 @@
 #include "game_compare_utils.h"
 
 #include "game.h"
+#include "type_table.h"
 #include <sstream>
 #include <cstdint>
 #include <string>

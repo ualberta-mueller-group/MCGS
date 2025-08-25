@@ -1,8 +1,6 @@
 #include "grid_utils.h"
 #include <cassert>
 #include <cmath>
-#include <string>
-#include <cstddef>
 #include "grid.h"
 #include "throw_assert.h"
 

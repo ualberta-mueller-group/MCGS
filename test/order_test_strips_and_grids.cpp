@@ -6,7 +6,6 @@
 #include <exception>
 #include <functional>
 #include "game.h"
-#include "grid_utils.h"
 #include "grid_generator.h"
 #include "test_utilities.h"
 

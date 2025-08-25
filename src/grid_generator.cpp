@@ -1,5 +1,11 @@
 #include "grid_generator.h"
-#include "grid_utils.h"
+
+#include <cassert>
+#include <cstddef>
+#include <vector>
+#include <string>
+#include <iostream>
+#include "grid.h"
 
 using namespace std;
 

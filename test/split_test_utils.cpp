@@ -1,6 +1,7 @@
 #include "split_test_utils.h"
 #include <algorithm>
 #include <string>
+#include <vector>
 #include "strip.h"
 #include "grid.h"
 #include "game.h"

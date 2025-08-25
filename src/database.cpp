@@ -6,10 +6,19 @@
     probably just the generic integer serializer template? It is very easy
     to write unsafe code with this...
 */
+#include <cassert>
+#include <optional>
+#include <string>
+#include <memory>
+#include <iostream>
 #include "database.h"
 #include "sumgame.h"
+#include "iobuffer.h"
+#include "serializer.h"
+#include "db_game_generator.h"
+#include "throw_assert.h"
+#include "type_table.h"
 #include "clobber_1xn.h"
-#include <unordered_set>
 
 using namespace std;
 
