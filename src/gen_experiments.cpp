@@ -1,3 +1,8 @@
+/*
+    TODO: May not produce same input as used for the paper. Use the commit
+    mentioned in the paper instead...
+*/
+
 #include "gen_experiments.h"
 #include <cstdint>
 #include <fstream>
@@ -30,7 +35,7 @@
 #include "strip.h"
 #include "throw_assert.h"
 #include "type_table.h"
-#include "random_generator.h"
+#include "random.h"
 
 using namespace std;
 
@@ -544,6 +549,10 @@ void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
 ////////////////////////////////////////////////// Main exported function
 void gen_experiments()
 {
+
+    cerr << "WARNING: May not produce same input as used for the paper. "
+        "Use the commit mentioned in the paper instead..." << endl;
+
     init();
 
     // EXPERIMENT VALUES
