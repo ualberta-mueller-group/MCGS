@@ -1,3 +1,6 @@
+/*
+    CLI option parsing function and struct
+*/
 #pragma once
 
 #include "file_parser.h"

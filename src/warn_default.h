@@ -1,3 +1,11 @@
+/*
+    Defines WARN_DEFAULT_IMPL() macro
+
+    Used to print warnings to stderr whenever the DEFAULT_IMPL_DEBUG compilation
+    option is defined, and a default implementation is
+    called, i.e. in order to find unimplemented non-mandatory functions like
+    split(), normalize(), etc
+*/
 #pragma once
 
 #ifdef DEFAULT_IMPL_DEBUG

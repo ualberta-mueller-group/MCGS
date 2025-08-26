@@ -1,4 +1,7 @@
 /*
+    Unused code for serializing/deserializing polymorphic types. May be used in
+    the future to store games in the database.
+
     TODO: figure out when assert or throw is the correct choice
 
     These types deal with I/O, so assert should be used when a condition

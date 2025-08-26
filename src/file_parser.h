@@ -1,3 +1,10 @@
+/*
+    file_parser class implements the main parsing logic for .test files,
+    games passed through stdin, and the game string passed as a CLI argument
+
+    To register a new game type with the parser, see
+    file_parser::_init_game_parsers() in the cpp file
+*/
 #pragma once
 #include <sstream>
 #include <string>

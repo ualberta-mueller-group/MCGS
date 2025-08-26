@@ -1,3 +1,6 @@
+/*
+    Helper types/functions for parsing.
+*/
 #pragma once
 #include <string>
 #include <vector>
@@ -15,6 +18,11 @@ struct run_command_t
 };
 
 ////////////////////////////////////////////////// parsing functions
+
+/*
+    Calls split_string() on the line, after surrounding special characters with
+    spaces
+*/
 std::vector<std::string> get_string_tokens(
     const std::string& line, const std::vector<char>& special_chars);
 
@@ -51,18 +59,34 @@ bool get_int(const std::vector<std::string>& string_tokens, size_t& idx,
 bool get_win_loss(const std::vector<std::string>& string_tokens, size_t& idx,
                   bool& win);
 
+// EMPTY for impartial game, i.e. "{N 5}" in .test file
 bool get_player(const std::vector<std::string>& string_tokens, size_t& idx,
                 ebw& player);
 
+// also matches ints
 bool get_fraction(const std::vector<std::string>& string_tokens, size_t& idx,
                   std::vector<fraction>& fracs);
 
+// succeeds IFF no comma, or comma with input afterward
 bool consume_optional_comma(const std::vector<std::string>& string_tokens,
                             size_t& idx);
 
 bool consume_mandatory_comma(const std::vector<std::string>& string_tokens,
                              size_t& idx);
 
+/*
+    Also matches empty list
+
+   Spaces or commas can separate list items, but commas cannot be at the
+   end of the list
+
+   i.e.
+       "1, 1/2, 3/ 4, 3 / 4"
+       "1  /  4  4"
+       " 3 1 / 4 6 "
+       ""
+    are all valid
+*/
 bool get_fraction_list(const std::string& line, std::vector<fraction>& fracs);
 
 bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx,

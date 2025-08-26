@@ -1,7 +1,11 @@
 #pragma once
 
 /*
-    Helpers for grids. Defines grid_location and grid_generator
+    grid_location helper class for representing/manipulating locations on a
+    grid.
+
+    IMPORTANT: See development-notes.md for details on pre-conditions and
+    post-conditions of these functions
 */
 
 #include <array>
@@ -9,6 +13,7 @@
 #include "throw_assert.h"
 #include <cassert>
 
+// Directions for moving on a grid
 enum grid_dir
 {
     GRID_DIR_UP = 0,
@@ -22,6 +27,7 @@ enum grid_dir
     GRID_DIR_NO_DIRECTION,
 };
 
+////////////////////////////////////////////////// Implementation details
 static constexpr std::array<int_pair, 9> _GRID_DISPLACEMENTS {{
     {-1, 0},
     {-1, 1},

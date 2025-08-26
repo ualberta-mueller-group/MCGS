@@ -1,3 +1,9 @@
+/*
+    Defines type_mapper class, used by database implementation.
+
+    Acts as a translation layer from runtime-allocated game_type_t values, to
+    those from the disk.
+*/
 #pragma once
 #include <string>
 #include <unordered_map>

@@ -1,3 +1,11 @@
+/*
+    Space/time "efficient" fixed-size array of bools.
+
+    Given two bit_arrays of the same size, the compare() method can determine
+    whether no/some/all bits are the same across both bit_arrays.
+
+    Mostly intended for a small handful of unit tests
+*/
 #pragma once
 
 #include <cstddef>

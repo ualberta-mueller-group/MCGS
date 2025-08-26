@@ -1,3 +1,7 @@
+/*
+    Globally accessible instance of the database class, available after
+    mcgs_init() runs
+*/
 #pragma once
 
 // IWYU pragma: begin_exports

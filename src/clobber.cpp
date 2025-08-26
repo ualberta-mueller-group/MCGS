@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <utility>
 #include <vector>
-#include "grid_utils.h"
+#include "grid_location.h"
 
 using namespace std;
 

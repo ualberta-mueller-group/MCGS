@@ -1,3 +1,6 @@
+/*
+    Transposition table template ttable<T>
+*/
 #pragma once
 #include "utilities.h"
 

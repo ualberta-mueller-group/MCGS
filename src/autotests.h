@@ -1,3 +1,6 @@
+/*
+    Invoked by ./MCGS --run-tests
+*/
 #pragma once
 #include <string>
 

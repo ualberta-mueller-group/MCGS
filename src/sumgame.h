@@ -33,6 +33,7 @@ namespace sumgame_impl {
 class change_record;
 }
 
+// Used by class sumgame::undo_stack_unwinder
 enum sumgame_undo_code
 {
     SUMGAME_UNDO_STACK_FRAME = 0,

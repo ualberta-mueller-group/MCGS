@@ -174,6 +174,7 @@ void run_autotests(const string& test_directory, const string& outfile_name,
             if (global::clear_tt() && !first_case)
                 sumgame::reset_ttable();
 
+            stats::reset_stats();
             search_result sr = gc.run(test_timeout);
             first_case = false;
 

@@ -1,12 +1,14 @@
 /*
-    TODO: assert or THROW_ASSERT for this file?
+    Types and functions used for serialization. Used to enforce
+    machine-indpendent binary format on disk. Prevents incompatibility from:
+        1. Variable widths differing across machines
+        2. Endianness differing across machines
 
-    TODO: both ibuffer and obuffer give templates for generic ints,
-    making it easier to read/write non-fixed width integers like int (this is
-    a problem...)
+    ibuffer/obuffer classes are wrappers of std::fstream,
 
-    This template method is useful for the "serialize" template struct, and
-    still at least enforces consistent endianness
+    TODO: Condition 1 is still only loosely enforced, because it's not possible
+    to distinguish between fixed-width integer types, and the equivalent "C
+    types", i.e. int32_t and int.
 
 */
 #pragma once
@@ -17,6 +19,18 @@
 #include <fstream>
 #include <cstdint>
 #include <iostream>
+
+/*
+    TODO: assert or THROW_ASSERT for this file?
+
+    TODO: both ibuffer and obuffer give templates for generic ints,
+    making it easier to read/write non-fixed width integers like int (this is
+    a problem...)
+
+    This template method is useful for the "serialize" template struct, and
+    still at least enforces consistent endianness
+
+*/
 
 ////////////////////////////////////////////////// fmt_write/fmt_read
 

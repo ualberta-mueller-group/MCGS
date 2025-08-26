@@ -1,3 +1,6 @@
+/*
+    Components used by file_parser to parse specific games
+*/
 #pragma once
 #include "game.h"
 #include "utilities.h"

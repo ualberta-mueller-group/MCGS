@@ -213,6 +213,7 @@ game_type_t __game_type_impl()
     return gt;
 }
 
+// i.e. game_type<clobber>()
 template <class T>
 inline game_type_t game_type()
 {
@@ -223,6 +224,7 @@ inline game_type_t game_type()
     return GT;
 }
 
+// i.e. some_clobber_game.game_type()
 inline game_type_t game::game_type() const
 {
     game_type_t& gt = type_table()->game_type_ref();
@@ -355,6 +357,7 @@ inline T_Ptr cast_game(game* g)
     return reinterpret_cast<T_Ptr>(g);
 }
 
+// const variant
 template <class T_Ptr>
 inline T_Ptr cast_game(const game* g)
 {

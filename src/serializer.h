@@ -1,3 +1,59 @@
+/*
+    Serialization API
+
+    Defines template struct serializer<T> with two static functions: save and
+    load.
+
+    To make your (non-polymorphic) type serializable, implement the template
+    specialization: serializer<Your_Type>, and implement the static functions
+    save and load. Several template specializations are defined in this file
+    for STL types. Polymorphic types are handled differently, explained further
+    below.
+
+    Save and load functions should recursively invoke the serializer template
+    where necessary. See serializer<vector<T>> implementation in this file for
+    an example.
+
+    Example load usage:
+    string some_string = serializer<string>::load(some_ibuffer);
+
+    Example save usage:
+    serializer<vector<string>>::save(some_obuffer, some_string_vec);
+
+        In this example, serializer<vector<string>> invokes serializer<string>.
+        This allows complicated nesting of types, i.e:
+
+        serializer<vector<pair<int32_t, int16_t>>>::save(...)
+
+    IMPORTANT: Currently, it is easy to accidentally write non-portable code
+    by passing non fixed width integer types to the serializer template,
+    i.e. serializer<int> instead of serializer<int32_t>
+
+    NOTE: The default-valued "Enable" template parameter is there to allow
+    conditional template specialization using SFINAE (substitution failure is
+    not an error). This is used for integer types.
+
+    Polymorphic types T should:
+    1. Derive from interface dyn_serializable (dynamic_serializable.h)
+    2. Define:
+        Method: void T::save_impl(obuffer&) const
+        Function: static dyn_serializable* T::load_impl(ibuffer&)
+    3. Call register_dyn_serializable<T>() during mcgs_init()
+
+    Polymorphic type save usage example:
+        game* some_game_ptr = new clobber("XO");
+        // All 3 valid:
+        serializer<dyn_serializable*>::save(some_obuffer, some_game_ptr);
+        serializer<game*>::save(some_obuffer, some_game_ptr);
+        serializer<clobber*>::save(some_obuffer, some_game_ptr);
+
+    After any of the above, all of the below are valid (remember to use delete):
+        serializer<dyn_serializable*>::load(some_ibuffer);
+        serializer<game*>::load(some_ibuffer);
+        serializer<clobber*>::load(some_ibuffer);
+
+    NOTE: Polymorphic types must use pointers as in these examples
+*/
 #pragma once
 #include "iobuffer.h"
 #include <type_traits>
@@ -8,13 +64,22 @@
 #include <cstdint>
 #include <utility>
 #include <memory>
+
 /*
-    TODO break this into multiple files. Consider separating serialize
+    TODO break this into multiple files. Consider separating serializer
     templates, i.e. put templates for STL containers in another file
 
     TODO: how to handle floating point values?
 
-    TODO: Explain SFINAE ("Enable" template parameter)
+    TODO: Explain SFINAE? ("Enable" template parameter)
+
+    TODO: Maybe the top level function call shouldn't be inlined. Have inline
+    _save(), and non-inline save() which calls _save()
+
+    TODO: How to enforce portability with integer problem?
+
+    TODO: Enforce interface of serializer template's static functions at compile
+        time?
 */
 
 ////////////////////////////////////////////////// serialize<T>
@@ -147,8 +212,11 @@ struct serializer<std::pair<T1, T2>>
         serializer<T2>::save(os, p.second);
     }
 
+    // TODO make this more efficient
     inline static std::pair<T1, T2> load(ibuffer& is)
     {
+        // Put these on different lines so they aren't called in the wrong
+        // order...
         T1 first = serializer<T1>::load(is);
         T2 second = serializer<T2>::load(is);
         return std::pair<T1, T2>(first, second);

@@ -1,3 +1,6 @@
+/*
+   General utility functions
+*/
 #pragma once
 #include <vector>
 #include <iostream>

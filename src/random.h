@@ -61,6 +61,8 @@ private:
     uint64_t _initial_seed;
     std::mt19937_64 _rng;
 
+    // This template is only well-defined for these types
+    // Don't use fixed-width types i.e. int16_t
     std::uniform_int_distribution<unsigned long long> _dist_u64;
     std::uniform_int_distribution<unsigned int> _dist_u32;
     std::uniform_int_distribution<unsigned short> _dist_u16;

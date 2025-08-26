@@ -13,10 +13,6 @@
 
 using std::string, std::vector;
 
-/*
-    Calls split_string() on the line, after surrounding special characters with
-    spaces
-*/
 vector<string> get_string_tokens(const string& line,
                                  const vector<char>& special_chars)
 {
@@ -118,7 +114,6 @@ bool get_player(const std::vector<std::string>& string_tokens, size_t& idx,
     return true;
 }
 
-// also matches ints
 bool get_fraction(const vector<string>& string_tokens, size_t& idx,
                   vector<fraction>& fracs)
 {
@@ -160,7 +155,6 @@ bool get_fraction(const vector<string>& string_tokens, size_t& idx,
     return make_fraction();
 }
 
-// succeeds IFF no comma, or comma with input afterward
 bool consume_optional_comma(const vector<string>& string_tokens, size_t& idx)
 {
     const size_t N = string_tokens.size();
@@ -191,19 +185,6 @@ bool consume_mandatory_comma(const vector<string>& string_tokens, size_t& idx)
     return true;
 }
 
-/*
-    Also matches empty list
-
-   Spaces or commas can separate list items, but commas cannot be at the
-   end of the list
-
-   i.e.
-       "1, 1/2, 3/ 4, 3 / 4"
-       "1  /  4  4"
-       " 3 1 / 4 6 "
-       ""
-    are all valid
-*/
 bool get_fraction_list(const string& line, vector<fraction>& fracs)
 {
     assert(fracs.size() == 0);

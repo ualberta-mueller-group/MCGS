@@ -1,4 +1,4 @@
-#include "grid_utils.h"
+#include "grid_location.h"
 #include <cassert>
 #include <cmath>
 #include "grid.h"

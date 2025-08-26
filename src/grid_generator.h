@@ -1,3 +1,16 @@
+/*
+   grid_generator interface for iterating over string representations of grids
+   (and strips, if row dimension is 1)
+
+    Abstract classes providing some functionality:
+        grid_generator_base
+        grid_generator_masked
+
+    Non-abstract classes:
+        grid_generator_default
+        grid_generator_clobber
+        grid_generator_nogo
+*/
 #pragma once
 
 #include <iostream>
@@ -15,7 +28,7 @@
    Both _init and _increment functions should return bools and be allowed to
    fail
 
-   TODO why aren't these game orderings faster?
+   TODO why aren't these game orderings faster when generating the database?
 */
 
 ////////////////////////////////////////////////// grid_mask

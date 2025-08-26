@@ -14,6 +14,7 @@
 
 //---------------------------------------------------------------------------
 
+// (row, col)
 typedef std::pair<int, int> int_pair;
 
 class grid : public game

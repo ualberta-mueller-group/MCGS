@@ -1,6 +1,6 @@
-#include "grid_utils_test.h"
+#include "grid_location_test.h"
 
-#include "grid_utils.h"
+#include "grid_location.h"
 #include "grid.h"
 #include "test_utilities.h"
 #include <vector>
@@ -387,7 +387,7 @@ namespace grid_generator_test {
 } // namespace grid_generator_test
 } // namespace
 
-void grid_utils_test_all()
+void grid_location_test_all()
 {
     grid_location_test::test_get_set();
     grid_location_test::test_mutators();

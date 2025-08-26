@@ -1,3 +1,9 @@
+/*
+   Database class, and database entry structs.
+
+   Must call register_type() to map game_type_t values to game name strings,
+   i.e. in mcgs_init()
+*/
 #pragma once
 #include <string>
 #include <iostream>
@@ -104,8 +110,8 @@ private:
     typedef DB_MAP_T<game_type_t, terminal_layer_partizan_t> tree_partizan_t;
     typedef DB_MAP_T<game_type_t, terminal_layer_impartial_t> tree_impartial_t;
 
-    std::unique_ptr<sumgame> _sum;
-    uint64_t _game_count;
+    std::unique_ptr<sumgame> _sum; // sumgame for solving games
+    uint64_t _game_count; // count incremented by generate_entries()
 
     sumgame& _get_sumgame();
     void _generate_entry_single(game* g);

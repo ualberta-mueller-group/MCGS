@@ -16,7 +16,7 @@ const bool RUN_OVERRIDE_TESTS = false;
 
 #include "bit_array_test.h"
 #include "random_test.h"
-#include "grid_utils_test.h"
+#include "grid_location_test.h"
 #include "grid_generator_test.h"
 #include "cgt_basics_test.h"
 #include "cgt_dyadic_rational_test.h"
@@ -122,7 +122,7 @@ int main(int argc, const char** argv)
     }
 
     random_test_all();
-    grid_utils_test_all();
+    grid_location_test_all();
     grid_generator_test_all();
     bit_array_test_all();
 

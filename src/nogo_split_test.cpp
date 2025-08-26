@@ -1,3 +1,9 @@
+/*
+    Testing correctness of nogo split by search. Not a unit test.
+
+    NOTE: Must first edit nogo, renaming _split_impl() to something else,
+    and calling it here to generate the difference game to test.
+*/
 #include "nogo_split_test.h"
 
 #include <memory>

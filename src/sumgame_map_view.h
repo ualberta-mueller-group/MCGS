@@ -1,3 +1,11 @@
+/*
+    Defines class sumgame_map_view
+
+    Sorts sumgame games by game_type_t. Remains valid so long as sumgame is only
+    mutated through the sumgame_map_view
+
+    See development-notes.md
+*/
 #pragma once
 
 #include <type_traits>

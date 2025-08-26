@@ -1,3 +1,7 @@
+/*
+    Solver statistics tracking. Must call reset_stats() after each
+    sumgame::solve
+*/
 #pragma once
 
 #include <cstdint>
@@ -25,6 +29,7 @@ struct solver_stats
 
 //////////////////////////////////////////////////
 namespace stats {
+// TODO make these methods instead of global functions...
 
 // NOLINTBEGIN(readability-identifier-naming)
 extern solver_stats __global_stats;

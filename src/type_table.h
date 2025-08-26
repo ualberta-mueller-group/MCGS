@@ -1,3 +1,29 @@
+/*
+    Defines i_type_table interface, and type_table_t struct. The struct contains
+    runtime type information for any type derived from the interface, and the
+    interface provides access to the struct.
+
+    The struct belongs to the derived type itself, and can be accessed either
+    through a pointer derived from i_type_table, or using a template function:
+
+        game* g = new clobber("XO");
+        g->type_table();
+    OR
+        type_table<clobber>();
+    Both examples give the same type_table_t -- the unique table corresponding
+    to clobber.
+
+
+    Also defines runtime-allocated type integers:
+        game_type_t (unique integer for each game class)
+
+        dyn_serializable_id_t (unique integer for each serializable polymorphic
+        type which has been registered)
+
+    Allocation of type_table_t is done in this file, but allocation of these
+    integral values is done elsewhere, i.e. game.cpp and
+    dynamic_serializable.cpp
+*/
 #pragma once
 #include <cassert>
 #include <type_traits>

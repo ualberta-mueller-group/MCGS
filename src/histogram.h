@@ -1,3 +1,6 @@
+/*
+    histogram type
+*/
 #pragma once
 #include <iostream>
 #include <cstdint>
@@ -11,7 +14,7 @@ public:
     histogram();
     histogram(const uint64_t& resize_up_to);
 
-    void count(const uint64_t& val);
+    void count(const uint64_t& val); // increment count
     void resize_at_least(const uint64_t& val);
     uint64_t get_count(const uint64_t& val) const;
 

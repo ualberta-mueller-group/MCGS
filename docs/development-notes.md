@@ -147,14 +147,14 @@ It derives from `alternating_move_game` and reimplements the
     reasonably fast if we maintain hashes for the boards as they're modified, and
     pick the one with the smallest hash to be active?
 
-## `grid_generator` class (`grid_utils.h`)
+## `grid_generator` class (`grid_generator.h`)
 - Given `MxN` or `1xN` dimensions of a `grid` or `strip`, generates all strings representing boards for all less than or equal dimensions
 - i.e. given `1x1`, generates: "" (empty string), ".", "X", "O"
 - i.e. given `2x2`, generates strings for: `0x0`, `1x1`, `1x2`, `2x1`, `2x2`
     - On each step, width is incremented, and on overflow, width is set to 1 and height is incremented
 - Given `2x1`, `1x2` is omitted, as its width is greater than `2x1`'s
 
-## `grid_location` class (`grid_utils.h`)
+## `grid_location` class (`grid_location.h`)
 - Utility class for manipulating locations on a `grid`
     - Internally uses "coordinate" (`int_pair`) representation instead of "point" (`int`) representation.
         - "Point" representation corresponds to the 1D indices of the flattened 2D grid
