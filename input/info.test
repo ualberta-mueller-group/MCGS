@@ -1,4 +1,4 @@
-{version 1.2}
+{version 1.3}
 /* This is a comment */
 
 /*_ This file is valid input to MCGS, and describes the input syntax. You can
@@ -29,10 +29,10 @@ There are 5 types of 'things' that appear in input:
         (win/loss/nim value). Commands are also used to specify what version of
         the input language is used by a file. The version command must be
         present in files, but can be omitted from input read from stdin or
-        passed as a command line argument to MCGS. The current version is 1.2.
+        passed as a command line argument to MCGS. The current version is 1.3.
             i.e.
             Version command:
-                {version 1.2}
+                {version 1.3}
 
             Solve the current game sum for black, without expecting a particular
             result:
