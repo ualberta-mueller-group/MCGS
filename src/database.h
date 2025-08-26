@@ -93,9 +93,6 @@ public:
 
     void generate_entries(db_game_generator& gen);
 
-    template <class T>
-    void generate_entries_for_game();
-
 private:
     friend std::ostream& operator<<(std::ostream& os, const database& db);
 
@@ -128,22 +125,6 @@ inline void database::register_type(const std::string& type_name, game_type_t ru
 inline bool database::empty() const
 {
     return _tree_partizan.empty() && _tree_impartial.empty();
-}
-
-template <class T>
-void database::generate_entries_for_game()
-{
-    /*
-        TODO these static asserts should be more descriptive...
-
-        The type trait isn't really useful if it doesn't result in a
-        nice error message
-    */
-    static_assert(has_create_db_game_generator_v<T>);
-
-    db_game_generator* gen = T::create_db_game_generator();
-    generate_entries(*gen);
-    delete gen;
 }
 
 inline sumgame& database::_get_sumgame()
