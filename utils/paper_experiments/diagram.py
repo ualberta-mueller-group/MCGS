@@ -1,3 +1,13 @@
+"""
+Diagram maker for MCGS paper experiments.
+
+The "groups" and "labels" variables at the bottom can be edited.
+
+IMPORTANT: an item's position in the labels list must correspond to the
+"diagram" variable in the test case metadata (encoded in the comments of the
+.test2 file and resulting csvs after running).
+"""
+
 import csv
 import random
 import matplotlib.pyplot as plt
