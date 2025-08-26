@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include "game.h"
+#include "type_table.h"
 #include "sumgame.h"
 #include <cassert>
 

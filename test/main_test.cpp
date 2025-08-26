@@ -17,6 +17,7 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include "bit_array_test.h"
 #include "random_test.h"
 #include "grid_utils_test.h"
+#include "grid_generator_test.h"
 #include "cgt_basics_test.h"
 #include "cgt_dyadic_rational_test.h"
 #include "cgt_integer_game_test.h"
@@ -84,6 +85,7 @@ void print_usage(const char* exec_name)
 int main(int argc, const char** argv)
 {
     global::silence_warnings.set(true);
+    global::use_db.set(false);
     mcgs_init_all();
 
     if (RUN_OVERRIDE_TESTS)
@@ -121,6 +123,7 @@ int main(int argc, const char** argv)
 
     random_test_all();
     grid_utils_test_all();
+    grid_generator_test_all();
     bit_array_test_all();
 
     cgt_basics_test_all();

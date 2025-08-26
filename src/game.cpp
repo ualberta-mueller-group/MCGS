@@ -1,14 +1,14 @@
-#include "game.h"
-#include "cgt_basics.h"
-#include "throw_assert.h"
-#include "warn_default.h"
-
 #include <array>
 #include <cassert>
 #include <limits>
 #include <memory>
 #include <iostream>
 #include <cstddef>
+
+#include "game.h"
+#include "cgt_basics.h"
+#include "warn_default.h"
+#include "type_table.h"
 
 using std::unique_ptr;
 

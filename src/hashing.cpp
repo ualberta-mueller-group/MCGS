@@ -1,10 +1,12 @@
 #include "hashing.h"
 #include "global_options.h"
 #include "utilities.h"
+#include "type_table.h"
 #include <iostream>
 #include "game.h"
 #include <limits>
 #include <type_traits>
+#include <memory>
 #include <vector>
 #include <random>
 #include "throw_assert.h"
@@ -76,7 +78,7 @@ void random_table::_resize_to(size_t new_n_positions)
 }
 
 namespace {
-std::vector<random_table> global_random_tables;
+std::vector<shared_ptr<random_table>> global_random_tables;
 } // namespace
 
 void init_global_random_tables(uint64_t seed)
@@ -106,16 +108,20 @@ void init_global_random_tables(uint64_t seed)
     global_random_tables.reserve(4);
 
     assert(RANDOM_TABLE_DEFAULT == 0);
-    global_random_tables.emplace_back(1024, next_seed());
+    //global_random_tables.emplace_back(1024, next_seed());
+    global_random_tables.emplace_back(new random_table(1024, next_seed()));
 
     assert(RANDOM_TABLE_TYPE == 1);
-    global_random_tables.emplace_back(1, next_seed());
+    //global_random_tables.emplace_back(1, next_seed());
+    global_random_tables.emplace_back(new random_table(1, next_seed()));
 
     assert(RANDOM_TABLE_MODIFIER == 2);
-    global_random_tables.emplace_back(128, next_seed());
+    //global_random_tables.emplace_back(128, next_seed());
+    global_random_tables.emplace_back(new random_table(128, next_seed()));
 
     assert(RANDOM_TABLE_PLAYER == 3);
-    global_random_tables.emplace_back(1, next_seed());
+    //global_random_tables.emplace_back(1, next_seed());
+    global_random_tables.emplace_back(new random_table(1, next_seed()));
 }
 
 random_table& get_global_random_table(global_random_table_id table_id)
@@ -124,7 +130,7 @@ random_table& get_global_random_table(global_random_table_id table_id)
         table_id < global_random_tables.size(),
         std::logic_error("global random tables not initialized yet"));
 
-    return global_random_tables[table_id];
+    return *global_random_tables[table_id];
 }
 
 ////////////////////////////////////////////////// local_hash

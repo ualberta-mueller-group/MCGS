@@ -3,13 +3,18 @@
 //---------------------------------------------------------------------------
 #include "nogo_1xn.h"
 
+#include <memory>
+#include <cassert>
+#include <utility>
+#include <ostream>
+#include <cstddef>
+#include <vector>
+
+#include "throw_assert.h"
+#include "iobuffer.h"
 #include "cgt_basics.h"
 #include "game.h"
 #include "strip.h"
-#include <memory>
-#include <cassert>
-#include <ostream>
-#include "throw_assert.h"
 #include "utilities.h"
 
 using std::string, std::pair, std::unique_ptr;

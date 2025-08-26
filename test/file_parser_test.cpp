@@ -4,8 +4,10 @@
 #include "file_parser.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <string>
 #include <cassert>
+#include <vector>
 #include <ios>
 
 using std::cout, std::endl, std::string, std::ifstream, std::stringstream;

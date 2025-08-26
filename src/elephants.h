@@ -12,6 +12,8 @@
 #include <vector>
 #include <ostream>
 
+#include "iobuffer.h"
+
 //////////////////////////////////////// elephants
 class elephants : public strip
 {

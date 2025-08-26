@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <ostream>
+#include "iobuffer.h"
 
 class nogo_1xn : public strip
 {

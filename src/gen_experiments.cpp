@@ -1,11 +1,21 @@
+/*
+    TODO: May not produce same input as used for the paper. Use the commit
+    mentioned in the paper instead...
+*/
+
 #include "gen_experiments.h"
 #include <cstdint>
 #include <fstream>
 #include <optional>
 #include <algorithm>
 #include <sstream>
+#include <vector>
+#include <cassert>
+#include <exception>
+#include <iostream>
 #include <unordered_map>
 #include <unordered_set>
+#include <cstddef>
 
 // 1D
 #include "clobber_1xn.h"
@@ -20,13 +30,12 @@
 #include "nogo.h"
 
 // Other includes
-#include "grid_utils.h"
 #include "hashing.h"
 #include "cgt_basics.h"
-#include "random.h"
 #include "strip.h"
 #include "throw_assert.h"
-#include "random_generator.h"
+#include "type_table.h"
+#include "random.h"
 
 using namespace std;
 
@@ -76,7 +85,7 @@ inline const string& get_game_name(game_type_t type)
     return it->second;
 }
 
-const string& get_game_name(const game& g)
+[[ maybe_unused ]] const string& get_game_name(const game& g) 
 {
     return get_game_name(g.game_type());
 }
@@ -420,7 +429,7 @@ generated_game gen_large_clobber()
     // Move count, hash, type
     clobber g(board, shape);
 
-    size_t move_count = count_moves_for(g, player);
+    //size_t move_count = count_moves_for(g, player);
     hash_t hash = get_hash(g, player);
     game_type_t type = game_type<clobber>();
 
@@ -466,7 +475,7 @@ generated_game gen_large_clobber_1xn_subgames()
     // Move count, hash, type
     clobber_1xn g(board_string);
 
-    size_t move_count = count_moves_for(g, player);
+    //size_t move_count = count_moves_for(g, player);
     hash_t hash = get_hash(g, player);
     game_type_t type = game_type<clobber_1xn>();
 
@@ -540,6 +549,11 @@ void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
 ////////////////////////////////////////////////// Main exported function
 void gen_experiments()
 {
+
+    cerr << "WARNING: May not produce same input as used for the paper. "
+        "Use the commit mentioned in the paper instead "
+        "(4113a903b24744b901173e5d18f06484887415ba)" << endl;
+
     init();
 
     // EXPERIMENT VALUES

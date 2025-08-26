@@ -1,6 +1,8 @@
 #include "global_database.h"
-#include "throw_assert.h"
+
 #include <optional>
+#include <cassert>
+#include "throw_assert.h"
 
 //////////////////////////////////////////////////
 namespace {

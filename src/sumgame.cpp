@@ -6,17 +6,20 @@
 #include "cgt_move.h"
 #include "database.h"
 #include "global_database.h"
+#include "type_table.h"
 #include "game.h"
 
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
 #include "cgt_nimber.h"
 #include "cgt_switch.h"
+#include "throw_assert.h"
 #include "cgt_up_star.h"
 #include "alternating_move_game.h"
 
 #include <algorithm>
 #include <chrono>
+#include <utility>
 #include <optional>
 #include <ctime>
 #include <iostream>

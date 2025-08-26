@@ -2,13 +2,14 @@
 #include "utilities.h"
 
 #include "hashing.h"
-#include "solver_stats.h"
 #include <cstddef>
 #include <cassert>
 #include <type_traits>
 #include <optional>
+#include <iostream>
 #include "random.h"
 #include "throw_assert.h"
+#include "global_options.h"
 
 ////////////////////////////////////////////////// class ttable
 template <class Entry>
@@ -170,9 +171,10 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     // First get random bits to fill tag bytes with
     constexpr size_t N_RANDOM_BYTES = 32;
     static_assert(is_power_of_2(N_RANDOM_BYTES)); // allow fast modulo below
+    random_generator& global_rng = get_global_rng();
     uint8_t random_bytes[N_RANDOM_BYTES];
     for (size_t i = 0; i < N_RANDOM_BYTES; i++)
-        random_bytes[i] = get_random_u8();
+        random_bytes[i] = global_rng.get_u8();
 
     // Now fill the tags array with random-ish bits
     _tags_arr = new uint8_t[_tags_arr_size];

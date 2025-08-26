@@ -8,6 +8,8 @@
 */
 #pragma once
 #include <type_traits>
+#include <cassert>
+
 #include "iobuffer.h"
 #include "serializer.h"
 #include "throw_assert.h"

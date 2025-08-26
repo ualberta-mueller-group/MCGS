@@ -22,6 +22,7 @@ cli_options::cli_options(const string& test_directory)
       gen_experiments(false),
       run_tests(false),
       run_tests_stdin(false),
+      nogo_test(false),
       test_directory(test_directory),
       outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
       test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
@@ -123,6 +124,10 @@ void print_help_message(const string& exec_name)
                    "ignored.");
 
     print_flag("--run-tests-stdin", "Like --run-tests, but read from stdin.");
+
+    print_flag("--nogo-test", "Helper functionality for python script testing "
+               "NoGo correctness, compared to SBHSolver");
+
 
 
     print_flag("--test-dir <directory name>",
@@ -310,6 +315,13 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+
+        if (arg == "--nogo-test")
+        {
+            opts.nogo_test = true;
+            continue;
+        }
+
         if (arg == "--test-dir")
         {
             arg_idx++;
@@ -477,7 +489,7 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg.size() > 0 && arg.front() != '-')
+        if (arg.size() >= 0 && arg.front() != '-')
         {
             // the rest of args is input to the file_parser
 

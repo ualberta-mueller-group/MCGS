@@ -1,4 +1,11 @@
 #include "init_database.h"
+
+#include <filesystem>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <cassert>
+
 #include "clobber_1xn.h"
 #include "clobber.h"
 #include "database.h"
@@ -8,7 +15,7 @@
 #include "nogo_1xn.h"
 #include "nogo.h"
 #include "gridlike_db_game_generator.h"
-#include <filesystem>
+#include "grid_generator.h"
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name) \
 db.register_type(#game_class_name, game_type<game_class_name>())
@@ -33,11 +40,11 @@ void fill_database(database& db)
 {
     std::vector<db_game_generator*> generators =
     {
-        new gridlike_db_game_generator<clobber_1xn>(15),
-        new gridlike_db_game_generator<nogo_1xn>(15),
-        new gridlike_db_game_generator<elephants>(15),
-        new gridlike_db_game_generator<clobber>(2, 5),
-        //new gridlike_db_game_generator<nogo>(3, 3),
+        new gridlike_db_game_generator<elephants, grid_generator_default>(15),
+        new gridlike_db_game_generator<clobber_1xn, grid_generator_clobber>(15),
+        new gridlike_db_game_generator<nogo_1xn, grid_generator_nogo>(15),
+        new gridlike_db_game_generator<clobber, grid_generator_clobber>(3, 3),
+        new gridlike_db_game_generator<nogo, grid_generator_nogo>(3, 3),
     };
 
     for (db_game_generator* gen : generators)

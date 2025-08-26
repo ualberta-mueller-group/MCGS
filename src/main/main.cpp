@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
@@ -12,6 +13,9 @@
 #include "hashing.h"
 #include "global_options.h"
 #include "search_utils.h"
+
+#include "nogo_split_test.h"
+#include "sumgame.h"
 
 using std::cout, std::endl, std::string;
 
@@ -24,6 +28,12 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_all(opts);
+
+    if (opts.nogo_test)
+    {
+        nogo_split_test();
+        return 0;
+    }
 
     if (opts.run_tests)
     {

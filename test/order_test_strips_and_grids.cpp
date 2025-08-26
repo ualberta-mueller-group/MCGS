@@ -6,7 +6,7 @@
 #include <exception>
 #include <functional>
 #include "game.h"
-#include "grid_utils.h"
+#include "grid_generator.h"
 #include "test_utilities.h"
 
 #include "clobber_1xn.h"
@@ -52,7 +52,7 @@ void gen_clobber_1xn(vector<game*>& games, bool fewer)
 {
     int range = fewer ? 3 : 4;
 
-    for (grid_generator gen(range); gen; ++gen)
+    for (grid_generator_default gen(range); gen; ++gen)
         games.push_back(new clobber_1xn(gen.gen_board()));
 }
 
@@ -62,7 +62,7 @@ void gen_nogo_1xn(vector<game*>& games, bool fewer)
 
     int range = fewer ? 3 : 5;
 
-    for (grid_generator gen(range); gen; ++gen)
+    for (grid_generator_default gen(range); gen; ++gen)
     {
         try
         {
@@ -80,7 +80,7 @@ void gen_elephants(vector<game*>& games, bool fewer)
 {
     int range = fewer ? 3 : 4;
 
-    for (grid_generator gen(range); gen; ++gen)
+    for (grid_generator_default gen(range); gen; ++gen)
         games.push_back(new elephants(gen.gen_board()));
 }
 
@@ -89,7 +89,7 @@ void gen_clobber(vector<game*>& games, bool fewer)
     int range_r = 2;
     int range_c = fewer ? 2 : 3;
 
-    for (grid_generator gen(range_r, range_c); gen; ++gen)
+    for (grid_generator_default gen(range_r, range_c); gen; ++gen)
         games.push_back(new clobber(gen.gen_board()));
 }
 
@@ -100,7 +100,7 @@ void gen_nogo(vector<game*>& games, bool fewer)
     int range_r = 2;
     int range_c = fewer ? 2 : 3;
 
-    for (grid_generator gen(range_r, range_c); gen; ++gen)
+    for (grid_generator_default gen(range_r, range_c); gen; ++gen)
     {
         try
         {

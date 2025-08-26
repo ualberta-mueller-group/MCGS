@@ -1,5 +1,6 @@
 #include "game_type_test.h"
 #include "all_game_headers.h"
+#include "type_table.h"
 #include <unordered_set>
 #include <vector>
 #include <cassert>

@@ -1,5 +1,6 @@
 #include "sumgame_map_view.h"
 #include "sumgame.h"
+#include "type_table.h"
 #include "sumgame_change_record.h"
 #include "game.h"
 #include <vector>

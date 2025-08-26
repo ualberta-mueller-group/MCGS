@@ -1,3 +1,17 @@
+"""
+MCGS test runner for paper experiments.
+
+IMPORTANT: check configuration under "Edit these" comment near the top of this
+file
+
+Multiple MCGS threads are created, and communicate with this script through
+stdin/stdout. Any thread not solving a game can receieve the next test case.
+
+Each test case is run for all optimization levels. A test which times out under
+any optimization level is excluded from the output csv files. Output data
+is partitioned into csv files based on thread number and optimization level.
+"""
+
 import subprocess
 import os
 import select

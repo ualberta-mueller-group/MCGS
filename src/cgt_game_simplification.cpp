@@ -1,20 +1,22 @@
 #include "cgt_game_simplification.h"
 
+#include <cassert>
+#include <utility>
+#include "utilities.h"
+#include <vector>
+#include <cstddef>
+
 #include "cgt_dyadic_rational.h"
 #include "fraction.h"
 #include "safe_arithmetic.h"
 #include "cgt_integer_game.h"
+#include "type_table.h"
 
 #include "cgt_nimber.h"
 #include "cgt_up_star.h"
 #include "cgt_switch.h"
 #include "throw_assert.h"
 #include "sumgame_map_view.h"
-#include <cassert>
-#include <utility>
-#include "utilities.h"
-#include <vector>
-#include <cstddef>
 
 using namespace std;
 

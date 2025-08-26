@@ -30,6 +30,12 @@ class random_table
 public:
     random_table(size_t n_positions, uint64_t seed);
 
+    // No copying/moving
+    random_table(const random_table&) = delete;
+    random_table& operator=(const random_table&) = delete;
+    random_table(const random_table&&) = delete;
+    random_table& operator=(const random_table&&) = delete;
+
     /*
        Position of get_zobrist_val functions can be past
            current_size() -- table will automatically grow

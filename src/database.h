@@ -1,13 +1,19 @@
 #pragma once
 #include <string>
+#include <iostream>
 #include <unordered_map>
+#include <memory>
+#include <cstdint>
+#include <optional>
+
 #include "cgt_basics.h"
+#include "type_table.h"
 #include "game.h"
+#include "serializer.h"
+#include "iobuffer.h"
+#include "sumgame.h"
 #include "db_game_generator.h"
 #include "type_mapper.h"
-
-////////////////////////////////////////////////// test function
-void db_test();
 
 ////////////////////////////////////////////////// struct db_entry_partizan
 struct db_entry_partizan
@@ -87,9 +93,6 @@ public:
 
     void generate_entries(db_game_generator& gen);
 
-    template <class T>
-    void generate_entries_for_game();
-
 private:
     friend std::ostream& operator<<(std::ostream& os, const database& db);
 
@@ -100,6 +103,12 @@ private:
     // Trees
     typedef DB_MAP_T<game_type_t, terminal_layer_partizan_t> tree_partizan_t;
     typedef DB_MAP_T<game_type_t, terminal_layer_impartial_t> tree_impartial_t;
+
+    std::unique_ptr<sumgame> _sum;
+    uint64_t _game_count;
+
+    sumgame& _get_sumgame();
+    void _generate_entry_single(game* g);
 
     tree_partizan_t _tree_partizan;
     tree_impartial_t _tree_impartial;
@@ -118,18 +127,11 @@ inline bool database::empty() const
     return _tree_partizan.empty() && _tree_impartial.empty();
 }
 
-template <class T>
-void database::generate_entries_for_game()
+inline sumgame& database::_get_sumgame()
 {
-    /*
-        TODO these static asserts should be more descriptive...
+    if (_sum.get() == nullptr)
+        _sum.reset(new sumgame(BLACK));
 
-        The type trait isn't really useful if it doesn't result in a
-        nice error message
-    */
-    static_assert(has_create_db_game_generator_v<T>);
-
-    db_game_generator* gen = T::create_db_game_generator();
-    generate_entries(*gen);
-    delete gen;
+    return *_sum;
 }
+

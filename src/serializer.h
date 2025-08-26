@@ -3,6 +3,10 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <string>
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 #include <memory>
 /*
     TODO break this into multiple files. Consider separating serialize

@@ -1,0 +1,17 @@
+Check out commit hash 4113a903b24744b901173e5d18f06484887415ba instead.
+The contents of this directory should already be at the root of the project,
+though with less documentation.
+
+Edit the options near the top of runtests.py (using the commit hash above,
+these should already be configured for running on fire-point), then run
+experiments.sh.
+
+This will delete database.bin and any diagrams/data from previous runs.
+database.bin and the experiment test case file ("experiments.test2") will be
+rebuilt using MCGS. The .test2 file is like a .test file but each test case is
+on its own line. Metadata is encoded into comments of each test case.
+
+Next, the tests will be run with runtests.py, and this will generate
+many csv files.
+
+Lastly, diagram.py will read the csvs, and create/save diagrams.
