@@ -612,8 +612,18 @@ Also defines runtime-allocated type integers:
 
 Allocation of each `type_table_t` is done in this file, but allocation of these
 integral values is done elsewhere, i.e. `game.cpp` and
-`dynamic_serializable.cpp`
+`dynamic_serializable.cpp`:
 
+- `game.h`/`game.cpp`
+    - Defines method `game_type_t game::game_type() const`
+    - Defines template function `game_type_t game_type<T>()`
+    - The `game_type_t`'s are assigned at run-time, and a game class's exact
+        number depends on the order of `game_type()` calls
+    - The value is stored in the game's `type_table_t`
+
+NOTE: If any of these functions are called in a constructor that isn't the
+most derived type, i.e. `strip` instead of `nogo_1xn`, then values may be
+incorrect.
 
 # Hashing (`hashing.h`)
 Defines main data types for game hashing:
