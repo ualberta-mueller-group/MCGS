@@ -40,6 +40,7 @@ This document includes more detailed information than `README.md`, including des
         - Splits a subgame into more subgames after playing a move in it
         - Simplifies "basic" CGT games
         - Uses a transposition table
+        - Uses a database of subgame outcomes
     - `sumgame::_solve_with_timeout`
         - `private` method implements most of the search algorithm
         - Runs until it either completes, or times out
@@ -147,12 +148,6 @@ It derives from `alternating_move_game` and reimplements the
     reasonably fast if we maintain hashes for the boards as they're modified, and
     pick the one with the smallest hash to be active?
 
-## `grid_generator` class (`grid_generator.h`)
-- Given `MxN` or `1xN` dimensions of a `grid` or `strip`, generates all strings representing boards for all less than or equal dimensions
-- i.e. given `1x1`, generates: "" (empty string), ".", "X", "O"
-- i.e. given `2x2`, generates strings for: `0x0`, `1x1`, `1x2`, `2x1`, `2x2`
-    - On each step, width is incremented, and on overflow, width is set to 1 and height is incremented
-- Given `2x1`, `1x2` is omitted, as its width is greater than `2x1`'s
 
 ## `grid_location` class (`grid_location.h`)
 - Utility class for manipulating locations on a `grid`
@@ -294,7 +289,8 @@ Two functions do this: `search_impartial_sumgame` and
 Executables based on the C++ source code must call one of the `mcgs_init_all()`
 or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
 parsing command-line arguments. These functions initialize static data:
-- `random.h`'s random seed
+- Serialization bookkeeping (for polymorphic types)
+- `random.h`'s random seed and global `random_generator`
 - Global `random_table`s
 - `sumgame`'s transposition table
 - `impartial_sumgame.h`'s transposition table
@@ -302,10 +298,233 @@ parsing command-line arguments. These functions initialize static data:
     assignments are not dependent on input
 
 # Random (`random.h`)
-- Defines functions to get random numbers for different integral types
-    - `get_random_uXX()` where `XX` is one of `64`, `32`, `16`, `8`
-    - `0` is never returned by these functions
-- `mcgs_init()` must be called first
+- Defines `random_generator` type
+    - Constructor accepts a `uint64_t` seed. 0 is a valid seed with no
+        special semantics
+    - A global `random_generator` instance is accessible through `get_global_rng()`
+        - `mcgs_init()` must be called first
+        - Seeded by `global::random_seed`. If this is 0, the global
+            `random_generator` is instead seeded with the current time by
+            calling `ms_since_epoch()` (`utilities.h`)
+    - Defines methods to get random numbers for different integral types
+        - `get_uXX()`, `get_iXX()` where `XX` is one of `64`, `32`,
+            `16`, `8`
+        - `min` and `max` values are accepted as method arguments, with default
+            values covering the whole range of the integral type
+        - TODO should these exclude 0 by default?
+- Method to access the underlying random number
+    generator, `std::mt19937_64& get_rng()`
+
+# Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)
+The serialization code detailed here is used by the database. Currently,
+serialization of polymorphic types is unused, and this section largely describes
+implementation details not currently important for users.
+
+## I/O Abstraction Class
+Classes `ibuffer` and `obuffer` (`iobuffer.h`) interact with files.
+
+- `ibuffer` is a wrapper of `std::ifstream`, `obuffer` is a wrapper
+    of `std::ofstream`
+- Constructors accept file names
+    - Files are in binary format
+    - `obuffer` truncates the file upon opening it (like deleting and opening
+        a new file)
+- Define methods for reading/writing fixed-width integers
+    - i.e. `uint8_t ibuffer::read_u8()`
+    - i.e. `void obuffer::write_i32(const int32_t&)`
+    - TODO: How to handle floating point? Assume IEEE?
+- A step toward enforcing machine-independent binary files
+    - Avoids endianness problems. The read/write methods use a fixed byte order
+        on disk
+    - TODO: However, non fixed width integer types are still a problem...
+    - In C++ it is not possible to distinguish between "C" integer types and
+        their fixed width equivalents, i.e. `int` and `int32_t`. Maybe write a
+        clang-tidy check?
+    - Possible solution: encode integer widths into the file format. Before
+        reading an int from a file, first read the expected width. If the width
+        doesn't match the width of the `read` method, throw.
+
+        - Run time safety but no compile time safety
+    - Currently expose `T ibuffer::__read<T>()`
+        and `void obuffer::__write<T>(const T&)` (integral types `T`)
+        in the public interface. Prefixed by `__` because they're only
+        a (temporary?) hack that shouldn't be called directly
+
+## Non-polymorphic Type Serialization
+Template struct `serializer<T, Enable = void>` defines the interface for
+serialization of both non-polymorphic and polymorphic types. This subsection
+talks about non-polymorphic types.
+
+- The default-valued `Enable` template argument is there to allow conditional
+    template specialization using SFINAE (substitution failure is not an
+    error), and can usually be ignored
+
+    - This is used to define the template for all integer types
+- Instantiating the template for a type that doesn't define it will trigger
+    a static assert
+- For a type `T`, `serializer<T>` should define two static functions:
+    - `inline static void save(obuffer&, const T&)`
+    - `inline static T load(ibuffer& is)`
+    - These functions should recursively use the `serializer` template where
+        necessary. See example implementation for `vector` below
+- `serializer.h` defines the template for several standard library types:
+    - integers
+    - `std::string`
+    - `std::vector<T>`
+    - `std::shared_ptr<T>` and `std::unique_ptr<T>`
+    - `std::pair<T1, T2>`
+    - `std::unordered_map<T1, T2>`
+        - `unordered_map` actually has more template arguments. TODO:
+            implement the rest?
+
+Example implementation for `vector`:
+```
+template <class T>
+struct serializer<std::vector<T>>
+{
+    inline static void save(obuffer& os, const std::vector<T>& val)
+    {
+        const size_t size = val.size();
+        os.write_u64(size);
+
+        for (size_t i = 0; i < size; i++)
+            serializer<T>::save(os, val[i]); // recursive use of template
+    }
+
+    inline static std::vector<T> load(ibuffer& is)
+    {
+        std::vector<T> vec;
+
+        const uint64_t size = is.read_u64();
+        vec.reserve(size);
+
+        for (uint64_t i = 0; i < size; i++)
+            vec.emplace_back(serializer<T>::load(is)); // recursive use here too
+
+        return vec;
+    }
+};
+```
+
+This structure allows serialization of complicated types, i.e.
+`serializer<vector<pair<int32_t, int16_t>>>::save(...)`
+
+## Polymorphic Type Serialization
+To make your polymorphic type serializable:
+1. Inherit from interface class `dyn_serializable` (`dynamic_serializable.h`)
+2. Define:
+    - Method `void T::save_impl(obuffer&) const`
+    - Function `static dyn_serializable* T::load_impl(ibuffer&)`
+3. Call `register_dyn_serializable<T>()` in `init_serialization.cpp`
+    - If not registered, your polymorphic type can't be saved/loaded
+    - A compile time error is raised if a registered type doesn't implement
+        these functions with the correct signatures
+
+Polymorphic type save usage example:
+```
+game* some_game_ptr = new clobber("XO");
+// All 3 valid:
+serializer<dyn_serializable*>::save(some_obuffer, some_game_ptr);
+serializer<game*>::save(some_obuffer, some_game_ptr);
+serializer<clobber*>::save(some_obuffer, some_game_ptr);
+```
+
+Load usage example (remember to use keyword `delete` to clean up):
+```
+serializer<dyn_serializable*>::load(some_ibuffer);
+serializer<game*>::load(some_ibuffer);
+serializer<clobber*>::load(some_ibuffer);
+```
+
+A `serializer` template is defined in `dynamic_serializable.h` for all pointer
+types derived from `dyn_serializable`.
+
+Each registered polymorphic type has a unique `dyn_serializable_id_t` (a
+unique runtime-allocated integer similar to a `game_type_t`). This specifies
+an index into an array of function pointers (for `load_impl` functions). This
+value is written/read from file when saving/loading polymorphic types.
+
+TODO: Use `type_mapper` like with database, to translate between run time type
+IDs and disk type IDs.
+
+# Database (`database.h`, `global_database.h`)
+`database.h` defines the `database` class, and two database entry structs. The
+struct `db_entry_partizan` is used to store outcome classes for partizan games,
+and the struct `db_entry_impartial` is used to store nim values for impartial
+games.
+
+- `set_partizan` and `set_impartial` methods take a game and entry, and store
+    it in the database
+- `get_partizan` and `get_impartial` methods take a game, and return a
+    `std::optional` of the corresponding entry type.
+- `save` and `load` methods save/load to/from a file
+- A global instance of `database` is accessible through
+    `database& get_global_database()` (`global_database.h`), after
+    `mcgs_init()` completes.
+- `database` has its own sumgame that it uses to solve outcome classes
+- The data is stored in two separate "trees", one tree for partizan games, the
+    other for impartial games
+    - Each tree is two layers of `std::unordered_map`. The first indexed by
+        game type (`game_type_t`), the second is indexed by local
+        hash (`hash_t`), yielding an entry struct
+    - Uses `type_mapper` (`type_mapper.h`) to translate between run time allocated
+        `game_type_t` values, and disk `game_type_t` values
+
+## Database Generation
+Several types are used for database generation:
+
+- `grid_generator` (`grid_generator.h`)
+    - See documentation in header file for more details
+    - Interface class for iterating over string representations of grid and
+        strip games
+    - `grid_generator_base` and `grid_generator_masked` are abstract classes
+        implementing some basic functionality
+    - `grid_generator_clobber`, `grid_generator_nogo`, and
+        `grid_generator_default` are non-abstract classes
+    - `grid_generator_clobber` and `grid_generator_nogo` are used to iterate
+        in order of increasing or decreasing number of stones
+    - `grid_generator_default` starts from a board full of `EMPTY` points, and
+        treats the board like a base 3 string, ending with all points being
+        `WHITE`
+
+The current non-abstract `grid_generators` take dimensions of a "max shape",
+i.e. `RxC` for non-negative integers `R` (row count) and `C` (column count),
+and generate strings for all grids having a shape less or equal.
+- For max shape `1x1`, the order of shapes is `0x0`, `1x1`
+- For `2x2`, it is `0x0`, `1x1`, `1x2`, `2x1`, `2x2`
+- For `2x1`, `1x2 is omitted, as its width is greater than `2x1`'s
+
+- `db_game_generator` (`db_game_generator.h`)
+    - Interface class for iterating over games, defining the order of database
+        entry generation. Passed to `database::generate_entries(db_game_generator&)`
+    - `gridlike_db_game_generator<Game_T, Generator_T>`
+        (`gridlike_db_game_generator.h`) is a non-abstract `db_game_generator`
+        for grid and strip games
+
+        - `Game_T` must be some non-abstract game derived from `strip` or `grid`
+        - `Generator_T` must be some non-abstract `grid_generator` type
+        - Generates all games in `Generator_T`'s ordering, which are legal.
+            Legal games are those which can be constructed without throwing an
+            exception, and, if method `bool Game_T::is_legal() const` exists,
+            the method returns true.
+        - Two constructors: one takes `RxC` max shape, the other takes `C` max
+            columns. The `RxC` constructor is only legal if `Game_T` is derived
+            from `grid`, otherwise a compile time  error will be raised
+
+## Adding A Game To the Database
+1. In `init_database.cpp`, in the `register_types` function, use the
+    `DATABASE_REGISTER_TYPE` macro to make the database aware of your game's
+    `game_type_t` value.
+
+    - IMPORTANT: write the game class name as it appears, with nothing extra,
+        i.e. `clobber` and not `some_namespace::clobber`, as the game name text
+        is used to identify `game_type_t`s on disk
+2. In `init_database.cpp`, in the `fill_database` function, add a
+    `db_game_generator` to the `generators` vector
+
+Recompile, delete `database.bin`, then re-run MCGS, i.e. `./MCGS ""` (note the
+empty game string). This will re-generate the database. Now `sumgame` solve
+methods will use your game's database entries.
 
 # Global Options (`global_options.h`)
 This file defines the `global_option` class, representing a global variable
@@ -345,7 +564,9 @@ the flag which should be used to set the option from the command line.
 The macros at the bottom of `global_options.cpp` initialize the `_name` field
 to the name of the variable in the source code.
 
-# RTTI - Run-time type information (`game_type.h`)
+# RTTI - Run-time type information (OLD) (`game_type.h`)
+TODO remove this
+
 - Defines interface class `i_game_type`
     - Currently implements method `game_type_t game_type() const` ("concrete" non-virtual method)
     - Also implements template function `game_type_t game_type<T>()`
@@ -362,6 +583,36 @@ to the name of the variable in the source code.
         - `game_type() const` already satisfies this as it's not possible to instantiate an abstract type
 - `game.h` defines template `T* cast_game<T*>(game*)` acting as a `reinterpret_cast`, but uses
 `assert`s to verify that the game is not `nullptr`, is active, and is of type `T` (using its `game_type_t`)
+
+# RTTI - Run-time type information (`type_table.h`)
+Defines `i_type_table` interface, and `type_table_t` struct. The struct contains
+run-time type information for any type derived from the interface, and the
+interface provides access to the struct.
+
+The struct belongs to the derived type itself, and can be accessed either
+through a pointer derived from `i_type_table`, or using a template function:
+
+```
+game* g = new clobber("XO");
+g->type_table();
+
+// OR
+
+type_table<clobber>();
+
+```
+
+Both examples give the same `type_table_t` -- the unique table corresponding
+to `clobber`.
+
+Also defines runtime-allocated type integers:
+- `game_type_t`, unique integer for each `game` class
+- `dyn_serializable_id_t`, unique integer for each serializable polymorphic type
+    which has been registered
+
+Allocation of each `type_table_t` is done in this file, but allocation of these
+integral values is done elsewhere, i.e. `game.cpp` and
+`dynamic_serializable.cpp`
 
 
 # Hashing (`hashing.h`)
