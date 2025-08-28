@@ -147,6 +147,9 @@ private:
 
     bool _over_time() const;
     game* _pop_game();
+
+    // For root level call, depth should be 0. For recursive calls,
+    // pass depth + 1
     std::optional<solve_result> _solve_with_timeout(uint64_t depth);
     void _push_undo_code(sumgame_undo_code code);
     void _pop_undo_code(sumgame_undo_code code);
