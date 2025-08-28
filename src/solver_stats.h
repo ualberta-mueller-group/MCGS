@@ -26,13 +26,13 @@ struct solver_stats
     size_t n_subgames;
 };
 
-
 //////////////////////////////////////////////////
 namespace stats {
 // TODO make these methods instead of global functions...
 
 // NOLINTBEGIN(readability-identifier-naming)
 extern solver_stats __global_stats;
+
 // NOLINTEND(readability-identifier-naming)
 
 inline void reset_stats()
@@ -68,8 +68,8 @@ inline void db_access(bool hit)
 
 inline void update_search_depth(const uint64_t& current_depth)
 {
-    __global_stats.search_depth = std::max(__global_stats.search_depth,
-                                      current_depth);
+    __global_stats.search_depth =
+        std::max(__global_stats.search_depth, current_depth);
 }
 
 inline void set_n_subgames(const size_t& n_subgames)

@@ -145,8 +145,8 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
         std::cout << "Estimated table size: " << byte_count_formatted;
         std::cout << " MiB" << std::endl;
 
-        //std::cout << "Estimated table size: " << byte_count;
-        //std::cout << " B" << std::endl;
+        // std::cout << "Estimated table size: " << byte_count;
+        // std::cout << " B" << std::endl;
     }
 
     //// Initialize arrays

@@ -110,7 +110,8 @@ bool grid_mask::_increment_by_moving(size_t marker_number, size_t max_pos)
 
     // Otherwise try to move marker i-1 to the right, and place
     // marker i to its right
-    if (marker_number > 0 && _increment_by_moving(marker_number - 1, max_pos - 1))
+    if (marker_number > 0 &&
+        _increment_by_moving(marker_number - 1, max_pos - 1))
     {
         const size_t pos_prev = _indices[marker_number - 1];
         const size_t pos_new = pos_prev + 1;
@@ -176,9 +177,11 @@ std::ostream& operator<<(std::ostream& os, const grid_mask& mask)
 } // namespace grid_generator_impl
 
 ////////////////////////////////////////////////// grid_generator methods
-bool grid_generator::increment_shape_helper(int_pair& shape, const int_pair& max_shape)
+bool grid_generator::increment_shape_helper(int_pair& shape,
+                                            const int_pair& max_shape)
 {
-    assert((shape.first <= max_shape.first) && (shape.second <= max_shape.second));
+    assert((shape.first <= max_shape.first) &&
+           (shape.second <= max_shape.second));
 
     if (shape.first == 0 && shape.second == 0)
         shape = int_pair(1, 1);
@@ -192,7 +195,8 @@ bool grid_generator::increment_shape_helper(int_pair& shape, const int_pair& max
         }
     }
 
-    return (shape.first <= max_shape.first) && (shape.second <= max_shape.second);
+    return (shape.first <= max_shape.first) &&
+           (shape.second <= max_shape.second);
 }
 
 /*
@@ -206,12 +210,12 @@ bool grid_generator::increment_shape_helper(int_pair& shape,
                                             const int_pair& max_shape)
 {
       assert(
-          ((shape.first <= max_shape.first) && 
+          ((shape.first <= max_shape.first) &&
           (shape.second <= max_shape.second))
 
           ||
 
-          ((shape.first <= max_shape.second) && 
+          ((shape.first <= max_shape.second) &&
           (shape.second <= max_shape.first))
           );
 
@@ -235,15 +239,18 @@ bool grid_generator::increment_shape_helper(int_pair& shape,
         }
     }
 
-    const bool both_le_max = (shape.first <= max_dim) && (shape.second <= max_dim);
-    const bool one_le_min = (shape.first <= min_dim) || (shape.second <= min_dim);
+    const bool both_le_max = (shape.first <= max_dim) && //
+                             (shape.second <= max_dim);  //
+
+    const bool one_le_min = (shape.first <= min_dim) || //
+                            (shape.second <= min_dim);  //
 
     return both_le_max && one_le_min;
 }
 */
 
-void grid_generator::init_board_helper(std::string& board, const int_pair& shape,
-                              char init_char)
+void grid_generator::init_board_helper(std::string& board,
+                                       const int_pair& shape, char init_char)
 {
     assert(shape.first >= 0 && shape.second >= 0);
 
@@ -309,10 +316,9 @@ void grid_generator_masked::operator++()
     }
 }
 
-void grid_generator_masked::init_board_helper_masked(std::string& board,
-                                            const int_pair& shape,
-                                            const grid_generator_impl::grid_mask& mask,
-                                            char true_char, char false_char)
+void grid_generator_masked::init_board_helper_masked(
+    std::string& board, const int_pair& shape,
+    const grid_generator_impl::grid_mask& mask, char true_char, char false_char)
 {
     assert(shape.first >= 0 && shape.second >= 0);
 
@@ -345,8 +351,8 @@ void grid_generator_masked::init_board_helper_masked(std::string& board,
     }
 }
 
-
-////////////////////////////////////////////////// grid_generator_default methods
+////////////////////////////////////////////////// grid_generator_default
+/// methods
 bool grid_generator_default::_increment_board()
 {
     bool carry = true;
@@ -367,7 +373,8 @@ bool grid_generator_default::_increment_board()
     return !carry;
 }
 
-////////////////////////////////////////////////// grid_generator_clobber methods
+////////////////////////////////////////////////// grid_generator_clobber
+/// methods
 bool grid_generator_clobber::_increment_board()
 {
     bool carry = true;

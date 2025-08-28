@@ -42,6 +42,7 @@ class i_type_table
 {
 public:
     i_type_table();
+
     virtual ~i_type_table() {}
 
     type_table_t* type_table() const;
@@ -49,13 +50,13 @@ public:
 private:
     // Ensure polymorphic type
     // NOLINTNEXTLINE(readability-identifier-naming)
-    virtual void __make_poly() const final {assert(false);}
+    virtual void __make_poly() const final { assert(false); }
 
     mutable type_table_t* _type_table;
 };
 
 ////////////////////////////////////////////////// type_table_t methods
-inline type_table_t::type_table_t(): _sid(0), _game_type(0)
+inline type_table_t::type_table_t() : _sid(0), _game_type(0)
 {
 }
 
@@ -79,8 +80,8 @@ inline game_type_t& type_table_t::game_type_ref()
     return _game_type;
 }
 
-////////////////////////////////////////////////// i_type_table methods 
-inline i_type_table::i_type_table(): _type_table(nullptr)
+////////////////////////////////////////////////// i_type_table methods
+inline i_type_table::i_type_table() : _type_table(nullptr)
 {
 }
 
@@ -96,7 +97,7 @@ inline type_table_t* i_type_table::type_table() const
     return _type_table;
 }
 
-////////////////////////////////////////////////// type_table<T>() function 
+////////////////////////////////////////////////// type_table<T>() function
 template <class T>
 inline type_table_t* type_table()
 {
@@ -106,4 +107,3 @@ inline type_table_t* type_table()
     static type_table_t* table = __type_table_impl::get_type_table(typeid(T));
     return table;
 }
-

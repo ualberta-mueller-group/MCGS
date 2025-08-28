@@ -4,7 +4,6 @@
 #pragma once
 #include "game.h"
 
-
 ////////////////////////////////////////////////// class db_game_generator
 class db_game_generator
 {

@@ -21,7 +21,8 @@ void register_impl(type_table_t* type_table, load_fn_ptr_t load_function)
     sid = next_sid++;
     load_functions.push_back(load_function);
 
-    assert(get_load_function(type_table->dyn_serializable_id()) == load_function);
+    assert(get_load_function(type_table->dyn_serializable_id()) ==
+           load_function);
 }
 
 load_fn_ptr_t get_load_function(dyn_serializable_id_t sid)
@@ -31,4 +32,3 @@ load_fn_ptr_t get_load_function(dyn_serializable_id_t sid)
 }
 
 } // namespace __dyn_serializable_impl
-

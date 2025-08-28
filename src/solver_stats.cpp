@@ -1,6 +1,5 @@
 #include "solver_stats.h"
 
-
 void solver_stats::reset()
 {
     node_count = 0;

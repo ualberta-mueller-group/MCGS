@@ -93,11 +93,9 @@ void split_test_elephants_all()
         assert_strip_split_result(&g, expected);
     }
 
-
-    vector<string> no_split =
-    {
-        "X..X.X..X..O...OOO",
-        "X..X.X.X..X...O.O..O"
+    vector<string> no_split = {
+        "X..X.X..X..O...OOO",  //
+        "X..X.X.X..X...O.O..O" //
     };
 
     for (const string& board : no_split)
@@ -105,5 +103,4 @@ void split_test_elephants_all()
         elephants g(board);
         assert_no_split(&g);
     }
-
 }

@@ -15,4 +15,4 @@ void init_serialization()
     register_dyn_serializable<elephants>();
 }
 
-} // namespace mcgs_init 
+} // namespace mcgs_init

@@ -82,4 +82,3 @@ void obuffer::write_i64(const int64_t& val)
 {
     __fmt_write<int64_t>(_fs, val);
 }
-

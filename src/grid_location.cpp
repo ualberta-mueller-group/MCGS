@@ -72,4 +72,3 @@ bool grid_location::get_neighbor_point(int& neighbor_point,
     neighbor_point = coord_to_point(neighbor_coord, shape);
     return true;
 }
-

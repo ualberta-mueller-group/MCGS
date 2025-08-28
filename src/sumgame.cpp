@@ -45,6 +45,7 @@ using std::optional;
 using sumgame_impl::change_record;
 
 std::shared_ptr<ttable_sumgame> sumgame::_tt(nullptr);
+
 //---------------------------------------------------------------------------
 
 // Helpers
@@ -128,8 +129,8 @@ void sumgame_move_generator::next_move(bool init)
         // Skip integers and rationals
         if (!_use_skipped_games && game_is_number(g))
         {
-                _skipped_games.push_back({_subgame_idx, g});
-                continue;
+            _skipped_games.push_back({_subgame_idx, g});
+            continue;
         }
 
         // Skip already seen games
@@ -381,8 +382,8 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
 
         if (result.has_value())
 
-        if (result.has_value())
-            return result;
+            if (result.has_value())
+                return result;
     }
 
     simplify_basic();
@@ -499,7 +500,8 @@ bool sumgame::_over_time() const
     return _should_stop;
 }
 
-void sumgame::_pre_solve_pass() {
+void sumgame::_pre_solve_pass()
+{
     _push_undo_code(SUMGAME_UNDO_PRE_SOLVE_PASS);
 
     // TODO change records are used in several places, but are kind of messy...
@@ -535,7 +537,8 @@ void sumgame::_pre_solve_pass() {
     }
 }
 
-void sumgame::_undo_pre_solve_pass() {
+void sumgame::_undo_pre_solve_pass()
+{
     _pop_undo_code(SUMGAME_UNDO_PRE_SOLVE_PASS);
     sumgame_impl::change_record& cr = _change_record_stack.back();
 
@@ -723,8 +726,7 @@ std::vector<unsigned int> get_oc_indexable_vector()
 {
     std::vector<unsigned int> vec;
 
-    constexpr outcome_class OC_MAX = std::max(
-    {
+    constexpr outcome_class OC_MAX = std::max({
         outcome_class::U,
         outcome_class::L,
         outcome_class::R,
@@ -742,8 +744,8 @@ std::vector<unsigned int> get_oc_indexable_vector()
     - Only Rs
     - One N, all others non-negative for to_play
 */
-ebw analyze_outcome_count_vector(
-    const std::vector<unsigned int>& counts, const bw player)
+ebw analyze_outcome_count_vector(const std::vector<unsigned int>& counts,
+                                 const bw player)
 {
     assert(is_black_white(player));
 
@@ -751,18 +753,16 @@ ebw analyze_outcome_count_vector(
     if (has_u)
         return EMPTY;
 
-    const bool only_l =
-        counts[outcome_class::L] > 0 &&
-        counts[outcome_class::R] == 0 &&
-        counts[outcome_class::N] == 0;
+    const bool only_l = counts[outcome_class::L] > 0 &&
+                        counts[outcome_class::R] == 0 &&
+                        counts[outcome_class::N] == 0;
 
     if (only_l)
         return BLACK;
 
-    const bool only_r =
-        counts[outcome_class::L] == 0 &&
-        counts[outcome_class::R] > 0 &&
-        counts[outcome_class::N] == 0;
+    const bool only_r = counts[outcome_class::L] == 0 &&
+                        counts[outcome_class::R] > 0 &&
+                        counts[outcome_class::N] == 0;
 
     if (only_r)
         return WHITE;

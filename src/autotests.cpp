@@ -202,7 +202,7 @@ void run_autotests(const string& test_directory, const string& outfile_name,
 }
 
 void run_autotests_stdin(const string& outfile_name,
-                   unsigned long long test_timeout)
+                         unsigned long long test_timeout)
 {
     assert(global::clear_tt());
 
@@ -269,13 +269,13 @@ void run_autotests_stdin(const string& outfile_name,
         append_field(outfile, sr.status_str(), true);
         append_field(outfile, gc.comments, true);
 
-        append_field(outfile, to_string(st.node_count), true); //
-        append_field(outfile, to_string(st.tt_hits), true); //
-        append_field(outfile, to_string(st.tt_misses), true); //
-        append_field(outfile, to_string(st.db_hits), true); //
-        append_field(outfile, to_string(st.db_misses), true); //
+        append_field(outfile, to_string(st.node_count), true);   //
+        append_field(outfile, to_string(st.tt_hits), true);      //
+        append_field(outfile, to_string(st.tt_misses), true);    //
+        append_field(outfile, to_string(st.db_hits), true);      //
+        append_field(outfile, to_string(st.db_misses), true);    //
         append_field(outfile, to_string(st.search_depth), true); //
-        append_field(outfile, to_string(st.n_subgames), true); //
+        append_field(outfile, to_string(st.n_subgames), true);   //
 
         append_field(outfile, gc.hash.get_string(), false);
         outfile << NEWLINE;

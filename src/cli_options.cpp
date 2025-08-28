@@ -88,13 +88,13 @@ void print_help_message(const string& exec_name)
     print_flag(global::use_db.no_flag(), "Disable database usage.");
 
     print_flag(global::play_split.no_flag(), "Don't split games after "
-               "playing a move.");
+                                             "playing a move.");
 
     print_flag(global::play_normalize.no_flag(), "Don't normalize subgames "
-               "after playing a move.");
+                                                 "after playing a move.");
 
     print_flag(global::dedupe_movegen.no_flag(), "Don't skip move generators "
-               "for duplicate subgames.");
+                                                 "for duplicate subgames.");
 
     cout << "Misc options flags:" << endl;
     print_flag(global::random_seed.flag(),
@@ -103,9 +103,10 @@ void print_help_message(const string& exec_name)
                "since epoch. Default: " +
                    global::random_seed.get_default_str() + ".");
 
-    print_flag(global::experiment_seed.flag(), "Set seed for experiment data "
+    print_flag(global::experiment_seed.flag(),
+               "Set seed for experiment data "
                "generation. 0 means seed with current time. Default: " +
-               global::experiment_seed.get_default_str());
+                   global::experiment_seed.get_default_str());
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -114,8 +115,7 @@ void print_help_message(const string& exec_name)
     cout << endl;
 
     print_flag("--gen-experiments", "Generate .test file for ICGA paper. See "
-               "gen_experiments.cpp");
-
+                                    "gen_experiments.cpp");
 
     print_flag("--run-tests",
                "Run all autotests. By default, reads tests from \"" +
@@ -126,9 +126,7 @@ void print_help_message(const string& exec_name)
     print_flag("--run-tests-stdin", "Like --run-tests, but read from stdin.");
 
     print_flag("--nogo-test", "Helper functionality for python script testing "
-               "NoGo correctness, compared to SBHSolver");
-
-
+                              "NoGo correctness, compared to SBHSolver");
 
     print_flag("--test-dir <directory name>",
                "Sets input directory for --run-tests. Default is \"" +
@@ -146,7 +144,7 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag(global::clear_tt.flag(),
                "Clear ttable between test runs. Default: " +
-               global::clear_tt.get_default_str() + ".");
+                   global::clear_tt.get_default_str() + ".");
 
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
@@ -169,7 +167,6 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag(global::print_ttable_size.flag(),
                "Print ttable size to stdout.");
-
 }
 
 } // namespace
@@ -308,13 +305,11 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-
         if (arg == "--run-tests-stdin")
         {
             opts.run_tests_stdin = true;
             continue;
         }
-
 
         if (arg == "--nogo-test")
         {

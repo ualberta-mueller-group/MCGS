@@ -8,7 +8,8 @@
 #include "type_table.h"
 #include "throw_assert.h"
 
-void type_mapper::register_type(const std::string& type_name, game_type_t runtime_type)
+void type_mapper::register_type(const std::string& type_name,
+                                game_type_t runtime_type)
 {
     // Search for existing disk type
     auto it = _disk_types.find(type_name);
@@ -43,7 +44,8 @@ game_type_t& type_mapper::_type_remapping_ref(game_type_t runtime_type)
 {
     if (!(runtime_type < _type_remappings.size()))
     {
-        const size_t new_size = new_vector_capacity(runtime_type, _type_remappings.size());
+        const size_t new_size =
+            new_vector_capacity(runtime_type, _type_remappings.size());
         _type_remappings.resize(new_size, 0);
     }
 

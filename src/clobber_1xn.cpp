@@ -19,11 +19,11 @@ class clobber_1xn_db_game_generator;
 
 using std::string, std::pair, std::vector;
 
-
 //////////////////////////////////////////////////
 
 namespace {
-void get_subgame_boundaries(const std::vector<int>& board, std::vector<std::pair<size_t, size_t>>& boundaries)
+void get_subgame_boundaries(const std::vector<int>& board,
+                            std::vector<std::pair<size_t, size_t>>& boundaries)
 {
     const size_t N = board.size();
 
@@ -71,7 +71,6 @@ void get_subgame_boundaries(const std::vector<int>& board, std::vector<std::pair
 }
 
 } // namespace
-
 
 //////////////////////////////////////////////////
 clobber_1xn::clobber_1xn(const vector<int>& board) : strip(board)
@@ -161,7 +160,8 @@ split_result clobber_1xn::_split_impl() const
 
     split_result sr = split_result(vector<game*>());
     for (const pair<size_t, size_t>& range : boundaries)
-        sr->push_back(new clobber_1xn(vector_substr(board, range.first, range.second)));
+        sr->push_back(
+            new clobber_1xn(vector_substr(board, range.first, range.second)));
 
     return sr;
 }
@@ -178,12 +178,12 @@ void clobber_1xn::_normalize_impl()
     // Empty, or subgame is whole board
     if (                                       //
         board_size == 0 ||                     //
-            (                                  //
+        (                                      //
             n_subgames == 1 &&                 //
             boundaries[0].first == 0 &&        //
             boundaries[0].second == board_size //
             )                                  //
-       )                                       //
+        )                                      //
     {
         const bool do_mirror = strip::_should_mirror(board);
 

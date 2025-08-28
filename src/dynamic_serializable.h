@@ -27,10 +27,11 @@ class dyn_serializable;
     i.e. function pointer to:
     static dyn_serializable* clobber_1xn::load_impl(ibuffer&)
 */
-typedef dyn_serializable* (* load_fn_ptr_t)(ibuffer&);
+typedef dyn_serializable* (*load_fn_ptr_t)(ibuffer&);
 
 ////////////////////////////////////////////////// type traits
 // NOLINTBEGIN(readability-identifier-naming)
+// clang-format off
 
 //////////////////////////////////////// has_save_impl<T>
 template <class T, class Enable = void>
@@ -80,17 +81,18 @@ struct has_load_impl<T,
 template <class T>
 static constexpr bool has_load_impl_v = has_load_impl<T>::value;
 
+// clang-format on
 // NOLINTEND(readability-identifier-naming)
 
 ////////////////////////////////////////////////// class dyn_serializable
-class dyn_serializable: public i_type_table
+class dyn_serializable : public i_type_table
 {
 public:
     virtual ~dyn_serializable() {}
 
     dyn_serializable_id_t dyn_serializable_id() const;
 
-    virtual void save_impl(obuffer&) const {THROW_ASSERT(false);}
+    virtual void save_impl(obuffer&) const { THROW_ASSERT(false); }
 
 private:
 };
@@ -132,11 +134,13 @@ inline dyn_serializable_id_t get_dyn_serializable_id()
     static_assert(!std::is_abstract_v<T>);
     static_assert(has_save_impl_v<T> && has_load_impl_v<T>);
 
-    static const dyn_serializable_id_t SID = __get_dyn_serializable_id_impl<T>();
+    static const dyn_serializable_id_t SID =
+        __get_dyn_serializable_id_impl<T>();
     return SID;
 }
 
-////////////////////////////////////////////////// register_dyn_serializable<T>()
+//////////////////////////////////////////////////
+/// register_dyn_serializable<T>()
 template <class T>
 void register_dyn_serializable()
 {
@@ -146,14 +150,11 @@ void register_dyn_serializable()
     __dyn_serializable_impl::register_impl(type_table<T>(), &T::load_impl);
 }
 
-////////////////////////////////////////////////// serializer<dyn_serializable*> and derived pointers
+////////////////////////////////////////////////// serializer<dyn_serializable*>
+/// and derived pointers
 template <class T>
-struct serializer<T*,
-    std::enable_if_t<
-        std::is_base_of_v<dyn_serializable, T>,
-        void
-    >
->
+struct serializer<
+    T*, std::enable_if_t<std::is_base_of_v<dyn_serializable, T>, void>>
 {
     static void save(obuffer& os, const dyn_serializable* obj)
     {

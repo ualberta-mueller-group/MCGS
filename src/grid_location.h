@@ -16,15 +16,15 @@
 // Directions for moving on a grid
 enum grid_dir
 {
-    GRID_DIR_UP = 0,
-    GRID_DIR_UP_RIGHT,
-    GRID_DIR_RIGHT,
-    GRID_DIR_DOWN_RIGHT,
-    GRID_DIR_DOWN,
-    GRID_DIR_DOWN_LEFT,
-    GRID_DIR_LEFT,
-    GRID_DIR_UP_LEFT,
-    GRID_DIR_NO_DIRECTION,
+    GRID_DIR_UP = 0,       //
+    GRID_DIR_UP_RIGHT,     //
+    GRID_DIR_RIGHT,        //
+    GRID_DIR_DOWN_RIGHT,   //
+    GRID_DIR_DOWN,         //
+    GRID_DIR_DOWN_LEFT,    //
+    GRID_DIR_LEFT,         //
+    GRID_DIR_UP_LEFT,      //
+    GRID_DIR_NO_DIRECTION, //
 };
 
 ////////////////////////////////////////////////// Implementation details
@@ -51,19 +51,29 @@ static_assert(_GRID_DISPLACEMENTS[GRID_DIR_UP_LEFT] == int_pair(-1, -1));
 static_assert(_GRID_DISPLACEMENTS[GRID_DIR_NO_DIRECTION] == int_pair(0, 0));
 
 static constexpr std::array<grid_dir, 4> GRID_DIRS_CARDINAL {
-    GRID_DIR_UP,
-    GRID_DIR_RIGHT,
-    GRID_DIR_DOWN,
-    GRID_DIR_LEFT,
+    GRID_DIR_UP,    //
+    GRID_DIR_RIGHT, //
+    GRID_DIR_DOWN,  //
+    GRID_DIR_LEFT,  //
 };
 
 static constexpr std::array<grid_dir, 4> GRID_DIRS_DIAGONAL {
-    GRID_DIR_UP_RIGHT, GRID_DIR_DOWN_RIGHT, GRID_DIR_DOWN_LEFT,
-    GRID_DIR_UP_LEFT};
+    GRID_DIR_UP_RIGHT,   //
+    GRID_DIR_DOWN_RIGHT, //
+    GRID_DIR_DOWN_LEFT,  //
+    GRID_DIR_UP_LEFT,    //
+};
 
 static constexpr std::array<grid_dir, 8> GRID_DIRS_ALL {
-    GRID_DIR_UP,   GRID_DIR_UP_RIGHT,  GRID_DIR_RIGHT, GRID_DIR_DOWN_RIGHT,
-    GRID_DIR_DOWN, GRID_DIR_DOWN_LEFT, GRID_DIR_LEFT,  GRID_DIR_UP_LEFT};
+    GRID_DIR_UP,         //
+    GRID_DIR_UP_RIGHT,   //
+    GRID_DIR_RIGHT,      //
+    GRID_DIR_DOWN_RIGHT, //
+    GRID_DIR_DOWN,       //
+    GRID_DIR_DOWN_LEFT,  //
+    GRID_DIR_LEFT,       //
+    GRID_DIR_UP_LEFT,    //
+};
 
 ////////////////////////////////////////////////// class grid_location
 class grid_location
@@ -248,4 +258,3 @@ inline int_pair grid_location::point_to_coord(int point, const int_pair& shape)
     int c = point % shape.second;
     return {r, c};
 }
-

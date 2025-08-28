@@ -10,7 +10,6 @@ namespace {
 optional<random_generator> rng_int_seeded;
 } // namespace
 
-
 // TODO inline?
 random_generator& get_global_rng()
 {
@@ -34,5 +33,3 @@ void init_random_impl()
 }
 
 } // namespace mcgs_init
-
-

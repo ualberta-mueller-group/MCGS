@@ -103,7 +103,6 @@ std::ostream& operator<<(std::ostream& os, const grid_mask& mask);
 
 } // namespace grid_generator_impl
 
-
 ////////////////////////////////////////////////// grid_generator
 /*
    Interface class for grid generators
@@ -142,7 +141,7 @@ public:
         _increment_board()
             Increment current string board (i.e "XX|XX" -> "OX|XX")
 */
-class grid_generator_base: public grid_generator
+class grid_generator_base : public grid_generator
 {
 public:
     grid_generator_base(const int_pair& max_shape);
@@ -175,13 +174,13 @@ protected:
     clobber and nogo generators (i.e. to iterate in order of increasing or
     decreasing number of stones)
 
-    See grid_generator_base for mandatory functions to implement. Implementations should
-    account for the current mask state
+    See grid_generator_base for mandatory functions to implement.
+   Implementations should account for the current mask state
 
     _init_mask() and _increment_mask() are provided. See grid_mask class
     for ordering. Overrides operator++() to account for mask
 */
-class grid_generator_masked: public grid_generator_base
+class grid_generator_masked : public grid_generator_base
 {
 public:
     grid_generator_masked(const int_pair& max_shape);
@@ -196,10 +195,10 @@ public:
        i.e. true/false characters for clobber: 'X' and '.'
        for nogo: '.' and 'X'
     */
-    static void init_board_helper_masked(std::string& board,
-                                         const int_pair& shape,
-                                         const grid_generator_impl::grid_mask& mask,
-                                         char true_char, char false_char);
+    static void init_board_helper_masked(
+        std::string& board, const int_pair& shape,
+        const grid_generator_impl::grid_mask& mask, char true_char,
+        char false_char);
 
 protected:
     grid_generator_impl::grid_mask _mask;
@@ -213,10 +212,10 @@ protected:
    Non-abstract basic grid generator.
 
    i.e for max_shape 2x2:
-       "" -> "." -> "X" -> "O" -> ".." -> ... -> 
+       "" -> "." -> "X" -> "O" -> ".." -> ... ->
        "..|.." -> "..|.X" -> "..|.O" -> "..|X." -> "..|XX" -> ... -> "OO|OO"
 */
-class grid_generator_default: public grid_generator_base
+class grid_generator_default : public grid_generator_base
 {
 public:
     grid_generator_default(const int_pair& max_shape);
@@ -242,7 +241,7 @@ protected:
     "XO|.." -> "OO|.." -> "X.|X." -> "O.|X." -> "X.|O." -> "O.|O." -> "X.|.X" ->
     "O.|.X" -> "X.|.O" -> "O.|.O" -> ".X|X." -> ... -> "OO|OO"
 */
-class grid_generator_clobber: public grid_generator_masked
+class grid_generator_clobber : public grid_generator_masked
 {
 public:
     grid_generator_clobber(const int_pair& max_shape);
@@ -256,7 +255,6 @@ protected:
     bool _increment_board() override;
 };
 
-    
 ////////////////////////////////////////////////// grid_generator_nogo
 /*
    Non-abstract grid generator for NoGo ordering
@@ -268,7 +266,7 @@ protected:
    "XO|.." -> "OO|.." -> "..|.X" -> "..|.O" -> "..|X." -> "..|O." -> ".X|.." ->
    ".O|.." -> "X.|.." -> "O.|.." -> "..|.."
 */
-class grid_generator_nogo: public grid_generator_masked
+class grid_generator_nogo : public grid_generator_masked
 {
 public:
     grid_generator_nogo(const int_pair& max_shape);
@@ -282,12 +280,10 @@ protected:
     bool _increment_board() override;
 };
 
-
 ////////////////////////////////////////////////// grid_mask methods
 namespace grid_generator_impl {
 
-inline grid_mask::grid_mask()
-    : _marker_count_end(0)
+inline grid_mask::grid_mask() : _marker_count_end(0)
 {
 }
 
@@ -317,20 +313,17 @@ inline grid_mask::operator bool() const
 
 ////////////////////////////////////////////////// grid_generator_base methods
 inline grid_generator_base::grid_generator_base(const int_pair& max_shape)
-    : _max_shape(max_shape),
-      _shape(0, 0)
+    : _max_shape(max_shape), _shape(0, 0)
 {
 }
 
 inline grid_generator_base::grid_generator_base(int max_rows, int max_cols)
-    : _max_shape(max_rows, max_cols),
-      _shape(0, 0)
+    : _max_shape(max_rows, max_cols), _shape(0, 0)
 {
 }
 
 inline grid_generator_base::grid_generator_base(int max_cols)
-    : _max_shape(1, max_cols),
-      _shape(0, 0)
+    : _max_shape(1, max_cols), _shape(0, 0)
 {
 }
 
@@ -359,20 +352,17 @@ inline bool grid_generator_base::_increment_shape()
 
 ////////////////////////////////////////////////// grid_generator_masked methods
 inline grid_generator_masked::grid_generator_masked(const int_pair& max_shape)
-    : grid_generator_base(max_shape),
-      _mask(int_pair(0, 0))
+    : grid_generator_base(max_shape), _mask(int_pair(0, 0))
 {
 }
 
 inline grid_generator_masked::grid_generator_masked(int max_rows, int max_cols)
-    : grid_generator_base(max_rows, max_cols),
-      _mask(int_pair(0, 0))
+    : grid_generator_base(max_rows, max_cols), _mask(int_pair(0, 0))
 {
 }
 
 inline grid_generator_masked::grid_generator_masked(int max_cols)
-    : grid_generator_base(1, max_cols),
-      _mask(int_pair(0, 0))
+    : grid_generator_base(1, max_cols), _mask(int_pair(0, 0))
 {
 }
 
@@ -387,13 +377,15 @@ inline bool grid_generator_masked::_increment_mask()
     return _mask;
 }
 
-////////////////////////////////////////////////// grid_generator_default methods
+////////////////////////////////////////////////// grid_generator_default
+/// methods
 inline grid_generator_default::grid_generator_default(const int_pair& max_shape)
     : grid_generator_base(max_shape)
 {
 }
 
-inline grid_generator_default::grid_generator_default(int max_rows, int max_cols)
+inline grid_generator_default::grid_generator_default(int max_rows,
+                                                      int max_cols)
     : grid_generator_base(max_rows, max_cols)
 {
 }
@@ -409,13 +401,15 @@ inline void grid_generator_default::_init_board()
     init_board_helper(_board, _shape, empty_char);
 }
 
-////////////////////////////////////////////////// grid_generator_clobber methods
+////////////////////////////////////////////////// grid_generator_clobber
+/// methods
 inline grid_generator_clobber::grid_generator_clobber(const int_pair& max_shape)
     : grid_generator_masked(max_shape)
 {
 }
 
-inline grid_generator_clobber::grid_generator_clobber(int max_rows, int max_cols)
+inline grid_generator_clobber::grid_generator_clobber(int max_rows,
+                                                      int max_cols)
     : grid_generator_masked(max_rows, max_cols)
 {
 }

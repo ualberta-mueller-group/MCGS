@@ -108,19 +108,19 @@ void init_global_random_tables(uint64_t seed)
     global_random_tables.reserve(4);
 
     assert(RANDOM_TABLE_DEFAULT == 0);
-    //global_random_tables.emplace_back(1024, next_seed());
+    // global_random_tables.emplace_back(1024, next_seed());
     global_random_tables.emplace_back(new random_table(1024, next_seed()));
 
     assert(RANDOM_TABLE_TYPE == 1);
-    //global_random_tables.emplace_back(1, next_seed());
+    // global_random_tables.emplace_back(1, next_seed());
     global_random_tables.emplace_back(new random_table(1, next_seed()));
 
     assert(RANDOM_TABLE_MODIFIER == 2);
-    //global_random_tables.emplace_back(128, next_seed());
+    // global_random_tables.emplace_back(128, next_seed());
     global_random_tables.emplace_back(new random_table(128, next_seed()));
 
     assert(RANDOM_TABLE_PLAYER == 3);
-    //global_random_tables.emplace_back(1, next_seed());
+    // global_random_tables.emplace_back(1, next_seed());
     global_random_tables.emplace_back(new random_table(1, next_seed()));
 }
 

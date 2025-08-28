@@ -44,8 +44,7 @@ clobber::clobber(int n_rows, int n_cols) : grid(n_rows, n_cols)
 {
 }
 
-clobber::clobber(const vector<int>& board, int_pair shape)
-    : grid(board, shape)
+clobber::clobber(const vector<int>& board, int_pair shape) : grid(board, shape)
 {
 }
 
@@ -150,10 +149,10 @@ bool trim_game(vector<int>& board_dst, int_pair& shape_dst,
         }
     }
 
-    assert(min_r < MIN_INVALID &&
-            min_c < MIN_INVALID &&
-            max_r > MAX_INVALID &&
-            max_c > MAX_INVALID);
+    assert(min_r < MIN_INVALID && //
+           min_c < MIN_INVALID && //
+           max_r > MAX_INVALID && //
+           max_c > MAX_INVALID);  //
 
     assert((min_r <= max_r) && (min_c <= max_c));
 
@@ -180,8 +179,10 @@ bool trim_game(vector<int>& board_dst, int_pair& shape_dst,
 
         const int_pair src_coord = loc.get_coord();
 
-        const int_pair dst_coord(src_coord.first - min_r, src_coord.second - min_c);
-        const int dst_point = grid_location::coord_to_point(dst_coord, shape_dst);
+        const int_pair dst_coord(src_coord.first - min_r,
+                                 src_coord.second - min_c);
+        const int dst_point =
+            grid_location::coord_to_point(dst_coord, shape_dst);
 
         board_dst[dst_point] = tile;
     }
@@ -304,8 +305,8 @@ split_result clobber::_split_impl() const
     {
         const vector<int>& board_untrimmed = component_vec[i];
 
-        const bool different = trim_game(new_board, new_shape, board_untrimmed,
-                                         grid_shape);
+        const bool different =
+            trim_game(new_board, new_shape, board_untrimmed, grid_shape);
 
         clobber* g_new = nullptr;
 

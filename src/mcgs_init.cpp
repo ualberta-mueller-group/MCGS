@@ -26,8 +26,8 @@ void mcgs_init_all(const cli_options& opts)
     mcgs_init::init_sumgame(global::tt_sumgame_idx_bits());
     mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits());
 
-    init_database_enum db_init_type = global::use_db()
-        ? INIT_DATABASE_AUTO : INIT_DATABASE_NONE;
+    init_database_enum db_init_type =
+        global::use_db() ? INIT_DATABASE_AUTO : INIT_DATABASE_NONE;
 
     mcgs_init::init_database("database.bin", db_init_type);
 }

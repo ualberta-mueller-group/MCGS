@@ -139,12 +139,12 @@ bool refine_subgame_range(const vector<int>& board, pair<size_t, size_t>& range)
             return true;
     }
 
-
     range.second = 0;
     return false;
 }
 
-void get_subgame_ranges(const vector<int>& board, vector<pair<size_t, size_t>>& ranges)
+void get_subgame_ranges(const vector<int>& board,
+                        vector<pair<size_t, size_t>>& ranges)
 {
     assert(ranges.empty());
 
@@ -204,8 +204,7 @@ void get_subgame_ranges(const vector<int>& board, vector<pair<size_t, size_t>>& 
             assert(chunk_start <= last_black && chunk_start <= last_white);
 
             // keep O in "left" subgame
-            ranges.emplace_back(chunk_start,
-                                last_white - chunk_start + 1);
+            ranges.emplace_back(chunk_start, last_white - chunk_start + 1);
 
             // keep X in remainder
             chunk_start = i;
@@ -231,7 +230,6 @@ inline void filter_ranges(const vector<int>& board,
     for (pair<size_t, size_t>& range : ranges)
         if (refine_subgame_range(board, range))
             filtered_ranges.emplace_back(range);
-
 }
 
 } // namespace
@@ -337,7 +335,8 @@ split_result elephants::_split_impl() const
     split_result result = split_result(vector<game*>());
 
     for (const pair<size_t, size_t>& range : ranges_filtered)
-        result->emplace_back(new elephants(vector_substr(board, range.first, range.second)));
+        result->emplace_back(
+            new elephants(vector_substr(board, range.first, range.second)));
 
     return result;
 }
@@ -354,7 +353,8 @@ void elephants::_normalize_impl()
     filter_ranges(board, ranges, ranges_filtered);
 
     const size_t n_subgames = ranges_filtered.size();
-    if (n_subgames == 1 && ranges_filtered[0].first == 0 && ranges_filtered[0].second == board_size)
+    if (n_subgames == 1 && ranges_filtered[0].first == 0 &&
+        ranges_filtered[0].second == board_size)
     {
         if (_hash_updatable())
             _mark_hash_updated();
@@ -389,8 +389,10 @@ void elephants::_normalize_impl()
             const int& left_boundary = board[end - 1];
             const int& right_boundary = board[next_range.first];
 
-            const bool have_black = (left_boundary == BLACK) | (right_boundary == BLACK);
-            const bool have_white = (left_boundary == WHITE) | (right_boundary == WHITE);
+            const bool have_black =
+                (left_boundary == BLACK) | (right_boundary == BLACK);
+            const bool have_white =
+                (left_boundary == WHITE) | (right_boundary == WHITE);
 
             if (!(have_black && have_white))
             {

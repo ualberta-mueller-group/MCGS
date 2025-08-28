@@ -58,7 +58,6 @@ protected:
 
     static bool _should_mirror(const std::vector<int>& board);
 
-
     void _mirror_self();
 
     void _set_board(const std::vector<int>& new_board);
@@ -133,6 +132,5 @@ inline void strip::_set_board(const std::vector<int>&& new_board)
     // TODO: Do I move the rvalue reference again, or do I just assign it?
     _board = std::move(new_board);
 }
-
 
 //---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /*
     Unused move_generator wrapper implemented play-in-the-middle heuristic.
-   
+
     Generates all moves from the move_generator during construction, and stores
     them in memory
 */

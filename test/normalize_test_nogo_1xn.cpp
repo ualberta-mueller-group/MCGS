@@ -33,7 +33,6 @@ void normalize_test_nogo_1xn()
 
         nogo_1xn n(input);
 
-
         assert(n.board_as_string() == input);
         n.normalize();
 

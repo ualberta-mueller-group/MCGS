@@ -207,7 +207,7 @@ game_type_t __game_type_impl()
 
     game_type_t& gt = type_table<T>()->game_type_ref();
 
-    if (gt == 0) [[ unlikely ]]
+    if (gt == 0) [[unlikely]]
         gt = game::_next_game_type++;
 
     return gt;
@@ -229,7 +229,7 @@ inline game_type_t game::game_type() const
 {
     game_type_t& gt = type_table()->game_type_ref();
 
-    if (gt == 0) [[ unlikely ]]
+    if (gt == 0) [[unlikely]]
         gt = _next_game_type++;
 
     return gt;

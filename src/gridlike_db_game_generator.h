@@ -26,20 +26,20 @@
 // i.e. gridlike_db_game_generator<clobber, grid_generator_clobber>
 
 template <class Game_T, class Generator_T>
-class gridlike_db_game_generator: public db_game_generator
+class gridlike_db_game_generator : public db_game_generator
 {
     static_assert(                                 //
         std::is_base_of_v<grid, Game_T> ||         //
-        std::is_base_of_v<strip, Game_T>,          //
+            std::is_base_of_v<strip, Game_T>,      //
         "Game must be derived from grid or strip." //
     );                                             //
 
     static_assert(!std::is_abstract_v<Game_T>, "Game must not be abstract.");
 
-    static_assert(                              //
+    static_assert(                                        //
         std::is_base_of_v<grid_generator, Generator_T> && //
-        !std::is_abstract_v<Generator_T>        //
-    );                                          //
+        !std::is_abstract_v<Generator_T>                  //
+    );                                                    //
 
 public:
     virtual ~gridlike_db_game_generator() {}
@@ -59,9 +59,7 @@ protected:
 
     void _init();
     bool _game_legal() const;
-
 };
-
 
 //////////////////////////////////////////////////
 // gridlike_db_game_generator methods
@@ -114,10 +112,8 @@ void gridlike_db_game_generator<Game_T, Generator_T>::operator++()
     {
         assert(_gen);
         ++_gen;
-    }
-    while (_gen && !_game_legal());
+    } while (_gen && !_game_legal());
 }
-
 
 template <class Game_T, class Generator_T>
 game* gridlike_db_game_generator<Game_T, Generator_T>::gen_game() const
@@ -165,4 +161,3 @@ bool gridlike_db_game_generator<Game_T, Generator_T>::_game_legal() const
 
     assert(false);
 }
-

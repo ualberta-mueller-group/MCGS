@@ -83,6 +83,7 @@
 */
 
 ////////////////////////////////////////////////// serialize<T>
+// clang-format off
 template <class T, class Enable = void>
 struct serializer
 {
@@ -109,7 +110,9 @@ struct serializer<T,
     }
 };
 
+// clang-format on
 //////////////////////////////////////// std::string
+
 /*
     TODO: Is this actually correct? Check if control codes are correctly
     dealt with...
@@ -200,7 +203,6 @@ struct serializer<std::unique_ptr<T>>
         return std::unique_ptr<T>(ptr);
     }
 };
-
 
 ////////////////////////////////////////////////// std::pair<T1, T2>
 template <class T1, class T2>

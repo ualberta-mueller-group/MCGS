@@ -13,7 +13,6 @@
 #include <cstddef>
 #include <ostream>
 
-
 //////////////////////////////////////// general utility functions
 template <class T>
 inline constexpr size_t size_in_bits(const T& expr)
@@ -147,7 +146,8 @@ relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,
 
 // TODO unit test
 template <class T>
-std::vector<T> vector_substr(const std::vector<T>& vec, size_t start, size_t length)
+std::vector<T> vector_substr(const std::vector<T>& vec, size_t start,
+                             size_t length)
 {
     assert(length <= vec.size());
 

@@ -41,7 +41,7 @@ outcome_class bools_to_outcome_class(bool black_wins, bool white_wins)
 } // namespace
 
 ////////////////////////////////////////////////// database methods
-database::database(): _sum(nullptr), _game_count(0)
+database::database() : _sum(nullptr), _game_count(0)
 {
 }
 
@@ -166,13 +166,12 @@ void database::generate_entries(db_game_generator& gen)
     }
 }
 
-
 void database::_generate_entry_single(game* g)
 {
     if (get_partizan(*g).has_value())
         return;
 
-    //bool print_game = true;
+    // bool print_game = true;
     bool print_game = (_game_count % 128) == 0;
 
     if (print_game)
@@ -204,7 +203,6 @@ void database::_generate_entry_single(game* g)
         cout << " DONE" << endl;
 }
 
-
 //////////////////////////////////////////////////
 std::ostream& operator<<(std::ostream& os, const database& db)
 {
@@ -228,4 +226,3 @@ std::ostream& operator<<(std::ostream& os, const database& db)
 
     return os;
 }
-

@@ -183,9 +183,8 @@ split_result nogo_1xn::_split_impl() const
     split_result result = split_result(vector<game*>());
 
     for (const pair<size_t, size_t>& range : subgame_ranges)
-        result->push_back(new nogo_1xn(vector_substr(simplified,
-                                                     range.first,
-                                                     range.second)));
+        result->push_back(
+            new nogo_1xn(vector_substr(simplified, range.first, range.second)));
 
     return result;
 }

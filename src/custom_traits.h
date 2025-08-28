@@ -7,6 +7,7 @@
 #include <type_traits>
 
 // NOLINTBEGIN(readability-identifier-naming)
+// clang-format off
 
 ////////////////////////////////////////////////// has_is_legal_v<T>
 // True IFF T has method: bool is_legal() const
@@ -39,4 +40,5 @@ template <class T>
 static constexpr bool has_is_legal_v = has_is_legal<T>::value;
 
 //////////////////////////////////////////////////
+// clang-format on
 // NOLINTEND(readability-identifier-naming)

@@ -235,10 +235,10 @@ void strip::_save_board(obuffer& os, const std::vector<int>& board)
     {
         const int& tile = board[i];
 
-        THROW_ASSERT(                                             //
-            (int) std::numeric_limits<uint8_t>::min() <= tile &&  //
-            tile <= (int) std::numeric_limits<uint8_t>::max()     //
-            );                                                    //
+        THROW_ASSERT(                                            //
+            (int) std::numeric_limits<uint8_t>::min() <= tile && //
+            tile <= (int) std::numeric_limits<uint8_t>::max()    //
+        );                                                       //
 
         os.write_u8(board[i]);
     }

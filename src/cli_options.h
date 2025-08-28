@@ -22,7 +22,7 @@ struct cli_options
 
     bool gen_experiments;
 
-    bool run_tests; // Run autotests
+    bool run_tests;       // Run autotests
     bool run_tests_stdin; // Run autotests from stdin
 
     bool nogo_test;

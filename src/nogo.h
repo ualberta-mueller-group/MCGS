@@ -19,14 +19,14 @@ class nogo : public grid
 public:
     nogo(std::string game_as_string);
     nogo(const std::vector<int>& board, int_pair shape);
-    nogo(const std::vector<int>& board, const std::vector<int>& immortal, int_pair shape);
+    nogo(const std::vector<int>& board, const std::vector<int>& immortal,
+         int_pair shape);
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
     bool is_legal() const;
 
     std::vector<int> immortal() const { return _immortal; }
-
 
 protected:
     void _init_hash(local_hash& hash) const override;
@@ -46,7 +46,7 @@ private:
                                 // BLACK for B-Go due to board partitioning,
                                 // WHITE for W-Go due to board partitioning,
                                 // EMPTY for others.
-    std::vector<int> _immortal_copy;    // A copy for undoing move
+    std::vector<int> _immortal_copy; // A copy for undoing move
 };
 
 // Compact nogo board for fast legality checking and board partitioning.
@@ -60,17 +60,27 @@ public:
 
     nogo_board(const std::vector<int> board, int_pair shape)
         : board(board), size(shape.first * shape.second), shape(shape)
-    { immortal = std::vector<int>(size, EMPTY); };
-    nogo_board(std::vector<int> board, std::vector<int> immortal, int_pair shape)
-        : board(board), immortal(immortal), size(shape.first * shape.second), shape(shape)
-    { };
+    {
+        immortal = std::vector<int>(size, EMPTY);
+    };
+
+    nogo_board(std::vector<int> board, std::vector<int> immortal,
+               int_pair shape)
+        : board(board),
+          immortal(immortal),
+          size(shape.first * shape.second),
+          shape(shape) {};
 
     int& operator[](size_t pos) { return board[pos]; }
+
     int operator[](size_t pos) const { return board[pos]; }
 
     std::vector<int>::iterator begin() { return board.begin(); }
+
     std::vector<int>::iterator end() { return board.end(); }
+
     std::vector<int>::const_iterator begin() const { return board.begin(); }
+
     std::vector<int>::const_iterator end() const { return board.end(); }
 };
 
@@ -95,16 +105,24 @@ public:
     static const int T_GO = EMPTY;  // 2-Go
     static const int N_GO = BORDER; // No-Go / immortal
 
-    static void classify_empty_points(const nogo_board& board, std::vector<int>& point_markers);
+    static void classify_empty_points(const nogo_board& board,
+                                      std::vector<int>& point_markers);
 
     // Mark all walls.
-    static void identify_walls(const nogo_board& board, const std::vector<int>& point_markers, std::vector<bool>& wall_markers);
+    static void identify_walls(const nogo_board& board,
+                               const std::vector<int>& point_markers,
+                               std::vector<bool>& wall_markers);
 
     // Mark the wall of color at the No-Go point.
-    static void mark_wall_at_nogo(const nogo_board& board, int p, int color, const std::vector<int>& point_markers, std::vector<bool>& wall_markers);
-    
-    static nogo_board mark_region_at_point(const nogo_board& board, int p, const std::vector<int>& point_markers, const std::vector<bool>& wall_markers, std::vector<bool>& region_markers);
-    
+    static void mark_wall_at_nogo(const nogo_board& board, int p, int color,
+                                  const std::vector<int>& point_markers,
+                                  std::vector<bool>& wall_markers);
+
+    static nogo_board mark_region_at_point(
+        const nogo_board& board, int p, const std::vector<int>& point_markers,
+        const std::vector<bool>& wall_markers,
+        std::vector<bool>& region_markers);
+
     static std::vector<nogo_board> split(const nogo_board& board);
 };
 

@@ -24,9 +24,7 @@
 ////////////////////////////////////////////////// struct db_entry_partizan
 struct db_entry_partizan
 {
-    db_entry_partizan(): outcome(outcome_class::U)
-    {
-    }
+    db_entry_partizan() : outcome(outcome_class::U) {}
 
     outcome_class outcome;
 };
@@ -51,9 +49,7 @@ struct serializer<db_entry_partizan>
 ////////////////////////////////////////////////// struct db_entry_impartial
 struct db_entry_impartial
 {
-    db_entry_impartial(): nim_value(-1)
-    {
-    }
+    db_entry_impartial() : nim_value(-1) {}
 
     int nim_value;
 };
@@ -111,7 +107,7 @@ private:
     typedef DB_MAP_T<game_type_t, terminal_layer_impartial_t> tree_impartial_t;
 
     std::unique_ptr<sumgame> _sum; // sumgame for solving games
-    uint64_t _game_count; // count incremented by generate_entries()
+    uint64_t _game_count;          // count incremented by generate_entries()
 
     sumgame& _get_sumgame();
     void _generate_entry_single(game* g);
@@ -123,7 +119,8 @@ private:
 };
 
 ////////////////////////////////////////////////// database methods
-inline void database::register_type(const std::string& type_name, game_type_t runtime_type)
+inline void database::register_type(const std::string& type_name,
+                                    game_type_t runtime_type)
 {
     _mapper.register_type(type_name, runtime_type);
 }
@@ -140,4 +137,3 @@ inline sumgame& database::_get_sumgame()
 
     return *_sum;
 }
-

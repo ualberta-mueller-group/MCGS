@@ -53,7 +53,7 @@ struct generated_game
     game_type_t type;
 };
 
-typedef generated_game (gen_func_t)();
+typedef generated_game(gen_func_t)();
 
 ////////////////////////////////////////////////// Forward declarations
 string board_to_string(const vector<int>& board);
@@ -85,7 +85,7 @@ inline const string& get_game_name(game_type_t type)
     return it->second;
 }
 
-[[ maybe_unused ]] const string& get_game_name(const game& g) 
+[[maybe_unused]] const string& get_game_name(const game& g)
 {
     return get_game_name(g.game_type());
 }
@@ -363,7 +363,7 @@ optional<generated_game> gen_large_elephants_impl()
     // Move count, hash, type
     elephants g(board_string);
 
-    //size_t move_count = count_moves_for(g, player);
+    // size_t move_count = count_moves_for(g, player);
     hash_t hash = get_hash(g, player);
     game_type_t type = game_type<elephants>();
 
@@ -401,7 +401,7 @@ generated_game gen_large_clobber()
     const uint16_t total_tiles = rows * cols;
 
     const uint16_t n_empties = rng->get_u16(2, 3);
-    //const uint16_t n_empties = 0;
+    // const uint16_t n_empties = 0;
 
     // Board
     vector<int> board(total_tiles, 0);
@@ -429,10 +429,9 @@ generated_game gen_large_clobber()
     // Move count, hash, type
     clobber g(board, shape);
 
-    //size_t move_count = count_moves_for(g, player);
+    // size_t move_count = count_moves_for(g, player);
     hash_t hash = get_hash(g, player);
     game_type_t type = game_type<clobber>();
-
 
     string board_string = g.board_as_string();
 
@@ -452,7 +451,7 @@ generated_game gen_large_clobber_1xn_subgames()
 {
     generated_game gen_game;
 
-    //const uint16_t size = rng->get_u16(16, 35);
+    // const uint16_t size = rng->get_u16(16, 35);
     const uint16_t size = rng->get_u16(24, 24);
     const uint16_t n_empties = rng->get_u16(0, 10);
 
@@ -475,7 +474,7 @@ generated_game gen_large_clobber_1xn_subgames()
     // Move count, hash, type
     clobber_1xn g(board_string);
 
-    //size_t move_count = count_moves_for(g, player);
+    // size_t move_count = count_moves_for(g, player);
     hash_t hash = get_hash(g, player);
     game_type_t type = game_type<clobber_1xn>();
 
@@ -491,7 +490,6 @@ generated_game gen_large_clobber_1xn_subgames()
     return gen_game;
 }
 
-
 void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
               int diagram_id, size_t min_x, size_t max_x)
 {
@@ -504,10 +502,8 @@ void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
     {
         const bool seen = seen_hashes.find(gg.hash) != seen_hashes.end();
 
-        const bool hist_ok =
-            (min_x <= gg.x_axis) &&
-            (gg.x_axis <= max_x) &&
-            (hist.get_count(gg.x_axis) < bucket_size);
+        const bool hist_ok = (min_x <= gg.x_axis) && (gg.x_axis <= max_x) &&
+                             (hist.get_count(gg.x_axis) < bucket_size);
 
         return !seen && hist_ok;
     };
@@ -542,8 +538,6 @@ void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
     *histogram_file << hist << '\n' << endl;
 }
 
-
-
 } // namespace
 
 ////////////////////////////////////////////////// Main exported function
@@ -551,24 +545,23 @@ void gen_experiments()
 {
 
     cerr << "WARNING: May not produce same input as used for the paper. "
-        "Use the commit mentioned in the paper instead "
-        "(4113a903b24744b901173e5d18f06484887415ba)" << endl;
+            "Use the commit mentioned in the paper instead "
+            "(4113a903b24744b901173e5d18f06484887415ba)"
+         << endl;
 
     init();
 
     // EXPERIMENT VALUES
-    //const uint64_t max_attempts = 24000000;
-    //const uint64_t bucket_size = 2000;
+    // const uint64_t max_attempts = 24000000;
+    // const uint64_t bucket_size = 2000;
 
     const uint64_t max_attempts = 24000000;
     const uint64_t bucket_size = 2000;
 
-
-    //const uint64_t max_attempts = 1000000;
-    //const uint64_t bucket_size = 50;
+    // const uint64_t max_attempts = 1000000;
+    // const uint64_t bucket_size = 50;
 
     int next_diagram_id = 0;
-
 
     // clobber_1xn
     gen_impl(max_attempts, bucket_size, gen_large_clobber_1xn, next_diagram_id,
@@ -577,20 +570,20 @@ void gen_experiments()
     next_diagram_id++;
 
     // nogo_1xn
-    gen_impl(max_attempts, bucket_size, gen_large_nogo_1xn, next_diagram_id,
-             0, 15);
+    gen_impl(max_attempts, bucket_size, gen_large_nogo_1xn, next_diagram_id, 0,
+             15);
 
     next_diagram_id++;
 
     // elephants (was 13)
-    gen_impl(max_attempts, bucket_size, gen_large_elephants, next_diagram_id,
-             0, 14);
+    gen_impl(max_attempts, bucket_size, gen_large_elephants, next_diagram_id, 0,
+             14);
 
     next_diagram_id++;
 
     // clobber
-    gen_impl(max_attempts, bucket_size, gen_large_clobber, next_diagram_id,
-             7, 20);
+    gen_impl(max_attempts, bucket_size, gen_large_clobber, next_diagram_id, 7,
+             20);
 
     next_diagram_id++;
 

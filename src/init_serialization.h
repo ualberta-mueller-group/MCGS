@@ -2,4 +2,4 @@
 
 namespace mcgs_init {
 void init_serialization();
-} // namespace mcgs_init 
+} // namespace mcgs_init
