@@ -454,6 +454,15 @@ void test_relation_from_search_results()
                expected);
     }
 }
+
+void test_bools_to_outcome_class()
+{
+    assert(bools_to_outcome_class(false, false) == outcome_class::P);
+    assert(bools_to_outcome_class(false, true) == outcome_class::R);
+    assert(bools_to_outcome_class(true, false) == outcome_class::L);
+    assert(bools_to_outcome_class(true, true) == outcome_class::N);
+}
+
 } // namespace
 
 void utilities_test_all()
@@ -469,4 +478,5 @@ void utilities_test_all()
     test_rotate_functions();
     test_new_vector_capacity();
     test_relation_from_search_results();
+    test_bools_to_outcome_class();
 }

@@ -4,6 +4,7 @@
     For details on the template specialization technique used, read about
     "SFINAE" (substitution failure is not an error).
 */
+#pragma once
 #include <type_traits>
 
 // NOLINTBEGIN(readability-identifier-naming)

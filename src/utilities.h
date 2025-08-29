@@ -194,3 +194,5 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
     os << ']';
     return os;
 }
+
+outcome_class bools_to_outcome_class(bool black_wins, bool white_wins);

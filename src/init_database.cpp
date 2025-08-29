@@ -17,8 +17,6 @@
 #include "gridlike_db_game_generator.h"
 #include "grid_generator.h"
 
-#define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
-    db.register_type(#game_class_name, game_type<game_class_name>())
 
 namespace {
 
@@ -95,8 +93,11 @@ void init_database(const std::string& filename, init_database_enum init_type)
         std::cout << "Database file saved" << std::endl;
     }
 
-    std::cout << "Database: " << std::endl;
-    std::cout << db << std::endl;
+    if (init_type != INIT_DATABASE_NONE)
+    {
+        std::cout << "Database: " << std::endl;
+        std::cout << db << std::endl;
+    }
 }
 
 } // namespace mcgs_init

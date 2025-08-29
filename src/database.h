@@ -21,6 +21,9 @@
 #include "db_game_generator.h"
 #include "type_mapper.h"
 
+#define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
+    db.register_type(#game_class_name, game_type<game_class_name>())
+
 ////////////////////////////////////////////////// struct db_entry_partizan
 struct db_entry_partizan
 {
@@ -93,7 +96,8 @@ public:
     void clear();
     bool empty() const;
 
-    void generate_entries(db_game_generator& gen);
+    // silent=true silences printing to stdout
+    void generate_entries(db_game_generator& gen, bool silent = false);
 
 private:
     friend std::ostream& operator<<(std::ostream& os, const database& db);
@@ -110,7 +114,7 @@ private:
     uint64_t _game_count;          // count incremented by generate_entries()
 
     sumgame& _get_sumgame();
-    void _generate_entry_single(game* g);
+    void _generate_entry_single(game* g, bool silent);
 
     tree_partizan_t _tree_partizan;
     tree_impartial_t _tree_impartial;

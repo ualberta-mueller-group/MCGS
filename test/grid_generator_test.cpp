@@ -1,14 +1,85 @@
 #include "grid_generator_test.h"
 #include "grid_generator.h"
+#include "strip.h"
 
 #include <string>
 #include <vector>
 #include <tuple>
 #include <cassert>
+#include <unordered_set>
+
 
 using namespace std;
 
 namespace {
+
+unordered_set<string> get_all_boards(grid_generator& gen)
+{
+    unordered_set<string> strings;
+
+    while (gen)
+    {
+        strings.insert(gen.gen_board());
+        ++gen;
+    }
+
+    return strings;
+}
+
+
+inline unordered_set<string> get_all_boards(grid_generator&& gen)
+{
+    return get_all_boards(gen);
+}
+
+
+int get_stone_count(const string& board)
+{
+    int count = 0;
+
+    const char BLACK_STONE = color_to_clobber_char(BLACK);
+    const char WHITE_STONE = color_to_clobber_char(WHITE);
+
+    const size_t N = board.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        const char c = board[i];
+
+        if (c == BLACK_STONE || c == WHITE_STONE)
+            count++;
+    }
+
+    return count;
+}
+
+void assert_stone_ordering(grid_generator& gen, bool increasing)
+{
+    int_pair prev_shape(0, 0);
+    int prev_stones = 0;
+
+    for (; gen; ++gen)
+    {
+        const int_pair next_shape = gen.get_shape();
+        const string& board = gen.gen_board();
+
+        if (next_shape != prev_shape)
+        {
+            prev_shape = next_shape;
+            prev_stones = get_stone_count(board);
+            continue;
+        }
+
+        int next_stones = get_stone_count(board);
+
+        if (increasing)
+            assert(next_stones >= prev_stones);
+        else
+            assert(next_stones <= prev_stones);
+
+        prev_stones = next_stones;
+    }
+}
+
 void gen_for_dims(vector<string>& boards, int rows, int cols)
 {
     assert(rows > 0 && cols > 0);
@@ -181,6 +252,55 @@ void test_empties()
     }
 }
 
+void test_clobber()
+{
+    grid_generator_clobber gen_strip(5);
+    grid_generator_clobber gen_grid(3, 3);
+
+    assert_stone_ordering(gen_strip, true);
+    assert_stone_ordering(gen_grid, true);
+}
+
+void test_nogo()
+{
+    grid_generator_nogo gen_strip(5);
+    grid_generator_nogo gen_grid(3, 3);
+
+    assert_stone_ordering(gen_strip, false);
+    assert_stone_ordering(gen_grid, false);
+}
+
+void test_equality()
+{
+    {
+
+        vector<unordered_set<string>> strings;
+        strings.reserve(3);
+
+        strings.emplace_back(get_all_boards(grid_generator_default(5)));
+        strings.emplace_back(get_all_boards(grid_generator_clobber(5)));
+        strings.emplace_back(get_all_boards(grid_generator_nogo(5)));
+
+        assert(strings.size() == 3);
+        assert(strings[0] == strings[1]);
+        assert(strings[1] == strings[2]);
+    }
+
+    {
+        vector<unordered_set<string>> strings;
+        strings.reserve(3);
+
+        strings.emplace_back(get_all_boards(grid_generator_default(3, 3)));
+        strings.emplace_back(get_all_boards(grid_generator_clobber(3, 3)));
+        strings.emplace_back(get_all_boards(grid_generator_nogo(3, 3)));
+
+        assert(strings.size() == 3);
+        assert(strings[0] == strings[1]);
+        assert(strings[1] == strings[2]);
+    }
+}
+
+
 } // namespace
 
 //////////////////////////////////////////////////
@@ -191,4 +311,7 @@ void grid_generator_test_all()
     test_2x1();
     test_2x2();
     test_empties();
+    test_clobber();
+    test_nogo();
+    test_equality();
 }

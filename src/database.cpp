@@ -19,26 +19,9 @@
 #include "throw_assert.h"
 #include "type_table.h"
 #include "clobber_1xn.h"
+#include "utilities.h"
 
 using namespace std;
-
-////////////////////////////////////////////////// helper functions
-namespace {
-outcome_class bools_to_outcome_class(bool black_wins, bool white_wins)
-{
-    if (!black_wins && !white_wins) // 00
-        return P;
-    if (!black_wins && white_wins) // 01
-        return R;
-    if (black_wins && !white_wins) // 10
-        return L;
-    if (black_wins && white_wins) // 11
-        return N;
-
-    assert(false);
-}
-
-} // namespace
 
 ////////////////////////////////////////////////// database methods
 database::database() : _sum(nullptr), _game_count(0)
@@ -139,7 +122,7 @@ void database::clear()
     _mapper.clear();
 }
 
-void database::generate_entries(db_game_generator& gen)
+void database::generate_entries(db_game_generator& gen, bool silent)
 {
     while (gen)
     {
@@ -153,7 +136,7 @@ void database::generate_entries(db_game_generator& gen)
             for (game* sg : *sr)
             {
                 sg->normalize();
-                _generate_entry_single(sg);
+                _generate_entry_single(sg, silent);
                 delete sg;
             }
 
@@ -162,17 +145,17 @@ void database::generate_entries(db_game_generator& gen)
 
         // Normalize, handle g
         g->normalize();
-        _generate_entry_single(g.get());
+        _generate_entry_single(g.get(), silent);
     }
 }
 
-void database::_generate_entry_single(game* g)
+void database::_generate_entry_single(game* g, bool silent)
 {
     if (get_partizan(*g).has_value())
         return;
 
     // bool print_game = true;
-    bool print_game = (_game_count % 128) == 0;
+    bool print_game = !silent && ((_game_count % 128) == 0);
 
     if (print_game)
         cout << "Game # " << _game_count << ": " << *g << std::flush;
