@@ -193,7 +193,7 @@ In your game `x`, override and implement `game::split_implementation()`. See `ga
 
 This optimization has significant overhead. It should improve performance if your game splits into "basic" CGT games, and `simplify_basic_cgt` remains enabled, or when using
 the `{N}` solve command to get its nim value (assuming the game is either already impartial, or created as its impartial variant (i.e. `[impartial YOUR_GAME_NAME]` in
-input.
+input. It should also improve minimax search time if subgames become smaller after splitting (i.e. break into boards with smaller dimensions), as smaller boards are more likely to be in the database.
 
 #### Simplifying Sums of Games (`simplify_basic_cgt`)
 Currently MCGS simplifies sums containing "basic" CGT games (`integer_game`, `dyadic_rational`, `up_star`, `switch_game`, and `nimber`), by summing together their values, resulting in fewer subgames. If your game's `split_implementation()` method returns subgames of these types, they will be included in this simplification step. 
