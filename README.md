@@ -22,6 +22,8 @@ The overall approach and future plans will be described in a forthcoming documen
     - [Splitting Into Subgames](#splitting-into-subgames-subgame_split)
     - [Simplifying Sums of Games](#simplifying-sums-of-games-simplify_basic_cgt)
     - [Hashing-Related Hooks](#hashing-related-hooks)
+    - [Adding A Game To the Database](#adding-a-game-to-the-database)
+
 
 ### Version 1.3 Additions
 #### New Features
