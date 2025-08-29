@@ -20,12 +20,12 @@ using namespace std;
 namespace {
 
 template <class Game_T>
-void assert_generators_consistent(db_game_generator& game_gen, grid_generator& grid_gen)
+void assert_generators_consistent(db_game_generator& game_gen,
+                                  grid_generator& grid_gen)
 {
     static_assert(std::is_base_of_v<strip, Game_T> || //
                   std::is_base_of_v<grid, Game_T>     //
-                  );                                  //
-
+    );                                                //
 
     auto is_legal = [&]() -> bool
     {
@@ -58,7 +58,6 @@ void assert_generators_consistent(db_game_generator& game_gen, grid_generator& g
         while (grid_gen && !is_legal())
             ++grid_gen;
     };
-
 
     advance_legal(true);
 
@@ -112,7 +111,6 @@ void test_nogo()
     grid_generator_default grid_gen(3, 3);
     assert_generators_consistent<nogo>(game_gen, grid_gen);
 }
-
 
 } // namespace
 

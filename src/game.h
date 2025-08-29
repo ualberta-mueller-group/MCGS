@@ -76,6 +76,8 @@ protected:
 
         To create an absent split_result:
             split_result sr = split_result();
+        Or:
+            split_result sr = {};
 
        IMPORTANT: This function must not change the available options, i.e.
        by pruning or adding (even irrelevant) options. For example,
@@ -88,7 +90,7 @@ protected:
 
     /*
        IMPORTANT: similarly to _split_impl, these methods must not change
-       the available options, i.e. {1/4 | 2} must not normalize to the 
+       the available options, i.e. {1/4 | 2} must not normalize to the
        integer 1
     */
     virtual void _normalize_impl();

@@ -226,7 +226,7 @@ split_result nogo::_split_impl() const
         if (nb.shape == shape() &&       //
             nb.board == board_const() && //
             nb.immortal == _immortal     //
-           )                             //
+            )                            //
             return {};
     }
 

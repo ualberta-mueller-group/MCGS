@@ -10,7 +10,6 @@
 #include <cassert>
 #include <unordered_set>
 
-
 using namespace std;
 
 namespace {
@@ -28,12 +27,10 @@ unordered_set<string> get_all_boards(grid_generator& gen)
     return strings;
 }
 
-
 inline unordered_set<string> get_all_boards(grid_generator&& gen)
 {
     return get_all_boards(gen);
 }
-
 
 int get_stone_count(const string& board)
 {
@@ -301,7 +298,6 @@ void test_equality()
         assert(strings[1] == strings[2]);
     }
 }
-
 
 } // namespace
 

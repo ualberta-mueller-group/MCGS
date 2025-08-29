@@ -200,12 +200,12 @@ std::ostream& operator<<(std::ostream& os, const database& db)
 
     os << '\n';
 
-    //os << "Impartial game types: " << db._tree_impartial.size() << '\n';
-    //for (const auto& it : db._tree_impartial)
+    // os << "Impartial game types: " << db._tree_impartial.size() << '\n';
+    // for (const auto& it : db._tree_impartial)
     //{
-    //    os << "Game type: " << it.first << ' ';
-    //    os << "Count: " << it.second.size() << '\n';
-    //}
+    //     os << "Game type: " << it.first << ' ';
+    //     os << "Count: " << it.second.size() << '\n';
+    // }
 
     return os;
 }

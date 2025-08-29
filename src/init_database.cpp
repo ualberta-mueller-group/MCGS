@@ -17,7 +17,6 @@
 #include "gridlike_db_game_generator.h"
 #include "grid_generator.h"
 
-
 namespace {
 
 void register_types(database& db)

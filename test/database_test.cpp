@@ -1,6 +1,5 @@
 #include "database_test.h"
 
-
 #include <memory>
 #include <cassert>
 #include <optional>
@@ -35,10 +34,8 @@ void test_basic()
     DATABASE_REGISTER_TYPE(db, clobber_1xn);
     DATABASE_REGISTER_TYPE(db, nogo_1xn);
 
-
     // Should be empty
     assert(db.empty());
-
 
     /*
         Entries get assigned: L, L, N, P
@@ -196,4 +193,3 @@ void database_test_all()
     test_basic();
     test_generate();
 }
-
