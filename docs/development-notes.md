@@ -901,6 +901,17 @@ found by calling `split()`
     - The methods of the `db_game_generator` interface are analogous to those of
     `move_generator`s. You may be able to reuse
     `gridlike_db_game_generator<Game_T, Generator_T>` for your game.
+    - The `grid_generator` should generate each game such that all immediate
+    child positions in the search tree (those reachable by 1 move) will have
+    been previously generated. This is not a hard requirement, but will speed up
+    database generation
+    - Implementing methods `game::_normalize_impl` and
+    `game::_undo_normalize_impl` for your game may reduce the size of the
+    database, and the time required to generate it
+    - You can add impartial games to the database, but currently they will be
+    treated like partizan games. Their entries will only be used by
+    the minimax search of `sumgame`, and will contain outcome classes and not
+    nim values
 
 Recompile, delete `database.bin`, then re-run MCGS, i.e. `./MCGS ""` (note the
 empty game string). This will re-generate the database. Now `sumgame` solve
