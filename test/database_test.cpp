@@ -2,10 +2,13 @@
 
 
 #include <memory>
+#include <cassert>
+#include <optional>
 
 #include "cgt_basics.h"
 #include "clobber_1xn.h"
 #include "grid_generator.h"
+#include "sumgame.h"
 #include "gridlike_db_game_generator.h"
 #include "nogo_1xn.h"
 #include "database.h"

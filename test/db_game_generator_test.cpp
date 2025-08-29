@@ -1,4 +1,9 @@
 #include "db_game_generator_test.h"
+
+#include <type_traits>
+#include <cassert>
+#include <exception>
+
 #include "clobber_1xn.h"
 #include "clobber.h"
 #include "nogo_1xn.h"
@@ -9,7 +14,6 @@
 #include "gridlike_db_game_generator.h"
 #include "strip.h"
 #include "grid.h"
-#include <type_traits>
 
 using namespace std;
 

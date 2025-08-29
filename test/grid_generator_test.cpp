@@ -1,8 +1,10 @@
 #include "grid_generator_test.h"
 #include "grid_generator.h"
 #include "strip.h"
+#include "grid.h"
 
 #include <string>
+#include <cstddef>
 #include <vector>
 #include <tuple>
 #include <cassert>

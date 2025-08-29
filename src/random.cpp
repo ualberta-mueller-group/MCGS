@@ -3,6 +3,7 @@
 #include "utilities.h"
 #include <optional>
 #include <cassert>
+#include <iostream>
 
 using namespace std;
 
