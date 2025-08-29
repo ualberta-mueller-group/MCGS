@@ -87,8 +87,8 @@ void print_help_message(const string& exec_name)
 
     print_flag(global::use_db.no_flag(), "Disable database usage.");
 
-    print_flag(global::play_split.no_flag(), "Don't split games after "
-                                             "playing a move.");
+    //print_flag(global::play_split.no_flag(), "Don't split games after "
+    //                                         "playing a move.");
 
     print_flag(global::play_normalize.no_flag(), "Don't normalize subgames "
                                                  "after playing a move.");
@@ -416,11 +416,11 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg == global::play_split.no_flag())
-        {
-            global::play_split.set(false);
-            continue;
-        }
+        //if (arg == global::play_split.no_flag())
+        //{
+        //    global::play_split.set(false);
+        //    continue;
+        //}
 
         if (arg == global::play_normalize.no_flag())
         {
