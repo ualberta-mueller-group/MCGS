@@ -213,11 +213,25 @@ void nogo::_init_hash(local_hash& hash) const
 
 split_result nogo::_split_impl() const
 {
+    if (size() == 0)
+        return {};
+
     nogo_board temp_board(board(), immortal(), shape());
     std::vector<nogo_board> subboards = split_by_nogo::split(temp_board);
 
+    if (subboards.size() == 1)
+    {
+        const nogo_board& nb = subboards.back();
+
+        if (nb.shape == shape() &&       //
+            nb.board == board_const() && //
+            nb.immortal == _immortal     //
+           )                             //
+            return {};
+    }
+
     split_result result = split_result(std::vector<game*>());
-    for (auto& subboard : subboards)
+    for (const nogo_board& subboard : subboards)
     {
         result->push_back(
             new nogo(subboard.board, subboard.immortal, subboard.shape));
