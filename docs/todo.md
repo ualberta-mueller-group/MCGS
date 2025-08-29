@@ -25,8 +25,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - implement general graph structure not just `strip`. E.g. play col or snort on an arbitrary graph, or on "triangular" graphs
     - col/snort: "Lessons in Play" p.313
 
-- check: does CGSuite OutcomeClass computation also rely on computing canonical form?
-
 - After `solve`, output a winning strategy
     - Have a player that can play through a proof.
     - Needs to handle all simplifications
@@ -40,25 +38,23 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
                 - Solver can stop at a win, even if the winning move is not "optimal"
 
 # Current tasks
-## "V1.3"
+
+# Future tasks
+
+## V1.4 (?)
+- transposition table
+    - Replacement policy?
+- performance testing
+    - How close to our special purpose solvers?
 - database
-    - design DB
-    - plan DB implementation steps
+    - design remaining DB features
+    - plan remaining DB implementation steps
     - "Hierarchical hash buckets" default case?
     - DB diff tool?
     - Add "DB lookup" command to input language?
 - gather other solvers into one repository
     - SBHSolver needs some slight modification
     - use CGSuite for impartial 2D nogo
-
-# Future tasks
-
-## V1.3 (?)
-- transposition table
-    - Replacement policy?
-- performance testing
-    - with/without table
-    - How close to our special purpose solvers?
 
 ## Possible steps for Versions 1.X
 - Important or good to have before V2
@@ -151,7 +147,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Try to make this both clearer AND less verbose
 - "Result" refers to `solve()` function's return value, but "Outcome" is still used in a few places (mostly variable names)
 - Add missing unit tests
-    - NoGo: add unit tests for move generator
+    - nogo_1xn: add unit tests for move generator
     - Do a systematic check
 
 - Performance profiling for older solvers, and MCGS
@@ -181,7 +177,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Can help determine when it may be beneficial to compute bounds, or other information,
     during search
 
-
 ## General design questions
 - Scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
 - Make board implementations (char, int, bitset, list?) separate from game classes, with common interface - allow composition of different board implementations with game mechanics
@@ -202,6 +197,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 ## Search features
 - Search stats: node count, leaf count, time, depth
     - Later: transposition hits, simplifications, zero removal, inverse removal
+    - Partially complete, mostly just need to expand, and include in csv output
 - `simplify()` hook for game
     - use cases? Use inverse()?
     - Will become really important after we have database
@@ -228,14 +224,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - E.g. clobber: multiples of up, up-star
     - Binary search to find confusion interval
 
-## Publications
-- Clobber paper, based on Taylor's 701 report
-    - Where to publish?
-    - What work needs to be done to turn report into paper?
-- New paper with MCGS design and results
-    - What goals? Match game-specific performance in 1xn Clobber, Nogo? 
-    - Get good performance on 2-D boards?
-    
 ## More Impartial Games Support
 
 - Small todo's
