@@ -289,7 +289,7 @@ structures section instead...
     - `random_table` seed
     - A few `random_table` values
     - Game class -> `game_type_t` mappings
-        - mcgs_init() must assign `game_type_t` to each game
+        - mcgs_init_all() must assign `game_type_t` to each game
         - Use macro trick for this:
           ```
           #define INIT_TYPE(class_name) init_type<class_name>(std::string(#class_name))

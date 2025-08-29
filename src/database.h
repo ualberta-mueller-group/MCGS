@@ -2,7 +2,7 @@
    Database class, and database entry structs.
 
    Must call register_type() to map game_type_t values to game name strings,
-   i.e. in mcgs_init()
+   i.e. in mcgs_init_all()
 */
 #pragma once
 #include <string>

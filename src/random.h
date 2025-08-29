@@ -3,7 +3,7 @@
    Random number generators
 
    get_global_rng() returns a global random_generator, available after
-   mcgs_init() has finished. It is seeded by global::random_seed, or when this
+   mcgs_init_all() has finished. It is seeded by global::random_seed, or when this
    value is 0, by ms_since_epoch().
 
     IMPORTANT, care must be taken when using the global random generator to

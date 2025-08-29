@@ -1,5 +1,5 @@
 /*
-    Run-time type information. Seed development-notes.md
+    Run-time type information. See development-notes.md
 */
 #pragma once
 #include <cassert>

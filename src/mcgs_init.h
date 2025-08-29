@@ -4,7 +4,7 @@
     Must be called near the start of the program.
 
     Global/static variables must be initialized through some "init" function
-    called from mcgs_init(), to avoid "static initialization order fiasco"
+    called from mcgs_init_all(), to avoid "static initialization order fiasco"
     problems.
 */
 #pragma once

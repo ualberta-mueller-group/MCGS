@@ -16,7 +16,7 @@
 
 namespace {
 
-std::optional<impartial_tt> tt_optional; // mcgs_init() must be called first
+std::optional<impartial_tt> tt_optional; // mcgs_init_all() must be called first
 
 // Calling thread may assign "true" to over_time to stop search
 int search_impartial_sumgame_cancellable(const sumgame& s,

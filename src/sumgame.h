@@ -135,7 +135,7 @@ public:
 
     bool all_impartial() const; // considers inactive games
 
-    // called by mcgs_init()
+    // called by mcgs_init_all()
     static void init_sumgame(size_t index_bits);
     static void reset_ttable();
 

@@ -40,7 +40,7 @@ The overall approach and future plans will be described in a forthcoming documen
 - `grid` class
     - `grid` helper classes (`grid_utils.h`)
 - `impartial_game` class
-- `mcgs_init()` initializes global data
+- `mcgs_init_all()` initializes global data
 - More code safety (clang-tidy checks, debugging checks)
 - More scripts in the `utils` directory
     - CGSuite scripts

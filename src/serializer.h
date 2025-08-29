@@ -38,7 +38,7 @@
     2. Define:
         Method: void T::save_impl(obuffer&) const
         Function: static dyn_serializable* T::load_impl(ibuffer&)
-    3. Call register_dyn_serializable<T>() during mcgs_init()
+    3. Call register_dyn_serializable<T>() during mcgs_init_all()
 
     Polymorphic type save usage example:
         game* some_game_ptr = new clobber("XO");
