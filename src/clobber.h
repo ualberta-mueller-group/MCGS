@@ -23,9 +23,7 @@ public:
 
 protected:
     // Disabled for now, too slow...
-#ifdef CLOBBER_SPLIT
     split_result _split_impl() const override;
-#endif
 
 public:
     move_generator* create_move_generator(bw to_play) const override;

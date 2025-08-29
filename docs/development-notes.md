@@ -398,6 +398,8 @@ Things initialized by `mcgs_init_all`:
 - Global `random_table`s
 - `sumgame`'s transposition table
 - `impartial_sumgame.h`'s transposition table
+- The global `database` is initialized, either by loading `database.bin` if it
+    exists, or by creating it (generating all database entries)
 - In the future, will assign `game_type_t`s to specific games, so that their
 assignments are not dependent on input
 
@@ -797,7 +799,8 @@ sr.set_bool(0, win);
 `database.h` defines the `database` class, and two database entry structs. The
 struct `db_entry_partizan` is used to store outcome classes for partizan games,
 and the struct `db_entry_impartial` is used to store nim values for impartial
-games.
+games. The database is not used by `MCGS_test` (CLI option `--no-use-db` is
+implied).
 
 - `set_partizan` and `set_impartial` methods take a game (single `game`) and
     entry, and store the entry in the database using the game's local hash value
@@ -891,10 +894,13 @@ found by calling `split()`
     `game_type_t` value.
 
     - IMPORTANT: write the game class name as it appears, with nothing extra,
-        i.e. `clobber` and not `some_namespace::clobber`, as the game name text
+        i.e. `clobber` and not `some_namespace::clobber`, because the game name text
         is used to identify `game_type_t`s on disk
 2. In `init_database.cpp`, in the `fill_database` function, add a
     `db_game_generator` to the `generators` vector
+    - The methods of the `db_game_generator` interface are analogous to those of
+    `move_generator`s. You may be able to reuse
+    `gridlike_db_game_generator<Game_T, Generator_T>` for your game.
 
 Recompile, delete `database.bin`, then re-run MCGS, i.e. `./MCGS ""` (note the
 empty game string). This will re-generate the database. Now `sumgame` solve
@@ -1507,15 +1513,18 @@ a move generator in a `std::unique_ptr`
     - `sumgame` uses outcome classes from the database to speed up search
     - `db_game_generator`s (`db_game_generator.h`) define the order of database
     entry generation for a game type
-    - Database entries are created for currently implemented `strip` and `grid`
-    games on startup, if the `database.bin` file is not present
+    - The database is loaded from the `database.bin` file on startup, if present
+    - If not present, `database.bin` is created for all currently implemented
+    `grid` and `strip` games
 - Split method for `nogo`
-- Scripts for paper experiments
+- Scripts for paper experiments (`utils/paper_experiments`)
     - Configurable test case generator
     - Multithreaded test runner runs several instances of MCGS and assigns test
     cases to available threads
     - Diagram generator
+    - See `instructions.txt` in the `utils/paper_experiments` directory
 - `commits.py` script for comparing performance across commits
+- Input language version `1.2` --> `1.3`
 
 ### Major Code Additions
 - Helper classes for adding games to the database
@@ -1533,6 +1542,8 @@ a move generator in a `std::unique_ptr`
     - Premade implementations for several standard library types
     - Support for both non-polymorphic and polymorphic types
 - `split()` and `normalize()` methods improved for some games
+- `clobber` split is always enabled, no longer requiring an additional compilation flag
+
 
 ## After Version 1.3 (Future)
 - Add more games (i.e. Amazons)

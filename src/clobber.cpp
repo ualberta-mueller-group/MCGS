@@ -115,7 +115,6 @@ bool clobber::is_move(const int& from, const int& to, bw to_play) const
     return (at(from) == to_play) && (at(to) == opp);
 }
 
-#ifdef CLOBBER_SPLIT
 namespace {
 
 bool trim_game(vector<int>& board_dst, int_pair& shape_dst,
@@ -334,7 +333,6 @@ split_result clobber::_split_impl() const
 
     return result;
 }
-#endif
 
 move_generator* clobber::create_move_generator(bw to_play) const
 {

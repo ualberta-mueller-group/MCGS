@@ -86,6 +86,11 @@ protected:
 
     virtual void _init_hash(local_hash& hash) const = 0;
 
+    /*
+       IMPORTANT: similarly to _split_impl, these methods must not change
+       the available options, i.e. {1/4 | 2} must not normalize to the 
+       integer 1
+    */
     virtual void _normalize_impl();
     virtual void _undo_normalize_impl();
 
