@@ -1527,6 +1527,7 @@ a move generator in a `std::unique_ptr`
     - If not present, `database.bin` is created for all currently implemented
     `grid` and `strip` games
 - Split method for `nogo`
+    - From Y. Shan's PhD thesis (see `nogo.h`)
 - Scripts for paper experiments (`utils/paper_experiments`)
     - Configurable test case generator
     - Multithreaded test runner runs several instances of MCGS and assigns test

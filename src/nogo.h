@@ -1,6 +1,11 @@
 //---------------------------------------------------------------------------
 // Implementation of NoGo on a 2-dimensional rectangular board
 //---------------------------------------------------------------------------
+/*
+    Implements NoGo split from Yi-Chang Shan's PhD thesis
+    "Solving Games and Improving Search Performance with Embedded Combinatorial
+    Game Knowledge" (National Chiao Tung University 2013)
+*/
 
 #pragma once
 

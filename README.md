@@ -36,6 +36,7 @@ The overall approach and future plans will be described in a forthcoming documen
     - If not present, `database.bin` is created for all currently implemented
     `grid` and `strip` games
 - Split method for `nogo`
+    - From Y. Shan's PhD thesis (see `nogo.h`)
 - Scripts for paper experiments (`utils/paper_experiments`)
     - Configurable test case generator
     - Multithreaded test runner runs several instances of MCGS and assigns test
