@@ -198,8 +198,6 @@ std::ostream& operator<<(std::ostream& os, const database& db)
         os << "Count: " << it.second.size() << '\n';
     }
 
-    os << '\n';
-
     // os << "Impartial game types: " << db._tree_impartial.size() << '\n';
     // for (const auto& it : db._tree_impartial)
     //{
