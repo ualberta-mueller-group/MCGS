@@ -12,6 +12,9 @@
 #include "cgt_basics.h"
 #include <vector>
 #include <cassert>
+#include <utility>
+
+#include "iobuffer.h"
 
 //---------------------------------------------------------------------------
 
@@ -37,6 +40,7 @@ public:
     std::vector<int> inverse_board() const;
     std::vector<int> inverse_mirror_board() const;
     std::string board_as_string() const;
+    const std::vector<int>& board_const() const;
 
     // void print(std::ostream& str) const { str << board_as_string();}
 
@@ -52,7 +56,15 @@ protected:
                                     const std::vector<int>& board2,
                                     bool mirror1 = false, bool mirror2 = false);
 
+    static bool _should_mirror(const std::vector<int>& board);
+
     void _mirror_self();
+
+    void _set_board(const std::vector<int>& new_board);
+    void _set_board(const std::vector<int>&& new_board);
+
+    static void _save_board(obuffer& os, const std::vector<int>& board);
+    static std::vector<int> _load_board(ibuffer& is);
 
 private:
     void _check_legal() const;
@@ -98,6 +110,27 @@ inline void strip::replace(int p, int color)
     assert_range(p, 0, size());
     assert_empty_black_white(color);
     _board[p] = color;
+}
+
+inline const std::vector<int>& strip::board_const() const
+{
+    return _board;
+}
+
+inline bool strip::_should_mirror(const std::vector<int>& board)
+{
+    return _compare_boards(board, board, true, false) == REL_LESS;
+}
+
+inline void strip::_set_board(const std::vector<int>& new_board)
+{
+    _board = new_board;
+}
+
+inline void strip::_set_board(const std::vector<int>&& new_board)
+{
+    // TODO: Do I move the rvalue reference again, or do I just assign it?
+    _board = std::move(new_board);
 }
 
 //---------------------------------------------------------------------------

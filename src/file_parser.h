@@ -1,3 +1,10 @@
+/*
+    file_parser class implements the main parsing logic for .test files,
+    games passed through stdin, and the game string passed as a CLI argument
+
+    To register a new game type with the parser, see
+    file_parser::_init_game_parsers() in the cpp file
+*/
 #pragma once
 #include <sstream>
 #include <string>
@@ -15,7 +22,7 @@
 // IWYU pragma: end_exports
 
 // file_parser checks for a version command when reading from file or stdin
-#define FILE_PARSER_VERSION_STRING "version 1.2"
+#define FILE_PARSER_VERSION_STRING "version 1.3"
 
 // How many game_cases can be created by a single "run" command, i.e.
 // "{B win, W loss}"

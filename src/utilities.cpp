@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cctype>
 #include <cassert>
+#include <vector>
 #include <cstdint>
 #include "cgt_basics.h"
 #include <algorithm>
@@ -150,4 +151,18 @@ relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,
     }
 
     return REL_UNKNOWN;
+}
+
+outcome_class bools_to_outcome_class(bool black_wins, bool white_wins)
+{
+    if (!black_wins && !white_wins) // 00
+        return P;
+    if (!black_wins && white_wins) // 01
+        return R;
+    if (black_wins && !white_wins) // 10
+        return L;
+    if (black_wins && white_wins) // 11
+        return N;
+
+    assert(false);
 }

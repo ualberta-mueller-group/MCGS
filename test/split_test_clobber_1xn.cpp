@@ -64,12 +64,14 @@ void clobber_1xn_split6()
 
 void clobber_1xn_split7()
 {
-    test_strip_split<clobber_1xn>("..X.", {});
+    clobber_1xn pos("..X.");
+    assert_no_split(&pos);
 }
 
 void clobber_1xn_split8()
 {
-    test_strip_split<clobber_1xn>("...", {});
+    clobber_1xn pos("...");
+    assert_no_split(&pos);
 }
 
 void clobber_1xn_split9()

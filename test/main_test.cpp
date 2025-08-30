@@ -4,6 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
+#include "test/db_game_generator_test.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
@@ -16,7 +17,8 @@ const bool RUN_OVERRIDE_TESTS = false;
 
 #include "bit_array_test.h"
 #include "random_test.h"
-#include "grid_utils_test.h"
+#include "grid_location_test.h"
+#include "grid_generator_test.h"
 #include "cgt_basics_test.h"
 #include "cgt_dyadic_rational_test.h"
 #include "cgt_integer_game_test.h"
@@ -52,13 +54,13 @@ const bool RUN_OVERRIDE_TESTS = false;
 #include "cgt_game_simplification_test.h"
 #include "hash_test.h"
 #include "hash_types_test.h"
+#include "database_test.h"
 
 using std::cout, std::endl, std::string;
 
 namespace {
 void override_tests()
 {
-    bit_array_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -85,6 +87,7 @@ void print_usage(const char* exec_name)
 int main(int argc, const char** argv)
 {
     global::silence_warnings.set(true);
+    global::use_db.set(false);
     mcgs_init_all();
 
     if (RUN_OVERRIDE_TESTS)
@@ -121,7 +124,7 @@ int main(int argc, const char** argv)
     }
 
     random_test_all();
-    grid_utils_test_all();
+    grid_location_test_all();
     bit_array_test_all();
 
     cgt_basics_test_all();
@@ -174,6 +177,9 @@ int main(int argc, const char** argv)
 
     hash_test_all();
     hash_types_test_all();
+    grid_generator_test_all();
+    db_game_generator_test_all();
+    database_test_all();
 
     cout << "SUCCESS" << endl;
 }

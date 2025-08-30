@@ -17,14 +17,14 @@ void normalize_test_clobber_1xn()
     vector<test_case_t> test_cases =
     {
         {"", ""},
-        {".", "."},
-        {"X", "X"},
-        {"O", "O"},
+        {".", ""},
+        {"X", ""},
+        {"O", ""},
         {"XO", "XO"},
-        {"OX....XO..X.X.O.XOXO", "OXOX.O.X.X..OX....XO"},
-        {"XOOXX...XOOOXO...O.X", "XOOXX...XOOOXO...O.X"},
-        {".O.X.X.OX.OO.X...XOO", "OOX...X.OO.XO.X.X.O."},
-        {"OX.X..XXO....O.OXXOX", "XOXXO.O....OXX..X.XO"},
+        {"OX....XO..X.X.O.XOXO", "OXOX.OX.XO"},
+        {"XOOXX...XOOOXO...O.X", "XOOXX.XOOOXO"},
+        {".O.X.X.OX.OO.X...XOO", "OX.XOO"},
+        {"OX.X..XXO....O.OXXOX", "XOXXO.OXX.XO"},
     };
     // clang-format on
 

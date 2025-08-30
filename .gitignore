@@ -48,3 +48,8 @@ temp.txt
 
 # Default test framework output files
 out.*
+
+# Database files
+db.bin
+database.bin
+test.bin

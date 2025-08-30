@@ -14,6 +14,7 @@
 
 //---------------------------------------------------------------------------
 
+// (row, col)
 typedef std::pair<int, int> int_pair;
 
 class grid : public game
@@ -36,6 +37,7 @@ public:
     void replace(int p, int color);
     std::vector<int> inverse_board() const;
     std::string board_as_string() const;
+    const std::vector<int>& board_const() const;
 
     int_pair point_to_coord(int p) const;
     int coord_to_point(int_pair coord) const;

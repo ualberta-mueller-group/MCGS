@@ -1,3 +1,6 @@
+/*
+    Unused testing code for evaluating hash performance/collisions
+*/
 #pragma once
 
 #include <cstdint>

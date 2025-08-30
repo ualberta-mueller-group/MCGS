@@ -1,3 +1,0 @@
-static_assert(false);
-#pragma once
-void custom_traits_test_all();

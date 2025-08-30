@@ -7,11 +7,15 @@
 #include "cgt_move.h"
 #include "game.h"
 #include <ctime>
+#include "global_options.h"
 #include "sumgame_change_record.h"
 #include "transposition.h"
 #include <memory>
 #include <vector>
+#include <set>
 #include <optional>
+#include <cstdint>
+#include <utility>
 #include <ostream>
 #include <cassert>
 
@@ -29,11 +33,14 @@ namespace sumgame_impl {
 class change_record;
 }
 
+// Used by class sumgame::undo_stack_unwinder
 enum sumgame_undo_code
 {
     SUMGAME_UNDO_STACK_FRAME = 0,
     SUMGAME_UNDO_SIMPLIFY_BASIC,
     SUMGAME_UNDO_PLAY,
+    SUMGAME_UNDO_SIMPLIFY_DB,
+    SUMGAME_UNDO_PRE_SOLVE_PASS,
 };
 
 //////////////////////////////////////// sumgame_move
@@ -87,6 +94,9 @@ public:
     void simplify_basic();
     void undo_simplify_basic();
 
+    std::optional<solve_result> simplify_db();
+    void undo_simplify_db();
+
     void add(game* g);
     void add(std::vector<game*>& gs);
     void pop(const game* g);
@@ -125,15 +135,22 @@ public:
 
     bool all_impartial() const; // considers inactive games
 
-    // called by mcgs_init()
+    // called by mcgs_init_all()
     static void init_sumgame(size_t index_bits);
+    static void reset_ttable();
 
 private:
     class undo_stack_unwinder;
 
+    void _pre_solve_pass();
+    void _undo_pre_solve_pass();
+
     bool _over_time() const;
     game* _pop_game();
-    std::optional<solve_result> _solve_with_timeout();
+
+    // For root level call, depth should be 0. For recursive calls,
+    // pass depth + 1
+    std::optional<solve_result> _solve_with_timeout(uint64_t depth);
     void _push_undo_code(sumgame_undo_code code);
     void _pop_undo_code(sumgame_undo_code code);
 
@@ -169,20 +186,42 @@ public:
     ~sumgame_move_generator();
 
     void operator++() override;
+
+    // TODO make private
     void next_move(bool init);
+
     operator bool() const override;
     sumgame_move gen_sum_move() const;
 
     move gen_move() const override { assert(false); }
 
 private:
-    const game* _current() const { return _game.subgame(_subgame_idx); }
+    std::pair<int, const game*> _current() const;
 
     const sumgame& _game;
     const int _num_subgames;
+
+    std::vector<std::pair<int, const game*>> _skipped_games;
+    bool _use_skipped_games;
+
+    std::set<hash_t> _seen_games;
+
+    /*
+       When _use_skipped_games is true, this is an index into our list of
+       skipped games, and not the sumgame
+    */
     int _subgame_idx;
+
     move_generator* _subgame_generator;
 };
+
+inline std::pair<int, const game*> sumgame_move_generator::_current() const
+{
+    if (_use_skipped_games)
+        return _skipped_games[_subgame_idx];
+    else
+        return {_subgame_idx, _game.subgame(_subgame_idx)};
+}
 
 //---------------------------------------------------------------------------
 
@@ -215,6 +254,21 @@ inline bool sumgame::is_empty() const
 inline hash_t sumgame::game_hash() const
 {
     return get_global_hash();
+}
+
+inline void sumgame::reset_ttable()
+{
+    assert(global::clear_tt());
+
+    if (_tt.get() == nullptr)
+    {
+        assert(global::tt_sumgame_idx_bits() == 0);
+        return;
+    }
+
+    const size_t index_bits = _tt->n_index_bits();
+    const size_t entry_bools = _tt->n_entry_bools();
+    _tt.reset(new ttable_sumgame(index_bits, entry_bools));
 }
 
 //---------------------------------------------------------------------------

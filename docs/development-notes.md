@@ -7,18 +7,21 @@ This document includes more detailed information than `README.md`, including des
 
 - [Search and Solving a Game](#search-and-solving-a-game)
 - [More On Data Types](#more-on-data-types)
-- [More on Extending the `game` Class](#more-on-extending-the-game-class)
+- [More On Extending the `game` Class](#more-on-extending-the-game-class)
 - [Impartial Games](#impartial-games)
+- [Global Options (`global_options.h`)](#global-options-global_optionsh)
 - [Initialization (`mcgs_init.h`)](#initialization-mcgs_inith)
 - [Random (`random.h`)](#random-randomh)
-- [Global Options (`global_options.h`)](#global-options-global_optionsh)
-- [RTTI - Run-time type information (`game_type.h`)](#rtti---run-time-type-information-game_typeh)
 - [Hashing (`hashing.h`)](#hashing-hashingh)
 - [Adding Hashing To Games](#adding-hashing-to-games)
 - [Transposition Tables (`transposition.h`)](#transposition-tables-transpositionh)
+- [Database (`database.h`, `global_database.h`)](#database-databaseh-global_databaseh)
+- [Adding A Game To the Database](#adding-a-game-to-the-database)
 - [Safe Arithmetic Functions (`safe_arithmetic.h`)](#safe-arithmetic-functions-safe_arithmetich)
+- [RTTI - Run-time type information (`type_table.h`)](#rtti---run-time-type-information-type_tableh)
 - [Sumgame Simplification (cgt_game_simplification.h)](#sumgame-simplification-cgt_game_simplificationh)
 - [Bounds (`bounds.h`)](#bounds-boundsh)
+- [Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)](#serialization-iobufferh-serializerh-dynamic_serializableh)
 - [Outstanding Issues](#outstanding-issues)
 - [Design Choices and Remaining Uglinesses](#design-choices-and-remaining-uglinesses)
 - [Misc Future Optimizations](#misc-future-optimizations)
@@ -26,7 +29,6 @@ This document includes more detailed information than `README.md`, including des
 - [Versions](#versions)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 
 # Search and Solving a Game
 - Two classes implement minimax game solving: `alternating_move_game` and `sumgame`
@@ -38,8 +40,10 @@ This document includes more detailed information than `README.md`, including des
         - Reimplements `solve` method
     - Boolean negamax search, with optimizations
         - Splits a subgame into more subgames after playing a move in it
+        - Normalizes subgames
         - Simplifies "basic" CGT games
         - Uses a transposition table
+        - Uses a database of subgame outcomes
     - `sumgame::_solve_with_timeout`
         - `private` method implements most of the search algorithm
         - Runs until it either completes, or times out
@@ -48,11 +52,19 @@ This document includes more detailed information than `README.md`, including des
     - `sumgame::solve_with_timeout`
         - Currently spawns a thread which calls `_solve_with_timeout`, and the main thread blocks until completion or timeout.
         - This may interfere with some performance profiling tools, but other implementations based on checking a clock seem to be costly.
+        - Calls `sumgame::_pre_solve_pass()` before search, which calls `game::split()` on
+        each active subgame, and calls `game::normalize()` on all active subgames
+        (whether or not they are the result of a split)
     - `sumgame::solve`
         - runs until completion, without timing out
     - `sumgame::solve_with_games`
         - Temporarily adds `game`s to the sum, calls `sumgame::solve`, then removes `game`s and returns the result.
         - Useful for playing a difference game
+
+    - Search postpones playing moves on `integer_game` and `dyadic_rational`
+    games until there are no more moves to play on other subgames
+    - Among duplicate subgames (as determined by comparing local hashes of
+    games), only one copy yields moves, and the others are skipped
 
 ## "Logically `const`" Interface for Solving Games
 - In both `alternating_move_game` and `sumgame`, the public `solve` methods are declared as `const`.
@@ -68,6 +80,37 @@ it must be restored before the end of `solve` in any case, including timeout or 
         - Derives from `assert_restore_alternating_game`
         - Ensures global_hash, number of subgames (active or inactive), and undo_code/play_record/change_record stack sizes are all restored
 
+## Sumgame's Usage Of the Database
+The database stores outcome classes for single subgames. `sumgame` uses this
+data, from the global database object (`get_global_database()` in
+`global_database.h`), during solving, to terminate search early in some cases.
+
+- `sumgame::simplify_db()` is called at the start of `sumgame::_solve_with_timeout()`
+    - This method looks up every active subgame's outcome class in the database
+    - P positions are deactivated, and all other outcome classes are counted
+    - The winner of the current game is known without further search when all
+    subgames' outcome classes are known, and one of the following holds
+    (after omitting P positions):
+
+        - All outcome classes are `L`, or all outcome classes are `R`
+        - Exactly one outcome class is `N`, and no outcome classes are "negative"
+        for current player
+            - For `BLACK` to play, this means there are no `R` outcome classes
+            - For `WHITE` to play, this means there are no `L` outcome classes
+
+## Solver Stats
+During search, `sumgame::_solve_with_timeout()` records events using the global
+instance of the `solver_stats` class (defined in `solver_stats.h`).
+
+This includes:
+- Node count (calls to `sumgame::_solve_with_timeout`)
+- Transposition table lookup hit/miss count
+- Database lookup hit/miss count
+- Maximum search depth
+
+TODO: These are currently only printed to csv output for the experiments in the paper,
+and are discarded for other tests i.e. `./MCGS --run-tests`
+
 # More On Data Types
 
 ## `cli_options` struct (`cli_options.h`)
@@ -79,6 +122,16 @@ it must be restored before the end of `solve` in any case, including timeout or 
 - Contains a subgame index and the `move` made in the subgame
 - The index is into the vector `sumgame::_subgames`
 - The `move` is for the subgame stored there
+
+## `game_type_t` integral type (`type_table.h`)
+- An integer with a unique value for every game class
+- Acessible by method or template function:
+    - Method `game_type_t game::game_type() const`
+    - Template function `game_type_t game_type<T>()` for non-abstract game type `T`
+        - i.e. `game_type<clobber>()`
+- Used to distinguish between game types, i.e. in a `vector<game*>`
+- Value is assigned at run time, and depends on the order of `game_type()` calls
+since the program's start
 
 ## `play_record` struct (`sumgame.h`)
 - Holds information about a `sumgame_move` played in a `sumgame`
@@ -103,7 +156,10 @@ it must be restored before the end of `solve` in any case, including timeout or 
 - Private inner class of `sumgame`
 - Created as local variable at the start of `sumgame::_solve_with_timeout()`
     - Constructor pushes a marker onto `sumgame`'s undo stack
-    - Destructor iteratively pops undo stack, calling undo functions (i.e. `sumgame::undo_move()`, `sumgame::undo_simplify_basic()`) until it sees the marker
+    - Destructor iteratively pops undo stack, calling undo functions until it sees the marker i.e:
+    - `sumgame::undo_move()`
+    - `sumgame::undo_simplify_basic()`
+    - `sumgame::undo_simplify_db()`
 
 ## `sumgame` class (`sumgame.h`)
 A `sumgame` represents a (possibly empty) set of subgames.
@@ -138,6 +194,7 @@ It derives from `alternating_move_game` and reimplements the
 ## `grid` class (`grid.h`)
 - Abstract class derived from `game`. Used for games played on an `MxN` grid. Analogous to `strip`
 - Row-major format. Coordinates and dimensions are `(row, column)` pairs
+    - Represented as `int_pair` (typedef for `std::pair<int, int>`, defined in the header)
 - Implements `game::_init_hash()` and `game::_order_impl()` analogously to `strip`
 - Does not implement `game::_normalize_impl()` or `game::_undo_normalize_impl()`
     - TODO: In most cases there are 8 equal representations of a grid
@@ -145,16 +202,9 @@ It derives from `alternating_move_game` and reimplements the
     subset of these 8, whenever it modifies the state, and have `_normalize_impl()`
     simply change which of them is the currently "active" board. This could be
     reasonably fast if we maintain hashes for the boards as they're modified, and
-    pick the one with the smallest hash to be active?
+    pick the one with the smallest hash to be the active one?
 
-## `grid_generator` class (`grid_utils.h`)
-- Given `MxN` or `1xN` dimensions of a `grid` or `strip`, generates all strings representing boards for all less than or equal dimensions
-- i.e. given `1x1`, generates: "" (empty string), ".", "X", "O"
-- i.e. given `2x2`, generates strings for: `0x0`, `1x1`, `1x2`, `2x1`, `2x2`
-    - On each step, width is incremented, and on overflow, width is set to 1 and height is incremented
-- Given `2x1`, `1x2` is omitted, as its width is greater than `2x1`'s
-
-## `grid_location` class (`grid_utils.h`)
+## `grid_location` class (`grid_location.h`)
 - Utility class for manipulating locations on a `grid`
     - Internally uses "coordinate" (`int_pair`) representation instead of "point" (`int`) representation.
         - "Point" representation corresponds to the 1D indices of the flattened 2D grid
@@ -177,6 +227,8 @@ It derives from `alternating_move_game` and reimplements the
 - `increment_position()` is used to iterate over grid locations. May produce an invalid state
 - `move()` moves the location in a direction. May fail and return `false`, leaving the grid_location unchanged
 - `get_neighbor_coord()` and `get_neighbor_point()` produce a neighbor given some direction, leaving the `grid_location` unchanged. May fail and return `false`
+- Many methods are implemented in terms of static class functions. Maybe confusing
+as there are several similar looking functions?
 
 ## `fraction` class (`fraction.h`)
 - Simple and lightweight fraction type whose denominator must be a positive power of 2
@@ -219,7 +271,9 @@ It derives from `alternating_move_game` and reimplements the
 - Kinds are computed during construction using `fraction::get_relation()`
     - TODO: perhaps we should evaluate this lazily?
 
-# More on Extending the `game` Class
+
+
+# More On Extending the `game` Class
 - In every game `x`'s implementation:
     - `x::play()` must immediately call `game::play()`
     - `x::undo_move()` must immediately call `last_move()` and then `game::undo_move()`
@@ -227,7 +281,7 @@ It derives from `alternating_move_game` and reimplements the
     - Generators are dynamically allocated - wrap each use in a `std::unique_ptr`
     - An example is in `alternating_move_game::_solve`
     - A game-specific move generator is declared and used only in `x.cpp`, not in a header file
-    - Moves returned by a `move_generator` must not use the color bit
+    - Moves returned by a `move_generator` must not use the color bit of the `move`
         - The exception to this is `impartial_game_wrapper`'s move generator
 - Game unit tests should cover at least:
     - `play` and `undo_move`
@@ -239,7 +293,8 @@ It derives from `alternating_move_game` and reimplements the
 - `play()` may not assume alternating colors, since a game can be a subgame
 in a sum.
 - The color of the player is encoded as part of the move
-and is stored in the move stack.
+and is stored in the move stack. This is handled automatically by `game::play()`,
+and affects the `move` returned by `game::last_move()`
 - `undo_move` must respect and use the move player color information in the stack.
 
 # Impartial Games
@@ -285,40 +340,23 @@ and is stored in the move stack.
 - `impartial_sumgame.h` defines functions for solving sums of impartial games.
 Two functions do this: `search_impartial_sumgame` and
 `search_impartial_sumgame_with_timeout`. The latter uses a timeout just like
-`sumgame'`s `solve_with_timeout`
+`sumgame`'s `solve_with_timeout`
     - These functions use a persistent transposition table, just like `sumgame`,
     but both tables are independent from each other
-
-
-# Initialization (`mcgs_init.h`)
-Executables based on the C++ source code must call one of the `mcgs_init_all()`
-or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
-parsing command-line arguments. These functions initialize static data:
-- `random.h`'s random seed
-- Global `random_table`s
-- `sumgame`'s transposition table
-- `impartial_sumgame.h`'s transposition table
-- In the future, will assign `game_type_t`s to specific games, so that their
-    assignments are not dependent on input
-
-# Random (`random.h`)
-- Defines functions to get random numbers for different integral types
-    - `get_random_uXX()` where `XX` is one of `64`, `32`, `16`, `8`
-    - `0` is never returned by these functions
-- `mcgs_init()` must be called first
 
 # Global Options (`global_options.h`)
 This file defines the `global_option` class, representing a global variable
 which is part of MCGS's configuration.
 
-Specific global variables are also defined in this file, including those necessary to
+Specific global options are also defined in this file, including those necessary to
 reproduce experiments (i.e. random seeds, table sizes), but also more general
-global values such as debug logging level.
+global options such as debug logging level. Many global options are used to
+initialize core data structures of MCGS.
 
 A `global_option` may optionally be included in the configuration summary
 printed by `./MCGS --print-optimizations`.
 
-To create a new global variable, first declare it at the bottom of
+To create a new global option, first declare it at the bottom of
 `global_options.h`:
 ```
 namespace global {
@@ -345,24 +383,43 @@ the flag which should be used to set the option from the command line.
 The macros at the bottom of `global_options.cpp` initialize the `_name` field
 to the name of the variable in the source code.
 
-# RTTI - Run-time type information (`game_type.h`)
-- Defines interface class `i_game_type`
-    - Currently implements method `game_type_t game_type() const` ("concrete" non-virtual method)
-    - Also implements template function `game_type_t game_type<T>()`
-    - `game_type_t` is an unsigned integral type with a unique value for every class inheriting from `i_game_type`
-    - Both the template and method versions give the same result for the same `T`
-        - The value is determined at run-time, and is dependent on the order of `game_type()` calls
-    - Uses built-in C++ RTTI (`std::type_info` and `std::type_index`) to look up value in a `std::unordered_map`
-        - Template version is faster as it stores this value in a static variable after the first map lookup
-        - Method version does a map lookup the first time it's called on a game object. Value is cached after.
-        If called during object construction, by a constructor that isn't of the most derived type, the cached
-        value will be incorrect. There's an assert to check this in debug mode
-    - `game_type_t` is only defined for "concrete" games (non-abstract classes derived from `game`).
-        - `game_type<T>()` fails a static assert if `T` doesn't satisfy this condition
-        - `game_type() const` already satisfies this as it's not possible to instantiate an abstract type
-- `game.h` defines template `T* cast_game<T*>(game*)` acting as a `reinterpret_cast`, but uses
-`assert`s to verify that the game is not `nullptr`, is active, and is of type `T` (using its `game_type_t`)
+# Initialization (`mcgs_init.h`)
+Executables based on the C++ source code must call one of the `mcgs_init_all()`
+or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
+parsing command-line arguments. These functions initialize core data structures
+and global variables. Global variables should be initialized from `mcgs_init_all()`
+to avoid "Static Initialization Order Fiasco" problems, as the initialization
+order of global variables in C++ is undefined across translation units.
 
+Things initialized by `mcgs_init_all`:
+- Serialization bookkeeping (for polymorphic types)
+    - This is currently implemented but unused
+- `random.h`'s random seed and global `random_generator`
+- Global `random_table`s
+- `sumgame`'s transposition table
+- `impartial_sumgame.h`'s transposition table
+- The global `database` is initialized, either by loading `database.bin` if it
+    exists, or by creating it (generating all database entries)
+- In the future, will assign `game_type_t`s to specific games, so that their
+assignments are not dependent on input
+
+# Random (`random.h`)
+- Defines `random_generator` class
+    - Constructor accepts a `uint64_t` seed. 0 is a valid seed with no
+    special semantics
+    - A global `random_generator` instance is accessible through `get_global_rng()`
+        - `mcgs_init_all()` must be called first
+        - Seeded by `global::random_seed`. If this is 0, the global
+        `random_generator` is instead seeded with the current time by
+        calling `ms_since_epoch()` (`utilities.h`)
+    - Defines methods to get random numbers for different integral types
+        - `get_uXX()`, `get_iXX()` where `XX` is one of `64`, `32`,
+        `16`, `8`
+        - `min` and `max` values are accepted as method arguments, with default
+        values covering the whole range of the integral type
+        - TODO should these exclude 0 by default?
+- Method to access the underlying random number
+generator, `std::mt19937_64& random_generator::get_rng()`
 
 # Hashing (`hashing.h`)
 Defines main data types for game hashing:
@@ -494,7 +551,6 @@ Methods:
     - Reset the global hash value to 0, and clear all stored `H_i` and `p`
 - `get_value()`
     - Get the current `hash_t` value. Must first set `p`
-
 
 # Adding Hashing To Games
 Important:
@@ -629,7 +685,6 @@ relation integer_game::_order_impl(const game* rhs) const
 You can simplify unit tests for ordering by using
 `void order_test_impl(std::vector<game*>& games)` from `test/order_test_utilities.h`.
 
-
 # Transposition Tables (`transposition.h`)
 Defines types for transposition tables:
 - `ttable<Entry>` class
@@ -682,7 +737,6 @@ table entry consists of a small number of `bool`s, the `Entry` struct can be
 left empty, and those `bool`s can instead be stored in a packed bit vector by
 the `ttable<Entry>` itself, by setting the `entry_bools` argument in the
 constructor.
-
 
 ## `ttable` Example 1
 ```
@@ -741,6 +795,128 @@ sr.init_entry();
 sr.set_bool(0, win);
 ```
 
+# Database (`database.h`, `global_database.h`)
+`database.h` defines the `database` class, and two database entry structs. The
+struct `db_entry_partizan` is used to store outcome classes for partizan games,
+and the struct `db_entry_impartial` is used to store nim values for impartial
+games. The database is not used by `MCGS_test` (CLI option `--no-use-db` is
+implied).
+
+- `set_partizan` and `set_impartial` methods take a game (single `game`) and
+    entry, and store the entry in the database using the game's local hash value
+- `get_partizan` and `get_impartial` methods take a game, and return a
+    `std::optional` of the corresponding entry type. The value is empty (i.e.
+    `returned_entry.has_value() == false`) if the entry is not found
+- `save` and `load` methods save/load the entire database to/from a file
+- A global instance of `database` is accessible through
+    `database& get_global_database()` (`global_database.h`), after
+    `mcgs_init_all()` completes.
+- `database` has its own sumgame that it uses to solve outcome classes
+- The data is stored in two separate "trees", one tree for partizan games, the
+    other for impartial games
+    - Each tree is two layers of `std::unordered_map`. The first indexed by
+        game type (`game_type_t`), the second is indexed by local
+        hash (`hash_t`), yielding an entry struct
+    - Uses `type_mapper` class (`type_mapper.h`) to translate between run time allocated
+        `game_type_t` values, and disk `game_type_t` values
+
+        - This means the order of `game_type()` calls (more particularly, which
+            game class has which value for its `game_type_t`) is allowed to be
+            undefined. It doesn't matter whether `game_type<clobber>()` is
+            `1` or `2` etc -- the database translates these using its own
+            internal mapping saved in the database file
+
+            - This is quick, simply indexing into a vector using the run time
+                `game_type_t` to get the disk equivalent
+
+## Database Generation
+Several types are used for database generation:
+
+- `grid_generator` (`grid_generator.h`)
+    - See documentation in header file for more details
+    - Interface class for iterating over string representations of grid and
+        strip games
+    - `grid_generator_base` and `grid_generator_masked` are abstract classes
+        implementing some basic functionality
+    - `grid_generator_clobber`, `grid_generator_nogo`, and
+        `grid_generator_default` are non-abstract classes
+    - `grid_generator_clobber` and `grid_generator_nogo` are used to iterate
+        in order of increasing or decreasing number of stones
+    - `grid_generator_default` starts from a board full of `EMPTY` points, and
+        treats the board like a base 3 string, ending with all points being
+        `WHITE`
+
+The current non-abstract `grid_generators` take dimensions of a "max shape",
+i.e. `RxC` for non-negative integers `R` (row count) and `C` (column count),
+and generate strings for all grids having a shape less or equal.
+- For max shape `1x1`, the order of shapes is `0x0`, `1x1`
+- For `2x2`, it is `0x0`, `1x1`, `1x2`, `2x1`, `2x2`
+- For `2x1`, `1x2` is omitted, as its width is greater than `2x1`'s
+- Strip game strings are generated by choosing `R` to be 1, so that the
+generated strings don't contain row separators (`SEP` `'|'`)
+
+- `db_game_generator` (`db_game_generator.h`)
+    - Interface class for iterating over games, defining the order of database
+        entry generation. Passed to `database::generate_entries(db_game_generator&)`
+    - `gridlike_db_game_generator<Game_T, Generator_T>`
+        (`gridlike_db_game_generator.h`) is a non-abstract `db_game_generator`
+        for grid and strip games
+
+        - `Game_T` must be some non-abstract game derived from `strip` or `grid`
+        - `Generator_T` must be some non-abstract `grid_generator` type
+        - Two constructors: one takes `RxC` max shape, the other takes `C` max
+            columns. The `RxC` constructor is only legal if `Game_T` is derived
+            from `grid`, otherwise a compile time error will be raised
+        - Generates all games in `Generator_T`'s ordering, which are legal.
+            Legal games are those which can be constructed without throwing an
+            exception, and, if method `bool Game_T::is_legal() const` exists,
+            the method returns true.
+
+Given a `db_game_generator`, `database::generate_entries` consumes games from
+the generator, and for each generated game `g`:
+1. `g.split()` is called
+2. If `g` didn't split, `g.normalize()` is called
+3. If `g` did split, then for each resulting subgame `sg`, `sg.normalize()` is called
+4. Each subgame `sg` (either resulting from a split or not), is passed to the method
+    `database::_generate_entry_single`. This searches for `sg` in the database, and
+    if not found, generates its entry by solving the game for both players to find
+    its outcome class
+
+NOTE: It currently would not be sufficient to simply handle only games which
+don't split, as `nogo`'s split method generates subgames which are not created
+by the `grid_generator`s. The `nogo::_immortal` vector is not considered by the
+current `grid_generator`s, so boards with meaningful immortal markers are
+found by calling `split()`
+
+# Adding A Game To the Database
+1. In `init_database.cpp`, in the `register_types` function, use the
+    `DATABASE_REGISTER_TYPE` macro to make the database aware of your game's
+    `game_type_t` value.
+
+    - IMPORTANT: write the game class name as it appears, with nothing extra,
+        i.e. `clobber` and not `some_namespace::clobber`, because the game name text
+        is used to identify `game_type_t`s on disk
+2. In `init_database.cpp`, in the `fill_database` function, add a
+    `db_game_generator` to the `generators` vector
+    - The methods of the `db_game_generator` interface are analogous to those of
+    `move_generator`s. You may be able to reuse
+    `gridlike_db_game_generator<Game_T, Generator_T>` for your game, if it's a `grid` or `strip` game.
+    - The `db_game_generator` should generate each game such that all immediate
+    child positions in the search tree (those reachable by 1 move) will have
+    been previously generated. This is not a hard requirement, but will speed up
+    database generation
+    - Implementing methods `game::_normalize_impl` and
+    `game::_undo_normalize_impl` for your game may reduce the size of the
+    database, and the time required to generate it
+    - You can add impartial games to the database, but currently they will be
+    treated like partizan games. Their entries will only be used by
+    the minimax search of `sumgame`, and will contain outcome classes and not
+    nim values
+
+Recompile, delete `database.bin`, then re-run MCGS, i.e. `./MCGS ""` (note the
+empty game string). This will re-generate the database. Now `sumgame` solve
+methods will use your game's database entries.
+
 # Safe Arithmetic Functions (`safe_arithmetic.h`)
 This section uses the term "wrapping" to mean either underflow or overflow.
 
@@ -797,6 +973,66 @@ This is not implemented, but described as a possible future task.
 - Have a macro `CHECK_SAFE_INT(x, code)`
     - If `x` is not valid, run `code` (allow cleanup and return from function)
 
+# RTTI - Run-time type information (`type_table.h`)
+Defines `i_type_table` interface, and `type_table_t` struct. The struct contains
+run-time type information for any type derived from the interface, and the
+interface provides access to the struct.
+
+The struct belongs to the derived type itself, and can be accessed either
+through a pointer derived from `i_type_table`, or using a template function:
+
+```
+game* g = new clobber("XO");
+g->type_table();
+
+// OR
+
+type_table<clobber>();
+```
+
+Both examples give the same `type_table_t` -- the unique table corresponding to
+`clobber` (both refer to the same memory location).
+
+Also defines runtime-allocated type integers (`uint32_t`), included as fields
+of the `type_table_t` struct:
+- `game_type_t`, integer with unique value for each `game` class
+- `dyn_serializable_id_t`, integer with unique value for each serializable
+    polymorphic type which has been registered with the serialization system.
+    Ignore this for now as it is unused (but implemented)
+- These members should typically not be accessed directly through the struct,
+    but rather through methods/functions defined by other files
+
+Allocation of each `type_table_t` is done in this file, but
+allocation/assignment of these integral values is done elsewhere, i.e.
+`game.cpp` and `dynamic_serializable.cpp`:
+
+- `game.h`/`game.cpp`
+    - Defines method `game_type_t game::game_type() const`
+    - Defines template function `game_type_t game_type<T>()`
+    - The `game_type_t`s are assigned at run-time, and a game class's exact
+        number depends on the order of `game_type()` calls since the program
+        was started
+    - The value is stored in the game's `type_table_t`
+
+NOTE: If any of these methods are called in a constructor that isn't the
+most derived type, i.e. `strip` instead of `nogo_1xn`, then values may be
+incorrect. The `-DTYPE_TABLE_DEBUG` compilation flag checks for this error.
+
+Implemented using built-in C++ RTTI (`std::type_info` and `std::type_index`) to
+distinguish between types, i.e. using an unordered map indexed by
+`std::type_index`.
+
+Restrictions on RTTI methods/functions:
+- `type_table()`
+    - Method provided by class `i_type_table`
+    - For template function, `T` must inherit from `i_type_table` and be non-abstract
+- `game_type()`
+    - Method provided by class `game`
+    - For template function, `T` must inherit from `game` and be non-abstract
+
+`game.h` defines template `T* cast_game<T*>(game*)` acting as a
+`reinterpret_cast`, but uses `assert`s to verify that the game is not
+`nullptr`, is active, and is of type `T` (using its `game_type_t`)
 
 # Sumgame Simplification (cgt_game_simplification.h)
 `sumgame::simplify_basic()` simplifies the sumgame by summing together basic CGT games and simplifying switches, (and `sumgame::undo_simplify_basic()` undoes this). Each step handles a different game type. Run-time type information is used to distinguish game types. To ensure that new games produced by a previous step may be included in the next step, steps happen in the following order:
@@ -813,7 +1049,6 @@ These steps are run at the start of `sumgame::_solve_with_timeout()`, when:
 - A "basic" CGT game has been added
 - After undoing a simplification
     - Calls to `simplify_basic()` which don't change the `sumgame` don't trigger an undo
-
 
 ## `nimber` Simplification
 - All `nimber`s are summed together using `nimber::nim_sum()`
@@ -909,6 +1144,161 @@ Searching for bounds is faster within smaller intervals. When finding bounds for
 
 Maybe bound generation in the database should be done using a sliding window of statistics for the last `N` games to help size intervals appropriately.
 
+# Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)
+The serialization code detailed here is used by the database. This section
+mostly describes implementation details not currently important for users.
+
+Serialization of polymorphic types is implemented but unused.
+
+## I/O Abstraction Class
+Classes `ibuffer` and `obuffer` (`iobuffer.h`) interact with files.
+
+- `ibuffer` is a wrapper of `std::ifstream`, `obuffer` is a wrapper
+    of `std::ofstream`
+- Constructors accept file names
+    - Files are in binary format
+    - `obuffer` truncates the file upon opening it (like deleting and opening
+        a new file)
+- Define methods for reading/writing fixed-width integers
+    - i.e. `uint8_t ibuffer::read_u8()`
+    - i.e. `void obuffer::write_i32(const int32_t&)`
+    - TODO: How to handle floating point? Assume IEEE?
+- A step toward enforcing machine-independent binary files
+    - Avoids endianness problems. The read/write methods enforce a fixed byte
+        order on disk
+    - TODO: However, non fixed width integer types are still a problem...
+    - In C++ it is not possible to distinguish between "C" integer types and
+        their fixed width equivalents, i.e. `int` and `int32_t`. Maybe write a
+        clang-tidy check?
+    - Possible solution: encode integer widths into the file format. Before
+        reading an int from a file, first read the expected width. If the width
+        doesn't match the width of the `read` method, throw.
+
+        - Run time safety but no compile time safety
+    - Currently expose `T ibuffer::__read<T>()`
+        and `void obuffer::__write<T>(const T&)` (integral types `T`)
+        in the public interface. Prefixed by `__` because they're only
+        a (temporary?) hack that shouldn't be called directly
+
+## Non-polymorphic Type Serialization
+Template struct `serializer<T, Enable = void>` defines the interface for
+serialization of both non-polymorphic and polymorphic types. This subsection
+talks about non-polymorphic types.
+
+- For a type `T`, `serializer<T>` should define two static functions:
+    - `inline static void save(obuffer&, const T&)`
+    - `inline static T load(ibuffer& is)`
+    - These functions should recursively use the `serializer` template where
+        necessary. See example implementation for `vector` below
+- The default-valued `Enable` template argument is there to allow conditional
+    template specialization using SFINAE (substitution failure is not an
+    error), and can usually be ignored
+
+    - This is used to define the template for all integer types
+- Instantiating the template for a type that doesn't define it will trigger
+    a static assert
+- `serializer.h` defines the template for several standard library types:
+    - all integer types
+    - `std::string`
+    - `std::vector<T>`
+    - `std::shared_ptr<T>` and `std::unique_ptr<T>`
+    - `std::pair<T1, T2>`
+    - `std::unordered_map<T1, T2>`
+        - `unordered_map` actually has more template arguments. TODO:
+            implement the rest?
+
+Example usage:
+```
+// Loading
+vector<int32_t> vec = serializer<vector<int32_t>>::load(some_ibuffer);
+
+// Saving
+serializer<vector<int32_t>>::save(some_obuffer, some_vec);
+
+// Also works for integral types:
+serializer<int32_t>::save(some_obuffer, some_i32);
+
+// Avoid using non fixed width types! This creates non-portable code:
+serializer<int>::save(some_obuffer, some_int);
+```
+
+Example implementation for `vector`:
+```
+template <class T>
+struct serializer<std::vector<T>>
+{
+    inline static void save(obuffer& os, const std::vector<T>& val)
+    {
+        const size_t size = val.size();
+        os.write_u64(size);
+
+        for (size_t i = 0; i < size; i++)
+            serializer<T>::save(os, val[i]); // recursive use of template
+    }
+
+    inline static std::vector<T> load(ibuffer& is)
+    {
+        std::vector<T> vec;
+
+        const uint64_t size = is.read_u64();
+        vec.reserve(size);
+
+        for (uint64_t i = 0; i < size; i++)
+            vec.emplace_back(serializer<T>::load(is)); // recursive use here too
+
+        return vec;
+    }
+};
+```
+
+This structure allows serialization of complicated types, i.e.
+`serializer<vector<pair<int32_t, int16_t>>>::save(...)`
+
+## Polymorphic Type Serialization (Unused, and may change)
+This code is implemented but unused. This section can (and should?) be
+ignored for now.
+
+To make your polymorphic type `T` serializable:
+1. Inherit from interface class `dyn_serializable` (`dynamic_serializable.h`)
+2. Define:
+    - Method `void T::save_impl(obuffer&) const`
+    - Function `static dyn_serializable* T::load_impl(ibuffer&)`
+3. Call `register_dyn_serializable<T>()` in `init_serialization.cpp`
+    - If not registered, your polymorphic type can't be saved/loaded. This
+        will cause run time exceptions when saving/loading `T`
+    - A compile time error is raised if a registered type doesn't implement
+        these functions with the correct signatures
+
+Polymorphic type save usage example:
+```
+game* some_game_ptr = new clobber("XO");
+// All 3 valid:
+serializer<dyn_serializable*>::save(some_obuffer, some_game_ptr);
+serializer<game*>::save(some_obuffer, some_game_ptr);
+serializer<clobber*>::save(some_obuffer, some_game_ptr);
+```
+
+Load usage example (remember to use keyword `delete` to clean up):
+```
+serializer<dyn_serializable*>::load(some_ibuffer);
+serializer<game*>::load(some_ibuffer);
+serializer<clobber*>::load(some_ibuffer);
+```
+
+A `serializer` template is defined in `dynamic_serializable.h` for all pointer
+types derived from `dyn_serializable`. It calls your `save_impl` method and
+`load_impl` function using some run time type information (see RTTI section).
+
+Each registered polymorphic type has a unique `dyn_serializable_id_t` (a
+unique run time allocated integer similar to a `game_type_t`). This specifies
+an index into an array of function pointers (for `load_impl` functions). This
+value is written/read from file when saving/loading polymorphic types.
+
+TODO: Use `type_mapper` like with database, to translate between run time type
+IDs and disk type IDs. This will allow type registration order to differ
+between the program when it saves the file, and the program when it loads
+the file (i.e. across different release versions of MCGS)
+
 # Outstanding Issues
 ## Splitting Can Make Move Ordering Worse
 Splitting into subgames creates move ordering problems in some cases.
@@ -919,12 +1309,14 @@ Consider:
 [integer_game] 6
 ```
 
-It is favorable to play in the clobber game. Without splitting, moves will
-first be tried in the clobber game. However, with splitting, a move will
-cause the clobber game to split into subgames, and those subgames will be placed
-at the end of the sum, meaning moves will be played on the integer game first.
-Without a transposition table, this increases run time from
-(5.49 ms black, 17.45 ms white) to (3557.94 ms black, 9807.72 ms white)
+Suppose `6` is not of type `integer_game` or `dyadic_rational`, but is some
+game with an integer/rational value (`sumgame` postpones moves on these 2 game
+types). It is favorable to play in the clobber game. Without splitting, moves
+will first be tried in the clobber game. However, with splitting, a move will
+cause the clobber game to split into subgames, and those subgames will be
+placed at the end of the sum, meaning moves will be played on the integer game
+first. Without a transposition table, this increases run time from (5.49 ms
+black, 17.45 ms white) to (3557.94 ms black, 9807.72 ms white), in version 1.2.
 
 Maybe we can have a subgame sorting pass which occasionally runs?
 
@@ -961,6 +1353,9 @@ a move generator in a `std::unique_ptr`
     defined by `throw_assert.h`, which throw exceptions, and can replace asserts
     where run-time errors may occur.
 - `game_type()` could possibly be faster if we eliminated the `unordered_map` lookup
+    - Probably OK now? the `type_table_t` pointer is stored as a field of
+    `i_type_table`, whenever the `type_table()` method is called for the
+    first time on some object
 
 # Release Procedure
 1. Resolve relevant TODOs
@@ -1107,7 +1502,7 @@ a move generator in a `std::unique_ptr`
 - `grid` class
     - `grid` helper classes (`grid_utils.h`)
 - `impartial_game` class
-- `mcgs_init()` initializes global data
+- `mcgs_init_all()` initializes global data
 - More code safety (clang-tidy checks, debugging checks)
 - More scripts in the `utils` directory
     - CGSuite scripts
@@ -1121,22 +1516,49 @@ a move generator in a `std::unique_ptr`
 - compare G with a simpler game H, replace in S if equal
 - compare G1+G2 with a simpler H, replace in S if equal
 
-## Version 1.3 (In Progress)
-- Database design and planning
-- First database implementation
-    - Modular enough to change details later
-        - Have basic DB "skeleton"
-        - Data structures could change
-        - Hashes used to locate DB entries could change
-    - Some components may be simpler than we plan them to eventually be
-    - Single `game` queries (no `sumgame` queries yet)
-    - Basic database entries
-        - Support partizan games. Store either win/loss, or outcome class
-        - Use this data to improve solving
-    - May consist of smaller incremental versions
-        - Only support strip games first. Add other games in next "small" version
+## Version 1.3 (Completed)
+### New Features
+- First database implementation (`database.h`, `global_database.h`)
+    - Currently stores outcome classes for single (partizan) normalized subgames
+    - `sumgame` uses outcome classes from the database to speed up search
+    - `db_game_generator`s (`db_game_generator.h`) define the order of database
+    entry generation for a game type
+    - The database is loaded from the `database.bin` file on startup, if present
+    - If not present, `database.bin` is created for all currently implemented
+    `grid` and `strip` games
+- Split method for `nogo`
+    - From Y. Shan's PhD thesis (see `nogo.h`)
+- Scripts for paper experiments (`utils/paper_experiments`)
+    - Configurable test case generator
+    - Multithreaded test runner runs several instances of MCGS and assigns test
+    cases to available threads
+    - Diagram generator
+    - See `instructions.txt` in the `utils/paper_experiments` directory
+- `commits.py` script for comparing performance across commits
+- Input language version `1.2` --> `1.3`
+
+### Major Code Additions
+- Helper classes for adding games to the database
+    - `grid_generator` (`grid_generator.h`) types provide a way to generate
+    all string representations of legal strip and grid games, up to some max size
+        - Generates in order of increasingly large dimensions
+        - Ties can optionally be broken in order of increasing or decreasing
+        number of stones
+    - `gridlike_db_game_generator` (`gridlike_db_game_generator.h`) provides
+    a template to easily create a `db_game_generator` for `strip` and `grid` games.
+        - Simply specify the game class, generator class, and max board dimensions
+- Serialization API (`serializer.h`)
+    - Uses a recursive templating system to support saving and loading of
+    complex types to/from disk, while keeping implementation simple
+    - Premade implementations for several standard library types
+    - Support for both non-polymorphic and polymorphic types
+- `split()` and `normalize()` methods improved for some games
+- `clobber` split is always enabled, no longer requiring an additional compilation flag
+
 
 ## After Version 1.3 (Future)
+- Add more games (i.e. Amazons)
+- Simple interactive player
 - Improve database
     - Support querying sums
     - Impartial game support
@@ -1149,6 +1571,5 @@ a move generator in a `std::unique_ptr`
 
 ## Version 2 (Future)
 - general sum simplifications
-    - remove/deactivate 0
     - find inverse pairs and deactivate
 

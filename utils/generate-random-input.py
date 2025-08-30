@@ -156,7 +156,7 @@ def get_random_game():
     return game_class()
 
 
-outfile.write("{version 1.2}\n")
+outfile.write("{version 1.3}\n")
 
 cgsuite_string = ""
 cpp_string = ""

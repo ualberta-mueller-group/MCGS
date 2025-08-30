@@ -36,6 +36,18 @@ sumgame::undo_stack_unwinder::~undo_stack_unwinder()
                 _sum.undo_simplify_basic();
                 continue;
             }
+
+            case SUMGAME_UNDO_SIMPLIFY_DB:
+            {
+                _sum.undo_simplify_db();
+                continue;
+            }
+
+            case SUMGAME_UNDO_PRE_SOLVE_PASS:
+            {
+                assert(false);
+                continue;
+            }
         }
     }
 

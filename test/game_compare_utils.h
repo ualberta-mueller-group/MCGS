@@ -18,6 +18,7 @@
 #include <unordered_set>
 #include <string>
 #include <vector>
+#include "type_table.h"
 
 namespace compare_games_by_print {
 

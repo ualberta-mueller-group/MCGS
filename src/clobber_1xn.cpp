@@ -7,12 +7,72 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "strip.h"
+#include "utilities.h"
+#include "iobuffer.h"
 #include <cassert>
+#include <utility>
+#include <vector>
 #include <cstddef>
 #include <ostream>
 
+class clobber_1xn_db_game_generator;
+
 using std::string, std::pair, std::vector;
 
+//////////////////////////////////////////////////
+
+namespace {
+void get_subgame_boundaries(const std::vector<int>& board,
+                            std::vector<std::pair<size_t, size_t>>& boundaries)
+{
+    const size_t N = board.size();
+
+    bool in_chunk = false;
+    size_t chunk_start = 0;
+    bool found_black = false;
+    bool found_white = false;
+
+    for (size_t i = 0; i < N; i++)
+    {
+        const int& color = board[i];
+        assert(is_empty_black_white(color));
+
+        if (color != EMPTY)
+        {
+            // new chunk
+            if (!in_chunk)
+            {
+                assert(!found_black && !found_white);
+
+                in_chunk = true;
+                chunk_start = i;
+            }
+
+            if (color == BLACK)
+                found_black = true;
+            else
+                found_white = true;
+        }
+        else
+        {
+            // end of chunk
+            if (in_chunk && found_black && found_white)
+                boundaries.emplace_back(chunk_start, i - chunk_start);
+
+            in_chunk = false;
+            chunk_start = 0;
+            found_black = false;
+            found_white = false;
+        }
+    }
+
+    if (in_chunk && found_black && found_white)
+        boundaries.emplace_back(chunk_start, N - chunk_start);
+}
+
+} // namespace
+
+//////////////////////////////////////////////////
 clobber_1xn::clobber_1xn(const vector<int>& board) : strip(board)
 {
 }
@@ -77,79 +137,117 @@ void clobber_1xn::undo_move()
     replace(to, opponent(player));
 }
 
+void clobber_1xn::save_impl(obuffer& os) const
+{
+    _save_board(os, board_const());
+}
+
+dyn_serializable* clobber_1xn::load_impl(ibuffer& is)
+{
+    return new clobber_1xn(_load_board(is));
+}
+
 split_result clobber_1xn::_split_impl() const
 {
-    vector<pair<int, int>> chunk_ranges;
+    const vector<int>& board = board_const();
 
-    string board = board_as_string();
-    const size_t N = board.size();
+    vector<pair<size_t, size_t>> boundaries;
+    get_subgame_boundaries(board, boundaries);
+    const size_t n_subgames = boundaries.size();
 
-    // auto add_chunk = [&](int start, int len) -> void
-    //{
-    //     result->push_back(new clobber_1xn(board.substr(start, len)));
-    // };
+    if (n_subgames < 2)
+        return {};
 
-    int chunk_start = -1;
-    bool found_black = false;
-    bool found_white = false;
+    split_result sr = split_result(vector<game*>());
+    for (const pair<size_t, size_t>& range : boundaries)
+        sr->push_back(
+            new clobber_1xn(vector_substr(board, range.first, range.second)));
 
-    for (size_t i = 0; i < N; i++)
+    return sr;
+}
+
+void clobber_1xn::_normalize_impl()
+{
+    const vector<int>& board = board_const();
+    const size_t board_size = board.size();
+
+    vector<pair<size_t, size_t>> boundaries;
+    get_subgame_boundaries(board, boundaries);
+    const size_t n_subgames = boundaries.size();
+
+    // Empty, or subgame is whole board
+    if (                                       //
+        board_size == 0 ||                     //
+        (                                      //
+            n_subgames == 1 &&                 //
+            boundaries[0].first == 0 &&        //
+            boundaries[0].second == board_size //
+            )                                  //
+        )                                      //
     {
-        const char c = board[i];
-        int color = clobber_char_to_color(c);
+        const bool do_mirror = strip::_should_mirror(board);
 
-        if (color != EMPTY)
+        if (do_mirror)
         {
-            // new chunk
-            if (chunk_start == -1)
-            {
-                chunk_start = i;
-            }
+            _normalize_did_change.push_back(true);
+            _normalize_boards.emplace_back(board);
 
-            if (color == BLACK)
-            {
-                found_black = true;
-            }
-            else
-            {
-                found_white = true;
-            }
-        }
-        else
-        {
-            // end of chunk
-            if (chunk_start != -1 && found_black && found_white)
-            {
-                chunk_ranges.push_back({chunk_start, i - chunk_start});
-            }
-
-            chunk_start = -1;
-            found_black = false;
-            found_white = false;
-        }
-    }
-
-    if (chunk_start != -1)
-    {
-        chunk_ranges.push_back({chunk_start, N - chunk_start});
-    }
-
-    if (chunk_ranges.size() == 1)
-    {
-        return split_result();
-    }
-    else
-    {
-        split_result result = split_result(vector<game*>());
-
-        for (const pair<int, int>& range : chunk_ranges)
-        {
-            result->push_back(
-                new clobber_1xn(board.substr(range.first, range.second)));
+            _set_board(vector_reversed(board));
+            return;
         }
 
-        return result;
+        if (_hash_updatable())
+            _mark_hash_updated();
+
+        _normalize_did_change.push_back(false);
+        return;
     }
+
+    _normalize_did_change.push_back(true);
+    _normalize_boards.emplace_back(board);
+
+    vector<int> new_board;
+    new_board.reserve(board_size);
+
+    for (size_t i = 0; i < n_subgames; i++)
+    {
+        const pair<size_t, size_t>& range = boundaries[i];
+        const size_t start = range.first;
+        const size_t end = start + range.second;
+
+        for (size_t j = start; j < end; j++)
+            new_board.push_back(board[j]);
+
+        if (i + 1 < n_subgames)
+            new_board.push_back(EMPTY);
+    }
+
+    const bool do_mirror = strip::_should_mirror(new_board);
+    if (do_mirror)
+    {
+        vector<int> new_board_mirrored = vector_reversed(new_board);
+        _set_board(new_board_mirrored);
+        return;
+    }
+
+    _set_board(new_board);
+}
+
+void clobber_1xn::_undo_normalize_impl()
+{
+    const bool did_change = _normalize_did_change.back();
+    _normalize_did_change.pop_back();
+
+    if (!did_change)
+    {
+        if (_hash_updatable())
+            _mark_hash_updated();
+
+        return;
+    }
+
+    _set_board(_normalize_boards.back());
+    _normalize_boards.pop_back();
 }
 
 game* clobber_1xn::inverse() const

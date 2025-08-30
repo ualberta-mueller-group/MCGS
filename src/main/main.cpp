@@ -4,13 +4,18 @@
 
 #include <iostream>
 #include <string>
+
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
+#include "gen_experiments.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
 #include "search_utils.h"
+
+#include "nogo_split_test.h"
+#include "sumgame.h"
 
 using std::cout, std::endl, std::string;
 
@@ -24,10 +29,28 @@ int main(int argc, char** argv)
 
     mcgs_init_all(opts);
 
+    if (opts.nogo_test)
+    {
+        nogo_split_test();
+        return 0;
+    }
+
     if (opts.run_tests)
     {
         run_autotests(opts.test_directory, opts.outfile_name,
                       opts.test_timeout);
+        return 0;
+    }
+
+    if (opts.run_tests_stdin)
+    {
+        run_autotests_stdin(opts.outfile_name, opts.test_timeout);
+        return 0;
+    }
+
+    if (opts.gen_experiments)
+    {
+        gen_experiments();
         return 0;
     }
 
@@ -39,9 +62,7 @@ int main(int argc, char** argv)
 
         while (opts.parser->parse_chunk(gc))
         {
-            if (first_case)
-                first_case = false;
-            else
+            if (!first_case)
                 cout << endl;
 
             for (game* g : gc.games)
@@ -57,6 +78,9 @@ int main(int argc, char** argv)
                 cout << "Not running search..." << endl;
             else
             {
+                if (global::clear_tt() && !first_case)
+                    sumgame::reset_ttable();
+
                 search_result sr = gc.run(0);
                 cout << "Got: " << sr.value_str() << endl;
                 cout << "Time (ms): " << sr.duration_str() << endl;
@@ -67,6 +91,7 @@ int main(int argc, char** argv)
                 cout << "\"" << gc.comments << "\"" << endl;
 
             gc.cleanup_games();
+            first_case = false;
         }
     }
 

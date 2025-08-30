@@ -1,0 +1,1941 @@
+/*
+    Prototype of serialization. Handles both polymorphic and non-polymorphic
+    types. This file is self contained.
+
+    Reading and writing of primitive data types is done through
+    fmt_write/fmt_read functions:
+        fmt_write_u32(some_ostream, some_uint32_t);
+        int64_t some_int = fmt_read_i64(some_istream);
+
+    Reading and writing of other objects is done through serializers:
+        serializer<vector<game*>>::save(some_ostream, some_games_vec);
+        vector<game*> games = serializer<vector<game*>>::load(some_istream);
+
+    Polymorphic types, such as games, need to implement some functions:
+
+    1. Inherit from class "serializable" (game already does this)
+
+    2. For a type, clobber, implement:
+        void clobber::save_impl(std::ostream&) const;
+        static clobber* clobber::load_impl(std::istream&);
+
+    3. In the init() function, register your type:
+        make_serializable<clobber>();
+
+    Now your type is serializable:
+        serializer<clobber*>::save(some_ostream, some_clobber_ptr);
+        clobber* ptr = serializer<clobber*>::load(some_istream);
+
+        OR
+
+        serializer<game*>::save(some_ostream, some_clobber_ptr);
+        game* ptr = serializer<game*>::load(some_istream);
+
+        OR
+
+        serializer<serializable*>::save(some_ostream, some_clobber_ptr);
+        serializable* ptr = serializer<serializable*>::load(some_istream);
+
+        The serializer template is defined for all T*, where T is derived from
+        "serializable". You may need to write serializers for types which
+        don't have them
+*/
+#include <algorithm>
+#include <climits>
+#include <cstring>
+#include <ctime>
+
+
+#include <fstream>
+#include "robin_hood.h"
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <random>
+#include <stdexcept>
+#include <type_traits>
+#include <typeindex>
+#include <typeinfo>
+#include <vector>
+#include <stdfloat>
+#include <unordered_map>
+#include <map>
+#include <unordered_set>
+#include <set>
+#include <cassert>
+#include <cstdint>
+#include <chrono>
+#include <ratio>
+
+namespace {
+
+#define STALL() {std::cout << "Stalling" << std::endl; while (1) {}} \
+static_assert(true)
+
+////////////////////////////////////////////////// histogram
+class histogram
+{
+public:
+    histogram() {}
+
+    void count(unsigned int val)
+    {
+        if (val >= _counts.size())
+            _counts.resize(val + 1);
+
+        _counts[val]++;
+    }
+
+private:
+    friend std::ostream& operator<<(std::ostream&, const histogram&);
+
+    std::vector<unsigned int> _counts;
+};
+
+std::ostream& operator<<(std::ostream& os, const histogram& hist)
+{
+    const std::vector<unsigned int>& counts = hist._counts;
+
+    unsigned int total = 0;
+    for (const unsigned int& count : counts)
+        total += count;
+
+    const size_t N = counts.size();
+
+    for (size_t i = 0; i < N; i++)
+    {
+        os << "(" << i << " : " << counts[i] << " ";
+        os << 100.0 * ((double) counts[i] / (double) total) << "%";
+        os << ")";
+
+        if (i + 1 < N)
+            os << '\n';
+    }
+
+    return os;
+}
+
+////////////////////////////////////////////////// timing
+uint64_t ms_since_epoch()
+{
+    using namespace std::chrono;
+
+    milliseconds t =
+        duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+    return t.count();
+}
+
+////////////////////////////////////////////////// random
+static_assert(sizeof(unsigned long long) >= sizeof(uint64_t));
+
+std::mt19937_64 rng;
+
+std::uniform_int_distribution<unsigned long long> random_dist(
+    0, std::numeric_limits<unsigned long long>::max());
+
+uint64_t __rng_seed = 0;
+
+uint64_t random_u64()
+{
+    return (uint64_t) random_dist(rng);
+}
+
+uint32_t random_u32()
+{
+    return (uint32_t) random_dist(rng);
+}
+
+uint16_t random_u16()
+{
+    return (uint16_t) random_dist(rng);
+}
+
+uint8_t random_u8()
+{
+    return (uint8_t) random_dist(rng);
+}
+
+////////////////////////////////////////////////// misc types
+typedef uint64_t hash_t;
+
+//////////////////////////////////////// element_t
+typedef std::pair<hash_t, uint32_t> element_t;
+
+inline bool operator<(const element_t& elem1, const element_t& elem2)
+{
+    return elem1.first < elem2.first;
+}
+
+std::ostream& operator<<(std::ostream& os, const element_t& elem)
+{
+    os << '{' << elem.first << '}';
+    return os;
+}
+ 
+inline bool operator==(const element_t& elem1, const element_t& elem2)
+{
+    return (elem1.first == elem2.first) && (elem1.second == elem2.second);
+}
+
+////////////////////////////////////////////////// std::vector printing
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
+{
+    const size_t size = vec.size();
+
+    os << "[";
+    for (size_t i = 0; i < size; i++)
+    {
+        os << vec[i];
+
+        if (i + 1 < size)
+            os << ", ";
+    }
+    os << "]";
+
+    return os;
+}
+
+// dereference pointers in vector
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T*>& vec)
+{
+    const size_t size = vec.size();
+
+    os << "[";
+    for (size_t i = 0; i < size; i++)
+    {
+        os << *vec[i];
+
+        if (i + 1 < size)
+            os << ", ";
+    }
+    os << "]";
+
+    return os;
+}
+
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<std::shared_ptr<T>>& vec)
+{
+    const size_t size = vec.size();
+
+    os << "[";
+    for (size_t i = 0; i < size; i++)
+    {
+        os << *vec[i];
+
+        if (i + 1 < size)
+            os << ", ";
+    }
+    os << "]";
+
+    return os;
+}
+
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<std::unique_ptr<T>>& vec)
+{
+    const size_t size = vec.size();
+
+    os << "[";
+    for (size_t i = 0; i < size; i++)
+    {
+        os << *vec[i];
+
+        if (i + 1 < size)
+            os << ", ";
+    }
+    os << "]";
+
+    return os;
+}
+
+////////////////////////////////////////////////// format write/read
+//////////////////////////////////////// implementations
+/*
+    TODO: I don't think we can distinguish between fixed-width and
+    non-fixed-width integral types. This may cause subtle bugs when
+    DB files are shared across machines...
+
+    i.e. supposing int is 32 bits, then int and int32_t are
+    indistinguishable...
+
+    One idea: use a macro and look at the string representation of the type,
+    but this doesn't work either, i.e. "typedef int int32_t" without including
+    cstdint...
+
+    This is a problem for serializer templates, i.e.
+
+    serializer<vector<int>>
+*/
+
+template <class T>
+inline void __fmt_write(std::ostream& str, const T val)
+{
+    static_assert(std::is_integral_v<T>);
+
+    using T_Unsigned = std::make_unsigned_t<T>;
+    const T_Unsigned& val_uns = reinterpret_cast<const T_Unsigned&>(val);
+
+    constexpr size_t N_BYTES = sizeof(T);
+
+    for (size_t i = 0; i < N_BYTES; i++)
+    {
+        const uint8_t byte = (uint8_t) (val_uns >> (i * 8));
+        assert(str);
+        str.write(reinterpret_cast<const char*>(&byte), 1);
+    }
+    assert(str);
+}
+
+template <class T>
+inline T __fmt_read(std::istream& str)
+{
+    static_assert(std::is_integral_v<T>);
+
+    constexpr size_t N_BYTES = sizeof(T);
+
+    T val(0);
+
+    uint8_t byte;
+    T byte_longer;
+
+    for (size_t i = 0; i < N_BYTES; i++)
+    {
+        assert(str);
+        str.read(reinterpret_cast<char*>(&byte), 1);
+        byte_longer = byte;
+        val |= (byte_longer << (i * 8));
+    }
+    assert(str);
+
+    return val;
+}
+
+//////////////////////////////////////// fmt_write functions
+inline void fmt_write_u8(std::ostream& str, const uint8_t& val)
+{
+    __fmt_write<uint8_t>(str, val);
+}
+
+inline void fmt_write_u16(std::ostream& str, const uint16_t& val)
+{
+    __fmt_write<uint16_t>(str, val);
+}
+
+inline void fmt_write_u32(std::ostream& str, const uint32_t& val)
+{
+    __fmt_write<uint32_t>(str, val);
+}
+
+inline void fmt_write_u64(std::ostream& str, const uint64_t& val)
+{
+    __fmt_write<uint64_t>(str, val);
+}
+
+inline void fmt_write_i8(std::ostream& str, const int8_t& val)
+{
+    __fmt_write<int8_t>(str, val);
+}
+
+inline void fmt_write_i16(std::ostream& str, const int16_t& val)
+{
+    __fmt_write<int16_t>(str, val);
+}
+
+inline void fmt_write_i32(std::ostream& str, const int32_t& val)
+{
+    __fmt_write<int32_t>(str, val);
+}
+
+inline void fmt_write_i64(std::ostream& str, const int64_t& val)
+{
+    __fmt_write<int64_t>(str, val);
+}
+
+//////////////////////////////////////// fmt_read functions
+inline uint8_t fmt_read_u8(std::istream& str)
+{
+    return __fmt_read<uint8_t>(str);
+}
+
+inline uint16_t fmt_read_u16(std::istream& str)
+{
+    return __fmt_read<uint16_t>(str);
+}
+
+inline uint32_t fmt_read_u32(std::istream& str)
+{
+    return __fmt_read<uint32_t>(str);
+}
+
+inline uint64_t fmt_read_u64(std::istream& str)
+{
+    return __fmt_read<uint64_t>(str);
+}
+
+inline int8_t fmt_read_i8(std::istream& str)
+{
+    return __fmt_read<int8_t>(str);
+}
+
+inline int16_t fmt_read_i16(std::istream& str)
+{
+    return __fmt_read<int16_t>(str);
+}
+
+inline int32_t fmt_read_i32(std::istream& str)
+{
+    return __fmt_read<int32_t>(str);
+}
+
+inline int64_t fmt_read_i64(std::istream& str)
+{
+    return __fmt_read<int64_t>(str);
+}
+
+////////////////////////////////////////////////// serialization type traits
+// Forward declarations
+class i_dynamic_serializer;
+class serializable;
+
+//////////////////////////////////////// has_save_impl<T>
+template <class T, class Enable = void>
+struct has_save_impl
+{
+    static constexpr bool value = false;
+};
+
+template <class T>
+struct has_save_impl<T,
+    std::enable_if_t<
+        std::is_same_v<
+            void (T::*)(std::ostream&) const,
+            decltype(&T::save_impl)
+        >,
+        void
+    >
+>
+{
+    static constexpr bool value = true;
+};
+
+template <class T>
+static constexpr bool has_save_impl_v = has_save_impl<T>::value;
+
+//////////////////////////////////////// has_load_impl<T>
+template <class T, class Enable = void>
+struct has_load_impl
+{
+    static constexpr bool value = false;
+};
+
+template <class T>
+struct has_load_impl<T,
+    std::enable_if_t<
+        std::is_same_v<
+            T* (*)(std::istream&),
+            decltype(&T::load_impl)
+        >,
+        void
+    >
+>
+{
+    static constexpr bool value = true;
+};
+
+template <class T>
+static constexpr bool has_load_impl_v = has_load_impl<T>::value;
+
+////////////////////////////////////////////////// i_type_table
+typedef unsigned int type_num_t; // analogue of game_type_t
+
+// polymorphic serializable object's unique type ID
+typedef uint32_t dynamic_serializer_id;
+
+struct type_table_t
+{
+    type_table_t(type_num_t num): num(num), sid(0)
+    {
+    }
+
+    type_num_t num;
+    dynamic_serializer_id sid;
+};
+
+type_num_t __next_type_num = 1;
+std::unordered_map<std::type_index, std::shared_ptr<type_table_t>> __type_table_map;
+
+inline type_table_t* __new_type_table()
+{
+    type_table_t* table = new type_table_t(__next_type_num++);
+    return table;
+}
+
+type_table_t* __get_type_table(const std::type_info& tinfo)
+{
+    const std::type_index tidx(tinfo);
+
+    auto it = __type_table_map.find(tidx);
+    if (it != __type_table_map.end())
+        return it->second.get();
+
+    type_table_t* table = __new_type_table();
+    __type_table_map.insert({tidx, std::shared_ptr<type_table_t>(table)});
+
+    return table;
+}
+
+class i_type_table // analogue of i_game_type
+{
+public:
+    i_type_table(): _table(nullptr)
+    {
+    }
+
+    virtual ~i_type_table()
+    {
+    }
+
+    type_table_t* type_table() const
+    {
+        if (_table != nullptr)
+        {
+            assert(__get_type_table(typeid(*this)) == _table);
+            return _table;
+        }
+
+        _table = __get_type_table(typeid(*this));
+        return _table;
+    }
+
+private:
+    mutable type_table_t* _table;
+};
+
+template <class T>
+type_table_t* type_table()
+{
+    static_assert(std::is_base_of_v<i_type_table, T>);
+    static type_table_t* table = __get_type_table(typeid(T));
+    return table;
+}
+
+////////////////////////////////////////////////// serialization
+
+//////////////////////////////////////// most of serialization system's data
+std::vector<std::shared_ptr<i_dynamic_serializer>> __dynamic_serializers;
+dynamic_serializer_id __next_dynamic_serializer_id = 1;
+
+const i_dynamic_serializer* get_dynamic_serializer(dynamic_serializer_id sid)
+{
+    assert(sid > 0);
+    sid--;
+    assert(sid < __dynamic_serializers.size());
+    return __dynamic_serializers[sid].get();
+}
+
+template <class T>
+dynamic_serializer_id __get_dynamic_serializer_id_impl() // to only check assert one time
+{
+    static_assert(std::is_base_of_v<serializable, T>);
+    dynamic_serializer_id sid = type_table<T>()->sid;
+    assert(sid > 0);
+    return sid;
+}
+
+template <class T>
+dynamic_serializer_id get_dynamic_serializer_id()
+{
+    static_assert(std::is_base_of_v<serializable, T>);
+    static const dynamic_serializer_id SID = __get_dynamic_serializer_id_impl<T>();
+    return SID;
+}
+
+//////////////////////////////////////// serialization types
+class i_dynamic_serializer
+{
+public:
+    i_dynamic_serializer(dynamic_serializer_id id): _id(id)
+    {
+    }
+
+    virtual ~i_dynamic_serializer()
+    {
+    }
+
+    dynamic_serializer_id get_id() const
+    {
+        return _id;
+    }
+
+    virtual void save(std::ostream&, const serializable*) const = 0;
+    virtual serializable* load(std::istream&) const = 0;
+
+private:
+    const dynamic_serializer_id _id;
+};
+
+class serializable: public i_type_table
+{
+public:
+    virtual ~serializable()
+    {
+    }
+
+    inline dynamic_serializer_id get_dynamic_serializer_id() const
+    {
+        return type_table()->sid;
+    }
+
+    inline static dynamic_serializer_id extract_dynamic_serializer_id_from_stream(std::istream& str)
+    {
+        static_assert(std::is_same_v<dynamic_serializer_id, uint32_t>);
+        dynamic_serializer_id sid = fmt_read_u32(str);
+        return sid;
+    }
+
+    inline static void insert_dynamic_serializer_id_to_stream(std::ostream& str, dynamic_serializer_id sid)
+    {
+        static_assert(std::is_same_v<dynamic_serializer_id, uint32_t>);
+        fmt_write_u32(str, sid);
+    }
+
+    void __save(std::ostream& str) const
+    {
+        const dynamic_serializer_id sid = get_dynamic_serializer_id();
+        assert(sid > 0);
+        const i_dynamic_serializer* ser = get_dynamic_serializer(sid);
+        assert(ser != nullptr);
+
+        insert_dynamic_serializer_id_to_stream(str, sid);
+        ser->save(str, this);
+    }
+
+    static serializable* __load(std::istream& str)
+    {
+        assert(str);
+
+        const dynamic_serializer_id sid = extract_dynamic_serializer_id_from_stream(str);
+        assert(sid > 0);
+
+        const i_dynamic_serializer* ser = get_dynamic_serializer(sid);
+        assert(ser != nullptr);
+
+        return ser->load(str);
+    }
+};
+
+// Created when registering a serializable object in the init() function
+template <class T>
+class dynamic_serializer: public i_dynamic_serializer
+{
+    static_assert(std::is_base_of_v<serializable, T>);
+    static_assert(has_save_impl_v<T>);
+    static_assert(has_load_impl_v<T>);
+
+public:
+    dynamic_serializer(dynamic_serializer_id sid): i_dynamic_serializer(sid)
+    {
+    }
+
+    virtual ~dynamic_serializer()
+    {
+    }
+
+    void save(std::ostream& str, const serializable* obj) const override
+    {
+        assert(obj->get_dynamic_serializer_id() == get_dynamic_serializer_id<T>());
+
+        const T* obj_casted = static_cast<const T*>(obj);
+        assert(dynamic_cast<const T*>(obj) == obj_casted);
+
+        obj_casted->save_impl(str);
+    }
+
+    serializable* load(std::istream& str) const override
+    {
+        serializable* obj = T::load_impl(str);
+        assert(obj->get_dynamic_serializer_id() == get_dynamic_serializer_id<T>());
+        return obj;
+    }
+};
+
+// Register a type to enable serialization
+template <class T>
+void make_serializable()
+{
+    static_assert(std::is_base_of_v<serializable, T>);
+
+    type_table_t* table = type_table<T>();
+    assert(table->sid == 0);
+
+    dynamic_serializer_id sid = __next_dynamic_serializer_id++;
+    table->sid = sid;
+
+    __dynamic_serializers.emplace_back(new dynamic_serializer<T>(sid));
+    assert(get_dynamic_serializer(sid)->get_id() == sid);
+}
+
+////////////////////////////////////////////////// game
+class game: public serializable
+{
+public:
+    virtual ~game()
+    {
+    }
+
+    virtual void print(std::ostream& os) const = 0;
+};
+
+std::ostream& operator<<(std::ostream& os, const game& g)
+{
+    g.print(os);
+    return os;
+}
+
+////////////////////////////////////////////////// manual serialization
+template <class T, class Enable = void>
+struct serializer
+{
+    static_assert(false, "Not implemented!");
+    static void save(std::ostream& os, const T& val);
+    static T load(std::istream& is);
+};
+
+//////////////////////////////////////// pointers
+
+// Only matches pointer types derived from serializable
+template <class T>
+struct serializer<T*,
+    std::enable_if_t<
+        std::is_base_of_v<serializable, T>,
+        void
+    >
+>
+{
+    static void save(std::ostream& os, const serializable* ptr)
+    {
+        ptr->__save(os);
+    }
+
+    static T* load(std::istream& is)
+    {
+        serializable* ptr = serializable::__load(is);
+        assert(dynamic_cast<T*>(ptr) != nullptr);
+        return static_cast<T*>(ptr);
+    }
+};
+
+//////////////////////////////////////// integers
+template <class T>
+struct serializer<T,
+    std::enable_if_t<
+        std::is_integral_v<T>,
+        void
+    >
+>
+{
+    static void save(std::ostream& os, const T& val)
+    {
+        __fmt_write(os, val);
+    }
+
+    static T load(std::istream& is)
+    {
+        return __fmt_read<T>(is);
+    }
+
+};
+
+//////////////////////////////////////// pair<T1, T2>
+template <class T1, class T2>
+struct serializer<std::pair<T1, T2>>
+{
+    static void save(std::ostream& os, const std::pair<T1, T2>& p)
+    {
+        serializer<T1>::save(os, p.first);
+        serializer<T2>::save(os, p.second);
+    }
+
+    static std::pair<T1, T2> load(std::istream& is)
+    {
+        const T1 val1 = serializer<T1>::load(is);
+        const T2 val2 = serializer<T2>::load(is);
+        return {val1, val2};
+    }
+};
+
+//////////////////////////////////////// unordered_map<T1, T2>
+template <class T1, class T2>
+struct serializer<std::unordered_map<T1, T2>>
+{
+    static void save(std::ostream& os, const std::unordered_map<T1, T2>& m)
+    {
+        const size_t size = m.size();
+        fmt_write_u32(os, size);
+
+        for (const std::pair<T1, T2>& p : m)
+            serializer<std::pair<T1, T2>>::save(os, p);
+    }
+
+    static std::unordered_map<T1, T2> load(std::istream& is)
+    {
+        const size_t size = fmt_read_u32(is);
+
+        std::unordered_map<T1, T2> m;
+        m.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+           m.emplace(serializer<std::pair<T1, T2>>::load(is));
+
+        return m;
+    }
+};
+
+//////////////////////////////////////// shared_ptr<T>
+template <class T>
+struct serializer<std::shared_ptr<T>>
+{
+    static void save(std::ostream& os, const std::shared_ptr<T>& ptr)
+    {
+        serializer<T*>::save(os, ptr.get());
+    }
+
+    static std::shared_ptr<T> load(std::istream& is)
+    {
+        T* ptr = serializer<T*>::load(is);
+        return std::shared_ptr<T>(ptr);
+    }
+};
+
+//////////////////////////////////////// unique_ptr<T>
+template <class T>
+struct serializer<std::unique_ptr<T>>
+{
+    static void save(std::ostream& os, const std::unique_ptr<T>& ptr)
+    {
+        serializer<T*>::save(os, ptr.get());
+    }
+
+    static std::unique_ptr<T> load(std::istream& is)
+    {
+        T* ptr = serializer<T*>::load(is);
+        return std::unique_ptr<T>(ptr);
+    }
+};
+
+//////////////////////////////////////// std::string
+template <>
+struct serializer<std::string>
+{
+    static void save(std::ostream& os, const std::string& str)
+    {
+        const size_t size = str.size();
+        fmt_write_u32(os, size);
+
+        for (size_t i = 0; i < size; i++)
+            fmt_write_i8(os, str[i]);
+    }
+
+    static std::string load(std::istream& is)
+    {
+        std::string str;
+
+        const size_t size = fmt_read_u32(is);
+        str.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+            str.push_back(fmt_read_i8(is));
+
+        return str;
+    }
+};
+
+//////////////////////////////////////// std::vector<T>
+template <class T>
+struct serializer<std::vector<T>>
+{
+    static void save(std::ostream& os, const std::vector<T>& vec)
+    {
+        const size_t size = vec.size();
+        fmt_write_u32(os, size);
+
+        for (size_t i = 0; i < size; i++)
+            serializer<T>::save(os, vec[i]);
+    }
+
+    static std::vector<T> load(std::istream& is)
+    {
+        std::vector<T> vec;
+
+        const size_t size = fmt_read_u32(is);
+        vec.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+            vec.emplace_back(serializer<T>::load(is));
+
+        return vec;
+    }
+};
+
+
+////////////////////////////////////////////////// games
+class game_a: public game
+{
+public:
+    game_a(int val): val(val)
+    {
+    }
+
+    void print(std::ostream& os) const override
+    {
+        os << "game_a: " << val;
+    }
+
+    void save_impl(std::ostream& str) const
+    {
+        fmt_write_i32(str, val);
+    }
+
+    static game_a* load_impl(std::istream& str)
+    {
+        int32_t val = fmt_read_i32(str);
+        return new game_a(val);
+    }
+
+    int val;
+};
+
+std::ostream& operator<<(std::ostream& os, const game_a& g)
+{
+    os << "<" << g.val << ">";
+    return os;
+}
+
+class game_b: public game
+{
+public:
+
+    game_b(int x, int y, int z): x(x), y(y), z(z)
+    {
+    }
+
+    void print(std::ostream& os) const override
+    {
+        os << "game_b: [";
+        os << x << " ";
+        os << y << " ";
+        os << z << "]";
+    }
+
+    void save_impl(std::ostream& os) const
+    {
+        fmt_write_i32(os, x);
+        fmt_write_i32(os, y);
+        fmt_write_i32(os, z);
+    }
+
+    static game_b* load_impl(std::istream& is)
+    {
+        int x = fmt_read_i32(is);
+        int y = fmt_read_i32(is);
+        int z = fmt_read_i32(is);
+
+        return new game_b(x, y, z);
+    }
+
+    int x, y, z;
+};
+
+std::ostream& operator<<(std::ostream& os, const game_b& g)
+{
+    os << '[';
+    os << g.x << ' ';
+    os << g.y << ' ';
+    os << g.z;
+    os << ']';
+
+    return os;
+}
+
+
+class game_c: public game
+{
+public:
+
+    game_c(const std::string& board): _board(board)
+    {
+    }
+
+    virtual ~game_c()
+    {
+    }
+
+    void print(std::ostream& os) const override
+    {
+        os << "game_c: \"" << _board << "\"";
+    }
+
+    void save_impl(std::ostream& os) const
+    {
+        serializer<std::string>::save(os, _board);
+    }
+
+    static game_c* load_impl(std::istream& is)
+    {
+        std::string board = serializer<std::string>::load(is);
+        return new game_c(board);
+    }
+
+private:
+
+    friend std::ostream& operator<<(std::ostream& os, const game_c& g);
+    std::string _board;
+};
+
+std::ostream& operator<<(std::ostream& os, const game_c& g)
+{
+    os << "game_c: \"";
+    os << g._board;
+    os << "\"";
+
+    return os;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////
+
+void init()
+{
+    make_serializable<game_a>();
+    make_serializable<game_b>();
+    make_serializable<game_c>();
+}
+
+std::fstream open_file(const std::string& filename, bool trunc)
+{
+    std::fstream::openmode om =
+        std::fstream::binary |
+        std::fstream::in     |
+        std::fstream::out;
+
+    if (trunc)
+        om |= std::fstream::trunc;
+
+    std::fstream fs(filename, om);
+
+    assert(fs.is_open());
+    return fs;
+}
+
+
+using namespace std;
+
+void test1();
+void test2();
+
+int main()
+{
+    init();
+
+    test1();
+    test2();
+}
+
+void test1()
+{
+    // Write
+    {
+        vector<unique_ptr<game>> games;
+
+        games.push_back(unique_ptr<game>(new game_a(5)));
+        games.push_back(unique_ptr<game>(new game_b(1, 6, 2)));
+        games.push_back(unique_ptr<game>(new game_c("This is some text")));
+
+        std::fstream fs = open_file("data.bin", true);
+
+        serializer<vector<unique_ptr<game>>>::save(fs, games);
+
+        fs.close();
+    }
+
+    // Read
+    {
+        std::fstream fs = open_file("data.bin", false);
+
+        vector<unique_ptr<game>> games = serializer<vector<unique_ptr<game>>>::load(fs);
+
+        cout << games << endl;
+
+        fs.close();
+    }
+}
+
+
+namespace {
+
+
+////////////////////////////////////////////////// helper functions
+
+void check_no_collisions(const std::vector<element_t>& vec)
+{
+    std::unordered_set<hash_t> hashes;
+
+    const size_t size = vec.size();
+    for (size_t i = 0; i < size; i++)
+    {
+        auto it = hashes.insert(vec[i].first);
+        if (!it.second)
+            throw std::logic_error("Hash collision");
+    }
+}
+
+inline bool linear_search(const std::vector<element_t>& bucket, const hash_t& query_hash, hash_t& found_idx)
+{
+    const size_t N = bucket.size();
+
+    for (found_idx = 0; found_idx < N; found_idx++)
+        if (bucket[found_idx].first == query_hash)
+            return true;
+
+    return false;
+}
+
+
+int max_size = 0;
+
+inline bool linear_search_flat(const element_t* bucket, int bucket_size, const hash_t& query_hash, int& found_idx)
+{
+#pragma unroll(8)
+    for (found_idx = 0; found_idx < bucket_size; found_idx++)
+        if (bucket[found_idx].first == query_hash)
+            return true;
+
+    return false;
+}
+
+inline bool linear_search_quick(const std::vector<element_t>& bucket, const hash_t& query_hash, hash_t& found_idx)
+{
+    const size_t N = bucket.size();
+
+    const hash_t low = bucket[0].first;
+    const hash_t high = bucket[N - 1].first;
+
+    //const hash_t step = (high - low) / N;
+    //const int guess = (query_hash - low) / step;
+
+    const int guess = N * (query_hash - low) / (high - low);
+
+    const int max_radius = std::max((int) (N - guess + 1), (int) (guess + 1));
+
+    for (int i = 0; i < max_radius; i++)
+    {
+        const int i_left = guess - i;
+        const int i_right = guess + i;
+
+        if (i_left > 0 && query_hash == bucket[i_left].first)
+        {
+            found_idx = i_left;
+            return true;
+        }
+
+        if (i_right < N && query_hash == bucket[i_right].first)
+        {
+            found_idx = i_right;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool binary_search(const std::vector<element_t>& bucket, const hash_t& query_hash, size_t& found_idx)
+{
+    found_idx = 0;
+
+    const size_t N = bucket.size();
+
+    if (N == 0)
+        return false;
+
+    size_t low = 0;
+    size_t high = N - 1;
+
+    while (low <= high)
+    {
+        const size_t idx = (low + high) / 2;
+        found_idx = low;
+
+        const hash_t elem_hash = bucket[idx].first;
+
+        if (elem_hash < query_hash)
+        {
+            low = idx + 1;
+            found_idx = low;
+        }
+        else if (elem_hash > query_hash)
+        {
+            if (idx == 0)
+                return false;
+
+            high = idx - 1;
+        } else
+        {
+            found_idx = idx;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool binary_search_flat(const element_t* bucket, int bucket_size, const hash_t& query_hash, int& found_idx)
+{
+    //if (N == 0)
+    //    return false;
+
+    int low = 0;
+    int high = bucket_size - 1;
+
+    while (low <= high)
+    {
+        found_idx = (low + high) / 2;
+
+        const hash_t elem_hash = bucket[found_idx].first;
+
+        if (elem_hash < query_hash)
+        {
+            low = found_idx + 1;
+        }
+        else if (elem_hash > query_hash)
+        {
+            high = found_idx - 1;
+        } else
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool binary_search_flat_insert(const element_t* bucket, int bucket_size, const hash_t& query_hash, int& found_idx)
+{
+    found_idx = 0;
+
+    if (bucket_size == 0)
+        return false;
+
+    int low = 0;
+    int high = bucket_size - 1;
+
+    while (low <= high)
+    {
+        const int idx = (low + high) / 2;
+        found_idx = low;
+
+        const hash_t elem_hash = bucket[idx].first;
+
+        if (elem_hash < query_hash)
+        {
+            low = idx + 1;
+            found_idx = low;
+        }
+        else if (elem_hash > query_hash)
+        {
+            high = idx - 1;
+        } else
+        {
+            found_idx = idx;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+template <class T>
+bool is_sorted(const std::vector<T>& vec)
+{
+    const size_t N = vec.size();
+
+    if (N < 2)
+        return true;
+
+    for (size_t i = 0; i < N - 1; i++)
+        if (!(vec[i] < vec[i + 1]))
+            return false;
+
+    return true;
+}
+
+struct offset_t
+{
+    element_t* arr;
+    int size;
+};
+
+class zobrist_index: public serializable
+{
+public:
+    zobrist_index(size_t n_bits)
+        : _sum(0),
+          _n_bits(n_bits),
+          _n_buckets(1 << n_bits),
+          _shift_width(sizeof(hash_t) * CHAR_BIT - _n_bits)
+    {
+        assert(0 < n_bits && n_bits < sizeof(hash_t) * CHAR_BIT);
+
+        _buckets.resize(_n_buckets);
+
+        for (size_t i = 0; i < _n_buckets; i++)
+            _buckets[i].reserve(20);
+
+        _offsets = nullptr;
+        _flattened = nullptr;
+    }
+
+    ~zobrist_index()
+    {
+        if (_offsets != nullptr)
+        {
+            for (size_t i = 0; i < _n_buckets; i++)
+                free(_offsets[i].arr);
+
+            free(_offsets);
+        }
+
+        if (_flattened != nullptr)
+            free(_flattened);
+
+    }
+
+    void insert(const element_t& elem)
+    {
+        const hash_t hash = elem.first;
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+        std::vector<element_t>& bucket = _buckets[bucket_idx];
+
+        size_t idx = 0;
+        bool found = binary_search(bucket, hash, idx);
+
+        if (!found)
+            _sum++;
+
+        bucket.insert(bucket.begin() + idx, elem);
+
+        //std::cout << bucket << std::endl;
+        //assert(is_sorted(bucket));
+    }
+
+    uint32_t search(hash_t hash) const
+    {
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+        const std::vector<element_t>& bucket = _buckets[bucket_idx];
+
+        size_t idx = 0;
+        bool found = false;
+
+        if (bucket.size() <= 7)
+            found = linear_search(bucket, hash, idx);
+        else
+            found = binary_search(bucket, hash, idx);
+
+        //bool found = linear_search_quick(bucket, hash, idx);
+
+        if (!found)
+            throw std::logic_error("Not found");
+
+        return bucket[idx].second;
+    }
+
+    uint32_t search_flat(hash_t hash) const
+    {
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+
+        const offset_t& of = _offsets[bucket_idx];
+        const element_t* bucket = of.arr;
+        const int& size = of.size;
+
+        /*
+           Getting a bool AND an index seems faster than getting just an index
+           (???)
+        */
+        int idx;
+
+        /*
+           Checking this condition and calling an inline function is faster
+           than using a stored function pointer
+        */
+        bool found;
+        if (size > 8) [[ unlikely ]]
+            found = binary_search_flat(bucket, size, hash, idx);
+        else
+            found = linear_search_flat(bucket, size, hash, idx);
+
+        if (!found)
+            return 0;
+
+        return bucket[idx].second;
+    }
+
+
+    void flatten()
+    {
+        assert(_offsets == nullptr && _flattened == nullptr);
+
+        _offsets = (offset_t*) malloc(sizeof(offset_t) * _n_buckets);
+
+        histogram hist;
+
+        for (size_t i = 0; i < _n_buckets; i++)
+        {
+            vector<element_t>& bucket = _buckets[i];
+            const size_t bucket_size = bucket.size();
+
+            hist.count(bucket_size);
+
+            offset_t& of = _offsets[i];
+            of.arr = (element_t*) malloc(bucket_size * sizeof(element_t));
+            of.size = bucket_size;
+
+            for (size_t j = 0; j < bucket_size; j++)
+                of.arr[j] = bucket[j];
+
+            bucket.clear();
+        }
+
+        //cout << "HISTOGRAM:" << endl;
+        //cout << hist << endl;
+        
+        _buckets.clear();
+    }
+
+    inline int get_sum() const
+    {
+        return _sum;
+    }
+
+    void save_impl(std::ostream& os) const
+    {
+        fmt_write_u8(os, _n_bits);
+        fmt_write_u64(os, _n_buckets);
+        for (size_t i = 0; i < _n_buckets; i++)
+            serializer<std::vector<element_t>>::save(os, _buckets[i]);
+    }
+
+    static zobrist_index* load_impl(std::istream& is)
+    {
+        uint8_t n_bits = fmt_read_u8(is);
+        uint64_t n_buckets = fmt_read_u64(is);
+
+        zobrist_index* obj = new zobrist_index(n_bits);
+
+        for (size_t i = 0; i < n_buckets; i++)
+        {
+            std::vector<element_t> bucket = serializer<std::vector<element_t>>::load(is);
+            const size_t N = bucket.size();
+
+            for (size_t j = 0; j < N; j++)
+                obj->insert(bucket[j]);
+        }
+
+        return obj;
+    }
+
+    bool operator==(const zobrist_index& rhs) const
+    {
+        if (_n_buckets != rhs._n_buckets)
+            return false;
+
+        for (size_t i = 0; i < _n_buckets; i++)
+            if (_buckets[i] != rhs._buckets[i])
+                return false;
+
+        return true;
+    }
+
+    bool operator!=(const zobrist_index& rhs) const
+    {
+        return !(*this == rhs);
+    }
+
+private:
+    inline hash_t _hash_to_bucket_idx(const hash_t& hash) const
+    {
+        return hash >> _shift_width;
+    }
+
+    int _sum;
+
+    const size_t _n_bits;
+    const size_t _n_buckets;
+    std::vector<std::vector<element_t>> _buckets;
+
+    //int* _offsets;
+    offset_t* _offsets;
+    element_t* _flattened;
+    int _shift_width;
+};
+
+struct bucket_t
+{
+    element_t* arr;
+    int max_size;
+    int size;
+};
+
+void assert_is_sorted(const element_t* arr, unsigned int size)
+{
+    if (size == 0)
+        return;
+
+    for (unsigned int i = 0; i < size - 1; i++)
+        if (!(arr[i] < arr[i + 1]))
+        {
+            cout << "SIZE FAIL: " << size << endl;
+            throw std::logic_error("NOT SORTED");
+        }
+}
+
+class better_zobrist_index
+{
+public:
+    better_zobrist_index(unsigned int n_bits)
+        : _n_bits(n_bits),
+          _n_buckets(1 << n_bits),
+          _hash_shift_width(sizeof(hash_t) * CHAR_BIT - n_bits),
+          _buckets(nullptr)
+    {
+        assert(0 < n_bits && n_bits <= 30);
+
+        cout << "Using n_bits: " << n_bits << endl;
+
+        //_buckets = (bucket_t*) malloc(_n_buckets * sizeof(bucket_t));
+        _buckets = (bucket_t*) calloc(_n_buckets, sizeof(bucket_t));
+
+        for (unsigned int i = 0; i < _n_buckets; i++)
+        {
+            bucket_t& bucket = _buckets[i];
+            bucket.size = 0;
+            bucket.max_size = INITIAL_BUCKET_SIZE;
+            //bucket.arr = (element_t*) calloc(bucket.max_size, sizeof(element_t));
+            bucket.arr = (element_t*) calloc(bucket.max_size, sizeof(element_t));
+        }
+    }
+
+    ~better_zobrist_index()
+    {
+        assert(_buckets != nullptr);
+
+        uint64_t overhead = 0;
+        overhead += sizeof(bucket_t) * _n_buckets;
+
+        histogram hist;
+
+        for (unsigned int i = 0; i < _n_buckets; i++)
+        {
+            bucket_t& bucket = _buckets[i];
+            overhead += sizeof(element_t) * (bucket.max_size - bucket.size);
+
+            hist.count(bucket.size);
+
+            assert(bucket.arr != nullptr);
+            free(bucket.arr);
+        }
+
+        free(_buckets);
+
+        cout << "Overhead (MB): " << ((double) overhead) / (1000.0 * 1000.0) << endl;
+        cout << "Histogram: " << endl << hist << endl;
+    }
+
+    bool insert(const element_t& elem)
+    {
+        const hash_t hash = elem.first;
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+
+        bucket_t& bucket = _buckets[bucket_idx];
+        element_t*& arr = bucket.arr;
+        int& size = bucket.size;
+
+        int idx;
+        bool found;
+
+        if (size > 8) [[ unlikely ]]
+            found = binary_search_flat_insert(bucket.arr, size, hash, idx);
+        else
+            found = linear_search_flat(bucket.arr, size, hash, idx);
+
+        if (found) [[ unlikely ]]
+            return false;
+
+        if (size == bucket.max_size) [[ unlikely ]]
+            _grow_bucket(bucket);
+
+        if (size <= 8) [[ likely ]]
+        {
+            arr[size] = elem;
+            size++;
+
+            if (size == 9) [[ unlikely ]]
+                std::sort(arr, arr + size);
+
+        }
+        else [[ unlikely ]]
+        {
+            for (unsigned int i = size; i > idx; i--)
+                arr[i] = arr[i - 1];
+
+            arr[idx] = elem;
+            size++;
+        }
+
+        return true;
+    }
+
+    uint32_t search(const hash_t hash) const
+    {
+        const hash_t bucket_idx = _hash_to_bucket_idx(hash);
+
+        const bucket_t& bucket = _buckets[bucket_idx];
+        const element_t* arr = bucket.arr;
+        const unsigned int& size = bucket.size;
+
+        int idx;
+        bool found;
+
+        if (size > 8) [[ unlikely ]]
+            found = binary_search_flat(arr, size, hash, idx);
+        else
+            found = linear_search_flat(arr, size, hash, idx);
+
+        if (!found)
+            return 0;
+
+        return arr[idx].second;
+    }
+
+private:
+    inline hash_t _hash_to_bucket_idx(const hash_t hash) const
+    {
+        return hash >> _hash_shift_width;
+    }
+
+    inline void _grow_bucket(bucket_t& bucket)
+    {
+        const unsigned int new_max_size = bucket.max_size << 1;
+        element_t* new_arr = (element_t*) calloc(new_max_size, sizeof(element_t));
+
+        for (unsigned int i = 0; i < bucket.size; i++)
+            new_arr[i] = bucket.arr[i];
+
+        free(bucket.arr);
+
+        bucket.arr = new_arr;
+        bucket.max_size = new_max_size;
+    }
+
+    static constexpr unsigned int INITIAL_BUCKET_SIZE = 2;
+
+    unsigned int _n_bits;
+    unsigned int _n_buckets;
+    unsigned int _hash_shift_width;
+
+    bucket_t* _buckets;
+};
+
+int test_unordered_map(const std::vector<element_t>& elements,
+                       const std::vector<hash_t>& queries)
+{
+    cout << "unordered_map test" << endl;
+
+    // Insertion
+    uint64_t start = ms_since_epoch();
+    std::unordered_map<hash_t, uint32_t> m;
+
+    const size_t N = elements.size();
+
+    m.reserve(N);
+
+    int sum = 0;
+
+    for (size_t i = 0; i < N; i++)
+    {
+        auto it = m.insert(elements[i]);
+        sum += it.second;
+    }
+
+    uint64_t end = ms_since_epoch();
+    cout << "Insertion time (ms): " << (end - start) << endl;
+
+    if (sum != elements.size())
+        throw std::logic_error("Hash collision");
+
+
+    // Search
+    uint64_t start2 = ms_since_epoch();
+    int sum2 = 0;
+
+    const size_t N2 = queries.size();
+    for (size_t i = 0; i < N2; i++)
+    {
+        auto it = m.find(queries[i]);
+        sum2 += it->second;
+    }
+
+    uint64_t end2 = ms_since_epoch();
+    cout << "Search time (ms): " << (end2 - start2) << endl;
+
+    return sum2;
+}
+
+int test_zobrist_index(const std::vector<element_t>& elements,
+               const std::vector<hash_t>& queries)
+{
+    cout << "zobrist_index test" << endl;
+
+    // Insertion
+    uint64_t start = ms_since_epoch();
+    zobrist_index m(23);
+
+    const size_t N = elements.size();
+
+    for (size_t i = 0; i < N; i++)
+        m.insert(elements[i]);
+
+    int s = m.get_sum();
+    uint64_t end = ms_since_epoch();
+
+    if (s != elements.size())
+        throw std::logic_error("Hash collision");
+
+    cout << "Insertion time (ms): " << (end - start) << endl;
+
+
+    m.flatten();
+
+    // Search
+    start = ms_since_epoch();
+    int sum = 0;
+
+    const size_t N2 = queries.size();
+    for (size_t i = 0; i < N2; i++)
+        sum += m.search_flat(queries[i]);
+        //sum += m.search(queries[i]);
+    end = ms_since_epoch();
+    cout << "Search time (ms): " << (end - start) << endl;
+
+    cout << "MAX BUCKET SIZE: " << max_size << endl;
+
+    return sum;
+}
+
+int test_better_zobrist_index(const std::vector<element_t>& elements,
+               const std::vector<hash_t>& queries)
+{
+    cout << "better_zobrist_index test" << endl;
+
+    // Insertion
+    uint64_t start = ms_since_epoch();
+
+    const size_t N = elements.size();
+
+
+    /*
+        Stop when:
+        (1 << n_bits ) >= N / 2
+            OR:
+        2 >= N / (1 << n_bits)
+    */
+    unsigned int n_bits = 1;
+    while ((1 << n_bits) < (N >> 1))
+        n_bits++;
+
+    better_zobrist_index m(n_bits);
+
+
+    for (size_t i = 0; i < N; i++)
+        m.insert(elements[i]);
+
+    uint64_t end = ms_since_epoch();
+
+
+    cout << "Insertion time (ms): " << (end - start) << endl;
+
+    // Search
+    start = ms_since_epoch();
+    int sum = 0;
+
+    const size_t N2 = queries.size();
+    for (size_t i = 0; i < N2; i++)
+        sum += m.search(queries[i]);
+    end = ms_since_epoch();
+    cout << "Search time (ms): " << (end - start) << endl;
+
+    cout << "MAX BUCKET SIZE: " << max_size << endl;
+
+    return sum;
+}
+
+
+int test_robinhood(const std::vector<element_t>& elements,
+                const std::vector<hash_t>& queries)
+{
+    cout << "robinhood::unordered_map test" << endl;
+
+    // Insertion
+    uint64_t start = ms_since_epoch();
+    //std::unordered_map<hash_t, uint32_t> m;
+    robin_hood::unordered_map<hash_t, uint32_t> m;
+
+    const size_t N = elements.size();
+
+    m.reserve(N);
+
+    int sum = 0;
+
+    for (size_t i = 0; i < N; i++)
+    {
+        auto it = m.emplace(elements[i].first, elements[i].second);
+        sum += it.second;
+    }
+
+    uint64_t end = ms_since_epoch();
+    cout << "Insertion time (ms): " << (end - start) << endl;
+
+    if (sum != elements.size())
+        throw std::logic_error("Hash collision");
+
+    // Search
+    uint64_t start2 = ms_since_epoch();
+    int sum2 = 0;
+
+    const size_t N2 = queries.size();
+    for (size_t i = 0; i < N2; i++)
+    {
+        auto it = m.find(queries[i]);
+        sum2 += it->second;
+    }
+
+    uint64_t end2 = ms_since_epoch();
+    cout << "Search time (ms): " << (end2 - start2) << endl;
+
+    return sum2;
+}
+
+void bar(); //
+
+
+} // namespace
+
+void test2()
+{
+    rng.seed(std::time(0));
+    make_serializable<zobrist_index>();
+
+    const uint64_t n_items = 16000000;
+    //const uint64_t n_items = 1000000;
+    //const uint64_t n_items = 8000000;
+
+    vector<element_t> elements;
+    elements.reserve(n_items);
+
+    vector<hash_t> queries;
+    queries.reserve(n_items);
+
+    for (size_t i = 0; i < n_items; i++)
+    {
+        const hash_t hash = random_u64();
+        const uint32_t val = random_u32();
+        elements.emplace_back(hash, val);
+        queries.push_back(hash);
+    }
+
+    std::shuffle(queries.begin(), queries.end(), rng);
+
+    //check_no_collisions(elements);
+
+    
+    int s;
+
+    cout << endl;
+    s = test_better_zobrist_index(elements, queries);
+    cout << "Element sum : " << s << endl;
+
+    cout << endl;
+    s = test_zobrist_index(elements, queries);
+    cout << "Element sum : " << s << endl;
+
+    cout << endl;
+    s = test_unordered_map(elements, queries);
+    cout << "Element sum: " << s << endl;
+
+    cout << endl;
+    s = test_robinhood(elements, queries);
+    cout << "Element sum: " << s << endl;
+
+}
+
+namespace {
+//////////////////////////////////////////////////
+/*
+    TODO: Can we guarantee that serializer only needs to take one template
+    parameter? This example with struct foo is really messy for users,
+    as SFINAE is especially janky when used with parameter packs (?).
+    Having this for one template parameter is already potentially confusing...
+*/
+
+// compile-time hack to hide parameter pack in one template parameter
+template <class... Ts>
+struct pack
+{
+};
+
+// default case
+template <class Pack, class Enable = void>
+struct foo_impl
+{
+    static_assert(false, "Not implemented!");
+};
+
+// match non integral pointers
+template <class T>
+struct foo_impl<pack<T*>,
+    std::enable_if_t<
+        !std::is_integral_v<T>,
+        void
+    >
+>
+{
+    static constexpr const char* name = "Non-integral pointer type";
+};
+
+// match integral pointers
+template <class T>
+struct foo_impl<pack<T*>,
+    std::enable_if_t<
+        std::is_integral_v<T>,
+        void
+    >
+>
+{
+    static constexpr const char* name = "Integral pointer type";
+};
+
+// "hide" parameter pack, and prevent "Enable" from showing up in foo usage...
+template <class... Ts>
+struct foo: public foo_impl<pack<Ts...>>
+{
+};
+
+void bar()
+{
+}
+
+//////////////////////////////////////////////////
+} // namespace

@@ -1,7 +1,11 @@
+/*
+   General utility functions
+*/
 #pragma once
+#include <vector>
+#include <iostream>
 #include <climits>
 #include <type_traits>
-#include <vector>
 #include <cassert>
 #include <string>
 #include "cgt_basics.h"
@@ -139,3 +143,56 @@ size_t new_vector_capacity(size_t access_idx, size_t current_capacity);
 ////////////////////////////////////////
 relation relation_from_search_results(bool le_known, bool is_le, bool ge_known,
                                       bool is_ge);
+
+// TODO unit test
+template <class T>
+std::vector<T> vector_substr(const std::vector<T>& vec, size_t start,
+                             size_t length)
+{
+    assert(length <= vec.size());
+
+    std::vector<T> result;
+    result.reserve(length);
+
+    const size_t end = start + length;
+
+    for (size_t i = start; i < end; i++)
+        result.emplace_back(vec[i]);
+
+    return result;
+}
+
+// TODO unit test
+template <class T>
+std::vector<T> vector_reversed(const std::vector<T>& vec)
+{
+    std::vector<T> rev;
+    const size_t size = vec.size();
+    rev.reserve(size);
+
+    for (size_t i = 0; i < size; i++)
+        rev.emplace_back(vec[size - 1 - i]);
+
+    return rev;
+}
+
+// vector printing
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
+{
+    os << '[';
+
+    const size_t N = vec.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        os << vec[i];
+
+        if (i + 1 < N)
+            os << ", ";
+    }
+
+    os << ']';
+    return os;
+}
+
+outcome_class bools_to_outcome_class(bool black_wins, bool white_wins);

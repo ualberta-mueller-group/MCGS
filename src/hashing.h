@@ -18,7 +18,7 @@
 #include <iostream>
 #include <cassert>
 #include "cgt_basics.h"
-#include "game_type.h"
+#include "type_table.h"
 
 class game;
 
@@ -29,6 +29,12 @@ class random_table
 {
 public:
     random_table(size_t n_positions, uint64_t seed);
+
+    // No copying/moving
+    random_table(const random_table&) = delete;
+    random_table& operator=(const random_table&) = delete;
+    random_table(const random_table&&) = delete;
+    random_table& operator=(const random_table&&) = delete;
 
     /*
        Position of get_zobrist_val functions can be past
@@ -186,8 +192,8 @@ public:
     void reset();
     hash_t get_value() const;
 
-    void add_subgame(size_t subgame_idx, game* g);
-    void remove_subgame(size_t subgame_idx, game* g);
+    void add_subgame(size_t subgame_idx, const game* g);
+    void remove_subgame(size_t subgame_idx, const game* g);
 
     void set_to_play(bw to_play);
 
@@ -196,7 +202,7 @@ private:
     void _reserve_space(size_t capacity);
 
     // hash modifier of a local_hash based on subgame index
-    hash_t _get_modified_hash(size_t subgame_idx, game* g);
+    hash_t _get_modified_hash(size_t subgame_idx, const game* g);
 
     hash_t _value;
 

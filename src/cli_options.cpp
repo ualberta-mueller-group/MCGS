@@ -19,7 +19,10 @@ cli_options::cli_options(const string& test_directory)
     : parser(nullptr),
       dry_run(false),
       should_exit(false),
+      gen_experiments(false),
       run_tests(false),
+      run_tests_stdin(false),
+      nogo_test(false),
       test_directory(test_directory),
       outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
       test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
@@ -82,6 +85,17 @@ void print_help_message(const string& exec_name)
         "table. Must be at least 1. Default: " +
             global::tt_imp_sumgame_idx_bits.get_default_str() + ".");
 
+    print_flag(global::use_db.no_flag(), "Disable database usage.");
+
+    // print_flag(global::play_split.no_flag(), "Don't split games after "
+    //                                          "playing a move.");
+
+    print_flag(global::play_normalize.no_flag(), "Don't normalize subgames "
+                                                 "after playing a move.");
+
+    print_flag(global::dedupe_movegen.no_flag(), "Don't skip move generators "
+                                                 "for duplicate subgames.");
+
     cout << "Misc options flags:" << endl;
     print_flag(global::random_seed.flag(),
                "Set seed for main random generator. "
@@ -89,17 +103,30 @@ void print_help_message(const string& exec_name)
                "since epoch. Default: " +
                    global::random_seed.get_default_str() + ".");
 
+    print_flag(global::experiment_seed.flag(),
+               "Set seed for experiment data "
+               "generation. 0 means seed with current time. Default: " +
+                   global::experiment_seed.get_default_str());
+
     cout << "Testing framework flags:" << endl;
     cout << endl;
     cout << "\tThese flags only have an effect when using \"--run-tests\"."
          << endl;
     cout << endl;
 
+    print_flag("--gen-experiments", "Generate .test file for ICGA paper. See "
+                                    "gen_experiments.cpp");
+
     print_flag("--run-tests",
                "Run all autotests. By default, reads tests from \"" +
                    string(cli_options::DEFAULT_RELATIVE_TEST_PATH) +
                    "\". Causes other input (i.e. from file, stdin etc) to be "
                    "ignored.");
+
+    print_flag("--run-tests-stdin", "Like --run-tests, but read from stdin.");
+
+    print_flag("--nogo-test", "Helper functionality for python script testing "
+                              "NoGo correctness, compared to SBHSolver");
 
     print_flag("--test-dir <directory name>",
                "Sets input directory for --run-tests. Default is \"" +
@@ -114,6 +141,10 @@ void print_help_message(const string& exec_name)
                "Set timeout duration for tests, in \
 milliseconds. Timeout of 0 means tests never time out. Default is " +
                    to_string(cli_options::DEFAULT_TEST_TIMEOUT) + ".");
+
+    print_flag(global::clear_tt.flag(),
+               "Clear ttable between test runs. Default: " +
+                   global::clear_tt.get_default_str() + ".");
 
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
@@ -133,6 +164,9 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     print_flag(global::silence_warnings.flag(),
                "Don't print warnings to "
                "stderr, i.e. random_table resize");
+
+    print_flag(global::print_ttable_size.flag(),
+               "Print ttable size to stdout.");
 }
 
 } // namespace
@@ -253,9 +287,33 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == global::print_ttable_size.flag())
+        {
+            global::print_ttable_size.set(true);
+            continue;
+        }
+
+        if (arg == "--gen-experiments")
+        {
+            opts.gen_experiments = true;
+            continue;
+        }
+
         if (arg == "--run-tests")
         {
             opts.run_tests = true;
+            continue;
+        }
+
+        if (arg == "--run-tests-stdin")
+        {
+            opts.run_tests_stdin = true;
+            continue;
+        }
+
+        if (arg == "--nogo-test")
+        {
+            opts.nogo_test = true;
             continue;
         }
 
@@ -308,6 +366,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == global::clear_tt.flag())
+        {
+            global::clear_tt.set(true);
+            continue;
+        }
+
         // OPTIMIZATION TOGGLES
 
         if (arg == global::simplify_basic_cgt.no_flag())
@@ -343,6 +407,30 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             const size_t n_index_bits = atoi(arg_next.c_str());
 
             global::tt_imp_sumgame_idx_bits.set(n_index_bits);
+            continue;
+        }
+
+        if (arg == global::use_db.no_flag())
+        {
+            global::use_db.set(false);
+            continue;
+        }
+
+        // if (arg == global::play_split.no_flag())
+        //{
+        //     global::play_split.set(false);
+        //     continue;
+        // }
+
+        if (arg == global::play_normalize.no_flag())
+        {
+            global::play_normalize.set(false);
+            continue;
+        }
+
+        if (arg == global::dedupe_movegen.no_flag())
+        {
+            global::dedupe_movegen.set(false);
             continue;
         }
 
@@ -383,7 +471,20 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg.size() > 0 && arg.front() != '-')
+        if (arg == global::experiment_seed.flag())
+        {
+            arg_idx++;
+
+            const char* arg_next_ptr = arg_next.c_str();
+            char* end = nullptr;
+
+            const uint64_t seed = strtoull(arg_next_ptr, &end, 10);
+
+            global::experiment_seed.set(seed);
+            continue;
+        }
+
+        if (arg.size() >= 0 && arg.front() != '-')
         {
             // the rest of args is input to the file_parser
 

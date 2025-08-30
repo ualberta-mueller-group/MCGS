@@ -1,4 +1,4 @@
-# MCGS V1.2
+# MCGS V1.3
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
@@ -11,7 +11,7 @@ The overall approach and future plans will be described in a forthcoming documen
 
 
 ### Sections
-- [Version 1.2 Additions](#version-12-additions)
+- [Version 1.3 Additions](#version-13-additions)
 - [Building MCGS](#building-mcgs)
 - [Using MCGS](#using-mcgs)
 - [Using the Testing Framework](#using-the-testing-framework)
@@ -22,29 +22,47 @@ The overall approach and future plans will be described in a forthcoming documen
     - [Splitting Into Subgames](#splitting-into-subgames-subgame_split)
     - [Simplifying Sums of Games](#simplifying-sums-of-games-simplify_basic_cgt)
     - [Hashing-Related Hooks](#hashing-related-hooks)
+    - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
-### Version 1.2 Additions
+
+### Version 1.3 Additions
 #### New Features
-- Transposition tables speed up search
-- Impartial games support
-    - Impartial game solving algorithm
-    - Input language version `1.1` --> `1.2`
-        - Impartial game variants are automatically created for all games i.e. `[impartial clobber_1xn]`
-        - New solve command for impartial sums: `{N 2}` computes nim-value, expects it to be `2`
-- More games: `nogo`, `clobber`, `kayles`
-- More `.test` files. Most have been verified by external solvers
+- First database implementation (`database.h`, `global_database.h`)
+    - Currently stores outcome classes for single (partizan) normalized subgames
+    - `sumgame` uses outcome classes from the database to speed up search
+    - `db_game_generator`s (`db_game_generator.h`) define the order of database
+    entry generation for a game type
+    - The database is loaded from the `database.bin` file on startup, if present
+    - If not present, `database.bin` is created for all currently implemented
+    `grid` and `strip` games
+- Split method for `nogo`
+    - From Y. Shan's PhD thesis (see `nogo.h`)
+- Scripts for paper experiments (`utils/paper_experiments`)
+    - Configurable test case generator
+    - Multithreaded test runner runs several instances of MCGS and assigns test
+    cases to available threads
+    - Diagram generator
+    - See `instructions.txt` in the `utils/paper_experiments` directory
+- `commits.py` script for comparing performance across commits
+- Input language version `1.2` --> `1.3`
 
 #### Major Code Additions
-- `game` and `sumgame` hashing
-    - Several hashing-related hooks for `game`s to implement
-- `grid` class
-    - `grid` helper classes (`grid_utils.h`)
-- `impartial_game` class
-- `mcgs_init()` initializes global data
-- More code safety (clang-tidy checks, debugging checks)
-- More scripts in the `utils` directory
-    - CGSuite scripts
-    - More random game generation scripts
+- Helper classes for adding games to the database
+    - `grid_generator` (`grid_generator.h`) types provide a way to generate
+    all string representations of legal strip and grid games, up to some max size
+        - Generates in order of increasingly large dimensions
+        - Ties can optionally be broken in order of increasing or decreasing
+        number of stones
+    - `gridlike_db_game_generator` (`gridlike_db_game_generator.h`) provides
+    a template to easily create a `db_game_generator` for `strip` and `grid` games.
+        - Simply specify the game class, generator class, and max board dimensions
+- Serialization API (`serializer.h`)
+    - Uses a recursive templating system to support saving and loading of
+    complex types to/from disk, while keeping implementation simple
+    - Premade implementations for several standard library types
+    - Support for both non-polymorphic and polymorphic types
+- `split()` and `normalize()` methods improved for some games
+- `clobber` split is always enabled, no longer requiring an additional compilation flag
 
 ### Building MCGS
 First download this repository, and enter its directory.
@@ -66,7 +84,13 @@ This will build and then run `./MCGS_test`, and on successful completion of unit
 ./MCGS "[clobber_1xn] XOXOXO {B, W}"
 ```
 
-For details about using `./MCGS`, see `./MCGS --help`. Some command line arguments are meant to be used together, and will have no effect when they aren't. This is detailed in the `--help` output, and may change in future versions. 
+If it is your first time running `MCGS`, or the database file (`database.bin`)
+is not present, then the database will be generated on startup. This may take a
+few minutes. If you just want to generate the database, you can enter an empty
+game string, i.e. `./MCGS ""`. For details about using `./MCGS`, see `./MCGS
+--help`. Some command line arguments are meant to be used together, and will
+have no effect when they aren't. This is detailed in the `--help` output, and
+may change in future versions.
 
 For a full description of input syntax, including game-specific input syntax, see [input/info.test](input/info.test).
 
@@ -149,7 +173,7 @@ Abstract type converting input tokens into `game`s.
 ### Implementing a new game
 To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
-- Define `class x` in `x.h`, derive from `game` or `strip`.
+- Define `class x` in `x.h`, derive from `game`, `strip` or `grid`.
 - Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, `inverse()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
     - For notes on `_init_hash()`, see [development-notes.md (Adding Hashing to Games, subsection 1)](docs/development-notes.md#adding-hashing-to-games).
 - Define `class x_move_generator`, derive from `move_generator`.
@@ -170,10 +194,7 @@ In your game `x`, override and implement `game::split_implementation()`. See `ga
 
 This optimization has significant overhead. It should improve performance if your game splits into "basic" CGT games, and `simplify_basic_cgt` remains enabled, or when using
 the `{N}` solve command to get its nim value (assuming the game is either already impartial, or created as its impartial variant (i.e. `[impartial YOUR_GAME_NAME]` in
-input.
-
-NOTE: `clobber`'s split method is especially slow, and is only enabled for the `MCGS_test` executable, or when building with `DEBUG=1`. You can re-enable it by editing the
-makefile, to include `-DCLOBBER_SPLIT` as a compilation argument. `clobber_1xn`'s split method remains enabled.
+input. It should also improve minimax search time if subgames become smaller after splitting (i.e. break into boards with smaller dimensions), as smaller boards are more likely to be in the database.
 
 #### Simplifying Sums of Games (`simplify_basic_cgt`)
 Currently MCGS simplifies sums containing "basic" CGT games (`integer_game`, `dyadic_rational`, `up_star`, `switch_game`, and `nimber`), by summing together their values, resulting in fewer subgames. If your game's `split_implementation()` method returns subgames of these types, they will be included in this simplification step. 
@@ -192,3 +213,9 @@ This optimization has low overhead, as MCGS avoids running these steps unless ne
 - Methods which modify the state of a `game` can incrementally update the hash, so that it need not be recomputed in its entirety after every state change.
 
 For complete details, with examples, see [development-notes.md (Adding Hashing to Games)](docs/development-notes.md#adding-hashing-to-games).
+
+#### Adding A Game To the Database
+To add your game to the database, you must register your game class with the database,
+and define or reuse a `grid_generator` class. See
+[development-notes.md (Adding A Game To the Database)](docs/development-notes.md#adding-a-game-to-the-database)
+for details.

@@ -1,6 +1,7 @@
 #include "hash_types_test.h"
 #include <iostream>
 #include "hashing.h"
+#include "type_table.h"
 #include <unordered_set>
 #include <optional>
 #include <vector>

@@ -7,7 +7,7 @@
 // IWYU pragma: begin_exports
 #include "cgt_basics.h"
 #include "cgt_move.h"
-#include "game_type.h"
+#include "dynamic_serializable.h"
 #include "hashing.h"
 // IWYU pragma: end_exports
 
@@ -15,8 +15,9 @@
 #include <vector>
 #include <optional>
 #include <cassert>
-
 #include <type_traits>
+
+#include "type_table.h"
 
 //---------------------------------------------------------------------------
 
@@ -25,7 +26,7 @@ class game;
 //---------------------------------------------------------------------------
 typedef std::optional<std::vector<game*>> split_result;
 
-class game : public i_game_type
+class game : public dyn_serializable
 {
 public:
     game();
@@ -56,6 +57,8 @@ public:
 
     virtual bool is_impartial() const;
 
+    inline game_type_t game_type() const;
+
 protected:
     /*
         Return list of games to replace current game. Empty list means game is
@@ -73,6 +76,8 @@ protected:
 
         To create an absent split_result:
             split_result sr = split_result();
+        Or:
+            split_result sr = {};
 
        IMPORTANT: This function must not change the available options, i.e.
        by pruning or adding (even irrelevant) options. For example,
@@ -83,6 +88,11 @@ protected:
 
     virtual void _init_hash(local_hash& hash) const = 0;
 
+    /*
+       IMPORTANT: similarly to _split_impl, these methods must not change
+       the available options, i.e. {1/4 | 2} must not normalize to the
+       integer 1
+    */
     virtual void _normalize_impl();
     virtual void _undo_normalize_impl();
 
@@ -122,6 +132,11 @@ private:
 
     mutable hash_state_enum _hash_state;
     mutable local_hash _hash;
+
+    static game_type_t _next_game_type;
+
+    template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
+    friend game_type_t __game_type_impl();
 
 private:
 #ifdef GAME_UNDO_DEBUG
@@ -189,6 +204,42 @@ inline split_result game::split() const
 inline bool game::is_impartial() const
 {
     return false;
+}
+
+template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
+game_type_t __game_type_impl()
+{
+    static_assert(std::is_base_of_v<game, T>);
+    static_assert(!std::is_abstract_v<T>);
+
+    game_type_t& gt = type_table<T>()->game_type_ref();
+
+    if (gt == 0) [[unlikely]]
+        gt = game::_next_game_type++;
+
+    return gt;
+}
+
+// i.e. game_type<clobber>()
+template <class T>
+inline game_type_t game_type()
+{
+    static_assert(std::is_base_of_v<game, T>);
+    static_assert(!std::is_abstract_v<T>);
+
+    static const game_type_t GT = __game_type_impl<T>();
+    return GT;
+}
+
+// i.e. some_clobber_game.game_type()
+inline game_type_t game::game_type() const
+{
+    game_type_t& gt = type_table()->game_type_ref();
+
+    if (gt == 0) [[unlikely]]
+        gt = _next_game_type++;
+
+    return gt;
 }
 
 inline local_hash& game::_get_hash_ref() const
@@ -313,6 +364,7 @@ inline T_Ptr cast_game(game* g)
     return reinterpret_cast<T_Ptr>(g);
 }
 
+// const variant
 template <class T_Ptr>
 inline T_Ptr cast_game(const game* g)
 {

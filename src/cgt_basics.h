@@ -29,7 +29,7 @@ typedef int ebw; // empty, black or white
  */
 enum outcome_class
 {
-    P,
+    P = 0,
     N,
     L,
     R,

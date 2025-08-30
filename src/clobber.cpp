@@ -7,8 +7,12 @@
 #include "cgt_move.h"
 #include <cstddef>
 #include <cassert>
+#include <algorithm>
+#include <utility>
 #include <vector>
-#include "grid_utils.h"
+#include "grid_location.h"
+
+using namespace std;
 
 ////////////////////////////////////////////////// move generator
 class clobber_move_generator : public move_generator
@@ -18,7 +22,7 @@ public:
 
     void operator++() override;
     operator bool() const override;
-    move gen_move() const override;
+    ::move gen_move() const override;
 
 private:
     void _next_move(bool init);
@@ -40,16 +44,15 @@ clobber::clobber(int n_rows, int n_cols) : grid(n_rows, n_cols)
 {
 }
 
-clobber::clobber(const std::vector<int>& board, int_pair shape)
-    : grid(board, shape)
+clobber::clobber(const vector<int>& board, int_pair shape) : grid(board, shape)
 {
 }
 
-clobber::clobber(const std::string& game_as_string) : grid(game_as_string)
+clobber::clobber(const string& game_as_string) : grid(game_as_string)
 {
 }
 
-void clobber::play(const move& m, bw to_play)
+void clobber::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
 
@@ -77,7 +80,7 @@ void clobber::play(const move& m, bw to_play)
 
 void clobber::undo_move()
 {
-    const move m_enc = last_move();
+    const ::move m_enc = last_move();
     game::undo_move();
 
     bw to_play;
@@ -112,28 +115,103 @@ bool clobber::is_move(const int& from, const int& to, bw to_play) const
     return (at(from) == to_play) && (at(to) == opp);
 }
 
-#ifdef CLOBBER_SPLIT
+namespace {
+
+bool trim_game(vector<int>& board_dst, int_pair& shape_dst,
+               const vector<int>& board_src, const int_pair& shape_src)
+{
+    assert((&board_dst != &board_src) && (&shape_dst != &shape_src));
+
+    const int MAX_INVALID = -1;
+    const int MIN_INVALID = max(shape_src.first, shape_src.second) + 1;
+
+    // Find new shape
+    int min_r = MIN_INVALID;
+    int min_c = MIN_INVALID;
+
+    int max_r = MAX_INVALID;
+    int max_c = MAX_INVALID;
+
+    for (grid_location loc(shape_src); loc.valid(); loc.increment_position())
+    {
+        int src_point = loc.get_point();
+
+        if (board_src[src_point] != EMPTY)
+        {
+            int_pair src_coord = loc.get_coord();
+
+            min_r = min(min_r, src_coord.first);
+            max_r = max(max_r, src_coord.first);
+
+            min_c = min(min_c, src_coord.second);
+            max_c = max(max_c, src_coord.second);
+        }
+    }
+
+    assert(min_r < MIN_INVALID && //
+           min_c < MIN_INVALID && //
+           max_r > MAX_INVALID && //
+           max_c > MAX_INVALID);  //
+
+    assert((min_r <= max_r) && (min_c <= max_c));
+
+    shape_dst.first = max_r - min_r + 1;
+    shape_dst.second = max_c - min_c + 1;
+
+    assert(!grid_location::shape_is_empty(shape_dst));
+
+    if (shape_dst == shape_src)
+        return false;
+
+    board_dst.clear();
+    board_dst.resize(shape_dst.first * shape_dst.second, EMPTY);
+
+    for (grid_location loc(shape_src); loc.valid(); loc.increment_position())
+    {
+        const int src_point = loc.get_point();
+        const int tile = board_src[src_point];
+
+        if (tile == EMPTY)
+            continue;
+
+        assert(is_black_white(tile));
+
+        const int_pair src_coord = loc.get_coord();
+
+        const int_pair dst_coord(src_coord.first - min_r,
+                                 src_coord.second - min_c);
+        const int dst_point =
+            grid_location::coord_to_point(dst_coord, shape_dst);
+
+        board_dst[dst_point] = tile;
+    }
+
+    return true;
+}
+
+} // namespace
+
 split_result clobber::_split_impl() const
 {
     if (size() == 0)
-        return split_result();
+        return {};
 
-    split_result result = split_result(std::vector<game*>());
+    split_result result = split_result(vector<game*>());
 
     const int_pair grid_shape = shape();
     const int grid_size = size();
 
-    std::vector<bool> closed_set(grid_size, false);
+    vector<bool> closed_set(grid_size, false);
 
-    std::vector<grid_location> open_stack;
+    vector<grid_location> open_stack;
 
     constexpr int BLACK_MASK = 1;
     constexpr int WHITE_MASK = 1 << 1;
     constexpr int FULL_MASK = BLACK_MASK | WHITE_MASK;
     int component_color_mask = 0;
 
-    std::vector<std::vector<int>> component_vec;
-    std::vector<int> component;
+    vector<vector<int>> component_vec;
+    vector<int> component;
 
     auto reset_vars = [&]() -> void
     {
@@ -208,24 +286,60 @@ split_result clobber::_split_impl() const
         }
     }
 
-    if (component_vec.size() != 1)
-    {
-        for (const std::vector<int>& board : component_vec)
-            result->push_back(new clobber(board, grid_shape));
+    assert(result.has_value() && result->empty());
 
+    // Empty or "dead" board with non-zero area
+    if (component_vec.size() == 0)
         return result;
+
+    int_pair new_shape;
+    vector<int> new_board;
+    new_board.reserve(board_const().size());
+
+    result->reserve(component_vec.size());
+
+    // Trim all components
+    const size_t n_components = component_vec.size();
+    for (size_t i = 0; i < n_components; i++)
+    {
+        const vector<int>& board_untrimmed = component_vec[i];
+
+        const bool different =
+            trim_game(new_board, new_shape, board_untrimmed, grid_shape);
+
+        clobber* g_new = nullptr;
+
+        if (!different)
+        {
+            if (i == 0 && component_vec.size() == 1)
+            {
+                const vector<int>& boardconst = board_const();
+                assert(board_untrimmed.size() == boardconst.size());
+
+                if (board_untrimmed == boardconst)
+                    return {};
+            }
+
+            g_new = new clobber(board_untrimmed, grid_shape);
+        }
+        else
+        {
+            assert(!grid_location::shape_is_empty(new_shape));
+            g_new = new clobber(new_board, new_shape);
+        }
+
+        result->push_back(g_new);
     }
 
-    return split_result();
+    return result;
 }
-#endif
 
 move_generator* clobber::create_move_generator(bw to_play) const
 {
     return new clobber_move_generator(*this, to_play);
 }
 
-void clobber::print(std::ostream& str) const
+void clobber::print(ostream& str) const
 {
     str << "clobber:" << board_as_string();
 }
@@ -260,7 +374,7 @@ clobber_move_generator::operator bool() const
     return _has_move;
 }
 
-move clobber_move_generator::gen_move() const
+::move clobber_move_generator::gen_move() const
 {
     assert(*this);
     assert(_location.valid());

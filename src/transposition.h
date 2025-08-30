@@ -1,3 +1,6 @@
+/*
+    Transposition table template ttable<T>
+*/
 #pragma once
 #include "utilities.h"
 
@@ -6,8 +9,10 @@
 #include <cassert>
 #include <type_traits>
 #include <optional>
+#include <iostream>
 #include "random.h"
 #include "throw_assert.h"
+#include "global_options.h"
 
 ////////////////////////////////////////////////// class ttable
 template <class Entry>
@@ -56,6 +61,9 @@ public:
 
     void store(hash_t hash, const Entry& entry);
     std::optional<Entry> get(hash_t hash) const;
+
+    size_t n_index_bits() const;
+    size_t n_entry_bools() const;
 
 private:
     inline hash_t _extract_index(hash_t hash) const;
@@ -127,13 +135,19 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
 
     //// Estimate memory cost
     // TODO: DEBUG PRINTING
-    // uint64_t byte_count = 0;
-    // byte_count += _entries_arr_size * sizeof(Entry);
-    // byte_count += _tags_arr_size * sizeof(uint8_t);
-    // byte_count += _bools_arr_size * sizeof(unsigned int);
-    // double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
-    // std::cout << "Estimated table size: " << byte_count_formatted;
-    // std::cout << " MiB" << std::endl;
+    if (global::print_ttable_size())
+    {
+        uint64_t byte_count = 0;
+        byte_count += _entries_arr_size * sizeof(Entry);
+        byte_count += _tags_arr_size * sizeof(uint8_t);
+        byte_count += _bools_arr_size * sizeof(unsigned int);
+        double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
+        std::cout << "Estimated table size: " << byte_count_formatted;
+        std::cout << " MiB" << std::endl;
+
+        // std::cout << "Estimated table size: " << byte_count;
+        // std::cout << " B" << std::endl;
+    }
 
     //// Initialize arrays
     _entries_arr = new Entry[_entries_arr_size];
@@ -160,9 +174,10 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     // First get random bits to fill tag bytes with
     constexpr size_t N_RANDOM_BYTES = 32;
     static_assert(is_power_of_2(N_RANDOM_BYTES)); // allow fast modulo below
+    random_generator& global_rng = get_global_rng();
     uint8_t random_bytes[N_RANDOM_BYTES];
     for (size_t i = 0; i < N_RANDOM_BYTES; i++)
-        random_bytes[i] = get_random_u8();
+        random_bytes[i] = global_rng.get_u8();
 
     // Now fill the tags array with random-ish bits
     _tags_arr = new uint8_t[_tags_arr_size];
@@ -214,6 +229,18 @@ std::optional<Entry> ttable<Entry>::get(hash_t hash) const
         return std::optional<Entry>(tt_result.get_entry());
 
     return std::optional<Entry>();
+}
+
+template <class Entry>
+inline size_t ttable<Entry>::n_index_bits() const
+{
+    return _n_index_bits;
+}
+
+template <class Entry>
+inline size_t ttable<Entry>::n_entry_bools() const
+{
+    return _bools_per_entry;
 }
 
 template <class Entry>

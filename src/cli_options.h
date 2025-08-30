@@ -1,3 +1,6 @@
+/*
+    CLI option parsing function and struct
+*/
 #pragma once
 
 #include "file_parser.h"
@@ -17,7 +20,12 @@ struct cli_options
     bool dry_run;     // Do dry run without running games
     bool should_exit; // Exit from main() i.e. when "--help" used
 
-    bool run_tests; // Run autotests
+    bool gen_experiments;
+
+    bool run_tests;       // Run autotests
+    bool run_tests_stdin; // Run autotests from stdin
+
+    bool nogo_test;
 
     std::string test_directory;
     std::string outfile_name;        // CSV output file
