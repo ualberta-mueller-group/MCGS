@@ -726,13 +726,18 @@ std::vector<unsigned int> get_oc_indexable_vector()
 {
     std::vector<unsigned int> vec;
 
-    constexpr outcome_class OC_MAX = std::max({
-        outcome_class::U,
-        outcome_class::L,
-        outcome_class::R,
-        outcome_class::P,
-        outcome_class::N,
-    });
+#ifdef LAB_MACHINE_COMPAT
+    static const outcome_class OC_MAX =
+#else
+    static constexpr outcome_class OC_MAX =
+#endif
+        std::max({
+            outcome_class::U,
+            outcome_class::L,
+            outcome_class::R,
+            outcome_class::P,
+            outcome_class::N,
+        });
 
     vec.resize(OC_MAX + 1, 0);
     return vec;

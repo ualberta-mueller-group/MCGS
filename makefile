@@ -1,5 +1,7 @@
 CC = c++
 
+LAB_COMPAT ?= 0
+
 ##### Handle compiler flags, especially those for debugging.
 ##### See documentation below this section.
 
@@ -30,8 +32,13 @@ ifneq (,$(filter $(ASAN),leak address)) # ASAN=leak or ASAN=address
 	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN)
 endif
 
-NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
-TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST)
+NORMAL_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
+TEST_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST)
+
+ifneq (,$(filter $(LAB_COMPAT),1 true))
+	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -D_LAB_MACHINE_COMPAT
+	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -D_LAB_MACHINE_COMPAT
+endif
 
 
 #         Makefile Variables
