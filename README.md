@@ -157,6 +157,9 @@ Additionally, the `DEBUG` makefile variable adds or removes debugging checks, to
 #### game (game.h)
 The abstract base type for all combinatorial games supported by MCGS.
 
+#### impartial_game (impartial_game.h)
+The abstract base type for all impartial combinatorial games supported by MCGS. Derives from `game`.
+
 #### strip (strip.h)
 An abstract game type derived from `game`, for games played on a "line" (1 dimensional board), consisting of black stones, white stones, and empty tiles. The games `clobber_1xn`, `nogo_1xn`, and `elephants` extend `strip` and can be used as examples for new implementations.
 
@@ -179,10 +182,19 @@ Used by MCGS to read games from files, stdin, and quoted input strings passed as
 Abstract type converting input tokens into `game`s.
 
 ### Implementing a new game
+The following is a brief list of instructions for implementing a new game. For more information, see
+[development-notes.md (More On Extending the `game` Class)](#more-on-extending-the-game-class) and
+[development-notes.md (Impartial Games)](#impartial-games).
+
 To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
 - Define `class x` in `x.h`, derive from `game`, `strip` or `grid`.
+    - Impartial games should instead derive from `impartial_game`
 - Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, `inverse()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
+    - Impartial games have a slightly different set of methods to implement
+        - `create_move_generator()` doesn't take a color argument
+        - Both `play` methods must be implemented: one with a color argument, and one without
+        - See `cgt_nimber.h` and `cgt_nimber.cpp` for an example implementation
     - For notes on `_init_hash()`, see [development-notes.md (Adding Hashing to Games, subsection 1)](docs/development-notes.md#adding-hashing-to-games).
 - Define `class x_move_generator`, derive from `move_generator`.
 - At the bottom of `file_parser.cpp`, add a line to the `init_game_parsers()` function, calling `add_game_parser()`, with your game name as it should appear in input files, and a `game_token_parser`. You may be able to reuse an existing `game_token_parser`, or you may need to create a new one (see `game_token_parsers.h` and `game_token_parsers.cpp`).

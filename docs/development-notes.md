@@ -276,6 +276,7 @@ as there are several similar looking functions?
 # More On Extending the `game` Class
 - In every game `x`'s implementation:
     - `x::play()` must immediately call `game::play()`
+        - For impartial games, call `impartial_game::play()` instead
     - `x::undo_move()` must immediately call `last_move()` and then `game::undo_move()`
 - Move generators are accessible only through the abstract game interface `create_move_generator`
     - Generators are dynamically allocated - wrap each use in a `std::unique_ptr`
@@ -301,6 +302,10 @@ and affects the `move` returned by `game::last_move()`
 - Impartial games support added in version 1.2
 - Main differences between `impartial_game` and `game`:
     1. `play(m)` does not take a color argument
+        - Must still implement both `play(m)` and `play(m, to_play)`, possibly
+        with one calling the other
+        - Instead of calling `game::play()` at the start,
+        call `impartial_game::play()`
     2. `move_generator` does not take a color argument
     3. Completely different solving algorithms:
         - Evaluate any impartial game to a nim value
