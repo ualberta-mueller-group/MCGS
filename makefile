@@ -1,6 +1,19 @@
 CC = c++
-
 LAB_COMPAT ?= 0
+
+# If --output-sync is supported and not specified by the user, add it to MAKEFLAGS.
+# This will make compiler errors clearer i.e. if using make -j <N_JOBS>. You
+# Can use --output-sync=none or -Onone to disable this
+#
+# NOTE: If using some long-running command i.e. clang-tidy with -j N, no output
+# will be shown for a long time. Instead, use -j 1
+ifneq (,$(findstring output-sync,$(.FEATURES)))
+ifeq (,$(findstring -O,$(MAKEFLAGS)))
+ifeq (,$(findstring --output-sync,$(MAKEFLAGS)))
+	MAKEFLAGS += --output-sync=line
+endif
+endif
+endif
 
 ##### Handle compiler flags, especially those for debugging.
 ##### See documentation below this section.
@@ -91,10 +104,13 @@ TEST_DIR = test
 RELEASE_BUILD_DIR = build/release
 TEST_BUILD_DIR = build/test
 
+# using -j <N_JOBS> with --output-sync makes programs think they're not outputting
+# to a terminal, so they don't print color...
+COLOR_FLAGS := -fdiagnostics-color=always
 INC = -I. -I$(SRC_DIR)
 
-NORMAL_FLAGS := $(NORMAL_FLAGS_BASE) $(INC)
-TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC)
+NORMAL_FLAGS := $(NORMAL_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
+TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
 
 # args: files, directory prefix, file extension
 FN_OUTPATH = \
@@ -159,25 +175,25 @@ endif
 tidy:
 	$(eval LINT_FILES ?= $(ALL_CPP_FILES))
 	$(eval NORMAL_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(NORMAL_FLAGS)))
-	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS) -x c++ 2>&1 | tee tidy_result.txt
 
 #$(eval LINT_FILES ?= $(MCGS_SRC) $(MCGS_SRC_H))
 tidy_release:
 	$(eval LINT_FILES ?= $(MCGS_SRC))
 	$(eval NORMAL_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(NORMAL_FLAGS)))
-	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS) -x c++ 2>&1 | tee tidy_result.txt
 
 #$(eval LINT_FILES ?= $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H))
 tidy_test:
 	$(eval LINT_FILES ?= $(MCGS_TEST_SRC))
 	$(eval TEST_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(TEST_FLAGS)))
-	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS) -x c++ 2>&1 | tee tidy_result.txt
 
 tidy_headers:
 	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 	$(eval LINT_FILES := $(filter %.h, $(LINT_FILES)))
 	$(eval NORMAL_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(NORMAL_FLAGS)))
-	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++-header 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS) -x c++-header 2>&1 | tee tidy_result.txt
 
 
 # Format targets
