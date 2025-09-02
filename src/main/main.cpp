@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+#include "basic_player.h"
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
@@ -28,6 +29,16 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_all(opts);
+
+    if (opts.use_player)
+    {
+        file_parser* parser = opts.parser.get();
+        THROW_ASSERT(parser != nullptr,
+                     "No games specified for player");
+
+        play_games(*parser);
+        return 0;
+    }
 
     if (opts.nogo_test)
     {

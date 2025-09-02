@@ -36,6 +36,7 @@ public:
     bool is_active() const;
     void set_active(bool status);
     move last_move() const;
+    bool has_moves_for(bw player) const;
     bool has_moves() const;
     int num_moves_played() const;
     int undo_stack_size() const;

@@ -33,9 +33,16 @@
     throw std::logic_error(_GET_THROW_MESSAGE(expr))
 
 // 2 arg implementation
-#define _THROW_ASSERT_2(expr, exception)                                       \
+#define _THROW_ASSERT_2(expr, _exception)                                      \
     if (!(expr))                                                               \
-    throw exception
+    {                                                                          \
+        const auto& _exc = _exception;                                         \
+        if constexpr (std::is_base_of_v<std::exception, decltype(_exc)>)       \
+            throw _exc;                                                        \
+        else                                                                   \
+            throw std::logic_error(_exc);                                      \
+    }                                                                          \
+    static_assert(true)
 
 // Resolves to correct implementation macro based on number of args
 #define _THROW_ASSERT_SELECTOR(arg1, arg2, arg3, ...) arg3

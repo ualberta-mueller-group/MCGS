@@ -23,6 +23,7 @@ cli_options::cli_options(const string& test_directory)
       run_tests(false),
       run_tests_stdin(false),
       nogo_test(false),
+      use_player(false),
       test_directory(test_directory),
       outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
       test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
@@ -61,6 +62,8 @@ void print_help_message(const string& exec_name)
     print_flag("--file <file name>", "Read input from <file name>. "
                                      "Input must start with version command. "
                                      "Causes [input string] to be ignored.");
+
+    print_flag("--play-mcgs", "Play against MCGS.");
 
     print_flag("--stdin",
                "Read input from stdin. Causes [input string] to be ignored.");
@@ -243,6 +246,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
                     shared_ptr<file_parser>(file_parser::from_file(arg_next));
             }
 
+            continue;
+        }
+
+        if (arg == "--play-mcgs")
+        {
+            opts.use_player = true;
             continue;
         }
 

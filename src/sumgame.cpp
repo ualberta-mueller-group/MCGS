@@ -6,6 +6,7 @@
 #include "cgt_move.h"
 #include "database.h"
 #include "global_database.h"
+#include "random.h"
 #include "type_table.h"
 #include "game.h"
 
@@ -234,6 +235,12 @@ void sumgame::pop(const game* g)
     assert(!_subgames.empty());
     assert(_subgames.back() == g);
     _subgames.pop_back();
+}
+
+void sumgame::pop(const std::vector<game*>& gs)
+{
+    for (auto it = gs.rbegin(); it != gs.rend(); it++)
+        pop(*it);
 }
 
 const bool PRINT_SUBGAMES = false;
@@ -935,6 +942,50 @@ bool sumgame::all_impartial() const
             return false;
 
     return true;
+}
+
+std::optional<sumgame_move> sumgame::get_winning_or_random_move(bw for_player) const
+{
+    assert(is_black_white(for_player));
+    assert_restore_sumgame ars(*this);
+
+    const bw prev_player = to_play();
+
+    sumgame& sum = const_cast<sumgame&>(*this);
+    sum.set_to_play(for_player);
+
+    std::unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(for_player));
+
+    std::vector<sumgame_move> moves;
+
+    while (*gen)
+    {
+        moves.emplace_back(gen->gen_sum_move());
+        const sumgame_move& sm = moves.back();
+        ++(*gen);
+
+        assert(sum.to_play() == for_player);
+        sum.play_sum(sm, for_player);
+        assert(sum.to_play() == ::opponent(for_player));
+        bool opp_loss = !sum.solve();
+        sum.undo_move();
+
+        // TODO undo this
+        if (false && opp_loss)
+        {
+            sum.set_to_play(prev_player);
+            return sm;
+        }
+    }
+
+    sum.set_to_play(prev_player);
+
+    if (moves.empty())
+        return {};
+
+    // TODO: random_generator should work for arbitrary types...
+    const uint32_t choice = get_global_rng().get_u32(0, moves.size() - 1);
+    return moves[choice];
 }
 
 void sumgame::init_sumgame(size_t index_bits)

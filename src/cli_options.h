@@ -27,6 +27,8 @@ struct cli_options
 
     bool nogo_test;
 
+    bool use_player;
+
     std::string test_directory;
     std::string outfile_name;        // CSV output file
     unsigned long long test_timeout; // ms

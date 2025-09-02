@@ -42,6 +42,15 @@ std::ostream& operator<<(std::ostream& os, const split_result& split)
     return os;
 }
 
+bool game::has_moves_for(bw player) const
+{
+    assert(is_black_white(player));
+    move_generator* gen = create_move_generator(player);
+    const bool move_exists = *gen;
+    delete gen;
+    return move_exists;
+}
+
 bool game::has_moves() const
 {
     unique_ptr<move_generator> gen_b =

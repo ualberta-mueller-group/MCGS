@@ -13,6 +13,14 @@
 #include <cstddef>
 #include <ostream>
 
+// Having "defined" in expanded macro would be undefined behavior
+// Instead use if/else/endif
+#if defined(_WIN32) || defined(_WIN64)
+#define IS_WINDOWS true
+#else
+#define IS_WINDOWS false
+#endif
+
 //////////////////////////////////////// general utility functions
 template <class T>
 inline constexpr size_t size_in_bits(const T& expr)

@@ -100,6 +100,7 @@ public:
     void add(game* g);
     void add(std::vector<game*>& gs);
     void pop(const game* g);
+    void pop(const std::vector<game*>& gs);
 
     bool solve() const override;
 
@@ -134,6 +135,9 @@ public:
     hash_t game_hash() const override;
 
     bool all_impartial() const; // considers inactive games
+
+    // Used by player
+    std::optional<sumgame_move> get_winning_or_random_move(bw for_player) const;
 
     // called by mcgs_init_all()
     static void init_sumgame(size_t index_bits);
