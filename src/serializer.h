@@ -55,7 +55,6 @@
     NOTE: Polymorphic types must use pointers as in these examples
 */
 #pragma once
-#include "iobuffer.h"
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -64,6 +63,8 @@
 #include <cstdint>
 #include <utility>
 #include <memory>
+#include "iobuffer.h"
+#include "custom_traits.h"
 
 /*
     TODO break this into multiple files. Consider separating serializer
@@ -87,7 +88,20 @@
 template <class T, class Enable = void>
 struct serializer
 {
-    static_assert(false, "Not implemented!");
+    // See note about deferred_false_v in custom_traits.h
+    static_assert(deferred_false_v<T>, "Not implemented!");
+
+    /*
+        TODO: This is not SFINAE-friendly. However, simply declaring the
+        template with no default definition allows strange behavior.
+
+        In particular, for class foo, if serializer<foo> is not defined,
+        it is still legal to instantiate serializer<vector<foo>>, so long as
+        the static functions are not called.
+
+        It's unlikely we'll need type traits like has_serializer_v<T>,
+        so it's probably better to have clearer compilation errors.
+    */
 };
 
 //////////////////////////////////////// integral types
