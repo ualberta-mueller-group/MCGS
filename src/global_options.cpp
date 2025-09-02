@@ -102,8 +102,15 @@ namespace global {
 // These WILL be printed with ./MCGS --print-optimizations
 INIT_GLOBAL_WITH_SUMMARY(random_seed, uint64_t, 7753);
 INIT_GLOBAL_WITH_SUMMARY(simplify_basic_cgt, bool, true);
-INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);
-INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 24);
+
+#ifdef LAB_MACHINE_COMPAT
+INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 27); // ~656 MiB
+INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 26); // ~576 MiB
+#else
+INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28); // ~1312 MiB
+INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 27); // ~1152 MiB
+#endif
+
 INIT_GLOBAL_WITH_SUMMARY(use_db, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(clear_tt, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(experiment_seed, uint64_t, 0);
