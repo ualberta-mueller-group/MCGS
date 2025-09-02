@@ -1,18 +1,11 @@
 CC = c++
 LAB_COMPAT ?= 0
 
-# If --output-sync is supported and not specified by the user, add it to MAKEFLAGS.
-# This will make compiler errors clearer i.e. if using make -j <N_JOBS>. You
-# Can use --output-sync=none or -Onone to disable this
-#
-# NOTE: If using some long-running command i.e. clang-tidy with -j N, no output
-# will be shown for a long time. Instead, use -j 1
+# If --output-sync is supported, use it for recursive make calls.
+# This will make compiler errors clearer i.e. if using make -j <N_JOBS>
+SYNC_FLAG :=
 ifneq (,$(findstring output-sync,$(.FEATURES)))
-ifeq (,$(findstring -O,$(MAKEFLAGS)))
-ifeq (,$(findstring --output-sync,$(MAKEFLAGS)))
-	MAKEFLAGS += --output-sync=line
-endif
-endif
+	SYNC_FLAG := --output-sync=recurse
 endif
 
 ##### Handle compiler flags, especially those for debugging.
@@ -225,10 +218,10 @@ else
 .PHONY: MCGS MCGS_test
 
 MCGS:
-	$(MAKE) $@ USE_FLAGS="$(NORMAL_FLAGS)" DEPS="$(MCGS_DEPS)" BUILD_DIR="$(RELEASE_BUILD_DIR)"
+	$(MAKE) $(SYNC_FLAG) $@ USE_FLAGS="$(NORMAL_FLAGS)" DEPS="$(MCGS_DEPS)" BUILD_DIR="$(RELEASE_BUILD_DIR)"
 
 MCGS_test:
-	$(MAKE) $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)" BUILD_DIR="$(TEST_BUILD_DIR)"
+	$(MAKE) $(SYNC_FLAG) $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)" BUILD_DIR="$(TEST_BUILD_DIR)"
 
 endif
 

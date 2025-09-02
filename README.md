@@ -71,10 +71,18 @@ To build the program, `./MCGS`, run:
 ```
 make
 ```
+This may take a few minutes. Depending on your hardware, you may build using more threads, i.e. to build using 4 threads:
+```
+make -j 4
+```
 
 To run all unit tests, run:
 ```
 make test
+```
+or:
+```
+make test -j 4
 ```
 This will build and then run `./MCGS_test`, and on successful completion of unit tests, the text "SUCCESS" should appear. Running all tests can take several seconds, depending on your hardware.
 
