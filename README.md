@@ -183,8 +183,8 @@ Abstract type converting input tokens into `game`s.
 
 ### Implementing a new game
 The following is a brief list of instructions for implementing a new game. For more information, see
-[development-notes.md (More On Extending the `game` Class)](#more-on-extending-the-game-class) and
-[development-notes.md (Impartial Games)](#impartial-games).
+[development-notes.md (More On Extending the `game` Class)](docs/development-notes.md#more-on-extending-the-game-class) and
+[development-notes.md (Impartial Games)](docs/development-notes.md#impartial-games).
 
 To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
