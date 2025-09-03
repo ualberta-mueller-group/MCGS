@@ -34,7 +34,7 @@ static std::ostream* str_log = nullptr; // logging txt file
 // intermediate stream flushed to both cout and log file
 static std::stringstream str_both;
 
-static bool old_cin_skipws; // cin state before init_streams() changes it
+static bool old_cin_skipws;     // cin state before init_streams() changes it
 static bool init_state = false; // was init_streams() called already?
 
 // Allow press_enter() to work correctly without typing non-whitespace chars
@@ -133,7 +133,6 @@ void finalize_streams()
 
 } // namespace
 
-
 ////////////////////////////////////////////////// Helper types
 
 namespace {
@@ -141,7 +140,7 @@ namespace {
 enum player_move_enum
 {
     PLAYER_MOVE_OK = 0, // Either contains move, or no move exists
-    PLAYER_MOVE_EOF, // i.e. user pressed Ctrl D
+    PLAYER_MOVE_EOF,    // i.e. user pressed Ctrl D
 };
 
 struct player_move
@@ -155,8 +154,7 @@ struct player_move
 };
 
 player_move::player_move(const std::optional<sumgame_move>& sum_move)
-    : sum_move(sum_move),
-      status(PLAYER_MOVE_OK)
+    : sum_move(sum_move), status(PLAYER_MOVE_OK)
 {
 }
 
@@ -199,7 +197,6 @@ ostream& set_color(ostream& os, color_enum color)
     return os;
 }
 */
-
 
 /*
     Print enumerated options, and get a choice from the user.
@@ -287,7 +284,6 @@ void new_screen()
     flush_str_both();
 }
 
-
 //////////////////////////////////////// sumgame stuff
 void print_sum(const sumgame& sum)
 {
@@ -358,7 +354,7 @@ optional<sumgame_move> get_mcgs_move(sumgame& sum, bw player)
 }
 
 // Get subgame and move choices
-player_move get_player_move(sumgame &sum, bw player)
+player_move get_player_move(sumgame& sum, bw player)
 {
     assert(is_black_white(player));
     assert_restore_sumgame ars(sum);
@@ -419,7 +415,8 @@ player_move get_player_move(sumgame &sum, bw player)
         sumgame_idx = it->second;
 
         // Generate options
-        unique_ptr<move_generator> gen(chosen_game->create_move_generator(player));
+        unique_ptr<move_generator> gen(
+            chosen_game->create_move_generator(player));
         while (*gen)
         {
             assert_restore_game arg(*chosen_game);
@@ -494,8 +491,7 @@ optional<pre_post_enum> get_choice_pre_post_action()
 
 optional<bool> get_choice_play_again()
 {
-    const vector<string> options =
-    {
+    const vector<string> options = {
         "Restart",
         "End",
     };
@@ -504,7 +500,7 @@ optional<bool> get_choice_play_again()
 
     if (!choice.has_value())
         return {};
-    
+
     return choice.value() == 0;
 }
 
@@ -624,7 +620,7 @@ bool play_single(sumgame& sum)
                 str_both << "You win" << endl;
                 flush_str_both();
                 game_determined = true;
-                //press_enter();
+                // press_enter();
             }
             else
             {
@@ -648,7 +644,7 @@ bool play_single(sumgame& sum)
                 str_both << "MCGS wins" << endl;
                 flush_str_both();
                 game_determined = true;
-                //press_enter();
+                // press_enter();
             }
             else
             {
@@ -710,7 +706,6 @@ bool has_kayles(const vector<game*>& games)
 }
 
 } // namespace
-
 
 //////////////////////////////////////////////////
 void play_games(file_parser& parser, const string& log_name)

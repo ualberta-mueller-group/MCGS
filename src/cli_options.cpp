@@ -65,7 +65,7 @@ void print_help_message(const string& exec_name)
                                      "Causes [input string] to be ignored.");
 
     print_flag("--play-mcgs", "Play against MCGS.");
-    //print_flag("--no-color", "Disable color printing for player.");
+    // print_flag("--no-color", "Disable color printing for player.");
 
     print_flag("--play-log", "Log file name for player.");
 
@@ -276,12 +276,11 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-
-        //if (arg == "--no-color")
+        // if (arg == "--no-color")
         //{
-        //    global::player_color.set(false);
-        //    continue;
-        //}
+        //     global::player_color.set(false);
+        //     continue;
+        // }
 
         if (arg == "-h" || arg == "--help")
         {

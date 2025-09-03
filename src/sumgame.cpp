@@ -944,7 +944,8 @@ bool sumgame::all_impartial() const
     return true;
 }
 
-std::optional<sumgame_move> sumgame::get_winning_or_random_move(bw for_player) const
+std::optional<sumgame_move> sumgame::get_winning_or_random_move(
+    bw for_player) const
 {
     assert(is_black_white(for_player));
     assert_restore_sumgame ars(*this);
@@ -954,7 +955,8 @@ std::optional<sumgame_move> sumgame::get_winning_or_random_move(bw for_player) c
     sumgame& sum = const_cast<sumgame&>(*this);
     sum.set_to_play(for_player);
 
-    std::unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(for_player));
+    std::unique_ptr<sumgame_move_generator> gen(
+        sum.create_sum_move_generator(for_player));
 
     std::vector<sumgame_move> moves;
 

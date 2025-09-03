@@ -34,8 +34,7 @@ int main(int argc, char** argv)
     if (opts.use_player)
     {
         file_parser* parser = opts.parser.get();
-        THROW_ASSERT(parser != nullptr,
-                     "No games specified for player");
+        THROW_ASSERT(parser != nullptr, "No games specified for player");
 
         play_games(*parser, opts.play_log_name);
         return 0;
