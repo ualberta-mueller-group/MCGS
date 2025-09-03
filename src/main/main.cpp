@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         THROW_ASSERT(parser != nullptr,
                      "No games specified for player");
 
-        play_games(*parser);
+        play_games(*parser, opts.play_log_name);
         return 0;
     }
 

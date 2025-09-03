@@ -33,6 +33,8 @@ struct cli_options
     std::string outfile_name;        // CSV output file
     unsigned long long test_timeout; // ms
 
+    std::string play_log_name;
+
     static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";
     static constexpr const char* DEFAULT_TEST_OUTFILE = "out.csv";
     static constexpr const unsigned long long DEFAULT_TEST_TIMEOUT = 500;

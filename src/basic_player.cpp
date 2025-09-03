@@ -1,16 +1,17 @@
 #include "basic_player.h"
 
-#include <poll.h>
-#include <cstdio>
+/*
+    TODO this file is really awful. This should be a class, etc
+*/
+
 #include <cstdlib>
+#include <filesystem>
 #include <ios>
-#include <limits>
 #include <string>
-#include <sys/poll.h>
-#include <unordered_map>
 #include <map>
 #include <iostream>
 #include <sstream>
+
 #include "cgt_basics.h"
 #include "file_parser.h"
 #include "global_options.h"
@@ -20,18 +21,126 @@
 #include "utilities.h"
 #include "clobber_1xn.h"
 
+////////////////////////////////////////////////// Global stream stuff
+namespace {
+static std::ostream* str_log = nullptr; // logging txt file
+
+// intermediate stream flushed to both cout and log file
+static std::stringstream str_both;
+
+static bool old_cin_skipws; // cin state before init_streams() changes it
+static bool init_state = false; // was init_streams() called already?
+
+// Allow press_enter() to work correctly without typing non-whitespace chars
+void disable_skipws()
+{
+    const std::ios::fmtflags oldskipws = std::cin.flags() & std::ios::skipws;
+    std::cin.unsetf(std::ios::skipws);
+    old_cin_skipws = oldskipws != 0;
+}
+
+void restore_skipws()
+{
+    if (old_cin_skipws)
+        std::cin.setf(std::ios::skipws);
+}
+
+// Flush intermediate stream to both output streams
+void flush_str_both()
+{
+    const std::string data = str_both.str();
+    str_both = std::stringstream();
+
+    std::cout << data << std::flush;
+
+    if (str_log)
+        *str_log << data << std::flush;
+}
+
+bool press_enter()
+{
+    // Wait for newline
+    str_both << "(press enter)";
+    flush_str_both();
+
+    char c = 0;
+
+    while (!std::cin.eof() && c != '\n')
+    {
+        THROW_ASSERT(!std::cin.bad());
+        c = std::cin.get();
+    }
+
+    THROW_ASSERT(!std::cin.bad());
+
+    // Pressing enter should print a newline to the log
+    if (str_log)
+        *str_log << std::endl;
+
+    return (c == '\n');
+}
+
+void init_streams(const std::string& log_name)
+{
+    assert(init_state == false);
+    init_state = true;
+
+    // Check this before changing any stream states
+    THROW_ASSERT(!std::filesystem::exists(log_name),
+                 "Log file \"" + log_name + "\" already exists!");
+
+    // Set up stdout
+    disable_skipws();
+
+    if (log_name.empty())
+    {
+        std::cerr << "Warning: no log file specified for player" << std::endl;
+        press_enter();
+    }
+
+    assert(str_log == nullptr);
+    if (!log_name.empty())
+    {
+        std::ofstream* log = new std::ofstream(log_name);
+        THROW_ASSERT(log->is_open());
+        str_log = log;
+    }
+
+    str_both = std::stringstream();
+}
+
+void finalize_streams()
+{
+    assert(init_state == true);
+    init_state = false;
+
+    restore_skipws();
+
+    flush_str_both();
+
+    if (str_log)
+    {
+        delete str_log;
+        str_log = nullptr;
+    }
+}
+
+} // namespace
+
+
 ////////////////////////////////////////////////// Helper types
 
 namespace {
 //////////////////////////////////////// struct player_move
 enum player_move_enum
 {
-    PLAYER_MOVE_OK = 0,
+    PLAYER_MOVE_OK = 0, // Either contains move, or no move exists
     PLAYER_MOVE_EOF, // i.e. user pressed Ctrl D
 };
 
 struct player_move
 {
+    // Two constructors
     player_move(const std::optional<sumgame_move>& sum_move);
     static player_move eof();
 
@@ -85,41 +194,13 @@ ostream& set_color(ostream& os, color_enum color)
 }
 */
 
-bool disable_skipws(std::ios_base& str)
-{
-    const std::ios::fmtflags oldskipws = str.flags() & std::ios::skipws;
-    str.unsetf(std::ios::skipws);
-
-    return oldskipws != 0;
-}
-
-void restore_skipws(std::ios_base& str, bool oldskipws)
-{
-    if (oldskipws)
-        str.setf(std::ios::skipws);
-}
-
-bool press_enter()
-{
-    // Wait for newline
-    cout << "(press enter)" << flush;
-
-    char c = 0;
-
-    while (!cin.eof() && c != '\n')
-    {
-        THROW_ASSERT(!cin.bad());
-        c = cin.get();
-    }
-
-    THROW_ASSERT(!cin.bad());
-    return (c == '\n');
-}
 
 /*
+    Print enumerated options, and get a choice from the user.
+
     has_value() IFF not EOF. Throws on error.
 
-    Must not pass empty options
+    Must not pass empty options!
 */
 template <class T>
 optional<int> get_choice(const vector<T>& options)
@@ -130,12 +211,12 @@ optional<int> get_choice(const vector<T>& options)
     int n_choices = 0;
     for (const T& opt : options)
     {
-        cout << n_choices << ": ";
-        cout << opt << '\n';
+        str_both << n_choices << ": ";
+        str_both << opt << '\n';
 
         n_choices++;
     }
-    cout << flush;
+    flush_str_both();
 
     // Get choice
     string user_input;
@@ -143,9 +224,21 @@ optional<int> get_choice(const vector<T>& options)
     const int min_choice = 0;
     const int max_choice = n_choices - 1;
 
+    string prompt_string;
+
+    {
+        stringstream str;
+        str << "Choice [" << min_choice << " - " << max_choice << "]: ";
+        prompt_string = str.str();
+    }
+
+    // Only print once to log file
+    if (str_log)
+        *str_log << prompt_string << flush;
+
     while (true)
     {
-        cout << "Choice [" << min_choice << " - " << max_choice << "]: ";
+        cout << prompt_string << flush;
 
         user_input.clear();
 
@@ -164,18 +257,28 @@ optional<int> get_choice(const vector<T>& options)
         if (!in_range(choice, min_choice, n_choices))
             continue;
 
-        cout << endl;
+        // Make sure choice is shown in the log and not just the screen
+        if (str_log)
+            *str_log << choice << endl;
+
+        str_both << endl;
+        flush_str_both();
+
         return choice;
     }
 }
 
-void clear_screen()
+// Clear screen and draw top bar
+void new_screen()
 {
 #if IS_WINDOWS
     system("cls");
 #else
     system("clear");
 #endif
+
+    str_both << "==============================" << endl;
+    flush_str_both();
 }
 
 
@@ -189,12 +292,15 @@ void print_sum(const sumgame& sum)
         if (!g->is_active())
             continue;
 
-        cout << *g << " ";
+        str_both << *g << " ";
     }
 
-    cout << '\n' << endl;
+    str_both << '\n' << endl;
+
+    flush_str_both();
 }
 
+// Disable normalize/split before playing a move
 void play_on_sum(sumgame& sum, const sumgame_move& sum_move, bw player)
 {
     assert(is_black_white(player));
@@ -215,6 +321,7 @@ void play_on_sum(sumgame& sum, const sumgame_move& sum_move, bw player)
     global::play_split.set(play_split);
 }
 
+// Disable normalize/split before undoing a move
 void undo_on_sum(sumgame& sum)
 {
     // Save current sumgame options
@@ -234,6 +341,8 @@ void undo_on_sum(sumgame& sum)
 }
 
 //////////////////////////////////////// move getting functions
+
+// Winning move or random move. Otherwise no moves exist
 optional<sumgame_move> get_mcgs_move(sumgame& sum, bw player)
 {
     assert(is_black_white(player));
@@ -242,6 +351,7 @@ optional<sumgame_move> get_mcgs_move(sumgame& sum, bw player)
     return sum.get_winning_or_random_move(player);
 }
 
+// Get subgame and move choices
 player_move get_player_move(sumgame &sum, bw player)
 {
     assert(is_black_white(player));
@@ -282,7 +392,8 @@ player_move get_player_move(sumgame &sum, bw player)
         return player_move({});
 
     // Get the subgame choice
-    cout << "Choose a subgame to move on:" << endl;
+    str_both << "Choose a subgame to move on:" << endl;
+    str_both.flush();
     optional<int> game_choice_idx = get_choice(available_games_strings);
 
     if (!game_choice_idx.has_value())
@@ -296,7 +407,7 @@ player_move get_player_move(sumgame &sum, bw player)
     vector<string> moves_strings;
 
     {
-        // Get sumgame idx
+        // Get sumgame idx of chosen subgame
         auto it = choice_idx_to_sumgame_idx.find(game_choice_idx.value());
         assert(it != choice_idx_to_sumgame_idx.end());
         sumgame_idx = it->second;
@@ -325,7 +436,8 @@ player_move get_player_move(sumgame &sum, bw player)
     assert(!moves.empty());
     assert(moves.size() == moves_strings.size());
 
-    cout << "Choose a move within the subgame:" << endl;
+    str_both << "Choose a move within the subgame:" << endl;
+    flush_str_both();
     optional<int> move_choice = get_choice(moves_strings);
 
     if (!move_choice.has_value())
@@ -336,7 +448,7 @@ player_move get_player_move(sumgame &sum, bw player)
     return player_move(sumgame_move(sumgame_idx, chosen_move));
 }
 
-//////////////////////////////////////// playing logic
+// To choose player color and first player
 optional<bw> get_choice_color()
 {
     const vector<string> options {"Black (B)", "White (W)"};
@@ -348,6 +460,8 @@ optional<bw> get_choice_color()
     return choice.value() == 0 ? BLACK : WHITE;
 }
 
+//////////////////////////////////////// playing logic
+// Before and after move actions
 enum pre_post_enum
 {
     PRE_POST_CONTINUE = 0,
@@ -372,7 +486,7 @@ optional<pre_post_enum> get_choice_pre_post_action()
     return static_cast<pre_post_enum>(choice);
 }
 
-// true IFF play again
+// true IFF should play again
 bool play_single(sumgame& sum)
 {
     assert_restore_sumgame ars(sum);
@@ -381,17 +495,19 @@ bool play_single(sumgame& sum)
     // Game setup
 
     // Clear screen, print game
-    clear_screen();
+    new_screen();
     print_sum(sum);
 
     // CHOICE: player color
-    cout << "Choose your color:" << endl;
+    str_both << "Choose your color:" << endl;
+    flush_str_both();
     optional<bw> player_color_opt = get_choice_color();
     if (!player_color_opt.has_value())
         return false;
 
     // CHOICE: first player
-    cout << "Choose first player:" << endl;
+    str_both << "Choose first player:" << endl;
+    flush_str_both();
     optional<bw> first_player_opt = get_choice_color();
     if (!first_player_opt.has_value())
         return false;
@@ -412,7 +528,7 @@ bool play_single(sumgame& sum)
     auto undo = [&]() -> bool
     {
         if (move_depth == 0)
-            return false;
+            return false; // should return and call play_single() again
 
         undo_on_sum(sum);
         move_depth--;
@@ -431,21 +547,22 @@ bool play_single(sumgame& sum)
     auto print_turn = [&]() -> void
     {
         if (current_player == mcgs_color)
-            cout << "MCGS's turn (" << mcgs_color_char << ").";
+            str_both << "MCGS's turn (" << mcgs_color_char << ").";
         else
         {
             assert(current_player == player_color);
-            cout << "Your turn (" << player_color_char << ").";
+            str_both << "Your turn (" << player_color_char << ").";
         }
 
-        cout << " Moves played so far: " << move_depth << endl;
-        cout << endl;
+        str_both << " Moves played so far: " << move_depth << endl;
+        str_both << endl;
+        flush_str_both();
     };
 
     // Main game loop
     while (true)
     {
-        clear_screen();
+        new_screen();
         print_turn();
         print_sum(sum);
 
@@ -461,6 +578,8 @@ bool play_single(sumgame& sum)
 
                 if (did_undo)
                     continue;
+
+                // No moves to undo, should instead go back to setup phase
                 should_replay = true;
                 break;
             }
@@ -475,14 +594,16 @@ bool play_single(sumgame& sum)
 
             if (!sm.has_value())
             {
-                cout << "You win" << endl;
+                str_both << "You win" << endl;
+                flush_str_both();
                 press_enter();
                 break;
             }
 
             play(sm.value());
 
-            cout << "MCGS moves to:" << endl << endl;
+            str_both << "MCGS moves to:" << endl << endl;
+            flush_str_both();
             print_sum(sum);
         }
         else
@@ -491,21 +612,24 @@ bool play_single(sumgame& sum)
 
             if (pm.status == PLAYER_MOVE_EOF)
             {
-                cout << "Aborting..." << endl;
+                str_both << "Aborting..." << endl;
+                flush_str_both();
                 break;
             }
 
             const optional<sumgame_move>& sm = pm.sum_move;
             if (!sm.has_value())
             {
-                cout << "MCGS wins" << endl;
+                str_both << "MCGS wins" << endl;
+                flush_str_both();
                 press_enter();
                 break;
             }
 
             play(sm.value());
 
-            cout << "You moved to: " << endl << endl;
+            str_both << "You moved to: " << endl << endl;
+            flush_str_both();
             print_sum(sum);
         }
 
@@ -545,17 +669,9 @@ bool has_kayles(const vector<game*>& games)
 
 
 //////////////////////////////////////////////////
-void play_games(file_parser& parser)
+void play_games(file_parser& parser, const string& log_name)
 {
-    /*
-        Disable skipws and save old state
-
-        This is necessary for press_enter(), otherwise you must write some
-        non-whitespace character before presing enter...
-
-        NOTE: Use "getline" instead of "cin >>" after doing this
-    */
-    const bool oldskipws = disable_skipws(cin);
+    init_streams(log_name);
 
     game_case gc;
     sumgame sum(BLACK);
@@ -584,8 +700,6 @@ void play_games(file_parser& parser)
         gc.cleanup_games();
     }
 
+    finalize_streams();
     assert(sum.num_total_games() == 0);
-
-    // Restore old cin state
-    restore_skipws(cin, oldskipws);
 }

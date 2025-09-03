@@ -26,7 +26,8 @@ cli_options::cli_options(const string& test_directory)
       use_player(false),
       test_directory(test_directory),
       outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
-      test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
+      test_timeout(cli_options::DEFAULT_TEST_TIMEOUT),
+      play_log_name("")
 {
 }
 
@@ -65,6 +66,8 @@ void print_help_message(const string& exec_name)
 
     print_flag("--play-mcgs", "Play against MCGS.");
     //print_flag("--no-color", "Disable color printing for player.");
+
+    print_flag("--play-log", "Log file name for player.");
 
     print_flag("--stdin",
                "Read input from stdin. Causes [input string] to be ignored.");
@@ -255,6 +258,21 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             opts.use_player = true;
             continue;
         }
+
+        if (arg == "--play-log")
+        {
+            arg_idx++;
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception(
+                    "Error: Got --play-log but no file path");
+            }
+
+            opts.play_log_name = arg_next;
+            continue;
+        }
+
 
         //if (arg == "--no-color")
         //{
