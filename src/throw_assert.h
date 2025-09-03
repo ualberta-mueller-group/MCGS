@@ -36,11 +36,10 @@
 #define _THROW_ASSERT_2(expr, _exception)                                      \
     if (!(expr))                                                               \
     {                                                                          \
-        const auto& _exc = _exception;                                         \
-        if constexpr (std::is_base_of_v<std::exception, decltype(_exc)>)       \
-            throw _exc;                                                        \
+        if constexpr (std::is_base_of_v<std::exception, decltype(_exception)>) \
+            throw _exception;                                                  \
         else                                                                   \
-            throw std::logic_error(_exc);                                      \
+            throw std::logic_error(_exception);                                \
     }                                                                          \
     static_assert(true)
 

@@ -1,18 +1,24 @@
 #include "basic_player.h"
 
+#include <poll.h>
 #include <cstdio>
 #include <cstdlib>
 #include <ios>
 #include <limits>
+#include <string>
+#include <sys/poll.h>
 #include <unordered_map>
 #include <map>
 #include <iostream>
 #include <sstream>
 #include "cgt_basics.h"
 #include "file_parser.h"
+#include "global_options.h"
 #include "kayles.h"
+#include "strip.h"
 #include "sumgame.h"
 #include "utilities.h"
+#include "clobber_1xn.h"
 
 ////////////////////////////////////////////////// Helper types
 
@@ -55,25 +61,35 @@ using namespace std;
 namespace {
 
 //////////////////////////////////////// screen and I/O stuff
-void press_enter()
+bool disable_skipws(std::ios_base& str)
 {
-    cout << "(press enter)" << flush;
+    const std::ios::fmtflags oldskipws = str.flags() & std::ios::skipws;
+    str.unsetf(std::ios::skipws);
 
-    const std::ios::fmtflags f_old = cin.flags();
-    const std::ios::fmtflags f_new = f_old & (~std::ios::skipws);
+    return oldskipws != 0;
+}
 
-    cin.setf(f_new);
+void restore_skipws(std::ios_base& str, bool oldskipws)
+{
+    if (oldskipws)
+        str.setf(std::ios::skipws);
+}
 
-    char temp;
+bool press_enter()
+{
+    // Wait for newline
+    cout << "(press enter)" << endl;
 
-    do
+    char c = 0;
+
+    while (!cin.eof() && c != '\n')
     {
-        temp = cin.get();
+        THROW_ASSERT(!cin.bad());
+        c = cin.get();
     }
-    while (temp != '\n' && !cin.eof());
 
-    cin.setf(f_old);
-    assert(cin.flags() == f_old);
+    THROW_ASSERT(!cin.bad());
+    return (c == '\n');
 }
 
 /*
@@ -107,12 +123,14 @@ optional<int> get_choice(const vector<T>& options)
     {
         cout << "Choice [" << min_choice << " - " << max_choice << "]: ";
 
-        cin >> user_input;
+        user_input.clear();
+
+        THROW_ASSERT(!cin.bad());
+        getline(cin, user_input);
+        THROW_ASSERT(!cin.bad());
 
         if (cin.eof())
             return {};
-
-        THROW_ASSERT(!cin.bad());
 
         if (!is_int(user_input))
             continue;
@@ -133,6 +151,62 @@ void clear_screen()
 #else
     system("clear");
 #endif
+}
+
+
+//////////////////////////////////////// sumgame stuff
+void print_sum(sumgame& sum, bool newline = true)
+{
+    const int n = sum.num_total_games();
+    for (int i = 0; i < n; i++)
+    {
+        game* g = sum.subgame(i);
+        if (!g->is_active())
+            continue;
+
+        cout << *g << " ";
+    }
+
+    if (newline)
+        cout << endl;
+}
+
+void play_on_sum(sumgame& sum, const sumgame_move& sum_move, bw player)
+{
+    assert(is_black_white(player));
+
+    // Save current sumgame options
+    const bool play_normalize = global::play_normalize();
+    const bool play_split = global::play_split();
+
+    // Disable them
+    global::play_normalize.set(false);
+    global::play_split.set(false);
+
+    // Play the move
+    sum.play_sum(sum_move, player);
+
+    // Restore options
+    global::play_normalize.set(play_normalize);
+    global::play_split.set(play_split);
+}
+
+void undo_on_sum(sumgame& sum)
+{
+    // Save current sumgame options
+    const bool play_normalize = global::play_normalize();
+    const bool play_split = global::play_split();
+
+    // Disable them
+    global::play_normalize.set(false);
+    global::play_split.set(false);
+
+    // Undo the move
+    sum.undo_move();
+
+    // Restore options
+    global::play_normalize.set(play_normalize);
+    global::play_split.set(play_split);
 }
 
 //////////////////////////////////////// move getting functions
@@ -227,6 +301,7 @@ player_move get_player_move(sumgame &sum, bw player)
     assert(!moves.empty());
     assert(moves.size() == moves_strings.size());
 
+    cout << "Choose a move:" << endl;
     optional<int> move_choice = get_choice(moves_strings);
 
     if (!move_choice.has_value())
@@ -240,7 +315,7 @@ player_move get_player_move(sumgame &sum, bw player)
 //////////////////////////////////////// playing logic
 optional<bw> get_choice_color()
 {
-    const vector<string> options {"Black", "White"};
+    const vector<string> options {"Black (B)", "White (W)"};
     optional<int> choice = get_choice(options);
 
     if (!choice.has_value())
@@ -249,7 +324,8 @@ optional<bw> get_choice_color()
     return choice.value() == 0 ? BLACK : WHITE;
 }
 
-void play_single(sumgame& sum)
+// true IFF play again
+bool play_single(sumgame& sum)
 {
     assert_restore_sumgame ars(sum);
     const bw original_player = sum.to_play();
@@ -260,23 +336,29 @@ void play_single(sumgame& sum)
     clear_screen();
 
     // Print game
-    cout << sum << endl;
+    print_sum(sum);
+    cout << endl;
 
     // CHOICE: player color
     cout << "Choose your color:" << endl;
     optional<bw> player_color_opt = get_choice_color();
     if (!player_color_opt.has_value())
-        return;
+        return false;
+
+    cout << endl;
 
     // CHOICE: first player
     cout << "Choose first player:" << endl;
     optional<bw> first_player_opt = get_choice_color();
     if (!first_player_opt.has_value())
-        return;
+        return false;
 
     // [ GAME LOOP ]
     const bw player_color = player_color_opt.value();
+    const char player_color_char = color_char(player_color);
+
     const bw mcgs_color = opponent(player_color);
+    const char mcgs_color_char = color_char(mcgs_color);
 
     bw current_player = first_player_opt.value();
 
@@ -288,28 +370,33 @@ void play_single(sumgame& sum)
 
         if (current_player == mcgs_color)
         {
+            cout << "MCGS's turn (" << mcgs_color_char << ")" << endl;
+            print_sum(sum);
+
             optional<sumgame_move> sm = get_mcgs_move(sum, mcgs_color);
 
             if (!sm.has_value())
             {
-                cout << "You win ";
+                cout << "You win" << endl;
                 press_enter();
                 break;
             }
 
-            cout << sum << endl;
-
-            cout << "MCGS moves to:" << endl;
-
-            sum.play_sum(sm.value(), mcgs_color);
+            play_on_sum(sum, sm.value(), mcgs_color);
             move_depth++;
 
-            cout << sum << endl;
+            cout << "MCGS moves to:" << endl;
+            print_sum(sum);
+
             press_enter();
         }
         else
         {
             assert(current_player == player_color);
+
+            cout << "Your turn (" << player_color_char << ")" << endl;
+            print_sum(sum);
+
             player_move pm = get_player_move(sum, player_color);
 
             if (pm.status == PLAYER_MOVE_EOF)
@@ -318,19 +405,19 @@ void play_single(sumgame& sum)
                 break;
             }
 
-            optional<sumgame_move>& sm = pm.sum_move;
+            const optional<sumgame_move>& sm = pm.sum_move;
             if (!sm.has_value())
             {
-                cout << "MCGS wins ";
+                cout << "MCGS wins" << endl;
                 press_enter();
                 break;
             }
 
-            cout << "Result:" << endl;
-            sum.play_sum(sm.value(), player_color);
+            play_on_sum(sum, sm.value(), player_color);
             move_depth++;
-            cout << sum << endl;
 
+            cout << "You moved to: " << endl;
+            print_sum(sum);
             press_enter();
         }
 
@@ -339,11 +426,13 @@ void play_single(sumgame& sum)
 
     while (move_depth > 0)
     {
-        sum.undo_move();
+        undo_on_sum(sum);
         move_depth--;
     }
 
     sum.set_to_play(original_player);
+
+    return false;
 }
 
 bool has_kayles(const vector<game*>& games)
@@ -358,9 +447,19 @@ bool has_kayles(const vector<game*>& games)
 } // namespace
 
 
-
+//////////////////////////////////////////////////
 void play_games(file_parser& parser)
 {
+    /*
+        Disable skipws and save old state
+
+        This is necessary for press_enter(), otherwise you must write some
+        non-whitespace character before presing enter...
+
+        NOTE: Use "getline" instead of "cin >>" after doing this
+    */
+    const bool oldskipws = disable_skipws(cin);
+
     game_case gc;
     sumgame sum(BLACK);
 
@@ -374,14 +473,22 @@ void play_games(file_parser& parser)
 
         assert(sum.num_total_games() == 0);
         sum.add(games);
+
+        bool play = true;
+
+        while (play)
         {
             assert_restore_sumgame ars(sum);
-            play_single(sum);
+            play = play_single(sum);
         }
+
         sum.pop(games);
 
         gc.cleanup_games();
     }
 
     assert(sum.num_total_games() == 0);
+
+    // Restore old cin state
+    restore_skipws(cin, oldskipws);
 }

@@ -970,9 +970,7 @@ std::optional<sumgame_move> sumgame::get_winning_or_random_move(bw for_player) c
         bool opp_loss = !sum.solve();
         sum.undo_move();
 
-        // TODO undo this
-#warning TODO ALLOW PLAYER TO PLAY REAL MOVES
-        if (false && opp_loss)
+        if (opp_loss)
         {
             sum.set_to_play(prev_player);
             return sm;
