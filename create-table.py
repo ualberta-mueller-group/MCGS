@@ -721,7 +721,7 @@ def get_metadata_string():
         dates.append(date_string)
 
         f = open(fname, "rb")
-        hash = hashlib.file_digest(f, hashlib.md5)
+        hash = hashlib.md5(f.read(-1))
         f.close()
         hashes.append(hash.hexdigest())
 
