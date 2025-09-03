@@ -102,7 +102,7 @@ void restore_skipws(std::ios_base& str, bool oldskipws)
 bool press_enter()
 {
     // Wait for newline
-    cout << "(press enter)" << endl;
+    cout << "(press enter)" << flush;
 
     char c = 0;
 
@@ -164,6 +164,7 @@ optional<int> get_choice(const vector<T>& options)
         if (!in_range(choice, min_choice, n_choices))
             continue;
 
+        cout << endl;
         return choice;
     }
 }
@@ -179,21 +180,19 @@ void clear_screen()
 
 
 //////////////////////////////////////// sumgame stuff
-void print_sum(sumgame& sum, bool newline = true)
+void print_sum(const sumgame& sum)
 {
     const int n = sum.num_total_games();
     for (int i = 0; i < n; i++)
     {
-        game* g = sum.subgame(i);
+        const game* g = sum.subgame(i);
         if (!g->is_active())
             continue;
 
         cout << *g << " ";
     }
 
-    if (newline)
-        cout << endl;
-
+    cout << '\n' << endl;
 }
 
 void play_on_sum(sumgame& sum, const sumgame_move& sum_move, bw player)
@@ -285,7 +284,6 @@ player_move get_player_move(sumgame &sum, bw player)
     // Get the subgame choice
     cout << "Choose a subgame to move on:" << endl;
     optional<int> game_choice_idx = get_choice(available_games_strings);
-    cout << endl;
 
     if (!game_choice_idx.has_value())
         return player_move::eof();
@@ -350,20 +348,41 @@ optional<bw> get_choice_color()
     return choice.value() == 0 ? BLACK : WHITE;
 }
 
+enum pre_post_enum
+{
+    PRE_POST_CONTINUE = 0,
+    PRE_POST_BACK,
+};
+
+optional<pre_post_enum> get_choice_pre_post_action()
+{
+    const vector<string> options = {
+        "Continue",
+        "Back",
+    };
+
+    optional<int> choice_opt = get_choice(options);
+
+    if (!choice_opt.has_value())
+        return {};
+
+    const int choice = choice_opt.value();
+
+    assert(PRE_POST_CONTINUE <= choice && choice <= PRE_POST_BACK);
+    return static_cast<pre_post_enum>(choice);
+}
+
 // true IFF play again
 bool play_single(sumgame& sum)
 {
     assert_restore_sumgame ars(sum);
     const bw original_player = sum.to_play();
 
-    // [ GAME PREAMBLE ]
+    // Game setup
 
-    // Clear screen
+    // Clear screen, print game
     clear_screen();
-
-    // Print game
     print_sum(sum);
-    cout << endl;
 
     // CHOICE: player color
     cout << "Choose your color:" << endl;
@@ -371,15 +390,13 @@ bool play_single(sumgame& sum)
     if (!player_color_opt.has_value())
         return false;
 
-    cout << endl;
-
     // CHOICE: first player
     cout << "Choose first player:" << endl;
     optional<bw> first_player_opt = get_choice_color();
     if (!first_player_opt.has_value())
         return false;
 
-    // [ GAME LOOP ]
+    // Game initialization
     const bw player_color = player_color_opt.value();
     const char player_color_char = color_char(player_color);
 
@@ -389,17 +406,71 @@ bool play_single(sumgame& sum)
     bw current_player = first_player_opt.value();
 
     int move_depth = 0;
+    bool should_replay = false;
 
+    // Helper functions
+    auto undo = [&]() -> bool
+    {
+        if (move_depth == 0)
+            return false;
+
+        undo_on_sum(sum);
+        move_depth--;
+        current_player = opponent(current_player);
+
+        return true;
+    };
+
+    auto play = [&](const sumgame_move& sm) -> void
+    {
+        play_on_sum(sum, sm, current_player);
+        move_depth++;
+        current_player = opponent(current_player);
+    };
+
+    auto print_turn = [&]() -> void
+    {
+        if (current_player == mcgs_color)
+            cout << "MCGS's turn (" << mcgs_color_char << ").";
+        else
+        {
+            assert(current_player == player_color);
+            cout << "Your turn (" << player_color_char << ").";
+        }
+
+        cout << " Moves played so far: " << move_depth << endl;
+        cout << endl;
+    };
+
+    // Main game loop
     while (true)
     {
         clear_screen();
+        print_turn();
         print_sum(sum);
-        cout << endl;
 
+        // Pre-move action
+        {
+            optional<pre_post_enum> pre_action = get_choice_pre_post_action();
+            if (!pre_action.has_value())
+                break;
+
+            if (pre_action.value() == PRE_POST_BACK)
+            {
+                bool did_undo = undo();
+
+                if (did_undo)
+                    continue;
+                should_replay = true;
+                break;
+            }
+            else
+                assert(pre_action.value() == PRE_POST_CONTINUE);
+        }
+
+        // Get and play move
         if (current_player == mcgs_color)
         {
-            cout << "MCGS's turn (" << mcgs_color_char << ")" << endl;
-
             optional<sumgame_move> sm = get_mcgs_move(sum, mcgs_color);
 
             if (!sm.has_value())
@@ -409,24 +480,14 @@ bool play_single(sumgame& sum)
                 break;
             }
 
-            play_on_sum(sum, sm.value(), mcgs_color);
-            move_depth++;
+            play(sm.value());
 
             cout << "MCGS moves to:" << endl << endl;
-
             print_sum(sum);
-            cout << endl;
-
-            press_enter();
         }
         else
         {
-            assert(current_player == player_color);
-
-            cout << "Your turn (" << player_color_char << ")" << endl << endl;
-
             player_move pm = get_player_move(sum, player_color);
-            cout << endl;
 
             if (pm.status == PLAYER_MOVE_EOF)
             {
@@ -442,28 +503,33 @@ bool play_single(sumgame& sum)
                 break;
             }
 
-            play_on_sum(sum, sm.value(), player_color);
-            move_depth++;
+            play(sm.value());
 
-            cout << "You moved to: " << endl;
+            cout << "You moved to: " << endl << endl;
             print_sum(sum);
-
-            cout << endl;
-            press_enter();
         }
 
-        current_player = opponent(current_player);
+        // Post-move action
+        optional<pre_post_enum> post_action = get_choice_pre_post_action();
+        if (!post_action.has_value())
+            break;
+
+        if (post_action.value() == PRE_POST_BACK)
+        {
+            bool did_undo = undo();
+            assert(did_undo);
+            continue;
+        }
+
+        assert(post_action.value() == PRE_POST_CONTINUE);
     }
 
     while (move_depth > 0)
-    {
-        undo_on_sum(sum);
-        move_depth--;
-    }
+        undo();
 
     sum.set_to_play(original_player);
 
-    return false;
+    return should_replay;
 }
 
 bool has_kayles(const vector<game*>& games)
