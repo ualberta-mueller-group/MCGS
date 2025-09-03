@@ -17,6 +17,7 @@
 
 #include "nogo_split_test.h"
 #include "sumgame.h"
+#include "throw_assert.h"
 
 using std::cout, std::endl, std::string;
 

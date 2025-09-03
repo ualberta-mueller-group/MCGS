@@ -10,8 +10,14 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include <cassert>
 #include <sstream>
+#include <fstream>
+#include <optional>
+#include <vector>
+#include <memory>
 
+#include "throw_assert.h"
 #include "cgt_basics.h"
 #include "file_parser.h"
 #include "global_options.h"
