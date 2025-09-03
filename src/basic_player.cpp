@@ -486,6 +486,22 @@ optional<pre_post_enum> get_choice_pre_post_action()
     return static_cast<pre_post_enum>(choice);
 }
 
+optional<bool> get_choice_play_again()
+{
+    const vector<string> options =
+    {
+        "Restart",
+        "End",
+    };
+
+    optional<int> choice = get_choice(options);
+
+    if (!choice.has_value())
+        return {};
+    
+    return choice.value() == 0;
+}
+
 // true IFF should play again
 bool play_single(sumgame& sum)
 {
@@ -522,7 +538,9 @@ bool play_single(sumgame& sum)
     bw current_player = first_player_opt.value();
 
     int move_depth = 0;
+
     bool should_replay = false;
+    bool game_determined = false;
 
     // Helper functions
     auto undo = [&]() -> bool
@@ -566,6 +584,9 @@ bool play_single(sumgame& sum)
         print_turn();
         print_sum(sum);
 
+        // Game should have ended
+        assert(!game_determined);
+
         // Pre-move action
         {
             optional<pre_post_enum> pre_action = get_choice_pre_post_action();
@@ -596,41 +617,41 @@ bool play_single(sumgame& sum)
             {
                 str_both << "You win" << endl;
                 flush_str_both();
-                press_enter();
-                break;
+                game_determined = true;
+                //press_enter();
             }
+            else
+            {
+                play(sm.value());
 
-            play(sm.value());
-
-            str_both << "MCGS moves to:" << endl << endl;
-            flush_str_both();
-            print_sum(sum);
+                str_both << "MCGS moves to:" << endl << endl;
+                flush_str_both();
+                print_sum(sum);
+            }
         }
         else
         {
             player_move pm = get_player_move(sum, player_color);
 
             if (pm.status == PLAYER_MOVE_EOF)
-            {
-                str_both << "Aborting..." << endl;
-                flush_str_both();
                 break;
-            }
 
             const optional<sumgame_move>& sm = pm.sum_move;
             if (!sm.has_value())
             {
                 str_both << "MCGS wins" << endl;
                 flush_str_both();
-                press_enter();
-                break;
+                game_determined = true;
+                //press_enter();
             }
+            else
+            {
+                play(sm.value());
 
-            play(sm.value());
-
-            str_both << "You moved to: " << endl << endl;
-            flush_str_both();
-            print_sum(sum);
+                str_both << "You moved to: " << endl << endl;
+                flush_str_both();
+                print_sum(sum);
+            }
         }
 
         // Post-move action
@@ -646,6 +667,23 @@ bool play_single(sumgame& sum)
         }
 
         assert(post_action.value() == PRE_POST_CONTINUE);
+
+        if (game_determined)
+        {
+            str_both << "Play again:" << endl;
+            flush_str_both();
+            optional<bool> should_replay_opt = get_choice_play_again();
+
+            if (should_replay_opt.has_value())
+                should_replay = should_replay_opt.value();
+            break;
+        }
+    }
+
+    if (cin.eof())
+    {
+        str_both << "Aborting..." << endl;
+        flush_str_both();
     }
 
     while (move_depth > 0)
@@ -692,12 +730,15 @@ void play_games(file_parser& parser, const string& log_name)
         while (play)
         {
             assert_restore_sumgame ars(sum);
-            play = play_single(sum);
+            play = play_single(sum) && !cin.eof();
         }
 
         sum.pop(games);
 
         gc.cleanup_games();
+
+        if (cin.eof())
+            break;
     }
 
     finalize_streams();
