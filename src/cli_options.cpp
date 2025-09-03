@@ -174,6 +174,9 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag(global::print_ttable_size.flag(),
                "Print ttable size to stdout.");
+
+    print_flag(global::print_db_info.flag(),
+               "Print verbose database info to stdout.");
 }
 
 } // namespace
@@ -324,6 +327,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::print_ttable_size.flag())
         {
             global::print_ttable_size.set(true);
+            continue;
+        }
+
+        if (arg == global::print_db_info.flag())
+        {
+            global::print_db_info.set(true);
             continue;
         }
 

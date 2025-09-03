@@ -12,6 +12,7 @@
 #include "db_game_generator.h"
 #include "elephants.h"
 #include "global_database.h"
+#include "global_options.h"
 #include "nogo_1xn.h"
 #include "nogo.h"
 #include "gridlike_db_game_generator.h"
@@ -80,7 +81,8 @@ void init_database(const std::string& filename, init_database_enum init_type)
     if (init_type == INIT_DATABASE_LOAD)
     {
         db.load(filename);
-        std::cout << "Database file loaded" << std::endl;
+        std::cout << "Database file loaded:";
+        std::cout << " \"" << filename << "\"" << std::endl;
     }
 
     register_types(db);
@@ -89,10 +91,11 @@ void init_database(const std::string& filename, init_database_enum init_type)
     {
         fill_database(db);
         db.save(filename);
-        std::cout << "Database file saved" << std::endl;
+        std::cout << "Database file saved:";
+        std::cout << " \"" << filename << "\"" << std::endl;
     }
 
-    if (init_type != INIT_DATABASE_NONE)
+    if (init_type != INIT_DATABASE_NONE && global::print_db_info())
     {
         std::cout << "Database: " << std::endl;
         std::cout << db << std::endl;

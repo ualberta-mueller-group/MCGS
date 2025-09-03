@@ -169,6 +169,7 @@ extern global_option<bool> dedupe_movegen;
 extern global_option<bool> silence_warnings;
 extern global_option<bool> print_ttable_size;
 extern global_option<bool> play_split;
+extern global_option<bool> print_db_info;
 //extern global_option<bool> player_color;
 
 } // namespace global
