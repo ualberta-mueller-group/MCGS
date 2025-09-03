@@ -61,6 +61,30 @@ using namespace std;
 namespace {
 
 //////////////////////////////////////// screen and I/O stuff
+/*
+enum color_enum
+{
+    COLOR_RED = 0,
+    COLOR_GREEN,
+    COLOR_YELLOW,
+    COLOR_BLUE,
+    COLOR_MAGENTA,
+    COLOR_CYAN,
+    COLOR_WHITE,
+    COLOR_DEFAULT,
+};
+
+ostream& set_color(ostream& os, color_enum color)
+{
+    assert(COLOR_RED <= color && color <= COLOR_DEFAULT);
+
+    if (global::player_color())
+        os << "\x1b[1;" << (31 + color) << 'm';
+
+    return os;
+}
+*/
+
 bool disable_skipws(std::ios_base& str)
 {
     const std::ios::fmtflags oldskipws = str.flags() & std::ios::skipws;
@@ -111,7 +135,7 @@ optional<int> get_choice(const vector<T>& options)
 
         n_choices++;
     }
-    cout << endl;
+    cout << flush;
 
     // Get choice
     string user_input;
@@ -169,6 +193,7 @@ void print_sum(sumgame& sum, bool newline = true)
 
     if (newline)
         cout << endl;
+
 }
 
 void play_on_sum(sumgame& sum, const sumgame_move& sum_move, bw player)
@@ -258,8 +283,9 @@ player_move get_player_move(sumgame &sum, bw player)
         return player_move({});
 
     // Get the subgame choice
-    cout << "Choose a subgame" << endl;
+    cout << "Choose a subgame to move on:" << endl;
     optional<int> game_choice_idx = get_choice(available_games_strings);
+    cout << endl;
 
     if (!game_choice_idx.has_value())
         return player_move::eof();
@@ -301,7 +327,7 @@ player_move get_player_move(sumgame &sum, bw player)
     assert(!moves.empty());
     assert(moves.size() == moves_strings.size());
 
-    cout << "Choose a move:" << endl;
+    cout << "Choose a move within the subgame:" << endl;
     optional<int> move_choice = get_choice(moves_strings);
 
     if (!move_choice.has_value())
@@ -367,11 +393,12 @@ bool play_single(sumgame& sum)
     while (true)
     {
         clear_screen();
+        print_sum(sum);
+        cout << endl;
 
         if (current_player == mcgs_color)
         {
             cout << "MCGS's turn (" << mcgs_color_char << ")" << endl;
-            print_sum(sum);
 
             optional<sumgame_move> sm = get_mcgs_move(sum, mcgs_color);
 
@@ -385,8 +412,10 @@ bool play_single(sumgame& sum)
             play_on_sum(sum, sm.value(), mcgs_color);
             move_depth++;
 
-            cout << "MCGS moves to:" << endl;
+            cout << "MCGS moves to:" << endl << endl;
+
             print_sum(sum);
+            cout << endl;
 
             press_enter();
         }
@@ -394,10 +423,10 @@ bool play_single(sumgame& sum)
         {
             assert(current_player == player_color);
 
-            cout << "Your turn (" << player_color_char << ")" << endl;
-            print_sum(sum);
+            cout << "Your turn (" << player_color_char << ")" << endl << endl;
 
             player_move pm = get_player_move(sum, player_color);
+            cout << endl;
 
             if (pm.status == PLAYER_MOVE_EOF)
             {
@@ -418,6 +447,8 @@ bool play_single(sumgame& sum)
 
             cout << "You moved to: " << endl;
             print_sum(sum);
+
+            cout << endl;
             press_enter();
         }
 

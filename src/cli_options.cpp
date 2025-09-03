@@ -64,6 +64,7 @@ void print_help_message(const string& exec_name)
                                      "Causes [input string] to be ignored.");
 
     print_flag("--play-mcgs", "Play against MCGS.");
+    //print_flag("--no-color", "Disable color printing for player.");
 
     print_flag("--stdin",
                "Read input from stdin. Causes [input string] to be ignored.");
@@ -254,6 +255,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             opts.use_player = true;
             continue;
         }
+
+        //if (arg == "--no-color")
+        //{
+        //    global::player_color.set(false);
+        //    continue;
+        //}
 
         if (arg == "-h" || arg == "--help")
         {
