@@ -293,8 +293,10 @@ void new_screen()
 }
 
 //////////////////////////////////////// sumgame stuff
-void print_sum(const sumgame& sum)
+string get_sum_string(const sumgame& sum)
 {
+    stringstream str;
+
     const int n = sum.num_total_games();
     for (int i = 0; i < n; i++)
     {
@@ -302,17 +304,32 @@ void print_sum(const sumgame& sum)
         if (!g->is_active())
             continue;
 
-        str_both << *g << " ";
+        str << *g << " ";
     }
 
-    set_color(cout, COLOR_BLUE);
-    str_both << '\n' << endl;
+    return str.str();
+}
+
+void print_sum_string(const string& sum_str)
+{
     flush_str_both();
+    set_color(cout, COLOR_BLUE);
+
+    str_both << sum_str << '\n' << endl;
+    flush_str_both();
+
     set_color(cout, COLOR_RESET);
 }
 
+void print_sum(const sumgame& sum)
+{
+    string sum_str = get_sum_string(sum);
+    print_sum_string(sum_str);
+}
+
 // Disable normalize/split before playing a move
-void play_on_sum(sumgame& sum, const sumgame_move& sum_move, bw player)
+hash_t play_on_sum(sumgame& sum, const sumgame_move& sum_move, bw player,
+                   bool split_norm)
 {
     assert(is_black_white(player));
 
@@ -320,35 +337,49 @@ void play_on_sum(sumgame& sum, const sumgame_move& sum_move, bw player)
     const bool play_normalize = global::play_normalize();
     const bool play_split = global::play_split();
 
-    // Disable them
-    global::play_normalize.set(false);
-    global::play_split.set(false);
+    if (!split_norm)
+    {
+        // Disable them
+        global::play_normalize.set(false);
+        global::play_split.set(false);
+    }
 
     // Play the move
     sum.play_sum(sum_move, player);
 
-    // Restore options
-    global::play_normalize.set(play_normalize);
-    global::play_split.set(play_split);
+    if (!split_norm)
+    {
+        // Restore options
+        global::play_normalize.set(play_normalize);
+        global::play_split.set(play_split);
+    }
+
+    return sum.get_global_hash();
 }
 
 // Disable normalize/split before undoing a move
-void undo_on_sum(sumgame& sum)
+void undo_on_sum(sumgame& sum, bool split_norm)
 {
     // Save current sumgame options
     const bool play_normalize = global::play_normalize();
     const bool play_split = global::play_split();
 
-    // Disable them
-    global::play_normalize.set(false);
-    global::play_split.set(false);
+    if (!split_norm)
+    {
+        // Disable them
+        global::play_normalize.set(false);
+        global::play_split.set(false);
+    }
 
     // Undo the move
     sum.undo_move();
 
-    // Restore options
-    global::play_normalize.set(play_normalize);
-    global::play_split.set(play_split);
+    if (!split_norm)
+    {
+        // Restore options
+        global::play_normalize.set(play_normalize);
+        global::play_split.set(play_split);
+    }
 }
 
 bool has_moves_for(const sumgame& sum, bw player)
@@ -600,16 +631,55 @@ bool play_single(sumgame& sum)
         if (move_depth == 0)
             return false; // should return and call play_single() again
 
-        undo_on_sum(sum);
+        undo_on_sum(sum, true);
         move_depth--;
         current_player = opponent(current_player);
 
         return true;
     };
 
+    //auto print_moved_to = [&]() -> void
+    //{
+    //    // Backwards because this happens after calling play()
+    //    if (current_player == player_color)
+    //        str_both << "MCGS";
+    //    else
+    //        str_both << "You";
+
+    //    str_both << " moved to:" << endl;
+
+    //    print_sum(sum);
+    //    flush_str_both();
+    //};
+
+    auto get_player_string = [&](bw color) -> string
+    {
+        if (color == player_color)
+            return "You";
+        return "MCGS";
+    };
+
     auto play = [&](const sumgame_move& sm) -> void
     {
-        play_on_sum(sum, sm, current_player);
+        const hash_t hash_no_sn = play_on_sum(sum, sm, current_player, false);
+        const string str_no_sn = get_sum_string(sum);
+        undo_on_sum(sum, false);
+
+        const hash_t hash_with_sn = play_on_sum(sum, sm, current_player, true);
+        const string str_with_sn = get_sum_string(sum);
+
+        const string& player_string = get_player_string(current_player);
+
+        str_both << player_string << " moved to:" << endl;
+        print_sum_string(str_no_sn);
+
+        if (hash_no_sn != hash_with_sn)
+        {
+            str_both << "After split/normalize, is equivalent to:" << endl;
+            print_sum_string(str_with_sn);
+        }
+
+        flush_str_both();
         move_depth++;
         current_player = opponent(current_player);
     };
@@ -663,19 +733,6 @@ bool play_single(sumgame& sum)
         return move_opt;
     };
 
-    auto print_moved_to = [&]() -> void
-    {
-        // Backwards because this happens after calling play()
-        if (current_player == player_color)
-            str_both << "MCGS";
-        else
-            str_both << "You";
-
-        str_both << " moved to:" << endl;
-
-        print_sum(sum);
-        flush_str_both();
-    };
 
 #define RESTART_MACRO() \
     { \
@@ -733,7 +790,7 @@ bool play_single(sumgame& sum)
         // Get and play move
         CHECKED_OPTIONAL(sumgame_move, sum_move, get_move());
         play(sum_move);
-        print_moved_to();
+        //print_moved_to();
 
         // Post-move action
         CHECKED_OPTIONAL(pre_post_enum, post_action, get_choice_pre_post_action());
@@ -757,7 +814,7 @@ bool play_single(sumgame& sum)
 
 bool has_kayles(const vector<game*>& games)
 {
-    for (game* g : games)
+    for (const game* g : games)
         if (g->game_type() == game_type<kayles>())
             return true;
 

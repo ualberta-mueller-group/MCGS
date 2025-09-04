@@ -19,6 +19,7 @@
 #pragma once
 #include <string>    // IWYU pragma: keep
 #include <stdexcept> // IWYU pragma: keep
+#include <type_traits> // IWYU pragma: keep
 
 // NOLINTBEGIN(readability-identifier-naming)
 
