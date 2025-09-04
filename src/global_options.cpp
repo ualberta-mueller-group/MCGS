@@ -123,6 +123,6 @@ INIT_GLOBAL_WITHOUT_SUMMARY(silence_warnings, bool, false);
 INIT_GLOBAL_WITHOUT_SUMMARY(print_ttable_size, bool, false);
 INIT_GLOBAL_WITHOUT_SUMMARY(play_split, bool, true);
 INIT_GLOBAL_WITHOUT_SUMMARY(print_db_info, bool, false);
-// INIT_GLOBAL_WITHOUT_SUMMARY(player_color, bool, true);
+INIT_GLOBAL_WITHOUT_SUMMARY(player_color, bool, true);
 
 } // namespace global

@@ -5,6 +5,7 @@
 */
 
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 #include <ios>
 #include <string>
@@ -174,29 +175,30 @@ using namespace std;
 namespace {
 
 //////////////////////////////////////// screen and I/O stuff
-/*
 enum color_enum
 {
-    COLOR_RED = 0,
+    COLOR_RED = 31,
     COLOR_GREEN,
     COLOR_YELLOW,
     COLOR_BLUE,
     COLOR_MAGENTA,
     COLOR_CYAN,
     COLOR_WHITE,
-    COLOR_DEFAULT,
+    COLOR_RESET = 0,
 };
 
 ostream& set_color(ostream& os, color_enum color)
 {
-    assert(COLOR_RED <= color && color <= COLOR_DEFAULT);
+    assert(                                          //
+        color == COLOR_RESET ||                      //
+        (COLOR_RED <= color && color <= COLOR_WHITE) //
+            );                                       //
 
     if (global::player_color())
-        os << "\x1b[1;" << (31 + color) << 'm';
+        os << "\x1b[" << color << 'm';
 
     return os;
 }
-*/
 
 /*
     Print enumerated options, and get a choice from the user.
@@ -297,9 +299,10 @@ void print_sum(const sumgame& sum)
         str_both << *g << " ";
     }
 
+    set_color(cout, COLOR_BLUE);
     str_both << '\n' << endl;
-
     flush_str_both();
+    set_color(cout, COLOR_RESET);
 }
 
 // Disable normalize/split before playing a move
@@ -742,6 +745,8 @@ void play_games(file_parser& parser, const string& log_name)
             break;
     }
 
+
     finalize_streams();
     assert(sum.num_total_games() == 0);
+    set_color(cout, COLOR_RESET);
 }
