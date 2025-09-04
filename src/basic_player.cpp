@@ -5,7 +5,6 @@
 */
 
 #include <cstdlib>
-#include <exception>
 #include <filesystem>
 #include <ios>
 #include <string>
@@ -576,21 +575,6 @@ optional<end_game_enum> get_choice_end_game()
     return static_cast<end_game_enum>(choice.value());
 }
 
-optional<bool> get_choice_play_again()
-{
-    const vector<string> options = {
-        "Restart",
-        "End",
-    };
-
-    optional<int> choice = get_choice(options);
-
-    if (!choice.has_value())
-        return {};
-
-    return choice.value() == 0;
-}
-
 // true IFF should play again
 bool play_single(sumgame& sum)
 {
@@ -642,20 +626,6 @@ bool play_single(sumgame& sum)
 
         return true;
     };
-
-    //auto print_moved_to = [&]() -> void
-    //{
-    //    // Backwards because this happens after calling play()
-    //    if (current_player == player_color)
-    //        str_both << "MCGS";
-    //    else
-    //        str_both << "You";
-
-    //    str_both << " moved to:" << endl;
-
-    //    print_sum(sum);
-    //    flush_str_both();
-    //};
 
     auto get_player_string = [&](bw color) -> string
     {
