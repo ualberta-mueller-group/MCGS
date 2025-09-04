@@ -56,7 +56,10 @@ struct sumgame_move
 //////////////////////////////////////// play_record
 struct play_record
 {
-    play_record(sumgame_move sm) : did_split(false), sm(sm), new_games() {}
+    play_record(sumgame_move sm)
+        : did_split(false), sm(sm), new_games(), deactivated_g(false)
+    {
+    }
 
     inline void add_game(game* game) { new_games.push_back(game); }
 
@@ -64,6 +67,7 @@ struct play_record
     sumgame_move sm;
     // doesn't own games, just stores them for debugging
     std::vector<game const*> new_games;
+    bool deactivated_g;
 };
 
 //////////////////////////////////////// solve_result

@@ -616,6 +616,7 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 
         // Don't normalize g, it's no longer part of the sum
         g->set_active(false);
+        record.deactivated_g = true;
 
         for (game* gp : *sr)
         {
@@ -629,7 +630,17 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
     else
     {
         if (global::play_normalize())
+        {
             g->normalize();
+
+            // TODO has_moves() is maybe slow...
+            if (!g->has_moves())
+            {
+                g->set_active(false);
+                record.deactivated_g = true;
+            }
+        }
+
     }
 
     alternating_move_game::play(mv);
@@ -649,7 +660,9 @@ void sumgame::undo_move()
     if (record.did_split)
     {
         assert(global::play_split());
-        assert(!s->is_active()); // should have been deactivated on last split
+        assert(
+            !s->is_active() &&
+            record.deactivated_g); // should have been deactivated on last split
 
         s->set_active(true);
 
@@ -670,7 +683,12 @@ void sumgame::undo_move()
     else
     {
         if (global::play_normalize())
+        {
+            if (record.deactivated_g)
+                s->set_active(true);
+
             s->undo_normalize();
+        }
     }
 
     const move subm = cgt_move::decode(s->last_move());

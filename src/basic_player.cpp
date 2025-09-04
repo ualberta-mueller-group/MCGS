@@ -298,14 +298,19 @@ string get_sum_string(const sumgame& sum)
     stringstream str;
 
     const int n = sum.num_total_games();
+    int n_active = 0;
     for (int i = 0; i < n; i++)
     {
         const game* g = sum.subgame(i);
         if (!g->is_active())
             continue;
 
+        n_active++;
         str << *g << " ";
     }
+
+    if (n_active == 0)
+        str << "<Empty sum>";
 
     return str.str();
 }
