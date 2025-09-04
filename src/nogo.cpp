@@ -253,12 +253,6 @@ game* nogo::inverse() const
     return new nogo(inverse_board(), new_immortal, shape());
 }
 
-std::ostream& operator<<(std::ostream& out, const nogo& g)
-{
-    out << g.board_as_string();
-    return out;
-}
-
 //////////////////////////////////////// nogo_rule
 bool nogo_rule::is_legal(nogo_board board, int p, int toplay)
 {

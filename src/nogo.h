@@ -131,5 +131,4 @@ public:
     static std::vector<nogo_board> split(const nogo_board& board);
 };
 
-std::ostream& operator<<(std::ostream& out, const nogo& g);
 std::ostream& operator<<(std::ostream& os, const nogo_board& board);
