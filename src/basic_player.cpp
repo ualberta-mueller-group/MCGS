@@ -273,6 +273,12 @@ optional<int> get_choice(const vector<T>& options)
     }
 }
 
+template <class T>
+optional<int> get_choice(const vector<T>&& options)
+{
+    return get_choice(options);
+}
+
 // Clear screen and draw top bar
 void new_screen()
 {
@@ -345,7 +351,22 @@ void undo_on_sum(sumgame& sum)
     global::play_split.set(play_split);
 }
 
-//////////////////////////////////////// move getting functions
+bool has_moves_for(const sumgame& sum, bw player)
+{
+    assert(is_black_white(player));
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        const game* g = sum.subgame_const(i);
+        if (!g->is_active() || !g->has_moves_for(player))
+            continue;
+
+        return true;
+    }
+
+    return false;
+}
 
 // Winning move or random move. Otherwise no moves exist
 optional<sumgame_move> get_mcgs_move(sumgame& sum, bw player)
@@ -474,6 +495,13 @@ enum pre_post_enum
     PRE_POST_BACK,
 };
 
+enum end_game_enum
+{
+    END_GAME_END = 0,
+    END_GAME_BACK,
+    END_GAME_RESTART,
+};
+
 optional<pre_post_enum> get_choice_pre_post_action()
 {
     const vector<string> options = {
@@ -490,6 +518,26 @@ optional<pre_post_enum> get_choice_pre_post_action()
 
     assert(PRE_POST_CONTINUE <= choice && choice <= PRE_POST_BACK);
     return static_cast<pre_post_enum>(choice);
+}
+
+optional<end_game_enum> get_choice_end_game()
+{
+    str_both << "Play again:" << endl;
+    flush_str_both();
+
+    const vector<string> options =
+    {
+        "End",
+        "Back",
+        "Restart",
+    };
+
+    optional<int> choice = get_choice(options);
+
+    if (!choice.has_value())
+        return {};
+
+    return static_cast<end_game_enum>(choice.value());
 }
 
 optional<bool> get_choice_play_again()
@@ -545,10 +593,9 @@ bool play_single(sumgame& sum)
     int move_depth = 0;
 
     bool should_replay = false;
-    bool game_determined = false;
 
-    // Helper functions
-    auto undo = [&]() -> bool
+    //////////////////////// Helper functions
+    auto undo_fn = [&]() -> bool
     {
         if (move_depth == 0)
             return false; // should return and call play_single() again
@@ -582,107 +629,116 @@ bool play_single(sumgame& sum)
         flush_str_both();
     };
 
+    auto print_end = [&]() -> void
+    {
+        if (current_player == mcgs_color)
+            str_both << "No moves. You win\n\n";
+        else
+            str_both << "No moves. MCGS wins\n\n";
+
+        flush_str_both();
+    };
+
+    auto get_move = [&]() -> optional<sumgame_move>
+    {
+        optional<sumgame_move> move_opt;
+
+        if (current_player == mcgs_color)
+        {
+            move_opt = get_mcgs_move(sum, mcgs_color);
+            assert(move_opt.has_value());
+        }
+        else
+        {
+            assert(current_player == player_color);
+            player_move pm = get_player_move(sum, player_color);
+
+            if (pm.status == PLAYER_MOVE_EOF)
+                return {};
+
+            move_opt = pm.sum_move;
+            assert(move_opt.has_value());
+        }
+
+        return move_opt;
+    };
+
+    auto print_moved_to = [&]() -> void
+    {
+        // Backwards because this happens after calling play()
+        if (current_player == player_color)
+            str_both << "MCGS";
+        else
+            str_both << "You";
+
+        str_both << " moved to:" << endl;
+
+        print_sum(sum);
+        flush_str_both();
+    };
+
+#define RESTART_MACRO() \
+    { \
+        should_replay = true; \
+        break; \
+    } \
+
+#define UNDO_MACRO() \
+    { \
+        if (undo_fn()) \
+            continue; \
+        else \
+            RESTART_MACRO(); \
+    } \
+
+#define CHECKED_OPTIONAL(non_opt_type, ident, opt_call) \
+    non_opt_type ident; \
+    { \
+        const std::optional<non_opt_type>& opt = opt_call; \
+        if (!opt.has_value()) \
+            break; \
+        ident = opt.value(); \
+    }
+
     // Main game loop
     while (true)
     {
+        const bool has_moves = has_moves_for(sum, current_player);
+
         new_screen();
         print_turn();
         print_sum(sum);
 
-        // Game should have ended
-        assert(!game_determined);
+        // End of game
+        if (!has_moves)
+        {
+            print_end();
+            CHECKED_OPTIONAL(end_game_enum, end_choice, get_choice_end_game());
+
+            if (end_choice == END_GAME_END) // End
+                break;
+            if (end_choice == END_GAME_BACK) // Back
+                UNDO_MACRO();
+            if (end_choice == END_GAME_RESTART) // Restart
+                RESTART_MACRO();
+        }
+
+        assert(has_moves);
 
         // Pre-move action
-        {
-            optional<pre_post_enum> pre_action = get_choice_pre_post_action();
-            if (!pre_action.has_value())
-                break;
-
-            if (pre_action.value() == PRE_POST_BACK)
-            {
-                bool did_undo = undo();
-
-                if (did_undo)
-                    continue;
-
-                // No moves to undo, should instead go back to setup phase
-                should_replay = true;
-                break;
-            }
-            else
-                assert(pre_action.value() == PRE_POST_CONTINUE);
-        }
+        CHECKED_OPTIONAL(pre_post_enum, pre_action, get_choice_pre_post_action());
+        if (pre_action == PRE_POST_BACK)
+            UNDO_MACRO();
 
         // Get and play move
-        if (current_player == mcgs_color)
-        {
-            optional<sumgame_move> sm = get_mcgs_move(sum, mcgs_color);
-
-            if (!sm.has_value())
-            {
-                str_both << "You win" << endl;
-                flush_str_both();
-                game_determined = true;
-                // press_enter();
-            }
-            else
-            {
-                play(sm.value());
-
-                str_both << "MCGS moves to:" << endl << endl;
-                flush_str_both();
-                print_sum(sum);
-            }
-        }
-        else
-        {
-            player_move pm = get_player_move(sum, player_color);
-
-            if (pm.status == PLAYER_MOVE_EOF)
-                break;
-
-            const optional<sumgame_move>& sm = pm.sum_move;
-            if (!sm.has_value())
-            {
-                str_both << "MCGS wins" << endl;
-                flush_str_both();
-                game_determined = true;
-                // press_enter();
-            }
-            else
-            {
-                play(sm.value());
-
-                str_both << "You moved to: " << endl << endl;
-                flush_str_both();
-                print_sum(sum);
-            }
-        }
+        CHECKED_OPTIONAL(sumgame_move, sum_move, get_move());
+        play(sum_move);
+        print_moved_to();
 
         // Post-move action
-        optional<pre_post_enum> post_action = get_choice_pre_post_action();
-        if (!post_action.has_value())
-            break;
-
-        if (post_action.value() == PRE_POST_BACK)
-        {
-            bool did_undo = undo();
-            assert(did_undo);
-            continue;
-        }
-
-        assert(post_action.value() == PRE_POST_CONTINUE);
-
-        if (game_determined)
-        {
-            str_both << "Play again:" << endl;
-            flush_str_both();
-            optional<bool> should_replay_opt = get_choice_play_again();
-
-            if (should_replay_opt.has_value())
-                should_replay = should_replay_opt.value();
-            break;
-        }
+        CHECKED_OPTIONAL(pre_post_enum, post_action, get_choice_pre_post_action());
+        if (post_action == PRE_POST_BACK)
+            UNDO_MACRO();
     }
 
     if (cin.eof())
@@ -692,7 +748,7 @@ bool play_single(sumgame& sum)
     }
 
     while (move_depth > 0)
-        undo();
+        undo_fn();
 
     sum.set_to_play(original_player);
 

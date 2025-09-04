@@ -46,6 +46,7 @@ enum sumgame_undo_code
 //////////////////////////////////////// sumgame_move
 struct sumgame_move
 {
+    sumgame_move() {} // TODO remove this?
     sumgame_move(int subg, move m) : subgame_idx(subg), m(m) {}
 
     int subgame_idx;
