@@ -751,11 +751,7 @@ std::vector<unsigned int> get_oc_indexable_vector()
 {
     std::vector<unsigned int> vec;
 
-#ifdef LAB_MACHINE_COMPAT
     static const outcome_class OC_MAX =
-#else
-    static constexpr outcome_class OC_MAX =
-#endif
         std::max({
             outcome_class::U,
             outcome_class::L,
