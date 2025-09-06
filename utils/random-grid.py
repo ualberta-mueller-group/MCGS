@@ -1,4 +1,4 @@
-# Generate a random strip game based on various parameters
+# Generate a random grid game based on various parameters
 
 import random
 import sys
@@ -6,6 +6,7 @@ import sys
 BLACK = "X"
 WHITE = "O"
 EMPTY = "."
+BORDER = "#"
 SEP = "|"
 
 if "-h" in sys.argv or "--help" in sys.argv:
@@ -18,30 +19,41 @@ def einput(prompt):
     return input()
 
 
+useColor = int(einput("Use color? (0, 1): "))
+assert 0 <= useColor and useColor <= 1
+useColor = False if useColor == 0 else True
+
 boardRows = int(einput("Board rows: ", ))
 boardCols = int(einput("Board cols: ", ))
 boardCells = boardRows * boardCols
 
-minBlackStones = int(einput("Min black stones: "))
-maxBlackStones = int(einput("Max black stones: "))
+if useColor:
+    minBlackStones = int(einput("Min black stones: "))
+    maxBlackStones = int(einput("Max black stones: "))
 
-minWhiteStones = int(einput("Min white stones: "))
-maxWhiteStones = int(einput("Max white stones: "))
+    minWhiteStones = int(einput("Min white stones: "))
+    maxWhiteStones = int(einput("Max white stones: "))
+
+    assert minBlackStones <= maxBlackStones
+    assert minWhiteStones <= maxWhiteStones
+    assert maxBlackStones + maxWhiteStones <= boardCells
+else:
+    minStones = int(einput("Min stones: "))
+    maxStones = int(einput("Max stones: "))
+
 count = int(einput("Number of cases: "))
 
-assert minBlackStones <= maxBlackStones
-assert minWhiteStones <= maxWhiteStones
-assert maxBlackStones + maxWhiteStones <= boardCells
-
-for i in range(count):
-    grid = [[EMPTY for c in range(boardCols)] for r in range(boardRows)]
+def getRandomColorBoard():
+    assert useColor
 
     blackStones = random.randint(minBlackStones, maxBlackStones)
     whiteStones = random.randint(minWhiteStones, maxWhiteStones)
 
-    # Randomly add stones
+    grid = [[EMPTY for c in range(boardCols)] for r in range(boardRows)]
+
     remainingB = blackStones
     remainingW = whiteStones
+
     choices = [(r, c) for r in range(boardRows) for c in range(boardCols)]
 
     while len(choices) > 0 and remainingB + remainingW > 0:
@@ -65,6 +77,39 @@ for i in range(count):
         r, c = to
         row = grid[r]
         row[c] = color
+    return grid
+
+
+def getRandomMonoBoard():
+    assert not useColor
+    stones = random.randint(minStones, maxStones)
+
+    grid = [[EMPTY for c in range(boardCols)] for r in range(boardRows)]
+
+    remaining = stones
+
+    choices = [(r, c) for r in range(boardRows) for c in range(boardCols)]
+
+    while len(choices) > 0 and remaining > 0:
+        color = BORDER
+        remaining -= 1
+
+        to = random.choice(choices)
+        choices.remove(to)
+
+        r, c = to
+        row = grid[r]
+        row[c] = color
+    return grid
+
+def getRandomBoard():
+    if useColor:
+        return getRandomColorBoard()
+    return getRandomMonoBoard()
+
+
+for i in range(count):
+    grid = getRandomBoard()
 
     row_strings = ["".join(row) for row in grid]
     grid_string = "|".join(row_strings)
