@@ -94,6 +94,7 @@ void clobber::undo_move()
 
     if (_hash_updatable())
     {
+        // TODO hard coded "2" should go away...
         local_hash& hash = _get_hash_ref();
         hash.toggle_value(2 + from, EMPTY);
         hash.toggle_value(2 + to, to_play);

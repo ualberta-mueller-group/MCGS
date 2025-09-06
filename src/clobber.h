@@ -22,7 +22,6 @@ public:
     bool is_move(const int& from, const int& to, bw to_play) const;
 
 protected:
-    // Disabled for now, too slow...
     split_result _split_impl() const override;
 
 public:

@@ -280,6 +280,33 @@ protected:
     bool _increment_board() override;
 };
 
+
+////////////////////////////////////////////////// grid_generator_domineering
+/*
+   Non-abstract grid generator for domineering. Uses NoGo-like ordering, but
+   contents are either '.' or '#'
+
+    i.e. for max_shape 2x2 (empties on the true part of the grid_mask):
+
+    "" -> "#" -> "." -> "##" -> ".#" -> "#." -> ".." -> "#|#" -> ".|#" -> "#|."
+    -> ".|." -> "##|##" -> ".#|##" -> "#.|##" -> "##|.#" -> "##|#." -> "..|##"
+    -> ".#|.#" -> ".#|#." -> "#.|.#" -> "#.|#." -> "##|.." -> "..|.#" -> "..|#."
+    -> ".#|.." -> "#.|.." -> "..|.."
+*/
+class grid_generator_domineering: public grid_generator_masked
+{
+public:
+    grid_generator_domineering(const int_pair& max_shape);
+    grid_generator_domineering(int max_rows, int max_cols);
+    grid_generator_domineering(int max_cols);
+
+    virtual ~grid_generator_domineering() {}
+
+protected:
+    void _init_board() override;
+    bool _increment_board() override;
+};
+
 ////////////////////////////////////////////////// grid_mask methods
 namespace grid_generator_impl {
 
@@ -447,4 +474,36 @@ inline void grid_generator_nogo::_init_board()
     const char black_char = color_to_clobber_char(BLACK);
     const char empty_char = color_to_clobber_char(EMPTY);
     init_board_helper_masked(_board, _shape, _mask, empty_char, black_char);
+}
+
+//////////////////////////////////////////////////
+// grid_generator_domineering methods
+inline grid_generator_domineering::grid_generator_domineering(
+    const int_pair& max_shape)
+    : grid_generator_masked(max_shape)
+{
+}
+
+inline grid_generator_domineering::grid_generator_domineering(int max_rows,
+                                                              int max_cols)
+    : grid_generator_masked(max_rows, max_cols)
+{
+}
+
+inline grid_generator_domineering::grid_generator_domineering(int max_cols)
+    : grid_generator_masked(1, max_cols)
+{
+}
+
+inline void grid_generator_domineering::_init_board()
+{
+    const char empty_char = color_to_clobber_char(EMPTY);
+    const char border_char = '#'; // TODO clean up grid stuff...
+
+    init_board_helper_masked(_board, _shape, _mask, empty_char, border_char);
+}
+
+inline bool grid_generator_domineering::_increment_board()
+{
+    return false;
 }

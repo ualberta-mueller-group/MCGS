@@ -208,3 +208,39 @@ std::vector<int> grid::inverse_board() const
     }
     return new_board;
 }
+
+std::vector<int> grid::get_transpose_board(int_pair& new_shape)
+{
+    const int_pair& s = shape();
+
+    new_shape.first = s.second;
+    new_shape.second = s.first;
+
+    return transpose_board(board_const(), s);
+}
+
+// TODO unit test this
+std::vector<int> grid::transpose_board(const std::vector<int>& board,
+                                       const int_pair& shape)
+{
+    std::vector<int> new_board;
+
+    const size_t board_n = board.size();
+    new_board.reserve(board_n);
+
+    const int n_rows = shape.first;
+    const int n_cols = shape.second;
+
+    for (int col = 0; col < n_cols; col++)
+    {
+        int idx = col;
+
+        for (int row = 0; row < n_rows; row++)
+        {
+            new_board.push_back(board[idx]);
+            idx += n_cols;
+        }
+    }
+
+    return new_board;
+}

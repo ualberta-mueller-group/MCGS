@@ -802,6 +802,8 @@ bool file_parser::warned_wrong_version()
 */
 void file_parser::_init_game_parsers()
 {
+    // TODO this file shouldn't include every game header. Define this function
+    // in another cpp file...
     assert(_game_map.size() == 0);
 
     _add_game_parser("clobber_1xn", new basic_parser<clobber_1xn>());
@@ -818,6 +820,7 @@ void file_parser::_init_game_parsers()
 
     _add_game_parser("nogo", new basic_parser_with_check<nogo>());
     _add_game_parser("clobber", new basic_parser<clobber>());
+    _add_game_parser("domineering", new basic_parser<domineering>());
 
     _add_game_parser("kayles", new int_parser<kayles>());
 }

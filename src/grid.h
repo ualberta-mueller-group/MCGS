@@ -46,6 +46,11 @@ public:
 
     std::vector<int> board() const;
 
+    std::vector<int> get_transpose_board(int_pair& new_shape);
+
+    static std::vector<int> transpose_board(const std::vector<int>& board,
+                                            const int_pair& shape);
+
 protected:
     void _init_hash(local_hash& hash) const override;
     relation _order_impl(const game* rhs) const override;
@@ -100,7 +105,7 @@ inline void grid::remove_stone(int p)
 inline void grid::replace(int p, int color)
 {
     assert_range(p, 0, size());
-    assert_empty_black_white(color);
+    assert(is_empty_black_white(color) || color == BORDER); // TODO clean up
     _board[p] = color;
 }
 
