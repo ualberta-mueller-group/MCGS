@@ -120,7 +120,7 @@ void domineering::play(const ::move& m, bw to_play)
     const int point1 = cgt_move::from(m);
     const int point2 = cgt_move::to(m);
 
-    // Both points within grid, with vertical/orientation for BLACK/WHITE
+    // Both points within grid, and vertical/horizontal for BLACK/WHITE
     assert(move_has_legal_orientation(point1, point2, to_play, shape()));
 
     // Grid empty at move location
@@ -267,6 +267,7 @@ split_result domineering::_split_impl() const
     vector<vector<int>> component_vec;
     vector<bounding_box> bounding_boxes;
 
+    // Current component
     vector<int> component;
     size_t component_empty_count = 0;
     int min_row = MIN_INVALID;
@@ -452,3 +453,4 @@ void domineering_move_generator::_increment(bool init)
         break;
     }
 }
+

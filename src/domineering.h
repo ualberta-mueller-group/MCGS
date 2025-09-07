@@ -37,5 +37,3 @@ inline void domineering::print(std::ostream& str) const
 {
     str << "domineering:" << board_as_string();
 }
-
-
