@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 
+#define ENABLEDOMSPLIT
+
 ////////////////////////////////////////////////// class domineering
 class domineering: public grid
 {
@@ -23,7 +25,10 @@ public:
     game* inverse() const override; // caller takes ownership
 
 protected:
+
+#ifdef ENABLEDOMSPLIT
     split_result _split_impl() const override;
+#endif
 
 };
 

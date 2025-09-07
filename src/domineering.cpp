@@ -194,41 +194,35 @@ game* domineering::inverse() const
     return new domineering(transpose_board(board_const(), s), transpose_shape);
 }
 
-
 ////////////////////////////////////////////////// split
 namespace {
 
+struct bounding_box
+{
+    bounding_box(int row_shift, int col_shift, int_pair shape):
+        row_shift(row_shift), col_shift(col_shift), shape(shape)
+    {
+    }
+
+    int row_shift;
+    int col_shift;
+    int_pair shape;
+};
+
 vector<int> trim_to_bounding_box(const vector<int>& src_board,
                                  const int_pair& src_shape,
-                                 const int_pair& min_dst_coords,
-                                 const int_pair& max_dst_coords,
-                                 int_pair& dst_shape)
+                                 const bounding_box& dst_box)
 {
     vector<int> dst_board;
 
-    // Min and max coords are consistent with each other
-    assert(
-        (min_dst_coords.first <= max_dst_coords.first) && //
-        (min_dst_coords.second <= max_dst_coords.second)  //
-            );
-
-    // Min and max coords are within src_shape
-    assert(
-            grid_location::coord_in_shape(min_dst_coords, src_shape) && //
-            grid_location::coord_in_shape(max_dst_coords, src_shape)    //
-            );
-
-    dst_shape = int_pair((max_dst_coords.first - min_dst_coords.first + 1),  //
-                         (max_dst_coords.second - min_dst_coords.second + 1) //
-    );
+    const int& row_shift = dst_box.row_shift;
+    const int& col_shift = dst_box.col_shift;
+    const int_pair& dst_shape = dst_box.shape;
 
     assert(!grid_location::shape_is_empty(dst_shape));
 
     const int dst_size = dst_shape.first * dst_shape.second;
     dst_board.reserve(dst_size);
-
-    const int& row_shift = min_dst_coords.first;
-    const int& col_shift = min_dst_coords.second;
 
     int src_point = col_shift + (row_shift * src_shape.second);
 
@@ -249,7 +243,8 @@ vector<int> trim_to_bounding_box(const vector<int>& src_board,
 } // namespace
 
 // Find all 4-connected components with at least 2 spaces
-///*
+
+#ifdef ENABLEDOMSPLIT
 split_result domineering::_split_impl() const
 {
     if (size() == 0)
@@ -268,8 +263,9 @@ split_result domineering::_split_impl() const
     vector<grid_location> open_stack;
     vector<bool> closed_set(grid_size, false);
 
+    // Found components
     vector<vector<int>> component_vec;
-    vector<pair<int_pair, int_pair>> bounding_boxes;
+    vector<bounding_box> bounding_boxes;
 
     vector<int> component;
     size_t component_empty_count = 0;
@@ -353,33 +349,37 @@ split_result domineering::_split_impl() const
 
         if (component_empty_count >= 2)
         {
+            // Save this component
             component_vec.emplace_back(std::move(component));
-            bounding_boxes.push_back(
-                    {int_pair(min_row, min_col), int_pair(max_row, max_col)}
-                    );
+
+            assert((min_row <= max_row) && (min_col <= max_col));
+
+            const int row_dim = max_row - min_row + 1;
+            const int col_dim = max_col - min_col + 1;
+
+            bounding_boxes.emplace_back(min_row, min_col,
+                                        int_pair(row_dim, col_dim));
         }
     }
 
     assert(component_vec.size() == bounding_boxes.size());
 
+    if (component_vec.size() == 1 && bounding_boxes.back().shape == grid_shape)
+        return {};
+
     const size_t n_components = component_vec.size();
     for (size_t i = 0; i < n_components; i++)
     {
         const vector<int>& comp = component_vec[i];
-        const pair<int_pair, int_pair>& box = bounding_boxes[i];
+        const bounding_box& box = bounding_boxes[i];
 
-        int_pair dst_shape;
-        vector<int> trimmed = trim_to_bounding_box(comp, grid_shape, box.first, box.second, dst_shape);
-
-        if (n_components == 1 && dst_shape == grid_shape)
-            return {};
-
-        result->push_back(new domineering(trimmed, dst_shape));
+        result->push_back(new domineering(
+            trim_to_bounding_box(comp, grid_shape, box), box.shape));
     }
 
     return result;
 }
-//*/
+#endif
 
 //////////////////////////////////////////////////
 // domineering_move_generator methods
