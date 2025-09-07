@@ -194,12 +194,192 @@ game* domineering::inverse() const
     return new domineering(transpose_board(board_const(), s), transpose_shape);
 }
 
-/*
+
+////////////////////////////////////////////////// split
+namespace {
+
+vector<int> trim_to_bounding_box(const vector<int>& src_board,
+                                 const int_pair& src_shape,
+                                 const int_pair& min_dst_coords,
+                                 const int_pair& max_dst_coords,
+                                 int_pair& dst_shape)
+{
+    vector<int> dst_board;
+
+    // Min and max coords are consistent with each other
+    assert(
+        (min_dst_coords.first <= max_dst_coords.first) && //
+        (min_dst_coords.second <= max_dst_coords.second)  //
+            );
+
+    // Min and max coords are within src_shape
+    assert(
+            grid_location::coord_in_shape(min_dst_coords, src_shape) && //
+            grid_location::coord_in_shape(max_dst_coords, src_shape)    //
+            );
+
+    dst_shape = int_pair((max_dst_coords.first - min_dst_coords.first + 1),  //
+                         (max_dst_coords.second - min_dst_coords.second + 1) //
+    );
+
+    assert(!grid_location::shape_is_empty(dst_shape));
+
+    const int dst_size = dst_shape.first * dst_shape.second;
+    dst_board.reserve(dst_size);
+
+    const int& row_shift = min_dst_coords.first;
+    const int& col_shift = min_dst_coords.second;
+
+    int src_point = col_shift + (row_shift * src_shape.second);
+
+    for (int r = 0; r < dst_shape.first; r++)
+    {
+        for (int c = 0; c < dst_shape.second; c++)
+        {
+            const int val = src_board[src_point + c];
+            dst_board.push_back(val);
+        }
+
+        src_point += src_shape.second;
+    }
+
+    return dst_board;
+}
+
+} // namespace
+
+// Find all 4-connected components with at least 2 spaces
+///*
 split_result domineering::_split_impl() const
 {
+    if (size() == 0)
+        return {};
 
+    split_result result = split_result(vector<game*>());
+
+    // Constants
+    const int grid_size = size();
+    const int_pair grid_shape = shape();
+
+    const int MIN_INVALID = max(grid_shape.first, grid_shape.second) + 1;
+    const int MAX_INVALID = -1;
+
+    // Search state
+    vector<grid_location> open_stack;
+    vector<bool> closed_set(grid_size, false);
+
+    vector<vector<int>> component_vec;
+    vector<pair<int_pair, int_pair>> bounding_boxes;
+
+    vector<int> component;
+    size_t component_empty_count = 0;
+    int min_row = MIN_INVALID;
+    int max_row = MAX_INVALID;
+    int min_col = MIN_INVALID;
+    int max_col = MAX_INVALID;
+
+    auto reset_component = [&]() -> void
+    {
+        component_empty_count = 0;
+
+        // component
+        if (component.empty())
+            component.resize(grid_size, BORDER);
+        else
+            for (int& tile : component)
+                tile = BORDER;
+
+        // bounding box
+        min_row = MIN_INVALID;
+        max_row = MAX_INVALID;
+        min_col = MIN_INVALID;
+        max_col = MAX_INVALID;
+    };
+
+    auto mark_component = [&](int point, const int_pair& coord)
+    {
+        component[point] = EMPTY;
+
+        min_row = min(min_row, coord.first);
+        max_row = max(max_row, coord.first);
+        min_col = min(min_col, coord.second);
+        max_col = max(max_col, coord.second);
+
+        component_empty_count++;
+    };
+
+    // Main loop
+    for (grid_location loc(grid_shape); loc.valid(); loc.increment_position())
+    {
+        const int point_start = loc.get_point();
+
+        if (closed_set[point_start] || at(point_start) != EMPTY)
+            continue;
+
+        reset_component();
+        assert(open_stack.empty());
+
+        open_stack.emplace_back(loc);
+        closed_set[point_start] = true;
+
+        while (!open_stack.empty())
+        {
+            grid_location loc1 = open_stack.back();
+            open_stack.pop_back();
+
+            const int point1 = loc1.get_point();
+            assert(at(point1) == EMPTY);
+            assert(closed_set[point1]);
+
+            assert(component[point1] == BORDER);
+            mark_component(point1, loc1.get_coord());
+
+            grid_location loc2(grid_shape);
+            for (grid_dir dir : GRID_DIRS_CARDINAL)
+            {
+                loc2.set_coord(loc1.get_coord());
+                if (!loc2.move(dir))
+                    continue;
+
+                const int point2 = loc2.get_point();
+
+                if (closed_set[point2] || at(point2) != EMPTY)
+                    continue;
+
+                closed_set[point2] = true;
+                open_stack.emplace_back(loc2);
+            }
+        }
+
+        if (component_empty_count >= 2)
+        {
+            component_vec.emplace_back(std::move(component));
+            bounding_boxes.push_back(
+                    {int_pair(min_row, min_col), int_pair(max_row, max_col)}
+                    );
+        }
+    }
+
+    assert(component_vec.size() == bounding_boxes.size());
+
+    const size_t n_components = component_vec.size();
+    for (size_t i = 0; i < n_components; i++)
+    {
+        const vector<int>& comp = component_vec[i];
+        const pair<int_pair, int_pair>& box = bounding_boxes[i];
+
+        int_pair dst_shape;
+        vector<int> trimmed = trim_to_bounding_box(comp, grid_shape, box.first, box.second, dst_shape);
+
+        if (n_components == 1 && dst_shape == grid_shape)
+            return {};
+
+        result->push_back(new domineering(trimmed, dst_shape));
+    }
+
+    return result;
 }
-*/
+//*/
 
 //////////////////////////////////////////////////
 // domineering_move_generator methods

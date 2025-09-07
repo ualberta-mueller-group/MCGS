@@ -39,11 +39,11 @@ void register_types(database& db)
 void fill_database(database& db)
 {
     std::vector<db_game_generator*> generators = {
-        new gridlike_db_game_generator<elephants, grid_generator_default>(15),
-        new gridlike_db_game_generator<clobber_1xn, grid_generator_clobber>(15),
-        new gridlike_db_game_generator<nogo_1xn, grid_generator_nogo>(15),
-        new gridlike_db_game_generator<clobber, grid_generator_clobber>(3, 3),
-        new gridlike_db_game_generator<nogo, grid_generator_nogo>(3, 3),
+        //new gridlike_db_game_generator<elephants, grid_generator_default>(15),
+        //new gridlike_db_game_generator<clobber_1xn, grid_generator_clobber>(15),
+        //new gridlike_db_game_generator<nogo_1xn, grid_generator_nogo>(15),
+        //new gridlike_db_game_generator<clobber, grid_generator_clobber>(3, 3),
+        //new gridlike_db_game_generator<nogo, grid_generator_nogo>(3, 3),
         new gridlike_db_game_generator<domineering, grid_generator_domineering>(4, 4),
     };
 

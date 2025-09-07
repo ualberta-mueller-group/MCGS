@@ -23,8 +23,7 @@ public:
     game* inverse() const override; // caller takes ownership
 
 protected:
-    // TODO implement split
-    //split_result _split_impl() const override;
+    split_result _split_impl() const override;
 
 };
 
