@@ -16,6 +16,7 @@
 #include "nogo_1xn.h"
 #include "nogo.h"
 #include "domineering.h"
+#include "amazons.h"
 #include "gridlike_db_game_generator.h"
 #include "grid_generator.h"
 
@@ -34,6 +35,7 @@ void register_types(database& db)
     DATABASE_REGISTER_TYPE(db, clobber);
     DATABASE_REGISTER_TYPE(db, nogo);
     DATABASE_REGISTER_TYPE(db, domineering);
+    DATABASE_REGISTER_TYPE(db, amazons);
 }
 
 void fill_database(database& db)
@@ -44,7 +46,8 @@ void fill_database(database& db)
         //new gridlike_db_game_generator<nogo_1xn, grid_generator_nogo>(15),
         //new gridlike_db_game_generator<clobber, grid_generator_clobber>(3, 3),
         //new gridlike_db_game_generator<nogo, grid_generator_nogo>(3, 3),
-        new gridlike_db_game_generator<domineering, grid_generator_domineering>(4, 4),
+        //new gridlike_db_game_generator<domineering, grid_generator_domineering>(4, 4),
+        new gridlike_db_game_generator<amazons, grid_generator_amazons>(3, 3),
     };
 
     for (db_game_generator* gen : generators)

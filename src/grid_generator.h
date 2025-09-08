@@ -307,6 +307,25 @@ protected:
     bool _increment_board() override;
 };
 
+////////////////////////////////////////////////// grid_generator_amazons
+/*
+   Non-abstract grid generator for amazons. Uses NoGo-like ordering, but
+   contents are 'X', 'O', and '.' on the mask bits, and '#' elsewhere
+*/
+class grid_generator_amazons: public grid_generator_masked
+{
+public:
+    grid_generator_amazons(const int_pair& max_shape);
+    grid_generator_amazons(int max_rows, int max_cols);
+    grid_generator_amazons(int max_cols);
+
+    virtual ~grid_generator_amazons() {}
+
+protected:
+    void _init_board() override;
+    bool _increment_board() override;
+};
+
 ////////////////////////////////////////////////// grid_mask methods
 namespace grid_generator_impl {
 
@@ -506,4 +525,29 @@ inline void grid_generator_domineering::_init_board()
 inline bool grid_generator_domineering::_increment_board()
 {
     return false;
+}
+
+//////////////////////////////////////////////////
+// grid_generator_amazons methods
+inline grid_generator_amazons::grid_generator_amazons(const int_pair& max_shape)
+    : grid_generator_masked(max_shape)
+{
+}
+
+inline grid_generator_amazons::grid_generator_amazons(int max_rows, int max_cols)
+    : grid_generator_masked(max_rows, max_cols)
+{
+}
+
+inline grid_generator_amazons::grid_generator_amazons(int max_cols)
+    : grid_generator_masked(max_cols)
+{
+}
+
+inline void grid_generator_amazons::_init_board()
+{
+    const char black_char = color_to_clobber_char(BLACK);
+    const char border_char = '#'; // TODO clean up grid stuff...
+
+    init_board_helper_masked(_board, _shape, _mask, black_char, border_char);
 }

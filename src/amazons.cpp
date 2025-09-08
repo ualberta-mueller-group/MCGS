@@ -96,6 +96,8 @@ void amazons::play(const ::move& m, bw to_play)
     unsigned int move1, move2, move3;
     decode_three_part_move(m, move1, move2, move3);
 
+    // TODO check paths?
+
     // Queen end can't be queen start or arrow end
     assert(move2 != move1 && move2 != move3);
 
@@ -142,6 +144,8 @@ void amazons::undo_move()
 
     unsigned int move1, move2, move3;
     decode_three_part_move(m_dec, move1, move2, move3);
+
+    // TODO check paths?
 
     // Queen end can't be queen start or arrow end
     assert(move2 != move1 && move2 != move3);

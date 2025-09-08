@@ -27,7 +27,7 @@ bool increment_char_clobber_bw(char& c)
 }
 
 // '.' --true--> 'X' --true--> 'O' --false--> '.'
-bool increment_char_clobber_bwe(char& c)
+bool increment_char_clobber_ebw(char& c)
 {
     if (c == '.')
     {
@@ -45,6 +45,27 @@ bool increment_char_clobber_bwe(char& c)
     c = '.';
     return false;
 }
+
+// 'X' --true--> 'O' --true--> '.' --false--> 'X'
+bool increment_char_clobber_bwe(char& c)
+{
+    if (c == 'X')
+    {
+        c = 'O';
+        return true;
+    }
+
+    if (c == 'O')
+    {
+        c = '.';
+        return true;
+    }
+
+    assert(c == '.');
+    c = 'X';
+    return false;
+}
+
 
 } // namespace
 
@@ -364,7 +385,7 @@ bool grid_generator_default::_increment_board()
         if (c == '|')
             continue;
 
-        carry = !increment_char_clobber_bwe(c);
+        carry = !increment_char_clobber_ebw(c);
 
         if (!carry)
             break;
@@ -416,6 +437,32 @@ bool grid_generator_nogo::_increment_board()
             continue;
 
         carry = !increment_char_clobber_bw(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
+//////////////////////////////////////////////////
+// grid_generator_amazons methods
+bool grid_generator_amazons::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (!_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_bwe(_board[i]);
 
         if (!carry)
             break;
