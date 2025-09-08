@@ -244,7 +244,7 @@ vector<int> trim_to_bounding_box(const vector<int>& src_board,
 
 // Find all 4-connected components with at least 2 spaces
 
-#ifdef ENABLEDOMSPLIT
+#ifdef DOMINEERING_SPLIT
 split_result domineering::_split_impl() const
 {
     if (size() == 0)
@@ -293,7 +293,7 @@ split_result domineering::_split_impl() const
         max_col = MAX_INVALID;
     };
 
-    auto mark_component = [&](int point, const int_pair& coord)
+    auto mark_component = [&](int point, const int_pair& coord) -> void
     {
         component[point] = EMPTY;
 

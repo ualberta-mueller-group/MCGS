@@ -105,6 +105,27 @@ inline constexpr T rotate_left(const T& val, size_t distance)
     return (val_unsigned << distance) | (val_unsigned >> (N_BITS - distance));
 }
 
+// TODO unit test
+// TODO inline or not?
+template <class T>
+constexpr T get_bit_mask(unsigned int n_bits)
+{
+    static_assert(std::is_integral_v<T>);
+    assert(n_bits <= size_in_bits<T>());
+
+    if (n_bits == 0) [[ unlikely ]]
+        return T(0);
+
+    T val(-1);
+
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_Unsigned = std::make_unsigned_t<T>;
+
+    T_Unsigned& val_unsigned = reinterpret_cast<T_Unsigned&>(val);
+
+    return val_unsigned >> (size_in_bits<T>() - n_bits);
+}
+
 // ... 0101 0101
 template <class T>
 constexpr T alternating_mask()

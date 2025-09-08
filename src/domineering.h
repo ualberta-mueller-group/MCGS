@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 
-#define ENABLEDOMSPLIT
+#define DOMINEERING_SPLIT
 
 ////////////////////////////////////////////////// class domineering
 class domineering: public grid
@@ -26,7 +26,7 @@ public:
 
 protected:
 
-#ifdef ENABLEDOMSPLIT
+#ifdef DOMINEERING_SPLIT
     split_result _split_impl() const override;
 #endif
 

@@ -12,5 +12,6 @@
 #include "nogo.h"
 #include "clobber.h"
 #include "domineering.h"
+#include "amazons.h"
 #include "kayles.h"
 // IWYU pragma: end_exports
