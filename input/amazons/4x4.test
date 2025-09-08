@@ -1,0 +1,38 @@
+{version 1.3}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[amazons]
+
+.#..|X.#.|#X#.|#..# {B win, W loss}
+...#|....|#.##|..#. {B loss, W loss}
+##X.|#...|#...|#... {B win, W loss}
+.O.#|#...|#..O|#.## {B loss, W win}
+#.#.|#.#.|X..#|#..# {B win, W loss}
+X##X|.##.|X##.|.O.. {B win, W loss}
+...#|####|#...|..#. {B loss, W loss}
+#.#.|.#X.|...X|X.#. {B win, W loss}
+#X#.|..X#|..O.|O##O {B win, W win}
+.#.#|..O.|..#.|##.# {B loss, W win}
+O##.|.###|....|#.O# {B loss, W win}
+#..X|..X.|..O#|.#X# {B win, W loss}
+.#..|##.#|##..|.#.. {B loss, W loss}
+X.O#|O##O|...#|XX#. {B win, W win}
+#.O.|##O#|.O.#|.##. {B loss, W win}
+.X.#|OXO.|#O##|..#X {B loss, W win}
+O...|.##X|.X#.|X#OO {B win, W loss}
+##.O|X#O#|#...|..O# {B loss, W win}
+...#|#..#|X.#.|##.X {B win, W loss}
+.#..|#OX#|O.O#|.#.. {B loss, W win}
+.O.#|.#..|..#.|O#.. {B loss, W win}
+###X|O...|#...|.#.X {B win, W loss}
+##..|##.#|O#O#|.... {B loss, W win}
+..#.|..#.|##.#|..#. {B loss, W loss}
+.#..|#...|O##.|.O.# {B loss, W win}
+.X..|#X##|..OO|#XO# {B win, W loss}
+##O.|..O#|X#.O|..#. {B win, W win}
+#.#.|O#O.|O..X|.##X {B loss, W win}
+#X..|...#|#X.#|...X {B win, W loss}
+.#.#|.X.O|XX.#|..#. {B win, W loss}

@@ -27,6 +27,10 @@ boardRows = int(einput("Board rows: ", ))
 boardCols = int(einput("Board cols: ", ))
 boardCells = boardRows * boardCols
 
+minBorders = int(einput("Min borders: "))
+maxBorders = int(einput("Max borders: "))
+assert minBorders <= maxBorders
+
 if useColor:
     minBlackStones = int(einput("Min black stones: "))
     maxBlackStones = int(einput("Max black stones: "))
@@ -36,10 +40,14 @@ if useColor:
 
     assert minBlackStones <= maxBlackStones
     assert minWhiteStones <= maxWhiteStones
-    assert maxBlackStones + maxWhiteStones <= boardCells
+    assert maxBorders + maxBlackStones + maxWhiteStones <= boardCells
 else:
     minStones = int(einput("Min stones: "))
     maxStones = int(einput("Max stones: "))
+
+    assert minStones <= maxStones
+    assert maxBorders + maxStones <= boardCells
+
 
 count = int(einput("Number of cases: "))
 
@@ -48,15 +56,17 @@ def getRandomColorBoard():
 
     blackStones = random.randint(minBlackStones, maxBlackStones)
     whiteStones = random.randint(minWhiteStones, maxWhiteStones)
+    borders = random.randint(minBorders, maxBorders)
 
     grid = [[EMPTY for c in range(boardCols)] for r in range(boardRows)]
 
     remainingB = blackStones
     remainingW = whiteStones
+    remainingBorders = borders
 
     choices = [(r, c) for r in range(boardRows) for c in range(boardCols)]
 
-    while len(choices) > 0 and remainingB + remainingW > 0:
+    while len(choices) > 0 and remainingB + remainingW + remainingBorders > 0:
         colors = []
         if remainingB:
             colors.append(BLACK)
@@ -64,12 +74,17 @@ def getRandomColorBoard():
         if remainingW:
             colors.append(WHITE)
 
+        if remainingBorders:
+            colors.append(BORDER)
+
         color = random.choice(colors)
 
         if color == BLACK:
             remainingB -= 1
         if color == WHITE:
             remainingW -= 1
+        if color == BORDER:
+            remainingBorders -= 1
 
         to = random.choice(choices)
         choices.remove(to)
