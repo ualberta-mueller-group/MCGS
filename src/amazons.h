@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 
-//#define AMAZONS_SPLIT
+#define AMAZONS_SPLIT
 
 ////////////////////////////////////////////////// class amazons
 class amazons: public grid
