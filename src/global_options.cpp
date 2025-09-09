@@ -111,12 +111,13 @@ INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 26); // ~576 MiB
 #ifdef __EMSCRIPTEN__
 INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 27);     // ~656 MiB
 INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 26); // ~576 MiB
+INIT_GLOBAL_WITH_SUMMARY(use_db, bool, false);
 #else
 INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);     // ~1312 MiB
 INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 27); // ~1152 MiB
+INIT_GLOBAL_WITH_SUMMARY(use_db, bool, true);
 #endif
 
-INIT_GLOBAL_WITH_SUMMARY(use_db, bool, true);
 
 INIT_GLOBAL_WITH_SUMMARY(clear_tt, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(experiment_seed, uint64_t, 0);

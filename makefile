@@ -7,7 +7,7 @@ EMCC_LINK_FLAGS :=
 EMCC_EXTENSION :=
 
 ifneq (,$(filter $(WASM),1 true))
-	EMCC_COMPILE_FLAGS := -sNO_DISABLE_EXCEPTION_CATCHING
+	#EMCC_COMPILE_FLAGS := -sNO_DISABLE_EXCEPTION_CATCHING
 	EMCC_LINK_FLAGS := -lembind -sALLOW_MEMORY_GROWTH
 	EMCC_EXTENSION := .js
 	CC = em++
@@ -51,13 +51,12 @@ ifneq (,$(filter $(ASAN),leak address)) # ASAN=leak or ASAN=address
 	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN)
 endif
 
-#NORMAL_FLAGS_BASE := -Wall --std=c++17 -O2 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
-NORMAL_FLAGS_BASE := -Wall --std=c++17 -O2 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
+NORMAL_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
 TEST_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST)
 
 ifneq (,$(filter $(WASM),1 true))
-	NORMAL_FLAGS_BASE := $(filter-out $(NORMAL_FLAGS_BASE),-pthread)
-	TEST_FLAGS_BASE := $(filter-out $(TEST_FLAGS_BASE),-pthread)
+	NORMAL_FLAGS_BASE := $(filter-out -pthread,$(NORMAL_FLAGS_BASE))
+	TEST_FLAGS_BASE := $(filter-out -pthread,$(TEST_FLAGS_BASE))
 endif
 
 
