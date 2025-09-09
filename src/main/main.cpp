@@ -22,8 +22,27 @@
 
 using std::cout, std::endl, std::string;
 
+class print_on_exit
+{
+public:
+    print_on_exit(const std::string& message)
+        : _message(message)
+    {
+    }
+
+    ~print_on_exit()
+    {
+        std::cout << _message << std::flush;
+    }
+
+private:
+    std::string _message;
+};
+
 int main(int argc, char** argv)
 {
+    print_on_exit poe("Exiting main\n");
+
     cli_options opts = parse_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
@@ -111,6 +130,7 @@ int main(int argc, char** argv)
 
     if (random_table::did_resize_warning())
         random_table::print_resize_warning();
+
 
     return 0;
 }

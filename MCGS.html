@@ -4,12 +4,16 @@
         <title>MCGS Emscripten Test</title>
 
         <script>
+            //const game = "[nogo] ....|....|....|.... {B, W}"
             Module = {
-                arguments: ["--print-ttable-size", "[]"]
+                arguments: ["--print-ttable-size", "--print-db-info"]
             };
         </script>
 
         <script src="MCGS.js">
+        </script>
+
+        <script src="MCGS_ui.js">
         </script>
     </head>
     <body>

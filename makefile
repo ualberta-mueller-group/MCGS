@@ -8,7 +8,7 @@ EMCC_EXTENSION :=
 
 ifneq (,$(filter $(WASM),1 true))
 	#EMCC_COMPILE_FLAGS := -sNO_DISABLE_EXCEPTION_CATCHING
-	EMCC_LINK_FLAGS := -lembind -sALLOW_MEMORY_GROWTH
+	EMCC_LINK_FLAGS := -lembind -sALLOW_MEMORY_GROWTH -sMAXIMUM_MEMORY=4GB --preload-file database.bin --preload-file input -sEXPORTED_RUNTIME_METHODS=FS
 	EMCC_EXTENSION := .js
 	CC = em++
 endif
@@ -247,7 +247,7 @@ endif
 
 # Simple targets
 clean:
-	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM *.d main/*.d test/*.d MCGS.wasm MCGS.js
+	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM *.d main/*.d test/*.d MCGS.wasm MCGS.js MCGS.data
 	-rm -rf build
 
 test: MCGS_test
