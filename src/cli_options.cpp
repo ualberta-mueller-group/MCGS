@@ -187,10 +187,16 @@ cli_options parse_args(int argc, const char** argv, bool silent)
     bool print_optimizations = false;
 
     assert(argc >= 1);
+
+#ifndef __EMSCRIPTEN__
     std::filesystem::path abs_exec_path = std::filesystem::canonical(argv[0]);
     std::filesystem::path parent_path = abs_exec_path.parent_path();
     std::filesystem::path default_test_path =
         parent_path / cli_options::DEFAULT_RELATIVE_TEST_PATH;
+#else
+    std::filesystem::path default_test_path =
+        cli_options::DEFAULT_RELATIVE_TEST_PATH;
+#endif
 
     cli_options opts(default_test_path.string());
 

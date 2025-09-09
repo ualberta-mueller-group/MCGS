@@ -1,6 +1,19 @@
 CC = c++
 LAB_COMPAT ?= 0
 
+
+EMCC_COMPILE_FLAGS :=
+EMCC_LINK_FLAGS :=
+EMCC_EXTENSION :=
+
+ifneq (,$(filter $(WASM),1 true))
+	EMCC_COMPILE_FLAGS := -sNO_DISABLE_EXCEPTION_CATCHING
+	EMCC_LINK_FLAGS := -lembind -sALLOW_MEMORY_GROWTH
+	EMCC_EXTENSION := .js
+	CC = em++
+endif
+
+
 # If --output-sync is supported, use it for recursive make calls.
 # This will make compiler errors clearer i.e. if using make -j <N_JOBS>
 SYNC_FLAG :=
@@ -38,8 +51,15 @@ ifneq (,$(filter $(ASAN),leak address)) # ASAN=leak or ASAN=address
 	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN)
 endif
 
-NORMAL_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
+#NORMAL_FLAGS_BASE := -Wall --std=c++17 -O2 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
+NORMAL_FLAGS_BASE := -Wall --std=c++17 -O2 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
 TEST_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST)
+
+ifneq (,$(filter $(WASM),1 true))
+	NORMAL_FLAGS_BASE := $(filter-out $(NORMAL_FLAGS_BASE),-pthread)
+	TEST_FLAGS_BASE := $(filter-out $(TEST_FLAGS_BASE),-pthread)
+endif
+
 
 ifneq (,$(filter $(LAB_COMPAT),1 true))
 	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -DLAB_MACHINE_COMPAT
@@ -209,10 +229,10 @@ find_todo:
 
 ifeq ($(CAN_BUILD), 1)
 MCGS: $(MCGS_OBJS)
-	$(CC) $(USE_FLAGS) $^ -o $@
+	$(CC) $(USE_FLAGS) $^ -o $@$(EMCC_EXTENSION) $(EMCC_LINK_FLAGS) $(EMCC_COMPILE_FLAGS)
 
 MCGS_test: $(MCGS_TEST_OBJS)
-	$(CC) $(USE_FLAGS) $^ -o $@
+	$(CC) $(USE_FLAGS) $^ -o $@$(EMCC_EXTENSION) $(EMCC_LINK_FLAGS) $(EMCC_COMPILE_FLAGS)
 
 else
 .PHONY: MCGS MCGS_test
@@ -228,7 +248,7 @@ endif
 
 # Simple targets
 clean:
-	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM *.d main/*.d test/*.d
+	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM *.d main/*.d test/*.d MCGS.wasm MCGS.js
 	-rm -rf build
 
 test: MCGS_test
@@ -242,7 +262,7 @@ test-fast: MCGS_test
 # TODO should this call mkdir like this? There's probably a better way
 $(BUILD_DIR)/%.o: %.cpp
 	-mkdir -p $(dir $@)
-	$(CC) $(USE_FLAGS) -x c++ -MMD -MP -c $< -o $@
+	$(CC) $(USE_FLAGS) -x c++ -MMD -MP -c $< -o $@ $(EMCC_COMPILE_FLAGS)
 
 
 -include $(DEPS)

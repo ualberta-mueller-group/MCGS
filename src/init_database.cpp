@@ -46,8 +46,8 @@ void fill_database(database& db)
         //new gridlike_db_game_generator<nogo_1xn, grid_generator_nogo>(15),
         //new gridlike_db_game_generator<clobber, grid_generator_clobber>(3, 3),
         //new gridlike_db_game_generator<nogo, grid_generator_nogo>(3, 3),
-        //new gridlike_db_game_generator<domineering, grid_generator_domineering>(4, 4),
-        new gridlike_db_game_generator<amazons, grid_generator_amazons>(3, 3),
+        new gridlike_db_game_generator<domineering, grid_generator_domineering>(3, 3), // TODO change back to 4, 4
+        //new gridlike_db_game_generator<amazons, grid_generator_amazons>(3, 3),
     };
 
     for (db_game_generator* gen : generators)

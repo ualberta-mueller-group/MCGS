@@ -30,10 +30,9 @@ int main(int argc, char** argv)
     if (opts.should_exit)
         return 0;
 
+    cout << "Pre-init" << endl;
     mcgs_init_all(opts);
-
-    //test_amazons_stuff();
-    //return 0;
+    cout << "Post-init" << endl;
 
     if (opts.use_player)
     {
