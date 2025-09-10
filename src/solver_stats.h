@@ -7,6 +7,10 @@
 #include <cstdint>
 #include <cstddef>
 #include <algorithm>
+#include <optional>
+#include <unordered_set>
+#include "hashing.h"
+#include "sumgame.h"
 
 //////////////////////////////////////////////////
 struct solver_stats
@@ -24,6 +28,8 @@ struct solver_stats
     uint64_t search_depth;
 
     size_t n_subgames;
+
+    std::optional<std::unordered_set<hash_t>> sum_hashes;
 };
 
 //////////////////////////////////////////////////
@@ -76,5 +82,7 @@ inline void set_n_subgames(const size_t& n_subgames)
 {
     __global_stats.n_subgames = n_subgames;
 }
+
+void count_sum(const sumgame& sum);
 
 } // namespace stats

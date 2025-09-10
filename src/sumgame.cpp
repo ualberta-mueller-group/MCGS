@@ -407,6 +407,8 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
     depth++;
     stats::inc_node_count();
     stats::update_search_depth(depth);
+    if (global::count_sums())
+        stats::count_sum(*this);
 
     if (PRINT_SUBGAMES)
     {
