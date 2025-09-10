@@ -3,6 +3,7 @@
 #include "solver_stats.h"
 
 #include <cstdio>
+#include <functional>
 #include <ios>
 #include <iostream>
 #include <filesystem>
@@ -19,6 +20,129 @@
 #include "game.h"
 #include <cassert>
 #include <memory>
+
+// TODO put this in its own file? remove interface type? unit tests?
+////////////////////////////////////////////////// directory iterators
+class i_file_iterator
+{
+public:
+    virtual ~i_file_iterator() {}
+
+    virtual operator bool() const = 0;
+    virtual const std::filesystem::directory_entry& gen_entry() const = 0;
+    virtual void operator++() = 0;
+};
+
+class file_iterator_alphabetical: public i_file_iterator
+{
+public:
+    file_iterator_alphabetical(const std::string& start_dir);
+    file_iterator_alphabetical(const std::filesystem::directory_entry& start_dir);
+
+    operator bool() const override;
+    const std::filesystem::directory_entry& gen_entry() const override;
+    void operator++() override;
+
+private:
+    void _expand(const std::filesystem::directory_entry& dir);
+    void _increment(bool init);
+
+    static bool _compare(const std::filesystem::directory_entry& entry1,
+                         const std::filesystem::directory_entry& entry2);
+
+    std::vector<std::filesystem::directory_entry> _file_entries;
+    std::vector<std::filesystem::directory_entry> _dir_entries;
+};
+
+
+file_iterator_alphabetical::file_iterator_alphabetical(const std::string& start_dir)
+{
+    _expand(std::filesystem::directory_entry(start_dir));
+    _increment(true);
+}
+
+file_iterator_alphabetical::file_iterator_alphabetical(const std::filesystem::directory_entry& start_dir)
+{
+    _expand(start_dir);
+    _increment(true);
+}
+
+file_iterator_alphabetical::operator bool() const
+{
+    // No files --implies--> No directories
+    assert(logical_implies(_file_entries.empty(), _dir_entries.empty()));
+    return !_file_entries.empty();
+}
+
+const std::filesystem::directory_entry& file_iterator_alphabetical::gen_entry() const
+{
+    assert(*this);
+    assert(!_file_entries.empty());
+
+    const std::filesystem::directory_entry& entry = _file_entries.back();
+    assert(!entry.is_directory());
+
+    return entry;
+}
+
+void file_iterator_alphabetical::operator++()
+{
+    assert(*this);
+    _increment(false);
+}
+
+void file_iterator_alphabetical::_expand(const std::filesystem::directory_entry& dir)
+{
+    assert(dir.is_directory());
+    assert(_file_entries.empty());
+
+    std::vector<std::filesystem::directory_entry> new_dirs;
+
+    std::filesystem::directory_iterator it(dir);
+
+    for (const std::filesystem::directory_entry& entry : it)
+    {
+        if (entry.is_directory())
+            new_dirs.push_back(entry);
+        else
+            _file_entries.push_back(entry);
+    }
+
+    std::sort(_file_entries.begin(), _file_entries.end(), _compare);
+    std::sort(new_dirs.begin(), new_dirs.end(), _compare);
+
+    for (const std::filesystem::directory_entry& entry : new_dirs)
+        _dir_entries.push_back(entry);
+}
+
+void file_iterator_alphabetical::_increment(bool init)
+{
+    assert(init || !_file_entries.empty());
+
+    if (!init)
+        _file_entries.pop_back();
+
+    if (!_file_entries.empty())
+        return;
+
+    // Keep expanding directories
+    while (!_dir_entries.empty() && _file_entries.empty())
+    {
+        std::filesystem::directory_entry dir = _dir_entries.back();
+        _dir_entries.pop_back();
+
+        _expand(dir);
+    }
+}
+
+bool file_iterator_alphabetical::_compare(
+    const std::filesystem::directory_entry& entry1,
+    const std::filesystem::directory_entry& entry2)
+{
+    return entry1.path().string() > entry2.path().string();
+}
+
+//////////////////////////////////////////////////
 
 /*
    TODO clean up this file after the papers. There should be a test_generator
@@ -142,10 +266,13 @@ void run_autotests(const string& test_directory, const string& outfile_name,
     append_field(outfile, "Input hash", false);
     outfile << NEWLINE;
 
+
     // iterate over autotests directory
-    for (const filesystem::directory_entry& entry :
-         recursive_directory_iterator(test_directory))
+    for (file_iterator_alphabetical iter(test_directory); iter; ++iter)
     {
+        const std::filesystem::directory_entry& entry = iter.gen_entry();
+        assert(!entry.is_directory());
+
         // Skip directories and non ".test" files
         if (!entry.is_regular_file())
             continue;

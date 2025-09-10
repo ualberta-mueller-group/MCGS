@@ -51,6 +51,12 @@ void print_bits(std::ostream& os, const T& x)
     }
 }
 
+// p implies q
+inline bool logical_implies(bool p, bool q)
+{
+    return !p | q;
+}
+
 //////////////////////////////////////// string parsing utils
 
 // like Python's string split()
