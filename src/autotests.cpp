@@ -1,4 +1,5 @@
 #include "autotests.h"
+#include "cgt_basics.h"
 #include "solver_stats.h"
 
 #include <cstdio>
@@ -137,6 +138,7 @@ void run_autotests(const string& test_directory, const string& outfile_name,
     append_field(outfile, "Status", true);
     append_field(outfile, "Comments", true);
     append_field(outfile, "Node Count", true);
+    append_field(outfile, "Unique Sum Count", true);
     append_field(outfile, "Input hash", false);
     outfile << NEWLINE;
 
@@ -179,8 +181,13 @@ void run_autotests(const string& test_directory, const string& outfile_name,
             search_result sr = gc.run(test_timeout);
             first_case = false;
 
-
             const solver_stats& st = stats::get_global_stats();
+
+            // If --count-sums AND solve command was not {N}
+            std::string sum_count_string =
+                (global::count_sums() && is_black_white(sr.player))
+                    ? to_string(st.sum_hashes.value().size())
+                    : "N/A";
 
             append_field(outfile, relative_file_path.string(), true);
             append_field(outfile, to_string(case_number), true);
@@ -192,6 +199,7 @@ void run_autotests(const string& test_directory, const string& outfile_name,
             append_field(outfile, sr.status_str(), true);
             append_field(outfile, gc.comments, true);
             append_field(outfile, to_string(st.node_count), true);
+            append_field(outfile, sum_count_string, true);
             append_field(outfile, gc.hash.get_string(), false);
             outfile << NEWLINE;
 

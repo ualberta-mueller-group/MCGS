@@ -153,6 +153,10 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
                "Clear ttable between test runs. Default: " +
                    global::clear_tt.get_default_str() + ".");
 
+    print_flag(global::count_sums.flag(), "Count unique sums found during "
+               "search. Only applies to partizan solve commands i.e. {B} or "
+               "{W}, but not {N}. Will slow down search somewhat.");
+
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
 
@@ -411,6 +415,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::clear_tt.flag())
         {
             global::clear_tt.set(true);
+            continue;
+        }
+
+        if (arg == global::count_sums.flag())
+        {
+            global::count_sums.set(true);
             continue;
         }
 

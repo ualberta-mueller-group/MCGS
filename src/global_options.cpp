@@ -113,6 +113,7 @@ INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 27); // ~1152 MiB
 
 INIT_GLOBAL_WITH_SUMMARY(use_db, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(clear_tt, bool, false);
+INIT_GLOBAL_WITH_SUMMARY(count_sums, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(experiment_seed, uint64_t, 0);
 
 INIT_GLOBAL_WITH_SUMMARY(play_normalize, bool, true);
