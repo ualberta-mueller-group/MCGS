@@ -8,6 +8,7 @@
 #include "impartial_game.h"
 #include "sumgame.h"
 #include "alternating_move_game.h"
+#include "solver_stats.h"
 #include <thread>
 #include <future>
 #include <chrono>
@@ -26,6 +27,8 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
     int sum_nim_value = 0;
 
     impartial_tt& tt = tt_optional.value();
+
+    stats::inc_node_count();
 
     for (game* g : s.subgames())
     {

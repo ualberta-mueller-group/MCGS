@@ -5,6 +5,7 @@
 
 #include "cgt_nimber.h"
 #include "hashing.h"
+#include "solver_stats.h"
 #include "transposition.h"
 #include <memory>
 #include <cassert>
@@ -67,6 +68,9 @@ int impartial_game::search_impartial_game_cancellable(
 {
     if (over_time)
         return -1;
+
+    // TODO increment before or after is_solved()?
+    stats::inc_node_count();
 
     if (is_solved())
         return nim_value();

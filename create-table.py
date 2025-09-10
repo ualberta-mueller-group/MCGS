@@ -293,7 +293,7 @@ def row_populate_double_mode(input_rows, output_row):
     comparison_row = input_rows[1] if len(input_rows) >= 2 else None
 
     # Populate simple fields
-    simple_fields = ["file", "case", "games", "player", "expected_result", "result", "time", "status", "comments", "hash"]
+    simple_fields = ["file", "case", "games", "player", "expected_result", "result", "time", "status", "comments", "node_count", "hash"]
     for alias in simple_fields:
         output_row[alias] = new_default_cell(input_row[alias])
 
@@ -315,9 +315,13 @@ def row_populate_double_mode(input_rows, output_row):
     old_result_text = comparison_row["result"] if (comparison_row is not None) else "N/A"
     output_row["old_result"] = new_default_cell(old_result_text)
 
-    #old_time
+    # old_time
     old_time_text = comparison_row["time"] if (comparison_row is not None) else "N/A"
     output_row["old_time"] = new_default_cell(old_time_text)
+
+    # old_node_count
+    old_node_count_text = comparison_row["node_count"] if (comparison_row is not None) else "N/A"
+    output_row["old_node_count"] = new_default_cell(old_node_count_text)
 
     # faster
     faster_by_string = "N/A"
@@ -471,6 +475,7 @@ add_input_col("result", "Result")
 add_input_col("time", "Time (ms)")
 add_input_col("status", "Status")
 add_input_col("comments", "Comments")
+add_input_col("node_count", "Node Count")
 add_input_col("hash", "Input hash")
 
 # The order of these output columns defines the output order
@@ -482,6 +487,7 @@ if comparison_file_name is None:
     add_output_col("expected_result", "Expected Result")
     add_output_col("result", "Result")
     add_output_col("time", "Time (ms)")
+    add_output_col("node_count", "Node Count")
     add_output_col("status", "Status")
     add_output_col("comments", "Comments")
 
@@ -497,8 +503,10 @@ else:
     add_output_col("expected_result", "Expected Result")
     add_output_col("result", "Result")
     add_output_col("time", "Time (ms)")
+    add_output_col("node_count", "Node Count")
     add_output_col("faster", "Time Improvement") #
     add_output_col("old_time", "Old Time (ms)")
+    add_output_col("old_node_count", "Old Node Count")
     add_output_col("status", "Status")
     add_output_col("regression", "Regression") #
     add_output_col("old_status", "Old Status")

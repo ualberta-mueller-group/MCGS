@@ -38,10 +38,10 @@ inline constexpr const char NEWLINE = '\n';
 //////////////////////////////////////// helper functions
 namespace {
 
-inline void print_ready_signal()
-{
-    cout << "\nREADY FOR TEST CASE" << endl;
-}
+//inline void print_ready_signal()
+//{
+//    cout << "\nREADY FOR TEST CASE" << endl;
+//}
 
 // convert game list to string
 string human_readable_game_string(const vector<game*>& games)
@@ -136,6 +136,7 @@ void run_autotests(const string& test_directory, const string& outfile_name,
     append_field(outfile, "Time (ms)", true);
     append_field(outfile, "Status", true);
     append_field(outfile, "Comments", true);
+    append_field(outfile, "Node Count", true);
     append_field(outfile, "Input hash", false);
     outfile << NEWLINE;
 
@@ -178,6 +179,9 @@ void run_autotests(const string& test_directory, const string& outfile_name,
             search_result sr = gc.run(test_timeout);
             first_case = false;
 
+
+            const solver_stats& st = stats::get_global_stats();
+
             append_field(outfile, relative_file_path.string(), true);
             append_field(outfile, to_string(case_number), true);
             append_field(outfile, human_readable_game_string(gc.games), true);
@@ -187,6 +191,7 @@ void run_autotests(const string& test_directory, const string& outfile_name,
             append_field(outfile, sr.duration_str(), true);
             append_field(outfile, sr.status_str(), true);
             append_field(outfile, gc.comments, true);
+            append_field(outfile, to_string(st.node_count), true);
             append_field(outfile, gc.hash.get_string(), false);
             outfile << NEWLINE;
 
@@ -201,93 +206,93 @@ void run_autotests(const string& test_directory, const string& outfile_name,
     outfile.close();
 }
 
-void run_autotests_stdin(const string& outfile_name,
-                         unsigned long long test_timeout)
-{
-    assert(global::clear_tt());
-
-    bool first_case = true;
-
-    ofstream outfile(outfile_name); // CSV file
-
-    if (!outfile.is_open())
-    {
-        throw ios_base::failure("Couldn't open file for writing: \"" +
-                                outfile_name + "\"");
-    }
-
-    // print format as first row to file
-    append_field(outfile, "File", true);
-    append_field(outfile, "Case", true);
-    append_field(outfile, "Games", true);
-    append_field(outfile, "Player", true);
-    append_field(outfile, "Expected Result", true);
-    append_field(outfile, "Result", true);
-    append_field(outfile, "Time (ms)", true);
-    append_field(outfile, "Status", true);
-    append_field(outfile, "Comments", true);
-
-    append_field(outfile, "Node Count", true);
-    append_field(outfile, "TT Hits", true);
-    append_field(outfile, "TT Misses", true);
-    append_field(outfile, "DB Hits", true);
-    append_field(outfile, "DB Misses", true);
-    append_field(outfile, "Max Depth", true);
-    append_field(outfile, "# Subgames", true);
-
-    append_field(outfile, "Input hash", false);
-    outfile << NEWLINE;
-
-    print_ready_signal(); // READY
-
-    unique_ptr<file_parser> parser(file_parser::from_stdin());
-
-    game_case gc;
-    uint64_t case_number = 0;
-
-    while (parser->parse_chunk(gc))
-    {
-        if (case_number % 20 == 0)
-            outfile.flush();
-
-        if (global::clear_tt() && !first_case)
-            sumgame::reset_ttable();
-
-        stats::reset_stats();
-        search_result sr = gc.run(test_timeout);
-        first_case = false;
-
-        const solver_stats& st = stats::get_global_stats();
-
-        append_field(outfile, "stdin", true);
-        append_field(outfile, to_string(case_number), true);
-        append_field(outfile, human_readable_game_string(gc.games), true);
-        append_field(outfile, sr.player_str(), true);
-        append_field(outfile, gc.expected_value.str(), true);
-        append_field(outfile, sr.value_str(), true);
-        append_field(outfile, sr.duration_str(), true);
-        append_field(outfile, sr.status_str(), true);
-        append_field(outfile, gc.comments, true);
-
-        append_field(outfile, to_string(st.node_count), true);   //
-        append_field(outfile, to_string(st.tt_hits), true);      //
-        append_field(outfile, to_string(st.tt_misses), true);    //
-        append_field(outfile, to_string(st.db_hits), true);      //
-        append_field(outfile, to_string(st.db_misses), true);    //
-        append_field(outfile, to_string(st.search_depth), true); //
-        append_field(outfile, to_string(st.n_subgames), true);   //
-
-        append_field(outfile, gc.hash.get_string(), false);
-        outfile << NEWLINE;
-
-        gc.cleanup_games();
-        case_number++;
-
-        print_ready_signal(); // READY
-    }
-
-    if (random_table::did_resize_warning())
-        cerr << "TABLE RESIZE" << endl;
-
-    outfile.close();
-}
+//void run_autotests_stdin(const string& outfile_name,
+//                         unsigned long long test_timeout)
+//{
+//    assert(global::clear_tt());
+//
+//    bool first_case = true;
+//
+//    ofstream outfile(outfile_name); // CSV file
+//
+//    if (!outfile.is_open())
+//    {
+//        throw ios_base::failure("Couldn't open file for writing: \"" +
+//                                outfile_name + "\"");
+//    }
+//
+//    // print format as first row to file
+//    append_field(outfile, "File", true);
+//    append_field(outfile, "Case", true);
+//    append_field(outfile, "Games", true);
+//    append_field(outfile, "Player", true);
+//    append_field(outfile, "Expected Result", true);
+//    append_field(outfile, "Result", true);
+//    append_field(outfile, "Time (ms)", true);
+//    append_field(outfile, "Status", true);
+//    append_field(outfile, "Comments", true);
+//
+//    append_field(outfile, "Node Count", true);
+//    append_field(outfile, "TT Hits", true);
+//    append_field(outfile, "TT Misses", true);
+//    append_field(outfile, "DB Hits", true);
+//    append_field(outfile, "DB Misses", true);
+//    append_field(outfile, "Max Depth", true);
+//    append_field(outfile, "# Subgames", true);
+//
+//    append_field(outfile, "Input hash", false);
+//    outfile << NEWLINE;
+//
+//    print_ready_signal(); // READY
+//
+//    unique_ptr<file_parser> parser(file_parser::from_stdin());
+//
+//    game_case gc;
+//    uint64_t case_number = 0;
+//
+//    while (parser->parse_chunk(gc))
+//    {
+//        if (case_number % 20 == 0)
+//            outfile.flush();
+//
+//        if (global::clear_tt() && !first_case)
+//            sumgame::reset_ttable();
+//
+//        stats::reset_stats();
+//        search_result sr = gc.run(test_timeout);
+//        first_case = false;
+//
+//        const solver_stats& st = stats::get_global_stats();
+//
+//        append_field(outfile, "stdin", true);
+//        append_field(outfile, to_string(case_number), true);
+//        append_field(outfile, human_readable_game_string(gc.games), true);
+//        append_field(outfile, sr.player_str(), true);
+//        append_field(outfile, gc.expected_value.str(), true);
+//        append_field(outfile, sr.value_str(), true);
+//        append_field(outfile, sr.duration_str(), true);
+//        append_field(outfile, sr.status_str(), true);
+//        append_field(outfile, gc.comments, true);
+//
+//        append_field(outfile, to_string(st.node_count), true);   //
+//        append_field(outfile, to_string(st.tt_hits), true);      //
+//        append_field(outfile, to_string(st.tt_misses), true);    //
+//        append_field(outfile, to_string(st.db_hits), true);      //
+//        append_field(outfile, to_string(st.db_misses), true);    //
+//        append_field(outfile, to_string(st.search_depth), true); //
+//        append_field(outfile, to_string(st.n_subgames), true);   //
+//
+//        append_field(outfile, gc.hash.get_string(), false);
+//        outfile << NEWLINE;
+//
+//        gc.cleanup_games();
+//        case_number++;
+//
+//        print_ready_signal(); // READY
+//    }
+//
+//    if (random_table::did_resize_warning())
+//        cerr << "TABLE RESIZE" << endl;
+//
+//    outfile.close();
+//}
