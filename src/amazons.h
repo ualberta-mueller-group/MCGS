@@ -36,6 +36,3 @@ inline void amazons::print(std::ostream& str) const
 {
     str << "amazons:" << board_as_string();
 }
-
-//////////////////////////////////////////////////
-void test_amazons_stuff();

@@ -412,28 +412,6 @@ split_result amazons::_split_impl() const
 #endif
 
 //////////////////////////////////////////////////
-
-void test_amazons_stuff()
-{
-    amazons g("X.|..");
-
-    unique_ptr<move_generator> gen(g.create_move_generator(BLACK));
-
-    cout << g << endl;
-
-    while (*gen)
-    {
-        const ::move m = gen->gen_move();
-        ++(*gen);
-
-        unsigned int move1, move2, move3;
-        decode_three_part_move(m, move1, move2, move3);
-
-        cout << move1 << " " << move2 << " " << move3 << endl;
-    }
-}
-
-//////////////////////////////////////////////////
 // amazons_move_generator methods
 
 amazons_move_generator::amazons_move_generator(const amazons& g, bw to_play)

@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 
-#include "amazons.h"
 #include "basic_player.h"
 #include "cli_options.h"
 #include "file_parser.h"
@@ -31,9 +30,6 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_all(opts);
-
-    //test_amazons_stuff();
-    //return 0;
 
     if (opts.use_player)
     {

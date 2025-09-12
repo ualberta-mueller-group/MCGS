@@ -25,6 +25,24 @@ public:
 
     game* inverse() const override;
 
+    /*
+        TODO
+
+        Probably won't be fast. Need to mark all stones as "true wall", "maybe
+        wall", or "not wall", based on whether or not it may have a move in the
+        future. Subgames are then the 4-connected components (of EMPTY/BLACK).
+
+        - 2x2 stone squares are "true walls"
+        - Board edges contribute to "squares"
+
+        "true wall" is either # or X that will never have a move
+        "not wall" is X which either has a move, or can have a move later
+        "maybe wall" if a wall has a maybe/true wall on each axis
+
+        Figure out how to resolve maybe walls
+
+        Replacing "true wall" stones with # is a good normalization step
+    */
 #ifdef FISSION_SPLIT
     split_result _split_impl() const;
 #endif
@@ -35,4 +53,3 @@ inline void fission::print(std::ostream& str) const
 {
     str << "fission:" << board_as_string();
 }
-

@@ -66,6 +66,20 @@ bool increment_char_clobber_bwe(char& c)
     return false;
 }
 
+// 'X' --true--> '.' --false--> 'X'
+bool increment_char_clobber_be(char& c)
+{
+    if (c == 'X')
+    {
+        c = '.';
+        return true;
+    }
+
+    assert(c == '.');
+    c = 'X';
+    return false;
+}
+
 
 } // namespace
 
@@ -463,6 +477,32 @@ bool grid_generator_amazons::_increment_board()
             continue;
 
         carry = !increment_char_clobber_bwe(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
+//////////////////////////////////////////////////
+// grid_generator_fission methods
+bool grid_generator_fission::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (!_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_be(_board[i]);
 
         if (!carry)
             break;

@@ -10,6 +10,9 @@
         grid_generator_default
         grid_generator_clobber
         grid_generator_nogo
+        grid_generator_domineering
+        grid_generator_amazons
+        grid_generator_fission
 */
 #pragma once
 
@@ -326,6 +329,29 @@ protected:
     bool _increment_board() override;
 };
 
+
+////////////////////////////////////////////////// grid_generator_fission
+/*
+    Non-abstract grid generator for Fission ordering
+
+    '#' on false bits, 'X', '.' on true bits
+
+
+*/
+class grid_generator_fission : public grid_generator_masked
+{
+public:
+    grid_generator_fission(const int_pair& max_shape);
+    grid_generator_fission(int max_rows, int max_cols);
+    grid_generator_fission(int max_cols);
+
+    virtual ~grid_generator_fission() {}
+
+protected:
+    void _init_board() override;
+    bool _increment_board() override;
+};
+
 ////////////////////////////////////////////////// grid_mask methods
 namespace grid_generator_impl {
 
@@ -549,5 +575,28 @@ inline void grid_generator_amazons::_init_board()
     const char black_char = color_to_clobber_char(BLACK);
     const char border_char = '#'; // TODO clean up grid stuff...
 
+    init_board_helper_masked(_board, _shape, _mask, black_char, border_char);
+}
+
+////////////////////////////////////////////////// grid_generator_fission methods
+inline grid_generator_fission::grid_generator_fission(const int_pair& max_shape)
+    : grid_generator_masked(max_shape)
+{
+}
+
+inline grid_generator_fission::grid_generator_fission(int max_rows, int max_cols)
+    : grid_generator_masked(max_rows, max_cols)
+{
+}
+
+inline grid_generator_fission::grid_generator_fission(int max_cols)
+    : grid_generator_masked(1, max_cols)
+{
+}
+
+inline void grid_generator_fission::_init_board()
+{
+    const char black_char = color_to_clobber_char(BLACK);
+    const char border_char = '#'; // TODO clean up grid stuff...
     init_board_helper_masked(_board, _shape, _mask, black_char, border_char);
 }
