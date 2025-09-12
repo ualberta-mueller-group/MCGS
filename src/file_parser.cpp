@@ -12,6 +12,7 @@
 #include <utility>
 #include "cgt_basics.h"
 #include "all_game_headers.h"
+#include "fission.h"
 #include "game_case.h"
 #include "game_token_parsers.h"
 #include "parsing_utilities.h"
@@ -822,6 +823,7 @@ void file_parser::_init_game_parsers()
     _add_game_parser("clobber", new basic_parser<clobber>());
     _add_game_parser("domineering", new basic_parser<domineering>());
     _add_game_parser("amazons", new basic_parser<amazons>());
+    _add_game_parser("fission", new basic_parser<fission>());
 
     _add_game_parser("kayles", new int_parser<kayles>());
 }

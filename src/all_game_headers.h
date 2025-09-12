@@ -13,5 +13,6 @@
 #include "clobber.h"
 #include "domineering.h"
 #include "amazons.h"
+#include "fission.h"
 #include "kayles.h"
 // IWYU pragma: end_exports

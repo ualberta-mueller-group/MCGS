@@ -99,6 +99,7 @@ bool move_has_legal_orientation(int point1, int point2, bw player,
 ////////////////////////////////////////////////// domineering methods
 domineering::domineering(int n_rows, int n_cols): grid(n_rows, n_cols)
 {
+    assert(has_only_valid_colors(board_const()));
 }
 
 domineering::domineering(const std::vector<int>& board, int_pair shape) :
