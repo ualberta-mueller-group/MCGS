@@ -96,6 +96,15 @@ public:
          XX
         XX
         #
+
+        Probably the solution (???):
+            1: Locally mark all stones as "O" "X" or "#"
+            2: Outer loop find "X", propagate in inner loop
+                Inner loop: pop from open set, do local check using all neighbors,
+                expand neighbors if they're "X" or if we have become "X"
+            3: Find components
+
+            At end of step 2, stones not proven to have moves should be walls?
     */
 #ifdef FISSION_SPLIT
     split_result _split_impl() const;
