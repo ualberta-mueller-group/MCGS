@@ -203,6 +203,128 @@ game* fission::inverse() const
                        transpose_shape);
 }
 
+// TODO extract these into one file instead of duplicating them
+namespace {
+
+struct bounding_box
+{
+    bounding_box(int row_shift, int col_shift, int_pair shape);
+
+    int row_shift;
+    int col_shift;
+    int_pair shape;
+};
+
+bounding_box::bounding_box(int row_shift, int col_shift, int_pair shape)
+    : row_shift(row_shift),
+      col_shift(col_shift),
+      shape(shape)
+{
+}
+
+vector<int> trim_to_bounding_box(const vector<int>& src_board,
+                                 const int_pair& src_shape,
+                                 const bounding_box& dst_box)
+{
+    vector<int> dst_board;
+
+    const int& row_shift = dst_box.row_shift;
+    const int& col_shift = dst_box.col_shift;
+    const int_pair& dst_shape = dst_box.shape;
+
+    assert(!grid_location::shape_is_empty(dst_shape));
+
+    const int dst_size = dst_shape.first * dst_shape.second;
+    dst_board.reserve(dst_size);
+
+    int src_point = col_shift + (row_shift * src_shape.second);
+
+    for (int r = 0; r < dst_shape.first; r++)
+    {
+        for (int c = 0; c < dst_shape.second; c++)
+        {
+            const int src_val = src_board[src_point + c];
+            dst_board.push_back(src_val);
+        }
+
+        src_point += src_shape.second;
+    }
+
+    return dst_board;
+}
+
+////////////////////////////////////////////////// class split_search
+class split_search
+{
+public:
+    split_search(const fission& game);
+
+    void search_main();
+    void search_step(grid_location loc1);
+
+
+    const fission& g;
+
+    // Constants
+    const int grid_size;
+    const int_pair grid_shape;
+    const int min_invalid;
+    const int max_invalid;
+
+    // Search state
+    vector<bool> closed_set;
+
+    // Current component
+    vector<int> component;
+    int row_min;
+    int row_max;
+    int col_min;
+    int col_max;
+
+private:
+    void _init_all();
+
+    static int _init_min_invalid(const int_pair& grid_shape);
+
+};
+
+////////////////////////////////////////////////// split_search methods
+split_search::split_search(const fission& game)
+    : g(game),
+      grid_size(game.size()),
+      grid_shape(game.shape()),
+      min_invalid(_init_min_invalid(game.shape())),
+      max_invalid(-1)
+{
+}
+
+/*
+*/
+void split_search::search_main()
+{
+    _init_all();
+
+}
+
+void split_search::search_step(grid_location loc1)
+{
+
+}
+
+void split_search::_init_all()
+{
+}
+
+inline int split_search::_init_min_invalid(const int_pair& grid_shape)
+{
+    return min(grid_shape.first, grid_shape.second) + 1;
+}
+
+
+
+} // namespace
+
+
 #ifdef FISSION_SPLIT
 split_result fission::_split_impl() const
 {

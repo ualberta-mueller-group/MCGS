@@ -30,7 +30,8 @@ public:
 
         Probably won't be fast. Need to mark all stones as "true wall", "maybe
         wall", or "not wall", based on whether or not it may have a move in the
-        future. Subgames are then the 4-connected components (of EMPTY/BLACK).
+        future. Subgames are then the 4-connected components (of EMPTY/BLACK
+        "carved" into BORDER-filled grid).
 
         - 2x2 stone squares are "true walls"
         - Board edges contribute to "squares"
@@ -41,7 +42,60 @@ public:
 
         Figure out how to resolve maybe walls
 
-        Replacing "true wall" stones with # is a good normalization step
+        Replacing "true wall" stones with # is a good normalization step and
+        is necessary for splits
+
+        3 pass solution?
+
+        1: Mark all stones with one of the following:
+            - 'X' has immediate move
+            - 'O' may have move
+            - '#' has no moves
+
+        2: Do a 2nd pass to resolve these?
+            - How to resolve/propagate?
+
+        3: Find connected components separated by walls
+
+        Or can we try patterns and then brute force test some range of boards
+        to see if we got them all?
+
+        All stones become walls below:
+
+        ....
+        .XX.
+        .XX.
+        ....
+
+        .#.
+        #X.
+        ...
+
+        .#..
+        #XX.
+        ..#.
+
+        .#..
+        #X..
+        .XX#
+        ..#.
+
+        If an adjacent stone has been proven to have a future move, then it is
+        not a blocker
+
+        Try to prove: "On a second pass, if all neighbors have been recursively
+        checked and are still blockers, then they must always be blockers."
+
+        Still insufficient, consider a ring of 2x2 squares each with a 1 wide
+        gap bridged by a 1x1 stone
+
+        "On a 2nd pass, if blocked on both axes after recursive checks of all
+        neighbors, then we must be permanently blocked"
+
+          XX
+         XX
+        XX
+        #
     */
 #ifdef FISSION_SPLIT
     split_result _split_impl() const;
@@ -53,3 +107,5 @@ inline void fission::print(std::ostream& str) const
 {
     str << "fission:" << board_as_string();
 }
+
+
