@@ -1,0 +1,48 @@
+{version 1.3}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+
+[gen_toads]
+1,1,0,0:.................XO..O.XO.......X.X..O.. {B loss, W loss}
+1,1,0,0:.X.......X.O.X...XOO.O..O.....X.O....XO. {B win, W loss}
+1,1,0,0:...OXO....OX....O..XXX......X..X........ {B win, W loss}
+1,1,0,0:O.O.....X...........X.O..XO....X.X...... {B win, W loss}
+1,1,0,0:X.XX.....O..O.O...X.............O.X....O {B loss, W win}
+1,1,0,0:XX...O.....O.............OX.......OX..O. {B loss, W win}
+1,1,0,0:......OXX......OO........XO.X.X....X.... {B win, W loss}
+1,1,0,0:.O...O....O..X..X.X.X.....O.OX..O....... {B win, W win}
+1,1,0,0:..........O..O.O...X...OXXO..O..OX.X.... {B loss, W win}
+1,1,0,0:.....X.....O..XX.OXX.XO........OOX...... {B loss, W win}
+1,1,0,0:X...O.O...X..X.........O........O.OO...X {B loss, W win}
+1,1,0,0:O.....XO..X.......X.....XOO..XO...X...X. {B win, W loss}
+1,1,0,0:...X.O.XX..X....X.......O..OO.......O... {B win, W loss}
+1,1,0,0:OX..X.OX.....O..X.......X..O...O....O.X. {B loss, W win}
+1,1,0,0:X....O....O..XX.....O...O.O......O...X.. {B loss, W win}
+1,1,0,0:....X..O.O...X..O...X..X.....X.O...O..O. {B win, W win}
+1,1,0,0:....X....XO...............O....XOO..X..O {B loss, W win}
+1,1,0,0:..X.O.........OX......X......X...OXOOX.. {B win, W loss}
+1,1,0,0:.O..XX...X.....O.....OX......OO.O......O {B loss, W win}
+1,1,0,0:..X.......X...O..O.....X....X.OO.X...OX. {B win, W loss}
+
+[impartial gen_toads]
+1,1,0,0:.................XO..O.XO.......X.X..O.. {N 1, B win, W win}
+1,1,0,0:.X.......X.O.X...XOO.O..O.....X.O....XO. {N 3, B win, W win}
+1,1,0,0:O.O.....X...........X.O..XO....X.X...... {N 3, B win, W win}
+1,1,0,0:XX...O.....O.............OX.......OX..O. {N 2, B win, W win}
+1,1,0,0:......OXX......OO........XO.X.X....X.... {N 1, B win, W win}
+1,1,0,0:.O...O....O..X..X.X.X.....O.OX..O....... {N 1, B win, W win}
+1,1,0,0:..........O..O.O...X...OXXO..O..OX.X.... {N 1, B win, W win}
+1,1,0,0:.....X.....O..XX.OXX.XO........OOX...... {N 3, B win, W win}
+1,1,0,0:O.....XO..X.......X.....XOO..XO...X...X. {N 0, B loss, W loss}
+1,1,0,0:...X.O.XX..X....X.......O..OO.......O... {N 0, B loss, W loss}
+1,1,0,0:OX..X.OX.....O..X.......X..O...O....O.X. {N 3, B win, W win}
+1,1,0,0:X....O....O..XX.....O...O.O......O...X.. {N 1, B win, W win}
+1,1,0,0:....X..O.O...X..O...X..X.....X.O...O..O. {N 0, B loss, W loss}
+1,1,0,0:....X....XO...............O....XOO..X..O {N 1, B win, W win}
+1,1,0,0:..X.O.........OX......X......X...OXOOX.. {N 2, B win, W win}
+1,1,0,0:..X.......X...O..O.....X....X.OO.X...OX. {N 1, B win, W win}
+
+

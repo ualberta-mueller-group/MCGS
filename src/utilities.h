@@ -57,6 +57,12 @@ inline bool logical_implies(bool p, bool q)
     return !p | q;
 }
 
+inline bool logical_iff(bool p, bool q)
+{
+    return p == q;
+}
+
+
 //////////////////////////////////////// string parsing utils
 
 // like Python's string split()

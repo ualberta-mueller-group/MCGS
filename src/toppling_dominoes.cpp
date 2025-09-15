@@ -68,7 +68,7 @@ private:
 
 ////////////////////////////////////////////////// toppling_dominoes methods
 
-toppling_dominoes::toppling_dominoes(const std::vector<int>& board)
+toppling_dominoes::toppling_dominoes(const vector<int>& board)
     : strip(board)
 {
     THROW_ASSERT(only_legal_tiles(board));
@@ -78,7 +78,7 @@ toppling_dominoes::toppling_dominoes(const std::vector<int>& board)
     _domino_flip_orientation = false;
 }
 
-toppling_dominoes::toppling_dominoes(const std::string& game_as_string)
+toppling_dominoes::toppling_dominoes(const string& game_as_string)
     : strip(game_as_string)
 {
     THROW_ASSERT(only_legal_chars(game_as_string));
@@ -144,7 +144,7 @@ move_generator* toppling_dominoes::create_move_generator(bw to_play) const
 }
 
 // TODO refactor colors
-void toppling_dominoes::print(std::ostream& str) const
+void toppling_dominoes::print(ostream& str) const
 {
     str << "toppling_dominoes:";
 
@@ -155,7 +155,7 @@ void toppling_dominoes::print(std::ostream& str) const
 
 game* toppling_dominoes::inverse() const
 {
-    std::vector<int> inv_board;
+    vector<int> inv_board;
 
     const int len = n_dominoes();
     inv_board.reserve(len);
@@ -166,12 +166,12 @@ game* toppling_dominoes::inverse() const
         int tile_inv = tile;
 
         if (tile != BORDER)
-            tile_inv = ebw_opponent(tile);
+            tile_inv = opponent(tile);
 
         inv_board.push_back(tile_inv);
     }
 
-    // TODO std::move board
+    // TODO move board
     return new toppling_dominoes(inv_board);
 }
 

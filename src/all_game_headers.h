@@ -15,5 +15,6 @@
 #include "amazons.h"
 #include "fission.h"
 #include "toppling_dominoes.h"
+#include "gen_toads.h"
 #include "kayles.h"
 // IWYU pragma: end_exports

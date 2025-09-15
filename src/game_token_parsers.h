@@ -3,6 +3,7 @@
 */
 #pragma once
 #include "game.h"
+#include "parsing_utilities.h"
 #include "utilities.h"
 #include <string>
 #include <cassert>
@@ -150,4 +151,52 @@ public:
 
 private:
     std::shared_ptr<game_token_parser> _parser;
+};
+
+////////////////////////////////////////////////// parameterized ("gen_") games
+template <class T>
+class basic_parameterized_game_parser : public game_token_parser
+{
+public:
+    game* parse_game(const std::string& game_token) const override
+    {
+        std::vector<std::string> string_tokens =
+            get_string_tokens(game_token, {':', ','});
+
+        std::vector<int> param_vec;
+        param_vec.reserve(string_tokens.size());
+
+        const size_t N = string_tokens.size();
+        size_t idx = 0;
+        bool found_colon = false;
+
+        int param;
+        while (idx < N)
+        {
+            // Mandatory param
+            if (!get_int(string_tokens, idx, param))
+                return nullptr;
+
+            param_vec.push_back(param);
+
+            // Check for colon
+            if (idx < N && string_tokens[idx] == ":")
+            {
+                found_colon = true;
+                idx++;
+                break;
+            }
+
+            // Otherwise mandatory comma
+            if (!consume_mandatory_comma(string_tokens, idx))
+                return nullptr;
+        }
+
+        // Should have idx + 1 == N
+        if (idx + 1 != N || !found_colon)
+            return nullptr;
+
+        const std::string& game_string = string_tokens[idx];
+        return new T(param_vec, game_string);
+    }
 };

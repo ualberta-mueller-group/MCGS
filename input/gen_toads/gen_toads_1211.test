@@ -1,0 +1,39 @@
+{version 1.3}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[gen_toads]
+
+1,2,1,1:X.OX..O......OOX...X {B loss, W win}
+1,2,1,1:...OX......X..O.OO.X {B loss, W win}
+1,2,1,1:.......X..XXXO.OO... {B win, W loss}
+1,2,1,1:.....OO..X.X..X...O. {B loss, W win}
+1,2,1,1:.....O.X..X..O.X..XO {B loss, W win}
+1,2,1,1:XX....OO.OOO.X....X. {B loss, W win}
+1,2,1,1:...X..O..O..X.....OX {B loss, W win}
+1,2,1,1:X............O...X.O {B loss, W win}
+1,2,1,1:OXO...X.OO..O.XX..X. {B win, W loss}
+1,2,1,1:...X.....X...OO...X. {B loss, W loss}
+1,2,1,1:X...XOO.XO.X....O... {B win, W loss}
+1,2,1,1:.X.OX.O.XO......XX.O {B win, W loss}
+1,2,1,1:X....X...X..OO..O..O {B loss, W win}
+1,2,1,1:.O...O.XO.X....X..XX {B win, W loss}
+1,2,1,1:..X....O.O.O.XX..XOO {B loss, W win}
+1,2,1,1:..O...X.OX.X..X..X.. {B win, W loss}
+1,2,1,1:...X...X.O..XX.O..X. {B win, W loss}
+1,2,1,1:..OO...X.XX..OX..... {B win, W loss}
+1,2,1,1:.....O...X.X......XO {B loss, W win}
+1,2,1,1:.....O..O..XX.X...OX {B loss, W win}
+1,2,1,1:.X....O........X..O. {B loss, W win}
+1,2,1,1:OO.....OX.OXX..XX..O {B win, W win}
+1,2,1,1:X...X..X...O...O..OX {B loss, W win}
+1,2,1,1:...O..XO........X... {B win, W loss}
+1,2,1,1:.X.X.........O.O.... {B win, W loss}
+1,2,1,1:O.O..XOO...X..X...O. {B win, W loss}
+1,2,1,1:........XO.O..O..X.. {B loss, W win}
+1,2,1,1:.X.X..X....OO..X.... {B win, W loss}
+1,2,1,1:..XOX.O....O.....O.. {B loss, W win}
+1,2,1,1:X..XO..O.X.......XO. {B win, W loss}
+

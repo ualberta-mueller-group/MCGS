@@ -1,0 +1,38 @@
+{version 1.3}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[gen_toads]
+
+1,2,3,0:...X.......XXO..O..O {B loss, W win}
+1,2,3,0:..X....X.....XOX..O. {B win, W loss}
+1,2,3,0:X...O..X....O....O.. {B loss, W win}
+1,2,3,0:..O..X....XOX.X.OO.. {B loss, W win}
+1,2,3,0:X.OO.X.......O.X.... {B win, W loss}
+1,2,3,0:X..X........OXX...O. {B win, W loss}
+1,2,3,0:O...X.XX..X..XO.O... {B win, W loss}
+1,2,3,0:X.X..X....X..O....O. {B win, W loss}
+1,2,3,0:...OX.O.XO...X.X.... {B win, W loss}
+1,2,3,0:.X...O.XXO...X.OX... {B win, W loss}
+1,2,3,0:O..O.X.XO.X....O.X.. {B win, W loss}
+1,2,3,0:..O...O.O..O.XX....O {B loss, W win}
+1,2,3,0:O.O.......X.O.OX...X {B loss, W win}
+1,2,3,0:X...X.X...X....O...O {B win, W loss}
+1,2,3,0:O..OX.......O..X.X.. {B win, W loss}
+1,2,3,0:.X.....X..OO..O.X... {B loss, W win}
+1,2,3,0:..O.OXXXO..O...X..O. {B loss, W loss}
+1,2,3,0:O....O......O...XXX. {B loss, W win}
+1,2,3,0:......O..XO..XO.XXX. {B loss, W win}
+1,2,3,0:X..OOXX.....O.....O. {B win, W loss}
+1,2,3,0:.X...O.XX....XO.O.X. {B win, W loss}
+1,2,3,0:.X.O...X..X.XXO..... {B win, W loss}
+1,2,3,0:..X.O.O....X.O...O.. {B loss, W win}
+1,2,3,0:..OOOO..XX...X.XXO.. {B win, W loss}
+1,2,3,0:.OO....X....O..OX.X. {B loss, W win}
+1,2,3,0:..O.....X.XX..OOX.OX {B loss, W win}
+1,2,3,0:......OO.X..XX....O. {B loss, W win}
+1,2,3,0:..O.O..X.....X...X.. {B win, W loss}
+1,2,3,0:.OOX.....X.XX..O.XO. {B win, W loss}
+
