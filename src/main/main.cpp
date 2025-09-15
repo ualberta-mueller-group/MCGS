@@ -21,15 +21,36 @@
 
 using std::cout, std::endl, std::string;
 
+class print_on_exit
+{
+public:
+    print_on_exit(const std::string& message)
+        : _message(message)
+    {
+    }
+
+    ~print_on_exit()
+    {
+        std::cout << _message << std::flush;
+    }
+
+private:
+    std::string _message;
+};
+
 int main(int argc, char** argv)
 {
+    print_on_exit poe("Exiting main\n");
+
     cli_options opts = parse_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
     if (opts.should_exit)
         return 0;
 
+    cout << "Pre-init" << endl;
     mcgs_init_all(opts);
+    cout << "Post-init" << endl;
 
     if (opts.use_player)
     {
@@ -53,11 +74,11 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (opts.run_tests_stdin)
-    {
-        run_autotests_stdin(opts.outfile_name, opts.test_timeout);
-        return 0;
-    }
+    //if (opts.run_tests_stdin)
+    //{
+    //    run_autotests_stdin(opts.outfile_name, opts.test_timeout);
+    //    return 0;
+    //}
 
     if (opts.gen_experiments)
     {
@@ -108,6 +129,7 @@ int main(int argc, char** argv)
 
     if (random_table::did_resize_warning())
         random_table::print_resize_warning();
+
 
     return 0;
 }

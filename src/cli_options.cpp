@@ -21,7 +21,7 @@ cli_options::cli_options(const string& test_directory)
       should_exit(false),
       gen_experiments(false),
       run_tests(false),
-      run_tests_stdin(false),
+      //run_tests_stdin(false),
       nogo_test(false),
       use_player(false),
       test_directory(test_directory),
@@ -130,7 +130,7 @@ void print_help_message(const string& exec_name)
                    "\". Causes other input (i.e. from file, stdin etc) to be "
                    "ignored.");
 
-    print_flag("--run-tests-stdin", "Like --run-tests, but read from stdin.");
+    //print_flag("--run-tests-stdin", "Like --run-tests, but read from stdin.");
 
     print_flag("--nogo-test", "Helper functionality for python script testing "
                               "NoGo correctness, compared to SBHSolver");
@@ -152,6 +152,10 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     print_flag(global::clear_tt.flag(),
                "Clear ttable between test runs. Default: " +
                    global::clear_tt.get_default_str() + ".");
+
+    print_flag(global::count_sums.flag(), "Count unique sums found during "
+               "search. Only applies to partizan solve commands i.e. {B} or "
+               "{W}, but not {N}. Will slow down search somewhat.");
 
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
@@ -187,10 +191,16 @@ cli_options parse_args(int argc, const char** argv, bool silent)
     bool print_optimizations = false;
 
     assert(argc >= 1);
+
+#ifndef __EMSCRIPTEN__
     std::filesystem::path abs_exec_path = std::filesystem::canonical(argv[0]);
     std::filesystem::path parent_path = abs_exec_path.parent_path();
     std::filesystem::path default_test_path =
         parent_path / cli_options::DEFAULT_RELATIVE_TEST_PATH;
+#else
+    std::filesystem::path default_test_path =
+        cli_options::DEFAULT_RELATIVE_TEST_PATH;
+#endif
 
     cli_options opts(default_test_path.string());
 
@@ -347,11 +357,11 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg == "--run-tests-stdin")
-        {
-            opts.run_tests_stdin = true;
-            continue;
-        }
+        //if (arg == "--run-tests-stdin")
+        //{
+        //    opts.run_tests_stdin = true;
+        //    continue;
+        //}
 
         if (arg == "--nogo-test")
         {
@@ -411,6 +421,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::clear_tt.flag())
         {
             global::clear_tt.set(true);
+            continue;
+        }
+
+        if (arg == global::count_sums.flag())
+        {
+            global::count_sums.set(true);
             continue;
         }
 

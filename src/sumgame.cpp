@@ -26,8 +26,10 @@
 #include <iostream>
 #include <memory>
 
+#ifndef __EMSCRIPTEN__
 #include <thread>
 #include <future>
+#endif
 
 #include <cassert>
 #include <unordered_set>
@@ -269,6 +271,7 @@ bool sumgame::solve() const
         ~4s with clock(), and ~11s with chrono...
 
 */
+#ifndef __EMSCRIPTEN__
 optional<solve_result> sumgame::solve_with_timeout(
     unsigned long long timeout) const
 {
@@ -322,6 +325,33 @@ optional<solve_result> sumgame::solve_with_timeout(
 
     return future.get();
 }
+#else
+// TODO emscripten pthreads
+optional<solve_result> sumgame::solve_with_timeout(
+    unsigned long long timeout) const
+{
+    assert_restore_sumgame ars(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+    sum._pre_solve_pass();
+
+    {
+        const int active = sum.num_active_games();
+        THROW_ASSERT(active >= 0);
+        stats::set_n_subgames(static_cast<uint64_t>(active));
+    }
+
+    _should_stop = false;
+    _need_cgt_simplify = true;
+
+
+    optional<solve_result> result = sum._solve_with_timeout(0);
+
+    sum._undo_pre_solve_pass();
+
+    return result;
+}
+#endif
 
 bool sumgame::solve_with_games(std::vector<game*>& gs) const
 {
@@ -377,6 +407,8 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
     depth++;
     stats::inc_node_count();
     stats::update_search_depth(depth);
+    if (global::count_sums())
+        stats::count_sum(*this);
 
     if (PRINT_SUBGAMES)
     {
