@@ -154,6 +154,9 @@ private:
 };
 
 ////////////////////////////////////////////////// parameterized ("gen_") games
+/*
+   TODO document this. Or better, put parameters into section titles?
+*/
 template <class T>
 class basic_parameterized_game_parser : public game_token_parser
 {
