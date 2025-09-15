@@ -1,0 +1,88 @@
+{version 1.3}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[impartial toppling_dominoes]
+
+OXXOOOOXXO
+OX#O#OOO#X
+XX##X#XX#X {N 10}
+          
+OOOOXO#OXX
+#XXXX#OOOX
+XXOXXOXO#X {N 10}
+          
+XOXXXO#X#O
+OOOO##OOXX
+X#XXXO#XXX {N 10}
+          
+OOO#XOXXXO
+OOOXOO#XXX
+O#X#O##XOX {N 10}
+          
+#XOXXO#XOX
+XO##XO#OXO
+OXXXXXXOXO {N 10}
+          
+OOXXXXOOXO
+OX#XXOX#X#
+XOXXX#OOOX {N 10}
+          
+XOXXXOOXOX
+OOOXX#OOXX
+OXOXOOXO#O {N 10}
+          
+OXXXXX###X
+XOOXXOOXOX
+#XOXOXXO#O {N 10}
+          
+OOXX#O#OXX
+XOXOOOXXOO
+X#OOX#OXXX {N 10}
+          
+O##O#O#OOX
+#O#XXOXXOO
+X#XXX#XXO# {N 10}
+          
+X#XXXXOXXX
+OXOO#OOXOO
+XOXOOOOXOX {N 10}
+          
+OXX#OXX#OO
+XX###OXXOX
+OOO#XXX##O {N 10}
+          
+X#XOXX#O#X
+XOOOOXOOXX
+XXX#X#OOO# {N 10}
+          
+#X##OOOX#O
+XXOXOX#XOX
+X#OXX#OXOO {N 10}
+          
+XXXXOOXOOX
+X##OOOXXXX
+XOO##OOOXX {N 10}
+          
+XXOXXXOO#O
+#XOXOXOXOO
+OXXXOOOOOX {N 10}
+          
+XOOX##OXO#
+XO##X#OOOO
+XOOXXOXOXO {N 10}
+          
+#OXOO#XOOX
+XOOOOXXXOX
+XXO##XXXXO {N 10}
+          
+OOXXXOOOXX
+X#XXXXO#XO
+OXXOO#O#XX {N 10}
+          
+XX#O#OOXOO
+X#XXXOX#XO
+###O#XOO#O {N 10}
+

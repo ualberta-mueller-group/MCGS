@@ -26,6 +26,8 @@ int clobber_char_to_color(char c)
         return WHITE;
     else if (c == '.')
         return EMPTY;
+    else if (c == '#')
+        return BORDER;
     else
         assert(false);
 
@@ -35,9 +37,9 @@ int clobber_char_to_color(char c)
 
 char color_to_clobber_char(int color)
 {
-    static char clobber_char[] = {'X', 'O', '.'};
+    static char clobber_char[] = {'X', 'O', '.', '#'};
 
-    assert_range(color, BLACK, EMPTY + 1);
+    assert_range(color, BLACK, BORDER + 1);
     return clobber_char[color];
 }
 
@@ -45,7 +47,7 @@ namespace {
 
 void check_is_clobber_char(char c)
 {
-    THROW_ASSERT(c == 'X' || c == 'O' || c == '.');
+    THROW_ASSERT(c == 'X' || c == 'O' || c == '.' ||  c == '#');
 }
 
 std::vector<int> string_to_board(const std::string& game_as_string)
@@ -260,7 +262,7 @@ std::vector<int> strip::_load_board(ibuffer& is)
 void strip::_check_legal() const
 {
     for (const int& x : _board)
-        THROW_ASSERT(x == BLACK || x == WHITE || x == EMPTY);
+        THROW_ASSERT(x == BLACK || x == WHITE || x == EMPTY || x == BORDER);
 }
 
 std::vector<int> strip::inverse_board() const

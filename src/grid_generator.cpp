@@ -510,3 +510,30 @@ bool grid_generator_fission::_increment_board()
 
     return !carry;
 }
+
+//////////////////////////////////////////////////
+// grid_generator_toppling_dominoes methods
+bool grid_generator_toppling_dominoes ::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (!_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_bw(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+

@@ -1419,6 +1419,8 @@ a move generator in a `std::unique_ptr`
        ```
        make clean && make DEBUG=1 ASAN=address && ./MCGS --run-tests
        ```
+       Check list of default implementation warnings at the end to see if some
+       games are missing implementations of functions.
     2. Run larger test set with default compilation flags (also quite slow):
        ```
        make clean && make && ./MCGS --run-tests --test-dir input/main_tests

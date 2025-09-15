@@ -23,6 +23,7 @@
 #include "domineering.h"
 #include "amazons.h"
 #include "fission.h"
+#include "toppling_dominoes.h"
 
 namespace {
 
@@ -42,6 +43,7 @@ void register_types(database& db)
     DATABASE_REGISTER_TYPE(db, domineering);
     DATABASE_REGISTER_TYPE(db, amazons);
     DATABASE_REGISTER_TYPE(db, fission);
+    DATABASE_REGISTER_TYPE(db, toppling_dominoes);
 }
 
 void fill_database(database& db)
@@ -54,7 +56,8 @@ void fill_database(database& db)
         //new gridlike_db_game_generator<nogo, grid_generator_nogo>(3, 3),
         //new gridlike_db_game_generator<domineering, grid_generator_domineering>(4, 4),
         //new gridlike_db_game_generator<amazons, grid_generator_amazons>(3, 3),
-        new gridlike_db_game_generator<fission, grid_generator_fission>(4, 3),
+        //new gridlike_db_game_generator<fission, grid_generator_fission>(4, 3),
+        new gridlike_db_game_generator<toppling_dominoes, grid_generator_toppling_dominoes>(10),
     };
 
     for (db_game_generator* gen : generators)

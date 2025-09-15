@@ -1,0 +1,88 @@
+{version 1.3}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[toppling_dominoes]
+
+XX#O#OXOXXXXX##XXOXX
+XXOOXOO##OOOXXOXXXXO
+OXOOX#XOXOOXXXXOXOOO {B win, W loss}
+                    
+XOO#OXXXXXO##XXOXOOO
+#XXOX#OO#OX#OOX##XO#
+XXXX#O##OOXOXOOOXOOO {B win, W win}
+                    
+OXXXXOXXXXXOX#XO#X##
+OXOXXOOXOOOXXXOOOXOO
+##OOOXOO##XXOXOOOOXO {B loss, W win}
+                    
+OOX#OO#OXXXO#OX#X#XO
+XOOXOXOXOOX#OXX#O##O
+OX###XOXXX#OXOOXOOOX {B loss, W win}
+                    
+OO#OOXXOO#XXX#OOOXOO
+O#XOOOOOO#OXOXOXXOXX
+XOXXX#OOOXX#O#XXOXOX {B loss, W win}
+                    
+X#OOOOOXX#XXXOXXOX#O
+OO#XXOOOOXXXXOOOOX#X
+X#OXOX#OXXOOXO#OXOXX {B win, W win}
+                    
+XO#O#XOOOO#OO#XOXXXO
+OO#OXXXXXXOOOX#OX#XX
+XOXXX#OXXX###OOXXXXO {B win, W win}
+                    
+XOOXO#XXOXX#OO#O#OOO
+XXOX#XOOOXX#XO##XOOO
+OOX#XO#XOOXXXXX#XXXO {B loss, W win}
+                    
+X#XOOOOXXOOOOXOXOOOO
+XXXO#X#OOOXOOXXXXXXO
+XXXOXXXXXX#XO#XXXOO# {B win, W loss}
+                    
+O#OX#OXXXXOOX#OOOX#X
+X##O#XOX#XXO#XOXO#OO
+OOOXXOOOOX#XX#OOO#XX {B win, W win}
+                    
+OOOOXXXXOXXOXOXOOXOO
+OXXXXXXO##XXOXOXXOOO
+#OXXXOOXOOXOXXOOOXOX {B loss, W win}
+                    
+XOOOXOOOOOXO#XOXXOOX
+OXO##OXXOX#XOOXXX#XO
+XXXX#OXOXOXXOXX##XO# {B win, W win}
+                    
+OXXOO#XXXX#OXXXX#OXX
+OOX#XXXOOXOX#OXOOOOX
+OOOXO##OXOOOO#OXXOO# {B loss, W win}
+                    
+XXXXXXOOOOOOOOOOO#XO
+XOOOXOXXXOXOXXOXX#OX
+OOXXO#XOO##XOOXXOOX# {B win, W win}
+                    
+X#X#OXXOXXOOXOOXXOOO
+OOXOOO#XOXO#O#XX#XXO
+XXXOXO##XOOXXOXOOXXO {B win, W win}
+                    
+XX#XXXX#OXOOX#OOOXOO
+XOXO##OX###OOXXO#OX#
+OOXXO#OO#XO#XO#XOOXX {B win, W win}
+                    
+O#OOOX#OXOOXOOOXOOXX
+XOXOOXOOXO#X#XX#XOO#
+XOXXOX#OOOX#XX#OOX#X {B win, W win}
+                    
+OOXOXXOOXOOOXXOOXOXO
+OOXOOXOXXOXXOOXOXOXO
+XXXXXOXXOOOXXXOOXXXO {B win, W win}
+                    
+XXOOOXOOOXO#OOXXXXXX
+XXO##OXXXOOXO#XOXO#X
+OXO#OX#XO#XXOOOXOOXO {B win, W loss}
+                    
+OOOXXXO##XXO#OX#XX#X
+#OXX#OOOXXXOOOO#OOXX
+O#XOOOXXOXXXXO##OXXX {B win, W win}
+                    

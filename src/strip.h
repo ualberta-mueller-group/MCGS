@@ -24,7 +24,7 @@ char color_to_clobber_char(int color);
 class strip : public game
 {
 public:
-    strip(const std::vector<int>& board);
+    strip(const std::vector<int>& board); // TODO rvalue reference version?
     strip(const std::string& game_as_string);
     int size() const;
     int at(int p) const;

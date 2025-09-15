@@ -16,6 +16,7 @@
 #include "game_case.h"
 #include "game_token_parsers.h"
 #include "parsing_utilities.h"
+#include "toppling_dominoes.h"
 #include "utilities.h"
 #include <ios>
 #include <exception>
@@ -824,6 +825,7 @@ void file_parser::_init_game_parsers()
     _add_game_parser("domineering", new basic_parser<domineering>());
     _add_game_parser("amazons", new basic_parser<amazons>());
     _add_game_parser("fission", new basic_parser<fission>());
+    _add_game_parser("toppling_dominoes", new basic_parser<toppling_dominoes>());
 
     _add_game_parser("kayles", new int_parser<kayles>());
 }

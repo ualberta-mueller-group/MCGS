@@ -5,10 +5,13 @@
 // Print move coordinate(s)
 //---------------------------------------------------------------------------
 
+// TODO this file has unused functions
+
 #pragma once
 
 #include "cgt_basics.h"
 
+#include <climits>
 #include <string>
 #include <cassert>
 
@@ -29,14 +32,30 @@ const int MOVE_MAX_SIZE = (1 << BITS_PER_MOVE_PART);
 const int MOVE_BITS = MOVE_MAX_SIZE - 1;
 static_assert(sizeof(int) >= 4);
 
+/*
+   TODO
+    - do these asserts slow down the code a lot? Only use with DEBUG=1?
+    - unit test unset_bit
+    - Should set_bit and unset_bit return move instead of int?
+*/
+
 inline int get_bit(move m, int bit)
 {
+    assert(0 <= bit && bit < (sizeof(move) * CHAR_BIT));
     return (m >> bit) & 1;
 }
 
 inline int set_bit(move m, int bit)
 {
+    assert(0 <= bit && bit < (sizeof(move) * CHAR_BIT));
     return m | (1 << bit);
+}
+
+// TODO unit test
+inline int unset_bit(move m, int bit)
+{
+    assert(0 <= bit && bit < (sizeof(move) * CHAR_BIT));
+    return m & ~(1 << bit);
 }
 
 inline bw get_color(move m) // BLACK = 0, WHITE = 1
@@ -80,6 +99,7 @@ inline move two_part_move(int first, int second)
     return (sign_bit << SIGN_BIT) + first * MOVE_MAX_SIZE + second;
 }
 
+// TODO remove multiply?
 inline int first(move m)
 {
     return get_sign(m) * ((m >> BITS_PER_MOVE_PART) & MOVE_BITS);

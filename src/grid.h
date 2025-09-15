@@ -21,8 +21,11 @@ class grid : public game
 {
 public:
     grid(int n_rows, int n_cols);
+
+    // TODO rvalue reference version?
     grid(const std::vector<int>& board, int_pair shape);
     grid(const std::string& game_as_string);
+
     int size() const;
     int at(int p) const;
     const int_pair& shape() const;
