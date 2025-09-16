@@ -15,6 +15,7 @@
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
+#include "new_random.h"
 #include "random.h"
 #include "search_utils.h"
 
@@ -54,6 +55,9 @@ int main(int argc, char** argv)
     cout << "Pre-init" << endl;
     mcgs_init_all(opts);
     cout << "Post-init" << endl;
+
+    test_new_random();
+    return 0;
 
     /*
     std::ofstream out_file("table.txt");
