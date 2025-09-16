@@ -2,7 +2,9 @@
 // main.cpp - main loop of MCGS
 //---------------------------------------------------------------------------
 
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "basic_player.h"
@@ -51,6 +53,28 @@ int main(int argc, char** argv)
     cout << "Pre-init" << endl;
     mcgs_init_all(opts);
     cout << "Post-init" << endl;
+
+    std::ofstream out_file("table.txt");
+
+    THROW_ASSERT(out_file.is_open());
+
+    random_table& rt = get_global_random_table(RANDOM_TABLE_DEFAULT);
+
+    const size_t table_size = rt.current_size();
+    out_file << "Size: " << table_size << "\n";
+
+    for (size_t i = 0; i < table_size; i++)
+    {
+        for (int j = 0; j < 256; j++)
+        {
+            out_file << "(" << i << ", " << j << "): " << rt.get_zobrist_val(i, j)
+                << "\n";
+        }
+    }
+
+    out_file.close();
+
+    return 0;
 
     if (opts.use_player)
     {

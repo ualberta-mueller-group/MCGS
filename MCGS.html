@@ -6,7 +6,17 @@
         <script>
             //const game = "[nogo] ....|....|....|.... {B, W}"
             Module = {
-                arguments: ["--print-ttable-size", "--print-db-info"]
+
+                arguments: [
+                    "--print-ttable-size",
+                    "--print-db-info",
+                    "--no-use-db",
+                    "--run-tests",
+                    "--test-timeout", "0",
+                    "--test-dir", "input/wasm_test",
+                    "--out-file", "wasm-out.csv",
+                ]
+
             };
         </script>
 

@@ -5,7 +5,9 @@ function addButtons() {
 
 
     b.addEventListener("click", () => {
-        const data = Module.FS.readFile("out.csv");
+        const fileName = "table.txt";
+
+        const data = Module.FS.readFile(fileName);
 
         const blob = new Blob([data], {type: "text/plain"});
 
@@ -13,7 +15,7 @@ function addButtons() {
 
         const dl = document.createElement("a");
         dl.href = url;
-        dl.download = "out.csv";
+        dl.download = fileName;
         dl.click();
 
         console.log("Added");

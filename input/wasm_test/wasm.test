@@ -1,0 +1,67 @@
+{version 1.3}
+
+/*_
+    Testing for runtime behavior divergence between native and WASM builds
+*/
+
+[clobber_1xn]
+
+/* 1 pair */
+XO {B win, W win}
+
+/* 2 pair */
+XOXO {B win, W win}
+
+/* 3 pair */
+XOXOXO {B loss, W loss}
+
+/* 4 pair */
+XOXOXOXO {B win, W win}
+
+/* 5 pair */
+XOXOXOXOXO {B win, W win}
+
+/* 6 pair */
+XOXOXOXOXOXO {B win, W win}
+
+/* 7 pair */
+XOXOXOXOXOXOXO {B win, W win}
+
+/* 8 pair */
+XOXOXOXOXOXOXOXO {B win, W win}
+
+/* 9 pair */
+XOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 10 pair */
+XOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 11 pair */
+XOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 12 pair */
+XOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 13 pair */
+XOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 14 pair */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 15 pair */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 16 pair */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 17 pair */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 18 pair */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 19 pair */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 20 pair */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
