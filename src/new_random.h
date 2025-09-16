@@ -10,7 +10,9 @@ public:
 
     int8_t get_i8();
     int8_t get_i8_biased(int8_t min_val = INT8_MIN, int8_t max_val = INT8_MAX);
-    int8_t get_i8_unbiased(int8_t min_val = INT8_MIN, int8_t max_val = INT8_MAX);
+    int8_t get_i8_unbiased_reject(int8_t min_val = INT8_MIN, int8_t max_val = INT8_MAX);
+    int8_t get_i8_unbiased_openbsd(int8_t min_val = INT8_MIN, int8_t max_val = INT8_MAX);
+    int8_t get_i8_unbiased_paper(int8_t min_val = INT8_MIN, int8_t max_val = INT8_MAX);
 
 
 private:
