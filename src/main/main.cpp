@@ -15,6 +15,7 @@
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
+#include "random.h"
 #include "search_utils.h"
 
 #include "nogo_split_test.h"
@@ -54,6 +55,7 @@ int main(int argc, char** argv)
     mcgs_init_all(opts);
     cout << "Post-init" << endl;
 
+    /*
     std::ofstream out_file("table.txt");
 
     THROW_ASSERT(out_file.is_open());
@@ -73,6 +75,11 @@ int main(int argc, char** argv)
     }
 
     out_file.close();
+    */
+
+    random_generator gen(31);
+    for (int i = 0; i < 20; i++)
+        cout << gen.get_u32() << endl;
 
     return 0;
 
