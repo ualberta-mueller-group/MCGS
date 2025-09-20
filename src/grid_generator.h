@@ -5,10 +5,12 @@
     Abstract classes providing some functionality:
         grid_generator_base
         grid_generator_masked
+        grid_generator_masked_fast
 
     Non-abstract classes:
         grid_generator_default
         grid_generator_clobber
+        grid_generator_clobber_fast
         grid_generator_nogo
         grid_generator_domineering
         grid_generator_amazons
@@ -18,10 +20,12 @@
 #pragma once
 
 #include <iostream>
+#include <unordered_set>
 #include <vector>
 #include <cassert>
 #include <cstddef>
 #include "grid.h"
+#include "grid_hash.h"
 #include "strip.h"
 
 /*
@@ -211,6 +215,33 @@ protected:
     virtual bool _increment_mask();
 };
 
+////////////////////////////////////////////////// grid_generator_masked_fast
+/*
+   TODO document
+*/
+class grid_generator_masked_fast : public grid_generator_base
+{
+public:
+    grid_generator_masked_fast(const int_pair& max_shape);
+    grid_generator_masked_fast(int max_rows, int max_cols);
+    grid_generator_masked_fast(int max_cols);
+
+    virtual ~grid_generator_masked_fast() {}
+
+    void operator++() override;
+
+protected:
+    grid_generator_impl::grid_mask _mask;
+
+    std::unordered_set<hash_t> _mask_hashes;
+    mutable grid_hash _gh;
+
+    virtual void _init_mask();
+    virtual bool _increment_mask();
+    hash_t _get_mask_hash() const;
+};
+
+
 ////////////////////////////////////////////////// grid_generator_default
 /*
    Non-abstract basic grid generator.
@@ -258,6 +289,25 @@ protected:
     void _init_board() override;
     bool _increment_board() override;
 };
+
+////////////////////////////////////////////////// grid_generator_clobber_fast
+/*
+    TODO document
+*/
+class grid_generator_clobber_fast : public grid_generator_masked_fast
+{
+public:
+    grid_generator_clobber_fast(const int_pair& max_shape);
+    grid_generator_clobber_fast(int max_rows, int max_cols);
+    grid_generator_clobber_fast(int max_cols);
+
+    virtual ~grid_generator_clobber_fast() {}
+
+protected:
+    void _init_board() override;
+    bool _increment_board() override;
+};
+
 
 ////////////////////////////////////////////////// grid_generator_nogo
 /*
@@ -470,6 +520,27 @@ inline bool grid_generator_masked::_increment_mask()
     return _mask;
 }
 
+
+////////////////////////////////////////////////// grid_generator_masked_fast
+// methods
+
+inline grid_generator_masked_fast::grid_generator_masked_fast(
+    const int_pair& max_shape)
+    : grid_generator_base(max_shape), _mask(int_pair(0, 0))
+{
+}
+
+inline grid_generator_masked_fast::grid_generator_masked_fast(int max_rows,
+                                                              int max_cols)
+    : grid_generator_base(max_rows, max_cols), _mask(int_pair(0, 0))
+{
+}
+
+inline grid_generator_masked_fast::grid_generator_masked_fast(int max_cols)
+    : grid_generator_base(1, max_cols), _mask(int_pair(0, 0))
+{
+}
+
 ////////////////////////////////////////////////// grid_generator_default
 /// methods
 inline grid_generator_default::grid_generator_default(const int_pair& max_shape)
@@ -517,6 +588,31 @@ inline void grid_generator_clobber::_init_board()
     const char black_char = color_to_clobber_char(BLACK);
     const char empty_char = color_to_clobber_char(EMPTY);
     init_board_helper_masked(_board, _shape, _mask, black_char, empty_char);
+}
+
+////////////////////////////////////////////////// grid_generator_clobber_fast
+/// methods
+inline grid_generator_clobber_fast::grid_generator_clobber_fast(const int_pair& max_shape)
+    : grid_generator_masked_fast(max_shape)
+{
+}
+
+inline grid_generator_clobber_fast::grid_generator_clobber_fast(int max_rows,
+                                                      int max_cols)
+    : grid_generator_masked_fast(max_rows, max_cols)
+{
+}
+
+inline grid_generator_clobber_fast::grid_generator_clobber_fast(int max_cols)
+    : grid_generator_masked_fast(1, max_cols)
+{
+}
+
+inline void grid_generator_clobber_fast::_init_board()
+{
+    const char black_char = color_to_clobber_char(BLACK);
+    const char empty_char = color_to_clobber_char(EMPTY);
+    grid_generator_masked::init_board_helper_masked(_board, _shape, _mask, black_char, empty_char);
 }
 
 ////////////////////////////////////////////////// grid_generator_nogo methods

@@ -386,6 +386,73 @@ void grid_generator_masked::init_board_helper_masked(
     }
 }
 
+////////////////////////////////////////////////// grid_generator_masked_fast
+// methods
+void grid_generator_masked_fast::operator++()
+{
+    assert(*this);
+
+    if (_increment_board())
+        return;
+
+    if (_increment_mask())
+    {
+        _init_board();
+        return;
+    }
+
+    if (_increment_shape())
+    {
+        _init_mask();
+        _init_board();
+        return;
+    }
+}
+
+void grid_generator_masked_fast::_init_mask()
+{
+    _mask.set_shape(_shape);
+
+    hash_t hash = _get_mask_hash();
+    _mask_hashes.insert(hash);
+}
+
+bool grid_generator_masked_fast::_increment_mask()
+{
+    while (true)
+    {
+        assert(_mask);
+
+        ++_mask;
+
+        bool ok = _mask;
+        if (!ok)
+            return false;
+
+        const hash_t hash = _get_mask_hash();
+        const auto& it = _mask_hashes.insert(hash);
+
+        if (it.second)
+            return true;
+    }
+}
+
+hash_t grid_generator_masked_fast::_get_mask_hash() const
+{
+    _gh.reset(_shape);
+
+    int pos = 0;
+    for (int r = 0; r < _shape.first; r++)
+    {
+        for (int c = 0; c < _shape.second; c++)
+            _gh.toggle_value(r, c, _mask[pos + c]);
+
+        pos += _shape.second;
+    }
+
+    return _gh.get_value();
+}
+
 ////////////////////////////////////////////////// grid_generator_default
 /// methods
 bool grid_generator_default::_increment_board()
@@ -433,6 +500,33 @@ bool grid_generator_clobber::_increment_board()
 
     return !carry;
 }
+
+////////////////////////////////////////////////// grid_generator_clobber_fast
+/// methods
+bool grid_generator_clobber_fast::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (!_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_bw(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
 
 ////////////////////////////////////////////////// grid_generator_nogo methods
 bool grid_generator_nogo::_increment_board()
