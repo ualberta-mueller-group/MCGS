@@ -18,6 +18,7 @@
 #include "nogo_split_test.h"
 #include "sumgame.h"
 #include "throw_assert.h"
+#include "grid_hash.h"
 
 using std::cout, std::endl, std::string;
 
@@ -51,6 +52,7 @@ int main(int argc, char** argv)
     cout << "Pre-init" << endl;
     mcgs_init_all(opts);
     cout << "Post-init" << endl;
+    test_grid_hash_stuff();
 
     if (opts.use_player)
     {
