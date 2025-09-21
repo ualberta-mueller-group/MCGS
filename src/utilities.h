@@ -52,7 +52,7 @@ void print_bits(std::ostream& os, const T& x)
 }
 
 // p implies q
-inline bool logical_implies(bool p, bool q)
+inline bool logical_implies(bool p, bool q) // TODO replace with macro?
 {
     return !p | q;
 }
@@ -62,6 +62,7 @@ inline bool logical_iff(bool p, bool q)
     return p == q;
 }
 
+#define LOGICAL_IMPLIES(p, q) (!(p) || (q))
 
 //////////////////////////////////////// string parsing utils
 
