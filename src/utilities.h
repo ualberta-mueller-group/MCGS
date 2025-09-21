@@ -119,8 +119,9 @@ inline constexpr T rotate_left(const T& val, size_t distance)
 
 // TODO unit test
 // TODO inline or not?
+// least significant bits, i.e. fn(3) == 0b0...0111
 template <class T>
-constexpr T get_bit_mask(unsigned int n_bits)
+constexpr T get_bit_mask_lower(unsigned int n_bits)
 {
     static_assert(std::is_integral_v<T>);
     assert(n_bits <= size_in_bits<T>());
@@ -136,6 +137,22 @@ constexpr T get_bit_mask(unsigned int n_bits)
     T_Unsigned& val_unsigned = reinterpret_cast<T_Unsigned&>(val);
 
     return val_unsigned >> (size_in_bits<T>() - n_bits);
+}
+
+// TODO unit test, and inline or not?
+// most significant bits, i.e. fn(3) == 0b1110...0
+template <class T>
+constexpr T get_bit_mask_upper(unsigned int n_bits)
+{
+    static_assert(std::is_integral_v<T>);
+    assert(n_bits <= size_in_bits<T>());
+
+    if (n_bits == 0) [[ unlikely ]]
+        return T(0);
+
+    T val(-1);
+
+    return val << (size_in_bits<T>() - n_bits);
 }
 
 // ... 0101 0101

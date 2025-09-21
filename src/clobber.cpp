@@ -20,18 +20,18 @@ namespace {
 
 inline int encode_clobber_coord(int r, int c)
 {
-    assert(r == (r & get_bit_mask<int>(7)));
-    assert(c == (c & get_bit_mask<int>(7)));
+    assert(r == (r & get_bit_mask_lower<int>(7)));
+    assert(c == (c & get_bit_mask_lower<int>(7)));
 
     return r | (c << 7);
 }
 
 inline int_pair decode_clobber_coord(int encoded)
 {
-    assert(encoded == (encoded & get_bit_mask<int>(14)));
+    assert(encoded == (encoded & get_bit_mask_lower<int>(14)));
 
     // TODO why is this not constexpr with clang?
-    const unsigned int CLOBBER_MASK = get_bit_mask<unsigned int>(7);
+    const unsigned int CLOBBER_MASK = get_bit_mask_lower<unsigned int>(7);
 
     const int r = encoded & CLOBBER_MASK;
     const int c = (encoded >> 7) & CLOBBER_MASK;

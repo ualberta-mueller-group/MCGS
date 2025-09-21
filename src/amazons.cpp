@@ -47,7 +47,7 @@ using namespace std;
 ////////////////////////////////////////////////// helper functions
 namespace {
 //////////////////////////////////////// Move encoding
-const unsigned int THREE_PART_MOVE_MAX = get_bit_mask<unsigned int>(10);
+const unsigned int THREE_PART_MOVE_MAX = get_bit_mask_lower<unsigned int>(10);
 
 inline ::move encode_three_part_move(unsigned int val1, unsigned int val2,
                                      unsigned int val3)
@@ -65,7 +65,7 @@ inline ::move encode_three_part_move(unsigned int val1, unsigned int val2,
 inline void decode_three_part_move(::move m, unsigned int& val1,
                                    unsigned int& val2, unsigned int& val3)
 {
-    assert((m & get_bit_mask<::move>(30)) == m);
+    assert((m & get_bit_mask_lower<::move>(30)) == m);
 
     val1 = (m & THREE_PART_MOVE_MAX);
     val2 = ((m >> 10) & THREE_PART_MOVE_MAX);
