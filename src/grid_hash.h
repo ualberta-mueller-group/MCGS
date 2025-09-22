@@ -131,10 +131,14 @@ inline void grid_hash::reset(const int_pair& grid_shape)
     }
 }
 
+// TODO why not std::min_element with em++?
 inline hash_t grid_hash::get_value() const
 {
-    const local_hash* result = std::min_element(_hashes.begin(), _hashes.end(), _compare);
-    return result->get_value();
+    hash_t min_val = std::numeric_limits<hash_t>::max();
+    for (const local_hash& lh : _hashes)
+        min_val = std::min(min_val, lh.get_value());
+
+    return min_val;
 }
 
 template <class T>
