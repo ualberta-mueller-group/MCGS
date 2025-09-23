@@ -88,6 +88,7 @@ public:
 
     size_t size() const; // number of tiles (excluding SEP)
     void set_shape(const int_pair& shape);
+    void set_shape_fill(const int_pair& shape);
 
     bool operator[](size_t idx) const;
 

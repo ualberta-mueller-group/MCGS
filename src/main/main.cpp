@@ -10,6 +10,7 @@
 #include "file_parser.h"
 #include "autotests.h"
 #include "gen_components.h"
+#include "gen_components2.h"
 #include "gen_experiments.h"
 #include "mcgs_init.h"
 #include "hashing.h"
@@ -55,8 +56,8 @@ int main(int argc, char** argv)
     cout << "Post-init" << endl;
     test_grid_hash_stuff();
 
-    gen_components();
-    return 0;
+    //gen_components();
+    //test_gen_components2();
 
     if (opts.use_player)
     {

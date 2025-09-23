@@ -101,6 +101,24 @@ void grid_mask::set_shape(const int_pair& shape)
     _indices.reserve(mask_size);
 }
 
+void grid_mask::set_shape_fill(const int_pair& shape)
+{
+    assert(shape.first >= 0 && shape.second >= 0);
+
+    const int mask_size = shape.first * shape.second;
+    _marker_count_end = mask_size + 1;
+
+    _indices.clear();
+    _indices.reserve(mask_size);
+
+    _mask.resize(mask_size);
+    for (int i = 0; i < mask_size; i++)
+    {
+        _mask[i] = true;
+        _indices.push_back(i);
+    }
+}
+
 void grid_mask::operator++()
 {
     // At most as many markers as the board would allow

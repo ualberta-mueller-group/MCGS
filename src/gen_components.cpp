@@ -145,6 +145,9 @@ hash_t gen_hash(const vector<bool>& vec, int_pair shape)
     return gh.get_value();
 }
 
+} // namespace
+
+//////////////////////////////////////////////////
 unordered_set<hash_t> get_hash_set_trivial(int max_r, int max_c)
 {
     const int_pair target_shape(max_r, max_c);
@@ -210,9 +213,6 @@ unordered_set<hash_t> get_hash_set_trivial(int max_r, int max_c)
     return hash_set;
 }
 
-} // namespace
-
-//////////////////////////////////////////////////
 void gen_components()
 {
     get_hash_set_trivial(5, 5);

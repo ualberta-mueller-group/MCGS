@@ -8,6 +8,7 @@
 
 #include "database.h"
 #include "db_game_generator.h"
+#include "gen_components2.h"
 #include "global_database.h"
 #include "global_options.h"
 #include "gridlike_db_game_generator.h"
@@ -55,7 +56,10 @@ void fill_database(database& db)
         //new gridlike_db_game_generator<clobber, grid_generator_clobber>(4, 4),
         //new gridlike_db_game_generator<clobber, grid_generator_clobber_fast>(4, 4),
         //new gridlike_db_game_generator<clobber, grid_generator_clobber>(4, 3),
+
         new gridlike_db_game_generator<clobber, grid_generator_clobber_fast>(4, 4),
+        //new gridlike_db_game_generator<clobber, grid_generator_clobber_cc>(4, 4),
+
         //new gridlike_db_game_generator<nogo, grid_generator_nogo>(3, 3),
         //new gridlike_db_game_generator<domineering, grid_generator_domineering>(4, 4),
         //new gridlike_db_game_generator<amazons, grid_generator_amazons>(3, 3),
