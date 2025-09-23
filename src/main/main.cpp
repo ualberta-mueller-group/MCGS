@@ -9,6 +9,7 @@
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
+#include "gen_components.h"
 #include "gen_experiments.h"
 #include "mcgs_init.h"
 #include "hashing.h"
@@ -53,6 +54,9 @@ int main(int argc, char** argv)
     mcgs_init_all(opts);
     cout << "Post-init" << endl;
     test_grid_hash_stuff();
+
+    gen_components();
+    return 0;
 
     if (opts.use_player)
     {
