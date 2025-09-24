@@ -18,6 +18,7 @@ using namespace std;
 ////////////////////////////////////////////////// helpers
 namespace {
 
+// TODO number of bits is decreasing...
 inline int encode_clobber_coord(int r, int c)
 {
     assert(r == (r & get_bit_mask_lower<int>(7)));
@@ -103,17 +104,18 @@ void clobber::play(const ::move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
-#ifdef CLOBBER_GRID_HASH
+#ifdef USE_GRID_HASH
         //hash.toggle_value(0, _gh.get_value());
-        hash.reset();
-        hash.toggle_type(game_type());
+        //hash.reset();
+        //hash.toggle_type(game_type());
 
         _gh.toggle_value(from_coord.first, from_coord.second, to_play);
         _gh.toggle_value(to_coord.first, to_coord.second, opp);
 
         _gh.toggle_value(from_coord.first, from_coord.second, EMPTY);
         _gh.toggle_value(to_coord.first, to_coord.second, to_play);
-        hash.toggle_value(0, _gh.get_value());
+        hash.__set_value(_gh.get_value());
+        //hash.toggle_value(0, _gh.get_value());
 #else
         hash.toggle_value(2 + from_point, to_play);
         hash.toggle_value(2 + to_point, opp);
@@ -154,17 +156,18 @@ void clobber::undo_move()
         // TODO hard coded "2" should go away...
         local_hash& hash = _get_hash_ref();
 
-#ifdef CLOBBER_GRID_HASH
+#ifdef USE_GRID_HASH
         //hash.toggle_value(0, _gh.get_value());
-        hash.reset();
-        hash.toggle_type(game_type());
+        //hash.reset();
+        //hash.toggle_type(game_type());
 
         _gh.toggle_value(from_coord.first, from_coord.second, EMPTY);
         _gh.toggle_value(to_coord.first, to_coord.second, to_play);
 
         _gh.toggle_value(from_coord.first, from_coord.second, to_play);
         _gh.toggle_value(to_coord.first, to_coord.second, opp);
-        hash.toggle_value(0, _gh.get_value());
+        hash.__set_value(_gh.get_value());
+        //hash.toggle_value(0, _gh.get_value());
 #else
         hash.toggle_value(2 + from_point, EMPTY);
         hash.toggle_value(2 + to_point, to_play);
@@ -406,7 +409,7 @@ split_result clobber::_split_impl() const
     return result;
 }
 
-#ifdef CLOBBER_GRID_HASH
+#ifdef USE_GRID_HASH
 void clobber::_init_hash(local_hash& hash) const
 {
     const int_pair &s = shape();
@@ -423,7 +426,8 @@ void clobber::_init_hash(local_hash& hash) const
         pos += s.second;
     }
 
-    hash.toggle_value(0, _gh.get_value());
+    hash.__set_value(_gh.get_value());
+    //hash.toggle_value(0, _gh.get_value());
 }
 #endif
 

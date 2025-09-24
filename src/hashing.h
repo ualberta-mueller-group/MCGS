@@ -179,6 +179,16 @@ public:
 
     void toggle_type(game_type_t type);
 
+    /*
+        TODO remove this? Or make it take a const grid_hash& and add some
+        checks?
+    */
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    void __set_value(hash_t new_value)
+    {
+        _value = new_value;
+    }
+
 private:
     hash_t _value;
 };

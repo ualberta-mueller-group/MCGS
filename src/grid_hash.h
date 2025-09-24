@@ -1,20 +1,15 @@
 #pragma once
-
 /*
-    grid_hash::_hashes array has 8 local_hash objects
+    grid_hash class
 
-    0, 0T, 90, 90T, 180, 180T, 270, 270T
+    For computing the same local hash between identical grids (considering
+    rotation/transpose symmetry).
 
-Disable some with bit mask? Have common bit masks?
+    Manages 8 local_hash objects and computes their values for each 90 degree
+    rotation and transpose combination. The value returned by grid_hash is the
+    minimum of these.
 
-All:
-    nogo, clobber, amazons
-
-0, 180, 90T, 270T:
-    domineering, fission
-
-Won't ever use?:
-    clobber_1xn, toppling_dominoes, nogo_1xn, elephants, gen_toads
+    Orientations are enabled by passing a bit mask to the grid_hash constructor.
 */
 
 #include <algorithm>
@@ -24,55 +19,122 @@ Won't ever use?:
 #include "grid.h"
 #include "game.h"
 #include "grid_location.h"
+#include "utilities.h"
 
-////////////////////////////////////////////////// constants
+#define USE_GRID_HASH
+
+////////////////////////////////////////////////// grid_hash_orientation
+
 /*
-    Notation for these comments:
-    r, c: row and column indices
-    R, C: row count, column count (in grid shape)
+    Enum of the 8 rotation/transpose orientations for grids
+
+    Numeric suffix is the clockwise rotation (in degrees). "T" indicates
+    transpose, computed AFTER the rotation.
 */
-
-// clockwise rotations (degrees)
-enum grid_hash_rotation
+enum grid_hash_orientation
 {
-    GRID_HASH_ROTATION_0 = 0,
-    GRID_HASH_ROTATION_90,
-    GRID_HASH_ROTATION_180,
-    GRID_HASH_ROTATION_270,
+    GRID_HASH_ORIENTATION_0 = 0,
+    GRID_HASH_ORIENTATION_0T,
+    GRID_HASH_ORIENTATION_90,
+    GRID_HASH_ORIENTATION_90T,
+    GRID_HASH_ORIENTATION_180,
+    GRID_HASH_ORIENTATION_180T,
+    GRID_HASH_ORIENTATION_270,
+    GRID_HASH_ORIENTATION_270T,
 };
 
-static constexpr std::array<grid_hash_rotation, 4> GRID_HASH_ROTATIONS
+// Array of the 8 grid_hash_orientations
+static constexpr std::array<grid_hash_orientation, 8> GRID_HASH_ORIENTATIONS
 {
-    GRID_HASH_ROTATION_0,
-    GRID_HASH_ROTATION_90,
-    GRID_HASH_ROTATION_180,
-    GRID_HASH_ROTATION_270,
+    GRID_HASH_ORIENTATION_0,
+    GRID_HASH_ORIENTATION_0T,
+    GRID_HASH_ORIENTATION_90,
+    GRID_HASH_ORIENTATION_90T,
+    GRID_HASH_ORIENTATION_180,
+    GRID_HASH_ORIENTATION_180T,
+    GRID_HASH_ORIENTATION_270,
+    GRID_HASH_ORIENTATION_270T,
 };
 
-enum grid_hash_bit_enum
+//////////////////////////////////////// Common active orientation bit masks
+// TODO static_assert that these are 8 and 4 bits, and within the lower 8 bits
+
+/*
+    Bit mask indicating that all 8 orientations should be active.
+
+    i.e. clobber, nogo, amazons
+*/
+static constexpr unsigned int GRID_HASH_ACTIVE_MASK_ALL =
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0) |    //
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0T) |   //
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_90) |   //
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_90T) |  //
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_180) |  //
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_180T) | //
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_270) |  //
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_270T);  //
+
+/*
+    Bit mask indicating that only orientations achievable by mirroring the grid
+    (vertically, horizontally, or both) should be active.
+
+    i.e. domineering, fission
+*/
+static constexpr unsigned int GRID_HASH_ACTIVE_MASK_MIRRORS =
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0) |    //
+    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_0T) |   //
+    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90) |   //
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_90T) |  // vert flip
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_180) |  // vert and horiz flip
+    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180T) | //
+    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270) |  //
+    set_bit<unsigned int>(GRID_HASH_ORIENTATION_270T);  // horiz flip
+
+////////////////////////////////////////////////// implementation details
+
+// NOLINTNEXTLINE(readability-identifier-naming)
+namespace __grid_hash_impl {
+
+/*
+    1 bit for each possible operation used to transform grid coordinates given
+    a target orientation
+*/
+enum orientation_op
 {
-    GRID_HASH_BIT_ROW_INVERSE = (1 << 0), // r -> (R - 1) - r
-    GRID_HASH_BIT_COL_INVERSE = (1 << 1), // c -> (C - 1) - c
-    GRID_HASH_BIT_FLIP = (1 << 2), // transpose: R, C, r, c -> C, R, c, r
+    ORIENTATION_OP_ROW_INV = (1 << 0), // r -> (R - 1) - r
+    ORIENTATION_OP_COL_INV = (1 << 1), // c -> (C - 1) - c
+    ORIENTATION_OP_SWAP = (1 << 2), // transpose: R, C, r, c -> C, R, c, r
 };
 
-static constexpr std::array<unsigned int, 4> _GRID_HASH_ROTATION_BITS {
+/*
+    Bit masks of orientation_ops for each 90 degree rotation (excluding
+    transposes)
+*/
+static constexpr std::array<unsigned int, 4> ORIENTATION_OPS_NO_T {
     0, // 0
-    GRID_HASH_BIT_ROW_INVERSE | GRID_HASH_BIT_FLIP, // 90
-    GRID_HASH_BIT_ROW_INVERSE | GRID_HASH_BIT_COL_INVERSE, // 180
-    GRID_HASH_BIT_COL_INVERSE | GRID_HASH_BIT_FLIP, // 270
+    ORIENTATION_OP_ROW_INV | ORIENTATION_OP_SWAP, // 90
+    ORIENTATION_OP_ROW_INV | ORIENTATION_OP_COL_INV, // 180
+    ORIENTATION_OP_COL_INV | ORIENTATION_OP_SWAP, // 270
 };
 
-inline unsigned int get_grid_hash_rotation_bits(grid_hash_rotation rot)
+inline unsigned int get_op_mask(grid_hash_orientation ori)
 {
-    assert(0 <= rot && rot < 4);
-    return _GRID_HASH_ROTATION_BITS[rot];
+    assert(!bit_is_1(ori, 0) &&                // Odd numbers only
+           0 <= ori &&                         //
+           ori < GRID_HASH_ORIENTATIONS.size() //
+    );
+
+    return ORIENTATION_OPS_NO_T[ori / 2];
 }
+
+} // namespace __grid_hash_impl
 
 ////////////////////////////////////////////////// class grid_hash
 class grid_hash
 {
 public:
+    grid_hash(unsigned int active_orientation_mask = GRID_HASH_ACTIVE_MASK_ALL);
+
     void reset(const int_pair& grid_shape);
 
     hash_t get_value() const;
@@ -80,55 +142,52 @@ public:
     template <class T>
     void toggle_value(int r, int c, const T& color);
 
+    template <class T>
+    void toggle_value(const int_pair& coord, const T& color);
+
     void toggle_type(game_type_t type);
 
 private:
-    int_pair _get_rotated_coords(int r, int c, grid_hash_rotation rot) const;
-    int_pair _get_rotated_shape(grid_hash_rotation rot) const;
+    int_pair _get_transformed_coords(int r, int c,
+                                     grid_hash_orientation ori) const;
 
-    static bool _compare(const local_hash& hash1, const local_hash& hash2);
+    int_pair _get_transformed_shape(grid_hash_orientation ori) const;
 
-    static constexpr unsigned int _N_HASHES = 8;
+    static constexpr unsigned int _N_HASHES = GRID_HASH_ORIENTATIONS.size();
+
+    const unsigned int _active_orientation_mask;
 
     int_pair _grid_shape;
     std::array<local_hash, _N_HASHES> _hashes;
 };
 
-/*
-    0
-    R C -> R C
-    r c -> r c
-
-    90
-    R C -> C R
-    r c -> c, (R - 1) - r
-
-    180
-    R C -> R C
-    r c -> (R - 1) - r, (C - 1) - c
-
-    270
-    R C -> C R
-    r c -> (C - 1) - c, r
-
-    flip row_inverse  col_inverse
-    000 -> 0
-    110 -> 90
-    011 -> 180
-    101 -> 270
-*/
-
 
 ////////////////////////////////////////////////// grid_hash methods
-// TODO don't inline these all...
 
 
-// TODO why not std::min_element with em++?
+inline grid_hash::grid_hash(unsigned int active_orientation_mask)
+    : _active_orientation_mask(active_orientation_mask)
+{
+    assert(bit_is_1(_active_orientation_mask, GRID_HASH_ORIENTATION_0) && //
+           0 == (_active_orientation_mask &
+                 ~get_bit_mask_lower<unsigned int>(_N_HASHES)) //
+    );
+}
+
 inline hash_t grid_hash::get_value() const
 {
     hash_t min_val = std::numeric_limits<hash_t>::max();
-    for (const local_hash& lh : _hashes)
-        min_val = std::min(min_val, lh.get_value());
+
+    for (unsigned int i = 0; i < _N_HASHES; i++)
+    {
+        if (bit_is_1(_active_orientation_mask, i))
+        {
+            const hash_t h = _hashes[i].get_value();
+
+            if (h < min_val)
+                min_val = h;
+        }
+    }
 
     return min_val;
 }
@@ -136,30 +195,52 @@ inline hash_t grid_hash::get_value() const
 template <class T>
 void grid_hash::toggle_value(int r, int c, const T& color)
 {
-    const size_t N_ROTATIONS = GRID_HASH_ROTATIONS.size();
+    static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
 
-    for (size_t rot_idx = 0; rot_idx < N_ROTATIONS; rot_idx++)
+    for (unsigned int idx_no_t = 0; idx_no_t < GRID_HASH_ORIENTATIONS.size();
+         idx_no_t += 2)
     {
-        const grid_hash_rotation rot = GRID_HASH_ROTATIONS[rot_idx];
+        // Orientation/_hashes index for N degree rotation, N degree + transpose
+        const unsigned int idx1 = idx_no_t;
+        const unsigned int idx2 = idx1 + 1;
 
-        const int_pair coords = _get_rotated_coords(r, c, rot);
-        const int_pair shape = _get_rotated_shape(rot);
+        assert(!bit_is_1(idx1, 0));
+
+        const bool active1 = bit_is_1(_active_orientation_mask, idx1);
+        const bool active2 = bit_is_1(_active_orientation_mask, idx2);
+
+        if (!(active1 || active2))
+            continue;
+
+        const grid_hash_orientation ori = GRID_HASH_ORIENTATIONS[idx1];
+
+        const int_pair coords = _get_transformed_coords(r, c, ori);
+        const int_pair shape = _get_transformed_shape(ori);
 
         const int_pair coords_transpose(coords.second, coords.first);
         const int_pair shape_transpose(shape.second, shape.first);
 
-        const size_t i = rot_idx * 2;
+        if (active1)
+        {
+            local_hash& hash1 = _hashes[idx1];
+            const int point1 = grid_location::coord_to_point(coords, shape);
+            hash1.toggle_value(2 + point1, color);
+        }
 
-        local_hash& hash = _hashes[i];
-        local_hash& hash_transpose = _hashes[i + 1];
-
-        const int point = grid_location::coord_to_point(coords, shape);
-        const int point_transpose =
-            grid_location::coord_to_point(coords_transpose, shape_transpose);
-
-        hash.toggle_value(2 + point, color);
-        hash_transpose.toggle_value(2 + point_transpose, color);
+        if (active2)
+        {
+            local_hash& hash2 = _hashes[idx2];
+            const int point2 = grid_location::coord_to_point(coords_transpose,
+                                                             shape_transpose);
+            hash2.toggle_value(2 + point2, color);
+        }
     }
+}
+
+template <class T>
+inline void grid_hash::toggle_value(const int_pair& coord, const T& color)
+{
+    toggle_value(coord.first, coord.second, color);
 }
 
 inline void grid_hash::toggle_type(game_type_t type)
@@ -168,35 +249,32 @@ inline void grid_hash::toggle_type(game_type_t type)
         hash.toggle_type(type);
 }
 
-inline int_pair grid_hash::_get_rotated_coords(int r, int c, grid_hash_rotation rot) const
+inline int_pair grid_hash::_get_transformed_coords(
+    int r, int c, grid_hash_orientation ori) const
 {
-    const unsigned int bits = get_grid_hash_rotation_bits(rot);
+    const unsigned int bits = __grid_hash_impl::get_op_mask(ori);
 
-    if (bits & GRID_HASH_BIT_ROW_INVERSE)
+    if (bits & __grid_hash_impl::ORIENTATION_OP_ROW_INV)
         r = (_grid_shape.first - 1) - r;
 
-    if (bits & GRID_HASH_BIT_COL_INVERSE)
+    if (bits & __grid_hash_impl::ORIENTATION_OP_COL_INV)
         c = (_grid_shape.second - 1) - c;
 
-    if (bits & GRID_HASH_BIT_FLIP)
+    if (bits & __grid_hash_impl::ORIENTATION_OP_SWAP)
         return {c, r};
 
     return {r, c};
 }
 
-inline int_pair grid_hash::_get_rotated_shape(grid_hash_rotation rot) const
+inline int_pair grid_hash::_get_transformed_shape(
+    grid_hash_orientation ori) const
 {
-    const unsigned int bits = get_grid_hash_rotation_bits(rot);
+    const unsigned int bits = __grid_hash_impl::get_op_mask(ori);
 
-    if (bits & GRID_HASH_BIT_FLIP)
+    if (bits & __grid_hash_impl::ORIENTATION_OP_SWAP)
         return {_grid_shape.second, _grid_shape.first};
 
     return _grid_shape;
-}
-
-inline bool grid_hash::_compare(const local_hash& hash1, const local_hash& hash2)
-{
-    return hash1.get_value() < hash2.get_value();
 }
 
 //////////////////////////////////////////////////

@@ -11,7 +11,6 @@
 
 #include "grid_hash.h"
 
-#define CLOBBER_GRID_HASH
 class clobber : public grid
 {
 public:
@@ -27,7 +26,7 @@ public:
 protected:
     split_result _split_impl() const override;
 
-#ifdef CLOBBER_GRID_HASH
+#ifdef USE_GRID_HASH
     void _init_hash(local_hash& hash) const override;
 
     mutable grid_hash _gh;

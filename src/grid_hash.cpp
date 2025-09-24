@@ -3,6 +3,7 @@
 #include <iostream>
 #include "grid.h"
 #include "grid_location.h"
+#include "utilities.h"
 
 using namespace std;
 
@@ -29,23 +30,38 @@ void grid_hash::reset(const int_pair& grid_shape)
 
     _grid_shape = grid_shape;
 
-    constexpr size_t N_ROTATIONS = GRID_HASH_ROTATIONS.size();
-    for (size_t rot_idx = 0; rot_idx < N_ROTATIONS; rot_idx++)
+    static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
+
+    for (unsigned int idx_no_t = 0; idx_no_t < GRID_HASH_ORIENTATIONS.size();
+         idx_no_t += 2)
     {
-        const grid_hash_rotation rot = GRID_HASH_ROTATIONS[rot_idx];
-        const int_pair shape = _get_rotated_shape(rot);
+        // Orientation/_hashes index for N degree rotation, N degree + transpose
+        const unsigned int idx1 = idx_no_t;
+        const unsigned int idx2 = idx1 + 1;
 
-        const size_t i = rot_idx * 2;
-        local_hash& hash_normal = _hashes[i];
-        local_hash& hash_transpose = _hashes[i + 1];
+        assert(!bit_is_1(idx1, 0));
 
-        hash_normal.reset();
-        hash_normal.toggle_value(0, shape.first);
-        hash_normal.toggle_value(1, shape.second);
+        const bool active1 = bit_is_1(_active_orientation_mask, idx1);
+        const bool active2 = bit_is_1(_active_orientation_mask, idx2);
 
-        hash_transpose.reset();
-        hash_transpose.toggle_value(0, shape.second);
-        hash_transpose.toggle_value(1, shape.first);
+        const grid_hash_orientation ori = GRID_HASH_ORIENTATIONS[idx1];
+        const int_pair shape = _get_transformed_shape(ori);
+
+        if (active1)
+        {
+            local_hash& hash1 = _hashes[idx1];
+            hash1.reset();
+            hash1.toggle_value(0, shape.first);
+            hash1.toggle_value(1, shape.second);
+        }
+
+        if (active2)
+        {
+            local_hash& hash2 = _hashes[idx2];
+            hash2.reset();
+            hash2.toggle_value(0, shape.second);
+            hash2.toggle_value(1, shape.first);
+        }
     }
 }
 

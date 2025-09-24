@@ -156,6 +156,36 @@ constexpr T get_bit_mask_upper(unsigned int n_bits)
     return val << (size_in_bits<T>() - n_bits);
 }
 
+// TODO unit test
+template <class T1, class T2>
+inline constexpr T1 set_bit(const T2& bit_idx)
+{
+    static_assert(std::is_integral_v<T1> &&                      //
+                  (std::is_integral_v<T2> || std::is_enum_v<T2>) //
+    );
+
+    assert(0 <= bit_idx &&                   //
+           bit_idx < (sizeof(T1) * CHAR_BIT) //
+    );
+
+    return T1(1) << bit_idx;
+}
+
+// TODO unit test
+template <class T1, class T2>
+inline constexpr bool bit_is_1(const T1& value, const T2& bit_idx)
+{
+    static_assert((std::is_integral_v<T1> || std::is_enum_v<T1>) && //
+                  (std::is_integral_v<T2> || std::is_enum_v<T2>)    //
+    );
+
+    assert(0 <= bit_idx &&                   //
+           bit_idx < (sizeof(T1) * CHAR_BIT) //
+    );
+
+    return (value >> bit_idx) & ((T1) 0x1);
+}
+
 // ... 0101 0101
 template <class T>
 constexpr T alternating_mask()

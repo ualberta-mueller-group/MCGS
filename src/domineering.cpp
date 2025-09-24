@@ -4,6 +4,7 @@
 #include "game.h"
 #include "throw_assert.h"
 #include "grid_location.h"
+#include "utilities.h"
 
 #include <cassert>
 #include <vector>
@@ -29,9 +30,12 @@ private:
     const domineering& _game;
     const grid_dir _orientation_dir;
 
-    grid_location _location;
     bool _has_move;
+
+    grid_location _loc1;
     int _point1;
+
+    int_pair _coord2;
     int _point2;
 };
 
@@ -93,23 +97,55 @@ bool move_has_legal_orientation(int point1, int point2, bw player,
     return orientation != EMPTY;
 }
 
+inline int encode_domineering_coord(const int_pair& coord)
+{
+    const int& r = coord.first;
+    const int& c = coord.second;
+
+    assert(0 == (r & ~get_bit_mask_lower<int>(7)));
+    assert(0 == (c & ~get_bit_mask_lower<int>(7)));
+
+    return r | (c << 7);
+}
+
+inline int_pair decode_domineering_coord(int encoded)
+{
+    assert(0 == (encoded & ~get_bit_mask_lower<int>(14)));
+
+    const int DOMINEERING_MASK = get_bit_mask_lower<int>(7);
+
+    const int r = encoded & DOMINEERING_MASK;
+    const int c = (encoded >> 7) & DOMINEERING_MASK;
+
+    return {r, c};
+}
+
 } // namespace
 
 
 ////////////////////////////////////////////////// domineering methods
 domineering::domineering(int n_rows, int n_cols): grid(n_rows, n_cols)
+#ifdef USE_GRID_HASH
+    , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
+#endif
 {
     assert(has_only_valid_colors(board_const()));
 }
 
 domineering::domineering(const std::vector<int>& board, int_pair shape) :
     grid(board, shape)
+#ifdef USE_GRID_HASH
+    , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
+#endif
 {
     THROW_ASSERT(has_only_valid_colors(board));
 }
 
 domineering::domineering(const std::string& game_as_string):
     grid(game_as_string)
+#ifdef USE_GRID_HASH
+    , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
+#endif
 {
     THROW_ASSERT(has_only_valid_colors(game_as_string));
 }
@@ -118,8 +154,14 @@ void domineering::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int point1 = cgt_move::from(m);
-    const int point2 = cgt_move::to(m);
+    const int enc1 = cgt_move::from(m);
+    const int enc2 = cgt_move::to(m);
+
+    const int_pair coord1 = decode_domineering_coord(enc1);
+    const int_pair coord2 = decode_domineering_coord(enc2);
+
+    const int point1 = grid_location::coord_to_point(coord1, shape());
+    const int point2 = grid_location::coord_to_point(coord2, shape());
 
     // Both points within grid, and vertical/horizontal for BLACK/WHITE
     assert(move_has_legal_orientation(point1, point2, to_play, shape()));
@@ -132,6 +174,14 @@ void domineering::play(const ::move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
+#ifdef USE_GRID_HASH
+        _gh.toggle_value(coord1, EMPTY);
+        _gh.toggle_value(coord2, EMPTY);
+
+        _gh.toggle_value(coord1, BORDER);
+        _gh.toggle_value(coord2, BORDER);
+        hash.__set_value(_gh.get_value());
+#else
         // Remove EMPTY from hash
         hash.toggle_value(2 + point1, EMPTY);
         hash.toggle_value(2 + point2, EMPTY);
@@ -139,6 +189,7 @@ void domineering::play(const ::move& m, bw to_play)
         // Add BORDER to hash
         hash.toggle_value(2 + point1, BORDER);
         hash.toggle_value(2 + point2, BORDER);
+#endif
 
         _mark_hash_updated();
     }
@@ -153,8 +204,14 @@ void domineering::undo_move()
     game::undo_move();
 
     bw to_play;
-    int point2;
-    int point1 = cgt_move::decode3(m_enc, &point2, &to_play);
+    int enc2;
+    int enc1 = cgt_move::decode3(m_enc, &enc2, &to_play);
+
+    const int_pair coord1 = decode_domineering_coord(enc1);
+    const int_pair coord2 = decode_domineering_coord(enc2);
+
+    const int point1 = grid_location::coord_to_point(coord1, shape());
+    const int point2 = grid_location::coord_to_point(coord2, shape());
 
     assert(move_has_legal_orientation(point1, point2, to_play, shape()));
     assert(checked_is_color(point1, BORDER));
@@ -163,7 +220,14 @@ void domineering::undo_move()
     if (_hash_updatable())
     {
         local_hash &hash = _get_hash_ref();
+#ifdef USE_GRID_HASH
+        _gh.toggle_value(coord1, BORDER);
+        _gh.toggle_value(coord2, BORDER);
 
+        _gh.toggle_value(coord1, EMPTY);
+        _gh.toggle_value(coord2, EMPTY);
+        hash.__set_value(_gh.get_value());
+#else
         // Remove BORDER
         hash.toggle_value(2 + point1, BORDER);
         hash.toggle_value(2 + point2, BORDER);
@@ -171,6 +235,7 @@ void domineering::undo_move()
         // Add EMPTY
         hash.toggle_value(2 + point1, EMPTY);
         hash.toggle_value(2 + point2, EMPTY);
+#endif
 
         _mark_hash_updated();
     }
@@ -383,6 +448,28 @@ split_result domineering::_split_impl() const
 }
 #endif
 
+#ifdef USE_GRID_HASH
+void domineering::_init_hash(local_hash& hash) const
+{
+    const int_pair &s = shape();
+
+    _gh.reset(s);
+    _gh.toggle_type(game_type());
+
+    int pos = 0;
+    for (int r = 0; r < s.first; r++)
+    {
+        for (int c = 0; c < s.second; c++)
+            _gh.toggle_value(r, c, at(pos + c));
+
+        pos += s.second;
+    }
+
+    hash.__set_value(_gh.get_value());
+    //hash.toggle_value(0, _gh.get_value());
+}
+#endif
+
 //////////////////////////////////////////////////
 // domineering_move_generator methods
 
@@ -391,7 +478,7 @@ domineering_move_generator::domineering_move_generator(const domineering& g,
     : move_generator(to_play),
       _game(g),
       _orientation_dir(to_play == BLACK ? GRID_DIR_DOWN : GRID_DIR_RIGHT),
-      _location(g.shape())
+      _loc1(g.shape())
 {
     assert(is_black_white(to_play));
     _increment(true);
@@ -411,7 +498,15 @@ domineering_move_generator::operator bool() const
 ::move domineering_move_generator::gen_move() const
 {
     assert(*this);
-    return cgt_move::two_part_move(_point1, _point2);
+    //return cgt_move::two_part_move(_point1, _point2);
+
+    const int_pair& coord1 = _loc1.get_coord();
+    const int_pair& coord2 = _coord2;
+
+    const int enc1 = encode_domineering_coord(coord1);
+    const int enc2 = encode_domineering_coord(coord2);
+
+    return cgt_move::two_part_move(enc1, enc2);
 }
 
 void domineering_move_generator::_increment(bool init)
@@ -420,32 +515,35 @@ void domineering_move_generator::_increment(bool init)
 
     if (init)
     {
-        assert(!_location.valid() || _location.get_point() == 0);
+        assert(!_loc1.valid() || _loc1.get_point() == 0);
     }
     else
-        _location.increment_position();
+        _loc1.increment_position();
 
     // Find legal move
     _has_move = false;
 
 #define GEN_LOOP_CONTINUE()             \
     {                                   \
-        _location.increment_position(); \
+        _loc1.increment_position(); \
         continue;                       \
     }                                   \
 
     // Check if current location has a legal move, increment if not
-    while (_location.valid())
+    while (_loc1.valid())
     {
         // Point 1 empty
-        _point1 = _location.get_point();
+        _point1 = _loc1.get_point();
 
         if (_game.at(_point1) != EMPTY)
             GEN_LOOP_CONTINUE();
 
         // Point2 exists, is empty
         bool point2_valid =
-            _location.get_neighbor_point(_point2, _orientation_dir);
+            _loc1.get_neighbor_coord(_coord2, _orientation_dir);
+
+        if (point2_valid)
+            _point2 = grid_location::coord_to_point(_coord2, _loc1.get_shape());
 
         if (!point2_valid || _game.at(_point2) != EMPTY)
             GEN_LOOP_CONTINUE();

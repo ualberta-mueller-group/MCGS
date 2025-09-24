@@ -72,6 +72,29 @@ inline void decode_three_part_move(::move m, unsigned int& val1,
     val3 = ((m >> 20) & THREE_PART_MOVE_MAX);
 }
 
+inline unsigned int encode_amazons_coord(const int_pair& coord)
+{
+    const int& r = coord.first;
+    const int& c = coord.second;
+
+    assert(r == (r & get_bit_mask_lower<unsigned int>(5)));
+    assert(c == (c & get_bit_mask_lower<unsigned int>(5)));
+
+    return r | (c << 5);
+}
+
+inline int_pair decode_amazons_coord(unsigned int encoded)
+{
+    assert(0 == (encoded & ~get_bit_mask_lower<unsigned int>(10)));
+
+    const unsigned int AMAZONS_MASK = get_bit_mask_lower<unsigned int>(5);
+
+    const unsigned int r = encoded & AMAZONS_MASK;
+    const unsigned int c = (encoded >> 5) & AMAZONS_MASK;
+
+    return {r, c};
+}
+
 } // namespace
 
 ////////////////////////////////////////////////// amazons methods
@@ -94,22 +117,32 @@ void amazons::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    unsigned int move1, move2, move3;
-    decode_three_part_move(m, move1, move2, move3);
+    const int_pair& s = shape();
+
+    unsigned int enc1, enc2, enc3;
+    decode_three_part_move(m, enc1, enc2, enc3);
+
+    const int_pair coord1 = decode_amazons_coord(enc1);
+    const int_pair coord2 = decode_amazons_coord(enc2);
+    const int_pair coord3 = decode_amazons_coord(enc3);
+
+    const int point1 = grid_location::coord_to_point(coord1, s);
+    const int point2 = grid_location::coord_to_point(coord2, s);
+    const int point3 = grid_location::coord_to_point(coord3, s);
 
     // TODO check paths?
 
     // Queen end can't be queen start or arrow end
-    assert(move2 != move1 && move2 != move3);
+    assert(point2 != point1 && point2 != point3);
 
     // Move queen
-    assert(at(move1) == to_play && at(move2) == EMPTY);
-    replace(move1, EMPTY);
-    replace(move2, to_play);
+    assert(at(point1) == to_play && at(point2) == EMPTY);
+    replace(point1, EMPTY);
+    replace(point2, to_play);
 
     // Shoot arrow
-    assert(at(move3) == EMPTY);
-    replace(move3, BORDER);
+    assert(at(point3) == EMPTY);
+    replace(point3, BORDER);
 
     // TODO this needs unit tests. And debug mode testing for play()/undo()
     // assert_restore_sumgame should catch it?
@@ -117,19 +150,37 @@ void amazons::play(const ::move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
+#ifdef USE_GRID_HASH
         // Remove old state
-        hash.toggle_value(2 + move1, to_play);
-        hash.toggle_value(2 + move2, EMPTY);
+        _gh.toggle_value(coord1, to_play);
+        _gh.toggle_value(coord2, EMPTY);
 
-        if (move1 != move3)
-            hash.toggle_value(2 + move3, EMPTY);
+        if (point1 != point3)
+            _gh.toggle_value(coord3, EMPTY);
 
         // Add new state
-        hash.toggle_value(2 + move2, to_play);
-        hash.toggle_value(2 + move3, BORDER);
+        _gh.toggle_value(coord2, to_play);
+        _gh.toggle_value(coord3, BORDER);
 
-        if (move1 != move3)
-            hash.toggle_value(2 + move1, EMPTY);
+        if (point1 != point3)
+            _gh.toggle_value(coord1, EMPTY);
+
+        hash.__set_value(_gh.get_value());
+#else
+        // Remove old state
+        hash.toggle_value(2 + point1, to_play);
+        hash.toggle_value(2 + point2, EMPTY);
+
+        if (point1 != point3)
+            hash.toggle_value(2 + point3, EMPTY);
+
+        // Add new state
+        hash.toggle_value(2 + point2, to_play);
+        hash.toggle_value(2 + point3, BORDER);
+
+        if (point1 != point3)
+            hash.toggle_value(2 + point1, EMPTY);
+#endif
 
         _mark_hash_updated();
     }
@@ -143,40 +194,67 @@ void amazons::undo_move()
     const bw to_play = cgt_move::get_color(m_enc);
     const ::move m_dec = cgt_move::decode(m_enc);
 
-    unsigned int move1, move2, move3;
-    decode_three_part_move(m_dec, move1, move2, move3);
+    const int_pair& s = shape();
+
+    unsigned int enc1, enc2, enc3;
+    decode_three_part_move(m_dec, enc1, enc2, enc3);
+
+    const int_pair coord1 = decode_amazons_coord(enc1);
+    const int_pair coord2 = decode_amazons_coord(enc2);
+    const int_pair coord3 = decode_amazons_coord(enc3);
+
+    const int point1 = grid_location::coord_to_point(coord1, s);
+    const int point2 = grid_location::coord_to_point(coord2, s);
+    const int point3 = grid_location::coord_to_point(coord3, s);
 
     // TODO check paths?
 
     // Queen end can't be queen start or arrow end
-    assert(move2 != move1 && move2 != move3);
+    assert(point2 != point1 && point2 != point3);
 
     // Remove arrow
-    assert(at(move3) == BORDER);
-    replace(move3, EMPTY);
+    assert(at(point3) == BORDER);
+    replace(point3, EMPTY);
 
     // Move queen back
-    assert(at(move1) == EMPTY && at(move2) == to_play);
-    replace(move1, to_play);
-    replace(move2, EMPTY);
+    assert(at(point1) == EMPTY && at(point2) == to_play);
+    replace(point1, to_play);
+    replace(point2, EMPTY);
 
     if (_hash_updatable())
     {
         local_hash& hash = _get_hash_ref();
-
+#ifdef USE_GRID_HASH
         // Remove old state
-        hash.toggle_value(2 + move2, to_play);
-        hash.toggle_value(2 + move3, BORDER);
+        _gh.toggle_value(coord2, to_play);
+        _gh.toggle_value(coord3, BORDER);
 
-        if (move1 != move3)
-            hash.toggle_value(2 + move1, EMPTY);
+        if (point1 != point3)
+            _gh.toggle_value(coord1, EMPTY);
 
         // Add new state
-        hash.toggle_value(2 + move1, to_play);
-        hash.toggle_value(2 + move2, EMPTY);
+        _gh.toggle_value(coord1, to_play);
+        _gh.toggle_value(coord2, EMPTY);
 
-        if (move1 != move3)
-            hash.toggle_value(2 + move3, EMPTY);
+        if (point1 != point3)
+            _gh.toggle_value(coord3, EMPTY);
+
+        hash.__set_value(_gh.get_value());
+#else
+        // Remove old state
+        hash.toggle_value(2 + point2, to_play);
+        hash.toggle_value(2 + point3, BORDER);
+
+        if (point1 != point3)
+            hash.toggle_value(2 + point1, EMPTY);
+
+        // Add new state
+        hash.toggle_value(2 + point1, to_play);
+        hash.toggle_value(2 + point2, EMPTY);
+
+        if (point1 != point3)
+            hash.toggle_value(2 + point3, EMPTY);
+#endif
 
         _mark_hash_updated();
     }
@@ -411,6 +489,27 @@ split_result amazons::_split_impl() const
 }
 #endif
 
+#ifdef USE_GRID_HASH
+void amazons::_init_hash(local_hash& hash) const
+{
+    const int_pair &s = shape();
+
+    _gh.reset(s);
+    _gh.toggle_type(game_type());
+
+    int pos = 0;
+    for (int r = 0; r < s.first; r++)
+    {
+        for (int c = 0; c < s.second; c++)
+            _gh.toggle_value(r, c, at(pos + c));
+
+        pos += s.second;
+    }
+
+    hash.__set_value(_gh.get_value());
+}
+#endif
+
 //////////////////////////////////////////////////
 // amazons_move_generator methods
 
@@ -439,7 +538,17 @@ amazons_move_generator::operator bool() const
 ::move amazons_move_generator::gen_move() const
 {
     assert(*this);
-    return encode_three_part_move(_move1, _move2, _move3);
+    //return encode_three_part_move(_move1, _move2, _move3);
+
+    const int_pair& coord1 = _queen_start.get_coord();
+    const int_pair& coord2 = _queen_end.get_coord();
+    const int_pair& coord3 = _arrow_end.get_coord();
+
+    const unsigned int enc1 = encode_amazons_coord(coord1);
+    const unsigned int enc2 = encode_amazons_coord(coord2);
+    const unsigned int enc3 = encode_amazons_coord(coord3);
+
+    return encode_three_part_move(enc1, enc2, enc3);
 }
 
 bool amazons_move_generator::_increment(bool init)

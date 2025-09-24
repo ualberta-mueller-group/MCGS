@@ -2,6 +2,7 @@
 
 #include "game.h"
 #include "grid.h"
+#include "grid_hash.h"
 
 #include <ostream>
 #include <vector>
@@ -28,6 +29,11 @@ protected:
 
 #ifdef DOMINEERING_SPLIT
     split_result _split_impl() const override;
+#endif
+
+#ifdef USE_GRID_HASH
+    void _init_hash(local_hash& hash) const override;
+    mutable grid_hash _gh;
 #endif
 
 };
