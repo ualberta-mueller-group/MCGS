@@ -16,7 +16,9 @@ import pathlib
 import math
 from collections import Counter
 import sys
+import seaborn as sns
 
+pal = sns.color_palette("colorblind")
 
 ############################################################
 args = sys.argv
@@ -79,12 +81,12 @@ class WrappedReader:
 def assert_group_format(group):
     assert type(group) is dict
 
-    expected_fields = set(["pattern", "color", "label"])
+    expected_fields = set(["pattern", "color", "label", "marker"])
     actual_fields = set([key for key in group])
     assert expected_fields == actual_fields
 
     for v in group.values():
-        assert type(v) is str
+        assert type(v) is str or (type(v) is tuple and len(v) == 3)
 
 
 def csv_files(pattern):
@@ -222,7 +224,7 @@ def pattern_to_file_list(pattern):
     return [f for f in input_dir.glob(pattern)]
 
 
-def process_files(group, diagram_id, label_set):
+def process_files(group, diagram_id, label_set, offset):
     assert_group_format(group)
     assert type(diagram_id) is int
     assert type(label_set) is list and len(label_set) == 2
@@ -284,7 +286,7 @@ def process_files(group, diagram_id, label_set):
     means = [np.mean(data_y[data_x == xi]) for xi in x_scale]
     errors = [np.std(data_y[data_x == xi]) for xi in x_scale]
 
-    plt.errorbar(x_scale, means, yerr=errors, fmt="o", label=group["label"],
+    plt.errorbar(x_scale + offset, means, yerr=errors, fmt="o", label=group["label"],
                  color=group["color"], capsize=3)
 
     plt.title(title)
@@ -303,26 +305,30 @@ def process_files(group, diagram_id, label_set):
 groups = [
     {
         "pattern": "*_0.csv",
-        "color": "tab:red",
+        "color": (0, 0, 0),
         "label": "No TT, no SN, no DB",
+        "marker": "$0-0$"
     },
 
     {
         "pattern": "*_1.csv",
-        "color": "tab:orange",
+        "color": pal[0],
         "label": "TT, no SN, no DB",
+        "marker": "$1-1$"
     },
 
     {
         "pattern": "*_2.csv",
-        "color": "tab:blue",
+        "color": pal[3],
         "label": "TT, SN, no DB",
+        "marker": "$2-2$"
     },
 
     {
         "pattern": "*_3.csv",
-        "color": "tab:green",
+        "color": pal[4],
         "label": "TT, SN, DB",
+        "marker": "$3-3$"
     },
 ]
 
@@ -350,8 +356,10 @@ for i in range(len(labels)):
         _ = input("")
     plt.close()
 
-    for g in groups:
-        process_files(g, i, label_set)
+    for j in range(len(groups)):
+        g = groups[j]
+        DELTA = 0.1
+        process_files(g, i, label_set, [-2 * DELTA, -DELTA, DELTA, 2 * DELTA][j])
 
     if output_dir is not None:
         plt.savefig(f"{output_dir.absolute() / title}.png")
