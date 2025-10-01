@@ -287,10 +287,22 @@ def process_files(group, diagram_id, label_set, offset):
     errors = [np.std(data_y[data_x == xi]) for xi in x_scale]
 
     plt.errorbar(x_scale + offset, means, yerr=errors, fmt="o", label=group["label"],
-                 color=group["color"], capsize=3)
+                 color=group["color"], capsize=3.4, capthick=2)
+
+    #plt.plot(x_scale + offset, means, color=group["color"], marker="o", linestyle="")
+    #plt.plot(x_scale + offset, np.add(means, errors), color=group["color"], marker=10, linestyle="")
+    #plt.plot(x_scale + offset, np.subtract(means, errors), color=group["color"], marker=11, linestyle="")
+
+    #assert len(x_scale) == len(means) and len(means) == len(errors)
+    #for i in range(len(means)):
+    #    x_pos = x_scale[i] + offset
+    #    y_center = means[i]
+    #    y_diff = errors[i]
+    #    plt.plot([x_pos, x_pos], [y_center - y_diff, y_center + y_diff], color=group["color"], linestyle=":")
+
 
     plt.title(title)
-    plt.legend()
+    plt.legend(framealpha=0.5)
     plt.xlabel(x_axis_name)
     plt.ylabel("# Nodes (log)")
     plt.xticks(x_scale)
@@ -312,7 +324,8 @@ groups = [
 
     {
         "pattern": "*_1.csv",
-        "color": pal[0],
+        #"color": pal[0],
+        "color": "#015887",
         "label": "TT, no SN, no DB",
         "marker": "$1-1$"
     },
@@ -326,7 +339,9 @@ groups = [
 
     {
         "pattern": "*_3.csv",
-        "color": pal[4],
+        #"color": pal[4],
+        "color": "#bf8ad6",
+        #"color": (0.8, 0.471, 0.737),
         "label": "TT, SN, DB",
         "marker": "$3-3$"
     },
@@ -358,7 +373,7 @@ for i in range(len(labels)):
 
     for j in range(len(groups)):
         g = groups[j]
-        DELTA = 0.1
+        DELTA = 0.13
         process_files(g, i, label_set, [-2 * DELTA, -DELTA, DELTA, 2 * DELTA][j])
 
     if output_dir is not None:
