@@ -20,6 +20,11 @@ import seaborn as sns
 
 pal = sns.color_palette("colorblind")
 
+plt.rcParams.update({"font.size": 14})
+plt.close()
+
+DATA_OFFSET = None
+
 ############################################################
 args = sys.argv
 argc = len(sys.argv)
@@ -229,6 +234,8 @@ def process_files(group, diagram_id, label_set, offset):
     assert type(diagram_id) is int
     assert type(label_set) is list and len(label_set) == 2
 
+    global DATA_OFFSET
+
     title, x_axis_name = label_set
     file_list = pattern_to_file_list(group["pattern"])
 
@@ -286,8 +293,21 @@ def process_files(group, diagram_id, label_set, offset):
     means = [np.mean(data_y[data_x == xi]) for xi in x_scale]
     errors = [np.std(data_y[data_x == xi]) for xi in x_scale]
 
-    plt.errorbar(x_scale + offset, means, yerr=errors, fmt="o", label=group["label"],
-                 color=group["color"], capsize=3.4, capthick=2)
+    plt.xticks(x_scale)
+
+    fig = plt.gcf()
+    fig.canvas.draw()
+
+    if DATA_OFFSET is None:
+        ax = plt.gca()
+        tf = ax.transData
+        tf_inv = tf.inverted()
+
+        disp = tf_inv.transform([(8, 0), (0, 0)])
+        DATA_OFFSET = disp[0][0] - disp[1][0]
+
+    plt.errorbar(x_scale + offset * DATA_OFFSET, means, yerr=errors, fmt="o", label=group["label"],
+                 color=group["color"], capsize=3.4, capthick=2, elinewidth=2)
 
     #plt.plot(x_scale + offset, means, color=group["color"], marker="o", linestyle="")
     #plt.plot(x_scale + offset, np.add(means, errors), color=group["color"], marker=10, linestyle="")
@@ -305,7 +325,7 @@ def process_files(group, diagram_id, label_set, offset):
     plt.legend(framealpha=0.5)
     plt.xlabel(x_axis_name)
     plt.ylabel("# Nodes (log)")
-    plt.xticks(x_scale)
+    #plt.xticks(x_scale)
 
     if show_figures:
         plt.show(block=False)
@@ -369,15 +389,32 @@ for i in range(len(labels)):
         plt.savefig(f"{output_dir.absolute() / title}_timeouts.png")
     else:
         _ = input("")
-    plt.close()
 
+
+    plt.close()
+    fig = plt.gcf()
+    fig.subplots_adjust(
+        bottom = 0.11,
+        top = 0.92,
+
+        left = 0.085,
+        right = 0.97,
+    )
+    fig.set_size_inches(10, 5)
+
+    ax = plt.gca()
+    ax.margins(x = 0.01)
+
+    DATA_OFFSET = None
     for j in range(len(groups)):
         g = groups[j]
-        DELTA = 0.13
-        process_files(g, i, label_set, [-2 * DELTA, -DELTA, DELTA, 2 * DELTA][j])
+        process_files(g, i, label_set, [-1.5, -0.5, 0.5, 1.5][j])
 
     if output_dir is not None:
-        plt.savefig(f"{output_dir.absolute() / title}.png")
+        #plt.tight_layout()
+        
+        fig.savefig(f"{output_dir.absolute() / title}.png")
+        #plt.savefig(f"{output_dir.absolute() / title}.png")
     else:
         _ = input("")
 
