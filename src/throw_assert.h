@@ -3,15 +3,15 @@
 
     Throw in both release and debug builds:
        THROW_ASSERT(condition);
-       THROW_ASSERT(condition, exception);
+       THROW_ASSERT(condition, exception or string);
 
     Throw only in debug builds (useful for unit tests as they can catch):
         THROW_ASSERT_DEBUG(condition);
-        THROW_ASSERT_DEBUG(condition, exception);
+        THROW_ASSERT_DEBUG(condition, exception or string);
 
 
-    If no exception is passed to the macro, a std::logic_error is thrown, with
-    assert-like information. Example:
+    If no exception or string is passed to the macro, a std::logic_error is
+    thrown, with assert-like information. Example:
 
     terminate called after throwing an instance of 'std::logic_error'
     what():  src/main/main.cpp:24: Condition `1 + 1 == 3' failed

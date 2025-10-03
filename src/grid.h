@@ -144,4 +144,6 @@ inline std::ostream& operator<<(std::ostream& os, const int_pair& pr)
     return os;
 }
 
-//---------------------------------------------------------------------------
+////////////////////////////////////////////////// Helpers
+std::pair<std::vector<int>, int_pair> string_to_int_grid(
+    const std::string& game_as_string);

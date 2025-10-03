@@ -4,12 +4,14 @@
 #include "grid.h"
 
 #include "cgt_basics.h"
+#include "parsing_utilities.h"
 #include "throw_assert.h"
 #include "strip.h"
 #include <cassert>
 #include <cstdlib>
 #include <utility>
 #include <vector>
+#include "utilities.h"
 #include "warn_default.h"
 
 //---------------------------------------------------------------------------
@@ -54,7 +56,7 @@ std::pair<std::vector<int>, int_pair> string_to_board(
 {
     std::vector<int> board;
     int n_rows = 0, n_cols = 0, counter = 0;
-    for (auto c : game_as_string)
+    for (const char& c : game_as_string)
     {
         check_is_valid_char(c);
         int color = char_to_color(c);
@@ -100,6 +102,72 @@ std::string board_to_string(const std::vector<int>& board, const int_pair shape)
 }
 
 } // namespace
+
+// TODO make it faster?
+std::pair<std::vector<int>, int_pair> string_to_int_grid(
+    const std::string& game_as_string)
+{
+    // Declare first to allow copy elision?
+    std::pair<std::vector<int>, int_pair> ret_pair;
+
+    std::vector<int>& board = ret_pair.first;
+    int_pair& shape = ret_pair.second;
+
+    const std::string SEP_STRING = std::string(1, color_to_char(ROW_SEP));
+
+    int n_rows = 0;
+    int n_cols = 0;
+    int counter = 0;
+    bool prev_was_control = false; // previous token was ',' or '|'
+
+    std::vector<std::string> tokens = get_string_tokens(game_as_string, {',', '|'});
+    const size_t N_TOKENS = tokens.size();
+
+    for (size_t idx = 0; idx < N_TOKENS; idx++)
+    {
+        const std::string& token = tokens[idx];
+
+        if (token == ",") // comma
+        {
+            THROW_ASSERT(!prev_was_control);
+            prev_was_control = true;
+            continue;
+        }
+
+        if (token == SEP_STRING) // ROW_SEP
+        {
+            THROW_ASSERT(!prev_was_control);
+            prev_was_control = true;
+
+            n_rows++;
+            if (n_cols == 0)
+                n_cols = counter;
+            else
+                THROW_ASSERT(n_cols == counter);
+            counter = 0;
+        }
+        else // integer
+        {
+            prev_was_control = false;
+
+            THROW_ASSERT(is_int(token));
+            const int val = atoi(token.c_str());
+
+            board.push_back(val);
+            counter++;
+        }
+    }
+
+    n_rows++;
+    if (n_cols == 0)
+        n_cols = counter;
+    else
+        THROW_ASSERT(n_cols == counter);
+
+    shape = {n_rows, n_cols};
+    return ret_pair;
+}
+
 
 //---------------------------------------------------------------------------
 
