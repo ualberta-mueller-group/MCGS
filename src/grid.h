@@ -38,9 +38,12 @@ public:
 
     // replaces whatever is there.
     // Less checking than play_stone or remove_stone
-    void replace(int p, int color);
+    void replace_int(int p, int value);
+    void replace(int p, int color); // TODO rename to replace_color?
     std::vector<int> inverse_board() const;
+    std::vector<int> inverse_number_board() const;
     std::string board_as_string() const;
+    std::string board_as_number_string() const;
     const std::vector<int>& board_const() const;
 
     int_pair point_to_coord(int p) const;
@@ -106,12 +109,18 @@ inline void grid::remove_stone(int p)
     _board[p] = EMPTY;
 }
 
-inline void grid::replace(int p, int color)
+inline void grid::replace_int(int p, int value)
 {
     assert_range(p, 0, size());
-    assert(is_empty_black_white(color) || color == BORDER); // TODO clean up
-    _board[p] = color;
+    _board[p] = value;
 }
+
+inline void grid::replace(int p, int color)
+{
+    assert(is_empty_black_white(color) || color == BORDER); // TODO clean up
+    replace_int(p, color);
+}
+
 
 inline int_pair grid::point_to_coord(int p) const
 {
