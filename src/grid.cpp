@@ -184,6 +184,17 @@ grid::grid(const std::vector<int>& board, int_pair shape)
     _check_legal();
 }
 
+grid::grid(const std::pair<std::vector<int>, int_pair>& board_pair)
+    : game(),
+    _board(board_pair.first),
+    _shape(board_pair.second)
+{
+    assert(_shape.first >= 0 &&                            //
+           _shape.second >= 0 &&                           //
+           _board.size() == (_shape.first * _shape.second) //
+    );
+}
+
 grid::grid(const std::string& game_as_string) : game()
 {
     std::pair<std::vector<int>, int_pair> board_shape =
