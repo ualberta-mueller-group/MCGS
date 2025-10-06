@@ -22,6 +22,7 @@ class grid : public game
 public:
     grid(int n_rows, int n_cols);
     grid(const std::vector<int>& board, int_pair shape);
+    grid(const std::pair<std::vector<int>, int_pair>& board_pair);
     grid(const std::string& game_as_string);
     int size() const;
     int at(int p) const;
