@@ -14,6 +14,7 @@
 #include <climits>
 #include <string>
 #include <cassert>
+#include "utilities.h"
 
 // Currently all moves must be encoded as int, and decoded from int
 // There is no abstract move class here.
@@ -134,5 +135,31 @@ inline move encode3(int first, int second, bw color)
 
 std::string print(const move& m);
 std::string print_two_part_move(const move& m);
+
+//////////////////////////////////////// Three part move
+const unsigned int THREE_PART_MOVE_MAX = get_bit_mask_lower<unsigned int>(10);
+
+inline ::move encode_three_part_move(unsigned int val1, unsigned int val2,
+                                     unsigned int val3)
+{
+    static_assert(size_in_bits<::move>() >= 30);
+
+    assert((val1 <= THREE_PART_MOVE_MAX) && //
+           (val2 <= THREE_PART_MOVE_MAX) && //
+           (val3 <= THREE_PART_MOVE_MAX)    //
+    );
+
+    return (val1) | (val2 << 10) | (val3 << 20);
+}
+
+inline void decode_three_part_move(::move m, unsigned int& val1,
+                                   unsigned int& val2, unsigned int& val3)
+{
+    assert((m & get_bit_mask_lower<::move>(30)) == m);
+
+    val1 = (m & THREE_PART_MOVE_MAX);
+    val2 = ((m >> 10) & THREE_PART_MOVE_MAX);
+    val3 = ((m >> 20) & THREE_PART_MOVE_MAX);
+}
 
 } // namespace cgt_move

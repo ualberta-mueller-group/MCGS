@@ -46,31 +46,6 @@ using namespace std;
 
 ////////////////////////////////////////////////// helper functions
 namespace {
-//////////////////////////////////////// Move encoding
-const unsigned int THREE_PART_MOVE_MAX = get_bit_mask_lower<unsigned int>(10);
-
-inline ::move encode_three_part_move(unsigned int val1, unsigned int val2,
-                                     unsigned int val3)
-{
-    static_assert(size_in_bits<::move>() >= 30);
-
-    assert((val1 <= THREE_PART_MOVE_MAX) && //
-           (val2 <= THREE_PART_MOVE_MAX) && //
-           (val3 <= THREE_PART_MOVE_MAX)    //
-    );
-
-    return (val1) | (val2 << 10) | (val3 << 20);
-}
-
-inline void decode_three_part_move(::move m, unsigned int& val1,
-                                   unsigned int& val2, unsigned int& val3)
-{
-    assert((m & get_bit_mask_lower<::move>(30)) == m);
-
-    val1 = (m & THREE_PART_MOVE_MAX);
-    val2 = ((m >> 10) & THREE_PART_MOVE_MAX);
-    val3 = ((m >> 20) & THREE_PART_MOVE_MAX);
-}
 
 inline unsigned int encode_amazons_coord(const int_pair& coord)
 {
@@ -120,7 +95,7 @@ void amazons::play(const ::move& m, bw to_play)
     const int_pair& s = shape();
 
     unsigned int enc1, enc2, enc3;
-    decode_three_part_move(m, enc1, enc2, enc3);
+    cgt_move::decode_three_part_move(m, enc1, enc2, enc3);
 
     const int_pair coord1 = decode_amazons_coord(enc1);
     const int_pair coord2 = decode_amazons_coord(enc2);
@@ -197,7 +172,7 @@ void amazons::undo_move()
     const int_pair& s = shape();
 
     unsigned int enc1, enc2, enc3;
-    decode_three_part_move(m_dec, enc1, enc2, enc3);
+    cgt_move::decode_three_part_move(m_dec, enc1, enc2, enc3);
 
     const int_pair coord1 = decode_amazons_coord(enc1);
     const int_pair coord2 = decode_amazons_coord(enc2);
@@ -548,7 +523,7 @@ amazons_move_generator::operator bool() const
     const unsigned int enc2 = encode_amazons_coord(coord2);
     const unsigned int enc3 = encode_amazons_coord(coord3);
 
-    return encode_three_part_move(enc1, enc2, enc3);
+    return cgt_move::encode_three_part_move(enc1, enc2, enc3);
 }
 
 bool amazons_move_generator::_increment(bool init)
