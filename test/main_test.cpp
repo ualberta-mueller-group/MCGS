@@ -5,6 +5,7 @@
 
 #include "global_options.h"
 #include "test/db_game_generator_test.h"
+#include "test/winning_moves_test.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
@@ -180,6 +181,8 @@ int main(int argc, const char** argv)
     grid_generator_test_all();
     db_game_generator_test_all();
     database_test_all();
+
+    test_winning_moves();
 
     cout << "SUCCESS" << endl;
 }
