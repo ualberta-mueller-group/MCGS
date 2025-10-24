@@ -97,28 +97,6 @@ bool move_has_legal_orientation(int point1, int point2, bw player,
     return orientation != EMPTY;
 }
 
-inline int encode_domineering_coord(const int_pair& coord)
-{
-    const int& r = coord.first;
-    const int& c = coord.second;
-
-    assert(0 == (r & ~get_bit_mask_lower<int>(7)));
-    assert(0 == (c & ~get_bit_mask_lower<int>(7)));
-
-    return r | (c << 7);
-}
-
-inline int_pair decode_domineering_coord(int encoded)
-{
-    assert(0 == (encoded & ~get_bit_mask_lower<int>(14)));
-
-    const int DOMINEERING_MASK = get_bit_mask_lower<int>(7);
-
-    const int r = encoded & DOMINEERING_MASK;
-    const int c = (encoded >> 7) & DOMINEERING_MASK;
-
-    return {r, c};
-}
 
 } // namespace
 

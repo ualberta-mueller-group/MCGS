@@ -4,6 +4,10 @@
 //---------------------------------------------------------------------------
 #pragma once
 
+// IWYU pragma: begin_exports
+#include "int_pair.h"
+// IWYU pragma: end_exports
+
 #include "cgt_basics.h"
 #include "game.h"
 #include <vector>
@@ -14,8 +18,6 @@
 
 //---------------------------------------------------------------------------
 
-// (row, col)
-typedef std::pair<int, int> int_pair;
 
 class grid : public game
 {
