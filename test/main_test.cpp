@@ -4,7 +4,12 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
+#include "test/amazons_test.h"
 #include "test/db_game_generator_test.h"
+#include "test/domineering_test.h"
+#include "test/fission_test.h"
+#include "test/gen_toads_test.h"
+#include "test/toppling_dominoes_test.h"
 #include "test/winning_moves_test.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
@@ -62,6 +67,11 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
+        domineering_test_all();
+        amazons_test_all();
+        fission_test_all();
+        toppling_dominoes_test_all();
+        gen_toads_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -153,6 +163,12 @@ int main(int argc, const char** argv)
         nogo_test_all();
         elephants_test_all(); // takes several seconds
         sumgame_test_all();
+
+        domineering_test_all();
+        amazons_test_all();
+        fission_test_all();
+        toppling_dominoes_test_all();
+        gen_toads_test_all();
     }
 
     // Impartial games
