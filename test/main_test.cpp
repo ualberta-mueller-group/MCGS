@@ -11,7 +11,7 @@
 #include "test/gen_toads_test.h"
 #include "test/toppling_dominoes_test.h"
 #include "test/winning_moves_test.h"
-const bool RUN_OVERRIDE_TESTS = false;
+const bool RUN_OVERRIDE_TESTS = true;
 
 #include <cassert>
 #include <string>

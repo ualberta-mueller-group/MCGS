@@ -15,25 +15,6 @@ namespace {
 
 ////////////////////////////////////////////////// utilities
 // TODO these are probably general enough to move into test utilities
-void get_generated_moves_for(const game* g, bw player, set<::move>& moves)
-{
-    assert(g != nullptr &&           //
-           is_black_white(player) && //
-           moves.empty()             //
-    );
-
-    move_generator* gen = g->create_move_generator(player);
-
-    while (*gen)
-    {
-        const ::move m = gen->gen_move();
-        ++(*gen);
-        auto inserted = moves.insert(m);
-        assert(inserted.second);
-    }
-
-    delete gen;
-}
 
 inline bool location_compatible(const grid_location& loc, const grid* g)
 {
@@ -101,8 +82,8 @@ optional<::move> get_move_at(const fission* g, const grid_location& loc, bw play
     return {};
 }
 
-void get_expected_moves(const fission* g, set<::move>& exp_b_moves,
-                        set<::move>& exp_w_moves,
+void get_expected_moves(const fission* g, unordered_set<::move>& exp_b_moves,
+                        unordered_set<::move>& exp_w_moves,
                         set<move_tuple_t>& found_coords)
 {
     assert(g != nullptr &&        //
@@ -205,8 +186,8 @@ void test_play_move_for(fission* g, const ::move& m, bw player)
 
 }
 
-void test_play_moves(fission* g, const set<::move>& b_moves,
-                     const set<::move>& w_moves)
+void test_play_moves(fission* g, const unordered_set<::move>& b_moves,
+                     const unordered_set<::move>& w_moves)
 {
     assert_restore_game arg(*g);
 
@@ -329,15 +310,16 @@ void test_moves_main()
         fission g(board);
 
         // Get generator moves
-        set<::move> b_moves;
-        set<::move> w_moves;
-        get_generated_moves_for(&g, BLACK, b_moves);
-        get_generated_moves_for(&g, WHITE, w_moves);
+        unordered_set<::move> b_moves =
+            get_generated_moves_for_player(&g, BLACK);
+
+        unordered_set<::move> w_moves =
+            get_generated_moves_for_player(&g, WHITE);
 
         // Get expected moves, compare
         {
-            set<::move> exp_b_moves;
-            set<::move> exp_w_moves;
+            unordered_set<::move> exp_b_moves;
+            unordered_set<::move> exp_w_moves;
             set<move_tuple_t> found_coords;
             get_expected_moves(&g, exp_b_moves, exp_w_moves, found_coords);
 
@@ -419,6 +401,6 @@ void test_constructors()
 
 void fission_test_all()
 {
-    test_moves_main();
     test_constructors();
+    test_moves_main();
 }

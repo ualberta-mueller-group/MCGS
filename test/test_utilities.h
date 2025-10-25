@@ -13,6 +13,13 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <unordered_set>
+
+std::unordered_set<move> get_generated_moves_for_player(const game* g,
+                                                        bw player);
+
+std::unordered_set<std::string> get_generated_moves_as_strings_for_player(
+    game* g, bw player);
 
 inline void assert_move(move_generator& mg, int mv)
 {
