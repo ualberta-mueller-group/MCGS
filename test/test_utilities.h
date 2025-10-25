@@ -20,7 +20,7 @@ std::unordered_set<move> get_generated_moves_for_player(const game* g,
 
 void test_moves_as_strings_for_player(
     game* g, bw player, const std::vector<std::string>& exp_move_strings,
-    const std::string& game_prefix = "");
+    const std::string& game_prefix);
 
 std::unordered_set<std::string> get_generated_moves_as_strings_for_player(
     game* g, bw player);

@@ -147,6 +147,9 @@ XOXOO...XO
                 '  1  -1  /  2   3  ,  4  '
 
     Games:
+        TODO add new games: amazons, domineering, gen_toads, toppling_dominoes,
+        fission
+
         [clobber_1xn], [nogo_1xn], and [elephants]:
             Contiguous sequence of '.', 'X', and 'O'.
         

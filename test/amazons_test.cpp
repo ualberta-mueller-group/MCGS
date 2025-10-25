@@ -220,7 +220,6 @@ void test_moves_main()
         const vector<string>& exp_move_board_strings_b = get<1>(test_case);
         const vector<string>& exp_move_board_strings_w = get<2>(test_case);
 
-        cout << board << endl;
         amazons g(board);
 
         test_moves_as_strings_for_player(&g, BLACK, exp_move_board_strings_b,

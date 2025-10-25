@@ -11,6 +11,27 @@
 class gen_toads: public strip
 {
 public:
+    /*
+        params is a vector of 4 elements:
+        - min slide > 0
+        - max slide >= min slide
+        - max jump >= 0
+        - friendly jump in [0, 1]
+
+        BLACK moves right, WHITE moves left.
+
+        A stone's moves are only one of the following:
+        - The stone has no move.
+
+        - The stone is not immediately blocked and can slide
+          [min slide, max slide] spaces (without jumping over stones).
+
+        - The stone is immediately blocked and can jump over (0, max jump]
+            opponent stones.
+
+            - If friendly jump is 1, the stone can jump over (possibly a mix of)
+              friendly or opponent stones.
+    */
     gen_toads(const std::vector<int>& params, const std::vector<int>& board);
     gen_toads(const std::vector<int>& params, const std::string& game_as_string);
 
