@@ -12,76 +12,7 @@
 using namespace std;
 
 namespace {
-////////////////////////////////////////////////// general utility
-// TODO these are general enough to extract elsewhere
-string game_to_string(const game* g)
-{
-    stringstream str;
-    str << *g;
-    return str.str();
-}
-
-////////////////////////////////////////////////// test logic helpers
-const string GAME_STRING_PREFIX = "toppling_dominoes:";
-
-unordered_set<string> get_exp_move_strings(
-    const vector<string>& exp_move_board_strings)
-{
-    unordered_set<string> strs;
-
-    for (const string& board : exp_move_board_strings)
-        strs.insert(GAME_STRING_PREFIX + board);
-
-    return strs;
-}
-
-void test_moves_for_player(toppling_dominoes* g, bw player,
-                           const vector<string>& exp_move_board_strings)
-{
-    assert(g != nullptr &&        //
-           is_black_white(player) //
-    );
-
-    unordered_set<string> exp_move_strings =
-        get_exp_move_strings(exp_move_board_strings);
-
-    unordered_set<string> gen_move_strings;
-
-    move_generator* gen = g->create_move_generator(player);
-
-    while (*gen)
-    {
-        assert_restore_game arg(*g);
-
-        const ::move m = gen->gen_move();
-        ++(*gen);
-
-        const string before_string = game_to_string(g);
-        const hash_t before_hash = g->get_local_hash();
-
-        g->play(m, player);
-        const string after_string = game_to_string(g);
-        const hash_t after_hash = g->get_local_hash();
-
-        g->undo_move();
-        const string undo_string = game_to_string(g);
-        const hash_t undo_hash = g->get_local_hash();
-
-        assert(before_string == undo_string && //
-               before_hash == undo_hash        //
-        );
-
-        assert(before_string != after_string && //
-               before_hash != after_hash        //
-        );
-
-        gen_move_strings.insert(after_string);
-    }
-
-    delete gen;
-    assert(exp_move_strings == gen_move_strings);
-}
-
+const string TOPPLING_DOMINOES_PREFIX = "toppling_dominoes:";
 ////////////////////////////////////////////////// main test functions
 
 void test_moves_main()
@@ -230,10 +161,12 @@ void test_moves_main()
 
         toppling_dominoes g(board);
 
-        test_moves_for_player(&g, BLACK, b_move_board_strings);
-        test_moves_for_player(&g, WHITE, w_move_board_strings);
-    }
+        test_moves_as_strings_for_player(&g, BLACK, b_move_board_strings,
+                                         TOPPLING_DOMINOES_PREFIX);
 
+        test_moves_as_strings_for_player(&g, WHITE, w_move_board_strings,
+                                         TOPPLING_DOMINOES_PREFIX);
+    }
 }
 
 void test_constructors()

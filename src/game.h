@@ -60,6 +60,8 @@ public:
 
     inline game_type_t game_type() const;
 
+    std::string to_string() const;
+
 protected:
     /*
         Return list of games to replace current game. Empty list means game is

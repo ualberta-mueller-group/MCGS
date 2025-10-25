@@ -271,8 +271,6 @@ void test_moves_main()
 
         domineering g(board);
 
-        cout << board << endl;
-
         // Check that correct moves were generated
         compare_generated_moves(&g, exp_b_coords, BLACK);
         compare_generated_moves(&g, exp_w_coords, WHITE);

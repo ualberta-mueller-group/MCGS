@@ -4,6 +4,7 @@
 #include <memory>
 #include <iostream>
 #include <cstddef>
+#include <sstream>
 
 #include "game.h"
 #include "cgt_basics.h"
@@ -13,6 +14,13 @@
 using std::unique_ptr;
 
 game_type_t game::_next_game_type = 1;
+
+std::string game::to_string() const
+{
+    std::stringstream str;
+    str << *this;
+    return str.str();
+}
 
 std::ostream& operator<<(std::ostream& os, const split_result& split)
 {

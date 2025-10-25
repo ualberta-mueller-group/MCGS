@@ -67,6 +67,10 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
+        /*
+            TODO:
+            split, normalize, inverse, (and others?)
+        */
         domineering_test_all();
         amazons_test_all();
         fission_test_all();

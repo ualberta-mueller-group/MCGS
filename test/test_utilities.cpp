@@ -41,6 +41,58 @@ std::unordered_set<move> get_generated_moves_for_player(const game* g, bw player
     return moves;
 }
 
+void test_moves_as_strings_for_player(
+    game* g, bw player, const std::vector<std::string>& exp_move_strings,
+    const std::string& game_prefix)
+{
+    assert(g != nullptr &&        //
+           is_black_white(player) //
+    );
+
+    // Get expected move strings
+    std::unordered_set<std::string> exp_move_strings_prefixed;
+
+    for (const std::string& game_string : exp_move_strings)
+        exp_move_strings_prefixed.insert(game_prefix + game_string);
+
+
+    std::unordered_set<std::string> gen_move_strings;
+
+    move_generator* gen = g->create_move_generator(player);
+
+    while (*gen)
+    {
+        assert_restore_game arg(*g);
+
+        const ::move m = gen->gen_move();
+        ++(*gen);
+
+        const string before_string = g->to_string();
+        const hash_t before_hash = g->get_local_hash();
+
+        g->play(m, player);
+        const string after_string = g->to_string();
+        const hash_t after_hash = g->get_local_hash();
+
+        g->undo_move();
+        const string undo_string = g->to_string();
+        const hash_t undo_hash = g->get_local_hash();
+
+        assert(before_string == undo_string && //
+               before_hash == undo_hash        //
+        );
+
+        assert(before_string != after_string && //
+               before_hash != after_hash        //
+        );
+
+        gen_move_strings.insert(after_string);
+    }
+
+    delete gen;
+    assert(gen_move_strings == exp_move_strings_prefixed);
+}
+
 std::unordered_set<std::string> get_generated_moves_as_strings_for_player(
     game* g, bw player)
 {
