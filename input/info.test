@@ -146,16 +146,41 @@ XOXOO...XO
                 '1 -1/2 3 4'
                 '  1  -1  /  2   3  ,  4  '
 
-    Games:
-        TODO add new games: amazons, domineering, gen_toads, toppling_dominoes,
-        fission
+        'grid':
+            A flattened row-major representation of a 2D board with '|'
+            separating the rows. i.e. 'XOX|OXO' (2x3 grid: 2 rows and 3 columns)
 
+    Games:
         [clobber_1xn], [nogo_1xn], and [elephants]:
             Contiguous sequence of '.', 'X', and 'O'.
-        
+
+        [toppling_dominoes]
+            Contiguous sequence of 'X', 'O', and '#'.
+
+        [gen_toads]
+            Parameter list of 4 ints, followed by ':', followed by a contiguous
+            sequence of '.', 'X', and 'O'.
+
+            Parameters (in order, see gen_toads.h for more info):
+                - min slide > 0
+                - max slide >= min slide
+                - max jump >= 0
+                - friendly jump in [0, 1]
+
+            Example:
+                '2,3,2,0:X..XO.O'
+
         [nogo], and [clobber]
-            Contiguous sequence of '.', 'X', 'O', and '|'. A flattened row-major
-            representation of 2D board with '|' separating the rows.
+            A grid of '.', 'X', and 'O'.
+
+        [amazons]
+            A grid of '.', 'X', 'O', and '#'.
+
+        [domineering]
+            A grid of '.' and '#'.
+
+        [fission]
+            A grid of '.', 'X', and '#'.
 
         [integer_game], [nimber], and [kayles]:
             A single int.
