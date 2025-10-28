@@ -9,6 +9,26 @@ def print(obj) begin
     System.Print(obj);
 end
 
+def bool_to_int(b) begin
+    assert(b is Boolean);
+
+    if b then
+        1;
+    else
+        0;
+    end
+end
+
+def int_to_bool(i) begin
+    assert(i is Integer and (i == 0 or i == 1));
+
+    if i == 1 then
+        true;
+    else
+        false;
+    end
+end
+
 def to_string(obj) begin
     if obj is String then
         obj;
@@ -44,6 +64,11 @@ end
 def mcgs_to_elephants(mcgs_string) begin
     assert(mcgs_string is String);
     mcgs_string.Replace("X", "t").Replace("O", "f");
+end
+
+def elephants_to_mcgs(mcgs_string) begin
+    assert(mcgs_string is String);
+    mcgs_string.Replace("t", "X").Replace("f", "O");
 end
 
 def sum_games(games) begin
@@ -129,6 +154,43 @@ def print_opts(g) begin
     print(join(["{", left, " | ", right, "}"], ""));
 end
 
+/*
+    Given a GenToadsAndFrogs game object, extract the parameter list
+
+    NOTE: All returned parameters are Integers
+*/
+def get_gen_toads_params(g) begin
+    assert(g is Game);
+
+    G := g.EnclosingObject;
+    assert(G is game.strip.GenToadsAndFrogs);
+
+    params := [G.minSlide, G.maxSlide, G.maxJump,
+               bool_to_int(G.allowFriendlyJump)];
+
+    params;
+end
+
+def collection_to_cpp_vector_string(col) begin
+    assert(col is Collection);
+
+    list := col.ToList;
+
+    str := "{";
+
+    for i from 1 to list.Size do
+        str := str + to_string(list[i]);
+
+        if i + 1 <= list.Size then
+            str := str + ", ";
+        end
+    end
+
+    str := str + "}";
+
+    str;
+end
+
 ////////////////////////////////////////////////// Games and shorthands
 def elephants(board) begin
     assert(board is String);
@@ -146,6 +208,28 @@ end
 def clobber(board) begin
     assert(board is String);
     game.grid.Clobber(board);
+end
+
+def gen_toads(gen_toads_spec) begin
+    assert(gen_toads_spec is List and gen_toads_spec.Size == 2);
+
+    params := gen_toads_spec[1];
+    board := gen_toads_spec[2];
+
+    assert(params is List and params.Size == 4);
+    for i from 1 to params.Size do
+        assert(params[i] is Integer);
+    end
+
+    assert(board is String);
+    board := mcgs_to_elephants(board);
+    assert(board is String);
+
+    G := game.strip.GenToadsAndFrogs(params[1], params[2], params[3],
+                                     int_to_bool(params[4]));
+    g := G(board);
+
+    g;
 end
 
 def cf(g) begin

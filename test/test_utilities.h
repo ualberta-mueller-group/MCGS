@@ -18,6 +18,7 @@
 std::unordered_set<move> get_generated_moves_for_player(const game* g,
                                                         bw player);
 
+// TODO unit test and document this (and other functions in this file)
 void test_moves_as_strings_for_player(
     game* g, bw player, const std::vector<std::string>& exp_move_strings,
     const std::string& game_prefix);
