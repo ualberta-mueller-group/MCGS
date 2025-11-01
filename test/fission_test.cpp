@@ -1,4 +1,13 @@
 #include "fission_test.h"
+
+#include <set>
+#include <cassert>
+#include <tuple>
+#include <optional>
+#include <unordered_set>
+#include <vector>
+#include <string>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
@@ -6,8 +15,6 @@
 #include "grid.h"
 #include "grid_location.h"
 #include "test/test_utilities.h"
-#include <iostream>
-#include <set>
 
 using namespace std;
 

@@ -1,25 +1,27 @@
 #include "autotests.h"
-#include "cgt_basics.h"
-#include "solver_stats.h"
 
+#include <string>
+#include <sstream>
 #include <cstdio>
-#include <functional>
 #include <ios>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <vector>
+#include <cassert>
+#include <memory>
+#include <algorithm>
+
+#include "cgt_basics.h"
+#include "solver_stats.h"
 #include "file_parser.h"
 #include "global_options.h"
 #include "search_utils.h"
 #include "throw_assert.h"
+#include "utilities.h"
 #include "sumgame.h"
-#include <vector>
-#include <sstream>
 #include "hashing.h"
-#include <string>
 #include "game.h"
-#include <cassert>
-#include <memory>
 
 // TODO put this in its own file? remove interface type? unit tests?
 ////////////////////////////////////////////////// directory iterators

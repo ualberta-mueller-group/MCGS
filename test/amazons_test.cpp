@@ -1,8 +1,11 @@
 #include "amazons_test.h"
+
 #include <iostream>
-#include <unordered_set>
 #include <tuple>
 #include <vector>
+#include <string>
+#include <cassert>
+
 #include "cgt_basics.h"
 #include "test_utilities.h"
 #include "amazons.h"

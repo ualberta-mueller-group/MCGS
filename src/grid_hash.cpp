@@ -1,9 +1,12 @@
 #include "grid_hash.h"
 
 #include <iostream>
+#include <vector>
+#include <cassert>
+
 #include "grid.h"
-#include "grid_location.h"
 #include "utilities.h"
+#include "hashing.h"
 
 using namespace std;
 

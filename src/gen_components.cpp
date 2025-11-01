@@ -3,8 +3,6 @@
 
     - For RxC grid, use real grid of 2R+1,2C+1
     - Main loop: given all unique 
-
-
 */
 
 #include "gen_components.h"
@@ -12,15 +10,19 @@
 #include <vector>
 #include <string>
 #include <unordered_set>
-#include <unordered_map>
+#include <iostream>
+#include <cassert>
+#include <cstdint>
+#include <cstddef>
 
+#include "global_options.h"
 #include "grid.h"
+#include "hashing.h"
 #include "grid_generator.h"
 #include "grid_hash.h"
 #include "grid_location.h"
 
 using namespace std;
-
 
 ////////////////////////////////////////////////// helpers
 namespace {

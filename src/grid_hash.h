@@ -12,9 +12,9 @@
     Orientations are enabled by passing a bit mask to the grid_hash constructor.
 */
 
-#include <algorithm>
-#include <cstddef>
 #include <array>
+#include <cassert>
+#include <limits>
 
 #include "grid.h"
 #include "game.h"

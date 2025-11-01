@@ -1,7 +1,15 @@
 #include "amazons.h"
 
+#include <cstddef>
+#include <cassert>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <utility>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "grid.h"
 #include "utilities.h"
 #include "grid_location.h"
 

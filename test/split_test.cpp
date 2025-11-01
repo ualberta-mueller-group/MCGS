@@ -10,6 +10,11 @@
 #include "split_test_nogo.h"
 #include "split_test_nimber.h"
 #include "split_test_up_star.h"
+#include "test/split_test_amazons.h"
+#include "test/split_test_domineering.h"
+#include "test/split_test_fission.h"
+#include "test/split_test_gen_toads.h"
+#include "test/split_test_toppling_dominoes.h"
 
 void split_test_all()
 {
@@ -23,4 +28,9 @@ void split_test_all()
     split_test_nogo_all();
     split_test_nimber_all();
     split_test_up_star_all();
+    split_test_amazons_all();
+    split_test_domineering_all();
+    split_test_fission_all();
+    split_test_toppling_dominoes_all();
+    split_test_gen_toads_all();
 }

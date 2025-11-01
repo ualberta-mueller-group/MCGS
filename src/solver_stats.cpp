@@ -1,5 +1,11 @@
 #include "solver_stats.h"
+
+#include <unordered_set>
+#include <cassert>
+
 #include "global_options.h"
+#include "hashing.h"
+#include "sumgame.h"
 
 void solver_stats::reset()
 {

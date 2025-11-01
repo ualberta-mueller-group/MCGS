@@ -1,12 +1,17 @@
 #pragma once
 
+// IWYU pragma: begin_exports
 #include "game.h"
 #include "strip.h"
-#include "cgt_basics.h"
+// IWYU pragma: end_exports
+
 
 #include <vector>
 #include <string>
+#include <cassert>
 #include <ostream>
+
+#include "cgt_basics.h"
 
 /*
 TODO IMPORTANT:

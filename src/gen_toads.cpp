@@ -3,9 +3,13 @@
 #include <vector>
 #include <string>
 #include <ostream>
+#include <cassert>
+#include <utility>
+#include <cmath>
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "throw_assert.h"
 #include "game.h"
 #include "strip.h"
 #include "utilities.h"

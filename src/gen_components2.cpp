@@ -1,6 +1,19 @@
 #include "gen_components2.h"
-#include "gen_components.h"
+
+#include <cassert>
+#include <iostream>
+#include <vector>
+#include <cstddef>
+#include <unordered_set>
+
+#include "global_options.h"
 #include "grid_generator.h"
+#include "grid_location.h"
+#include "hashing.h"
+#include "grid_hash.h"
+#include "cgt_basics.h"
+#include "grid.h"
+#include "strip.h"
 
 using namespace std;
 

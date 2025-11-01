@@ -1,6 +1,7 @@
 #pragma once
 #include <utility>
 #include <functional>
+#include <cstddef>
 
 // (row, col)
 typedef std::pair<int, int> int_pair;

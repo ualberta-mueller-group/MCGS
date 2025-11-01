@@ -9,6 +9,7 @@
 #include <cassert>
 #include <vector>
 #include <memory>
+#include <cstddef>
 #include <iostream>
 
 /*

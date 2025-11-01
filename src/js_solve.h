@@ -5,7 +5,6 @@
 
 #include <iostream>
 #include <string>
-#include "emscripten.h"
 
 struct js_struct
 {

@@ -9,6 +9,11 @@
 #include "test/domineering_test.h"
 #include "test/fission_test.h"
 #include "test/gen_toads_test.h"
+#include "test/split_test_amazons.h"
+#include "test/split_test_domineering.h"
+#include "test/split_test_fission.h"
+#include "test/split_test_gen_toads.h"
+#include "test/split_test_toppling_dominoes.h"
 #include "test/toppling_dominoes_test.h"
 #include "test/winning_moves_test.h"
 const bool RUN_OVERRIDE_TESTS = true;
@@ -76,6 +81,12 @@ void override_tests()
         fission_test_all();
         toppling_dominoes_test_all();
         gen_toads_test_all();
+
+        split_test_amazons_all();
+        split_test_domineering_all();
+        split_test_fission_all();
+        split_test_toppling_dominoes_all();
+        split_test_gen_toads_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)

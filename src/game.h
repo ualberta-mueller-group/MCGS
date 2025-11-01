@@ -9,15 +9,16 @@
 #include "cgt_move.h"
 #include "dynamic_serializable.h"
 #include "hashing.h"
+#include "type_table.h"
 // IWYU pragma: end_exports
 
 #include <ostream>
 #include <vector>
 #include <optional>
+#include <string>
 #include <cassert>
 #include <type_traits>
 
-#include "type_table.h"
 
 //---------------------------------------------------------------------------
 

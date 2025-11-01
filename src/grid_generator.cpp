@@ -5,7 +5,9 @@
 #include <vector>
 #include <string>
 #include <iostream>
+
 #include "grid.h"
+#include "hashing.h"
 
 using namespace std;
 

@@ -8,7 +8,6 @@
 
 #include "database.h"
 #include "db_game_generator.h"
-#include "gen_components2.h"
 #include "global_database.h"
 #include "global_options.h"
 #include "gridlike_db_game_generator.h"

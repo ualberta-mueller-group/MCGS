@@ -1,8 +1,11 @@
 #include "js_solve.h"
 
-#include "emscripten.h"
-#include "file_parser.h"
 #include <sstream>
+#include <string>
+
+#include "emscripten.h" // IWYU pragma: keep
+#include "file_parser.h"
+#include "search_utils.h"
 
 using namespace std;
 

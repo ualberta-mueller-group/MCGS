@@ -1,7 +1,9 @@
 #pragma once
 
+// IWYU pragma: begin_exports
 #include "game.h"
 #include "strip.h"
+// IWYU pragma: end_exports
 
 #include <vector>
 #include <string>

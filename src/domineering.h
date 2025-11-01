@@ -1,12 +1,17 @@
 #pragma once
 
+// IWYU pragma: begin_exports
 #include "game.h"
 #include "grid.h"
-#include "grid_hash.h"
+// IWYU pragma: end_exports
 
 #include <ostream>
 #include <vector>
+#include <cassert>
 #include <string>
+
+#include "grid_hash.h"
+#include "utilities.h"
 
 #define DOMINEERING_SPLIT
 

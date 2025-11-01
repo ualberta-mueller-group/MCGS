@@ -1,9 +1,11 @@
 #include "toppling_dominoes_test.h"
+
 #include <iostream>
-#include <sstream>
-#include <unordered_set>
+#include <tuple>
 #include <string>
+#include <cassert>
 #include <vector>
+
 #include "cgt_basics.h"
 #include "game.h"
 #include "test_utilities.h"

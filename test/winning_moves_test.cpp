@@ -1,12 +1,13 @@
 #include "winning_moves_test.h"
 
+#include <algorithm>
+#include <tuple>
+#include <cassert>
+#include <vector>
+
 #include "cgt_move.h"
 #include "winning_moves.h"
 #include "game.h"
-#include <unordered_set>
-#include <algorithm>
-#include <iostream>
-#include <vector>
 
 #include "nogo_1xn.h"
 #include "clobber_1xn.h"

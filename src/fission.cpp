@@ -1,7 +1,14 @@
 #include "fission.h"
+
+#include <vector>
+#include <algorithm>
+#include <string>
+#include <cassert>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "grid_location.h"
+#include "throw_assert.h"
 
 using namespace std;
 

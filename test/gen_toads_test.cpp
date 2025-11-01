@@ -1,8 +1,12 @@
 #include "gen_toads_test.h"
+
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <tuple>
+#include <string>
+#include <cassert>
+
 #include "gen_toads.h"
 #include "test/test_utilities.h"
 

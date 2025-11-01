@@ -1,4 +1,10 @@
 #include "toppling_dominoes.h"
+
+#include <vector>
+#include <string>
+#include <cassert>
+#include <iostream>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"

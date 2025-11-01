@@ -1,10 +1,10 @@
 #pragma once
 
 #include <unordered_set>
-#include <vector>
 
 #include "grid_generator.h"
 #include "grid.h"
+#include "hashing.h"
 
 //////////////////////////////////////////////////
 // class grid_generator_masked_cc

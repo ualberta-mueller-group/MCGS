@@ -1,9 +1,12 @@
 #include "domineering_test.h"
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <unordered_set>
 #include <tuple>
+#include <cassert>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "domineering.h"

@@ -9,9 +9,6 @@
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
-#include "gen_components.h"
-#include "gen_components2.h"
-#include "gen_experiments.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
@@ -21,6 +18,7 @@
 #include "sumgame.h"
 #include "throw_assert.h"
 #include "grid_hash.h"
+#include "gen_experiments.h"
 
 using std::cout, std::endl, std::string;
 

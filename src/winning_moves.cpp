@@ -1,4 +1,9 @@
 #include "winning_moves.h"
+
+#include <vector>
+#include <memory>
+#include <cassert>
+
 #include "cgt_basics.h"
 #include "game.h"
 #include "sumgame.h"

@@ -1,3 +1,5 @@
+#include "game.h"
+
 #include <array>
 #include <cassert>
 #include <limits>
@@ -5,8 +7,8 @@
 #include <iostream>
 #include <cstddef>
 #include <sstream>
+#include <string>
 
-#include "game.h"
 #include "cgt_basics.h"
 #include "warn_default.h"
 #include "type_table.h"

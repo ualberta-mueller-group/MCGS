@@ -1,14 +1,20 @@
 #include "domineering.h"
+
+#include <cassert>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <cmath>
+#include <utility>
+#include <cstddef>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
 #include "throw_assert.h"
 #include "grid_location.h"
-#include "utilities.h"
+#include "grid_hash.h"
 
-#include <cassert>
-#include <vector>
-#include <string>
 
 using namespace std;
 
