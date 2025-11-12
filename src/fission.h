@@ -10,7 +10,6 @@
 #include <vector>
 
 ////////////////////////////////////////////////// class fission
-//#define FISSION_SPLIT
 class fission: public grid
 {
 public:
@@ -108,9 +107,6 @@ public:
 
             At end of step 2, stones not proven to have moves should be walls?
     */
-#ifdef FISSION_SPLIT
-    split_result _split_impl() const;
-#endif
 };
 
 ////////////////////////////////////////////////// fission methods

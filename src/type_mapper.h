@@ -24,6 +24,9 @@ public:
     void register_type(const std::string& type_name, game_type_t runtime_type);
     game_type_t translate_type(game_type_t runtime_type) const;
 
+    std::unordered_map<game_type_t, std::string> get_disk_type_to_name_map()
+        const;
+
 private:
     game_type_t& _type_remapping_ref(game_type_t runtime_type);
 

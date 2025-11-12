@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 #include <cstddef>
-#include <ostream>
 
 class clobber_1xn_db_game_generator;
 
@@ -261,14 +260,6 @@ string clobber_1xn::xoxo(int n)
     for (int i = 0; i < n; ++i)
         result += "XO";
     return result;
-}
-
-//---------------------------------------------------------------------------
-
-std::ostream& operator<<(std::ostream& out, const clobber_1xn& g)
-{
-    out << g.board_as_string();
-    return out;
 }
 
 //---------------------------------------------------------------------------

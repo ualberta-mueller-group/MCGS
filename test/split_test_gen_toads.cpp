@@ -24,7 +24,7 @@ void test_no_split()
     };
     // clang-format on
 
-    for (const string& board : test_cases)
+    for ([[maybe_unused]] const string& board : test_cases)
     {
         //gen_toads g(board);
         //assert_no_split(&g);

@@ -12,7 +12,8 @@ using namespace std;
 
 ////////////////////////////////////////////////// helper functions
 namespace {
-void print_grid(const int_pair& shape, const vector<int>& vec)
+// TODO why unused?
+[[maybe_unused]] void print_grid(const int_pair& shape, const vector<int>& vec)
 {
     for (int r = 0; r < shape.first; r++)
     {

@@ -66,12 +66,13 @@ enum color_enum
     COLOR_RESET = 0,
 };
 
-ostream& set_color(ostream& os, color_enum color)
+// TODO extract to other file
+[[maybe_unused]] ostream& set_color(ostream& os, color_enum color)
 {
     assert(                                          //
         color == COLOR_RESET ||                      //
         (COLOR_RED <= color && color <= COLOR_WHITE) //
-            );                                       //
+    );                                               //
 
     if (global::player_color())
         os << "\x1b[" << color << 'm';
@@ -79,7 +80,8 @@ ostream& set_color(ostream& os, color_enum color)
     return os;
 }
 
-void print_bool_grid(const grid_generator_impl::grid_mask& board, int_pair shape)
+[[maybe_unused]] void print_bool_grid(
+    const grid_generator_impl::grid_mask& board, int_pair shape)
 {
     int idx = 0;
     for (int r = 0; r < shape.first; r++)

@@ -2,11 +2,16 @@
 
 #include <vector>
 #include <memory>
+#include <iostream>
 #include <cassert>
 
 #include "cgt_basics.h"
+#include "cgt_move.h"
 #include "game.h"
 #include "sumgame.h"
+#include "sheep.h"
+#include "throw_assert.h"
+#include "file_parser.h"
 
 // TODO more unit tests?
 std::vector<move> get_winning_moves(const game* g, bw to_play)
@@ -42,3 +47,43 @@ std::vector<move> get_winning_moves(const game* g, bw to_play)
 
     return moves;
 }
+
+void print_winning_moves_impl(std::shared_ptr<file_parser> fp)
+{
+    game_case gc;
+    bool is_first = true;
+
+    while (fp->parse_chunk(gc))
+    {
+        THROW_ASSERT(gc.games.size() == 1 && is_black_white(gc.to_play));
+
+        game* g = gc.games.back();
+        THROW_ASSERT(dynamic_cast<sheep*>(g) != nullptr);
+
+        std::vector<move> winning_moves = get_winning_moves(g, gc.to_play);
+
+        if (is_first)
+            is_first = false;
+        else
+            std::cout << std::endl;
+
+        std::cout << *g << std::endl;
+
+        for (move m : winning_moves)
+        {
+            unsigned int from_point;
+            unsigned int to_point;
+            unsigned int target_herd_abs;
+
+            cgt_move::decode_three_part_move(m, from_point, to_point,
+                                             target_herd_abs);
+
+            std::cout << from_point << " -> " << to_point << " ("
+                      << target_herd_abs << ")" << std::endl;
+        }
+
+        gc.cleanup_games();
+    }
+
+}
+

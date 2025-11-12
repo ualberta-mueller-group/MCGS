@@ -1,96 +1,41 @@
+/*
+   TODO inline some of these functions...
+*/
 #include "grid_generator.h"
 
-#include <cassert>
-#include <cstddef>
-#include <vector>
-#include <string>
 #include <iostream>
+#include <cassert>
 
-#include "grid.h"
-#include "hashing.h"
+#include "clobber.h"
+#include "clobber_1xn.h"
+#include "throw_assert.h"
+#include "utilities.h"
+#include "cgt_basics.h"
 
 using namespace std;
 
-////////////////////////////////////////////////// helper functions
-namespace {
-
-// 'X' --true--> 'O' --false--> 'X'
-bool increment_char_clobber_bw(char& c)
-{
-    if (c == 'X')
-    {
-        c = 'O';
-        return true;
-    }
-
-    assert(c == 'O');
-    c = 'X';
-    return false;
-}
-
-// '.' --true--> 'X' --true--> 'O' --false--> '.'
-bool increment_char_clobber_ebw(char& c)
-{
-    if (c == '.')
-    {
-        c = 'X';
-        return true;
-    }
-
-    if (c == 'X')
-    {
-        c = 'O';
-        return true;
-    }
-
-    assert(c == 'O');
-    c = '.';
-    return false;
-}
-
-// 'X' --true--> 'O' --true--> '.' --false--> 'X'
-bool increment_char_clobber_bwe(char& c)
-{
-    if (c == 'X')
-    {
-        c = 'O';
-        return true;
-    }
-
-    if (c == 'O')
-    {
-        c = '.';
-        return true;
-    }
-
-    assert(c == '.');
-    c = 'X';
-    return false;
-}
-
-// 'X' --true--> '.' --false--> 'X'
-bool increment_char_clobber_be(char& c)
-{
-    if (c == 'X')
-    {
-        c = '.';
-        return true;
-    }
-
-    assert(c == '.');
-    c = 'X';
-    return false;
-}
-
-
-} // namespace
-
 ////////////////////////////////////////////////// grid_mask methods
-namespace grid_generator_impl {
+grid_mask::grid_mask() : _current_shape(0, 0), _marker_count_end(0)
+{
+}
+
+size_t grid_mask::size() const
+{
+    assert(*this);
+    return _mask.size();
+}
+
+int_pair grid_mask::get_shape() const
+{
+    assert(*this);
+    return _current_shape;
+}
 
 void grid_mask::set_shape(const int_pair& shape)
 {
     assert(shape.first >= 0 && shape.second >= 0);
+
+    _current_shape = shape;
 
     const int mask_size = shape.first * shape.second;
     _marker_count_end = mask_size + 1;
@@ -103,22 +48,15 @@ void grid_mask::set_shape(const int_pair& shape)
     _indices.reserve(mask_size);
 }
 
-void grid_mask::set_shape_fill(const int_pair& shape)
+bool grid_mask::operator[](size_t idx) const
 {
-    assert(shape.first >= 0 && shape.second >= 0);
+    assert(*this);
+    return _mask[idx];
+}
 
-    const int mask_size = shape.first * shape.second;
-    _marker_count_end = mask_size + 1;
-
-    _indices.clear();
-    _indices.reserve(mask_size);
-
-    _mask.resize(mask_size);
-    for (int i = 0; i < mask_size; i++)
-    {
-        _mask[i] = true;
-        _indices.push_back(i);
-    }
+grid_mask::operator bool() const
+{
+    return _indices.size() < _marker_count_end;
 }
 
 void grid_mask::operator++()
@@ -229,425 +167,377 @@ std::ostream& operator<<(std::ostream& os, const grid_mask& mask)
     return os;
 }
 
-} // namespace grid_generator_impl
+////////////////////////////////////////////////// i_grid_generator functions
 
-////////////////////////////////////////////////// grid_generator methods
-bool grid_generator::increment_shape_helper(int_pair& shape,
-                                            const int_pair& max_shape)
+bool i_grid_generator::increment_dims_standard(int_pair& dims,
+                                                   const int_pair& max_dims,
+                                                   bool init)
 {
-    assert((shape.first <= max_shape.first) &&
-           (shape.second <= max_shape.second));
+    assert(init || dims_le_max_standard(dims, max_dims));
 
-    if (shape.first == 0 && shape.second == 0)
-        shape = int_pair(1, 1);
+    if (init)
+    {
+        dims = int_pair(0, 0);
+        return dims_le_max_standard(dims, max_dims);
+    }
+
+    if (dims.first == 0 && dims.second == 0)
+        dims = int_pair(1, 1);
     else
     {
-        shape.second++;
-        if (shape.second > max_shape.second)
+        dims.second++;
+        if (dims.second > max_dims.second)
         {
-            shape.second = 1;
-            shape.first++;
+            dims.first++;
+            dims.second = 1;
         }
     }
 
-    return (shape.first <= max_shape.first) &&
-           (shape.second <= max_shape.second);
+    return dims_le_max_standard(dims, max_dims);
 }
 
-/*
-   TODO use this other function to generate transposes at some point
+bool i_grid_generator::dims_le_max_standard(const int_pair& dims,
+                                                   const int_pair& max_dims)
 
-   But this requires two types of grid generators, one for strips and one
-       for grids...
-*/
-/*
-bool grid_generator::increment_shape_helper(int_pair& shape,
-                                            const int_pair& max_shape)
 {
-      assert(
-          ((shape.first <= max_shape.first) &&
-          (shape.second <= max_shape.second))
+    assert(dims.first >= 0 &&     //
+           dims.second >= 0 &&    //
+           max_dims.first >= 0 && //
+           max_dims.second >= 0   //
+    );
 
-          ||
+    return dims.first <= max_dims.first && //
+           dims.second <= max_dims.second; //
+}
 
-          ((shape.first <= max_shape.second) &&
-          (shape.second <= max_shape.first))
-          );
+bool i_grid_generator::increment_dims_transpose(int_pair& dims,
+                                                const int_pair& max_dims,
+                                                bool init)
+{
+    assert(init || dims_le_max_transpose(dims, max_dims));
 
-    const int max_dim = max(max_shape.first, max_shape.second);
-    const int min_dim = min(max_shape.first, max_shape.second);
+    const int max_dim = max(max_dims.first, max_dims.second);
+    const int min_dim = min(max_dims.first, max_dims.second);
 
-    if (shape.first == 0 && shape.second == 0)
-        shape = int_pair(1, 1);
-    else if (shape.first < shape.second)
-        swap(shape.first, shape.second);
+    if (init)
+    {
+        dims = int_pair(0, 0);
+        return dims_le_max_transpose(dims, max_dims);
+    }
+
+    if (dims.first == 0 && dims.second == 0)
+        dims = int_pair(1, 1);
+    else if (dims.first < dims.second)
+        swap(dims.first, dims.second);
     else
     {
-        swap(shape.first, shape.second);
-        shape.second++;
+        swap(dims.first, dims.second);
+        dims.second++;
 
-        if (shape.second > max_dim)
+        if (dims.second > max_dim)
         {
-            const int next_val = min(shape.first, shape.second) + 1;
-            shape.first = next_val;
-            shape.second = next_val;
+            const int next_val = min(dims.first, dims.second) + 1;
+            dims.first = next_val;
+            dims.second = next_val;
         }
     }
 
-    const bool both_le_max = (shape.first <= max_dim) && //
-                             (shape.second <= max_dim);  //
+    const bool both_le_max = (dims.first <= max_dim) && //
+                             (dims.second <= max_dim);  //
 
-    const bool one_le_min = (shape.first <= min_dim) || //
-                            (shape.second <= min_dim);  //
+    const bool one_le_min = (dims.first <= min_dim) || //
+                            (dims.second <= min_dim);  //
 
     return both_le_max && one_le_min;
 }
-*/
 
-void grid_generator::init_board_helper(std::string& board,
-                                       const int_pair& shape, char init_char)
+bool i_grid_generator::dims_le_max_transpose(const int_pair& dims,
+                                             const int_pair& max_dims)
 {
-    assert(shape.first >= 0 && shape.second >= 0);
+    assert(dims.first >= 0 &&     //
+           dims.second >= 0 &&    //
+           max_dims.first >= 0 && //
+           max_dims.second >= 0   //
+    );
 
-    size_t board_size = shape.first * shape.second;
-    if (board_size > 0)
-        board_size += shape.first - 1;
+    const int max_dim = max(max_dims.first, max_dims.second);
+    const int min_dim = min(max_dims.first, max_dims.second);
 
-    board.resize(board_size);
+    const bool both_le_max = (dims.first <= max_dim) && //
+                             (dims.second <= max_dim);  //
 
-    size_t col_idx = 0;
+    const bool one_le_min = (dims.first <= min_dim) || //
+                            (dims.second <= min_dim);  //
 
-    const unsigned int col_count = shape.second;
-
-    for (size_t i = 0; i < board_size; i++)
-    {
-        if (col_idx == col_count)
-        {
-            // TODO use ROW_SEP instead of literal
-            board[i] = '|';
-            col_idx = 0;
-            continue;
-        }
-
-        board[i] = init_char;
-        col_idx++;
-    }
+    return both_le_max && one_le_min;
 }
 
-////////////////////////////////////////////////// grid_generator_base methods
-void grid_generator_base::operator++()
+////////////////////////////////////////////////// grid_generator methods
+grid_generator::grid_generator(const int_pair& max_dims,
+                               const std::vector<int>& tile_sequence,
+                               bool strips_only)
+    : _strips_only(strips_only),
+      _max_dims(max_dims),
+      _tile_sequence(tile_sequence),
+      _idx_invalid(tile_sequence.size()),
+      _mask_active_bit(true),
+      _mask_inactive_tile(0)
+{
+    THROW_ASSERT(tile_sequence.size() > 0, "Tile sequence must not be empty!");
+    THROW_ASSERT(max_dims.first >= 0 && max_dims.second >= 0,
+                 "Max dimensions must be non-negative!");
+    THROW_ASSERT(LOGICAL_IMPLIES(_strips_only, _max_dims.first <= 1),
+                 "Specified strips only but got max_dims with more than " 
+                 "1 row!");
+
+    assert(_mask.get() == nullptr);
+    _increment(true);
+}
+
+grid_generator::grid_generator(const int_pair& max_dims,
+                               const std::vector<int>& tile_sequence,
+                               bool mask_active_bit, int mask_inactive_tile,
+                               bool strips_only)
+
+    : _strips_only(strips_only),
+      _max_dims(max_dims),
+      _tile_sequence(tile_sequence),
+      _idx_invalid(tile_sequence.size()),
+      _mask(new grid_mask()),
+      _mask_active_bit(mask_active_bit),
+      _mask_inactive_tile(mask_inactive_tile)
+{
+
+    THROW_ASSERT(tile_sequence.size() > 0, "Tile sequence must not be empty!");
+    THROW_ASSERT(max_dims.first >= 0 && max_dims.second >= 0,
+                 "Max dimensions must be non-negative!");
+
+    THROW_ASSERT(LOGICAL_IMPLIES(_strips_only, _max_dims.first <= 1),
+                 "Specified strips only but got max_dims with more than " 
+                 "1 row!");
+
+    assert(_mask.get() != nullptr);
+    _increment(true);
+}
+
+grid_generator::operator bool() const
+{
+    if (_strips_only)
+        return i_grid_generator::dims_le_max_standard(_current_dims, _max_dims);
+    return i_grid_generator::dims_le_max_transpose(_current_dims, _max_dims);
+}
+
+void grid_generator::operator++()
 {
     assert(*this);
-
-    if (_increment_board())
-        return;
-
-    if (_increment_shape())
-    {
-        _init_board();
-        return;
-    }
+    _increment(false);
 }
 
-////////////////////////////////////////////////// grid_generator_masked methods
-void grid_generator_masked::operator++()
+const std::vector<int>& grid_generator::gen_board() const
+{
+    assert(*this && _real_board_matches_idx_board());
+    return _real_board;
+}
+
+int_pair grid_generator::get_shape() const
 {
     assert(*this);
-
-    if (_increment_board())
-        return;
-
-    if (_increment_mask())
-    {
-        _init_board();
-        return;
-    }
-
-    if (_increment_shape())
-    {
-        _init_mask();
-        _init_board();
-        return;
-    }
+    return _current_dims;
 }
 
-void grid_generator_masked::init_board_helper_masked(
-    std::string& board, const int_pair& shape,
-    const grid_generator_impl::grid_mask& mask, char true_char, char false_char)
+bool grid_generator::only_strips() const
 {
-    assert(shape.first >= 0 && shape.second >= 0);
-
-    size_t board_size = shape.first * shape.second;
-    if (board_size > 0)
-        board_size += shape.first - 1;
-
-    board.resize(board_size);
-
-    size_t mask_idx = 0;
-    size_t col_idx = 0;
-
-    const unsigned int col_count = shape.second;
-
-    for (size_t i = 0; i < board_size; i++)
-    {
-        if (col_idx == col_count)
-        {
-            // TODO use ROW_SEP instead of literal
-            board[i] = '|';
-            col_idx = 0;
-            continue;
-        }
-
-        const char tile = mask[mask_idx] ? true_char : false_char;
-        board[i] = tile;
-
-        mask_idx++;
-        col_idx++;
-    }
+    return _max_dims.first <= 1;
 }
 
-////////////////////////////////////////////////// grid_generator_masked_fast
-// methods
-void grid_generator_masked_fast::operator++()
+int grid_generator::get_current_size() const
 {
     assert(*this);
-
-    if (_increment_board())
-        return;
-
-    if (_increment_mask())
-    {
-        _init_board();
-        return;
-    }
-
-    if (_increment_shape())
-    {
-        _init_mask();
-        _init_board();
-        return;
-    }
+    return _current_dims.first * _current_dims.second;
 }
 
-void grid_generator_masked_fast::_init_mask()
+bool grid_generator::_increment(bool init)
 {
-    _mask.set_shape(_shape);
+    assert(init || *this);
 
-    hash_t hash = _get_mask_hash();
-    _mask_hashes.insert(hash);
-}
+    bool has_dims = !init;
+    bool has_mask = !init;
+    bool has_tiles = !init;
 
-bool grid_generator_masked_fast::_increment_mask()
-{
     while (true)
     {
-        assert(_mask);
-
-        ++_mask;
-
-        bool ok = _mask;
-        if (!ok)
-            return false;
-
-        const hash_t hash = _get_mask_hash();
-        const auto& it = _mask_hashes.insert(hash);
-
-        if (it.second)
+        // Try to increment tiles
+        if (has_mask && _increment_tiles(!has_tiles))
+        {
+            assert(*this);
             return true;
+        }
+
+        has_tiles = false;
+
+        // Try to increment mask
+        if (has_dims && _increment_mask(!has_mask))
+        {
+            has_mask = true;
+            continue;
+        }
+
+        has_mask = false;
+
+        // Try to increment dimensions
+        if (_increment_dimensions(!has_dims))
+        {
+            has_dims = true;
+            continue;
+        }
+
+        has_dims = false;
+
+        assert(!*this);
+        return false;
     }
 }
 
-hash_t grid_generator_masked_fast::_get_mask_hash() const
+bool grid_generator::_increment_dimensions(bool init)
 {
-    _gh.reset(_shape);
 
-    int pos = 0;
-    for (int r = 0; r < _shape.first; r++)
+    assert(init || *this);
+
+    if (_strips_only)
+        return i_grid_generator::increment_dims_standard(_current_dims,
+                                                         _max_dims, init);
+
+    return i_grid_generator::increment_dims_transpose(_current_dims, _max_dims,
+                                                      init);
+}
+
+bool grid_generator::_increment_mask(bool init)
+{
+    if (_mask.get() == nullptr)
+        return init;
+
+    assert(_mask.get() != nullptr);
+    if (init)
     {
-        for (int c = 0; c < _shape.second; c++)
-            _gh.toggle_value(r, c, _mask[pos + c]);
-
-        pos += _shape.second;
+        _mask->set_shape(_current_dims);
+        return *_mask;
     }
 
-    return _gh.get_value();
+    assert(*_mask);
+    ++(*_mask);
+    return *_mask;
 }
 
-////////////////////////////////////////////////// grid_generator_default
-/// methods
-bool grid_generator_default::_increment_board()
+bool grid_generator::_increment_tiles(bool init)
 {
+    if (init)
+    {
+        _init_board();
+        return true;
+    }
+
+    assert(_real_board_matches_idx_board() &&      //
+           _idx_board.size() == _real_board.size() //
+    );
+
+    const size_t SIZE = _idx_board.size();
     bool carry = true;
 
-    for (auto it = _board.rbegin(); it != _board.rend(); it++)
+    for (size_t offset = 1; offset <= SIZE; offset++)
     {
-        char& c = *it;
+        const size_t idx = SIZE - offset;
 
-        if (c == '|')
+        if (_idx_board[idx] == _idx_invalid)
             continue;
 
-        carry = !increment_char_clobber_ebw(c);
+        size_t& tile_idx = _idx_board[idx];
+        int& tile_real = _real_board[idx];
 
-        if (!carry)
+        tile_idx++;
+
+        if (tile_idx < _idx_invalid)
+        {
+            tile_real = _tile_sequence[tile_idx];
+            carry = false;
             break;
+        }
+
+        assert(tile_idx == _idx_invalid);
+        tile_idx = 0;
+        tile_real = _tile_sequence[0];
     }
 
     return !carry;
 }
 
-////////////////////////////////////////////////// grid_generator_clobber
-/// methods
-bool grid_generator_clobber::_increment_board()
+bool grid_generator::_real_board_matches_idx_board() const
 {
-    bool carry = true;
+    if (_real_board.size() != _idx_board.size())
+        return false;
 
-    size_t mask_idx = 0;
-    const size_t board_size = _board.size();
-
-    for (size_t i = 0; i < board_size; i++)
+    const size_t SIZE = _real_board.size();
+    for (size_t i = 0; i < SIZE; i++)
     {
-        if (_board[i] == '|')
-            continue;
+        const size_t val_idx = _idx_board[i];
+        const int val_real = _real_board[i];
 
-        if (!_mask[mask_idx++])
-            continue;
-
-        carry = !increment_char_clobber_bw(_board[i]);
-
-        if (!carry)
-            break;
+        if (_is_active_tile(i))
+        {
+            if (val_idx == _idx_invalid ||          //
+                val_real != _tile_sequence[val_idx] //
+            )
+                return false;
+        }
+        else
+        {
+            if (val_idx != _idx_invalid ||      //
+                val_real != _mask_inactive_tile //
+            )
+                return false;
+        }
     }
 
-    return !carry;
+    return true;
 }
 
-////////////////////////////////////////////////// grid_generator_clobber_fast
-/// methods
-bool grid_generator_clobber_fast::_increment_board()
+void grid_generator::_init_board()
 {
-    bool carry = true;
+    assert(_current_dims.first >= 0 && //
+           _current_dims.second >= 0   //
+    );
 
-    size_t mask_idx = 0;
-    const size_t board_size = _board.size();
+    const int SIZE = _current_dims.first * _current_dims.second;
+    assert(SIZE >= 0);
 
-    for (size_t i = 0; i < board_size; i++)
+    _idx_board.resize(SIZE);
+    _real_board.resize(SIZE);
+
+    for (int i = 0; i < SIZE; i++)
     {
-        if (_board[i] == '|')
-            continue;
-
-        if (!_mask[mask_idx++])
-            continue;
-
-        carry = !increment_char_clobber_bw(_board[i]);
-
-        if (!carry)
-            break;
+        if (_is_active_tile(i))
+        {
+            _idx_board[i] = 0;
+            _real_board[i] = _tile_sequence[0];
+        }
+        else
+        {
+            _idx_board[i] = _idx_invalid;
+            _real_board[i] = _mask_inactive_tile;
+        }
     }
 
-    return !carry;
+    assert(_real_board_matches_idx_board());
 }
 
-
-////////////////////////////////////////////////// grid_generator_nogo methods
-bool grid_generator_nogo::_increment_board()
+bool grid_generator::_is_active_tile(int tile_idx) const
 {
-    bool carry = true;
+    assert(0 <= tile_idx &&              //
+           tile_idx < get_current_size() //
+    );
 
-    size_t mask_idx = 0;
-    const size_t board_size = _board.size();
+    if (_mask.get() == nullptr)
+        return true;
 
-    for (size_t i = 0; i < board_size; i++)
-    {
-        if (_board[i] == '|')
-            continue;
-
-        if (_mask[mask_idx++])
-            continue;
-
-        carry = !increment_char_clobber_bw(_board[i]);
-
-        if (!carry)
-            break;
-    }
-
-    return !carry;
-}
-
-//////////////////////////////////////////////////
-// grid_generator_amazons methods
-bool grid_generator_amazons::_increment_board()
-{
-    bool carry = true;
-
-    size_t mask_idx = 0;
-    const size_t board_size = _board.size();
-
-    for (size_t i = 0; i < board_size; i++)
-    {
-        if (_board[i] == '|')
-            continue;
-
-        if (!_mask[mask_idx++])
-            continue;
-
-        carry = !increment_char_clobber_bwe(_board[i]);
-
-        if (!carry)
-            break;
-    }
-
-    return !carry;
-}
-
-//////////////////////////////////////////////////
-// grid_generator_fission methods
-bool grid_generator_fission::_increment_board()
-{
-    bool carry = true;
-
-    size_t mask_idx = 0;
-    const size_t board_size = _board.size();
-
-    for (size_t i = 0; i < board_size; i++)
-    {
-        if (_board[i] == '|')
-            continue;
-
-        if (!_mask[mask_idx++])
-            continue;
-
-        carry = !increment_char_clobber_be(_board[i]);
-
-        if (!carry)
-            break;
-    }
-
-    return !carry;
-}
-
-//////////////////////////////////////////////////
-// grid_generator_toppling_dominoes methods
-bool grid_generator_toppling_dominoes ::_increment_board()
-{
-    bool carry = true;
-
-    size_t mask_idx = 0;
-    const size_t board_size = _board.size();
-
-    for (size_t i = 0; i < board_size; i++)
-    {
-        if (_board[i] == '|')
-            continue;
-
-        if (!_mask[mask_idx++])
-            continue;
-
-        carry = !increment_char_clobber_bw(_board[i]);
-
-        if (!carry)
-            break;
-    }
-
-    return !carry;
+    return (*_mask)[tile_idx] == _mask_active_bit;
 }
 

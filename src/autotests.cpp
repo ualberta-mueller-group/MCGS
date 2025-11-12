@@ -72,7 +72,7 @@ file_iterator_alphabetical::file_iterator_alphabetical(const std::filesystem::di
 file_iterator_alphabetical::operator bool() const
 {
     // No files --implies--> No directories
-    assert(logical_implies(_file_entries.empty(), _dir_entries.empty()));
+    assert(LOGICAL_IMPLIES(_file_entries.empty(), _dir_entries.empty()));
     return !_file_entries.empty();
 }
 

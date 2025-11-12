@@ -9,14 +9,17 @@
 #include "test/domineering_test.h"
 #include "test/fission_test.h"
 #include "test/gen_toads_test.h"
+#include "test/sheep_grid_generator_test.h"
 #include "test/split_test_amazons.h"
 #include "test/split_test_domineering.h"
 #include "test/split_test_fission.h"
 #include "test/split_test_gen_toads.h"
 #include "test/split_test_toppling_dominoes.h"
 #include "test/toppling_dominoes_test.h"
+#include "test/sheep_test.h"
+#include "split_test_sheep.h"
 #include "test/winning_moves_test.h"
-const bool RUN_OVERRIDE_TESTS = true;
+const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
 #include <string>
@@ -72,6 +75,10 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
+
+        sheep_grid_generator_test_all();
+        return;
+
         /*
             TODO:
             split, normalize, inverse, (and others?)
@@ -81,12 +88,14 @@ void override_tests()
         fission_test_all();
         toppling_dominoes_test_all();
         gen_toads_test_all();
+        sheep_test_all();
 
         split_test_amazons_all();
         split_test_domineering_all();
         split_test_fission_all();
         split_test_toppling_dominoes_all();
         split_test_gen_toads_all();
+        split_test_sheep_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -184,6 +193,7 @@ int main(int argc, const char** argv)
         fission_test_all();
         toppling_dominoes_test_all();
         gen_toads_test_all();
+        sheep_test_all();
     }
 
     // Impartial games
@@ -210,6 +220,7 @@ int main(int argc, const char** argv)
     hash_test_all();
     hash_types_test_all();
     grid_generator_test_all();
+    sheep_grid_generator_test_all();
     db_game_generator_test_all();
     database_test_all();
 

@@ -47,5 +47,3 @@ public:
         str << "nogo_1xn:" << board_as_string();
     }
 };
-
-std::ostream& operator<<(std::ostream& out, const nogo_1xn& g);

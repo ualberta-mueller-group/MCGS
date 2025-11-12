@@ -13,12 +13,14 @@
 */
 #pragma once
 #include <climits>
+#include <filesystem>
 #include <string>
 #include <type_traits>
 #include <cassert>
 #include <fstream>
 #include <cstdint>
 #include <iostream>
+#include "throw_assert.h"
 
 /*
     TODO: assert or THROW_ASSERT for this file?
@@ -118,11 +120,6 @@ private:
 };
 
 ////////////////////////////////////////////////// ibuffer methods
-inline ibuffer::ibuffer(const std::string& file_name)
-    : _fs(file_name, OPEN_MODE)
-{
-    assert(_fs.is_open());
-}
 
 inline void ibuffer::close()
 {

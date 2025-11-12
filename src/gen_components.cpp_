@@ -39,7 +39,8 @@ enum color_enum
     COLOR_RESET = 0,
 };
 
-ostream& set_color(ostream& os, color_enum color)
+// TODO extract
+[[ maybe_unused ]] ostream& set_color(ostream& os, color_enum color)
 {
     assert(                                          //
         color == COLOR_RESET ||                      //
@@ -52,7 +53,8 @@ ostream& set_color(ostream& os, color_enum color)
     return os;
 }
 
-void print_bool_grid(const vector<bool>& board, int_pair shape)
+// TODO extract
+[[maybe_unused]] void print_bool_grid(const vector<bool>& board, int_pair shape)
 {
     int idx = 0;
     for (int r = 0; r < shape.first; r++)
@@ -178,7 +180,11 @@ unordered_set<hash_t> get_hash_set_trivial(int max_r, int max_c)
 
         total_count++;
 
-        const int board_area = board_shape.first * board_shape.second;
+        const int board_area_signed = board_shape.first * board_shape.second;
+        assert(board_area_signed >= 0);
+
+        const unsigned int board_area =
+            static_cast<unsigned int>(board_area_signed);
 
         if (board_area != board_bool.size())
             board_bool.resize(board_area);

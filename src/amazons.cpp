@@ -60,8 +60,8 @@ inline unsigned int encode_amazons_coord(const int_pair& coord)
     const int& r = coord.first;
     const int& c = coord.second;
 
-    assert(r == (r & get_bit_mask_lower<unsigned int>(5)));
-    assert(c == (c & get_bit_mask_lower<unsigned int>(5)));
+    assert(r == (r & get_bit_mask_lower<int>(5)));
+    assert(c == (c & get_bit_mask_lower<int>(5)));
 
     return r | (c << 5);
 }

@@ -2,6 +2,15 @@
 #include <cstdint>
 
 ////////////////////////////////////////////////// ibuffer
+ibuffer::ibuffer(const std::string& file_name) : _fs(file_name, OPEN_MODE)
+{
+    THROW_ASSERT(std::filesystem::exists(file_name),
+                 "Input file \"" + file_name + "\" not found!");
+
+    THROW_ASSERT(_fs.is_open(),
+                 "Failed to open input file \"" + file_name + "\"!");
+}
+
 uint8_t ibuffer::read_u8()
 {
     return __fmt_read<uint8_t>(_fs);

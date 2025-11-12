@@ -82,6 +82,8 @@ class database
 public:
     database();
 
+    void update_metadata_string(const std::string& config_string);
+
     void set_partizan(const game& g, const db_entry_partizan& entry);
     void set_impartial(const game& g, const db_entry_impartial& entry);
 
@@ -97,7 +99,7 @@ public:
     bool empty() const;
 
     // silent=true silences printing to stdout
-    void generate_entries(db_game_generator& gen, bool silent = false);
+    void generate_entries(i_db_game_generator& gen, bool silent = false);
 
 private:
     friend std::ostream& operator<<(std::ostream& os, const database& db);
@@ -116,6 +118,7 @@ private:
     sumgame& _get_sumgame();
     void _generate_entry_single(game* g, bool silent);
 
+    std::string _metadata_string;
     tree_partizan_t _tree_partizan;
     tree_impartial_t _tree_impartial;
 

@@ -1,0 +1,653 @@
+#include "grid_generator.h"
+
+#include <cassert>
+#include <cstddef>
+#include <vector>
+#include <string>
+#include <iostream>
+
+#include "grid.h"
+#include "hashing.h"
+
+using namespace std;
+
+////////////////////////////////////////////////// helper functions
+namespace {
+
+// 'X' --true--> 'O' --false--> 'X'
+bool increment_char_clobber_bw(char& c)
+{
+    if (c == 'X')
+    {
+        c = 'O';
+        return true;
+    }
+
+    assert(c == 'O');
+    c = 'X';
+    return false;
+}
+
+// '.' --true--> 'X' --true--> 'O' --false--> '.'
+bool increment_char_clobber_ebw(char& c)
+{
+    if (c == '.')
+    {
+        c = 'X';
+        return true;
+    }
+
+    if (c == 'X')
+    {
+        c = 'O';
+        return true;
+    }
+
+    assert(c == 'O');
+    c = '.';
+    return false;
+}
+
+// 'X' --true--> 'O' --true--> '.' --false--> 'X'
+bool increment_char_clobber_bwe(char& c)
+{
+    if (c == 'X')
+    {
+        c = 'O';
+        return true;
+    }
+
+    if (c == 'O')
+    {
+        c = '.';
+        return true;
+    }
+
+    assert(c == '.');
+    c = 'X';
+    return false;
+}
+
+// 'X' --true--> '.' --false--> 'X'
+bool increment_char_clobber_be(char& c)
+{
+    if (c == 'X')
+    {
+        c = '.';
+        return true;
+    }
+
+    assert(c == '.');
+    c = 'X';
+    return false;
+}
+
+
+} // namespace
+
+////////////////////////////////////////////////// grid_mask methods
+namespace grid_generator_impl {
+
+void grid_mask::set_shape(const int_pair& shape)
+{
+    assert(shape.first >= 0 && shape.second >= 0);
+
+    const int mask_size = shape.first * shape.second;
+    _marker_count_end = mask_size + 1;
+
+    _mask.resize(mask_size);
+    for (int i = 0; i < mask_size; i++)
+        _mask[i] = false;
+
+    _indices.clear();
+    _indices.reserve(mask_size);
+}
+
+void grid_mask::set_shape_fill(const int_pair& shape)
+{
+    assert(shape.first >= 0 && shape.second >= 0);
+
+    const int mask_size = shape.first * shape.second;
+    _marker_count_end = mask_size + 1;
+
+    _indices.clear();
+    _indices.reserve(mask_size);
+
+    _mask.resize(mask_size);
+    for (int i = 0; i < mask_size; i++)
+    {
+        _mask[i] = true;
+        _indices.push_back(i);
+    }
+}
+
+void grid_mask::operator++()
+{
+    // At most as many markers as the board would allow
+    assert(*this);
+
+    // If there is at least one marker, try to move right, starting with last
+    // marker
+    if (                                                            //
+        (_indices.size() > 0) &&                                    //
+        _increment_by_moving(_indices.size() - 1, _mask.size() - 1) //
+        )                                                           //
+        return;
+
+    // Otherwise add another marker and reset positions of all markers
+    if (!_increment_by_adding())
+    {
+        // Ensure operator bool() returns false
+        _marker_count_end = 0;
+        assert(!*this);
+    }
+}
+
+bool grid_mask::_increment_by_moving(size_t marker_number, size_t max_pos)
+{
+    assert(max_pos >= marker_number);
+
+    // Pick up marker i
+    size_t& mi_pos = _indices[marker_number];
+    assert(_mask[mi_pos]);
+    _mask[mi_pos] = false;
+
+    // Place marker i to the right if possible
+    const size_t pos_right = mi_pos + 1;
+
+    if (pos_right <= max_pos)
+    {
+        mi_pos = pos_right;
+        assert(!_mask[pos_right]);
+        _mask[pos_right] = true;
+        return true;
+    }
+
+    // Otherwise try to move marker i-1 to the right, and place
+    // marker i to its right
+    if (marker_number > 0 &&
+        _increment_by_moving(marker_number - 1, max_pos - 1))
+    {
+        const size_t pos_prev = _indices[marker_number - 1];
+        const size_t pos_new = pos_prev + 1;
+
+        assert(pos_new < _mask.size() && !_mask[pos_new]);
+
+        mi_pos = pos_new;
+        _mask[pos_new] = true;
+        return true;
+    }
+
+    return false;
+}
+
+bool grid_mask::_increment_by_adding()
+{
+    assert(*this);
+
+    // No space for another marker, but push marker anyway (for operator bool())
+    if (_indices.size() >= _mask.size())
+        return false;
+
+    // Reset mask
+    {
+        const size_t mask_size = _mask.size();
+        for (size_t i = 0; i < mask_size; i++)
+            _mask[i] = false;
+    }
+
+    // Add another marker
+    _indices.push_back(0);
+    const size_t n_markers = _indices.size();
+
+    for (size_t i = 0; i < n_markers; i++)
+    {
+        _indices[i] = i;
+        _mask[i] = true;
+    }
+
+    return true;
+}
+
+// TODO why can't this just use the template from utilities.h? Header problem?
+std::ostream& operator<<(std::ostream& os, const grid_mask& mask)
+{
+    const vector<bool>& vec = mask._mask;
+
+    os << '[';
+
+    const size_t N = vec.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        os << vec[i];
+
+        if (i + 1 < N)
+            os << ", ";
+    }
+
+    os << ']';
+    return os;
+}
+
+} // namespace grid_generator_impl
+
+////////////////////////////////////////////////// grid_generator methods
+bool grid_generator::increment_shape_helper(int_pair& shape,
+                                            const int_pair& max_shape)
+{
+    assert((shape.first <= max_shape.first) &&
+           (shape.second <= max_shape.second));
+
+    if (shape.first == 0 && shape.second == 0)
+        shape = int_pair(1, 1);
+    else
+    {
+        shape.second++;
+        if (shape.second > max_shape.second)
+        {
+            shape.second = 1;
+            shape.first++;
+        }
+    }
+
+    return (shape.first <= max_shape.first) &&
+           (shape.second <= max_shape.second);
+}
+
+/*
+   TODO use this other function to generate transposes at some point
+
+   But this requires two types of grid generators, one for strips and one
+       for grids...
+*/
+/*
+bool grid_generator::increment_shape_helper(int_pair& shape,
+                                            const int_pair& max_shape)
+{
+      assert(
+          ((shape.first <= max_shape.first) &&
+          (shape.second <= max_shape.second))
+
+          ||
+
+          ((shape.first <= max_shape.second) &&
+          (shape.second <= max_shape.first))
+          );
+
+    const int max_dim = max(max_shape.first, max_shape.second);
+    const int min_dim = min(max_shape.first, max_shape.second);
+
+    if (shape.first == 0 && shape.second == 0)
+        shape = int_pair(1, 1);
+    else if (shape.first < shape.second)
+        swap(shape.first, shape.second);
+    else
+    {
+        swap(shape.first, shape.second);
+        shape.second++;
+
+        if (shape.second > max_dim)
+        {
+            const int next_val = min(shape.first, shape.second) + 1;
+            shape.first = next_val;
+            shape.second = next_val;
+        }
+    }
+
+    const bool both_le_max = (shape.first <= max_dim) && //
+                             (shape.second <= max_dim);  //
+
+    const bool one_le_min = (shape.first <= min_dim) || //
+                            (shape.second <= min_dim);  //
+
+    return both_le_max && one_le_min;
+}
+*/
+
+void grid_generator::init_board_helper(std::string& board,
+                                       const int_pair& shape, char init_char)
+{
+    assert(shape.first >= 0 && shape.second >= 0);
+
+    size_t board_size = shape.first * shape.second;
+    if (board_size > 0)
+        board_size += shape.first - 1;
+
+    board.resize(board_size);
+
+    size_t col_idx = 0;
+
+    const unsigned int col_count = shape.second;
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (col_idx == col_count)
+        {
+            // TODO use ROW_SEP instead of literal
+            board[i] = '|';
+            col_idx = 0;
+            continue;
+        }
+
+        board[i] = init_char;
+        col_idx++;
+    }
+}
+
+////////////////////////////////////////////////// grid_generator_base methods
+void grid_generator_base::operator++()
+{
+    assert(*this);
+
+    if (_increment_board())
+        return;
+
+    if (_increment_shape())
+    {
+        _init_board();
+        return;
+    }
+}
+
+////////////////////////////////////////////////// grid_generator_masked methods
+void grid_generator_masked::operator++()
+{
+    assert(*this);
+
+    if (_increment_board())
+        return;
+
+    if (_increment_mask())
+    {
+        _init_board();
+        return;
+    }
+
+    if (_increment_shape())
+    {
+        _init_mask();
+        _init_board();
+        return;
+    }
+}
+
+void grid_generator_masked::init_board_helper_masked(
+    std::string& board, const int_pair& shape,
+    const grid_generator_impl::grid_mask& mask, char true_char, char false_char)
+{
+    assert(shape.first >= 0 && shape.second >= 0);
+
+    size_t board_size = shape.first * shape.second;
+    if (board_size > 0)
+        board_size += shape.first - 1;
+
+    board.resize(board_size);
+
+    size_t mask_idx = 0;
+    size_t col_idx = 0;
+
+    const unsigned int col_count = shape.second;
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (col_idx == col_count)
+        {
+            // TODO use ROW_SEP instead of literal
+            board[i] = '|';
+            col_idx = 0;
+            continue;
+        }
+
+        const char tile = mask[mask_idx] ? true_char : false_char;
+        board[i] = tile;
+
+        mask_idx++;
+        col_idx++;
+    }
+}
+
+////////////////////////////////////////////////// grid_generator_masked_fast
+// methods
+void grid_generator_masked_fast::operator++()
+{
+    assert(*this);
+
+    if (_increment_board())
+        return;
+
+    if (_increment_mask())
+    {
+        _init_board();
+        return;
+    }
+
+    if (_increment_shape())
+    {
+        _init_mask();
+        _init_board();
+        return;
+    }
+}
+
+void grid_generator_masked_fast::_init_mask()
+{
+    _mask.set_shape(_shape);
+
+    hash_t hash = _get_mask_hash();
+    _mask_hashes.insert(hash);
+}
+
+bool grid_generator_masked_fast::_increment_mask()
+{
+    while (true)
+    {
+        assert(_mask);
+
+        ++_mask;
+
+        bool ok = _mask;
+        if (!ok)
+            return false;
+
+        const hash_t hash = _get_mask_hash();
+        const auto& it = _mask_hashes.insert(hash);
+
+        if (it.second)
+            return true;
+    }
+}
+
+hash_t grid_generator_masked_fast::_get_mask_hash() const
+{
+    _gh.reset(_shape);
+
+    int pos = 0;
+    for (int r = 0; r < _shape.first; r++)
+    {
+        for (int c = 0; c < _shape.second; c++)
+            _gh.toggle_value(r, c, _mask[pos + c]);
+
+        pos += _shape.second;
+    }
+
+    return _gh.get_value();
+}
+
+////////////////////////////////////////////////// grid_generator_default
+/// methods
+bool grid_generator_default::_increment_board()
+{
+    bool carry = true;
+
+    for (auto it = _board.rbegin(); it != _board.rend(); it++)
+    {
+        char& c = *it;
+
+        if (c == '|')
+            continue;
+
+        carry = !increment_char_clobber_ebw(c);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
+////////////////////////////////////////////////// grid_generator_clobber
+/// methods
+bool grid_generator_clobber::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (!_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_bw(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
+////////////////////////////////////////////////// grid_generator_clobber_fast
+/// methods
+bool grid_generator_clobber_fast::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (!_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_bw(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
+
+////////////////////////////////////////////////// grid_generator_nogo methods
+bool grid_generator_nogo::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_bw(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
+//////////////////////////////////////////////////
+// grid_generator_amazons methods
+bool grid_generator_amazons::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (!_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_bwe(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
+//////////////////////////////////////////////////
+// grid_generator_fission methods
+bool grid_generator_fission::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (!_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_be(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+
+//////////////////////////////////////////////////
+// grid_generator_toppling_dominoes methods
+bool grid_generator_toppling_dominoes ::_increment_board()
+{
+    bool carry = true;
+
+    size_t mask_idx = 0;
+    const size_t board_size = _board.size();
+
+    for (size_t i = 0; i < board_size; i++)
+    {
+        if (_board[i] == '|')
+            continue;
+
+        if (!_mask[mask_idx++])
+            continue;
+
+        carry = !increment_char_clobber_bw(_board[i]);
+
+        if (!carry)
+            break;
+    }
+
+    return !carry;
+}
+

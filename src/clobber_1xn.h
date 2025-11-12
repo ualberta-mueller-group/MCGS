@@ -50,4 +50,3 @@ public:
     static std::string xoxo(int n);
 };
 
-std::ostream& operator<<(std::ostream& out, const clobber_1xn& g);

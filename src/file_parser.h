@@ -16,13 +16,12 @@
 #include <iostream>
 #include <cstddef>
 #include <cstdlib>
+#include "version_info.h"
 
 // IWYU pragma: begin_exports
 #include "game_case.h"
 // IWYU pragma: end_exports
 
-// file_parser checks for a version command when reading from file or stdin
-#define FILE_PARSER_VERSION_STRING "version 1.3"
 
 // How many game_cases can be created by a single "run" command, i.e.
 // "{B win, W loss}"

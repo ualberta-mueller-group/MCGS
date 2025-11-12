@@ -52,10 +52,10 @@ void print_bits(std::ostream& os, const T& x)
 }
 
 // p implies q
-inline bool logical_implies(bool p, bool q) // TODO replace with macro?
-{
-    return !p | q;
-}
+//inline bool logical_implies(bool p, bool q) // TODO replace with macro?
+//{
+//    return !p | q;
+//}
 
 inline bool logical_iff(bool p, bool q)
 {
@@ -75,6 +75,24 @@ bool string_starts_with(const std::string& str, const std::string& word);
 bool string_ends_with(const std::string& str, const std::string& word);
 
 //////////////////////////////////////// arithmetic operations
+// TODO test
+template <class T>
+inline bool in_interval(const T& val, const T& low, const T& high)
+{
+    return low <= val && val <= high;
+}
+
+// TODO make this work for negative values, and make it a template
+inline int div_ceil(int top, int bottom)
+{
+    assert(top >= 0 && bottom > 0);
+
+    const int quotient = top / bottom;
+    const int remainder = top % bottom;
+
+    return quotient + (remainder > 0);
+}
+
 template <class T>
 inline constexpr bool is_power_of_2(const T& n)
 {
@@ -179,8 +197,9 @@ inline constexpr bool bit_is_1(const T1& value, const T2& bit_idx)
                   (std::is_integral_v<T2> || std::is_enum_v<T2>)    //
     );
 
-    assert(0 <= bit_idx &&                   //
-           bit_idx < (sizeof(T1) * CHAR_BIT) //
+    assert(
+        0 <= bit_idx &&                                                     //
+        static_cast<std::make_unsigned_t<T2>>(bit_idx) < size_in_bits<T1>() //
     );
 
     return (value >> bit_idx) & ((T1) 0x1);
@@ -263,6 +282,17 @@ std::vector<T> vector_reversed(const std::vector<T>& vec)
         rev.emplace_back(vec[size - 1 - i]);
 
     return rev;
+}
+
+// pair printing
+template <class T1, class T2>
+std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& p)
+{
+    os << '(';
+    os << p.first << ", " << p.second;
+    os << ')';
+
+    return os;
 }
 
 // vector printing

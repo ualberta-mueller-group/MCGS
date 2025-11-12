@@ -9,6 +9,7 @@
 #include <cstdint>
 #include "file_parser.h"
 #include "global_options.h"
+#include "init_database.h"
 #include "utilities.h"
 #include <cassert>
 
@@ -24,10 +25,14 @@ cli_options::cli_options(const string& test_directory)
       //run_tests_stdin(false),
       nogo_test(false),
       use_player(false),
+      print_winning_moves(false),
       test_directory(test_directory),
       outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
       test_timeout(cli_options::DEFAULT_TEST_TIMEOUT),
-      play_log_name("")
+      play_log_name(),
+      db_file_name(cli_options::DEFAULT_RELATIVE_DB_FILE),
+      init_database_type(INIT_DATABASE_AUTO),
+      db_config_string()
 {
 }
 
@@ -64,6 +69,9 @@ void print_help_message(const string& exec_name)
                                      "Input must start with version command. "
                                      "Causes [input string] to be ignored.");
 
+    print_flag("--print-winning-moves",
+               "Instead of solving, show winning moves for input sums.");
+
     print_flag("--play-mcgs", "Play against MCGS.");
     print_flag("--no-color", "Disable color printing for player.");
 
@@ -94,6 +102,9 @@ void print_help_message(const string& exec_name)
 
     print_flag(global::use_db.no_flag(), "Disable database usage.");
 
+    print_flag("--db-file-load <file name>", "TODO");
+    print_flag("--db-file-create <file name> \"config string\"", "TODO");
+
     // print_flag(global::play_split.no_flag(), "Don't split games after "
     //                                          "playing a move.");
 
@@ -114,6 +125,7 @@ void print_help_message(const string& exec_name)
                "Set seed for experiment data "
                "generation. 0 means seed with current time. Default: " +
                    global::experiment_seed.get_default_str());
+
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -263,6 +275,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
                     shared_ptr<file_parser>(file_parser::from_file(arg_next));
             }
 
+            continue;
+        }
+
+        if (arg == "--print-winning-moves")
+        {
+            opts.print_winning_moves = true;
             continue;
         }
 
@@ -474,6 +492,51 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == "--db-file-load")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: --db-file-load but no file name given");
+
+            if (opts.init_database_type != INIT_DATABASE_AUTO)
+                throw cli_options_exception(
+                    "Error: --db-file-load used, but another \"--db-file*\" "
+                    "option already used");
+
+            opts.init_database_type = INIT_DATABASE_LOAD;
+            opts.db_file_name = arg_next;
+
+            continue;
+        }
+
+        if (arg == "--db-file-create")
+        {
+            const int arg_idx_config_string = arg_idx + 2;
+            arg_idx += 2;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: --db-file-create but no file name given");
+
+            if (arg_idx_config_string >= arg_n)
+                throw cli_options_exception(
+                    "Error: --db-file-create but no config string given");
+
+            if (opts.init_database_type != INIT_DATABASE_AUTO)
+                throw cli_options_exception(
+                    "Error: --db-file-create used, but another \"--db-file*\" "
+                    "option already used");
+
+            opts.init_database_type = INIT_DATABASE_CREATE;
+            opts.db_file_name = arg_next;
+            opts.db_config_string = args[arg_idx_config_string];
+
+            continue;
+        }
+
+
         // if (arg == global::play_split.no_flag())
         //{
         //     global::play_split.set(false);
@@ -542,7 +605,9 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg.size() >= 0 && arg.front() != '-')
+        if (arg.size() >= 0 &&                                  //
+            LOGICAL_IMPLIES(arg.size() > 0, arg.front() != '-') //
+        )
         {
             // the rest of args is input to the file_parser
 

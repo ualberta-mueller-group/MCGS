@@ -11,7 +11,6 @@
 
 #include "cgt_basics.h"
 
-#include <climits>
 #include <string>
 #include <cassert>
 #include "utilities.h"
@@ -42,20 +41,20 @@ static_assert(sizeof(int) >= 4);
 
 inline int get_bit(move m, int bit)
 {
-    assert(0 <= bit && bit < (sizeof(move) * CHAR_BIT));
+    assert(0 <= bit && static_cast<unsigned int>(bit) < size_in_bits<move>());
     return (m >> bit) & 1;
 }
 
 inline int set_bit(move m, int bit)
 {
-    assert(0 <= bit && bit < (sizeof(move) * CHAR_BIT));
+    assert(0 <= bit && static_cast<unsigned int>(bit) < size_in_bits<move>());
     return m | (1 << bit);
 }
 
 // TODO unit test
 inline int unset_bit(move m, int bit)
 {
-    assert(0 <= bit && bit < (sizeof(move) * CHAR_BIT));
+    assert(0 <= bit && static_cast<unsigned int>(bit) < size_in_bits<move>());
     return m & ~(1 << bit);
 }
 

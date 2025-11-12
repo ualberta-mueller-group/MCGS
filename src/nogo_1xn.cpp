@@ -6,7 +6,6 @@
 #include <memory>
 #include <cassert>
 #include <utility>
-#include <ostream>
 #include <cstddef>
 #include <vector>
 
@@ -234,14 +233,6 @@ game* nogo_1xn::inverse() const
 {
     return new nogo_1xn(inverse_board());
 }
-
-std::ostream& operator<<(std::ostream& out, const nogo_1xn& g)
-{
-    out << g.board_as_string();
-    return out;
-}
-
-//---------------------------------------------------------------------------
 
 class nogo_1xn_move_generator : public move_generator
 {

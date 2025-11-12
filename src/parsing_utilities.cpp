@@ -211,6 +211,36 @@ bool get_fraction_list(const string& line, vector<fraction>& fracs)
     return true;
 }
 
+bool get_int_list(const string& line, vector<int>& ints)
+{
+    assert(ints.size() == 0);
+
+    vector<string> string_tokens = get_string_tokens(line, {','});
+    const size_t N = string_tokens.size();
+
+    if (N == 0)
+        return true;
+
+    int x;
+
+    size_t i = 0;
+    while (i < N)
+    {
+        // must have int
+        if (!get_int(string_tokens, i, x))
+            return false;
+
+        ints.push_back(x);
+
+        if (!consume_optional_comma(string_tokens, i))
+            return false;
+    }
+
+    assert(i == N);
+    assert(ints.size() > 0);
+    return true;
+}
+
 bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx,
                      std::vector<run_command_t>& run_commands)
 {

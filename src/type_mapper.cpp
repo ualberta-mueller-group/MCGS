@@ -8,7 +8,9 @@
 #include "type_table.h"
 #include "throw_assert.h"
 
-void type_mapper::register_type(const std::string& type_name,
+using namespace std;
+
+void type_mapper::register_type(const string& type_name,
                                 game_type_t runtime_type)
 {
     // Search for existing disk type
@@ -40,6 +42,20 @@ void type_mapper::register_type(const std::string& type_name,
     assert(translate_type(runtime_type) == disk_type);
 }
 
+unordered_map<game_type_t, string> type_mapper::get_disk_type_to_name_map()
+    const
+{
+    unordered_map<game_type_t, string> disk_type_to_name_map;
+
+    for (const pair<const string, game_type_t>& p : _disk_types)
+    {
+        auto inserted = disk_type_to_name_map.emplace(p.second, p.first);
+        assert(inserted.second);
+    }
+
+    return disk_type_to_name_map;
+}
+
 game_type_t& type_mapper::_type_remapping_ref(game_type_t runtime_type)
 {
     if (!(runtime_type < _type_remappings.size()))
@@ -54,7 +70,7 @@ game_type_t& type_mapper::_type_remapping_ref(game_type_t runtime_type)
 }
 
 //////////////////////////////////////////////////
-std::ostream& operator<<(std::ostream& os, const type_mapper& mapper)
+ostream& operator<<(ostream& os, const type_mapper& mapper)
 {
 
     os << "Types in mapper: \n";

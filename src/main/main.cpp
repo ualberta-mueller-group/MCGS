@@ -9,16 +9,22 @@
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
+#include "grid_generator.h"
+#include "gridlike_db_game_generator.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
 #include "search_utils.h"
+#include "clobber.h"
 
 #include "nogo_split_test.h"
+#include "sheep.h"
+#include "sheep_grid_generator.h"
 #include "sumgame.h"
 #include "throw_assert.h"
-#include "grid_hash.h"
 #include "gen_experiments.h"
+#include "winning_moves.h"
+#include "sheep_generator_sketch.h"
 
 using std::cout, std::endl, std::string;
 
@@ -41,7 +47,7 @@ private:
 
 int main(int argc, char** argv)
 {
-    print_on_exit poe("Exiting main\n");
+    //print_on_exit poe("Exiting main\n");
 
     cli_options opts = parse_args(argc, (const char**) argv, false);
 
@@ -49,13 +55,13 @@ int main(int argc, char** argv)
     if (opts.should_exit)
         return 0;
 
-    cout << "Pre-init" << endl;
+    //cout << "Pre-init" << endl;
     mcgs_init_all(opts);
-    cout << "Post-init" << endl;
-    test_grid_hash_stuff();
+    //cout << "Post-init" << endl;
 
-    //gen_components();
-    //test_gen_components2();
+    //test_sheep_generator_sketch();
+    //test_sheep_grid_generator();
+    //return 0;
 
     if (opts.use_player)
     {
@@ -68,7 +74,9 @@ int main(int argc, char** argv)
 
     if (opts.nogo_test)
     {
-        nogo_split_test();
+        // TODO
+        THROW_ASSERT(false, "TODO uncomment nogo_split_test.cpp");
+        //nogo_split_test();
         return 0;
     }
 
@@ -76,6 +84,12 @@ int main(int argc, char** argv)
     {
         run_autotests(opts.test_directory, opts.outfile_name,
                       opts.test_timeout);
+        return 0;
+    }
+
+    if (opts.print_winning_moves)
+    {
+        print_winning_moves_impl(opts.parser);
         return 0;
     }
 

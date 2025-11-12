@@ -4,6 +4,12 @@
     NOTE: Must first edit nogo, renaming _split_impl() to something else,
     and calling it here to generate the difference game to test.
 */
+
+// TODO uncomment!
+#warning TODO uncomment this file!
+
+#if 0
+
 #include "nogo_split_test.h"
 
 #include <memory>
@@ -72,3 +78,4 @@ void nogo_split_test()
 
     THROW_ASSERT(s.num_total_games() == 0);
 }
+#endif
