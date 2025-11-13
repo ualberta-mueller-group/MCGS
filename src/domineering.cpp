@@ -244,6 +244,21 @@ game* domineering::inverse() const
     return new domineering(transpose_board(board_const(), s), transpose_shape);
 }
 
+void domineering::print_move(std::ostream& str, const ::move& m) const
+{
+    bw ignore_to_play;
+    int enc_to;
+    const int enc_from = cgt_move::decode3(m, &enc_to, &ignore_to_play);
+
+    const int_pair coord_from = decode_domineering_coord(enc_from);
+    const int_pair coord_to   = decode_domineering_coord(enc_to);
+
+    const int point_from = grid_location::coord_to_point(coord_from, shape());
+    const int point_to   = grid_location::coord_to_point(coord_to, shape());
+    str << point_coord_as_string(point_from) << "-"
+        << point_coord_as_string(point_to);
+}
+
 ////////////////////////////////////////////////// split
 namespace {
 

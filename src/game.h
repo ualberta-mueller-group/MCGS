@@ -116,6 +116,12 @@ public:
     virtual void print(std::ostream& str) const = 0;
 
     /*
+        Print a move in game-specific formatting.
+        The default implementation prints the raw move = int.
+    */
+    virtual void print_move(std::ostream& str, const move& m) const;
+
+    /*
         Return a new game representing the inverse of this game.
             i.e. for the game "4", this should return the game "-4"
     */
@@ -275,6 +281,11 @@ inline void game::_mark_hash_updated() const
 {
     assert(_hash_state == HASH_STATE_NEED_UPDATE);
     _hash_state = HASH_STATE_UP_TO_DATE;
+}
+
+inline void game::print_move(std::ostream& str, const move& m) const
+{
+    str << m;
 }
 
 inline std::ostream& operator<<(std::ostream& out, const game& g)

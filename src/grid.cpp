@@ -3,14 +3,15 @@
 //---------------------------------------------------------------------------
 #include "grid.h"
 
-#include "cgt_basics.h"
-#include "parsing_utilities.h"
-#include "throw_assert.h"
-#include "strip.h"
 #include <cassert>
 #include <cstdlib>
 #include <utility>
 #include <vector>
+#include "cgt_basics.h"
+#include "grid_location.h"
+#include "parsing_utilities.h"
+#include "strip.h"
+#include "throw_assert.h"
 #include "utilities.h"
 #include "warn_default.h"
 
@@ -99,6 +100,11 @@ std::string board_to_string(const std::vector<int>& board, const int_pair shape)
             result += '|';
     }
     return result;
+}
+
+inline char coord(int value) // 0 -> 'a', 1 -> 'b', etc.
+{
+    return 'a' + value;
 }
 
 } // namespace
@@ -328,4 +334,14 @@ std::vector<int> grid::transpose_board(const std::vector<int>& board,
     }
 
     return new_board;
+}
+
+std::string grid::point_coord_as_string(int point) const
+{
+    std::string result;
+    int_pair rc = grid_location::point_to_coord(point, shape());
+    result += coord(rc.second);
+    // From 0-based internal to 1-based external coordinates
+    result += std::to_string(rc.first + 1); 
+    return result;
 }

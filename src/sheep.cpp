@@ -233,6 +233,20 @@ void sheep::print(ostream& str) const
     }
 }
 
+void sheep::print_move(std::ostream& str, const ::move& m) const
+{
+    unsigned int from_point;
+    unsigned int to_point;
+    unsigned int target_herd_abs;
+
+    cgt_move::decode_three_part_move(m, from_point, to_point,
+                                     target_herd_abs);
+
+    std::cout << point_coord_as_string(from_point) << "-"
+              << point_coord_as_string(to_point) << "-" 
+              << target_herd_abs;
+}
+
 game* sheep::inverse() const
 {
     const int SIZE = size();
