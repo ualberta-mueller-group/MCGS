@@ -9,7 +9,6 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "sumgame.h"
-#include "sheep.h"
 #include "throw_assert.h"
 #include "file_parser.h"
 
