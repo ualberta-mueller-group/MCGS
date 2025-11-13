@@ -3,10 +3,11 @@
 //---------------------------------------------------------------------------
 #include "nogo_1xn.h"
 
-#include <memory>
 #include <cassert>
-#include <utility>
 #include <cstddef>
+#include <memory>
+#include <ostream>
+#include <utility>
 #include <vector>
 
 #include "throw_assert.h"
@@ -234,6 +235,13 @@ game* nogo_1xn::inverse() const
     return new nogo_1xn(inverse_board());
 }
 
+std::ostream& operator<<(std::ostream& out, const nogo_1xn& g)
+{
+    out << g.board_as_string();
+    return out;
+}
+
+//////////////////////////////////////// nogo_1xn_move_generator
 class nogo_1xn_move_generator : public move_generator
 {
 public:
