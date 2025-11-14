@@ -147,9 +147,9 @@ bool sheep_alt_generator::_increment_target_dir(bool init)
     else
         _target_dir_idx++;
 
-    for (; _target_dir_idx < GRID_DIRS_SHEEP.size(); _target_dir_idx++)
+    for (; _target_dir_idx < GRID_DIRS_HEX.size(); _target_dir_idx++)
     {
-        const grid_dir dir = GRID_DIRS_SHEEP[_target_dir_idx];
+        const grid_dir dir = GRID_DIRS_HEX[_target_dir_idx];
 
         _target_end = _herd_start;
         assert(_target_end.valid());

@@ -222,7 +222,7 @@ vector<pair<string, string>> split_db_config_string_by_game_name(
 
         if (db_config_string[idx] != '[')
             return false;
-        
+
         idx++;
 
         current_game_name.clear();

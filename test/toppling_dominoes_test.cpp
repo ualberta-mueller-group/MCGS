@@ -19,6 +19,9 @@ const string TOPPLING_DOMINOES_PREFIX = "toppling_dominoes:";
 
 void test_moves_main()
 {
+    /*
+       toppling dominoes board string, all black moves, all white moves
+    */
     typedef tuple<string, vector<string>, vector<string>> test_case_t;
 
     // clang-format off
@@ -173,7 +176,9 @@ void test_moves_main()
 
 void test_constructors()
 {
-    // test string constructors
+    /*
+        board string, expected board
+    */
     typedef tuple<string, vector<int>> test_case_t;
 
     // clang-format off

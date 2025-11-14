@@ -19,6 +19,9 @@ const string AMAZONS_PREFIX = "amazons:";
 ////////////////////////////////////////////////// main test functions
 void test_moves_main()
 {
+    /*
+       amazons board, all black moves, all white moves
+    */
     typedef tuple<string, vector<string>, vector<string>>
         test_case_t;
 
@@ -234,6 +237,9 @@ void test_moves_main()
 
 void test_constructors()
 {
+    /*
+       amazons board string, grid dimensions, board
+    */
     typedef tuple<string, int_pair, vector<int>> test_case_t;
 
     // clang-format off
@@ -319,9 +325,9 @@ void test_constructors()
             "...|X#O|...",
             {3, 3},
             {
-                EMPTY, EMPTY, EMPTY, 
+                EMPTY, EMPTY, EMPTY,
                 BLACK, BORDER, WHITE,
-                EMPTY, EMPTY, EMPTY, 
+                EMPTY, EMPTY, EMPTY,
             },
         },
 

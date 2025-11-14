@@ -10,6 +10,10 @@ using namespace std;
 
 void split_test_elephants_all()
 {
+    /*
+       elephants board
+       split result
+    */
     typedef tuple<string, vector<string>> test_case_t;
 
     // clang-format off

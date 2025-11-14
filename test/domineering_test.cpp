@@ -131,6 +131,13 @@ void test_play_undo_for_player(domineering* g,
 ////////////////////////////////////////////////// main test functions
 void test_moves_main()
 {
+    /*
+       domineering board string
+       list of moves for black (1st coordinate of the move)
+       list of moves for white (1st coordinate of the move)
+
+       (here 1st coordinate) is top-leftmost coordinate of the move
+    */
     typedef tuple<string, vector<int_pair>, vector<int_pair>> test_case_t;
 
     // clang-format off
@@ -285,7 +292,11 @@ void test_moves_main()
 
 void test_constructors()
 {
-    // test string constructors
+    /*
+       domineering board string
+       grid dimensions
+       expected board
+    */
     typedef tuple<string, int_pair, vector<int>> test_case_t;
 
     // clang-format off
@@ -365,11 +376,11 @@ void test_constructors()
             "#...#|..#..|.###.|..#..|.#.#.",
             {5, 5},
             {
-                BORDER, EMPTY, EMPTY, EMPTY, BORDER, 
-                EMPTY, EMPTY, BORDER, EMPTY, EMPTY, 
-                EMPTY, BORDER, BORDER, BORDER, EMPTY, 
-                EMPTY, EMPTY, BORDER, EMPTY, EMPTY, 
-                EMPTY, BORDER, EMPTY, BORDER, EMPTY, 
+                BORDER, EMPTY, EMPTY, EMPTY, BORDER,
+                EMPTY, EMPTY, BORDER, EMPTY, EMPTY,
+                EMPTY, BORDER, BORDER, BORDER, EMPTY,
+                EMPTY, EMPTY, BORDER, EMPTY, EMPTY,
+                EMPTY, BORDER, EMPTY, BORDER, EMPTY,
             },
         },
 

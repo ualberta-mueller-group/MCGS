@@ -7,14 +7,13 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "strip.h"
+#include "throw_assert.h"
 #include "utilities.h"
 #include "iobuffer.h"
 #include <cassert>
 #include <utility>
 #include <vector>
 #include <cstddef>
-
-class clobber_1xn_db_game_generator;
 
 using std::string, std::pair, std::vector;
 
@@ -69,15 +68,25 @@ void get_subgame_boundaries(const std::vector<int>& board,
         boundaries.emplace_back(chunk_start, N - chunk_start);
 }
 
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x))
+            return false;
+    return true;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////
 clobber_1xn::clobber_1xn(const vector<int>& board) : strip(board)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 clobber_1xn::clobber_1xn(std::string game_as_string) : strip(game_as_string)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 void clobber_1xn::play(const move& m, bw to_play)

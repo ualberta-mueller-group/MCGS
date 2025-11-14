@@ -44,16 +44,6 @@ protected:
 private:
 };
 
-////////////////////////////////////////////////// grid directions
-static constexpr std::array<grid_dir, 6> GRID_DIRS_SHEEP {
-    GRID_DIR_UP,         //
-    GRID_DIR_UP_RIGHT,   //
-    GRID_DIR_RIGHT,      //
-    GRID_DIR_DOWN,       //
-    GRID_DIR_DOWN_LEFT,  //
-    GRID_DIR_LEFT,       //
-};
-
 ////////////////////////////////////////////////// helpers
 inline bool herd_belongs_to_player(int herd, bw player)
 {

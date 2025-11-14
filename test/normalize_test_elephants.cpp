@@ -10,6 +10,7 @@ using namespace std;
 
 void normalize_test_elephants()
 {
+    // before normalize, after normalize
     typedef tuple<string, string> test_case_t;
 
     // clang-format off

@@ -603,10 +603,10 @@ bool play_single(sumgame& sum)
 
     // Game initialization
     const bw player_color = player_color_opt.value();
-    const char player_color_char = color_char(player_color);
+    const char player_color_char = color_to_player_char(player_color);
 
     const bw mcgs_color = opponent(player_color);
-    const char mcgs_color_char = color_char(mcgs_color);
+    const char mcgs_color_char = color_to_player_char(mcgs_color);
 
     bw current_player = first_player_opt.value();
 

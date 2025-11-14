@@ -10,6 +10,7 @@
 
 #include <array>
 #include "grid.h"
+#include "int_pair.h"
 #include "throw_assert.h"
 #include <cassert>
 

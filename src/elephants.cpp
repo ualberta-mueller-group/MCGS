@@ -232,15 +232,25 @@ inline void filter_ranges(const vector<int>& board,
             filtered_ranges.emplace_back(range);
 }
 
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x))
+            return false;
+    return true;
+}
+
 } // namespace
 
 //////////////////////////////////////// elephants
 elephants::elephants(const string& game_as_string) : strip(game_as_string)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 elephants::elephants(const vector<int>& board) : strip(board)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 void elephants::play(const move& m, bw to_play)

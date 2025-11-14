@@ -19,6 +19,7 @@ public:
     nogo_1xn(std::string game_as_string);
     nogo_1xn(const std::vector<int>& board);
 
+    // checks that all stones have liberties
     bool is_legal() const;
 
     void play(const move& m, bw to_play) override;

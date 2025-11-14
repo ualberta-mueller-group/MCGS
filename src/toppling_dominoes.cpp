@@ -15,37 +15,13 @@ using namespace std;
 ////////////////////////////////////////////////// Helper functions
 namespace {
 
-bool only_legal_tiles(const vector<int>& board)
+bool only_legal_colors(const std::vector<int>& board)
 {
     for (const int& tile : board)
         if (!(tile == BLACK || tile == WHITE || tile == BORDER))
             return false;
 
     return true;
-}
-
-// TODO use symbolic chars instead of char literals...
-bool only_legal_chars(const string& board_str)
-{
-    for (const char& c : board_str)
-        if (!(c == 'X' || c == 'O' || c == '#'))
-            return false;
-
-    return true;
-}
-
-char td_strip_color_to_char(int color)
-{
-    if (color == BLACK)
-        return 'X';
-    if (color == WHITE)
-        return 'O';
-    if (color == BORDER)
-        return '#';
-
-    assert(false);
-    //if (color == EMPTY)
-    //    return '.';
 }
 
 } // namespace
@@ -77,7 +53,7 @@ private:
 toppling_dominoes::toppling_dominoes(const vector<int>& board)
     : strip(board)
 {
-    THROW_ASSERT(only_legal_tiles(board));
+    THROW_ASSERT(only_legal_colors(board_const()));
 
     _domino_start = 0;
     _domino_end = size();
@@ -87,7 +63,7 @@ toppling_dominoes::toppling_dominoes(const vector<int>& board)
 toppling_dominoes::toppling_dominoes(const string& game_as_string)
     : strip(game_as_string)
 {
-    THROW_ASSERT(only_legal_chars(game_as_string));
+    THROW_ASSERT(only_legal_colors(board_const()));
 
     _domino_start = 0;
     _domino_end = size();
@@ -156,7 +132,7 @@ void toppling_dominoes::print(ostream& str) const
 
     const int len = n_dominoes();
     for (int i = 0; i < len; i++)
-        str << td_strip_color_to_char(get_domino_at(i));
+        str << color_to_char(get_domino_at(i));
 }
 
 game* toppling_dominoes::inverse() const

@@ -78,22 +78,33 @@ inline int_pair decode_amazons_coord(unsigned int encoded)
     return {r, c};
 }
 
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x) && x != BORDER)
+            return false;
+    return true;
+}
+
 } // namespace
 
 ////////////////////////////////////////////////// amazons methods
 amazons::amazons(int n_rows, int n_cols)
-    : grid(n_rows, n_cols)
+    : grid(n_rows, n_cols, GRID_TYPE_COLOR)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 amazons::amazons(const std::vector<int>& board, int_pair shape)
-    : grid(board, shape)
+    : grid(board, shape, GRID_TYPE_COLOR)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 amazons::amazons(const std::string& game_as_string)
-    : grid(game_as_string)
+    : grid(game_as_string, GRID_TYPE_COLOR)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 void amazons::play(const ::move& m, bw to_play)

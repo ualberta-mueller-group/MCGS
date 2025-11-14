@@ -156,6 +156,9 @@ void test_compare()
 
 void test_print()
 {
+    /*
+        integer (specifying bits), expected print value
+    */
     typedef tuple<uint16_t, string> test_case_t;
 
     vector<test_case_t> test_cases = {

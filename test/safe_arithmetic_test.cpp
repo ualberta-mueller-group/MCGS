@@ -59,11 +59,12 @@ void test_addition_like()
     const int32_t& max = numeric_limits<int32_t>::max();
 
     typedef optional<int32_t> exp_t;
-    typedef tuple<int32_t, int32_t, exp_t, exp_t, exp_t, exp_t, exp_t, exp_t>
-        test_case_t;
+
     /*
-       Each line in this comment represents one expected result in the
-       test_case_t
+       First two variables are the input parameters to addition-like functions
+
+       Each following line represents one expected result in the test_case_t.
+       When absent, the operation should not succeed.
 
         safe_add, add_is_safe
         safe_add_negatable
@@ -73,6 +74,8 @@ void test_addition_like()
         safe_subtract_negatable(x, y)
         safe_subtract_negatable(y, x)
     */
+    typedef tuple<int32_t, int32_t, exp_t, exp_t, exp_t, exp_t, exp_t, exp_t>
+        test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases // auto generated from a python script
@@ -137,10 +140,11 @@ void test_negate()
     const int32_t& min = numeric_limits<int32_t>::min();
     const int32_t& max = numeric_limits<int32_t>::max();
 
-    typedef tuple<int32_t, bool> test_case_t;
     /*
+       input
        !negate_is_safe(x), !safe_negate(x)
     */
+    typedef tuple<int32_t, bool> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -175,10 +179,13 @@ void test_mul2_shift()
     const int32_t& max = numeric_limits<int32_t>::max();
 
     typedef optional<int32_t> exp_t;
-    typedef tuple<int32_t, int16_t, exp_t> test_case_t;
+
     /*
-        safe_mul2_shift(x, y)
+       shiftee
+       shift amount
+       result of safe_mul2_shift(x, y) (if absent, operation shouldn't succeed)
     */
+    typedef tuple<int32_t, int16_t, exp_t> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -248,10 +255,14 @@ void test_mod()
     const int32_t& max = numeric_limits<int32_t>::max();
 
     typedef optional<int32_t> exp_t;
-    typedef tuple<int32_t, int32_t, exp_t> test_case_t;
+
+
     /*
-        safe_pow2_mod(x, y)
+       base
+       exponent
+       safe_pow2_mod(x, y) (if absent, shouldn't succeed)
     */
+    typedef tuple<int32_t, int32_t, exp_t> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases

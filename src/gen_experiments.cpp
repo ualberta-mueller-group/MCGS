@@ -160,7 +160,7 @@ unordered_map<game_type_t, string> init_game_names()
 void write_game(const generated_game& gg, int diagram_id)
 {
     const string& game_name = get_game_name(gg.type);
-    const char player_char = color_char(gg.player);
+    const char player_char = color_to_player_char(gg.player);
 
     stringstream str;
 
@@ -184,7 +184,7 @@ string board_to_string(const vector<int>& board)
     board_string.reserve(board.size());
 
     for (const int& tile : board)
-        board_string.push_back(color_to_clobber_char(tile));
+        board_string.push_back(color_to_char(tile));
 
     return board_string;
 }

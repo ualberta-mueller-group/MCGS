@@ -20,7 +20,7 @@ std::string print_two_part_move(const move& m)
     bw player;
     const int first = decode3(m, &second, &player);
     std::string result;
-    result += color_char(player);
+    result += color_to_player_char(player);
     result += ' ';
     result += std::to_string(first);
     result += ' ';

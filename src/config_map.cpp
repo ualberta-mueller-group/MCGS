@@ -95,7 +95,7 @@ config_map::config_map(const string& config_string)
     while (idx < SIZE)
     {
         consume_whitespace();
-        
+
         if (!(idx < SIZE))
             break;
 

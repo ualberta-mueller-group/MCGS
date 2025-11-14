@@ -2,6 +2,7 @@
 #include <utility>
 #include <functional>
 #include <cstddef>
+#include "utilities.h" // IWYU pragma: keep
 
 // (row, col)
 typedef std::pair<int, int> int_pair;

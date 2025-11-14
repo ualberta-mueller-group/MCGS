@@ -18,14 +18,12 @@
 
 //---------------------------------------------------------------------------
 
-int clobber_char_to_color(char c);
-char color_to_clobber_char(int color);
-
 class strip : public game
 {
 public:
     strip(const std::vector<int>& board); // TODO rvalue reference version?
     strip(const std::string& game_as_string);
+
     int size() const;
     int at(int p) const;
 
@@ -67,7 +65,7 @@ protected:
     static std::vector<int> _load_board(ibuffer& is);
 
 private:
-    void _check_legal() const;
+    bool _is_legal_strip() const;
 
     std::vector<bool> _default_normalize_did_mirror;
     std::vector<int> _board; // todo try char as well.
@@ -93,22 +91,24 @@ inline bool strip::checked_is_color(int p, int color) const
 inline void strip::play_stone(int p, int color)
 {
     assert_range(p, 0, size());
-    assert_black_white(color);
-    assert(_board[p] == EMPTY);
+    assert(is_stone_color(color) && _board[p] == EMPTY);
+
     _board[p] = color;
 }
 
 inline void strip::remove_stone(int p)
 {
     assert_range(p, 0, size());
-    assert(_board[p] != EMPTY);
+    assert(is_stone_color(_board[p]));
+
     _board[p] = EMPTY;
 }
 
 inline void strip::replace(int p, int color)
 {
     assert_range(p, 0, size());
-    assert_empty_black_white(color);
+    assert(is_empty_or_stone_color(color));
+
     _board[p] = color;
 }
 

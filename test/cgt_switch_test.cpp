@@ -120,6 +120,9 @@ void test4()
 
 void test_kind()
 {
+    /*
+        left fraction, right fraction, expected switch_kind
+    */
     typedef std::tuple<fraction, fraction, switch_kind> test_case_t;
 
     // clang-format off

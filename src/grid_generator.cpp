@@ -287,7 +287,7 @@ grid_generator::grid_generator(const int_pair& max_dims,
     THROW_ASSERT(max_dims.first >= 0 && max_dims.second >= 0,
                  "Max dimensions must be non-negative!");
     THROW_ASSERT(LOGICAL_IMPLIES(_strips_only, _max_dims.first <= 1),
-                 "Specified strips only but got max_dims with more than " 
+                 "Specified strips only but got max_dims with more than "
                  "1 row!");
 
     assert(_mask.get() == nullptr);
@@ -313,7 +313,7 @@ grid_generator::grid_generator(const int_pair& max_dims,
                  "Max dimensions must be non-negative!");
 
     THROW_ASSERT(LOGICAL_IMPLIES(_strips_only, _max_dims.first <= 1),
-                 "Specified strips only but got max_dims with more than " 
+                 "Specified strips only but got max_dims with more than "
                  "1 row!");
 
     assert(_mask.get() != nullptr);

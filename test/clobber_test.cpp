@@ -65,6 +65,9 @@ void test_outcomes2()
 // check black/white outcomes: various boards
 void test_outcomes3()
 {
+    /*
+       clobber board string, result (black first), result (white first)
+    */
     typedef tuple<string, bool, bool> test_case_t;
 
     // clang-format off
@@ -92,12 +95,12 @@ void test_outcomes3()
 // check move generator moves
 void test_moves()
 {
-    typedef tuple<string, vector<string>, vector<string>> test_case_t;
     /*
         board
         sequence of boards for black moves
         sequence of boards for white moves
     */
+    typedef tuple<string, vector<string>, vector<string>> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases =

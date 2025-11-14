@@ -75,12 +75,6 @@ bool string_starts_with(const std::string& str, const std::string& word);
 bool string_ends_with(const std::string& str, const std::string& word);
 
 //////////////////////////////////////// arithmetic operations
-// TODO test
-template <class T>
-inline bool in_interval(const T& val, const T& low, const T& high)
-{
-    return low <= val && val <= high;
-}
 
 // TODO make this work for negative values, and make it a template
 inline int div_ceil(int top, int bottom)

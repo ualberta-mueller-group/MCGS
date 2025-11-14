@@ -22,7 +22,7 @@ using namespace std;
 enum toads_move_enum
 {
     TOADS_MOVE_UNKNOWN = 0,
-    TOADS_MOVE_SLIDE, 
+    TOADS_MOVE_SLIDE,
     TOADS_MOVE_JUMP,
 };
 
@@ -63,24 +63,14 @@ private:
 
 ////////////////////////////////////////////////// helper functions
 namespace {
-bool only_legal_tiles(const vector<int>& board)
-{
-    for (const int& tile : board)
-        if (!is_empty_black_white(tile))
-            return false;
 
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x))
+            return false;
     return true;
 }
-
-bool only_legal_chars(const string& str)
-{
-    for (const char& c : str)
-        if (!is_empty_black_white(clobber_char_to_color(c)))
-            return false;
-
-    return true;
-}
-
 
 } // namespace
 
@@ -89,14 +79,14 @@ bool only_legal_chars(const string& str)
 gen_toads::gen_toads(const vector<int>& params, const vector<int>& board)
     : strip(board)
 {
-    THROW_ASSERT(only_legal_tiles(board));
+    THROW_ASSERT(only_legal_colors(board_const()));
     _init_params(params);
 }
 
 gen_toads::gen_toads(const vector<int>& params, const string& game_as_string)
     : strip(game_as_string)
 {
-    THROW_ASSERT(only_legal_chars(game_as_string));
+    THROW_ASSERT(only_legal_colors(board_const()));
     _init_params(params);
 }
 
@@ -487,10 +477,4 @@ inline bool gen_toads_move_generator::_distance_in_jump_bounds() const
 {
     return (_min_jump_signed <= _move_distance) &&
            (_move_distance <= _max_jump_signed);
-}
-
-//////////////////////////////////////////////////
-void test_gen_toads_stuff()
-{
-
 }

@@ -10,12 +10,19 @@
 #include "init_sumgame.h"
 #include "init_impartial_sumgame.h"
 #include "init_database.h"
+#include "cgt_basics.h"
 
 namespace {
 bool already_initialized = false;
 } // namespace
 
-void mcgs_init_all(const cli_options& opts)
+
+void mcgs_init_1()
+{
+    mcgs_init::init_color_tables();
+}
+
+void mcgs_init_2(const cli_options& opts)
 {
     THROW_ASSERT(!already_initialized);
     already_initialized = true;
@@ -33,8 +40,8 @@ void mcgs_init_all(const cli_options& opts)
                              opts.db_config_string);
 }
 
-void mcgs_init_all()
+void mcgs_init_2()
 {
     cli_options opts("");
-    mcgs_init_all(opts);
+    mcgs_init_2(opts);
 }

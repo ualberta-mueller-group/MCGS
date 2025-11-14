@@ -14,6 +14,11 @@ namespace {
 
 void test_outcomes()
 {
+    /*
+       nogo board
+       result (black first)
+       result (white first)
+    */
     typedef tuple<string, bool, bool> test_case_t;
 
     // clang-format off
@@ -45,6 +50,9 @@ void test_outcomes()
 
 void test_moves()
 {
+    /*
+       nogo board, black options, white options
+    */
     typedef tuple<string, vector<string>, vector<string>> test_case_t;
 
     // clang-format off
@@ -53,7 +61,7 @@ void test_moves()
         {"", {}, {}},
         {".", {}, {}},
         {"..", {"X.", ".X"}, {"O.", ".O"}},
-        {"..|..", 
+        {"..|..",
             {"X.|..",".X|..", "..|X.", "..|.X"},
             {"O.|..",".O|..", "..|O.", "..|.O"},
         },

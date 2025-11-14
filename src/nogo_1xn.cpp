@@ -42,18 +42,29 @@ vector<int> block_simplify(const vector<int>& board)
 
     return result;
 }
+
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x))
+            return false;
+    return true;
+}
+
 } // namespace
 
 //////////////////////////////////////// nogo_1xn
-nogo_1xn::nogo_1xn(const vector<int>& board) : strip(board)
+nogo_1xn::nogo_1xn(string game_as_string) : strip(game_as_string)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 #ifdef NOGO_DEBUG
     THROW_ASSERT(is_legal());
 #endif
 }
 
-nogo_1xn::nogo_1xn(string game_as_string) : strip(game_as_string)
+nogo_1xn::nogo_1xn(const vector<int>& board) : strip(board)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 #ifdef NOGO_DEBUG
     THROW_ASSERT(is_legal());
 #endif
@@ -147,7 +158,6 @@ dyn_serializable* nogo_1xn::load_impl(ibuffer& is)
 /*
    implements "XO split" from
    Henry's paper
-
 */
 split_result nogo_1xn::_split_impl() const
 {

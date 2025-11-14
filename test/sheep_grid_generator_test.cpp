@@ -179,6 +179,12 @@ unordered_set<board_pair_t> compute_expected_set(const int_pair& max_dims,
 //////////////////////////////////////////////////
 void manual_test()
 {
+    /*
+       max dimensions to generate
+       max black sheep
+       max white sheep
+       set of expected board pairs (dimensions + board vector)
+    */
     typedef tuple<int_pair, int, int, unordered_set<board_pair_t>>
         test_case_t;
 
@@ -385,6 +391,11 @@ void manual_test()
 
 void test_main()
 {
+    /*
+       max dimensions
+       max black sheep
+       max white sheep
+    */
     typedef tuple<int_pair, int, int> test_case_t;
 
     // clang-format off

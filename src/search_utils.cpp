@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include "cgt_basics.h"
 #include "sumgame.h"
 #include "impartial_sumgame.h"
 #include "game.h"
@@ -42,7 +43,7 @@ test_status_t compare_search_values(const search_value* found_value,
 string player_name_bw_imp(ebw to_play)
 {
     if (is_black_white(to_play))
-        return string(1, color_char(to_play));
+        return string(1, color_to_player_char(to_play));
 
     assert(to_play == EMPTY);
     return "IMP"; // impartial

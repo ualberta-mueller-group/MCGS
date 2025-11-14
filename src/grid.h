@@ -5,11 +5,13 @@
 #pragma once
 
 // IWYU pragma: begin_exports
+#include "grid_location.h"
 #include "int_pair.h"
 // IWYU pragma: end_exports
 
 #include "cgt_basics.h"
 #include "game.h"
+#include "safe_arithmetic.h"
 #include <vector>
 #include <utility>
 #include <string>
@@ -17,17 +19,24 @@
 #include <ostream>
 
 //---------------------------------------------------------------------------
+// NOTE: subclass should call one of the _is_legal_XYZ() methods
 
+
+enum grid_type_enum
+{
+    GRID_TYPE_COLOR = 0,
+    GRID_TYPE_NUMBER,
+};
 
 class grid : public game
 {
 public:
-    grid(int n_rows, int n_cols);
+    grid(int n_rows, int n_cols, grid_type_enum grid_type);
 
     // TODO rvalue reference version?
-    grid(const std::vector<int>& board, int_pair shape);
-    grid(const std::pair<std::vector<int>, int_pair>& board_pair);
-    grid(const std::string& game_as_string);
+    grid(const std::vector<int>& board, int_pair shape, grid_type_enum grid_type);
+    grid(const std::pair<std::vector<int>, int_pair>& board_pair, grid_type_enum grid_type);
+    grid(const std::string& game_as_string, grid_type_enum grid_type);
 
     int size() const;
     int at(int p) const;
@@ -45,13 +54,10 @@ public:
     std::vector<int> inverse_board() const;
     std::vector<int> inverse_number_board() const;
     std::string board_as_string() const;
-    std::string board_as_number_string() const;
      // Point in format such as "g5", with rows a,b..., columns 1, 2...
     std::string point_coord_as_string(int p) const;
+    std::string board_as_number_string() const;
     const std::vector<int>& board_const() const;
-
-    int_pair point_to_coord(int p) const;
-    int coord_to_point(int_pair coord) const;
 
     bool coord_in_bounds(const int_pair& coord) const;
 
@@ -68,12 +74,17 @@ protected:
 
     static relation _compare_grids(const grid& g1, const grid& g2);
 
+
 private:
-    void _check_legal() const;
+    bool _is_legal_grid();
+    bool _is_legal_color_grid();
+    bool _is_legal_number_grid();
 
     // _board is row-major.
     std::vector<int> _board; // todo try char as well.
     int_pair _shape;         // (n_rows, n_cols)
+
+    const grid_type_enum _grid_type;
 };
 
 inline int grid::size() const
@@ -94,48 +105,45 @@ inline const int_pair& grid::shape() const
 
 inline bool grid::checked_is_color(int p, int color) const
 {
+    assert(_grid_type == GRID_TYPE_COLOR);
+
     return in_range(p, 0, size()) //
            && _board[p] == color; //
 }
 
 inline void grid::play_stone(int p, int color)
 {
+    assert(_grid_type == GRID_TYPE_COLOR);
+
     assert_range(p, 0, size());
-    assert_black_white(color);
-    assert(_board[p] == EMPTY);
+    assert(is_stone_color(color) && _board[p] == EMPTY);
     _board[p] = color;
 }
 
 inline void grid::remove_stone(int p)
 {
+    assert(_grid_type == GRID_TYPE_COLOR);
+
     assert_range(p, 0, size());
-    assert(_board[p] != EMPTY);
+    assert(is_stone_color(_board[p]));
     _board[p] = EMPTY;
 }
 
 inline void grid::replace_int(int p, int value)
 {
+    assert(_grid_type == GRID_TYPE_NUMBER);
+
     assert_range(p, 0, size());
+    assert(negate_is_safe(value));
     _board[p] = value;
 }
 
 inline void grid::replace(int p, int color)
 {
-    assert(is_empty_black_white(color) || color == BORDER); // TODO clean up
-    replace_int(p, color);
-}
-
-
-inline int_pair grid::point_to_coord(int p) const
-{
-    int r = p / _shape.second;
-    int c = p % _shape.second;
-    return {r, c};
-}
-
-inline int grid::coord_to_point(int_pair coord) const
-{
-    return coord.first * _shape.second + coord.second;
+    assert(_grid_type == GRID_TYPE_COLOR);
+    assert_range(p, 0, size());
+    assert(is_empty_or_stone_color(color));
+    _board[p] = color;
 }
 
 inline bool grid::coord_in_bounds(const int_pair& coord) const
@@ -150,12 +158,6 @@ inline bool grid::coord_in_bounds(const int_pair& coord) const
 inline std::vector<int> grid::board() const
 {
     return _board;
-}
-
-inline std::ostream& operator<<(std::ostream& os, const int_pair& pr)
-{
-    os << '(' << pr.first << ' ' << pr.second << ')';
-    return os;
 }
 
 ////////////////////////////////////////////////// Helpers

@@ -40,6 +40,13 @@ inline int_pair decode_clobber_coord(int encoded)
     return {r, c};
 }
 
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x))
+            return false;
+    return true;
+}
 
 } // namespace
 
@@ -71,16 +78,21 @@ private:
 };
 
 ////////////////////////////////////////////////// clobber
-clobber::clobber(int n_rows, int n_cols) : grid(n_rows, n_cols)
+clobber::clobber(int n_rows, int n_cols) : grid(n_rows, n_cols, GRID_TYPE_COLOR)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
-clobber::clobber(const vector<int>& board, int_pair shape) : grid(board, shape)
+clobber::clobber(const vector<int>& board, int_pair shape)
+    : grid(board, shape, GRID_TYPE_COLOR)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
-clobber::clobber(const string& game_as_string) : grid(game_as_string)
+clobber::clobber(const string& game_as_string)
+    : grid(game_as_string, GRID_TYPE_COLOR)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 void clobber::play(const ::move& m, bw to_play)

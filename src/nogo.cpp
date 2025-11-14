@@ -63,22 +63,36 @@ nogo_board shrink_board(const nogo_board& board)
 
     return nogo_board(new_board, new_immortal, new_shape);
 }
+
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x) && x != BORDER)
+            return false;
+    return true;
+}
+
 } // namespace
 
 //////////////////////////////////////// nogo
-nogo::nogo(std::string game_as_string) : grid(game_as_string)
+nogo::nogo(std::string game_as_string) : grid(game_as_string, GRID_TYPE_COLOR)
 {
     _immortal = std::vector<int>(size(), EMPTY);
     _immortal_copy = _immortal;
+
+    THROW_ASSERT(only_legal_colors(board_const()));
 #ifdef NOGO_DEBUG
     THROW_ASSERT(is_legal());
 #endif
 }
 
-nogo::nogo(const std::vector<int>& board, int_pair shape) : grid(board, shape)
+nogo::nogo(const std::vector<int>& board, int_pair shape)
+    : grid(board, shape, GRID_TYPE_COLOR)
 {
     _immortal = std::vector<int>(size(), EMPTY);
     _immortal_copy = _immortal;
+
+    THROW_ASSERT(only_legal_colors(board_const()));
 #ifdef NOGO_DEBUG
     THROW_ASSERT(is_legal());
 #endif
@@ -86,9 +100,11 @@ nogo::nogo(const std::vector<int>& board, int_pair shape) : grid(board, shape)
 
 nogo::nogo(const std::vector<int>& board, const std::vector<int>& immortal,
            int_pair shape)
-    : grid(board, shape), _immortal(immortal)
+    : grid(board, shape, GRID_TYPE_COLOR), _immortal(immortal)
 {
     _immortal_copy = _immortal;
+
+    THROW_ASSERT(only_legal_colors(board_const()));
 #ifdef NOGO_DEBUG
     THROW_ASSERT(is_legal());
 #endif

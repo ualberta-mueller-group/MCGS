@@ -94,7 +94,7 @@ enum color_enum
     }
 }
 
-} // namespace 
+} // namespace
 
 //////////////////////////////////////////////////
 // grid_generator_masked_cc methods

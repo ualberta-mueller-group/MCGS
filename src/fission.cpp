@@ -6,6 +6,7 @@
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "grid.h"
 #include "grid_location.h"
 #include "throw_assert.h"
 
@@ -13,19 +14,10 @@ using namespace std;
 
 ////////////////////////////////////////////////// helper functions
 namespace {
-bool only_legal_tiles(const vector<int>& board)
+bool only_legal_colors(const std::vector<int>& board)
 {
-    for (const int& tile : board)
-        if (!(tile == EMPTY || tile == BLACK || tile == BORDER))
-            return false;
-    return true;
-}
-
-// TODO use symbolic chars instead of char literals
-bool only_legal_chars(const string& board)
-{
-    for (const char& c : board)
-        if (!(c == '.' || c == 'X' || c == '#' || c == '|'))
+    for (const int& x : board)
+        if (!(x == EMPTY || x == BLACK || x == BORDER))
             return false;
     return true;
 }
@@ -61,21 +53,21 @@ private:
 
 ////////////////////////////////////////////////// fission methods
 fission::fission(int n_rows, int n_cols)
-    : grid(n_rows, n_cols)
+    : grid(n_rows, n_cols, GRID_TYPE_COLOR)
 {
-    assert(only_legal_tiles(board_const()));
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 fission::fission(const vector<int>& board, int_pair shape)
-    : grid(board, shape)
+    : grid(board, shape, GRID_TYPE_COLOR)
 {
-    THROW_ASSERT(only_legal_tiles(board));
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 fission::fission(const string& game_as_string)
-    : grid(game_as_string)
+    : grid(game_as_string, GRID_TYPE_COLOR)
 {
-    THROW_ASSERT(only_legal_chars(game_as_string));
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 void fission::play(const ::move& m, bw to_play)

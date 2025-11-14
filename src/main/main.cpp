@@ -48,6 +48,7 @@ private:
 int main(int argc, char** argv)
 {
     //print_on_exit poe("Exiting main\n");
+    mcgs_init_1();
 
     cli_options opts = parse_args(argc, (const char**) argv, false);
 
@@ -56,7 +57,7 @@ int main(int argc, char** argv)
         return 0;
 
     //cout << "Pre-init" << endl;
-    mcgs_init_all(opts);
+    mcgs_init_2(opts);
     //cout << "Post-init" << endl;
 
     //test_sheep_generator_sketch();

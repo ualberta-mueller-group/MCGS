@@ -158,7 +158,7 @@ void test_moves_play(sheep& g,
 
 void test_moves_main()
 {
-    // Board string, and from/to location pairs
+    // Board string, and from/to point pairs for either player
     typedef tuple<string, unordered_set<pair<int, int>>> test_case_t;
 
     // clang-format off

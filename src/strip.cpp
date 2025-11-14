@@ -18,45 +18,15 @@
 
 //---------------------------------------------------------------------------
 
-int clobber_char_to_color(char c)
-{
-    if (c == 'X')
-        return BLACK;
-    else if (c == 'O')
-        return WHITE;
-    else if (c == '.')
-        return EMPTY;
-    else if (c == '#')
-        return BORDER;
-    else
-        assert(false);
-
-    exit(-1);
-    return -1;
-}
-
-char color_to_clobber_char(int color)
-{
-    static char clobber_char[] = {'X', 'O', '.', '#'};
-
-    assert_range(color, BLACK, BORDER + 1);
-    return clobber_char[color];
-}
-
 namespace {
-
-void check_is_clobber_char(char c)
-{
-    THROW_ASSERT(c == 'X' || c == 'O' || c == '.' ||  c == '#');
-}
 
 std::vector<int> string_to_board(const std::string& game_as_string)
 {
     std::vector<int> board;
-    for (auto c : game_as_string)
+    for (const char& c : game_as_string)
     {
-        check_is_clobber_char(c);
-        board.push_back(clobber_char_to_color(c));
+        THROW_ASSERT(is_empty_or_stone_char(c));
+        board.push_back(char_to_color(c));
     }
     return board;
 }
@@ -65,7 +35,10 @@ std::string board_to_string(const std::vector<int>& board)
 {
     std::string result;
     for (int p : board)
-        result += color_to_clobber_char(p);
+    {
+        THROW_ASSERT(is_empty_or_stone_color(p));
+        result += color_to_char(p);
+    }
     return result;
 }
 
@@ -86,7 +59,7 @@ inline std::vector<int> inverse_board_impl(
         else
             x = original_board[i];
 
-        new_board[i] = ebw_opponent(x);
+        new_board[i] = inverse_color(x);
     }
 
     return new_board;
@@ -98,12 +71,13 @@ inline std::vector<int> inverse_board_impl(
 
 strip::strip(const std::vector<int>& board) : game(), _board(board)
 {
-    _check_legal();
+    THROW_ASSERT(_is_legal_strip());
 }
 
 strip::strip(const std::string& game_as_string)
     : strip(string_to_board(game_as_string))
 {
+    THROW_ASSERT(_is_legal_strip());
 }
 
 std::string strip::board_as_string() const
@@ -259,10 +233,13 @@ std::vector<int> strip::_load_board(ibuffer& is)
     return board;
 }
 
-void strip::_check_legal() const
+bool strip::_is_legal_strip() const
 {
     for (const int& x : _board)
-        THROW_ASSERT(x == BLACK || x == WHITE || x == EMPTY || x == BORDER);
+        if (!is_empty_or_stone_color(x))
+            return false;
+
+    return true;
 }
 
 std::vector<int> strip::inverse_board() const

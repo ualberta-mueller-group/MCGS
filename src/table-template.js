@@ -83,7 +83,7 @@ function setTableFilter() {
     }
 }
 
-function setTableFilterText() { 
+function setTableFilterText() {
     const table = document.getElementById("data-table");
     const rows = table.rows;
 
@@ -338,7 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
     refresh();
 
     const indexRow = document.getElementById("col-indices");
-    const indexRowCells = indexRow.getElementsByTagName("th"); 
+    const indexRowCells = indexRow.getElementsByTagName("th");
     for (const th of indexRowCells) {
         th.addEventListener("click", (e) => {
             let indexText = th.innerHTML;

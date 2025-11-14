@@ -32,6 +32,9 @@ string get_game_prefix(const vector<int>& param_vec)
 ////////////////////////////////////////////////// main test functions
 void test_moves_main()
 {
+    /*
+       parameters, board string, all black moves, all white moves
+    */
     typedef tuple<vector<int>, string, vector<string>, vector<string>>
         test_case_t;
 
@@ -278,6 +281,9 @@ void test_moves_main()
 
 void test_constructors()
 {
+    /*
+       parameters, board string, expected board
+    */
     typedef tuple<vector<int>, string, vector<int>> test_case_t;
 
     // clang-format off

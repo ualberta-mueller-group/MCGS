@@ -85,19 +85,19 @@ void check_valid_board(const sheep& g)
 ////////////////////////////////////////////////// sheep methods
 
 sheep::sheep(const string& game_as_string)
-    : grid(string_to_int_grid(game_as_string))
+    : grid(game_as_string, GRID_TYPE_NUMBER)
 {
     check_valid_board(*this);
 }
 
 sheep::sheep(const vector<int>& board, int_pair shape)
-    : grid(board, shape)
+    : grid(board, shape, GRID_TYPE_NUMBER)
 {
     check_valid_board(*this);
 }
 
 sheep::sheep(const pair<vector<int>, int_pair>& board_pair)
-    : grid(board_pair)
+    : grid(board_pair, GRID_TYPE_NUMBER)
 {
     check_valid_board(*this);
 }
@@ -243,35 +243,13 @@ void sheep::print_move(std::ostream& str, const ::move& m) const
                                      target_herd_abs);
 
     std::cout << point_coord_as_string(from_point) << "-"
-              << point_coord_as_string(to_point) << "-" 
+              << point_coord_as_string(to_point) << "-"
               << target_herd_abs;
 }
 
 game* sheep::inverse() const
 {
-    const int SIZE = size();
-
-    pair<vector<int>, int_pair> board_pair;
-
-    vector<int>& inv_board = board_pair.first;
-    inv_board.reserve(SIZE);
-
-    board_pair.second = shape();
-
-    for (int i = 0; i < SIZE; i++)
-    {
-        int val = at(i);
-        assert(negate_is_safe(val));
-        val = -val;
-
-        inv_board.push_back(val);
-    }
-
-    assert(SIZE >= 0 &&                                        //
-           inv_board.size() == static_cast<unsigned int>(SIZE) //
-    );
-
-    return new sheep(board_pair);
+    return new sheep(inverse_number_board(), shape());
 }
 
 ////////////////////////////////////////////////// sheep_move_generator methods
@@ -403,9 +381,9 @@ bool sheep_move_generator::_increment_target_dir(bool init)
     else
         _target_dir_idx++;
 
-    for (; _target_dir_idx < GRID_DIRS_SHEEP.size(); _target_dir_idx++)
+    for (; _target_dir_idx < GRID_DIRS_HEX.size(); _target_dir_idx++)
     {
-        const grid_dir dir = GRID_DIRS_SHEEP[_target_dir_idx];
+        const grid_dir dir = GRID_DIRS_HEX[_target_dir_idx];
 
         _target_end = _herd_start;
         assert(_target_end.valid());
@@ -508,7 +486,7 @@ split_result sheep::_split_impl() const
     const int_pair grid_shape = shape();
     const int MIN_INVALID = max(grid_shape.first, grid_shape.second) + 1;
     const int MAX_INVALID = -1;
-     
+
     // Search state
     vector<bool> closed_set(grid_size, false);
     vector<grid_location> open_stack;
@@ -600,7 +578,7 @@ split_result sheep::_split_impl() const
 
             // Find neighbors
             grid_location loc2(grid_shape);
-            for (grid_dir dir : GRID_DIRS_SHEEP)
+            for (grid_dir dir : GRID_DIRS_HEX)
             {
                 loc2 = loc1;
 

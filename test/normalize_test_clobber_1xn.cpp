@@ -10,8 +10,8 @@ using namespace std;
 
 void normalize_test_clobber_1xn()
 {
+    // before normalize, after normalize
     typedef tuple<string, string> test_case_t;
-    // input, expected
 
     // clang-format off
     vector<test_case_t> test_cases =

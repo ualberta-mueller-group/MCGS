@@ -2,7 +2,7 @@
     Generate all 4-connected components on RxC grid. General sketch:
 
     - For RxC grid, use real grid of 2R+1,2C+1
-    - Main loop: given all unique 
+    - Main loop: given all unique
 */
 
 #include "gen_components.h"

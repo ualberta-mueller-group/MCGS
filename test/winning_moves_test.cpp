@@ -29,6 +29,11 @@ bool same_move_vecs(std::vector<move>& vec1, std::vector<move>& vec2)
 
 void test_winning_moves()
 {
+    /*
+       game (pointer)
+       player to play
+       expected winning moves
+    */
     typedef std::tuple<game*, bw, std::vector<move>> test_case_t;
 
     // clang-format off

@@ -88,7 +88,3 @@ inline bool gen_toads::get_friendly_jump() const
     return _friendly_jump;
 }
 
-
-
-//////////////////////////////////////////////////
-void test_gen_toads_stuff();

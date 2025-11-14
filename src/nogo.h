@@ -29,6 +29,7 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
+    // checks that all stones have liberties
     bool is_legal() const;
 
     std::vector<int> immortal() const { return _immortal; }

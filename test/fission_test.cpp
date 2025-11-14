@@ -208,6 +208,13 @@ void test_play_moves(fission* g, const unordered_set<::move>& b_moves,
 ////////////////////////////////////////////////// main test functions
 void test_moves_main()
 {
+    /*
+        fission board string
+        list of moves for both players
+
+        A move is a coordinate of a stone, plus the color of which player
+        has the move (or EMPTY if both players have a move there)
+    */
     typedef tuple<string, set<move_tuple_t>> test_case_t;
 
     // clang-format off
@@ -342,9 +349,13 @@ void test_moves_main()
 
 void test_constructors()
 {
+    /*
+       fission board string
+       grid dimensions
+       expected board
+    */
     typedef tuple<string, int_pair, vector<int>> test_case_t;
 
-    // test string constructors
 
     // clang-format off
     vector<test_case_t> test_cases =
@@ -353,7 +364,7 @@ void test_constructors()
             "..|X#",
             {2, 2},
             {
-                EMPTY, EMPTY, 
+                EMPTY, EMPTY,
                 BLACK, BORDER,
             },
         },

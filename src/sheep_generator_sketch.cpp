@@ -104,7 +104,7 @@ bool sheep_generator::is_possible(int b_sheep, int w_sheep, int remaining_spaces
     const int w_spaces = div_ceil(w_sheep, k);
     return (b_spaces + w_spaces) < remaining_spaces;
 }
-    
+
 } // namespace
 
 void test_sheep_generator_sketch()

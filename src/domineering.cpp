@@ -11,6 +11,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "grid.h"
 #include "throw_assert.h"
 #include "grid_location.h"
 #include "grid_hash.h"
@@ -51,24 +52,6 @@ namespace {
 // TODO clean up grid colors, make these functions use proper grid color
 // functions/definitions from headers
 
-bool has_only_valid_colors(const vector<int>& board)
-{
-    for (const int& tile : board)
-        if (tile != EMPTY && tile != BORDER)
-            return false;
-
-    return true;
-}
-
-bool has_only_valid_colors(const string& board_string)
-{
-    for (const char& c : board_string)
-        if (c != '.' && c != '#' && c != '|')
-            return false;
-
-    return true;
-}
-
 bool move_has_legal_orientation(int point1, int point2, bw player,
                                 const int_pair& grid_shape)
 {
@@ -103,35 +86,44 @@ bool move_has_legal_orientation(int point1, int point2, bw player,
     return orientation != EMPTY;
 }
 
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& tile : board)
+        if (tile != EMPTY && tile != BORDER)
+            return false;
+
+    return true;
+}
 
 } // namespace
 
 
 ////////////////////////////////////////////////// domineering methods
-domineering::domineering(int n_rows, int n_cols): grid(n_rows, n_cols)
+domineering::domineering(int n_rows, int n_cols)
+    : grid(n_rows, n_cols, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-    , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
+      , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
 #endif
 {
-    assert(has_only_valid_colors(board_const()));
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 domineering::domineering(const std::vector<int>& board, int_pair shape) :
-    grid(board, shape)
+    grid(board, shape, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
     , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
 #endif
 {
-    THROW_ASSERT(has_only_valid_colors(board));
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 domineering::domineering(const std::string& game_as_string):
-    grid(game_as_string)
+    grid(game_as_string, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
     , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
 #endif
 {
-    THROW_ASSERT(has_only_valid_colors(game_as_string));
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 void domineering::play(const ::move& m, bw to_play)
