@@ -15,6 +15,7 @@
 #include <array>
 #include <cassert>
 #include <limits>
+#include <type_traits>
 
 #include "grid.h"
 #include "game.h"
@@ -121,7 +122,7 @@ inline unsigned int get_op_mask(grid_hash_orientation ori)
 {
     assert(!bit_is_1(ori, 0) &&                // Odd numbers only
            0 <= ori &&                         //
-           ori < GRID_HASH_ORIENTATIONS.size() //
+           ((std::make_unsigned_t<grid_hash_orientation>) ori) < GRID_HASH_ORIENTATIONS.size() //
     );
 
     return ORIENTATION_OPS_NO_T[ori / 2];
