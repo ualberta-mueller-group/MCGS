@@ -31,7 +31,7 @@ public:
     bool is_split() const { return _smaller_part > 0; }
 
     static int static_result(int n);
-    static void print_move(move m, std::ostream& str);
+    static void print_kayles_move(move m, std::ostream& str);
     static move encode(int take, int smaller, int larger);
     static void init_cache();
     void set_solved(int nim_value) override;

@@ -60,7 +60,7 @@ void kayles::print(std::ostream& str) const
     str << "kayles: " << _value;
 }
 
-void kayles::print_move(move m, std::ostream& str)
+void kayles::print_kayles_move(move m, std::ostream& str)
 {
     int take, smaller, larger;
     _decode(m, take, smaller, larger);
