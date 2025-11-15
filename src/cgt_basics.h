@@ -9,6 +9,7 @@
 #include <cassert>
 #include <climits>
 #include <limits>
+#include "throw_assert.h"
 
 
 /*
@@ -24,20 +25,21 @@
     - Row separators (ROW_SEP '|')
     - Invalid (COLOR_INVALID, CHAR_INVALID = '?')
         - This is an error and should never occur. If NDEBUG is not defined,
-          asserts should catch usage errors in the color API functions, but
-          with NDEBUG defined, this may or may not be returned.
+          exceptions should catch usage errors in the color API functions, but
+          with NDEBUG defined, COLOR_INVALID/CHAR_INVALID are returned instead
 
-        - TODO make failsafe (no out of bounds access) on error with NDEBUG?
-          Use unsigned indexing into lookup tables and only allow colors to be
-          non-negative ints?
-
-        - You must use is_valid_color() or is_valid_char() before calling
-          conversion functions, i.e. in asserts (or in THROW_ASSERT if the
-          color is the result of non-sanitized user input)
+        - You should use is_valid_color() or is_valid_char() before calling
+          conversion functions, if the input is a result of non-sanitized user
+          input.
 
     ROW_SEP has special semantics for grids, and is not allowed in strips.
     It shouldn't be used as a stone color.
 */
+
+
+// Colors must be in the range [0, NUM_MAX_COLORS = 256)
+// (assuming char is 8 bits)
+constexpr int NUM_MAX_COLORS = 1 << (CHAR_BIT);
 
 const int BLACK = 0;
 const int WHITE = 1;
@@ -171,9 +173,6 @@ inline bool in_interval(const T& val, const T& low, const T& high)
 ///    return c == 'B' || c == 'W';
 ///}
 
-
-constexpr int NUM_MAX_COLORS = 1 << (CHAR_BIT);
-
 namespace __color_impl { // NOLINT(readability-identifier-naming)
 const char* get_color_to_char_table();
 const int* get_char_to_color_table();
@@ -190,13 +189,13 @@ inline bool is_player_char(char c)
 
 inline int player_char_to_color(char c)
 {
-    assert(is_player_char(c));
+    THROW_ASSERT_DEBUG(is_player_char(c));
     return c == 'B' ? BLACK : WHITE;
 }
 
 inline char color_to_player_char(int color)
 {
-    assert(is_black_white(color));
+    THROW_ASSERT_DEBUG(is_black_white(color));
     return color == BLACK ? 'B' : 'W';
 }
 
@@ -207,7 +206,7 @@ inline bool is_valid_color(int color)
 
     if (!(0 <= color && color < NUM_MAX_COLORS))
         return false;
-    return COLOR_TO_CHAR_TABLE[color] != CHAR_INVALID;
+    return COLOR_TO_CHAR_TABLE[(unsigned char) color] != CHAR_INVALID;
 }
 
 inline bool is_valid_char(char c)
@@ -228,27 +227,31 @@ inline int char_to_color(char c)
                   std::numeric_limits<unsigned char>::max() ==
                       NUM_MAX_COLORS - 1);
 
-    assert(is_valid_char(c));
-
     static const int* const CHAR_TO_COLOR_TABLE =
         __color_impl::get_char_to_color_table();
 
-    return CHAR_TO_COLOR_TABLE[(unsigned char) c];
+    const int color = CHAR_TO_COLOR_TABLE[(unsigned char) c];
+
+    THROW_ASSERT_DEBUG(color != COLOR_INVALID);
+
+    return color;
 }
 
 inline char color_to_char(int color)
 {
-    assert(is_valid_color(color));
-
     static const char* const COLOR_TO_CHAR_TABLE =
         __color_impl::get_color_to_char_table();
 
-    return COLOR_TO_CHAR_TABLE[color];
+    const char c = COLOR_TO_CHAR_TABLE[(unsigned char) color];
+
+    THROW_ASSERT_DEBUG(c != CHAR_INVALID);
+
+    return c;
 }
 
 inline int inverse_color(int color)
 {
-    assert(is_valid_color(color));
+    THROW_ASSERT_DEBUG(is_valid_color(color));
 
     if (is_black_white(color))
         return opponent(color);
@@ -258,7 +261,7 @@ inline int inverse_color(int color)
 
 inline char inverse_char(char c)
 {
-    assert(is_valid_char(c));
+    THROW_ASSERT_DEBUG(is_valid_char(c));
 
     if (c == 'X' || c == 'O')
         return c == 'X' ? 'O' : 'X';
