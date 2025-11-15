@@ -56,6 +56,29 @@ bool is_int(const string& str)
     return true;
 }
 
+// TODO unit test this
+bool is_unsigned_int(const std::string& str)
+{
+    const size_t N = str.size();
+
+    if (N == 0)
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < N; i++)
+    {
+        const char& c = str[i];
+
+        if (!isdigit(c))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool string_starts_with(const std::string& str, const std::string& word)
 {
     if (word.size() > str.size())

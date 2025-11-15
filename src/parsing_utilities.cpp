@@ -10,8 +10,9 @@
 #include "search_utils.h"
 #include "utilities.h"
 #include "fraction.h"
+#include "string_to_int.h"
 
-using std::string, std::vector;
+using namespace std;
 
 vector<string> get_string_tokens(const string& line,
                                  const vector<char>& special_chars)
@@ -65,10 +66,13 @@ bool get_int(const vector<string>& string_tokens, size_t& idx, int& val)
 
     const string& token = string_tokens[idx];
 
-    if (!is_int(token))
+    optional<int> int_optional = str_to_i_opt(token);
+
+    if (!int_optional.has_value())
         return false;
 
-    val = stoi(token);
+    val = int_optional.value();
+
     idx++;
     return true;
 }
@@ -92,7 +96,7 @@ bool get_win_loss(const vector<string>& string_tokens, size_t& idx, bool& win)
     return true;
 }
 
-bool get_player(const std::vector<std::string>& string_tokens, size_t& idx,
+bool get_player(const vector<string>& string_tokens, size_t& idx,
                 ebw& player)
 {
     const size_t N = string_tokens.size();
@@ -241,8 +245,8 @@ bool get_int_list(const string& line, vector<int>& ints)
     return true;
 }
 
-bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx,
-                     std::vector<run_command_t>& run_commands)
+bool get_run_command(const vector<string>& string_tokens, size_t& idx,
+                     vector<run_command_t>& run_commands)
 {
     const size_t N = string_tokens.size();
     if (!(idx < N))
@@ -288,8 +292,8 @@ bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx,
     return true;
 }
 
-bool get_run_command_list(const std::string& line,
-                          std::vector<run_command_t>& commands)
+bool get_run_command_list(const string& line,
+                          vector<run_command_t>& commands)
 {
     assert(commands.empty());
 

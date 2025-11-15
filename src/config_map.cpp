@@ -1,9 +1,12 @@
 #include "config_map.h"
+
+#include <cctype>
+#include <cstdlib>
+
 #include "parsing_utilities.h"
 #include "throw_assert.h"
 #include "utilities.h"
-#include <cctype>
-#include <cstdlib>
+#include "string_to_int.h"
 
 using namespace std;
 
@@ -182,17 +185,15 @@ optional<int_pair> config_map::get_dims(const string& key) const
     return {};
 }
 
+// TODO make non-optional versions to make error handling easier
 optional<int> config_map::get_int(const string& key) const
 {
     const string* val_string = _get_value_string(key);
+
     if (val_string == nullptr)
         return {};
 
-    // TODO unsafe conversion?
-    if (!is_int(*val_string))
-        return {};
-
-    return atoi(val_string->c_str());
+    return str_to_i_opt(*val_string);
 }
 
 ostream& operator<<(ostream& os, const config_map& config)

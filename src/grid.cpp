@@ -11,6 +11,7 @@
 #include "grid_location.h"
 #include "parsing_utilities.h"
 #include "safe_arithmetic.h"
+#include "string_to_int.h"
 #include "strip.h"
 #include "throw_assert.h"
 #include "utilities.h"
@@ -403,8 +404,7 @@ std::pair<std::vector<int>, int_pair> string_to_int_grid(
         {
             prev_was_control = false;
 
-            THROW_ASSERT(is_int(token));
-            const int val = atoi(token.c_str());
+            const int val = str_to_i(token);
 
             board.push_back(val);
             counter++;

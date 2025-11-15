@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <string>
+#include <type_traits>
 #include <vector>
 #include <iostream>
 #include <memory>
@@ -10,6 +11,7 @@
 #include "file_parser.h"
 #include "global_options.h"
 #include "init_database.h"
+#include "string_to_int.h"
 #include "utilities.h"
 #include <cassert>
 
@@ -424,14 +426,19 @@ cli_options parse_args(int argc, const char** argv, bool silent)
                 throw cli_options_exception(
                     "Error: got --test-timeout but no timeout");
             }
-
-            if (!is_int(arg_next))
+            
+            try
             {
-                throw cli_options_exception(
-                    "Error: --test-timeout argument not an integer");
-            }
+                static_assert(std::is_same_v<unsigned long long,
+                                             decltype(opts.test_timeout)>);
 
-            opts.test_timeout = atoi(arg_next.c_str());
+                opts.test_timeout = str_to_ull(arg_next);
+            }
+            catch (const exception& exc)
+            {
+                throw cli_options_exception("Error: --test-timeout argument "
+                        "not an unsigned integer, or out of range");
+            }
 
             continue;
         }
@@ -460,12 +467,26 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         {
             arg_idx++;
 
-            if (!is_int(arg_next))
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: got " +
+                                            global::tt_sumgame_idx_bits.flag() +
+                                            " but no value");
+            }
+
+            static_assert(sizeof(size_t) >= sizeof(unsigned short));
+            unsigned short n_index_bits;
+
+            try
+            {
+                n_index_bits = str_to_ush(arg_next);
+            }
+            catch (const exception& exc)
+            {
                 throw cli_options_exception(
                     "Error: " + global::tt_sumgame_idx_bits.flag() +
-                    " value not an int");
-
-            const size_t n_index_bits = atoi(arg_next.c_str());
+                    " value not an unsigned integer, or out of range");
+            }
 
             global::tt_sumgame_idx_bits.set(n_index_bits);
             continue;
@@ -475,12 +496,26 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         {
             arg_idx++;
 
-            if (!is_int(arg_next))
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: got " +
+                                            global::tt_imp_sumgame_idx_bits.flag() +
+                                            " but no value");
+            }
+
+            static_assert(sizeof(size_t) >= sizeof(unsigned short));
+            unsigned short n_index_bits;
+
+            try
+            {
+                n_index_bits = str_to_ush(arg_next);
+            }
+            catch (const exception& exc)
+            {
                 throw cli_options_exception(
                     "Error: " + global::tt_imp_sumgame_idx_bits.flag() +
-                    " value not an int");
-
-            const size_t n_index_bits = atoi(arg_next.c_str());
+                    " value not an unsigned integer, or out of range");
+            }
 
             global::tt_imp_sumgame_idx_bits.set(n_index_bits);
             continue;

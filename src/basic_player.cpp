@@ -17,6 +17,7 @@
 #include <vector>
 #include <memory>
 
+#include "string_to_int.h"
 #include "throw_assert.h"
 #include "cgt_basics.h"
 #include "file_parser.h"
@@ -253,10 +254,15 @@ optional<int> get_choice(const vector<T>& options)
         if (cin.eof())
             return {};
 
-        if (!is_int(user_input))
+        int choice;
+        try
+        {
+            choice = str_to_i(user_input);
+        }
+        catch (const exception& exc)
+        {
             continue;
-
-        int choice = atoi(user_input.c_str());
+        }
 
         if (!in_range(choice, min_choice, n_choices))
             continue;

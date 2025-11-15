@@ -8,10 +8,13 @@
 #include <type_traits>
 #include <cassert>
 #include <string>
-#include "cgt_basics.h"
 #include <cstdint>
 #include <cstddef>
 #include <ostream>
+#include <optional>
+
+#include "cgt_basics.h"
+#include "throw_assert.h"
 
 // Having "defined" in expanded macro would be undefined behavior
 // Instead use if/else/endif
@@ -70,6 +73,8 @@ inline bool logical_iff(bool p, bool q)
 std::vector<std::string> split_string(const std::string& str);
 
 bool is_int(const std::string& str);
+// TODO doesn't recognize -0
+bool is_unsigned_int(const std::string& str);
 
 bool string_starts_with(const std::string& str, const std::string& word);
 bool string_ends_with(const std::string& str, const std::string& word);

@@ -2,15 +2,18 @@
     Components used by file_parser to parse specific games
 */
 #pragma once
-#include "game.h"
-#include "parsing_utilities.h"
-#include "utilities.h"
+
 #include <string>
 #include <cassert>
 #include <vector>
 #include <memory>
 #include <cstddef>
 #include <iostream>
+
+#include "game.h"
+#include "parsing_utilities.h"
+#include "utilities.h"
+#include "string_to_int.h"
 
 /*
     New games must have a corresponding call to file_parser::add_game_parser()
@@ -78,12 +81,15 @@ public:
     {
         std::vector<std::string> strs = split_string(game_token);
 
-        if (strs.size() != 1 || !is_int(strs[0]))
-        {
+        if (strs.size() != 1)
             return nullptr;
-        }
 
-        return new T(std::stoi(strs[0]));
+        std::optional<int> int_optional = str_to_i_opt(strs[0]);
+
+        if (!int_optional.has_value())
+            return nullptr;
+
+        return new T(int_optional.value());
     }
 };
 
@@ -97,22 +103,15 @@ public:
         std::vector<std::string> strs = split_string(game_token);
 
         if (strs.size() != 2)
-        {
             return nullptr;
-        }
 
-        for (const std::string& str : strs)
-        {
-            if (!is_int(str))
-            {
-                return nullptr;
-            }
-        }
+        std::optional<int> val1_optional = str_to_i_opt(strs[0]);
+        std::optional<int> val2_optional = str_to_i_opt(strs[1]);
 
-        int val1 = std::stoi(strs[0]);
-        int val2 = std::stoi(strs[1]);
+        if (!val1_optional.has_value() || !val2_optional.has_value())
+            return nullptr;
 
-        return new T(val1, val2);
+        return new T(val1_optional.value(), val2_optional.value());
     }
 };
 

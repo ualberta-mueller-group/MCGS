@@ -1,11 +1,13 @@
 #include "game_token_parsers.h"
-#include "cgt_up_star.h"
-#include "cgt_dyadic_rational.h"
-#include "cgt_switch.h"
+
 #include <string>
 #include <vector>
 #include <cassert>
 #include <cstddef>
+
+#include "cgt_up_star.h"
+#include "cgt_dyadic_rational.h"
+#include "cgt_switch.h"
 #include "impartial_game_wrapper.h"
 
 #include "parsing_utilities.h"
