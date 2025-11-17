@@ -1,4 +1,5 @@
 #include "toppling_dominoes_test.h"
+// TODO add more tests now that it no longer inherits from strip?
 
 #include <iostream>
 #include <tuple>
@@ -262,7 +263,8 @@ void test_constructors()
         const vector<int>& exp_board = get<1>(test_case);
 
         toppling_dominoes g(board);
-        assert(g.board_const() == exp_board);
+
+        assert(g.current_dominoes() == exp_board);
     }
 
     // test 0 size games

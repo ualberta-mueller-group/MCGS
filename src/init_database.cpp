@@ -369,9 +369,11 @@ void register_games(database& db)
     // toppling_dominoes
     DATABASE_REGISTER_TYPE(db, toppling_dominoes);
 
+    /*
     register_create_game_gen_fn(
         "toppling_dominoes", get_gridlike_create_game_gen_fn<toppling_dominoes>(
                                  {BLACK, WHITE}, true, BORDER));
+    */
 
     // sheep
     DATABASE_REGISTER_TYPE(db, sheep);

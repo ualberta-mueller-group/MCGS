@@ -16,10 +16,9 @@
 #include "cgt_basics.h"
 #include "throw_assert.h"
 
-//---------------------------------------------------------------------------
 
-namespace {
-
+////////////////////////////////////////////////// helpers
+namespace strip_utils {
 std::vector<int> string_to_board(const std::string& game_as_string)
 {
     std::vector<int> board;
@@ -41,7 +40,9 @@ std::string board_to_string(const std::vector<int>& board)
     }
     return result;
 }
+} // namespace strip_utils
 
+namespace {
 template <const bool mirror>
 inline std::vector<int> inverse_board_impl(
     const std::vector<int>& original_board)
@@ -68,6 +69,8 @@ inline std::vector<int> inverse_board_impl(
 } // namespace
 
 //---------------------------------------------------------------------------
+
+using namespace strip_utils;
 
 strip::strip(const std::vector<int>& board) : game(), _board(board)
 {

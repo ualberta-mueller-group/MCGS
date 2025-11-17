@@ -16,8 +16,8 @@
 
 #include "iobuffer.h"
 
-//---------------------------------------------------------------------------
 
+////////////////////////////////////////////////// strip class
 class strip : public game
 {
 public:
@@ -71,6 +71,13 @@ private:
     std::vector<int> _board; // todo try char as well.
 };
 
+////////////////////////////////////////////////// utility functions
+namespace strip_utils {
+std::vector<int> string_to_board(const std::string& game_as_string);
+std::string board_to_string(const std::vector<int>& board);
+} // namespace strip_utils
+
+////////////////////////////////////////////////// strip methods
 inline int strip::size() const
 {
     return _board.size();

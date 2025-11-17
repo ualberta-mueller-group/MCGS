@@ -141,7 +141,7 @@ void test_split()
     for (const test_case_t& test_case : test_cases)
     {
         const string& board = get<0>(test_case);
-        const vector<string> exp_boards = get<1>(test_case);
+        const vector<string>& exp_boards = get<1>(test_case);
 
         assert(game_split_matches<amazons>(board, exp_boards));
     }

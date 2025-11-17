@@ -8,6 +8,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "strip.h"
 #include "throw_assert.h"
 
 using namespace std;
@@ -51,22 +52,22 @@ private:
 ////////////////////////////////////////////////// toppling_dominoes methods
 
 toppling_dominoes::toppling_dominoes(const vector<int>& board)
-    : strip(board)
+    : _initial_dominoes(board)
 {
-    THROW_ASSERT(only_legal_colors(board_const()));
+    THROW_ASSERT(only_legal_colors(_initial_dominoes));
 
     _domino_start = 0;
-    _domino_end = size();
+    _domino_end = _initial_dominoes.size();
     _domino_flip_orientation = false;
 }
 
 toppling_dominoes::toppling_dominoes(const string& game_as_string)
-    : strip(game_as_string)
+    : _initial_dominoes(strip_utils::string_to_board(game_as_string))
 {
-    THROW_ASSERT(only_legal_colors(board_const()));
+    THROW_ASSERT(only_legal_colors(_initial_dominoes));
 
     _domino_start = 0;
-    _domino_end = size();
+    _domino_end = _initial_dominoes.size();
     _domino_flip_orientation = false;
 }
 
@@ -106,7 +107,7 @@ void toppling_dominoes::undo_move()
     else
     {
         new_start = 0;
-        new_end = size();
+        new_end = _initial_dominoes.size();
     }
 
     assert(
@@ -155,6 +156,17 @@ game* toppling_dominoes::inverse() const
 
     // TODO move board
     return new toppling_dominoes(inv_board);
+}
+
+const vector<int> toppling_dominoes::current_dominoes() const
+{
+    vector<int> dominoes;
+
+    const int SIZE = n_dominoes();
+    for (int i = 0; i < SIZE; i++)
+        dominoes.push_back(get_domino_at(i));
+
+    return dominoes;
 }
 
 void toppling_dominoes::_init_hash(local_hash& hash) const

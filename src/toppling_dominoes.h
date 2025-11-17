@@ -13,15 +13,8 @@
 
 #include "cgt_basics.h"
 
-/*
-TODO IMPORTANT:
-
-   - at() is incorrect. Maybe privately inherit from strip? But how would that
-       affect DB game generators?
-*/
-
 ////////////////////////////////////////////////// class toppling_dominoes
-class toppling_dominoes: public strip
+class toppling_dominoes: public game
 {
 public:
     toppling_dominoes(const std::vector<int>& board);
@@ -39,6 +32,8 @@ public:
     int n_dominoes() const;
     int get_domino_at(int idx_virtual) const;
 
+    const std::vector<int> current_dominoes() const;
+
 protected:
     friend class toppling_dominoes_move_generator;
 
@@ -55,6 +50,7 @@ protected:
     bool _domino_flip_orientation; // IFF true: reverse index
 
     std::vector<bool> _normalize_did_flip;
+    const std::vector<int> _initial_dominoes;
 
 };
 
@@ -71,7 +67,7 @@ inline int toppling_dominoes::n_dominoes() const
 
 inline int toppling_dominoes::get_domino_at(int idx_virtual) const
 {
-    return at(_idx_virtual_to_real(idx_virtual));
+    return _initial_dominoes[_idx_virtual_to_real(idx_virtual)];
 }
 
 inline void toppling_dominoes::_flip()

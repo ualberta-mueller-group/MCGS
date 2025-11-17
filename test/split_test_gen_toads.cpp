@@ -50,7 +50,7 @@ void test_split()
     {
         const vector<int>& params = get<0>(test_case);
         const string& board = get<1>(test_case);
-        const vector<string> exp_boards = get<2>(test_case);
+        const vector<string>& exp_boards = get<2>(test_case);
 
         // TODO write
         gen_toads g(params, board);
