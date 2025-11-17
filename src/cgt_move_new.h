@@ -1,158 +1,229 @@
+/*
+    Tools for encoding and decoding moves. Defines various N part moves.
+
+    The bit fields of an N part move are specified by a "layout struct". For
+    example, move2_layout specifies a move type containing a 16 bit signed
+    value, and a 15 bit unsigned value.
+
+    NOTE: Many values in this file should be constexprs, don't change them to
+          const! This file doesn't seem to increase compile time measurably,
+          compared to the old one.
+*/
 #pragma once
 
 #include <cassert>
-#include <climits>
+#include <array>
+#include <tuple>
 #include <type_traits>
-#include "throw_assert.h"
-
-#define N_BIT_INT_MAX_BITS 31
+#include "n_bit_int.h"
 
 typedef int move;
-static_assert(N_BIT_INT_MAX_BITS < sizeof(int) * CHAR_BIT);
-//////////////////////////////////////////////////
-enum signed_type_enum
-{
-    INT_UNSIGNED = 0,
-    INT_SIGNED,
-};
-
-namespace n_bit_int {
-
-template <int n_bits>
-inline constexpr int sign_bit_idx()
-{
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
-    return n_bits - 1;
-}
-
-template <int n_bits>
-inline constexpr int sign_bit_mask()
-{
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
-    return 1 << sign_bit_idx<n_bits>();
-}
-
-
-template <int n_bits>
-inline constexpr int value_mask()
-{
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
-    return ~((unsigned int)(-1) << n_bits);
-}
-
-template <int n_bits, signed_type_enum signed_type>
-inline constexpr int max_val()
-{
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
-
-    switch (signed_type)
-    {
-        case INT_UNSIGNED:
-            return value_mask<n_bits>();
-        case INT_SIGNED:
-            return sign_bit_mask<n_bits>() - 1;
-    }
-
-}
-
-template <int n_bits, signed_type_enum signed_type>
-inline constexpr int min_val()
-{
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
-
-    switch (signed_type)
-    {
-        case INT_UNSIGNED:
-            return 0;
-        case INT_SIGNED:
-            return -max_val<n_bits, signed_type>() - 1;
-    }
-
-}
-
-template <int n_bits, signed_type_enum signed_type>
-inline constexpr int shrink_int_to_n_bits(int val)
-{
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
-
-    assert(                                        //
-        (min_val<n_bits, signed_type>()) <= val && //
-        val <= (max_val<n_bits, signed_type>())    //
-    );                                             //
-
-    return val & value_mask<n_bits>();
-}
-
-template <int n_bits, signed_type_enum signed_type>
-inline constexpr int expand_int_from_n_bits(int n_bit_val)
-{
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
-
-    assert(n_bit_val == (n_bit_val & value_mask<n_bits>()));
-
-    if constexpr (signed_type == INT_SIGNED)
-    {
-        const bool is_negative = (n_bit_val & sign_bit_mask<n_bits>()) != 0;
-
-        if (is_negative)
-            n_bit_val |= ~value_mask<n_bits>();
-    }
-
-    return n_bit_val;
-}
-
-} // namespace n_bit_int
 
 namespace cgt_move_new {
 
-
-template <int n_bits, signed_type_enum signed_type, int n_previous_bits>
-inline void move_n_set_part(move& m, int value)
+////////////////////////////////////////////////// bit fields N part moves
+struct move1_layout
 {
-    static_assert(n_previous_bits >= 0);
+    static constexpr std::array<std::pair<int, signed_type_enum>, 1> LAYOUT =
+    {{
+        {31, INT_SIGNED},
+    }};
+};
 
-    static_assert(2 <= n_bits &&                                 //
-                  n_bits <= N_BIT_INT_MAX_BITS &&                //
-                  n_bits + n_previous_bits <= N_BIT_INT_MAX_BITS //
-    );
+struct move2_layout
+{
+    static constexpr std::array<std::pair<int, signed_type_enum>, 2> LAYOUT =
+    {{
+        {16, INT_SIGNED},
+        {15, INT_UNSIGNED},
+    }};
+};
 
-    m &= ~(n_bit_int::value_mask<n_bits>() << n_previous_bits);
+struct move3_layout
+{
+    static constexpr std::array<std::pair<int, signed_type_enum>, 3> LAYOUT =
+    {{
+        {11, INT_SIGNED},
+        {10, INT_UNSIGNED},
+        {10, INT_UNSIGNED},
+    }};
+};
 
-    m |= (n_bit_int::shrink_int_to_n_bits<n_bits, signed_type>(value)
-          << n_previous_bits);
+struct move4_layout
+{
+    static constexpr std::array<std::pair<int, signed_type_enum>, 4> LAYOUT =
+    {{
+        {8, INT_SIGNED},
+        {8, INT_SIGNED},
+        {8, INT_SIGNED},
+        {7, INT_UNSIGNED},
+    }};
+};
+
+struct move6_layout
+{
+    static constexpr std::array<std::pair<int, signed_type_enum>, 6> LAYOUT =
+    {{
+        {6, INT_SIGNED},
+        {5, INT_UNSIGNED},
+        {5, INT_UNSIGNED},
+        {5, INT_UNSIGNED},
+        {5, INT_UNSIGNED},
+        {5, INT_UNSIGNED},
+    }};
+};
+
+/*
+   Move parts must have bit fields whose sizes are in the interval
+   [2, N_BIT_INT_MAX_BITS] and whose sum is also in the interval.
+*/
+template <class Move_Layout_T>
+constexpr bool move_layout_is_legal()
+{
+    int total_bits = 0;
+
+    for (const std::pair<int, signed_type_enum>& p : Move_Layout_T::LAYOUT)
+    {
+        if (!(2 <= p.first && p.first <= N_BIT_INT_MAX_BITS))
+            return false;
+
+        total_bits += p.first;
+    }
+
+    return (2 <= total_bits && total_bits <= N_BIT_INT_MAX_BITS);
 }
 
-template <int n_bits, signed_type_enum signed_type, int n_previous_bits>
-inline int move_n_get_part(const move& m)
-{
-    static_assert(n_previous_bits >= 0);
 
-    static_assert(2 <= n_bits &&                                 //
-                  n_bits <= N_BIT_INT_MAX_BITS &&                //
-                  n_bits + n_previous_bits <= N_BIT_INT_MAX_BITS //
+////////////////////////////////////////////////// implementation details
+
+/*
+   Given a move layout struct and the (1-indexed) move part number,
+   return a tuple containing the part's:
+
+   - Bit field width
+   - Left shift amount (cumulative sum of previous parts' widths)
+   - Sign type (INT_UNSIGNED or INT_SIGNED)
+*/
+template <class Move_Layout_T, unsigned int move_part_number>
+constexpr std::tuple<int, int, signed_type_enum>
+get_move_part_width_shift_and_sign_type()
+{
+    static_assert(move_layout_is_legal<Move_Layout_T>());
+    static_assert(1 <= move_part_number &&
+                  move_part_number <= Move_Layout_T::LAYOUT.size());
+
+    int total_shift = 0;
+
+    for (unsigned int i = 1; i < move_part_number; i++)
+    {
+        const std::pair<int, signed_type_enum> p = Move_Layout_T::LAYOUT[i - 1];
+        total_shift += p.first;
+    }
+
+    const std::pair<int, signed_type_enum> p =
+        Move_Layout_T::LAYOUT[move_part_number - 1];
+
+    return {p.first, total_shift, p.second};
+}
+
+/*
+   Store an integral value inside of the move part specified by the
+   move layout struct and (1-indexed) move part number.
+
+   This function converts the given value to an N bit int.
+*/
+template <class Move_Layout_T, unsigned int move_part_number>
+inline void move_n_set_part(move& m, int value)
+{
+    static_assert(move_layout_is_legal<Move_Layout_T>());
+    static_assert(1 <= move_part_number &&
+                  move_part_number <= Move_Layout_T::LAYOUT.size());
+
+    constexpr std::tuple<int, int, signed_type_enum> WIDTH_SHIFT_AND_SIGN_TYPE =
+        get_move_part_width_shift_and_sign_type<Move_Layout_T,
+                                                move_part_number>();
+
+    constexpr int WIDTH = std::get<0>(WIDTH_SHIFT_AND_SIGN_TYPE);
+    constexpr int SHIFT = std::get<1>(WIDTH_SHIFT_AND_SIGN_TYPE);
+    constexpr signed_type_enum SIGN_TYPE =
+        std::get<2>(WIDTH_SHIFT_AND_SIGN_TYPE);
+
+    static_assert(2 <= WIDTH &&                       //
+                  SHIFT >= 0 &&                       //
+                  WIDTH <= N_BIT_INT_MAX_BITS &&      //
+                  WIDTH + SHIFT <= N_BIT_INT_MAX_BITS //
     );
 
+    // Remove previous N bit int from the move
+    m &= ~(n_bit_int::value_mask<WIDTH>() << SHIFT);
+
+    // Insert the new one after shrinking it
+    m |= (n_bit_int::shrink_int_to_n_bits<WIDTH, SIGN_TYPE>(value)
+          << SHIFT);
+}
+
+/*
+   Get an integral value from the move part specified by the move layout
+   struct and (1-indexed) move part number.
+
+   This function converts the N bit int stored in the move back to a regular
+   C++ int.
+*/
+template <class Move_Layout_T, unsigned int move_part_number>
+inline int move_n_get_part(const move& m)
+{
+    static_assert(move_layout_is_legal<Move_Layout_T>());
+    static_assert(1 <= move_part_number &&
+                  move_part_number <= Move_Layout_T::LAYOUT.size());
+
+    constexpr std::tuple<int, int, signed_type_enum> WIDTH_SHIFT_AND_SIGN_TYPE =
+        get_move_part_width_shift_and_sign_type<Move_Layout_T,
+                                                move_part_number>();
+
+    constexpr int WIDTH = std::get<0>(WIDTH_SHIFT_AND_SIGN_TYPE);
+    constexpr int SHIFT = std::get<1>(WIDTH_SHIFT_AND_SIGN_TYPE);
+    constexpr signed_type_enum SIGN_TYPE =
+        std::get<2>(WIDTH_SHIFT_AND_SIGN_TYPE);
+
+    static_assert(2 <= WIDTH &&                       //
+                  SHIFT >= 0 &&                       //
+                  WIDTH <= N_BIT_INT_MAX_BITS &&      //
+                  WIDTH + SHIFT <= N_BIT_INT_MAX_BITS //
+    );
+
+    // Right shift of signed value is undefined. Treat the move as unsigned.
     using move_unsigned_t = std::make_unsigned_t<move>;
     const move_unsigned_t& m_unsigned =
         reinterpret_cast<const move_unsigned_t&>(m);
 
+    // Extract the N bit int from the move
     const int n_bit_value =
-        (m_unsigned >> n_previous_bits) & n_bit_int::value_mask<n_bits>();
+        (m_unsigned >> SHIFT) & n_bit_int::value_mask<WIDTH>();
 
-    return n_bit_int::expand_int_from_n_bits<n_bits, signed_type>(n_bit_value);
+    // Convert it to a regular int and return it
+    return n_bit_int::expand_int_from_n_bits<WIDTH, SIGN_TYPE>(n_bit_value);
 }
+
+
+//////////////////////////////////////////////////
+/*
+   N part move functions follow below. Provides implementations for
+   1, 2, 3, 4, and 6 part moves. See the move layout structs earlier in this
+   file for details on move part sizes and signedness.
+*/
+
 
 ////////////////////////////////////////////////// move1 (i31)
 //////////////////////////////////////// move1 setters
 inline void move1_set_part_1(move& m, int part1)
 {
-    move_n_set_part<31, INT_SIGNED, 0>(m, part1);
+    move_n_set_part<move1_layout, 1>(m, part1);
 }
 
 //////////////////////////////////////// move1 getters
 inline int move1_get_part_1(const move& m)
 {
-    return move_n_get_part<31, INT_SIGNED, 0>(m);
+    return move_n_get_part<move1_layout, 1>(m);
 }
 
 //////////////////////////////////////// move1 helpers
@@ -172,23 +243,23 @@ inline void move1_unpack(const move& m, int& part1)
 //////////////////////////////////////// move2 setters
 inline void move2_set_part_1(move& m, int part1)
 {
-    move_n_set_part<16, INT_SIGNED, 0>(m, part1);
+    move_n_set_part<move2_layout, 1>(m, part1);
 }
 
 inline void move2_set_part_2(move& m, int part2)
 {
-    move_n_set_part<15, INT_UNSIGNED, 16>(m, part2);
+    move_n_set_part<move2_layout, 2>(m, part2);
 }
 
 //////////////////////////////////////// move2 getters
 inline int move2_get_part_1(const move& m)
 {
-    return move_n_get_part<16, INT_SIGNED, 0>(m);
+    return move_n_get_part<move2_layout, 1>(m);
 }
 
 inline int move2_get_part_2(const move& m)
 {
-    return move_n_get_part<15, INT_UNSIGNED, 16>(m);
+    return move_n_get_part<move2_layout, 2>(m);
 }
 
 //////////////////////////////////////// move2 helpers
@@ -210,33 +281,33 @@ inline void move2_unpack(const move& m, int& part1, int& part2)
 //////////////////////////////////////// move3 setters
 inline void move3_set_part_1(move& m, int part1)
 {
-    move_n_set_part<11, INT_SIGNED, 0>(m, part1);
+    move_n_set_part<move3_layout, 1>(m, part1);
 }
 
 inline void move3_set_part_2(move& m, int part2)
 {
-    move_n_set_part<10, INT_UNSIGNED, 11>(m, part2);
+    move_n_set_part<move3_layout, 2>(m, part2);
 }
 
 inline void move3_set_part_3(move& m, int part3)
 {
-    move_n_set_part<10, INT_UNSIGNED, 11 + 10>(m, part3);
+    move_n_set_part<move3_layout, 3>(m, part3);
 }
 
 //////////////////////////////////////// move3 getters
 inline int move3_get_part_1(const move& m)
 {
-    return move_n_get_part<11, INT_SIGNED, 0>(m);
+    return move_n_get_part<move3_layout, 1>(m);
 }
 
 inline int move3_get_part_2(const move& m)
 {
-    return move_n_get_part<10, INT_UNSIGNED, 11>(m);
+    return move_n_get_part<move3_layout, 2>(m);
 }
 
 inline int move3_get_part_3(const move& m)
 {
-    return move_n_get_part<10, INT_UNSIGNED, 11 + 10>(m);
+    return move_n_get_part<move3_layout, 3>(m);
 }
 
 //////////////////////////////////////// move3 helpers
@@ -260,44 +331,43 @@ inline void move3_unpack(const move& m, int& part1, int& part2, int& part3)
 //////////////////////////////////////// move4 setters
 inline void move4_set_part_1(move& m, int part1)
 {
-    move_n_set_part<8, INT_SIGNED, 0>(m, part1);
+    move_n_set_part<move4_layout, 1>(m, part1);
 }
 
 inline void move4_set_part_2(move& m, int part2)
 {
-    move_n_set_part<8, INT_SIGNED, 8>(m, part2);
+    move_n_set_part<move4_layout, 2>(m, part2);
 }
 
 inline void move4_set_part_3(move& m, int part3)
 {
-
-    move_n_set_part<8, INT_SIGNED, 8 + 8>(m, part3);
+    move_n_set_part<move4_layout, 3>(m, part3);
 }
 
 inline void move4_set_part_4(move& m, int part4)
 {
-    move_n_set_part<7, INT_UNSIGNED, 8 + 8 + 8>(m, part4);
+    move_n_set_part<move4_layout, 4>(m, part4);
 }
 
 //////////////////////////////////////// move4 getters
 inline int move4_get_part_1(const move& m)
 {
-    return move_n_get_part<8, INT_SIGNED, 0>(m);
+    return move_n_get_part<move4_layout, 1>(m);
 }
 
 inline int move4_get_part_2(const move& m)
 {
-    return move_n_get_part<8, INT_SIGNED, 8>(m);
+    return move_n_get_part<move4_layout, 2>(m);
 }
 
 inline int move4_get_part_3(const move& m)
 {
-    return move_n_get_part<8, INT_SIGNED, 8 + 8>(m);
+    return move_n_get_part<move4_layout, 3>(m);
 }
 
 inline int move4_get_part_4(const move& m)
 {
-    return move_n_get_part<7, INT_UNSIGNED, 8 + 8 + 8>(m);
+    return move_n_get_part<move4_layout, 4>(m);
 }
 
 //////////////////////////////////////// move4 helpers
@@ -325,64 +395,63 @@ inline void move4_unpack(const move& m, int& part1, int& part2, int& part3,
 //////////////////////////////////////// move6 setters
 inline void move6_set_part_1(move& m, int part1)
 {
-    move_n_set_part<6, INT_SIGNED, 0>(m, part1);
+    move_n_set_part<move6_layout, 1>(m, part1);
 }
 
 inline void move6_set_part_2(move& m, int part2)
 {
-    move_n_set_part<5, INT_UNSIGNED, 6>(m, part2);
+    move_n_set_part<move6_layout, 2>(m, part2);
 }
 
 inline void move6_set_part_3(move& m, int part3)
 {
-    move_n_set_part<5, INT_UNSIGNED, 6 + 5>(m, part3);
+    move_n_set_part<move6_layout, 3>(m, part3);
 }
 
 inline void move6_set_part_4(move& m, int part4)
 {
-    move_n_set_part<5, INT_UNSIGNED, 6 + 5 + 5>(m, part4);
+    move_n_set_part<move6_layout, 4>(m, part4);
 }
 
 inline void move6_set_part_5(move& m, int part5)
 {
-    move_n_set_part<5, INT_UNSIGNED, 6 + 5 + 5 + 5>(m, part5);
+    move_n_set_part<move6_layout, 5>(m, part5);
 }
 
 inline void move6_set_part_6(move& m, int part6)
 {
-    move_n_set_part<5, INT_UNSIGNED, 6 + 5 + 5 + 5 + 5>(m, part6);
+    move_n_set_part<move6_layout, 6>(m, part6);
 }
 
 //////////////////////////////////////// move6 getters
 inline int move6_get_part_1(const move& m)
 {
-    return move_n_get_part<6, INT_SIGNED, 0>(m);
+    return move_n_get_part<move6_layout, 1>(m);
 }
 
 inline int move6_get_part_2(const move& m)
 {
-    return move_n_get_part<5, INT_UNSIGNED, 6>(m);
+    return move_n_get_part<move6_layout, 2>(m);
 }
 
 inline int move6_get_part_3(const move& m)
 {
-    return move_n_get_part<5, INT_UNSIGNED, 6 + 5>(m);
+    return move_n_get_part<move6_layout, 3>(m);
 }
 
 inline int move6_get_part_4(const move& m)
 {
-    return move_n_get_part<5, INT_UNSIGNED, 6 + 5 + 5>(m);
+    return move_n_get_part<move6_layout, 4>(m);
 }
 
 inline int move6_get_part_5(const move& m)
 {
-
-    return move_n_get_part<5, INT_UNSIGNED, 6 + 5 + 5 + 5>(m);
+    return move_n_get_part<move6_layout, 5>(m);
 }
 
 inline int move6_get_part_6(const move& m)
 {
-    return move_n_get_part<5, INT_UNSIGNED, 6 + 5 + 5 + 5 + 5>(m);
+    return move_n_get_part<move6_layout, 6>(m);
 }
 
 //////////////////////////////////////// move6 helpers
