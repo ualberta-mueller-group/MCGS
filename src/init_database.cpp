@@ -58,7 +58,7 @@ i_db_game_generator* create_sheep_gen(const config_map& config)
     i_grid_generator* gg = new sheep_grid_generator(
         max_dims.value(), max_sheep.value()[0], max_sheep.value()[1]);
 
-    return new gridlike_db_game_generator<sheep>(gg);
+    return new gridlike_db_game_generator<sheep, GRIDLIKE_TYPE_GRID>(gg);
 }
 
 } // namespace
@@ -314,66 +314,70 @@ void register_games(database& db)
     // clobber_1xn
     DATABASE_REGISTER_TYPE(db, clobber_1xn);
 
-    register_create_game_gen_fn("clobber_1xn",
-                                 get_gridlike_create_game_gen_fn<clobber_1xn>(
-                                     {BLACK, WHITE}, true, EMPTY));
+    register_create_game_gen_fn(
+        "clobber_1xn",
+        get_gridlike_create_game_gen_fn<clobber_1xn, GRIDLIKE_TYPE_STRIP>(
+            {BLACK, WHITE}, true, EMPTY));
 
     // nogo_1xn
     DATABASE_REGISTER_TYPE(db, nogo_1xn);
 
     register_create_game_gen_fn(
-        "nogo_1xn", get_gridlike_create_game_gen_fn<nogo_1xn>({BLACK, WHITE},
-                                                              false, EMPTY));
+        "nogo_1xn",
+        get_gridlike_create_game_gen_fn<nogo_1xn, GRIDLIKE_TYPE_STRIP>(
+            {BLACK, WHITE}, false, EMPTY));
 
     // elephants
     DATABASE_REGISTER_TYPE(db, elephants);
 
     register_create_game_gen_fn(
         "elephants",
-        get_gridlike_create_game_gen_fn<elephants>({BLACK, WHITE, EMPTY}));
+        get_gridlike_create_game_gen_fn<elephants, GRIDLIKE_TYPE_STRIP>(
+            {BLACK, WHITE, EMPTY}));
 
     // clobber
     DATABASE_REGISTER_TYPE(db, clobber);
 
     register_create_game_gen_fn(
-        "clobber",
-        get_gridlike_create_game_gen_fn<clobber>({BLACK, WHITE}, true, EMPTY));
+        "clobber", get_gridlike_create_game_gen_fn<clobber, GRIDLIKE_TYPE_GRID>(
+                       {BLACK, WHITE}, true, EMPTY));
 
     // nogo
     DATABASE_REGISTER_TYPE(db, nogo);
 
-    register_create_game_gen_fn("nogo", get_gridlike_create_game_gen_fn<nogo>(
-                                             {BLACK, WHITE}, false, EMPTY));
+    register_create_game_gen_fn(
+        "nogo", get_gridlike_create_game_gen_fn<nogo, GRIDLIKE_TYPE_GRID>(
+                    {BLACK, WHITE}, false, EMPTY));
 
     // domineering
     DATABASE_REGISTER_TYPE(db, domineering);
 
     register_create_game_gen_fn(
         "domineering",
-        get_gridlike_create_game_gen_fn<domineering>({EMPTY}, true, BORDER));
+        get_gridlike_create_game_gen_fn<domineering, GRIDLIKE_TYPE_GRID>(
+            {EMPTY}, true, BORDER));
 
     // amazons
     DATABASE_REGISTER_TYPE(db, amazons);
 
-    register_create_game_gen_fn("amazons",
-                                 get_gridlike_create_game_gen_fn<amazons>(
-                                     {BORDER, BLACK, WHITE}, false, EMPTY));
+    register_create_game_gen_fn(
+        "amazons", get_gridlike_create_game_gen_fn<amazons, GRIDLIKE_TYPE_GRID>(
+                       {BORDER, BLACK, WHITE}, false, EMPTY));
 
     // fission
     DATABASE_REGISTER_TYPE(db, fission);
 
     register_create_game_gen_fn(
-        "fission", get_gridlike_create_game_gen_fn<fission>({BORDER, BLACK},
-                                                            false, EMPTY));
+        "fission", get_gridlike_create_game_gen_fn<fission, GRIDLIKE_TYPE_GRID>(
+                       {BORDER, BLACK}, false, EMPTY));
 
     // toppling_dominoes
     DATABASE_REGISTER_TYPE(db, toppling_dominoes);
 
-    /*
     register_create_game_gen_fn(
-        "toppling_dominoes", get_gridlike_create_game_gen_fn<toppling_dominoes>(
-                                 {BLACK, WHITE}, true, BORDER));
-    */
+        "toppling_dominoes",
+        get_gridlike_create_game_gen_fn<toppling_dominoes, GRIDLIKE_TYPE_STRIP>(
+            {BLACK, WHITE}, true, BORDER));
 
     // sheep
     DATABASE_REGISTER_TYPE(db, sheep);
