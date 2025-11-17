@@ -61,7 +61,6 @@ inline constexpr int max_val()
         case INT_SIGNED:
             return sign_bit_mask<n_bits>() - 1;
     }
-
 }
 
 // Minimum value of an N bit int (can be signed or unsigned)
@@ -77,7 +76,6 @@ inline constexpr int min_val()
         case INT_SIGNED:
             return -max_val<n_bits, signed_type>() - 1;
     }
-
 }
 
 // Convert a regular C++ int to an N bit int
@@ -104,8 +102,10 @@ inline constexpr int expand_int_from_n_bits(int n_bit_val)
 
     if constexpr (signed_type == INT_SIGNED)
     {
+        // Check sign bit
         const bool is_negative = (n_bit_val & sign_bit_mask<n_bits>()) != 0;
 
+        // Sign extend by prepending 1s into most significant bits
         if (is_negative)
             n_bit_val |= ~value_mask<n_bits>();
     }

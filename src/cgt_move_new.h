@@ -21,7 +21,7 @@ typedef int move;
 
 namespace cgt_move_new {
 
-////////////////////////////////////////////////// bit fields N part moves
+////////////////////////////////////////////////// bit fields of N part moves
 struct move1_layout
 {
     static constexpr std::array<std::pair<int, signed_type_enum>, 1> LAYOUT =
