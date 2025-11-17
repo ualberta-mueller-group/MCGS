@@ -37,7 +37,7 @@ template <int n_bits>
 inline constexpr int value_mask()
 {
     static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
-    return (sign_bit_mask<n_bits>() << 1) - 1;
+    return ~((unsigned int)(-1) << n_bits);
 }
 
 template <int n_bits, signed_type_enum signed_type>
@@ -142,6 +142,32 @@ inline int move_n_get_part(const move& m)
     return n_bit_int::expand_int_from_n_bits<n_bits, signed_type>(n_bit_value);
 }
 
+////////////////////////////////////////////////// move1 (i31)
+//////////////////////////////////////// move1 setters
+inline void move1_set_part_1(move& m, int part1)
+{
+    move_n_set_part<31, INT_SIGNED, 0>(m, part1);
+}
+
+//////////////////////////////////////// move1 getters
+inline int move1_get_part_1(const move& m)
+{
+    return move_n_get_part<31, INT_SIGNED, 0>(m);
+}
+
+//////////////////////////////////////// move1 helpers
+inline move move1_create(int part1)
+{
+    move m = 0;
+    move1_set_part_1(m, part1);
+    return m;
+}
+
+inline void move1_unpack(const move& m, int& part1)
+{
+    part1 = move1_get_part_1(m);
+}
+
 ////////////////////////////////////////////////// move2 (i16, u15)
 //////////////////////////////////////// move2 setters
 inline void move2_set_part_1(move& m, int part1)
@@ -229,6 +255,162 @@ inline void move3_unpack(const move& m, int& part1, int& part2, int& part3)
     part2 = move3_get_part_2(m);
     part3 = move3_get_part_3(m);
 }
+
+////////////////////////////////////////////////// move4 (i8, i8, i8, u7)
+//////////////////////////////////////// move4 setters
+inline void move4_set_part_1(move& m, int part1)
+{
+    move_n_set_part<8, INT_SIGNED, 0>(m, part1);
+}
+
+inline void move4_set_part_2(move& m, int part2)
+{
+    move_n_set_part<8, INT_SIGNED, 8>(m, part2);
+}
+
+inline void move4_set_part_3(move& m, int part3)
+{
+
+    move_n_set_part<8, INT_SIGNED, 8 + 8>(m, part3);
+}
+
+inline void move4_set_part_4(move& m, int part4)
+{
+    move_n_set_part<7, INT_UNSIGNED, 8 + 8 + 8>(m, part4);
+}
+
+//////////////////////////////////////// move4 getters
+inline int move4_get_part_1(const move& m)
+{
+    return move_n_get_part<8, INT_SIGNED, 0>(m);
+}
+
+inline int move4_get_part_2(const move& m)
+{
+    return move_n_get_part<8, INT_SIGNED, 8>(m);
+}
+
+inline int move4_get_part_3(const move& m)
+{
+    return move_n_get_part<8, INT_SIGNED, 8 + 8>(m);
+}
+
+inline int move4_get_part_4(const move& m)
+{
+    return move_n_get_part<7, INT_UNSIGNED, 8 + 8 + 8>(m);
+}
+
+//////////////////////////////////////// move4 helpers
+inline move move4_create(int part1, int part2, int part3, int part4)
+{
+    move m = 0;
+    move4_set_part_1(m, part1);
+    move4_set_part_2(m, part2);
+    move4_set_part_3(m, part3);
+    move4_set_part_4(m, part4);
+    return m;
+}
+
+
+inline void move4_unpack(const move& m, int& part1, int& part2, int& part3,
+                         int& part4)
+{
+    part1 = move4_get_part_1(m);
+    part2 = move4_get_part_2(m);
+    part3 = move4_get_part_3(m);
+    part4 = move4_get_part_4(m);
+}
+
+////////////////////////////////////////////////// move6 (i6, u5, ..., u5)
+//////////////////////////////////////// move6 setters
+inline void move6_set_part_1(move& m, int part1)
+{
+    move_n_set_part<6, INT_SIGNED, 0>(m, part1);
+}
+
+inline void move6_set_part_2(move& m, int part2)
+{
+    move_n_set_part<5, INT_UNSIGNED, 6>(m, part2);
+}
+
+inline void move6_set_part_3(move& m, int part3)
+{
+    move_n_set_part<5, INT_UNSIGNED, 6 + 5>(m, part3);
+}
+
+inline void move6_set_part_4(move& m, int part4)
+{
+    move_n_set_part<5, INT_UNSIGNED, 6 + 5 + 5>(m, part4);
+}
+
+inline void move6_set_part_5(move& m, int part5)
+{
+    move_n_set_part<5, INT_UNSIGNED, 6 + 5 + 5 + 5>(m, part5);
+}
+
+inline void move6_set_part_6(move& m, int part6)
+{
+    move_n_set_part<5, INT_UNSIGNED, 6 + 5 + 5 + 5 + 5>(m, part6);
+}
+
+//////////////////////////////////////// move6 getters
+inline int move6_get_part_1(const move& m)
+{
+    return move_n_get_part<6, INT_SIGNED, 0>(m);
+}
+
+inline int move6_get_part_2(const move& m)
+{
+    return move_n_get_part<5, INT_UNSIGNED, 6>(m);
+}
+
+inline int move6_get_part_3(const move& m)
+{
+    return move_n_get_part<5, INT_UNSIGNED, 6 + 5>(m);
+}
+
+inline int move6_get_part_4(const move& m)
+{
+    return move_n_get_part<5, INT_UNSIGNED, 6 + 5 + 5>(m);
+}
+
+inline int move6_get_part_5(const move& m)
+{
+
+    return move_n_get_part<5, INT_UNSIGNED, 6 + 5 + 5 + 5>(m);
+}
+
+inline int move6_get_part_6(const move& m)
+{
+    return move_n_get_part<5, INT_UNSIGNED, 6 + 5 + 5 + 5 + 5>(m);
+}
+
+//////////////////////////////////////// move6 helpers
+inline move move6_create(int part1, int part2, int part3, int part4, int part5,
+                         int part6)
+{
+    move m = 0;
+    move6_set_part_1(m, part1);
+    move6_set_part_2(m, part2);
+    move6_set_part_3(m, part3);
+    move6_set_part_4(m, part4);
+    move6_set_part_5(m, part5);
+    move6_set_part_6(m, part6);
+    return m;
+}
+
+
+inline void move6_unpack(const move& m, int& part1, int& part2, int& part3,
+                         int& part4, int& part5, int& part6)
+{
+    part1 = move6_get_part_1(m);
+    part2 = move6_get_part_2(m);
+    part3 = move6_get_part_3(m);
+    part4 = move6_get_part_4(m);
+    part5 = move6_get_part_5(m);
+    part6 = move6_get_part_6(m);
+}
+
 
 } // namespace cgt_move_new
 

@@ -1,7 +1,147 @@
 #include "cgt_move_new.h"
 #include <iostream>
 
+#define TEST_LOOP(var, n_bits, signed_type, body)                              \
+    for (int var = n_bit_int::min_val<n_bits, signed_type>();                  \
+         var <= n_bit_int::max_val<n_bits, signed_type>(); var++)              \
+    {                                                                          \
+        body                                                                   \
+    }
+
 using namespace std;
+
+namespace {
+
+void test_move1()
+{
+    unsigned int checksum = 0;
+
+    TEST_LOOP(p1, 31, INT_SIGNED, {
+        const ::move m = cgt_move_new::move1_create(p1);
+
+        int p1_dec;
+        cgt_move_new::move1_unpack(m, p1_dec);
+        checksum += p1_dec;
+
+        assert(p1 == p1_dec);
+        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+    });
+
+    cout << checksum << endl;
+}
+
+
+void test_move2()
+{
+    unsigned int checksum = 0;
+
+    TEST_LOOP(p1, 16, INT_SIGNED,
+    TEST_LOOP(p2, 15, INT_UNSIGNED, {
+        const ::move m = cgt_move_new::move2_create(p1, p2);
+
+        int p1_dec;
+        int p2_dec;
+        cgt_move_new::move2_unpack(m, p1_dec, p2_dec);
+        checksum += p1_dec + p2_dec;
+
+        assert(p1 == p1_dec);
+        assert(p2 == p2_dec);
+        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+    }));
+
+    cout << checksum << endl;
+}
+
+void test_move3()
+{
+    unsigned int checksum = 0;
+
+    TEST_LOOP(p1, 11, INT_SIGNED,
+    TEST_LOOP(p2, 10, INT_UNSIGNED,
+    TEST_LOOP(p3, 10, INT_UNSIGNED, {
+        const ::move m = cgt_move_new::move3_create(p1, p2, p3);
+
+        int p1_dec;
+        int p2_dec;
+        int p3_dec;
+        cgt_move_new::move3_unpack(m, p1_dec, p2_dec, p3_dec);
+        checksum += p1_dec + p2_dec + p3_dec;
+
+        assert(p1 == p1_dec);
+        assert(p2 == p2_dec);
+        assert(p3 == p3_dec);
+
+        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+    })));
+
+    cout << checksum << endl;
+}
+
+void test_move4()
+{
+    unsigned int checksum = 0;
+
+    TEST_LOOP(p1, 8, INT_SIGNED,
+    TEST_LOOP(p2, 8, INT_SIGNED,
+    TEST_LOOP(p3, 8, INT_SIGNED,
+    TEST_LOOP(p4, 7, INT_UNSIGNED, {
+        const ::move m = cgt_move_new::move4_create(p1, p2, p3, p4);
+
+        int p1_dec;
+        int p2_dec;
+        int p3_dec;
+        int p4_dec;
+        cgt_move_new::move4_unpack(m, p1_dec, p2_dec, p3_dec, p4_dec);
+        checksum += p1_dec + p2_dec + p3_dec + p4_dec;
+
+        assert(p1 == p1_dec);
+        assert(p2 == p2_dec);
+        assert(p3 == p3_dec);
+        assert(p4 == p4_dec);
+
+        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+    }))));
+
+    cout << checksum << endl;
+}
+
+void test_move6()
+{
+    unsigned int checksum = 0;
+
+    TEST_LOOP(p1, 6, INT_SIGNED,
+    TEST_LOOP(p2, 5, INT_UNSIGNED,
+    TEST_LOOP(p3, 5, INT_UNSIGNED,
+    TEST_LOOP(p4, 5, INT_UNSIGNED,
+    TEST_LOOP(p5, 5, INT_UNSIGNED,
+    TEST_LOOP(p6, 5, INT_UNSIGNED, {
+        const ::move m = cgt_move_new::move6_create(p1, p2, p3, p4, p5, p6);
+
+        int p1_dec;
+        int p2_dec;
+        int p3_dec;
+        int p4_dec;
+        int p5_dec;
+        int p6_dec;
+        cgt_move_new::move6_unpack(m, p1_dec, p2_dec, p3_dec, p4_dec, p5_dec, p6_dec);
+        checksum += p1_dec + p2_dec + p3_dec + p4_dec + p5_dec + p6_dec;
+
+        assert(p1 == p1_dec);
+        assert(p2 == p2_dec);
+        assert(p3 == p3_dec);
+        assert(p4 == p4_dec);
+        assert(p5 == p5_dec);
+        assert(p6 == p6_dec);
+
+        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+    }))))));
+
+    cout << checksum << endl;
+}
+
+
+
+} // namespace
 
 
 //////////////////////////////////////////////////
@@ -63,69 +203,10 @@ void test_new_move_stuff()
         assert(x == dec);
     }
 
-    // Test move2
-    {
-        const int low1 = n_bit_int::min_val<16, INT_SIGNED>();
-        const int high1 = n_bit_int::max_val<16, INT_SIGNED>();
-
-        const int low2 = n_bit_int::min_val<15, INT_UNSIGNED>();
-        const int high2 = n_bit_int::max_val<15, INT_UNSIGNED>();
-
-        unsigned int checksum = 0;
-        for (int p1 = low1; p1 <= high1; p1++)
-        {
-            for (int p2 = low2; p2 <= high2; p2++)
-            {
-                const ::move m = cgt_move_new::move2_create(p1, p2);
-
-                int p1_dec, p2_dec;
-                cgt_move_new::move2_unpack(m, p1_dec, p2_dec);
-                checksum += p1_dec + p2_dec;
-
-                //cout << p1 << ' ' << p2 << '\n';
-                assert(p1 == p1_dec);
-                assert(p2 == p2_dec);
-                assert(0 == (m & (1 << 31)));
-            }
-        }
-
-        cout << checksum << endl;
-    }
-
-    // Test move3
-    {
-        const int low1 = n_bit_int::min_val<11, INT_SIGNED>();
-        const int high1 = n_bit_int::max_val<11, INT_SIGNED>();
-
-        const int low2 = n_bit_int::min_val<10, INT_UNSIGNED>();
-        const int high2 = n_bit_int::max_val<10, INT_UNSIGNED>();
-
-        const int low3 = n_bit_int::min_val<10, INT_UNSIGNED>();
-        const int high3 = n_bit_int::max_val<10, INT_UNSIGNED>();
-
-        unsigned int checksum = 0;
-        for (int p1 = low1; p1 <= high1; p1++)
-        {
-            for (int p2 = low2; p2 <= high2; p2++)
-            {
-                for (int p3 = low3; p3 <= high3; p3++)
-                {
-                    const ::move m = cgt_move_new::move3_create(p1, p2, p3);
-
-                    int p1_dec, p2_dec, p3_dec;
-                    cgt_move_new::move3_unpack(m, p1_dec, p2_dec, p3_dec);
-                    checksum += p1_dec + p2_dec + p3_dec;
-
-                    //cout << p1 << ' ' << p2 << ' ' << p3 << '\n';
-                    assert(p1 == p1_dec);
-                    assert(p2 == p2_dec);
-                    assert(p3 == p3_dec);
-                    assert(0 == (m & (1 << 31)));
-                }
-            }
-        }
-
-        cout << checksum << endl;
-    }
+    test_move1();
+    test_move2();
+    test_move3();
+    test_move4();
+    test_move6();
 
 }
