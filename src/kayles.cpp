@@ -34,7 +34,9 @@ void kayles::_decode(move m, int& take, int& smaller, int& larger)
 
 void kayles::_init_hash(local_hash& hash) const
 {
-    assert(_smaller_part == 0);
+    // TODO assert(_smaller_part == 0);
+    // after split, _smaller_part should be reset to zero?
+    // but _split_impl() is const...
     hash.toggle_value(0, _value);
 }
 
@@ -91,14 +93,16 @@ relation kayles::_order_impl(const game* rhs) const
 split_result kayles::_split_impl() const
 {
     assert(_value >= _smaller_part);
-    split_result result = split_result(vector<game*>());
-    if (_value > 0) // At least one subgame left
+    assert(_smaller_part >= 0);
+    if (_smaller_part == 0)
+        return {};
+    else // two subgames
     {
-        result->push_back(new kayles(_value));
-        if (_smaller_part > 0) // two subgames
-            result->push_back(new kayles(_smaller_part));
+        split_result sr = split_result(vector<game*>());
+        sr->push_back(new kayles(_value));
+        sr->push_back(new kayles(_smaller_part));
+        return sr;
     }
-    return result;
 }
 
 // Values from https://en.wikipedia.org/wiki/Kayles
