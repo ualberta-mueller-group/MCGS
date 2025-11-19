@@ -13,6 +13,9 @@
 #include "grid_hash.h"
 #include "utilities.h"
 
+constexpr unsigned int DOMINEERING_GRID_HASH_MASK =
+    GRID_HASH_ACTIVE_MASK_MIRRORS;
+
 #define DOMINEERING_SPLIT
 
 ////////////////////////////////////////////////// class domineering
@@ -49,29 +52,3 @@ inline void domineering::print(std::ostream& str) const
 {
     str << "domineering:" << board_as_string();
 }
-
-////////////////////////////////////////////////// move encoding
-// TODO put this elsewhere or use cgt_move functions?
-inline int encode_domineering_coord(const int_pair& coord)
-{
-    const int& r = coord.first;
-    const int& c = coord.second;
-
-    assert(0 == (r & ~get_bit_mask_lower<int>(7)));
-    assert(0 == (c & ~get_bit_mask_lower<int>(7)));
-
-    return r | (c << 7);
-}
-
-inline int_pair decode_domineering_coord(int encoded)
-{
-    assert(0 == (encoded & ~get_bit_mask_lower<int>(14)));
-
-    const int DOMINEERING_MASK = get_bit_mask_lower<int>(7);
-
-    const int r = encoded & DOMINEERING_MASK;
-    const int c = (encoded >> 7) & DOMINEERING_MASK;
-
-    return {r, c};
-}
-

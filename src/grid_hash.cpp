@@ -10,6 +10,7 @@
 
 using namespace std;
 
+
 ////////////////////////////////////////////////// helper functions
 namespace {
 // TODO why unused?
@@ -67,6 +68,25 @@ void grid_hash::reset(const int_pair& grid_shape)
             hash2.toggle_value(1, shape.first);
         }
     }
+}
+
+
+void grid_hash::init_from_grid(const grid& g)
+{
+    const int_pair& shape = g.shape();
+
+    reset(shape);
+    toggle_type(g.game_type());
+
+    int pos = 0;
+    for (int r = 0; r < shape.first; r++)
+    {
+        for (int c = 0; c < shape.second; c++)
+            toggle_value(r, c, g.at(pos + c));
+
+        pos += shape.second;
+    }
+
 }
 
 //////////////////////////////////////////////////

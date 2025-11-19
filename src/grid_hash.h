@@ -134,7 +134,7 @@ inline unsigned int get_op_mask(grid_hash_orientation ori)
 class grid_hash
 {
 public:
-    grid_hash(unsigned int active_orientation_mask = GRID_HASH_ACTIVE_MASK_ALL);
+    grid_hash(unsigned int active_orientation_mask);
 
     void reset(const int_pair& grid_shape);
 
@@ -147,6 +147,8 @@ public:
     void toggle_value(const int_pair& coord, const T& color);
 
     void toggle_type(game_type_t type);
+
+    void init_from_grid(const grid& g);
 
 private:
     int_pair _get_transformed_coords(int r, int c,
@@ -277,6 +279,8 @@ inline int_pair grid_hash::_get_transformed_shape(
 
     return _grid_shape;
 }
+
+
 
 //////////////////////////////////////////////////
 void test_grid_hash_stuff();

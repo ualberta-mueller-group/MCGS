@@ -9,6 +9,10 @@
 #include <ostream>
 #include <vector>
 
+#include "grid_hash.h"
+
+constexpr unsigned int FISSION_GRID_HASH_MASK = GRID_HASH_ACTIVE_MASK_MIRRORS;
+
 ////////////////////////////////////////////////// class fission
 class fission: public grid
 {
@@ -25,6 +29,13 @@ public:
     void print(std::ostream& str) const override;
 
     game* inverse() const override;
+
+protected:
+#ifdef USE_GRID_HASH
+    void _init_hash(local_hash& hash) const override;
+
+    mutable grid_hash _gh;
+#endif
 
     /*
         TODO

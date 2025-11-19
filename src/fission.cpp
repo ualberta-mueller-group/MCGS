@@ -6,6 +6,7 @@
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "grid.h"
 #include "grid_location.h"
 #include "throw_assert.h"
@@ -54,18 +55,27 @@ private:
 ////////////////////////////////////////////////// fission methods
 fission::fission(int n_rows, int n_cols)
     : grid(n_rows, n_cols, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(FISSION_GRID_HASH_MASK)
+#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 fission::fission(const vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(FISSION_GRID_HASH_MASK)
+#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 fission::fission(const string& game_as_string)
     : grid(game_as_string, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(FISSION_GRID_HASH_MASK)
+#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
@@ -75,8 +85,11 @@ void fission::play(const ::move& m, bw to_play)
     game::play(m, to_play);
 
     // Get points
-    grid_location loc_start(shape(),
-                            int_pair(cgt_move::first(m), cgt_move::second(m)));
+
+    int_pair coord_start;
+    cgt_move_new::move2_unpack_from_coords(m, coord_start);
+
+    grid_location loc_start(shape(), coord_start);
     assert(loc_start.valid());
 
     grid_dir dir1;
@@ -84,14 +97,18 @@ void fission::play(const ::move& m, bw to_play)
     get_player_dirs(to_play, dir1, dir2);
 
     int point_start = loc_start.get_point();
-    int point1;
-    int point2;
+    int_pair coord1, coord2;
+    int point1, point2;
 
     {
         bool ok = true;
-        ok &= loc_start.get_neighbor_point(point1, dir1);
-        ok &= loc_start.get_neighbor_point(point2, dir2);
+        ok &= loc_start.get_neighbor_coord(coord1, dir1);
+        ok &= loc_start.get_neighbor_coord(coord2, dir2);
         assert(ok);
+
+        point1 = grid_location::coord_to_point(coord1, shape());
+        point2 = grid_location::coord_to_point(coord2, shape());
+        
     }
 
     // Remove/place stones
@@ -110,6 +127,19 @@ void fission::play(const ::move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
+#ifdef USE_GRID_HASH
+        // Remove old state
+        _gh.toggle_value(coord_start, BLACK);
+        _gh.toggle_value(coord1, EMPTY);
+        _gh.toggle_value(coord2, EMPTY);
+
+        // Add new state
+        _gh.toggle_value(coord_start, EMPTY);
+        _gh.toggle_value(coord1, BLACK);
+        _gh.toggle_value(coord2, BLACK);
+
+        hash.__set_value(_gh.get_value());
+#else
         // Remove old state
         hash.toggle_value(2 + point_start, BLACK);
         hash.toggle_value(2 + point1, EMPTY);
@@ -119,6 +149,7 @@ void fission::play(const ::move& m, bw to_play)
         hash.toggle_value(2 + point_start, EMPTY);
         hash.toggle_value(2 + point1, BLACK);
         hash.toggle_value(2 + point2, BLACK);
+#endif
 
         _mark_hash_updated();
     }
@@ -130,12 +161,13 @@ void fission::undo_move()
     game::undo_move();
 
     // Decode move
-    const bw player = cgt_move::get_color(m_enc);
-    const ::move m = cgt_move::decode(m_enc);
+    const bw player = cgt_move_new::get_color(m_enc);
 
     // Get points
-    grid_location loc_start(shape(),
-                            int_pair(cgt_move::first(m), cgt_move::second(m)));
+    int_pair coord_start;
+    cgt_move_new::move2_unpack_from_coords(m_enc, coord_start);
+
+    grid_location loc_start(shape(), coord_start);
     assert(loc_start.valid());
 
     grid_dir dir1;
@@ -143,14 +175,17 @@ void fission::undo_move()
     get_player_dirs(player, dir1, dir2);
 
     int point_start = loc_start.get_point();
-    int point1;
-    int point2;
+    int_pair coord1, coord2;
+    int point1, point2;
 
     {
         bool ok = true;
-        ok &= loc_start.get_neighbor_point(point1, dir1);
-        ok &= loc_start.get_neighbor_point(point2, dir2);
+        ok &= loc_start.get_neighbor_coord(coord1, dir1);
+        ok &= loc_start.get_neighbor_coord(coord2, dir2);
         assert(ok);
+
+        point1 = grid_location::coord_to_point(coord1, shape());
+        point2 = grid_location::coord_to_point(coord2, shape());
     }
 
     // Remove/place stones
@@ -170,6 +205,19 @@ void fission::undo_move()
     {
         local_hash& hash = _get_hash_ref();
 
+#ifdef USE_GRID_HASH
+        // Remove old state
+        _gh.toggle_value(coord_start, EMPTY);
+        _gh.toggle_value(coord1, BLACK);
+        _gh.toggle_value(coord2, BLACK);
+
+        // Add new state
+        _gh.toggle_value(coord_start, BLACK);
+        _gh.toggle_value(coord1, EMPTY);
+        _gh.toggle_value(coord2, EMPTY);
+
+        hash.__set_value(_gh.get_value());
+#else
         // Remove old state
         hash.toggle_value(2 + point_start, EMPTY);
         hash.toggle_value(2 + point1, BLACK);
@@ -179,7 +227,7 @@ void fission::undo_move()
         hash.toggle_value(2 + point_start, BLACK);
         hash.toggle_value(2 + point1, EMPTY);
         hash.toggle_value(2 + point2, EMPTY);
-
+#endif
         _mark_hash_updated();
     }
 }
@@ -200,6 +248,14 @@ game* fission::inverse() const
     return new fission(grid::transpose_board(board_const(), s),
                        transpose_shape);
 }
+
+#ifdef USE_GRID_HASH
+void fission::_init_hash(local_hash& hash) const
+{
+    _gh.init_from_grid(*this);
+    hash.__set_value(_gh.get_value());
+}
+#endif
 
 //////////////////////////////////////////////////
 // fission_move_generator methods
@@ -228,7 +284,7 @@ fission_move_generator::operator bool() const
     assert(*this);
 
     const int_pair& coords = _loc.get_coord();
-    return cgt_move::two_part_move(coords.first, coords.second);
+    return cgt_move_new::move2_create_from_coords(coords);
 }
 
 void fission_move_generator::_increment(bool init)

@@ -9,13 +9,12 @@
 #include <cstddef>
 
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "game.h"
 #include "grid.h"
 #include "throw_assert.h"
 #include "grid_location.h"
 #include "grid_hash.h"
-
 
 using namespace std;
 
@@ -102,7 +101,7 @@ bool only_legal_colors(const std::vector<int>& board)
 domineering::domineering(int n_rows, int n_cols)
     : grid(n_rows, n_cols, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-      , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
+      , _gh(DOMINEERING_GRID_HASH_MASK)
 #endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
@@ -111,7 +110,7 @@ domineering::domineering(int n_rows, int n_cols)
 domineering::domineering(const std::vector<int>& board, int_pair shape) :
     grid(board, shape, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-    , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
+      , _gh(DOMINEERING_GRID_HASH_MASK)
 #endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
@@ -120,7 +119,7 @@ domineering::domineering(const std::vector<int>& board, int_pair shape) :
 domineering::domineering(const std::string& game_as_string):
     grid(game_as_string, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-    , _gh(GRID_HASH_ACTIVE_MASK_MIRRORS)
+      , _gh(DOMINEERING_GRID_HASH_MASK)
 #endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
@@ -130,11 +129,8 @@ void domineering::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int enc1 = cgt_move::from(m);
-    const int enc2 = cgt_move::to(m);
-
-    const int_pair coord1 = decode_domineering_coord(enc1);
-    const int_pair coord2 = decode_domineering_coord(enc2);
+    int_pair coord1, coord2;
+    cgt_move_new::move4_unpack_coords(m, coord1, coord2);
 
     const int point1 = grid_location::coord_to_point(coord1, shape());
     const int point2 = grid_location::coord_to_point(coord2, shape());
@@ -156,6 +152,7 @@ void domineering::play(const ::move& m, bw to_play)
 
         _gh.toggle_value(coord1, BORDER);
         _gh.toggle_value(coord2, BORDER);
+
         hash.__set_value(_gh.get_value());
 #else
         // Remove EMPTY from hash
@@ -179,12 +176,10 @@ void domineering::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    bw to_play;
-    int enc2;
-    int enc1 = cgt_move::decode3(m_enc, &enc2, &to_play);
+    bw to_play = cgt_move_new::get_color(m_enc);
 
-    const int_pair coord1 = decode_domineering_coord(enc1);
-    const int_pair coord2 = decode_domineering_coord(enc2);
+    int_pair coord1, coord2;
+    cgt_move_new::move4_unpack_coords(m_enc, coord1, coord2);
 
     const int point1 = grid_location::coord_to_point(coord1, shape());
     const int point2 = grid_location::coord_to_point(coord2, shape());
@@ -202,6 +197,7 @@ void domineering::undo_move()
 
         _gh.toggle_value(coord1, EMPTY);
         _gh.toggle_value(coord2, EMPTY);
+
         hash.__set_value(_gh.get_value());
 #else
         // Remove BORDER
@@ -238,15 +234,12 @@ game* domineering::inverse() const
 
 void domineering::print_move(std::ostream& str, const ::move& m) const
 {
-    bw ignore_to_play;
-    int enc_to;
-    const int enc_from = cgt_move::decode3(m, &enc_to, &ignore_to_play);
-
-    const int_pair coord_from = decode_domineering_coord(enc_from);
-    const int_pair coord_to   = decode_domineering_coord(enc_to);
+    int_pair coord_from, coord_to;
+    cgt_move_new::move4_unpack_coords(m, coord_from, coord_to);
 
     const int point_from = grid_location::coord_to_point(coord_from, shape());
     const int point_to   = grid_location::coord_to_point(coord_to, shape());
+
     str << point_coord_as_string(point_from) << "-"
         << point_coord_as_string(point_to);
 }
@@ -442,22 +435,8 @@ split_result domineering::_split_impl() const
 #ifdef USE_GRID_HASH
 void domineering::_init_hash(local_hash& hash) const
 {
-    const int_pair &s = shape();
-
-    _gh.reset(s);
-    _gh.toggle_type(game_type());
-
-    int pos = 0;
-    for (int r = 0; r < s.first; r++)
-    {
-        for (int c = 0; c < s.second; c++)
-            _gh.toggle_value(r, c, at(pos + c));
-
-        pos += s.second;
-    }
-
+    _gh.init_from_grid(*this);
     hash.__set_value(_gh.get_value());
-    //hash.toggle_value(0, _gh.get_value());
 }
 #endif
 
@@ -489,15 +468,7 @@ domineering_move_generator::operator bool() const
 ::move domineering_move_generator::gen_move() const
 {
     assert(*this);
-    //return cgt_move::two_part_move(_point1, _point2);
-
-    const int_pair& coord1 = _loc1.get_coord();
-    const int_pair& coord2 = _coord2;
-
-    const int enc1 = encode_domineering_coord(coord1);
-    const int enc2 = encode_domineering_coord(coord2);
-
-    return cgt_move::two_part_move(enc1, enc2);
+    return cgt_move_new::move4_create_from_coords(_loc1.get_coord(), _coord2);
 }
 
 void domineering_move_generator::_increment(bool init)

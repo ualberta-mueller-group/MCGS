@@ -34,16 +34,16 @@ sheep_alt_generator::operator bool() const
 
     /*
        3 part move:
+       _target_size (signed)
        _herd_start_idx
        _target_end_idx
-       _target_size (as absolute)
     */
     assert(_herd_start_idx >= 0 && //
            _target_end_idx >= 0    //
     );
 
-    return cgt_move::encode_three_part_move(_herd_start_idx, _target_end_idx,
-                                            abs(_target_size));
+    return cgt_move_new::move3_create(_target_size, _herd_start_idx,
+                                      _target_end_idx);
 }
 
 bool sheep_alt_generator::_increment(bool init)

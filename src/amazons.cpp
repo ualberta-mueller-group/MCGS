@@ -9,6 +9,7 @@
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "grid.h"
 #include "utilities.h"
 #include "grid_location.h"
@@ -55,29 +56,6 @@ using namespace std;
 ////////////////////////////////////////////////// helper functions
 namespace {
 
-inline unsigned int encode_amazons_coord(const int_pair& coord)
-{
-    const int& r = coord.first;
-    const int& c = coord.second;
-
-    assert(r == (r & get_bit_mask_lower<int>(5)));
-    assert(c == (c & get_bit_mask_lower<int>(5)));
-
-    return r | (c << 5);
-}
-
-inline int_pair decode_amazons_coord(unsigned int encoded)
-{
-    assert(0 == (encoded & ~get_bit_mask_lower<unsigned int>(10)));
-
-    const unsigned int AMAZONS_MASK = get_bit_mask_lower<unsigned int>(5);
-
-    const unsigned int r = encoded & AMAZONS_MASK;
-    const unsigned int c = (encoded >> 5) & AMAZONS_MASK;
-
-    return {r, c};
-}
-
 bool only_legal_colors(const std::vector<int>& board)
 {
     for (const int& x : board)
@@ -91,18 +69,27 @@ bool only_legal_colors(const std::vector<int>& board)
 ////////////////////////////////////////////////// amazons methods
 amazons::amazons(int n_rows, int n_cols)
     : grid(n_rows, n_cols, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(AMAZONS_GRID_HASH_MASK)
+#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 amazons::amazons(const std::vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(AMAZONS_GRID_HASH_MASK)
+#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 amazons::amazons(const std::string& game_as_string)
     : grid(game_as_string, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(AMAZONS_GRID_HASH_MASK)
+#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
@@ -111,15 +98,11 @@ void amazons::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
 
+
+    int_pair coord1, coord2, coord3;
+    cgt_move_new::move6_unpack_coords(m, coord1, coord2, coord3);
+
     const int_pair& s = shape();
-
-    unsigned int enc1, enc2, enc3;
-    cgt_move::decode_three_part_move(m, enc1, enc2, enc3);
-
-    const int_pair coord1 = decode_amazons_coord(enc1);
-    const int_pair coord2 = decode_amazons_coord(enc2);
-    const int_pair coord3 = decode_amazons_coord(enc3);
-
     const int point1 = grid_location::coord_to_point(coord1, s);
     const int point2 = grid_location::coord_to_point(coord2, s);
     const int point3 = grid_location::coord_to_point(coord3, s);
@@ -185,18 +168,13 @@ void amazons::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    const bw to_play = cgt_move::get_color(m_enc);
-    const ::move m_dec = cgt_move::decode(m_enc);
+    const bw to_play = cgt_move_new::get_color(m_enc);
+
+
+    int_pair coord1, coord2, coord3;
+    cgt_move_new::move6_unpack_coords(m_enc, coord1, coord2, coord3);
 
     const int_pair& s = shape();
-
-    unsigned int enc1, enc2, enc3;
-    cgt_move::decode_three_part_move(m_dec, enc1, enc2, enc3);
-
-    const int_pair coord1 = decode_amazons_coord(enc1);
-    const int_pair coord2 = decode_amazons_coord(enc2);
-    const int_pair coord3 = decode_amazons_coord(enc3);
-
     const int point1 = grid_location::coord_to_point(coord1, s);
     const int point2 = grid_location::coord_to_point(coord2, s);
     const int point3 = grid_location::coord_to_point(coord3, s);
@@ -486,20 +464,7 @@ split_result amazons::_split_impl() const
 #ifdef USE_GRID_HASH
 void amazons::_init_hash(local_hash& hash) const
 {
-    const int_pair &s = shape();
-
-    _gh.reset(s);
-    _gh.toggle_type(game_type());
-
-    int pos = 0;
-    for (int r = 0; r < s.first; r++)
-    {
-        for (int c = 0; c < s.second; c++)
-            _gh.toggle_value(r, c, at(pos + c));
-
-        pos += s.second;
-    }
-
+    _gh.init_from_grid(*this);
     hash.__set_value(_gh.get_value());
 }
 #endif
@@ -532,17 +497,12 @@ amazons_move_generator::operator bool() const
 ::move amazons_move_generator::gen_move() const
 {
     assert(*this);
-    //return encode_three_part_move(_move1, _move2, _move3);
 
     const int_pair& coord1 = _queen_start.get_coord();
     const int_pair& coord2 = _queen_end.get_coord();
     const int_pair& coord3 = _arrow_end.get_coord();
 
-    const unsigned int enc1 = encode_amazons_coord(coord1);
-    const unsigned int enc2 = encode_amazons_coord(coord2);
-    const unsigned int enc3 = encode_amazons_coord(coord3);
-
-    return cgt_move::encode_three_part_move(enc1, enc2, enc3);
+    return cgt_move_new::move6_create_from_coords(coord1, coord2, coord3);
 }
 
 bool amazons_move_generator::_increment(bool init)

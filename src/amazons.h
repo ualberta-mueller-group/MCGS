@@ -13,6 +13,8 @@
 
 #define AMAZONS_SPLIT
 
+constexpr unsigned int AMAZONS_GRID_HASH_MASK = GRID_HASH_ACTIVE_MASK_ALL;
+
 ////////////////////////////////////////////////// class amazons
 class amazons: public grid
 {

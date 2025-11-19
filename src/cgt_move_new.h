@@ -16,10 +16,33 @@
 #include <tuple>
 #include <type_traits>
 #include "n_bit_int.h"
+#include "cgt_basics.h"
+#include "int_pair.h"
 
 typedef int move;
 
 namespace cgt_move_new {
+
+constexpr int COLOR_BIT_IDX = 31;
+constexpr int COLOR_BIT_MASK = (1) << COLOR_BIT_IDX;
+
+static_assert(BLACK == 0 && WHITE == 1);
+inline move set_color(const move& m, bw color)
+{
+    assert(is_black_white(color) && 0 == (m & COLOR_BIT_MASK));
+    using bw_unsigned_t = std::make_unsigned_t<bw>;
+    return m | (static_cast<bw_unsigned_t>(color) << COLOR_BIT_IDX);
+}
+
+inline move remove_color(const move& m)
+{
+    return m & ~(COLOR_BIT_MASK);
+}
+
+inline bw get_color(const move& m)
+{
+    return (m & COLOR_BIT_MASK) != 0;
+}
 
 ////////////////////////////////////////////////// bit fields of N part moves
 struct move1_layout
@@ -251,6 +274,12 @@ inline void move2_set_part_2(move& m, int part2)
     move_n_set_part<move2_layout, 2>(m, part2);
 }
 
+inline void move2_set_coord1(move& m, const int_pair& coord)
+{
+    move2_set_part_1(m, coord.first);
+    move2_set_part_2(m, coord.second);
+}
+
 //////////////////////////////////////// move2 getters
 inline int move2_get_part_1(const move& m)
 {
@@ -262,6 +291,21 @@ inline int move2_get_part_2(const move& m)
     return move_n_get_part<move2_layout, 2>(m);
 }
 
+inline int move2_get_from(const move& m)
+{
+    return move_n_get_part<move2_layout, 1>(m);
+}
+
+inline int move2_get_to(const move& m)
+{
+    return move_n_get_part<move2_layout, 2>(m);
+}
+
+inline int_pair move2_get_coord1(const move& m)
+{
+    return int_pair(move2_get_part_1(m), move2_get_part_2(m));
+}
+
 //////////////////////////////////////// move2 helpers
 inline move move2_create(int part1, int part2)
 {
@@ -271,10 +315,22 @@ inline move move2_create(int part1, int part2)
     return m;
 }
 
+inline move move2_create_from_coords(const int_pair& coord1)
+{
+    move m = 0;
+    move2_set_coord1(m, coord1);
+    return m;
+}
+
 inline void move2_unpack(const move& m, int& part1, int& part2)
 {
     part1 = move2_get_part_1(m);
     part2 = move2_get_part_2(m);
+}
+
+inline void move2_unpack_from_coords(const move& m, int_pair& coord1)
+{
+    coord1 = move2_get_coord1(m);
 }
 
 ////////////////////////////////////////////////// move3 (i11, u10, u10)
@@ -349,6 +405,18 @@ inline void move4_set_part_4(move& m, int part4)
     move_n_set_part<move4_layout, 4>(m, part4);
 }
 
+inline void move4_set_coord_1(move& m, const int_pair& coord)
+{
+    move4_set_part_1(m, coord.first);
+    move4_set_part_2(m, coord.second);
+}
+
+inline void move4_set_coord_2(move& m, const int_pair& coord)
+{
+    move4_set_part_3(m, coord.first);
+    move4_set_part_4(m, coord.second);
+}
+
 //////////////////////////////////////// move4 getters
 inline int move4_get_part_1(const move& m)
 {
@@ -370,6 +438,16 @@ inline int move4_get_part_4(const move& m)
     return move_n_get_part<move4_layout, 4>(m);
 }
 
+inline int_pair move4_get_coord1(const move& m)
+{
+    return int_pair(move4_get_part_1(m), move4_get_part_2(m));
+}
+
+inline int_pair move4_get_coord2(const move& m)
+{
+    return int_pair(move4_get_part_3(m), move4_get_part_4(m));
+}
+
 //////////////////////////////////////// move4 helpers
 inline move move4_create(int part1, int part2, int part3, int part4)
 {
@@ -381,6 +459,13 @@ inline move move4_create(int part1, int part2, int part3, int part4)
     return m;
 }
 
+inline move move4_create_from_coords(const int_pair& coord1, const int_pair& coord2)
+{
+    move m = 0;
+    move4_set_coord_1(m, coord1);
+    move4_set_coord_2(m, coord2);
+    return m;
+}
 
 inline void move4_unpack(const move& m, int& part1, int& part2, int& part3,
                          int& part4)
@@ -389,6 +474,12 @@ inline void move4_unpack(const move& m, int& part1, int& part2, int& part3,
     part2 = move4_get_part_2(m);
     part3 = move4_get_part_3(m);
     part4 = move4_get_part_4(m);
+}
+
+inline void move4_unpack_coords(const move& m, int_pair& coord1, int_pair& coord2)
+{
+    coord1 = move4_get_coord1(m);
+    coord2 = move4_get_coord2(m);
 }
 
 ////////////////////////////////////////////////// move6 (i6, u5, ..., u5)
@@ -423,6 +514,24 @@ inline void move6_set_part_6(move& m, int part6)
     move_n_set_part<move6_layout, 6>(m, part6);
 }
 
+inline void move6_set_coord_1(move& m, const int_pair& coord)
+{
+    move6_set_part_1(m, coord.first);
+    move6_set_part_2(m, coord.second);
+}
+
+inline void move6_set_coord_2(move& m, const int_pair& coord)
+{
+    move6_set_part_3(m, coord.first);
+    move6_set_part_4(m, coord.second);
+}
+
+inline void move6_set_coord_3(move& m, const int_pair& coord)
+{
+    move6_set_part_5(m, coord.first);
+    move6_set_part_6(m, coord.second);
+}
+
 //////////////////////////////////////// move6 getters
 inline int move6_get_part_1(const move& m)
 {
@@ -454,6 +563,21 @@ inline int move6_get_part_6(const move& m)
     return move_n_get_part<move6_layout, 6>(m);
 }
 
+inline int_pair move6_get_coord1(const move& m)
+{
+    return int_pair(move6_get_part_1(m), move6_get_part_2(m));
+}
+
+inline int_pair move6_get_coord2(const move& m)
+{
+    return int_pair(move6_get_part_3(m), move6_get_part_4(m));
+}
+
+inline int_pair move6_get_coord3(const move& m)
+{
+    return int_pair(move6_get_part_5(m), move6_get_part_6(m));
+}
+
 //////////////////////////////////////// move6 helpers
 inline move move6_create(int part1, int part2, int part3, int part4, int part5,
                          int part6)
@@ -468,6 +592,16 @@ inline move move6_create(int part1, int part2, int part3, int part4, int part5,
     return m;
 }
 
+inline move move6_create_from_coords(const int_pair& coord1,
+                                     const int_pair& coord2,
+                                     const int_pair& coord3)
+{
+    move m = 0;
+    move6_set_coord_1(m, coord1);
+    move6_set_coord_2(m, coord2);
+    move6_set_coord_3(m, coord3);
+    return m;
+}
 
 inline void move6_unpack(const move& m, int& part1, int& part2, int& part3,
                          int& part4, int& part5, int& part6)
@@ -480,6 +614,13 @@ inline void move6_unpack(const move& m, int& part1, int& part2, int& part3,
     part6 = move6_get_part_6(m);
 }
 
+inline void move6_unpack_coords(const move& m, int_pair& coord1,
+                                int_pair& coord2, int_pair& coord3)
+{
+    coord1 = move6_get_coord1(m);
+    coord2 = move6_get_coord2(m);
+    coord3 = move6_get_coord3(m);
+}
 
 } // namespace cgt_move_new
 

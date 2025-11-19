@@ -5,6 +5,12 @@
 #include "sheep.h"
 #include "grid_location.h"
 
+/*
+    Uses move3 representation:
+    1. Target herd value (signed)
+    2. Herd start index
+    3. Herd end index
+*/
 class sheep_alt_generator: public move_generator
 {
 public:

@@ -1,6 +1,7 @@
 #include "clobber.h"
 #include "cgt_basics.h"
 #include <ostream>
+#include "cgt_move_new.h"
 #include "game.h"
 #include "grid.h"
 #include <string>
@@ -10,6 +11,7 @@
 #include <algorithm>
 #include <utility>
 #include <vector>
+#include "grid_hash.h"
 #include "grid_location.h"
 #include "utilities.h"
 
@@ -19,26 +21,6 @@ using namespace std;
 namespace {
 
 // TODO number of bits is decreasing...
-inline int encode_clobber_coord(int r, int c)
-{
-    assert(r == (r & get_bit_mask_lower<int>(7)));
-    assert(c == (c & get_bit_mask_lower<int>(7)));
-
-    return r | (c << 7);
-}
-
-inline int_pair decode_clobber_coord(int encoded)
-{
-    assert(encoded == (encoded & get_bit_mask_lower<int>(14)));
-
-    // TODO why is this not constexpr with clang?
-    const unsigned int CLOBBER_MASK = get_bit_mask_lower<unsigned int>(7);
-
-    const int r = encoded & CLOBBER_MASK;
-    const int c = (encoded >> 7) & CLOBBER_MASK;
-
-    return {r, c};
-}
 
 bool only_legal_colors(const std::vector<int>& board)
 {
@@ -79,18 +61,28 @@ private:
 
 ////////////////////////////////////////////////// clobber
 clobber::clobber(int n_rows, int n_cols) : grid(n_rows, n_cols, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(CLOBBER_GRID_HASH_MASK)
+#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 clobber::clobber(const vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(CLOBBER_GRID_HASH_MASK)
+#endif
+
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 clobber::clobber(const string& game_as_string)
     : grid(game_as_string, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(CLOBBER_GRID_HASH_MASK)
+#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
@@ -99,11 +91,8 @@ void clobber::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int from_enc = cgt_move::from(m);
-    const int to_enc = cgt_move::to(m);
-
-    const int_pair from_coord = decode_clobber_coord(from_enc);
-    const int_pair to_coord = decode_clobber_coord(to_enc);
+    int_pair from_coord, to_coord;
+    cgt_move_new::move4_unpack_coords(m, from_coord, to_coord);
 
     const int from_point = grid_location::coord_to_point(from_coord, shape());
     const int to_point = grid_location::coord_to_point(to_coord, shape());
@@ -117,17 +106,13 @@ void clobber::play(const ::move& m, bw to_play)
         local_hash& hash = _get_hash_ref();
 
 #ifdef USE_GRID_HASH
-        //hash.toggle_value(0, _gh.get_value());
-        //hash.reset();
-        //hash.toggle_type(game_type());
+        _gh.toggle_value(from_coord, to_play);
+        _gh.toggle_value(to_coord, opp);
 
-        _gh.toggle_value(from_coord.first, from_coord.second, to_play);
-        _gh.toggle_value(to_coord.first, to_coord.second, opp);
+        _gh.toggle_value(from_coord, EMPTY);
+        _gh.toggle_value(to_coord, to_play);
 
-        _gh.toggle_value(from_coord.first, from_coord.second, EMPTY);
-        _gh.toggle_value(to_coord.first, to_coord.second, to_play);
         hash.__set_value(_gh.get_value());
-        //hash.toggle_value(0, _gh.get_value());
 #else
         hash.toggle_value(2 + from_point, to_play);
         hash.toggle_value(2 + to_point, opp);
@@ -148,12 +133,10 @@ void clobber::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    bw to_play;
-    int to_enc;
-    int from_enc = cgt_move::decode3(m_enc, &to_enc, &to_play);
+    bw to_play = cgt_move_new::get_color(m_enc);
 
-    const int_pair from_coord = decode_clobber_coord(from_enc);
-    const int_pair to_coord = decode_clobber_coord(to_enc);
+    int_pair from_coord, to_coord;
+    cgt_move_new::move4_unpack_coords(m_enc, from_coord, to_coord);
 
     const int from_point = grid_location::coord_to_point(from_coord, shape());
     const int to_point = grid_location::coord_to_point(to_coord, shape());
@@ -169,17 +152,13 @@ void clobber::undo_move()
         local_hash& hash = _get_hash_ref();
 
 #ifdef USE_GRID_HASH
-        //hash.toggle_value(0, _gh.get_value());
-        //hash.reset();
-        //hash.toggle_type(game_type());
+        _gh.toggle_value(from_coord, EMPTY);
+        _gh.toggle_value(to_coord, to_play);
 
-        _gh.toggle_value(from_coord.first, from_coord.second, EMPTY);
-        _gh.toggle_value(to_coord.first, to_coord.second, to_play);
+        _gh.toggle_value(from_coord, to_play);
+        _gh.toggle_value(to_coord, opp);
 
-        _gh.toggle_value(from_coord.first, from_coord.second, to_play);
-        _gh.toggle_value(to_coord.first, to_coord.second, opp);
         hash.__set_value(_gh.get_value());
-        //hash.toggle_value(0, _gh.get_value());
 #else
         hash.toggle_value(2 + from_point, EMPTY);
         hash.toggle_value(2 + to_point, to_play);
@@ -424,22 +403,8 @@ split_result clobber::_split_impl() const
 #ifdef USE_GRID_HASH
 void clobber::_init_hash(local_hash& hash) const
 {
-    const int_pair &s = shape();
-
-    _gh.reset(s);
-    _gh.toggle_type(game_type());
-
-    int pos = 0;
-    for (int r = 0; r < s.first; r++)
-    {
-        for (int c = 0; c < s.second; c++)
-            _gh.toggle_value(r, c, at(pos + c));
-
-        pos += s.second;
-    }
-
+    _gh.init_from_grid(*this);
     hash.__set_value(_gh.get_value());
-    //hash.toggle_value(0, _gh.get_value());
 }
 #endif
 
@@ -489,15 +454,10 @@ clobber_move_generator::operator bool() const
     assert(*this);
     assert(_location.valid() && _target_location.valid());
 
-    //return cgt_move::two_part_move(_location_point, _target_point);
-    const int_pair from_coords = _location.get_coord();
-    const int from_coords_enc = encode_clobber_coord(from_coords.first, from_coords.second);
+    const int_pair& from_coords = _location.get_coord();
+    const int_pair& to_coords = _target_location.get_coord();
 
-    const int_pair to_coords = _target_location.get_coord();
-    const int to_coords_enc =
-        encode_clobber_coord(to_coords.first, to_coords.second);
-
-    return cgt_move::two_part_move(from_coords_enc, to_coords_enc);
+    return cgt_move_new::move4_create_from_coords(from_coords, to_coords);
 }
 
 void clobber_move_generator::_next_move(bool init)
