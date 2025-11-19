@@ -2,8 +2,8 @@
 // Impartial game - kayles
 //---------------------------------------------------------------------------
 #include "kayles.h"
-#include "cgt_move.h"
 #include "cgt_basics.h"
+#include "cgt_move_new.h"
 #include "hashing.h"
 
 #include <ostream>
@@ -17,15 +17,15 @@ move kayles::encode(int take, int smaller, int larger)
     assert(take == 1 || take == 2);
     assert(larger >= smaller);
     int first = 2 * smaller + take - 1;
-    return cgt_move::two_part_move(first, larger);
+    return cgt_move_new::move2_create(first, larger);
 }
 
 // Decode move back to triple (take, smaller, larger)
 void kayles::_decode(move m, int& take, int& smaller, int& larger)
 {
-    larger = cgt_move::second(m);
+    larger = cgt_move_new::move2_get_part_2(m);
     assert(larger >= 0);
-    int f = cgt_move::first(m);
+    int f = cgt_move_new::move2_get_part_1(m);
     smaller = f / 2;
     assert(smaller >= 0);
     assert(larger >= smaller);
@@ -49,7 +49,7 @@ void kayles::play(const move& m)
 
 void kayles::undo_move()
 {
-    const move m = cgt_move::decode(last_move());
+    const move m = cgt_move_new::remove_color(last_move());
     game::undo_move();
     int take, smaller, larger;
     _decode(m, take, smaller, larger);

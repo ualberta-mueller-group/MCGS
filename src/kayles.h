@@ -52,7 +52,7 @@ private:
 inline kayles::kayles(int value)
     : impartial_game(), _value(value), _smaller_part(0)
 {
-    assert(_value >= 0);
+    THROW_ASSERT(_value >= 0);
 }
 
 inline void kayles::play(const move& m, bw ignore_to_play)
