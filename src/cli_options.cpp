@@ -128,6 +128,8 @@ void print_help_message(const string& exec_name)
                "generation. 0 means seed with current time. Default: " +
                    global::experiment_seed.get_default_str());
 
+    print_flag(global::alt_imp_search.flag(),
+               "Enable alternative search algorithm for impartial games.");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -637,6 +639,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             const uint64_t seed = strtoull(arg_next_ptr, &end, 10);
 
             global::experiment_seed.set(seed);
+            continue;
+        }
+
+        if (arg == global::alt_imp_search.flag())
+        {
+            global::alt_imp_search.set(true);
             continue;
         }
 
