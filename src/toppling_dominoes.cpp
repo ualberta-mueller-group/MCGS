@@ -7,6 +7,7 @@
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "game.h"
 #include "strip.h"
 #include "throw_assert.h"
@@ -75,8 +76,8 @@ void toppling_dominoes::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int new_start = cgt_move::first(m);
-    const int new_end = cgt_move::second(m);
+    const int new_start = cgt_move_new::move2_get_part_1(m);
+    const int new_end = cgt_move_new::move2_get_part_2(m);
 
     assert(
         (_domino_start <= new_start) && //
@@ -99,10 +100,8 @@ void toppling_dominoes::undo_move()
     if (num_moves_played() > 0)
     {
         const ::move m_enc = last_move();
-        const ::move m = cgt_move::decode(m_enc);
 
-        new_start = cgt_move::first(m);
-        new_end = cgt_move::second(m);
+        cgt_move_new::move2_unpack(m_enc, new_start, new_end);
     }
     else
     {
@@ -293,9 +292,10 @@ toppling_dominoes_move_generator::operator bool() const
     */
 
     if (!real_right)
-        return cgt_move::two_part_move(real_idx + 1, real_end); // LEFT
+        return cgt_move_new::move2_create(real_idx + 1, real_end); // LEFT
+
     else
-        return cgt_move::two_part_move(real_start, real_idx); // RIGHT
+        return cgt_move_new::move2_create(real_start, real_idx); // RIGHT
 }
 
 void toppling_dominoes_move_generator::_increment(bool init)

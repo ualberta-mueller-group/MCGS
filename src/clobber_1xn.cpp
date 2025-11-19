@@ -4,7 +4,7 @@
 #include "clobber_1xn.h"
 
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "game.h"
 #include "strip.h"
 #include "throw_assert.h"
@@ -93,8 +93,8 @@ void clobber_1xn::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int from = cgt_move::from(m);
-    const int to = cgt_move::to(m);
+    const int from = cgt_move_new::move2_get_from(m);
+    const int to = cgt_move_new::move2_get_to(m);
     assert(at(from) == to_play);
     assert(at(to) == opponent(to_play));
 
@@ -120,11 +120,10 @@ void clobber_1xn::undo_move()
     const move mc = last_move();
     game::undo_move();
 
-    const move m = cgt_move::decode(mc);
-    const int from = cgt_move::from(m);
-    const int to = cgt_move::to(m);
+    const int from = cgt_move_new::move2_get_from(mc);
+    const int to = cgt_move_new::move2_get_to(mc);
 
-    const bw player = cgt_move::get_color(mc);
+    const bw player = cgt_move_new::get_color(mc);
     assert(at(from) == EMPTY);
     assert(at(to) == player);
 
@@ -358,7 +357,7 @@ clobber_1xn_move_generator::operator bool() const
 move clobber_1xn_move_generator::gen_move() const
 {
     assert(operator bool());
-    return cgt_move::two_part_move(_current, _current + _dir);
+    return cgt_move_new::move2_create(_current, _current + _dir);
 }
 
 //---------------------------------------------------------------------------

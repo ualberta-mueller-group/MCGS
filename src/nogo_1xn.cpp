@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "cgt_move_new.h"
 #include "throw_assert.h"
 #include "iobuffer.h"
 #include "cgt_basics.h"
@@ -109,7 +110,7 @@ void nogo_1xn::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int to = m;
+    const int to = cgt_move_new::move1_get_part_1(m);
     assert(at(to) == EMPTY);
 
     // incremental hash
@@ -129,8 +130,8 @@ void nogo_1xn::undo_move()
     const move mc = last_move();
     game::undo_move();
 
-    const int to = cgt_move::decode(mc);
-    const bw player = cgt_move::get_color(mc);
+    const int to = cgt_move_new::move1_get_part_1(mc);
+    const bw player = cgt_move_new::get_color(mc);
     assert(at(to) == player);
 
     // incremental hash
@@ -339,7 +340,7 @@ nogo_1xn_move_generator::operator bool() const
 move nogo_1xn_move_generator::gen_move() const
 {
     assert(operator bool());
-    return _current;
+    return cgt_move_new::move1_create(_current);
 }
 
 //---------------------------------------------------------------------------

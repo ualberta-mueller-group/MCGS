@@ -8,7 +8,7 @@
 #include <cmath>
 
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "throw_assert.h"
 #include "game.h"
 #include "strip.h"
@@ -96,14 +96,17 @@ void gen_toads::play(const ::move& m, bw to_play)
 
     assert(is_black_white(to_play));
 
-    const int start_idx = cgt_move::first(m);
-    const int abs_distance = cgt_move::second(m);
-    const int distance_signed = to_play == BLACK ? abs_distance : -abs_distance;
+    const int distance_signed = cgt_move_new::move2_get_part_1(m);
+    const int start_idx = cgt_move_new::move2_get_part_2(m);
+
+    assert(LOGICAL_IMPLIES(distance_signed > 0, to_play == BLACK) && //
+           LOGICAL_IMPLIES(distance_signed < 0, to_play == WHITE)    //
+    );
+
     const int end_idx = start_idx + distance_signed;
 
     assert((0 <= start_idx && start_idx <= size()) && //
-           (0 <= end_idx && end_idx <= size()) &&     //
-           abs_distance > 0                           //
+           (0 <= end_idx && end_idx <= size())        //
     );
 
     assert(at(start_idx) == to_play);
@@ -133,17 +136,19 @@ void gen_toads::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    const bw to_play = cgt_move::get_color(m_enc);
-    const ::move m_dec = cgt_move::decode(m_enc);
+    const bw to_play = cgt_move_new::get_color(m_enc);
 
-    const int start_idx = cgt_move::first(m_dec);
-    const int abs_distance = cgt_move::second(m_dec);
-    const int distance_signed = to_play == BLACK ? abs_distance : -abs_distance;
+    const int distance_signed = cgt_move_new::move2_get_part_1(m_enc);
+    const int start_idx = cgt_move_new::move2_get_part_2(m_enc);
+
+    assert(LOGICAL_IMPLIES(distance_signed > 0, to_play == BLACK) && //
+           LOGICAL_IMPLIES(distance_signed < 0, to_play == WHITE)    //
+    );
+
     const int end_idx = start_idx + distance_signed;
 
     assert((0 <= start_idx && start_idx <= size()) && //
-           (0 <= end_idx && end_idx <= size()) &&     //
-           abs_distance > 0                           //
+           (0 <= end_idx && end_idx <= size())        //
     );
 
     assert(at(start_idx) == EMPTY);
@@ -337,7 +342,8 @@ gen_toads_move_generator::operator bool() const
 ::move gen_toads_move_generator::gen_move() const
 {
     assert(*this);
-    return cgt_move::two_part_move(_start_idx, abs(_move_distance));
+    // _move_distance is signed
+    return cgt_move_new::move2_create(_move_distance, _start_idx);
 }
 
 void gen_toads_move_generator::_increment(bool init)
