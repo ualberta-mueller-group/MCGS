@@ -18,6 +18,9 @@
 #include <string>
 #include <ostream>
 #include <cstddef>
+#include "grid_hash.h"
+
+constexpr unsigned int NOGO_GRID_HASH_MASK = GRID_HASH_ACTIVE_MASK_ALL;
 
 class nogo : public grid
 {
@@ -38,6 +41,7 @@ protected:
     void _init_hash(local_hash& hash) const override;
     split_result _split_impl() const override;
 
+
 public:
     game* inverse() const override;
     move_generator* create_move_generator(bw to_play) const override;
@@ -53,6 +57,10 @@ private:
                                 // WHITE for W-Go due to board partitioning,
                                 // EMPTY for others.
     std::vector<int> _immortal_copy; // A copy for undoing move
+
+#ifdef USE_GRID_HASH
+    mutable grid_hash _gh;
+#endif
 };
 
 // Compact nogo board for fast legality checking and board partitioning.
@@ -130,6 +138,7 @@ public:
         std::vector<bool>& region_markers);
 
     static std::vector<nogo_board> split(const nogo_board& board);
+
 };
 
 std::ostream& operator<<(std::ostream& os, const nogo_board& board);

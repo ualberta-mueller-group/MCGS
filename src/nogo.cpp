@@ -73,10 +73,27 @@ bool only_legal_colors(const std::vector<int>& board)
     return true;
 }
 
+inline int combine_board_and_immortal_val(int board_val, int immortal_val)
+{
+    // Check that we can combine both values by shifting by CHAR_BIT bits
+    static_assert(NUM_MAX_COLORS == (1 << CHAR_BIT));
+    // Check that the values fit in a single int
+    static_assert(sizeof(int) >= 2);
+
+    assert(in_range(board_val, 0, NUM_MAX_COLORS) && //
+           in_range(immortal_val, 0, NUM_MAX_COLORS) //
+    );
+
+    return board_val | (static_cast<unsigned int>(immortal_val) << CHAR_BIT);
+}
+
 } // namespace
 
 //////////////////////////////////////// nogo
 nogo::nogo(std::string game_as_string) : grid(game_as_string, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(NOGO_GRID_HASH_MASK)
+#endif
 {
     _immortal = std::vector<int>(size(), EMPTY);
     _immortal_copy = _immortal;
@@ -89,6 +106,9 @@ nogo::nogo(std::string game_as_string) : grid(game_as_string, GRID_TYPE_COLOR)
 
 nogo::nogo(const std::vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(NOGO_GRID_HASH_MASK)
+#endif
 {
     _immortal = std::vector<int>(size(), EMPTY);
     _immortal_copy = _immortal;
@@ -102,6 +122,9 @@ nogo::nogo(const std::vector<int>& board, int_pair shape)
 nogo::nogo(const std::vector<int>& board, const std::vector<int>& immortal,
            int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR), _immortal(immortal)
+#ifdef USE_GRID_HASH
+      , _gh(NOGO_GRID_HASH_MASK)
+#endif
 {
     _immortal_copy = _immortal;
 
@@ -115,25 +138,45 @@ void nogo::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int to = cgt_move_new::move1_get_part_1(m);
-    assert(at(to) == EMPTY);
+    //const int to = cgt_move_new::move1_get_part_1(m);
+    const int_pair to_coord = cgt_move_new::move2_get_coord1(m);
+    const int to_point = grid_location::coord_to_point(to_coord, shape());
 
-    replace(to, to_play);
+    assert(at(to_point) == EMPTY);
+
+    replace(to_point, to_play);
     // playing on a marked 1-Go point turns to immortal
-    if (_immortal[to] == to_play)
+    if (_immortal[to_point] == to_play)
     {
-        _immortal[to] = BORDER;
+        _immortal[to_point] = BORDER;
     }
 
     if (_hash_updatable())
     {
         local_hash& hash = _get_hash_ref();
-        const int N = size();
+        //const int N = size();
 
-        hash.toggle_value(2 + to, EMPTY); // update board
-        hash.toggle_value(2 + to, to_play);
-        hash.toggle_value(2 + N + to, _immortal_copy[to]); // update immortal
-        hash.toggle_value(2 + N + to, _immortal[to]);
+        //hash.toggle_value(2 + to_point, EMPTY); // update board
+        //hash.toggle_value(2 + to_point, to_play);
+        //hash.toggle_value(2 + N + to_point, _immortal_copy[to_point]); // update immortal
+        //hash.toggle_value(2 + N + to_point, _immortal[to_point]);
+
+        // Old board and immortal values
+        const int val1 =
+            combine_board_and_immortal_val(EMPTY, _immortal_copy[to_point]);
+
+        // New board and immortal values
+        const int val2 =
+            combine_board_and_immortal_val(to_play, _immortal[to_point]);
+
+#ifdef USE_GRID_HASH
+        _gh.toggle_value(to_coord, val1);
+        _gh.toggle_value(to_coord, val2);
+        hash.__set_value(_gh.get_value());
+#else
+        hash.toggle_value(2 + to_point, val1);
+        hash.toggle_value(2 + to_point, val2);
+#endif
 
         _mark_hash_updated();
     }
@@ -144,27 +187,47 @@ void nogo::undo_move()
     const move mc = last_move();
     game::undo_move();
 
-    const int to = cgt_move_new::move1_get_part_1(mc);
+    //const int to = cgt_move_new::move1_get_part_1(mc);
+    const int_pair to_coord = cgt_move_new::move2_get_coord1(mc);
+    const int to_point = grid_location::coord_to_point(to_coord, shape());
+
     const bw player = cgt_move_new::get_color(mc);
 
-    assert(at(to) == player);
-    const int N = size();
+    assert(at(to_point) == player);
+    //const int N = size();
 
-    replace(to, EMPTY);
+    replace(to_point, EMPTY);
 
     if (_hash_updatable())
     {
         local_hash& hash = _get_hash_ref();
 
-        hash.toggle_value(2 + to, player); // update board
-        hash.toggle_value(2 + to, EMPTY);
-        hash.toggle_value(2 + N + to, _immortal[to]); // update immortal
-        hash.toggle_value(2 + N + to, _immortal_copy[to]);
+        //hash.toggle_value(2 + to_point, player); // update board
+        //hash.toggle_value(2 + to_point, EMPTY);
+        //hash.toggle_value(2 + N + to_point, _immortal[to_point]); // update immortal
+        //hash.toggle_value(2 + N + to_point, _immortal_copy[to_point]);
+
+        // Old board and immortal values
+        const int val1 =
+            combine_board_and_immortal_val(player, _immortal[to_point]);
+
+        // New board and immortal values
+        const int val2 =
+            combine_board_and_immortal_val(EMPTY, _immortal_copy[to_point]);
+
+#ifdef USE_GRID_HASH
+        _gh.toggle_value(to_coord, val1);
+        _gh.toggle_value(to_coord, val2);
+        hash.__set_value(_gh.get_value());
+#else
+        hash.toggle_value(2 + to_point, val1);
+        hash.toggle_value(2 + to_point, val2);
+#endif
 
         _mark_hash_updated();
     }
 
-    _immortal[to] = _immortal_copy[to];
+    _immortal[to_point] = _immortal_copy[to_point];
 }
 
 bool nogo::is_legal() const
@@ -214,12 +277,8 @@ bool nogo::is_legal() const
 void nogo::_init_hash(local_hash& hash) const
 {
     const int_pair board_shape = shape();
-    const size_t N = size();
 
-    // hash board shape
-    hash.toggle_value(0, board_shape.first);
-    hash.toggle_value(1, board_shape.second);
-
+    /*
     // hash board
     for (size_t i = 0; i < N; i++)
         hash.toggle_value(i + 2, at(i));
@@ -227,6 +286,36 @@ void nogo::_init_hash(local_hash& hash) const
     // hash immortal
     for (size_t i = 0; i < N; i++)
         hash.toggle_value(i + N + 2, _immortal[i]);
+    */
+
+#ifdef USE_GRID_HASH
+    _gh.reset(board_shape);
+    _gh.toggle_type(::game_type<nogo>());
+
+    for (grid_location loc(board_shape); loc.valid(); loc.increment_position())
+    {
+        const int point = loc.get_point();
+        const int val =
+            combine_board_and_immortal_val(at(point), _immortal[point]);
+
+        _gh.toggle_value(loc.get_coord(), val);
+    }
+
+    hash.__set_value(_gh.get_value());
+
+#else
+    const size_t N = size();
+
+    // hash board shape
+    hash.toggle_value(0, board_shape.first);
+    hash.toggle_value(1, board_shape.second);
+
+    for (size_t i = 0; i < N; i++)
+    {
+        const int val = combine_board_and_immortal_val(at(i), _immortal[i]);
+        hash.toggle_value(2 + i, val);
+    }
+#endif
 }
 
 split_result nogo::_split_impl() const
@@ -573,11 +662,11 @@ private:
     bool _is_legal();
 
     const nogo& _game;
-    int _current; // current stone location to test
+    grid_location _current; // current stone location to test
 };
 
 inline nogo_move_generator::nogo_move_generator(const nogo& game, bw to_play)
-    : move_generator(to_play), _game(game), _current(0)
+    : move_generator(to_play), _game(game), _current(game.shape(), int_pair(0, 0))
 {
     if (_game.size() > 0 && !_is_legal())
     {
@@ -592,6 +681,7 @@ void nogo_move_generator::operator++()
 
 inline void nogo_move_generator::_find_next_move()
 {
+    /*
     _current++;
 
     int num = (int) _game.size();
@@ -599,23 +689,32 @@ inline void nogo_move_generator::_find_next_move()
     {
         _current++;
     }
+    */
+
+    assert(_current.valid());
+    
+    _current.increment_position();
+    while (_current.valid() && !_is_legal())
+        _current.increment_position();
 }
 
 inline bool nogo_move_generator::_is_legal()
 {
     return nogo_rule::is_legal({_game.board(), _game.immortal(), _game.shape()},
-                               _current, to_play());
+                               _current.get_point(), to_play());
 }
 
 nogo_move_generator::operator bool() const
 {
-    return _current < _game.size();
+    //return _current < _game.size();
+    return _current.valid();
 }
 
 move nogo_move_generator::gen_move() const
 {
     assert(operator bool());
-    return cgt_move_new::move1_create(_current);
+    //return cgt_move_new::move1_create(_current);
+    return cgt_move_new::move2_create_from_coords(_current.get_coord());
 }
 
 //---------------------------------------------------------------------------
