@@ -3,6 +3,8 @@
 //---------------------------------------------------------------------------
 #include "cgt_up_star.h"
 #include "cgt_basics.h"
+#include "cgt_move_new.h"
+#include "safe_arithmetic.h"
 #include <cassert>
 #include <ostream>
 
@@ -28,8 +30,8 @@ void up_star::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int delta_v = cgt_move::first(m);
-    const bool flip_star = static_cast<bool>(cgt_move::second(m));
+    const int delta_v = cgt_move_new::move2_get_part_1(m);
+    const bool flip_star = static_cast<bool>(cgt_move_new::move2_get_part_2(m));
     if (_value == 0) // last move from * to 0
     {
         assert(_star);
@@ -59,9 +61,9 @@ void up_star::undo_move()
     const move m = last_move();
     game::undo_move();
 
-    int flip_star;
-    bw to_play;
-    const int delta_v = cgt_move::decode3(m, &flip_star, &to_play);
+    const int delta_v = cgt_move_new::move2_get_part_1(m);
+    const int flip_star = cgt_move_new::move2_get_part_2(m);
+
     _value -= delta_v;
     if (flip_star)
         _star = !_star;
@@ -69,6 +71,7 @@ void up_star::undo_move()
 
 game* up_star::inverse() const
 {
+    assert(negate_is_safe(num_ups()));
     return new up_star(-num_ups(), has_star());
 }
 
@@ -167,18 +170,18 @@ move up_star_move_generator::gen_move() const
     const bool star = _game.has_star();
     move m;
     if (ups == 0) // flip star
-        m = cgt_move::two_part_move(0, 1);
+        m = cgt_move_new::move2_create(0, 1);
     else if (_num_generated == 0) // move to 0 , or flip star
     {
         if (is_same_player(ups, to_play())) // move to 0
-            m = cgt_move::two_part_move(-ups, star);
+            m = cgt_move_new::move2_create(-ups, star);
         else // move towards 0 by up_star
-            m = cgt_move::two_part_move(sign(-ups), 1);
+            m = cgt_move_new::move2_create(sign(-ups), 1);
     }
     else // up* or down* move to *
     {
         assert(ups == 1 || ups == -1);
-        m = cgt_move::two_part_move(-ups, 0);
+        m = cgt_move_new::move2_create(-ups, 0);
     }
     return m;
 }

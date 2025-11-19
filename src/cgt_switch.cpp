@@ -7,6 +7,7 @@
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
 #include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "safe_arithmetic.h"
 
 #include <iostream>
@@ -37,7 +38,7 @@ void switch_game::play(const move& m, bw to_play)
 
 void switch_game::undo_move()
 {
-    const int m = cgt_move::decode(last_move());
+    const int m = cgt_move_new::remove_color(last_move());
     game::undo_move();
 
     assert(is_rational());
