@@ -55,7 +55,7 @@ void impartial_game_wrapper_test_values()
 
     int limit = 50;
     for (int i = 0; i <= limit; ++i)
-        test_nim_value(clobber_1xn::xoxo(i), expected_result[i]);
+        test_nim_value(clobber_1xn::xo(i), expected_result[i]);
 }
 
 void test_play_undo(const string& s)
