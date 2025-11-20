@@ -3,16 +3,17 @@
 //---------------------------------------------------------------------------
 #include "clobber_1xn.h"
 
+#include <cassert>
+#include <cstddef>
+#include <utility>
+#include <vector>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "iobuffer.h"
 #include "strip.h"
 #include "utilities.h"
-#include "iobuffer.h"
-#include <cassert>
-#include <utility>
-#include <vector>
-#include <cstddef>
 
 class clobber_1xn_db_game_generator;
 
@@ -254,12 +255,14 @@ game* clobber_1xn::inverse() const
     return new clobber_1xn(inverse_board());
 }
 
-string clobber_1xn::xoxo(int n)
+string clobber_1xn::xo(int n)
 {
-    string result;
-    for (int i = 0; i < n; ++i)
-        result += "XO";
-    return result;
+    return repeat_string("XO", n);
+}
+
+string clobber_1xn::xxo(int n)
+{
+    return repeat_string("XXO", n);
 }
 
 //---------------------------------------------------------------------------
