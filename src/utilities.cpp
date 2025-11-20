@@ -100,6 +100,17 @@ bool string_ends_with(const std::string& str, const std::string& word)
     return true;
 }
 
+// Could implement a fancier version with repeated doubling,
+// but it's not worth doing
+std::string repeat_string(const std::string& str, int n)
+{
+    string result;
+    for (int i = 0; i < n; ++i)
+        result += str;
+    return result;
+}
+
+
 uint64_t ms_since_epoch()
 {
     using namespace std::chrono;
