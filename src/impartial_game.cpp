@@ -3,13 +3,14 @@
 //---------------------------------------------------------------------------
 #include "impartial_game.h"
 
+#include <cassert>
+#include <memory>
+#include <set>
+
 #include "cgt_nimber.h"
 #include "hashing.h"
 #include "solver_stats.h"
 #include "transposition.h"
-#include <memory>
-#include <cassert>
-#include <set>
 
 //---------------------------------------------------------------------------
 
@@ -58,7 +59,7 @@ int impartial_game::search_with_tt(int tt_size) const
 
 int impartial_game::search_impartial_game(impartial_tt& tt) const
 {
-    int result = search_impartial_game_cancellable(tt, false);
+    const int result = search_impartial_game_cancellable(tt, false);
     assert(result >= 0);
     return result;
 }
