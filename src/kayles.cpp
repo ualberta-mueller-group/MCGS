@@ -34,9 +34,7 @@ void kayles::_decode(move m, int& take, int& smaller, int& larger)
 
 void kayles::_init_hash(local_hash& hash) const
 {
-    // TODO assert(_smaller_part == 0);
-    // after split, _smaller_part should be reset to zero?
-    // but _split_impl() is const...
+    assert(_smaller_part == 0);
     hash.toggle_value(0, _value);
 }
 
@@ -101,6 +99,8 @@ split_result kayles::_split_impl() const
         split_result sr = split_result(vector<game*>());
         sr->push_back(new kayles(_value));
         sr->push_back(new kayles(_smaller_part));
+        kayles& nc_kayles = const_cast<kayles&>(*this);
+        nc_kayles._smaller_part = 0;
         return sr;
     }
 }
