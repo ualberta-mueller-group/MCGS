@@ -1,0 +1,37 @@
+{version 1.3}
+
+/*_
+    These tests have not been tried, but are larger than 
+    the largest solved tests in impartial_clobber_hard.test.
+*/
+
+[impartial clobber]
+
+/* 2x14 */
+XO|OX|XO|OX|XO|OX|XO|OX|XO|OX|XO|OX|XO|OX {N}
+
+/* 2x15 */
+XO|OX|XO|OX|XO|OX|XO|OX|XO|OX|XO|OX|XO|OX|XO {N}
+
+/* 3x9 */
+XOX|OXO|XOX|OXO|XOX|OXO|XOX|OXO|XOX {N}
+
+/* 4x7 */
+XOXO|OXOX|XOXO|OXOX|XOXO|OXOX|XOXO {N}
+
+/* 5x6 */
+XOXOX|OXOXO|XOXOX|OXOXO|XOXOX|OXOXO {N}
+
+/* 6x6 */
+XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO|OXOXOX {N}
+
+-------------------------------------
+/* From clobber_random_filled1_imp_hard.test */
+
+/* 3x8 random */
+XOXOXXXO|XXXXOXXO|OOXXXXOX
+    {N}
+
+/* 3x8 random */
+XOXOOOXX|OXOXOOXO|XXOOXXOX
+    {N}

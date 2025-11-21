@@ -1,0 +1,14 @@
+{version 1.3}
+[impartial clobber]
+
+/* 2x10 */
+XO|OX|XO|OX|XO|OX|XO|OX|XO|OX {N 0}
+
+/* 3x6*/
+XOX|OXO|XOX|OXO|XOX|OXO {N 0}
+
+/* 4x5 */
+XOXO|OXOX|XOXO|OXOX|XOXO {N 1}
+
+/* 3x7 random */
+XXXXXOO|XXXXXOX|XXOOOXO {N 0}
