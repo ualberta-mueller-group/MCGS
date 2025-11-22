@@ -139,7 +139,7 @@ void nogo::play(const move& m, bw to_play)
     game::play(m, to_play);
 
     //const int to = cgt_move_new::move1_get_part_1(m);
-    const int_pair to_coord = cgt_move_new::move2_get_coord1(m);
+    const int_pair to_coord = cgt_move_new::move2_get_coord_1(m);
     const int to_point = grid_location::coord_to_point(to_coord, shape());
 
     assert(at(to_point) == EMPTY);
@@ -188,7 +188,7 @@ void nogo::undo_move()
     game::undo_move();
 
     //const int to = cgt_move_new::move1_get_part_1(mc);
-    const int_pair to_coord = cgt_move_new::move2_get_coord1(mc);
+    const int_pair to_coord = cgt_move_new::move2_get_coord_1(mc);
     const int to_point = grid_location::coord_to_point(to_coord, shape());
 
     const bw player = cgt_move_new::get_color(mc);
