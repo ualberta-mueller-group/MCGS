@@ -6,6 +6,7 @@
 #include "alternating_move_game.h"
 #include "cgt_move.h"
 #include "game.h"
+#include <atomic>
 #include <ctime>
 #include "global_options.h"
 #include "sumgame_change_record.h"
@@ -168,7 +169,7 @@ private:
     void _debug_extra() const;
     void _assert_games_unique() const;
 
-    mutable bool _should_stop;
+    mutable std::atomic<bool> _should_stop;
     mutable bool _need_cgt_simplify;
     mutable global_hash _sumgame_hash;
     std::vector<game*> _subgames;
