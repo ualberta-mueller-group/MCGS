@@ -20,6 +20,7 @@
 #include "grid.h"
 #include "game.h"
 #include "grid_location.h"
+#include "type_table.h"
 #include "utilities.h"
 
 #define USE_GRID_HASH
@@ -281,6 +282,24 @@ inline int_pair grid_hash::_get_transformed_shape(
 }
 
 
+////////////////////////////////////////////////// type_table stuff...
+template <class Game_T>
+unsigned int grid_hash_mask()
+{
+    static_assert(std::is_base_of_v<game, Game_T> &&
+                  !std::is_abstract_v<Game_T>);
+
+    return type_table<Game_T>()->grid_hash_mask();
+}
+
+template <class Game_T>
+void set_grid_hash_mask(unsigned int mask)
+{
+    static_assert(std::is_base_of_v<game, Game_T> &&
+                  !std::is_abstract_v<Game_T>);
+
+    type_table<Game_T>()->set_grid_hash_mask(mask);
+}
 
 //////////////////////////////////////////////////
 void test_grid_hash_stuff();

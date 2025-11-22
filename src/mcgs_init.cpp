@@ -1,5 +1,6 @@
 #include "mcgs_init.h"
 #include "global_options.h"
+#include "init_grid_hash_mask.h"
 #include "throw_assert.h"
 #include <cassert>
 #include "cli_options.h"
@@ -11,6 +12,7 @@
 #include "init_impartial_sumgame.h"
 #include "init_database.h"
 #include "cgt_basics.h"
+#include "type_table.h"
 
 namespace {
 bool already_initialized = false;
@@ -26,6 +28,16 @@ void mcgs_init_2(const cli_options& opts)
 {
     THROW_ASSERT(!already_initialized);
     already_initialized = true;
+
+    mcgs_init::init_grid_hash_mask();
+
+    /*
+       Locks further modification of type_table_t fields which require
+       explicit initialization from the programmer. Other fields i.e. game type
+       IDs and serialization IDs which are automatically assigned will still
+       be initialized later upon first use
+    */
+    type_table_t::set_initialized();
 
     mcgs_init::init_serialization();
     mcgs_init::init_random();

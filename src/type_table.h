@@ -12,6 +12,16 @@ typedef uint32_t dyn_serializable_id_t;
 typedef uint32_t game_type_t;
 
 ////////////////////////////////////////////////// struct type_table_t
+
+/*
+   TODO:
+   - Make some of these const?
+   - Move implementations for fields back into some type_table related file,
+     rather than consumer files i.e. game.h? Currently implementation is
+     fragmented across several files to avoid problems with including many
+     headers across the project, but this is probably not necessary?
+
+*/
 struct type_table_t
 {
 public:
@@ -25,9 +35,27 @@ public:
     game_type_t game_type();
     game_type_t& game_type_ref();
 
+    // grid_hash symmetry mask
+    unsigned int grid_hash_mask() const;
+    void set_grid_hash_mask(unsigned int mask);
+
+    /*
+       Some fields must be explicitly initialized during mcgs_init by the
+       programmer. Modification of these will be locked afterward, once this
+       set_initialized() function is called.
+
+       Fields which are not explicitly initialized (i.e. game type and
+       serialization IDs) will still be automatically initialized later
+       as they're used.
+    */
+    static void set_initialized();
+
 private:
     dyn_serializable_id_t _sid;
     game_type_t _game_type;
+    unsigned int _grid_hash_mask;
+
+    static bool _initialized;
 };
 
 ////////////////////////////////////////////////// implementation details
@@ -56,7 +84,7 @@ private:
 };
 
 ////////////////////////////////////////////////// type_table_t methods
-inline type_table_t::type_table_t() : _sid(0), _game_type(0)
+inline type_table_t::type_table_t() : _sid(0), _game_type(0), _grid_hash_mask(0)
 {
 }
 
@@ -78,6 +106,20 @@ inline game_type_t type_table_t::game_type()
 inline game_type_t& type_table_t::game_type_ref()
 {
     return _game_type;
+}
+
+inline unsigned int type_table_t::grid_hash_mask() const
+{
+    // Must initialize in some mcgs_init function before using
+    assert(_initialized && _grid_hash_mask != 0);
+    return _grid_hash_mask;
+}
+
+inline void type_table_t::set_grid_hash_mask(unsigned int mask)
+{
+    // Field is only modifiable during mcgs_init, and not after.
+    assert(!_initialized && _grid_hash_mask == 0);
+    _grid_hash_mask = mask;
 }
 
 ////////////////////////////////////////////////// i_type_table methods
