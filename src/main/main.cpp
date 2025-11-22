@@ -14,6 +14,7 @@
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
+#include "misc_tests.h"
 #include "search_utils.h"
 #include "clobber.h"
 
@@ -62,6 +63,9 @@ int main(int argc, char** argv)
 
     //test_sheep_generator_sketch();
     //test_sheep_grid_generator();
+    //return 0;
+
+    //misc_tests_all();
     //return 0;
 
     if (opts.use_player)

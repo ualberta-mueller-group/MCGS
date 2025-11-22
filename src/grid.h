@@ -68,6 +68,9 @@ public:
     static std::vector<int> transpose_board(const std::vector<int>& board,
                                             const int_pair& shape);
 
+    static std::vector<int> rotate_90_board(const std::vector<int>& board,
+                                            const int_pair& shape);
+
 protected:
     void _init_hash(local_hash& hash) const override;
     relation _order_impl(const game* rhs) const override;
@@ -161,5 +164,9 @@ inline std::vector<int> grid::board() const
 }
 
 ////////////////////////////////////////////////// Helpers
+// TODO make these static members of grid...
+std::pair<std::vector<int>, int_pair> string_to_grid(
+    const std::string& game_as_string);
+
 std::pair<std::vector<int>, int_pair> string_to_int_grid(
     const std::string& game_as_string);

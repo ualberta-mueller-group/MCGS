@@ -19,8 +19,9 @@
 
 //---------------------------------------------------------------------------
 
-namespace {
 
+
+namespace {
 std::pair<std::vector<int>, int_pair> string_to_board(
     const std::string& game_as_string)
 {
@@ -56,6 +57,7 @@ std::pair<std::vector<int>, int_pair> string_to_board(
     int_pair shape = {n_rows, n_cols};
     return {board, shape};
 }
+
 
 std::string board_to_string(const std::vector<int>& board, const int_pair shape)
 {
@@ -355,7 +357,48 @@ std::vector<int> grid::transpose_board(const std::vector<int>& board,
     return new_board;
 }
 
+// 90 degree clockwise
+// TODO make faster
+// TODO unit test this
+std::vector<int> grid::rotate_90_board(const std::vector<int>& board,
+                                       const int_pair& shape)
+{
+    std::vector<int> new_board;
+    new_board.resize(shape.first * shape.second, COLOR_INVALID);
+    int_pair new_shape(shape.second, shape.first);
+
+    const size_t board_n = board.size();
+    new_board.reserve(board_n);
+
+    const int n_rows = shape.first;
+    const int n_cols = shape.second;
+
+
+    for (grid_location loc(shape); loc.valid(); loc.increment_position())
+    {
+        int_pair coord0 = loc.get_coord();
+        int_pair coord90(coord0.second, shape.first - 1 - coord0.first);
+
+        int point90 = grid_location::coord_to_point(coord90, new_shape);
+        assert(new_board[point90] == COLOR_INVALID);
+        new_board[point90] = board[loc.get_point()];
+    }
+
+    return new_board;
+}
+
+
 ////////////////////////////////////////////////// Helpers
+
+std::pair<std::vector<int>, int_pair> string_to_grid(
+    const std::string& game_as_string)
+{
+    return string_to_board(game_as_string);
+}
+
+
+
+
 
 // TODO make it faster?
 std::pair<std::vector<int>, int_pair> string_to_int_grid(

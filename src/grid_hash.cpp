@@ -70,23 +70,29 @@ void grid_hash::reset(const int_pair& grid_shape)
     }
 }
 
-
 void grid_hash::init_from_grid(const grid& g)
 {
     const int_pair& shape = g.shape();
+    const game_type_t type = g.game_type();
 
+    init_from_board_and_type(g.board_const(), shape, type);
+}
+
+void grid_hash::init_from_board_and_type(const std::vector<int>& board,
+                                         const int_pair& shape,
+                                         game_type_t type)
+{
     reset(shape);
-    toggle_type(g.game_type());
+    toggle_type(type);
 
     int pos = 0;
     for (int r = 0; r < shape.first; r++)
     {
         for (int c = 0; c < shape.second; c++)
-            toggle_value(r, c, g.at(pos + c));
+            toggle_value(r, c, board[pos + c]);
 
         pos += shape.second;
     }
-
 }
 
 //////////////////////////////////////////////////
