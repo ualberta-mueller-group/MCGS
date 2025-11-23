@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>MCGS Computational Results</title>
+</head>
+<body>
+<h1>MCGS Computational Results</h1>
+
+<p>Contents:</p>
+<ul>
+<li><a href="#partizan">Partizan Games</a></li>
+<li><a href="#impartial">Impartial Games</a>
+    <ul>
+    <li><a href="#impartial-clobber">Impartial Clobber</a></li>
+    <li><a href="#impartial-nogo">Impartial NoGo</a></li>
+    </ul>
+</li>
+<li><a href="#references">References</a></li>
+</ul>
+
+<h2><a name="partizan"></a>Partizan Games</h2>
+
+<h2><a name="impartial"></a>Impartial Games</h2>
+<h3><a name="impartial-clobber"></a>Impartial Clobber</h3>
+<h4><a name="impartial-clobber-1xn"></a>Impartial Linear Clobber</h4>
+<p>Repeating impartial clobber patterns are "easy", in the sense
+that the number of possible/relevant subgames is limited. 
+After most moves, the board divides into two subgames of "known" 
+nim values. "Known" means they are already stored in the 
+transposition table, from solving boards with smaller n). 
+For each new n, only a few new larger subgames need to be computed 
+and added to the table. In contrast, random starting positions allow less re-use.
+</p>
+<figure>
+<img src="images/Impartial-Clobber-xo-1-2000.pdf" alt="Impartial-Clobber-xo-1-2000">
+<figcaption>
+Figure 1: Nim values for (xo)<sup>n</sup>, n=1..2000
+</figcaption>
+</figure>
+
+<figure>
+<img src="images/Impartial-Clobber-xxo-1-1000.pdf" alt="Impartial-Clobber-xxo-1-1000">
+<figcaption>
+Figure 2: Nim values for (xxo)<sup>n</sup>, n=1..1000
+</figcaption>
+</figure>
+
+<figure>
+<img src="images/Impartial-Clobber-xxxo-1-1000.pdf" alt="Impartial-Clobber-xxxo-1-1000">
+<figcaption>
+Figure 3: Nim values for (xxxo)<sup>n</sup>, n=1..1000
+</figcaption>
+</figure>
+
+<p>History: 
+<br>(xo)<sup>n</sup>, n=1..42, except n= 17, 21, 39, 40, by (Dai and Chen 2022).
+<br>(xo)<sup>n</sup>, n=1..2000 computed Nov 20, 2025. All values from (Dai and Chen 2022) confirmed.
+<br>(xxo)<sup>n</sup>, n=1..1000 computed Nov 20, 2025.
+<br>(xxxo)<sup>n</sup>, n=1..1000 computed Nov 20, 2025.
+</p>
+<h3><a name="impartial-nogo"></a>Impartial NoGo</h3>
+<p>We are not aware of any previous published results on this game.</p>
+
+<table>
+  <caption>Impartial NoGo Nim Values</caption>
+<tr>
+  <th>rows\columns</th>
+  <th>2</th>
+  <th>3</th>
+  <th>4</th>
+  <th>5</th>
+  <th>6</th>
+  <th>7</th>
+  <th>8</th>
+  <th>9</th>
+</tr>
+<tr>
+  <th>2</th>
+  <td>*1</td>
+  <td>*1</td>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*1</td>
+  <td>*1</td>
+</tr>
+<tr>
+  <th>3</th>
+  <td>*1</td>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*1</td>
+  <td>*0</td>
+</tr>
+
+<tr>
+  <th>4</th>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*0</td>
+</tr>
+
+<tr>
+  <th>5</th>
+  <td>*0</td>
+  <td>*1</td>
+</tr>
+
+<tr>
+  <th>6</th>
+  <td>*0</td>
+  <td>*0</td>
+</tr>
+
+<tr>
+  <th>7</th>
+  <td>*0</td>
+</tr>
+
+<tr>
+  <th>8</th>
+  <td>*1</td>
+</tr>
+
+<tr>
+  <th>9</th>
+  <td>*1</td>
+</tr>
+
+</tr>
+</table>
+
+<p>History: 
+<br>All boards computed Nov 22, 2025 with Lemoine - Viennot algorithm.
+</p>
+
+<h4><a name="impartial-nogo-1xn"></a>Impartial Linear NoGo</h4>
+<table>
+  <caption>Impartial Linear NoGo Nim Values</caption>
+<tr>
+  <th>Board Size</th>
+  <th>NoGo Position</th>
+  <th>Nim Value</th>
+  <th>Notes</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><tt>.</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><tt>..</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><tt>...</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><tt>....</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><tt>.....</tt></td>
+  <td>*2</td>
+  <td></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><tt>......</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><tt>.......</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><tt>........</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><tt>.........</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><tt>..........</tt></td>
+  <td>*2</td>
+  <td></td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><tt>...........</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><tt>............</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><tt>.............</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><tt>..............</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><tt>...............</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><tt>................</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>17</td>
+  <td><tt>.................</tt></td>
+  <td>*2</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>18</td>
+  <td><tt>..................</tt></td>
+  <td>*2</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>19</td>
+  <td><tt>...................</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>20</td>
+  <td><tt>....................</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>21</td>
+  <td><tt>.....................</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>22</td>
+  <td><tt>......................</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><tt>.......................</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>24</td>
+  <td><tt>........................</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><tt>.........................</tt></td>
+  <td>?</td>
+  <td>Timed out (1hr limit) on Nov 21, 2025</td>
+</tr>
+</table>
+
+<p>History: 
+<br>Boards 1-19 computed May 1, 2025 with MEX algorithm.
+<br>Boards 20-24 computed Nov 21, 2025 with Lemoine - Viennot algorithm.
+</p>
+
+
+<h2><a name="references"></a>References</h2>
+
+<ul>
+<li>(Dai and Chen 2022) Jiayi Dai and Xinyue Chen. Impartial Clobber Solver. Course project, University of Alberta 2022.</li>
+</ul>
+
+</body>
+</html>
