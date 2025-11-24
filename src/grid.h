@@ -71,6 +71,10 @@ public:
     static std::vector<int> rotate_90_board(const std::vector<int>& board,
                                             const int_pair& shape);
 
+    template <class T>
+    static void print_grid(std::ostream& os, const std::vector<T>& board,
+                           const int_pair& shape);
+
 protected:
     void _init_hash(local_hash& hash) const override;
     relation _order_impl(const game* rhs) const override;
@@ -161,6 +165,29 @@ inline bool grid::coord_in_bounds(const int_pair& coord) const
 inline std::vector<int> grid::board() const
 {
     return _board;
+}
+
+template <class T>
+void grid::print_grid(std::ostream& os, const std::vector<T>& board,
+                      const int_pair& shape)
+{
+    for (int c = 0; c < shape.second; c++)
+        os << '-';
+    os << '\n';
+
+    int pos = 0;
+    for (int r = 0; r < shape.first; r++)
+    {
+        for (int c = 0; c < shape.second; c++)
+            os << board[pos + c];
+
+        os << '\n';
+        pos += shape.second;
+    }
+
+    for (int c = 0; c < shape.second; c++)
+        os << '-';
+    os << '\n';
 }
 
 ////////////////////////////////////////////////// Helpers

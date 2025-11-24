@@ -5,28 +5,13 @@
 #include <cassert>
 
 #include "grid.h"
+#include "grid_generator.h"
 #include "utilities.h"
 #include "hashing.h"
 
 using namespace std;
 
-
 ////////////////////////////////////////////////// helper functions
-namespace {
-// TODO why unused?
-[[maybe_unused]] void print_grid(const int_pair& shape, const vector<int>& vec)
-{
-    for (int r = 0; r < shape.first; r++)
-    {
-        for (int c = 0; c < shape.second; c++)
-        {
-            cout << vec[r * shape.second + c] << ' ';
-        }
-        cout << endl;
-    }
-}
-
-} // namespace
 
 ////////////////////////////////////////////////// grid_hash methods
 void grid_hash::reset(const int_pair& grid_shape)
@@ -78,24 +63,3 @@ void grid_hash::init_from_grid(const grid& g)
     init_from_board_and_type(g.board_const(), shape, type);
 }
 
-void grid_hash::init_from_board_and_type(const std::vector<int>& board,
-                                         const int_pair& shape,
-                                         game_type_t type)
-{
-    reset(shape);
-    toggle_type(type);
-
-    int pos = 0;
-    for (int r = 0; r < shape.first; r++)
-    {
-        for (int c = 0; c < shape.second; c++)
-            toggle_value(r, c, board[pos + c]);
-
-        pos += shape.second;
-    }
-}
-
-//////////////////////////////////////////////////
-void test_grid_hash_stuff()
-{
-}

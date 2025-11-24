@@ -202,7 +202,9 @@ public:
     void toggle_type(game_type_t type);
 
     void init_from_grid(const grid& g);
-    void init_from_board_and_type(const std::vector<int>& board,
+
+    template <class T>
+    void init_from_board_and_type(const std::vector<T>& board,
                                   const int_pair& shape, game_type_t type);
 
 private:
@@ -307,6 +309,25 @@ inline void grid_hash::toggle_type(game_type_t type)
         hash.toggle_type(type);
 }
 
+template <class T>
+void grid_hash::init_from_board_and_type(const std::vector<T>& board,
+                                         const int_pair& shape,
+                                         game_type_t type)
+{
+    reset(shape);
+    toggle_type(type);
+
+    int pos = 0;
+    for (int r = 0; r < shape.first; r++)
+    {
+        for (int c = 0; c < shape.second; c++)
+            toggle_value(r, c, board[pos + c]);
+
+        pos += shape.second;
+    }
+}
+
+
 inline int_pair grid_hash::_get_transformed_coords(
     int r, int c, grid_hash_orientation ori) const
 {
@@ -355,5 +376,3 @@ void set_grid_hash_mask(unsigned int mask)
     type_table<Game_T>()->set_grid_hash_mask(mask);
 }
 
-//////////////////////////////////////////////////
-void test_grid_hash_stuff();

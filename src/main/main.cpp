@@ -66,6 +66,8 @@ int main(int argc, char** argv)
     //return 0;
 
     //misc_tests_all();
+
+    //test_grid_generator_stuff();
     //return 0;
 
     if (opts.use_player)

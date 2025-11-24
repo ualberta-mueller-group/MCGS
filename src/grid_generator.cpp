@@ -8,6 +8,7 @@
 
 #include "clobber.h"
 #include "clobber_1xn.h"
+#include "grid_hash.h"
 #include "throw_assert.h"
 #include "utilities.h"
 #include "cgt_basics.h"
@@ -15,7 +16,8 @@
 using namespace std;
 
 ////////////////////////////////////////////////// grid_mask methods
-grid_mask::grid_mask() : _current_shape(0, 0), _marker_count_end(0)
+grid_mask::grid_mask(unsigned int grid_hash_symmetry_mask)
+    : _gh(grid_hash_symmetry_mask), _current_shape(0, 0), _marker_count_end(0)
 {
 }
 
@@ -46,6 +48,21 @@ void grid_mask::set_shape(const int_pair& shape)
 
     _indices.clear();
     _indices.reserve(mask_size);
+
+    if (*this)
+        _increment(true);
+}
+
+const std::vector<bool>& grid_mask::get_mask() const
+{
+    assert(*this);
+    return _mask;
+}
+
+void grid_mask::reset()
+{
+    _mask_hash_set.clear();
+    set_shape(int_pair(0, 0));
 }
 
 bool grid_mask::operator[](size_t idx) const
@@ -61,6 +78,31 @@ grid_mask::operator bool() const
 
 void grid_mask::operator++()
 {
+    assert(*this);
+    _increment(false);
+}
+
+bool grid_mask::_increment(bool init)
+{
+    assert(*this);
+
+    if (!init)
+    {
+        if (!_increment_no_hash_check())
+            return false;
+    }
+
+    while (*this && !_add_mask_hash_to_set())
+    {
+        if (!_increment_no_hash_check())
+            return false;
+    }
+
+    return true;
+}
+
+bool grid_mask::_increment_no_hash_check()
+{
     // At most as many markers as the board would allow
     assert(*this);
 
@@ -70,7 +112,10 @@ void grid_mask::operator++()
         (_indices.size() > 0) &&                                    //
         _increment_by_moving(_indices.size() - 1, _mask.size() - 1) //
         )                                                           //
-        return;
+    {
+        assert(*this);
+        return true;
+    }
 
     // Otherwise add another marker and reset positions of all markers
     if (!_increment_by_adding())
@@ -78,7 +123,11 @@ void grid_mask::operator++()
         // Ensure operator bool() returns false
         _marker_count_end = 0;
         assert(!*this);
+        return false;
     }
+
+    assert(*this);
+    return true;
 }
 
 bool grid_mask::_increment_by_moving(size_t marker_number, size_t max_pos)
@@ -145,6 +194,16 @@ bool grid_mask::_increment_by_adding()
     }
 
     return true;
+}
+
+bool grid_mask::_add_mask_hash_to_set()
+{
+    _gh.init_from_board_and_type(_mask, _current_shape, 0);
+
+    const hash_t hash = _gh.get_value();
+    auto inserted = _mask_hash_set.emplace(hash);
+
+    return inserted.second;
 }
 
 // TODO why can't this just use the template from utilities.h? Header problem?
@@ -539,5 +598,21 @@ bool grid_generator::_is_active_tile(int tile_idx) const
         return true;
 
     return (*_mask)[tile_idx] == _mask_active_bit;
+}
+
+//////////////////////////////////////////////////
+void test_grid_generator_stuff()
+{
+    grid_mask m(GRID_HASH_ACTIVE_MASK_IDENTITY);
+
+    m.set_shape({2, 2});
+
+    while (m)
+    {
+        grid::print_grid(cout, m.get_mask(), m.get_shape());
+        cout << endl;
+        ++m;
+    }
+
 }
 
