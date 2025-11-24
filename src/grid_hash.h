@@ -223,8 +223,6 @@ private:
 
 
 ////////////////////////////////////////////////// grid_hash methods
-
-
 inline grid_hash::grid_hash(unsigned int active_orientation_mask)
     : _active_orientation_mask(active_orientation_mask)
 {
@@ -326,7 +324,6 @@ void grid_hash::init_from_board_and_type(const std::vector<T>& board,
         pos += shape.second;
     }
 }
-
 
 inline int_pair grid_hash::_get_transformed_coords(
     int r, int c, grid_hash_orientation ori) const

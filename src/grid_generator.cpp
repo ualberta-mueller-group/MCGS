@@ -356,13 +356,14 @@ grid_generator::grid_generator(const int_pair& max_dims,
 grid_generator::grid_generator(const int_pair& max_dims,
                                const std::vector<int>& tile_sequence,
                                bool mask_active_bit, int mask_inactive_tile,
-                               bool strips_only)
+                               bool strips_only,
+                               unsigned int grid_hash_symmetry_mask)
 
     : _strips_only(strips_only),
       _max_dims(max_dims),
       _tile_sequence(tile_sequence),
       _idx_invalid(tile_sequence.size()),
-      _mask(new grid_mask()),
+      _mask(new grid_mask(grid_hash_symmetry_mask)),
       _mask_active_bit(mask_active_bit),
       _mask_inactive_tile(mask_inactive_tile)
 {

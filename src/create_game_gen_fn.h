@@ -73,9 +73,9 @@ create_game_gen_fn_t get_gridlike_create_game_gen_fn(
                      max_dims->second >= 0   //
         );
 
-        grid_generator* gg =
-            new grid_generator(max_dims.value(), tile_sequence, mask_active_bit,
-                               mask_inactive_tile, STRIPS_ONLY);
+        grid_generator* gg = new grid_generator(
+            max_dims.value(), tile_sequence, mask_active_bit,
+            mask_inactive_tile, STRIPS_ONLY, grid_hash_mask<Gridlike_Game_T>());
 
         return new gridlike_db_game_generator<Gridlike_Game_T, gridlike_type>(
             gg);
