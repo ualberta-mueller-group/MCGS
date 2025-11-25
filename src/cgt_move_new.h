@@ -624,7 +624,3 @@ inline void move6_unpack_coords(const move& m, int_pair& coord1,
 
 } // namespace cgt_move_new
 
-
-
-//////////////////////////////////////////////////
-void test_new_move_stuff();

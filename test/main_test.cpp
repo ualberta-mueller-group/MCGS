@@ -9,6 +9,7 @@
 #include "test/domineering_test.h"
 #include "test/fission_test.h"
 #include "test/gen_toads_test.h"
+#include "test/n_bit_int_test.h"
 #include "test/sheep_grid_generator_test.h"
 #include "test/split_test_amazons.h"
 #include "test/split_test_domineering.h"
@@ -19,7 +20,7 @@
 #include "test/sheep_test.h"
 #include "split_test_sheep.h"
 #include "test/winning_moves_test.h"
-const bool RUN_OVERRIDE_TESTS = false;
+const bool RUN_OVERRIDE_TESTS = true;
 
 #include <cassert>
 #include <string>
@@ -75,6 +76,8 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
+        cgt_move_test_all();
+        return;
 
         sheep_grid_generator_test_all();
         return;
@@ -166,6 +169,8 @@ int main(int argc, const char** argv)
     cgt_basics_test_all();
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
+
+    n_bit_int_test_all();
     cgt_move_test_all();
     cgt_nimber_test_all();
     cgt_switch_test_all();
