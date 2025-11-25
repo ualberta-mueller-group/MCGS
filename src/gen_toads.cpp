@@ -195,7 +195,7 @@ void gen_toads::print_move(std::ostream& str, const ::move& m) const
 
     const int end_idx = start_idx + move_delta;
 
-    str << start_idx << '-' << end_idx;
+    str << (1 + start_idx) << '-' << (1 + end_idx);
 }
 
 game* gen_toads::inverse() const
