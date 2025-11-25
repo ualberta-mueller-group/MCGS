@@ -96,7 +96,8 @@ int main(int argc, char** argv)
 
     if (opts.print_winning_moves)
     {
-        print_winning_moves_impl(opts.parser);
+        //print_winning_moves_impl(opts.parser);
+        print_winning_moves_new(opts.parser);
         return 0;
     }
 

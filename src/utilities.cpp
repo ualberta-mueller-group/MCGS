@@ -123,6 +123,15 @@ bool string_ends_with(const std::string& str, const std::string& word)
     return true;
 }
 
+bool string_contains_whitespace(const std::string& str)
+{
+    for (const char& c : str)
+        if (std::isspace(c))
+            return true;
+
+    return false;
+}
+
 uint64_t ms_since_epoch()
 {
     using namespace std::chrono;

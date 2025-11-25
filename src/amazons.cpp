@@ -11,6 +11,7 @@
 #include "cgt_move.h"
 #include "cgt_move_new.h"
 #include "grid.h"
+#include "print_move_helpers.h"
 #include "utilities.h"
 #include "grid_location.h"
 
@@ -235,6 +236,12 @@ void amazons::undo_move()
 move_generator* amazons::create_move_generator(bw to_play) const
 {
     return new amazons_move_generator(*this, to_play);
+}
+
+void amazons::print_move(std::ostream& str, const ::move& m) const
+{
+    // (from, to, arrow destination)
+    print_move6_as_coords(str, m, shape());
 }
 
 game* amazons::inverse() const

@@ -50,6 +50,7 @@ public:
     {
         str << "nogo:" << board_as_string();
     }
+    void print_move(std::ostream& str, const move& m) const override;
 
 private:
     std::vector<int> _immortal; // BORDER for immortal points (stones),

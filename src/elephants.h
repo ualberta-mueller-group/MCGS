@@ -45,6 +45,7 @@ public:
     {
         str << "elephants:" << board_as_string();
     }
+    void print_move(std::ostream& str, const move& m) const override;
 
     game* inverse() const override; // caller takes ownership
 };

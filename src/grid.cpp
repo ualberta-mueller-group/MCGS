@@ -78,11 +78,6 @@ std::string board_to_string(const std::vector<int>& board, const int_pair shape)
     return result;
 }
 
-inline char coord(int value) // 0 -> 'a', 1 -> 'b', etc.
-{
-    return 'a' + value;
-}
-
 inline std::vector<int> get_default_grid(int n_rows, int n_cols,
                                          grid_type_enum grid_type)
 {
@@ -170,16 +165,6 @@ std::string grid::board_as_string() const
 {
     assert(_grid_type == GRID_TYPE_COLOR);
     return board_to_string(_board, _shape);
-}
-
-std::string grid::point_coord_as_string(int point) const
-{
-    std::string result;
-    int_pair rc = grid_location::point_to_coord(point, shape());
-    result += coord(rc.second);
-    // From 0-based internal to 1-based external coordinates
-    result += std::to_string(rc.first + 1);
-    return result;
 }
 
 const std::vector<int>& grid::board_const() const

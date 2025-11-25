@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "cgt_move_new.h"
+#include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "iobuffer.h"
 #include "cgt_basics.h"
@@ -244,6 +245,12 @@ void nogo_1xn::_undo_normalize_impl()
 game* nogo_1xn::inverse() const
 {
     return new nogo_1xn(inverse_board());
+}
+
+void nogo_1xn::print_move(std::ostream& str, const move& m) const
+{
+    // to
+    print_move1_as_points(str, m);
 }
 
 std::ostream& operator<<(std::ostream& out, const nogo_1xn& g)

@@ -9,6 +9,7 @@
 #include "cgt_move.h"
 #include "cgt_move_new.h"
 #include "game.h"
+#include "print_move_helpers.h"
 #include "strip.h"
 #include "throw_assert.h"
 
@@ -133,6 +134,15 @@ void toppling_dominoes::print(ostream& str) const
     const int len = n_dominoes();
     for (int i = 0; i < len; i++)
         str << color_to_char(get_domino_at(i));
+}
+
+void toppling_dominoes::print_move(std::ostream& str, const ::move& m) const
+{
+    // Board is the open interval: [low_bound, high_bound)
+    int low_bound, high_bound;
+    cgt_move_new::move2_unpack(m, low_bound, high_bound);
+
+    str << '[' << low_bound << ',' << high_bound << ')';
 }
 
 game* toppling_dominoes::inverse() const

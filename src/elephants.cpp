@@ -5,6 +5,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "cgt_move_new.h"
+#include "print_move_helpers.h"
 #include "strip.h"
 #include "iobuffer.h"
 #include "utilities.h"
@@ -436,6 +437,12 @@ void elephants::_undo_normalize_impl()
 move_generator* elephants::create_move_generator(bw to_play) const
 {
     return new elephants_move_generator(*this, to_play);
+}
+
+void elephants::print_move(std::ostream& str, const move& m) const
+{
+    // from, to
+    print_move2_as_points(str, m);
 }
 
 game* elephants::inverse() const

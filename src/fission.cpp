@@ -9,6 +9,7 @@
 #include "cgt_move_new.h"
 #include "grid.h"
 #include "grid_location.h"
+#include "print_move_helpers.h"
 #include "throw_assert.h"
 
 using namespace std;
@@ -235,6 +236,12 @@ void fission::undo_move()
 move_generator* fission::create_move_generator(bw to_play) const
 {
     return new fission_move_generator(*this, to_play);
+}
+
+void fission::print_move(std::ostream& str, const ::move& m) const
+{
+    // (stone coord)
+    print_move2_as_coords(str, m, shape());
 }
 
 game* fission::inverse() const

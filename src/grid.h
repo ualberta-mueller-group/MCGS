@@ -54,8 +54,6 @@ public:
     std::vector<int> inverse_board() const;
     std::vector<int> inverse_number_board() const;
     std::string board_as_string() const;
-     // Point in format such as "g5", with rows a,b..., columns 1, 2...
-    std::string point_coord_as_string(int p) const;
     std::string board_as_number_string() const;
     const std::vector<int>& board_const() const;
 

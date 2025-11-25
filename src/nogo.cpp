@@ -11,6 +11,7 @@
 #include <ostream>
 
 #include "cgt_move_new.h"
+#include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "cgt_basics.h"
 #include "game.h"
@@ -358,6 +359,12 @@ game* nogo::inverse() const
         }
     }
     return new nogo(inverse_board(), new_immortal, shape());
+}
+
+void nogo::print_move(std::ostream& str, const move& m) const
+{
+    // (to)
+    print_move2_as_coords(str, m, shape());
 }
 
 //////////////////////////////////////// nogo_rule

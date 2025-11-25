@@ -6,6 +6,7 @@
 #include "cgt_basics.h"
 #include "cgt_move_new.h"
 #include "game.h"
+#include "print_move_helpers.h"
 #include "strip.h"
 #include "throw_assert.h"
 #include "utilities.h"
@@ -260,6 +261,12 @@ void clobber_1xn::_undo_normalize_impl()
 game* clobber_1xn::inverse() const
 {
     return new clobber_1xn(inverse_board());
+}
+
+void clobber_1xn::print_move(std::ostream& str, const move& m) const
+{
+    // from, to
+    print_move2_as_points(str, m);
 }
 
 string clobber_1xn::xoxo(int n)

@@ -12,6 +12,7 @@
 #include "cgt_move_new.h"
 #include "game.h"
 #include "grid.h"
+#include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "grid_location.h"
 #include "grid_hash.h"
@@ -234,14 +235,12 @@ game* domineering::inverse() const
 
 void domineering::print_move(std::ostream& str, const ::move& m) const
 {
-    int_pair coord_from, coord_to;
-    cgt_move_new::move4_unpack_coords(m, coord_from, coord_to);
+    /*
+        (coord1, coord2)
 
-    const int point_from = grid_location::coord_to_point(coord_from, shape());
-    const int point_to   = grid_location::coord_to_point(coord_to, shape());
-
-    str << point_coord_as_string(point_from) << "-"
-        << point_coord_as_string(point_to);
+        coord1 is upper-left-most
+    */
+    print_move4_as_coords(str, m, shape());
 }
 
 ////////////////////////////////////////////////// split

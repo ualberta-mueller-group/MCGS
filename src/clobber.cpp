@@ -13,6 +13,7 @@
 #include <vector>
 #include "grid_hash.h"
 #include "grid_location.h"
+#include "print_move_helpers.h"
 #include "utilities.h"
 
 using namespace std;
@@ -416,6 +417,12 @@ move_generator* clobber::create_move_generator(bw to_play) const
 void clobber::print(ostream& str) const
 {
     str << "clobber:" << board_as_string();
+}
+
+void clobber::print_move(std::ostream& str, const ::move& m) const
+{
+    // (from, to)
+    print_move4_as_coords(str, m, shape());
 }
 
 game* clobber::inverse() const

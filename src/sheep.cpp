@@ -14,6 +14,7 @@
 #include "grid.h"
 #include "grid_location.h"
 #include "game.h"
+#include "print_move_helpers.h"
 #include "safe_arithmetic.h"
 #include "throw_assert.h"
 #include "bounding_box.h"
@@ -235,9 +236,11 @@ void sheep::print_move(std::ostream& str, const ::move& m) const
 
     THROW_ASSERT(negate_is_safe(target_herd));
 
-    std::cout << point_coord_as_string(from_point) << "-"
-              << point_coord_as_string(to_point) << "-"
-              << abs(target_herd);
+    str << grid_point_as_chesslike_string(from_point, shape());
+    str << "-";
+    str << grid_point_as_chesslike_string(to_point, shape());
+    str << "-";
+    str << abs(target_herd);
 }
 
 game* sheep::inverse() const

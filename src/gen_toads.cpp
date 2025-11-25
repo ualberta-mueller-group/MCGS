@@ -5,7 +5,6 @@
 #include <ostream>
 #include <cassert>
 #include <utility>
-#include <cmath>
 
 #include "cgt_basics.h"
 #include "cgt_move_new.h"
@@ -187,6 +186,16 @@ void gen_toads::print(ostream& str) const
     str << get_max_jump() << ", ";
     str << get_friendly_jump() << ">:";
     str << board_as_string();
+}
+
+void gen_toads::print_move(std::ostream& str, const ::move& m) const
+{
+    int move_delta, start_idx;
+    cgt_move_new::move2_unpack(m, move_delta, start_idx);
+
+    const int end_idx = start_idx + move_delta;
+
+    str << start_idx << '-' << end_idx;
 }
 
 game* gen_toads::inverse() const

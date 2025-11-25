@@ -79,6 +79,8 @@ bool is_unsigned_int(const std::string& str);
 bool string_starts_with(const std::string& str, const std::string& word);
 bool string_ends_with(const std::string& str, const std::string& word);
 
+bool string_contains_whitespace(const std::string& str);
+
 //////////////////////////////////////// arithmetic operations
 
 // TODO make this work for negative values, and make it a template
