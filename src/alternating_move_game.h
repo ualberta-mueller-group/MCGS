@@ -10,7 +10,7 @@
 // IWYU pragma: end_exports
 
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include <cassert>
 
 class alternating_move_game

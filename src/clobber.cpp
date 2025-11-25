@@ -5,7 +5,6 @@
 #include "game.h"
 #include "grid.h"
 #include <string>
-#include "cgt_move.h"
 #include <cstddef>
 #include <cassert>
 #include <algorithm>

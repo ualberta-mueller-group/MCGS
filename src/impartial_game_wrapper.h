@@ -7,7 +7,7 @@
 #pragma once
 
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "game.h"
 #include "impartial_game.h"
 #include <ostream>
@@ -92,8 +92,8 @@ inline void impartial_game_wrapper::play(const move& m)
        move generator. We must preserve this information when calling other
        play() functions.
     */
-    const bw color = cgt_move::get_color(m);
-    const move m_no_color = cgt_move::decode(m);
+    const bw color = cgt_move_new::get_color(m);
+    const move m_no_color = cgt_move_new::remove_color(m);
 
     _game->play(m_no_color, color);
     impartial_game::play(m);

@@ -81,10 +81,6 @@ void check_valid_board(const sheep& g)
                      abs(herd) <= sheep::MAX_HERD //
         );
     }
-
-    if (SIZE > 0)
-        THROW_ASSERT(static_cast<unsigned int>(SIZE - 1) <
-                     cgt_move::THREE_PART_MOVE_MAX);
 }
 
 } // namespace

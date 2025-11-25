@@ -8,7 +8,7 @@
 #include <cassert>
 
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "game.h"
 #include "search_utils.h"
 #include "sumgame.h"

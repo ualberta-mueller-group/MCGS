@@ -6,7 +6,6 @@
 
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
-#include "cgt_move.h"
 #include "cgt_move_new.h"
 #include "safe_arithmetic.h"
 

@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------
 #include "sumgame.h"
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "database.h"
 #include "global_database.h"
 #include "random.h"
@@ -723,12 +723,12 @@ void sumgame::undo_move()
         }
     }
 
-    const move subm = cgt_move::decode(s->last_move());
+    const move subm = cgt_move_new::remove_color(s->last_move());
 
     assert(                                                         //
         sm.m == subm ||                                             //
         (                                                           //
-            (cgt_move::decode(sm.m) == subm) &&                     //
+            (cgt_move_new::remove_color(sm.m) == subm) &&                     //
             (s->game_type() == game_type<impartial_game_wrapper>()) //
             )                                                       //
     );                                                              //

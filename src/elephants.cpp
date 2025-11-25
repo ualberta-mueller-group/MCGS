@@ -3,7 +3,6 @@
 */
 #include "elephants.h"
 #include "cgt_basics.h"
-#include "cgt_move.h"
 #include "cgt_move_new.h"
 #include "print_move_helpers.h"
 #include "strip.h"

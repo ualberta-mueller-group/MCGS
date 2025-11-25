@@ -6,7 +6,7 @@
 
 // IWYU pragma: begin_exports
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "dynamic_serializable.h"
 #include "hashing.h"
 #include "type_table.h"

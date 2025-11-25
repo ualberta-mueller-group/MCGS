@@ -4,7 +4,7 @@
 #pragma once
 
 #include "alternating_move_game.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "game.h"
 #include <atomic>
 #include <ctime>
