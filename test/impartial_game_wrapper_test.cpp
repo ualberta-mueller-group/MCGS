@@ -7,7 +7,7 @@
 #include <cassert>
 #include <memory>
 #include <string>
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "clobber_1xn.h"
 #include "nogo_1xn.h"
 #include "test_utilities.h"

@@ -1,8 +1,8 @@
 #include "cgt_dyadic_rational_test.h"
 #include "cgt_dyadic_rational.h"
-#include "cgt_move.h"
 
 #include <cassert>
+#include "cgt_move_new.h"
 #include "test_utilities.h"
 #include "utilities.h"
 
@@ -85,7 +85,7 @@ void test_constructor7()
 void test_play(int p, int q, bw color, int p2, int q2)
 {
     dyadic_rational g(p, q);
-    const move m = cgt_move::two_part_move(p, q);
+    const move m = cgt_move_new::move2_create(p, q);
     assert_equal(g.p(), p);
     assert_equal(g.q(), q);
     g.play(m, color);

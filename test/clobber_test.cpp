@@ -1,5 +1,5 @@
 #include "clobber_test.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "clobber.h"
 
 #include "test/test_utilities.h"
@@ -9,7 +9,6 @@
 #include <tuple>
 #include "grid_test_utilities.h"
 
-using cgt_move::two_part_move;
 using std::cout, std::endl, std::vector, std::string, std::tuple;
 
 namespace {

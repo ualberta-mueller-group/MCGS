@@ -1,6 +1,6 @@
 #include "cgt_switch_test.h"
 #include "cgt_switch.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 
 #include <cassert>
 #include "game.h"

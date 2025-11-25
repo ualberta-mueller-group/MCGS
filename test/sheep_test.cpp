@@ -10,7 +10,7 @@
 #include <tuple>
 
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "game.h"
 #include "sheep.h"
 #include "test/test_utilities.h"
@@ -38,17 +38,11 @@ void get_move_generator_moves_impl(sheep& g, bw to_play,
         ::move m = gen->gen_move();
         ++(*gen);
 
-        unsigned int from, to, new_herd;
-        cgt_move::decode_three_part_move(m, from, to, new_herd);
-
-        int from_cast = static_cast<int>(from);
-        assert(from_cast >= 0);
-
-        int to_cast = static_cast<int>(to);
-        assert(to_cast >= 0);
+        int new_herd, from, to;
+        cgt_move_new::move3_unpack(m, new_herd, from, to);
 
         moves.insert(m);
-        pairs.insert({from_cast, to_cast});
+        pairs.insert({from, to});
     }
 }
 
@@ -97,8 +91,8 @@ void test_moves_play(sheep& g,
             assert_restore_game arg(g);
 
             // Compute the move. Check that it was generated
-            ::move m = cgt_move::encode_three_part_move(from_idx, to_idx,
-                                                        abs(target_size));
+            ::move m = cgt_move_new::move3_create(target_size, from_idx, to_idx);
+
             if (player == BLACK)
             {
                 computed_moves_black.insert(m);

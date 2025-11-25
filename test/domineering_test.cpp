@@ -8,7 +8,7 @@
 #include <cassert>
 
 #include "cgt_basics.h"
-#include "cgt_move.h"
+#include "cgt_move_new.h"
 #include "domineering.h"
 #include "grid_location.h"
 #include "test/test_utilities.h"
@@ -42,18 +42,15 @@ int_pair get_second_coord_for_player(const domineering* g,
     return coord2;
 }
 
-::move coord_to_move(const domineering* g, const int_pair& coord, bw player)
+::move coord_to_move(const domineering* g, const int_pair& coord1, bw player)
 {
     assert(g != nullptr &&        //
            is_black_white(player) //
     );
 
-    const int_pair coord2 = get_second_coord_for_player(g, coord, player);
+    const int_pair coord2 = get_second_coord_for_player(g, coord1, player);
 
-    const int enc1 = encode_domineering_coord(coord);
-    const int enc2 = encode_domineering_coord(coord2);
-
-    return cgt_move::two_part_move(enc1, enc2);
+    return cgt_move_new::move4_create_from_coords(coord1, coord2);
 }
 
 void compare_generated_moves(const domineering* g,
