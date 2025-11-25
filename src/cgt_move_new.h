@@ -328,7 +328,7 @@ inline void move2_unpack(const move& m, int& part1, int& part2)
     part2 = move2_get_part_2(m);
 }
 
-inline void move2_unpack_from_coords(const move& m, int_pair& coord1)
+inline void move2_unpack_coords(const move& m, int_pair& coord1)
 {
     coord1 = move2_get_coord_1(m);
 }

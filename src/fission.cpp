@@ -87,7 +87,7 @@ void fission::play(const ::move& m, bw to_play)
     // Get points
 
     int_pair coord_start;
-    cgt_move_new::move2_unpack_from_coords(m, coord_start);
+    cgt_move_new::move2_unpack_coords(m, coord_start);
 
     grid_location loc_start(shape(), coord_start);
     assert(loc_start.valid());
@@ -165,7 +165,7 @@ void fission::undo_move()
 
     // Get points
     int_pair coord_start;
-    cgt_move_new::move2_unpack_from_coords(m_enc, coord_start);
+    cgt_move_new::move2_unpack_coords(m_enc, coord_start);
 
     grid_location loc_start(shape(), coord_start);
     assert(loc_start.valid());
