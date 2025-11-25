@@ -77,6 +77,7 @@ namespace {
 void override_tests()
 {
         cgt_move_test_all();
+        n_bit_int_test_all();
         return;
 
         sheep_grid_generator_test_all();

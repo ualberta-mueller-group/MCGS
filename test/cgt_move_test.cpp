@@ -4,7 +4,6 @@
 #include "cgt_basics.h"
 #include "n_bit_int.h"
 
-
 using namespace std;
 
 #define TEST_LOOP(var, layout_t, move_part, body)                              \
@@ -52,8 +51,59 @@ constexpr int move_part_max()
     return n_bit_int::max_val<N_BITS, SIGN_TYPE>();
 }
 
-
 ////////////////////////////////////////////////// main test functions 
+void test_colors_move2()
+{
+    ::move m = 0;
+    m = cgt_move_new::set_color(m, BLACK);
+    assert(cgt_move_new::get_color(m) == BLACK);
+
+    cgt_move_new::move2_set_part_1(m, -642);
+    cgt_move_new::move2_set_part_2(m, 216);
+
+    assert(cgt_move_new::get_color(m) == BLACK &&       //
+           cgt_move_new::move2_get_part_1(m) == -642 && //
+           cgt_move_new::move2_get_part_2(m) == 216     //
+    );
+
+    m = cgt_move_new::remove_color(m);
+    m = cgt_move_new::set_color(m, WHITE);
+
+    assert(cgt_move_new::get_color(m) == WHITE &&       //
+           cgt_move_new::move2_get_part_1(m) == -642 && //
+           cgt_move_new::move2_get_part_2(m) == 216     //
+    );
+}
+
+void test_colors_move4()
+{
+    ::move m = 0;
+    m = cgt_move_new::set_color(m, WHITE);
+    assert(cgt_move_new::get_color(m) == WHITE);
+
+    cgt_move_new::move4_set_part_1(m, -60);
+    cgt_move_new::move4_set_part_2(m, -31);
+    cgt_move_new::move4_set_part_3(m, 40);
+    cgt_move_new::move4_set_part_4(m, 120);
+
+    assert(cgt_move_new::get_color(m) == WHITE &&      //
+           cgt_move_new::move4_get_part_1(m) == -60 && //
+           cgt_move_new::move4_get_part_2(m) == -31 && //
+           cgt_move_new::move4_get_part_3(m) == 40 &&  //
+           cgt_move_new::move4_get_part_4(m) == 120    //
+    );
+
+    m = cgt_move_new::remove_color(m);
+    m = cgt_move_new::set_color(m, BLACK);
+
+    assert(cgt_move_new::get_color(m) == BLACK &&      //
+           cgt_move_new::move4_get_part_1(m) == -60 && //
+           cgt_move_new::move4_get_part_2(m) == -31 && //
+           cgt_move_new::move4_get_part_3(m) == 40 &&  //
+           cgt_move_new::move4_get_part_4(m) == 120    //
+    );
+
+}
 
 void test_move1()
 {
@@ -247,9 +297,7 @@ void test_move4()
         assert(c2 == c2_unpack && c2_unpack == c2_get);
 
     }}}}))));
-
 }
-
 
 void test_move6()
 {
@@ -329,107 +377,22 @@ void test_move6()
         assert(c3 == c3_unpack && c3_unpack == c3_get);
 
     }}}}}}))))));
-
 }
 
 
 } // namespace
 
-
-
-/*
-using namespace cgt_move;
-
-namespace {
-namespace cgt_move_test {
-
-void test_two_part_move()
-{
-    {
-        const int part1 = 123;
-        const int part2 = 456;
-        const move m = two_part_move(part1, part2);
-        assert(first(m) == part1);
-        assert(second(m) == part2);
-    }
-    {
-        const int part1 = MOVE_MAX_SIZE - 1;
-        const int part2 = MOVE_MAX_SIZE - 1;
-        const move m = two_part_move(part1, part2);
-        assert(first(m) == part1);
-        assert(second(m) == part2);
-    }
-    {
-        const int part1 = 0;
-        const int part2 = 0;
-        const move m = two_part_move(part1, part2);
-        assert(first(m) == part1);
-        assert(second(m) == part2);
-    }
-}
-
-void test_encode_decode()
-{
-    int mm = MOVE_MAX_SIZE - 1;
-    const move m = two_part_move(mm, mm);
-    const move m2 = encode(m, BLACK);
-    assert(decode(m2) == m);
-    assert(get_color(m2) == BLACK);
-    const move m3 = encode(m, WHITE);
-    assert(decode(m3) == m);
-    assert(get_color(m3) == WHITE);
-}
-
-void test_encode_decode2()
-{
-    int mm = (MOVE_MAX_SIZE - 1) / 2;
-    const move m = two_part_move(mm, mm);
-    const move m2 = encode(m, BLACK);
-    assert(decode(m2) == m);
-    assert(get_color(m2) == BLACK);
-    const move m3 = encode(m, WHITE);
-    assert(decode(m3) == m);
-    assert(get_color(m3) == WHITE);
-}
-
-void test_encode_decode3()
-{
-    const move m = two_part_move(-5, 8);
-    const move m2 = encode(m, BLACK);
-    assert(decode(m2) == m);
-    assert(get_color(m2) == BLACK);
-    const move m3 = encode(m, WHITE);
-    assert(decode(m3) == m);
-    assert(get_color(m3) == WHITE);
-}
-
-void test_encode_decode4()
-{
-    const move m = two_part_move(1, 2);
-    const move m2 = encode(m, BLACK);
-    assert(decode(m2) == m);
-    assert(get_color(m2) == BLACK);
-    const move m3 = encode(m, WHITE);
-    assert(decode(m3) == m);
-    assert(get_color(m3) == WHITE);
-}
-} // namespace cgt_move_test
-} // namespace
-
-*/
-
+//////////////////////////////////////////////////
 void cgt_move_test_all()
 {
-    std::cout << "TODO deleted tests in " << __FILE__ << std::endl;
+    std::cout << __FILE__ << std::endl;
+
+    test_colors_move2();
+    test_colors_move4();
+
     test_move1();
     test_move2();
     test_move3();
     test_move4();
     test_move6();
-
-    //cgt_move_test::test_two_part_move();
-    //cgt_move_test::test_encode_decode();
-    //cgt_move_test::test_encode_decode2();
-    //cgt_move_test::test_encode_decode3();
-    //cgt_move_test::test_encode_decode4();
 }

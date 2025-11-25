@@ -27,19 +27,19 @@ constexpr int COLOR_BIT_IDX = 31;
 constexpr int COLOR_BIT_MASK = (1) << COLOR_BIT_IDX;
 
 static_assert(BLACK == 0 && WHITE == 1);
-inline move set_color(const move& m, bw color)
+[[nodiscard]] inline move set_color(const move& m, bw color)
 {
     assert(is_black_white(color) && 0 == (m & COLOR_BIT_MASK));
     using bw_unsigned_t = std::make_unsigned_t<bw>;
     return m | (static_cast<bw_unsigned_t>(color) << COLOR_BIT_IDX);
 }
 
-inline move remove_color(const move& m)
+[[nodiscard]] inline move remove_color(const move& m)
 {
     return m & ~(COLOR_BIT_MASK);
 }
 
-inline bw get_color(const move& m)
+[[nodiscard]] inline bw get_color(const move& m)
 {
     return (m & COLOR_BIT_MASK) != 0;
 }
