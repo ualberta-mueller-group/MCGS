@@ -1,8 +1,8 @@
 #include "grid_hash_test.h"
 
+
 #include <vector>
 #include <iostream>
-#include <utility>
 #include <cassert>
 #include <tuple>
 #include <string>
@@ -11,8 +11,8 @@
 #include "grid.h"
 #include "grid_hash.h"
 #include "hashing.h"
+#include "grid_hash_test_utilities.h"
 
-typedef std::pair<std::vector<int>, int_pair> grid_pair_t;
 
 using namespace std;
 
@@ -29,31 +29,6 @@ static_assert(in_interval((int) GRID_HASH_ORIENTATION_270, 0, 7));
 static_assert(in_interval((int) GRID_HASH_ORIENTATION_270T, 0, 7));
 
 ////////////////////////////////////////////////// helper functions
-grid_pair_t rotate_grid_pair(const grid_pair_t& grid_pair)
-{
-    const vector<int>& vec = grid_pair.first;
-    const int_pair& shape = grid_pair.second;
-
-    const int_pair shape_rotated(shape.second, shape.first);
-
-    return {grid::rotate_90_board(vec, shape), shape_rotated};
-}
-
-grid_pair_t transpose_grid_pair(const grid_pair_t& grid_pair)
-{
-    const vector<int>& vec = grid_pair.first;
-    const int_pair& shape = grid_pair.second;
-
-    const int_pair shape_rotated(shape.second, shape.first);
-
-    return {grid::transpose_board(vec, shape), shape_rotated};
-}
-
-hash_t get_grid_pair_hash(const grid_pair_t& grid_pair, grid_hash& gh)
-{
-    gh.init_from_board_and_type(grid_pair.first, grid_pair.second, 0);
-    return gh.get_value();
-}
 
 /*
    Given a grid and grid_hash mask, generate the 7 other grids (using rotation
@@ -92,7 +67,7 @@ void test_grid_hash_impl(unsigned int mask, const grid_pair_t& grid0)
 
     vector<hash_t> hash_vec(8, 0);
 
-    auto add_to_hash_vec = [&](const hash_t hash, int idx) -> void
+    auto add_to_hash_vec = [&](hash_t hash, int idx) -> void
     {
         assert(hash_vec[idx] == 0);
         hash_vec[idx] = hash;
