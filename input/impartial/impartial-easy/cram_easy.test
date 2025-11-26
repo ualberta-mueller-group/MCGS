@@ -1,6 +1,6 @@
 {version 1.3}
 
-/*_
+/*
     Verified results TODO which? from: CGSuite 2.1.1, and
     https://sprouts.tuxfamily.org/wiki/doku.php?id=records#cram :
         3xn, n=3..20
@@ -9,7 +9,7 @@
         6x7
         7x7
 
- 2xn is *0 if n even, *1 if n odd (Uiterwijk 2018) */
+ 2xn is *0 if n even, *1 if n odd (Uiterwijk 2018)
 
 (Uiterwijk 2018) Uiterwijk, J. Construction and investigation of Cram endgame databases. ICGA Journal 40(4), 425–437, 2018.
 */
