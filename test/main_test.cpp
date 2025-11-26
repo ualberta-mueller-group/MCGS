@@ -10,6 +10,7 @@
 #include "test/fission_test.h"
 #include "test/gen_toads_test.h"
 #include "test/grid_hash_test.h"
+#include "test/grid_mask_test.h"
 #include "test/n_bit_int_test.h"
 #include "test/sheep_grid_generator_test.h"
 #include "test/split_test_amazons.h"
@@ -81,6 +82,7 @@ void override_tests()
     //cgt_move_test_all();
     //n_bit_int_test_all();
     grid_hash_test_all();
+    grid_mask_test_all();
     return;
 
     sheep_grid_generator_test_all();
@@ -177,6 +179,7 @@ int main(int argc, const char** argv)
     n_bit_int_test_all();
     cgt_move_test_all();
     grid_hash_test_all();
+    grid_mask_test_all();
     cgt_nimber_test_all();
     cgt_switch_test_all();
     cgt_up_star_test_all();
