@@ -3,6 +3,8 @@
 #include <exception>
 #include <type_traits>
 #include <memory>
+#include <vector>
+#include <cassert>
 
 #include "grid.h"
 #include "strip.h"

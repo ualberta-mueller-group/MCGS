@@ -18,6 +18,7 @@
 #include "parsing_utilities.h"
 #include "toppling_dominoes.h"
 #include "utilities.h"
+#include "version_info.h"
 #include <ios>
 #include <exception>
 

@@ -2,10 +2,16 @@
 
 #include <cctype>
 #include <cstdlib>
+#include <ostream>
+#include <string>
+#include <utility>
+#include <optional>
+#include <vector>
+#include <cassert>
 
 #include "parsing_utilities.h"
 #include "throw_assert.h"
-#include "utilities.h"
+#include "int_pair.h"
 #include "string_to_int.h"
 
 using namespace std;

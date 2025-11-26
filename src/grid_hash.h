@@ -43,6 +43,7 @@
 #include <cassert>
 #include <limits>
 #include <type_traits>
+#include <vector>
 
 #include "grid.h"
 #include "game.h"

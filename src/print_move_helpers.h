@@ -1,7 +1,11 @@
 #pragma once
 
-#include "cgt_move_new.h"
 #include <ostream>
+#include <string>
+
+#include "cgt_move_new.h"
+#include "int_pair.h"
+#include "throw_assert.h"
 
 void print_move1_as_points(std::ostream& str, const move& m);
 void print_move2_as_points(std::ostream& str, const move& m);

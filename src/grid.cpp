@@ -14,7 +14,6 @@
 #include "string_to_int.h"
 #include "strip.h"
 #include "throw_assert.h"
-#include "utilities.h"
 #include "warn_default.h"
 
 //---------------------------------------------------------------------------

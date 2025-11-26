@@ -2,12 +2,17 @@
 
 #include <cassert>
 #include <algorithm>
+#include <vector>
+#include <cstddef>
+#include <optional>
+#include <utility>
 
 #include "cgt_basics.h"
 #include "grid_generator.h"
 #include "safe_arithmetic.h"
 #include "utilities.h"
 #include "throw_assert.h"
+#include "int_pair.h"
 
 using namespace std;
 

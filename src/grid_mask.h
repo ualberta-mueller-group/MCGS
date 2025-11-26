@@ -3,11 +3,19 @@
 #include <cassert>
 #include <cstddef>
 #include <unordered_set>
+#include <vector>
+#include <ostream>
 
 #include "int_pair.h"
 #include "grid_hash.h"
+#include "hashing.h"
 
 ////////////////////////////////////////////////// class grid_mask
+
+/*
+    NOTE: set_shape() will advance to the first unique mask according
+    to the grid_hash. However, it will not clear the set of seen hashes.
+*/
 class grid_mask
 {
 public:

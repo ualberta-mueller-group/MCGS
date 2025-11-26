@@ -2,8 +2,11 @@
 
 #include <string>
 #include <cassert>
+#include <unordered_map>
+#include <utility>
 #include <cstddef>
 #include <iostream>
+
 #include "utilities.h"
 #include "type_table.h"
 #include "throw_assert.h"

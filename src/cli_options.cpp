@@ -7,6 +7,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <exception>
 #include <cstdint>
 #include "file_parser.h"
 #include "global_options.h"

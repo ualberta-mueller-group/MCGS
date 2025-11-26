@@ -3,6 +3,12 @@
 //---------------------------------------------------------------------------
 #include "clobber_1xn.h"
 
+#include <cassert>
+#include <utility>
+#include <vector>
+#include <ostream>
+#include <cstddef>
+
 #include "cgt_basics.h"
 #include "cgt_move_new.h"
 #include "game.h"
@@ -11,10 +17,6 @@
 #include "throw_assert.h"
 #include "utilities.h"
 #include "iobuffer.h"
-#include <cassert>
-#include <utility>
-#include <vector>
-#include <cstddef>
 
 using std::string, std::pair, std::vector;
 

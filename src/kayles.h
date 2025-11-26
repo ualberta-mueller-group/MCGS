@@ -14,6 +14,8 @@
 #include <cassert>
 #include <ostream>
 
+#include "throw_assert.h"
+
 class kayles : public impartial_game
 {
 public:

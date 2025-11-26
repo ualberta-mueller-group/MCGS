@@ -1,11 +1,9 @@
 #include "grid_hash.h"
 
-#include <iostream>
-#include <vector>
 #include <cassert>
 
+#include "type_table.h"
 #include "grid.h"
-#include "grid_generator.h"
 #include "utilities.h"
 #include "hashing.h"
 

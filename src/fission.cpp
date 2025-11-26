@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <cassert>
+#include <ostream>
 
 #include "cgt_basics.h"
 #include "cgt_move_new.h"

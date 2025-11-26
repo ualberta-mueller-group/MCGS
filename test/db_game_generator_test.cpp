@@ -1,7 +1,12 @@
 #include "db_game_generator_test.h"
 
-#include <type_traits>
 #include <iostream>
+
+#warning TODO UNCOMMENT THIS FILE
+
+#if 0
+
+#include <type_traits>
 #include <cassert>
 #include <exception>
 
@@ -16,9 +21,6 @@
 #include "strip.h"
 #include "grid.h"
 
-#warning TODO UNCOMMENT THIS FILE
-
-#if 0
 using namespace std;
 
 namespace {

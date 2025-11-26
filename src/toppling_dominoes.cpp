@@ -8,7 +8,6 @@
 #include "cgt_basics.h"
 #include "cgt_move_new.h"
 #include "game.h"
-#include "print_move_helpers.h"
 #include "strip.h"
 #include "throw_assert.h"
 

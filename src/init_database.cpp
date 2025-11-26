@@ -3,9 +3,12 @@
 #include <cctype>
 #include <filesystem>
 #include <functional>
-#include <type_traits>
 #include <unordered_set>
+#include <optional>
+#include <unordered_map>
+#include <utility>
 #include <vector>
+#include <cstddef>
 #include <string>
 #include <iostream>
 #include <cassert>

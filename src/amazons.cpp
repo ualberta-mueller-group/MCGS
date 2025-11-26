@@ -6,13 +6,14 @@
 #include <string>
 #include <algorithm>
 #include <utility>
+#include <ostream>
 
 #include "cgt_basics.h"
 #include "cgt_move_new.h"
 #include "grid.h"
 #include "print_move_helpers.h"
-#include "utilities.h"
 #include "grid_location.h"
+#include "throw_assert.h"
 
 class amazons_move_generator: public move_generator
 {

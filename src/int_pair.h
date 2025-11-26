@@ -13,7 +13,7 @@ class std::hash<std::pair<int, int>>
 {
 public:
     // TODO uint64_t instead of size_t?
-    inline size_t operator()(const pair<int, int>& p) const noexcept
+    inline size_t operator()(const std::pair<int, int>& p) const noexcept
     {
         return p.first ^ p.second;
     }

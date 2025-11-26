@@ -1,16 +1,16 @@
 #include "grid_hash_test.h"
 
+#include <vector>
+#include <iostream>
+#include <utility>
+#include <cassert>
+#include <tuple>
+#include <string>
 
 #include "cgt_basics.h"
 #include "grid.h"
 #include "grid_hash.h"
-#include "utilities.h"
-#include "n_bit_int.h"
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
-#include <set>
-#include <iostream>
+#include "hashing.h"
 
 typedef std::pair<std::vector<int>, int_pair> grid_pair_t;
 

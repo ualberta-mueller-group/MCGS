@@ -13,6 +13,7 @@
 #include <string>
 #include <optional>
 #include "utilities.h"
+#include "throw_assert.h"
 
 // TODO test all of these
 // TODO not sure which of these should be inlined, if any

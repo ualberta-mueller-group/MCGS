@@ -1,6 +1,8 @@
 #include "type_table.h"
+
 #include <typeinfo>
 #include <typeindex>
+#include <cassert>
 #include <unordered_map>
 #include <memory>
 

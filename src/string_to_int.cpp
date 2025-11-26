@@ -3,8 +3,8 @@
 #include <limits>
 #include <string>
 #include <optional>
-#include "cgt_basics.h"
 #include "utilities.h"
+#include "throw_assert.h"
 
 ////////////////////////////////////////////////// short
 short str_to_sh(const std::string& str)

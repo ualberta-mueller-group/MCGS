@@ -1,5 +1,9 @@
 #include "iobuffer.h"
+
 #include <cstdint>
+#include <filesystem>
+#include <string>
+#include "throw_assert.h"
 
 ////////////////////////////////////////////////// ibuffer
 ibuffer::ibuffer(const std::string& file_name) : _fs(file_name, OPEN_MODE)

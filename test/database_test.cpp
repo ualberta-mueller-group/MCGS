@@ -1,5 +1,12 @@
 #include "database_test.h"
 
+#warning TODO UNCOMMENT THIS FILE
+
+#include <iostream>
+using namespace std;
+
+#if 0
+
 #include <memory>
 #include <cassert>
 #include <optional>
@@ -13,11 +20,7 @@
 #include "database.h"
 #include "utilities.h"
 
-using namespace std;
 
-#warning TODO UNCOMMENT THIS FILE
-
-#if 0
 
 namespace {
 outcome_class get_outcome(sumgame& sum)

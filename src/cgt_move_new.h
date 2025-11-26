@@ -15,6 +15,8 @@
 #include <array>
 #include <tuple>
 #include <type_traits>
+#include <utility>
+
 #include "n_bit_int.h"
 #include "cgt_basics.h"
 #include "int_pair.h"

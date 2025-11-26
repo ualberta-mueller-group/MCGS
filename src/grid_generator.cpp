@@ -3,15 +3,15 @@
 */
 #include "grid_generator.h"
 
-#include <iostream>
+#include <algorithm>
 #include <cassert>
+#include <vector>
+#include <cstddef>
 
 #include "clobber.h"
-#include "clobber_1xn.h"
-#include "grid_hash.h"
 #include "throw_assert.h"
 #include "utilities.h"
-#include "cgt_basics.h"
+#include "grid_mask.h"
 
 using namespace std;
 

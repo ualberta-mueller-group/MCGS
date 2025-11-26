@@ -1,5 +1,4 @@
 #include "clobber_test.h"
-#include "cgt_move_new.h"
 #include "clobber.h"
 
 #include "test/test_utilities.h"

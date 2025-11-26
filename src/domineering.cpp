@@ -6,6 +6,7 @@
 #include <string>
 #include <cmath>
 #include <utility>
+#include <ostream>
 #include <cstddef>
 
 #include "cgt_basics.h"

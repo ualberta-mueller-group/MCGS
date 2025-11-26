@@ -3,8 +3,8 @@
 //---------------------------------------------------------------------------
 #include "nogo.h"
 
+#include <climits>
 #include <string>
-#include <cstddef>
 #include <vector>
 #include <iostream>
 #include <cassert>

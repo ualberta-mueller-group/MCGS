@@ -8,7 +8,6 @@
 #include <string>
 #include <exception>
 
-#include "cli_options.h"
 #include "init_database.h"
 
 /*

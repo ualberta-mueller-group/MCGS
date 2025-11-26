@@ -16,7 +16,6 @@
 #include <iostream>
 #include <cstddef>
 #include <cstdlib>
-#include "version_info.h"
 
 // IWYU pragma: begin_exports
 #include "game_case.h"

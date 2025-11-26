@@ -16,6 +16,7 @@
 #include <optional>
 #include <vector>
 #include <memory>
+#include <exception>
 
 #include "string_to_int.h"
 #include "throw_assert.h"

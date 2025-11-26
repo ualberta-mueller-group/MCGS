@@ -1,6 +1,11 @@
 #include "print_move_helpers.h"
+
+#include <ostream>
+#include <string>
+
 #include "cgt_move_new.h"
 #include "grid_location.h"
+#include "int_pair.h"
 
 void print_move1_as_points(std::ostream& str, const move& m)
 {

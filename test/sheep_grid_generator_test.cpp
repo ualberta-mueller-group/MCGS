@@ -1,15 +1,18 @@
 #include "sheep_grid_generator_test.h"
 
-#include <cstdint>
 #include <tuple>
+#include <cassert>
 #include <unordered_set>
 #include <vector>
+#include <utility>
+#include <cstddef>
+#include <iostream>
+#include <functional>
 
 #include "grid_generator.h"
 #include "sheep_grid_generator.h"
-#include "utilities.h"
+#include "int_pair.h"
 
-using namespace std;
 
 typedef std::pair<int_pair, std::vector<int>> board_pair_t;
 
@@ -23,9 +26,9 @@ typedef std::pair<int_pair, std::vector<int>> board_pair_t;
 template <class T>
 struct std::hash<std::vector<T>>
 {
-    uint64_t operator()(const std::vector<T>& vec) const noexcept
+    inline size_t operator()(const std::vector<T>& vec) const noexcept
     {
-        uint64_t result = 0;
+        size_t result = 0;
 
         result ^= vec.size();
 
@@ -43,9 +46,9 @@ struct std::hash<std::vector<T>>
 template <class T1, class T2>
 struct std::hash<std::pair<T1, T2>>
 {
-    uint64_t operator()(const std::pair<T1, T2>& p) const noexcept
+    inline size_t operator()(const std::pair<T1, T2>& p) const noexcept
     {
-        uint64_t result = 0;
+        size_t result = 0;
 
         std::hash<T1> hash_fn1;
         std::hash<T2> hash_fn2;
@@ -56,6 +59,9 @@ struct std::hash<std::pair<T1, T2>>
         return result;
     }
 };
+
+
+using namespace std;
 
 namespace {
 

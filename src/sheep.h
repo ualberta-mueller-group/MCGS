@@ -5,11 +5,9 @@
 #include "grid.h"
 // IWYU pragma: end_exports
 
-#include "grid_location.h"
 
 #include <vector>
 #include <iostream>
-#include <array>
 #include <cassert>
 #include <string>
 #include <utility>

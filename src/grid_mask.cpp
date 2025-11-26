@@ -1,6 +1,11 @@
 #include "grid_mask.h"
 
 #include <cassert>
+#include <vector>
+#include <ostream>
+#include <cstddef>
+
+#include "hashing.h"
 
 using namespace std;
 

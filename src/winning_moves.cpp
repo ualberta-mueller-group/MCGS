@@ -1,14 +1,13 @@
 #include "winning_moves.h"
 
-#include <cctype>
 #include <sstream>
 #include <vector>
 #include <memory>
 #include <iostream>
 #include <cassert>
+#include <string>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
 #include "game.h"
 #include "search_utils.h"
 #include "sumgame.h"

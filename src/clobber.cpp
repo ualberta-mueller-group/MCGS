@@ -13,7 +13,7 @@
 #include "grid_hash.h"
 #include "grid_location.h"
 #include "print_move_helpers.h"
-#include "utilities.h"
+#include "throw_assert.h"
 
 using namespace std;
 

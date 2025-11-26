@@ -11,10 +11,9 @@
 #include <cstdint>
 #include <cstddef>
 #include <ostream>
-#include <optional>
+#include <utility>
 
 #include "cgt_basics.h"
-#include "throw_assert.h"
 
 // Having "defined" in expanded macro would be undefined behavior
 // Instead use if/else/endif

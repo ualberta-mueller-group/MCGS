@@ -1,9 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <memory>
 
-#include "game.h"
 #include "file_parser.h"
 
 /*

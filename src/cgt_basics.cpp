@@ -1,4 +1,7 @@
 #include "cgt_basics.h"
+#include <cassert>
+#include <limits>
+
 #include "utilities.h"
 
 static bool initialized = false;

@@ -9,6 +9,7 @@
 #include <memory>
 #include <cstddef>
 #include <iostream>
+#include <optional>
 
 #include "game.h"
 #include "parsing_utilities.h"

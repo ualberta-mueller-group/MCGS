@@ -1,7 +1,12 @@
 #include "cgt_move_test.h"
-#include "cgt_move_new.h"
+
 #include <cassert>
+#include <utility>
+#include <iostream>
+
+#include "cgt_move_new.h"
 #include "cgt_basics.h"
+#include "int_pair.h"
 #include "n_bit_int.h"
 
 using namespace std;

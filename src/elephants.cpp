@@ -2,16 +2,20 @@
     TODO: We really need a split_and_normalize() method
 */
 #include "elephants.h"
+
+#include <vector>
+#include <cassert>
+#include <utility>
+#include <cstddef>
+#include <ostream>
+
 #include "cgt_basics.h"
 #include "cgt_move_new.h"
 #include "print_move_helpers.h"
 #include "strip.h"
 #include "iobuffer.h"
+#include "throw_assert.h"
 #include "utilities.h"
-#include <vector>
-#include <cassert>
-#include <utility>
-#include <cstddef>
 
 using std::string, std::pair;
 using std::vector;

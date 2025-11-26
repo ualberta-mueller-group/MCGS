@@ -8,6 +8,8 @@
 
 #include <functional>
 #include <type_traits>
+#include <vector>
+#include <optional>
 
 #include "config_map.h"
 #include "db_game_generator.h"
@@ -15,6 +17,7 @@
 #include "gridlike_db_game_generator.h"
 #include "grid.h"
 #include "strip.h"
+#include "throw_assert.h"
 
 typedef std::function<i_db_game_generator*(const config_map&)>
     create_game_gen_fn_t;

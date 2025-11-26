@@ -1,9 +1,12 @@
 #pragma once
 
 #include <optional>
+#include <vector>
+#include <utility>
+#include <cstddef>
 
 #include "grid_generator.h"
-#include "cgt_basics.h"
+#include "int_pair.h"
 
 ////////////////////////////////////////////////// class sheep_grid_generator
 
