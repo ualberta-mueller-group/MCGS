@@ -83,6 +83,14 @@ public:
     grid_generator(const int_pair& max_dims,
                    const std::vector<int>& tile_sequence, bool strips_only);
 
+    /*
+       The symmetry mask only applies to the grid_mask.
+
+       i.e. for GRID_HASH_ACTIVE_MASK_ALL, clobber boards
+       "XO" and "OX" can both
+       be generated, but equivalent "shapes" cannot both be
+       generated, i.e. 11 (1x2) and 1|1 (2x1)
+    */
     grid_generator(const int_pair& max_dims,
                    const std::vector<int>& tile_sequence, bool mask_active_bit,
                    int mask_inactive_tile, bool strips_only,

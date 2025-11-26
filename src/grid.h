@@ -73,6 +73,9 @@ public:
     static void print_grid(std::ostream& os, const std::vector<T>& board,
                            const int_pair& shape);
 
+    static std::string board_to_string(const std::vector<int>& board,
+                                       const int_pair shape);
+
 protected:
     void _init_hash(local_hash& hash) const override;
     relation _order_impl(const game* rhs) const override;

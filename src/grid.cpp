@@ -58,25 +58,6 @@ std::pair<std::vector<int>, int_pair> string_to_board(
 }
 
 
-std::string board_to_string(const std::vector<int>& board, const int_pair shape)
-{
-    std::string result;
-    int n_cols = shape.second;
-    for (int r = 0; r < shape.first; r++)
-    {
-        for (int c = 0; c < shape.second; c++)
-        {
-            const int color = board[r * n_cols + c];
-            THROW_ASSERT(is_empty_or_stone_color(color));
-            const char ch = color_to_char(color);
-            result += ch;
-        }
-        if (r != shape.first - 1)
-            result += '|';
-    }
-    return result;
-}
-
 inline std::vector<int> get_default_grid(int n_rows, int n_cols,
                                          grid_type_enum grid_type)
 {
@@ -369,6 +350,25 @@ std::vector<int> grid::rotate_90_board(const std::vector<int>& board,
     }
 
     return new_board;
+}
+
+std::string grid::board_to_string(const std::vector<int>& board, const int_pair shape)
+{
+    std::string result;
+    int n_cols = shape.second;
+    for (int r = 0; r < shape.first; r++)
+    {
+        for (int c = 0; c < shape.second; c++)
+        {
+            const int color = board[r * n_cols + c];
+            THROW_ASSERT(is_empty_or_stone_color(color));
+            const char ch = color_to_char(color);
+            result += ch;
+        }
+        if (r != shape.first - 1)
+            result += '|';
+    }
+    return result;
 }
 
 

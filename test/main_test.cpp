@@ -81,6 +81,8 @@ void override_tests()
     cout << "TODO make sure all new tests are called from main()" << endl;
     //cgt_move_test_all();
     //n_bit_int_test_all();
+
+    grid_generator_test_all();
     grid_hash_test_all();
     grid_mask_test_all();
     return;

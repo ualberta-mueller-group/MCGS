@@ -1,329 +1,407 @@
 #include "grid_generator_test.h"
 
-#warning TODO UNCOMMENT THIS FILE
 #include <iostream>
+#include <string>
+#include <vector>
+#include <cassert>
 
-#if 0
-//#include "grid_generator.h"
+#include "cgt_basics.h"
+#include "grid_generator.h"
+#include "grid_hash.h"
 #include "strip.h"
 #include "grid.h"
-
-#include <string>
-#include <cstddef>
-#include <vector>
-#include <tuple>
-#include <cassert>
-#include <unordered_set>
+#include "test_utilities.h"
 
 using namespace std;
 
 namespace {
 
-unordered_set<string> get_all_boards(grid_generator& gen)
+[[maybe_unused]] void print_sequence(const vector<string>& sequence)
 {
-    unordered_set<string> strings;
+    cout << "========================================" << endl;
+    for (const string& str : sequence)
+        cout << "\"" << str << "\"" << endl;
+    cout << "========================================" << endl;
+}
+
+vector<string> get_board_string_sequence(grid_generator& gen)
+{
+    vector<string> sequence;
 
     while (gen)
     {
-        strings.insert(gen.gen_board());
+        sequence.emplace_back(
+            grid::board_to_string(gen.gen_board(), gen.get_shape()));
+
         ++gen;
     }
 
-    return strings;
+    return sequence;
 }
 
-inline unordered_set<string> get_all_boards(grid_generator&& gen)
+
+// 0 size grids
+void test_basic1()
 {
-    return get_all_boards(gen);
-}
-
-int get_stone_count(const string& board)
-{
-    int count = 0;
-
-    const char BLACK_STONE = color_to_clobber_char(BLACK);
-    const char WHITE_STONE = color_to_clobber_char(WHITE);
-
-    const size_t N = board.size();
-    for (size_t i = 0; i < N; i++)
+    const vector<string> exp_sequence =
     {
-        const char c = board[i];
-
-        if (c == BLACK_STONE || c == WHITE_STONE)
-            count++;
-    }
-
-    return count;
-}
-
-void assert_stone_ordering(grid_generator& gen, bool increasing)
-{
-    int_pair prev_shape(0, 0);
-    int prev_stones = 0;
-
-    for (; gen; ++gen)
-    {
-        const int_pair next_shape = gen.get_shape();
-        const string& board = gen.gen_board();
-
-        if (next_shape != prev_shape)
-        {
-            prev_shape = next_shape;
-            prev_stones = get_stone_count(board);
-            continue;
-        }
-
-        int next_stones = get_stone_count(board);
-
-        if (increasing)
-            assert(next_stones >= prev_stones);
-        else
-            assert(next_stones <= prev_stones);
-
-        prev_stones = next_stones;
-    }
-}
-
-void gen_for_dims(vector<string>& boards, int rows, int cols)
-{
-    assert(rows > 0 && cols > 0);
-
-    string board;
-
-    for (int r = 0; r < rows; r++)
-    {
-        for (int c = 0; c < cols; c++)
-            board.push_back('.');
-
-        if (r + 1 < rows)
-            board.push_back('|');
-    }
-
-    boards.push_back(board);
-
-    auto increment = [&]() -> bool
-    {
-        bool carry = true;
-
-        for (auto it = board.rbegin(); it != board.rend(); it++)
-        {
-            if (!carry)
-                break;
-
-            const char c = *it;
-
-            if (c == '|')
-                continue;
-
-            carry = false;
-
-            if (c == '.')
-                *it = 'X';
-            else if (c == 'X')
-                *it = 'O';
-            else if (c == 'O')
-            {
-                *it = '.';
-                carry = true;
-            }
-        }
-
-        return !carry;
+        "",
     };
 
-    while (increment())
-        boards.push_back(board);
+    grid_generator gen1(int_pair(0, 0), {BORDER, WHITE}, false);
+    vector<string> sequence1 = get_board_string_sequence(gen1);
+
+    grid_generator gen2(int_pair(0, 0), {BORDER, WHITE}, true);
+    vector<string> sequence2 = get_board_string_sequence(gen2);
+
+    grid_generator gen3(int_pair(0, 1), {BORDER, WHITE}, false);
+    vector<string> sequence3 = get_board_string_sequence(gen3);
+
+    grid_generator gen4(int_pair(0, 1), {BORDER, WHITE}, true);
+    vector<string> sequence4 = get_board_string_sequence(gen4);
+
+    grid_generator gen5(int_pair(1, 0), {BORDER, WHITE}, false);
+    vector<string> sequence5 = get_board_string_sequence(gen5);
+
+    grid_generator gen6(int_pair(1, 0), {BORDER, WHITE}, true);
+    vector<string> sequence6 = get_board_string_sequence(gen6);
+
+    assert(sequence1 == exp_sequence);
+    assert(sequence2 == exp_sequence);
+    assert(sequence3 == exp_sequence);
+    assert(sequence4 == exp_sequence);
+    assert(sequence5 == exp_sequence);
+    assert(sequence6 == exp_sequence);
 }
 
-void test_1x2()
+
+// Strips test
+void test_basic2()
 {
-    vector<string> expected = {
-        "",   //
-        ".",  //
-        "X",  //
-        "O",  //
-        "..", //
-        ".X", //
-        ".O", //
-        "X.", //
-        "XX", //
-        "XO", //
-        "O.", //
-        "OX", //
-        "OO", //
+    const vector<string> exp_sequence =
+    {
+        "",
+        "#",
+        "O",
+        "##",
+        "#O",
+        "O#",
+        "OO",
+        "###",
+        "##O",
+        "#O#",
+        "#OO",
+        "O##",
+        "O#O",
+        "OO#",
+        "OOO",
     };
 
-    grid_generator_default gen1(2);
-    grid_generator_default gen2(1, 2);
+    grid_generator gen1(int_pair(1, 3), {BORDER, WHITE}, true);
+    vector<string> sequence1 = get_board_string_sequence(gen1);
 
-    for (const string& exp : expected)
-    {
-        assert(gen1);
-        assert(gen2);
+    ASSERT_DID_THROW(grid_generator gen2(int_pair(3, 1), {BORDER, WHITE}, true););
 
-        assert(gen1.gen_board() == exp);
-        assert(gen2.gen_board() == exp);
-
-        ++gen1;
-        ++gen2;
-    }
-    assert(!gen1);
-    assert(!gen2);
+    assert(sequence1 == exp_sequence);
 }
 
-void test_2x1()
+// 1x2 and 2x1 (should be the same)
+void test_basic3()
 {
-    vector<string> expected = {
-        "",    //
-        ".",   //
-        "X",   //
-        "O",   //
-        ".|.", //
-        ".|X", //
-        ".|O", //
-        "X|.", //
-        "X|X", //
-        "X|O", //
-        "O|.", //
-        "O|X", //
-        "O|O", //
+    const vector<string> exp_sequence =
+    {
+        "",
+        "#",
+        "O",
+        "##",
+        "#O",
+        "O#",
+        "OO",
+        "#|#",
+        "#|O",
+        "O|#",
+        "O|O",
     };
 
-    grid_generator_default gen(2, 1);
-    for (const string& exp : expected)
-    {
-        assert(gen);
-        assert(gen.gen_board() == exp);
-        ++gen;
-    }
-    assert(!gen);
+    grid_generator gen1(int_pair(1, 2), {BORDER, WHITE}, false);
+    vector<string> sequence1 = get_board_string_sequence(gen1);
+
+    grid_generator gen2(int_pair(2, 1), {BORDER, WHITE}, false);
+    vector<string> sequence2 = get_board_string_sequence(gen2);
+
+    assert(sequence1 == exp_sequence);
+    assert(sequence2 == exp_sequence);
 }
 
-void test_2x2()
+// another 1x2 and 2x1
+void test_basic4()
 {
-    vector<string> expected;
-
-    expected.push_back("");
-    gen_for_dims(expected, 1, 1);
-    gen_for_dims(expected, 1, 2);
-    gen_for_dims(expected, 2, 1);
-    gen_for_dims(expected, 2, 2);
-
-    grid_generator_default gen(2, 2);
-
-    for (const string& exp : expected)
+    const vector<string> exp_sequence =
     {
-        assert(gen);
-        assert(gen.gen_board() == exp);
-        ++gen;
-    }
-    assert(!gen);
-}
+        "",
 
-void test_empties()
-{
-    // rows, columns, expected
-    typedef tuple<int, int, string> test_case_t;
+        ".",
+        "X",
+        "O",
 
-    vector<test_case_t> test_cases = {
-        {0, 0, ""},            //
-        {0, 1, ""},            //
-        {1, 0, ""},            //
-                               //
-        {1, 1, "."},           //
-        {1, 2, ".."},          //
-        {1, 3, "..."},         //
-                               //
-        {2, 1, ".|."},         //
-        {2, 2, "..|.."},       //
-        {2, 3, "...|..."},     //
-                               //
-                               //
-        {3, 1, ".|.|."},       //
-        {3, 2, "..|..|.."},    //
-        {3, 3, "...|...|..."}, //
+        "..",
+        ".X",
+        ".O",
+        "X.",
+        "XX",
+        "XO",
+        "O.",
+        "OX",
+        "OO",
+
+        ".|.",
+        ".|X",
+        ".|O",
+        "X|.",
+        "X|X",
+        "X|O",
+        "O|.",
+        "O|X",
+        "O|O",
     };
 
-    for (const test_case_t& test_case : test_cases)
-    {
-        const int r = get<0>(test_case);
-        const int c = get<1>(test_case);
-        const string& exp = get<2>(test_case);
+    grid_generator gen1(int_pair(1, 2), {EMPTY, BLACK, WHITE}, false);
+    vector<string> sequence1 = get_board_string_sequence(gen1);
 
-        string got;
-        grid_generator::init_board_helper(got, int_pair(r, c), '.');
-        assert(got == exp);
-    }
+    grid_generator gen2(int_pair(2, 1), {EMPTY, BLACK, WHITE}, false);
+    vector<string> sequence2 = get_board_string_sequence(gen2);
+
+
+    assert(sequence1 == exp_sequence);
+    assert(sequence2 == exp_sequence);
 }
 
-void test_clobber()
+// clobber without symmetry pruning
+void test_masked1()
 {
-    grid_generator_clobber gen_strip(5);
-    grid_generator_clobber gen_grid(3, 3);
-
-    assert_stone_ordering(gen_strip, true);
-    assert_stone_ordering(gen_grid, true);
-}
-
-void test_nogo()
-{
-    grid_generator_nogo gen_strip(5);
-    grid_generator_nogo gen_grid(3, 3);
-
-    assert_stone_ordering(gen_strip, false);
-    assert_stone_ordering(gen_grid, false);
-}
-
-void test_equality()
-{
+    const vector<string> exp_sequence =
     {
+        "",
+        ".",
+        "X",
+        "O",
+        "..",
+        "X.",
+        "O.",
+        ".X",
+        ".O",
+        "XX",
+        "XO",
+        "OX",
+        "OO",
+        ".|.",
+        "X|.",
+        "O|.",
+        ".|X",
+        ".|O",
+        "X|X",
+        "X|O",
+        "O|X",
+        "O|O",
+    };
 
-        vector<unordered_set<string>> strings;
-        strings.reserve(3);
+    grid_generator gen1(int_pair(1, 2), {BLACK, WHITE}, true, EMPTY, false,
+                        GRID_HASH_ACTIVE_MASK_IDENTITY);
+    vector<string> sequence1 = get_board_string_sequence(gen1);
 
-        strings.emplace_back(get_all_boards(grid_generator_default(5)));
-        strings.emplace_back(get_all_boards(grid_generator_clobber(5)));
-        strings.emplace_back(get_all_boards(grid_generator_nogo(5)));
+    grid_generator gen2(int_pair(2, 1), {BLACK, WHITE}, true, EMPTY, false,
+                        GRID_HASH_ACTIVE_MASK_IDENTITY);
+    vector<string> sequence2 = get_board_string_sequence(gen2);
 
-        assert(strings.size() == 3);
-        assert(strings[0] == strings[1]);
-        assert(strings[1] == strings[2]);
-    }
-
-    {
-        vector<unordered_set<string>> strings;
-        strings.reserve(3);
-
-        strings.emplace_back(get_all_boards(grid_generator_default(3, 3)));
-        strings.emplace_back(get_all_boards(grid_generator_clobber(3, 3)));
-        strings.emplace_back(get_all_boards(grid_generator_nogo(3, 3)));
-
-        assert(strings.size() == 3);
-        assert(strings[0] == strings[1]);
-        assert(strings[1] == strings[2]);
-    }
+    assert(sequence1 == exp_sequence);
+    assert(sequence2 == exp_sequence);
 }
+
+// nogo without symmetry pruning
+void test_masked2()
+{
+    const vector<string> exp_sequence =
+    {
+        "",
+        "X",
+        "O",
+        ".",
+        "XX",
+        "XO",
+        "OX",
+        "OO",
+        ".X",
+        ".O",
+        "X.",
+        "O.",
+        "..",
+        "X|X",
+        "X|O",
+        "O|X",
+        "O|O",
+        ".|X",
+        ".|O",
+        "X|.",
+        "O|.",
+        ".|.",
+    };
+
+    grid_generator gen1(int_pair(1, 2), {BLACK, WHITE}, false, EMPTY, false,
+                        GRID_HASH_ACTIVE_MASK_IDENTITY);
+    vector<string> sequence1 = get_board_string_sequence(gen1);
+
+    grid_generator gen2(int_pair(2, 1), {BLACK, WHITE}, false, EMPTY, false,
+                        GRID_HASH_ACTIVE_MASK_IDENTITY);
+    vector<string> sequence2 = get_board_string_sequence(gen2);
+
+    assert(sequence1 == exp_sequence);
+    assert(sequence2 == exp_sequence);
+}
+
+// ALL symmetry pruning
+void test_masked3()
+{
+    const vector<string> exp_sequence =
+    {
+        "",
+        ".",
+        "X",
+        "O",
+        "..",
+        "X.",
+        "O.",
+        //".X",
+        //".O",
+        "XX",
+        "XO",
+        "OX",
+        "OO",
+        //".|.",
+        //"X|.",
+        //"O|.",
+        //".|X",
+        //".|O",
+        //"X|X",
+        //"X|O",
+        //"O|X",
+        //"O|O",
+    };
+
+    grid_generator gen1(int_pair(1, 2), {BLACK, WHITE}, true, EMPTY, false,
+                        GRID_HASH_ACTIVE_MASK_ALL);
+    vector<string> sequence1 = get_board_string_sequence(gen1);
+
+    grid_generator gen2(int_pair(2, 1), {BLACK, WHITE}, true, EMPTY, false,
+                        GRID_HASH_ACTIVE_MASK_ALL);
+    vector<string> sequence2 = get_board_string_sequence(gen2);
+
+    assert(sequence1 == exp_sequence);
+    assert(sequence2 == exp_sequence);
+}
+
+// MIRRORS symmetry pruning
+void test_masked4()
+{
+    const vector<string> exp_sequence =
+    {
+        "",
+        ".",
+        "#",
+        "..",
+        "#.",
+        //".#",
+        "##",
+        ".|.",
+        "#|.",
+        //".|#",
+        "#|#",
+        "..|..",
+        "#.|..",
+        //".#|..",
+        //"..|#.",
+        //"..|.#",
+        "##|..",
+        "#.|#.",
+        "#.|.#",
+        //".#|#.",
+        //".#|.#",
+        //"..|##",
+        "##|#.",
+        //"##|.#",
+        //"#.|##",
+        //".#|##",
+        "##|##",
+    };
+
+    grid_generator gen1(int_pair(2, 2), {BORDER}, true, EMPTY, false,
+                        GRID_HASH_ACTIVE_MASK_MIRRORS);
+    vector<string> sequence1 = get_board_string_sequence(gen1);
+
+    assert(sequence1 == exp_sequence);
+}
+
+// strip with ALL symmetry pruning
+void test_masked5()
+{
+    const vector<string> exp_sequence =
+    {
+        "",
+        ".",
+        "#",
+        "..",
+        "#.",
+        //".#",
+        "##",
+        "...",
+        "#..",
+        ".#.",
+        //"..#",
+        "##.",
+        "#.#",
+        //".##",
+        "###",
+        "....",
+        "#...",
+        ".#..",
+        //"..#.",
+        //"...#",
+        "##..",
+        "#.#.",
+        "#..#",
+        ".##.",
+        //".#.#",
+        //"..##",
+        "###.",
+        "##.#",
+        //"#.##",
+        //".###",
+        "####",
+    };
+
+    grid_generator gen1(int_pair(1, 4), {BORDER}, true, EMPTY, true,
+                        GRID_HASH_ACTIVE_MASK_ALL);
+    vector<string> sequence1 = get_board_string_sequence(gen1);
+
+    assert(sequence1 == exp_sequence);
+}
+
 
 } // namespace
 
 //////////////////////////////////////////////////
-
 void grid_generator_test_all()
 {
-    test_1x2();
-    test_2x1();
-    test_2x2();
-    test_empties();
-    test_clobber();
-    test_nogo();
-    test_equality();
-}
-#else
-using namespace std;
+    test_basic1();
+    test_basic2();
+    test_basic3();
+    test_basic4();
 
-void grid_generator_test_all()
-{
-    cout << "TODO UNCOMMENT " << __FILE__ << endl;
+    test_masked1();
+    test_masked2();
+    test_masked3();
+    test_masked4();
+    test_masked5();
+
+    cout << __FILE__ << endl;
 }
 
-#endif
