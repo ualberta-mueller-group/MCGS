@@ -391,19 +391,3 @@ bool grid_generator::_is_active_tile(int tile_idx) const
     return (*_mask)[tile_idx] == _mask_active_bit;
 }
 
-//////////////////////////////////////////////////
-void test_grid_generator_stuff()
-{
-    grid_mask m(GRID_HASH_ACTIVE_MASK_IDENTITY);
-
-    m.set_shape({2, 2});
-
-    while (m)
-    {
-        grid::print_grid(cout, m.get_mask(), m.get_shape());
-        cout << endl;
-        ++m;
-    }
-
-}
-

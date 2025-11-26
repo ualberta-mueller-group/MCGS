@@ -14,7 +14,6 @@
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
-#include "misc_tests.h"
 #include "search_utils.h"
 #include "clobber.h"
 
@@ -25,7 +24,6 @@
 #include "throw_assert.h"
 #include "gen_experiments.h"
 #include "winning_moves.h"
-#include "sheep_generator_sketch.h"
 
 using std::cout, std::endl, std::string;
 
@@ -61,14 +59,6 @@ int main(int argc, char** argv)
     mcgs_init_2(opts);
     //cout << "Post-init" << endl;
 
-    //test_sheep_generator_sketch();
-    //test_sheep_grid_generator();
-    //return 0;
-
-    //misc_tests_all();
-
-    //test_grid_generator_stuff();
-    //return 0;
 
     if (opts.use_player)
     {

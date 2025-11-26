@@ -100,4 +100,3 @@ std::vector<game_bounds_ptr> find_bounds(
 std::vector<game_bounds_ptr> find_bounds(
     game* game, const std::vector<bounds_options>& options);
 
-void test_bounds();

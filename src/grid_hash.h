@@ -12,6 +12,33 @@
     Orientations are enabled by passing a bit mask to the grid_hash constructor.
 */
 
+/*
+   TODO NOTE:
+   Not all orientation masks are legal. There's some "closure"
+   condition we should check for in grid_hash.
+
+   An orientation mask denotes an equivalence class for boards.
+   All boards in the equivalence class must be reached in one "step".
+   This means the mask containing only 0 and 90 is illegal:
+   - The inverse of 90 (270) is missing
+   - 90 implies 180, but this takes a 2nd step to reach...
+*/
+
+/*
+   These are all of the masks which pass all test cases:
+
+    1: 00000000000000000000000000000001
+    3: 00000000000000000000000000000011
+    9: 00000000000000000000000000001001
+    17: 00000000000000000000000000010001
+    33: 00000000000000000000000000100001
+    51: 00000000000000000000000000110011
+    85: 00000000000000000000000001010101
+    129: 00000000000000000000000010000001
+    153: 00000000000000000000000010011001
+    255: 00000000000000000000000011111111
+*/
+
 #include <array>
 #include <cassert>
 #include <limits>

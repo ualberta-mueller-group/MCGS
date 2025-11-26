@@ -123,5 +123,3 @@ private:
     std::vector<int> _real_board;
 };
 
-//////////////////////////////////////////////////
-void test_grid_generator_stuff();

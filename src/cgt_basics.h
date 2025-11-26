@@ -148,7 +148,7 @@ inline void assert_range(int value, int low, int high)
 // TODO test
 // interval includes both low and high
 template <class T>
-inline bool in_interval(const T& val, const T& low, const T& high)
+inline constexpr bool in_interval(const T& val, const T& low, const T& high)
 {
     return low <= val && val <= high;
 }

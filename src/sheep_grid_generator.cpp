@@ -356,28 +356,3 @@ bool sheep_grid_generator::_sheep_count_order_fn(const std::pair<int, int>& p1,
 
     return false;
 }
-
-//////////////////////////////////////////////////
-void test_sheep_grid_generator()
-{
-
-    sheep_grid_generator gen(int_pair(2, 3), 2, 2);
-
-    while (gen)
-    {
-        cout << gen.get_shape() << " " << gen.gen_board() << endl;
-        ++gen;
-    }
-
-    //const int_pair max_dims(3, 2);
-    //int_pair dims;
-    //bool init = true;
-
-    //while (i_grid_generator::increment_dims_transpose(dims, max_dims, init))
-    //{
-    //    cout << dims << endl;
-    //    init = false;
-    //}
-
-}
-

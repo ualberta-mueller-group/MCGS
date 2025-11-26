@@ -9,6 +9,7 @@
 #include "test/domineering_test.h"
 #include "test/fission_test.h"
 #include "test/gen_toads_test.h"
+#include "test/grid_hash_test.h"
 #include "test/n_bit_int_test.h"
 #include "test/sheep_grid_generator_test.h"
 #include "test/split_test_amazons.h"
@@ -76,30 +77,32 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
-        cgt_move_test_all();
-        n_bit_int_test_all();
-        return;
+    cout << "TODO make sure all new tests are called from main()" << endl;
+    //cgt_move_test_all();
+    //n_bit_int_test_all();
+    grid_hash_test_all();
+    return;
 
-        sheep_grid_generator_test_all();
-        return;
+    sheep_grid_generator_test_all();
+    return;
 
-        /*
-            TODO:
-            split, normalize, inverse, (and others?)
-        */
-        domineering_test_all();
-        amazons_test_all();
-        fission_test_all();
-        toppling_dominoes_test_all();
-        gen_toads_test_all();
-        sheep_test_all();
+    /*
+    TODO:
+    split, normalize, inverse, (and others?)
+    */
+    domineering_test_all();
+    amazons_test_all();
+    fission_test_all();
+    toppling_dominoes_test_all();
+    gen_toads_test_all();
+    sheep_test_all();
 
-        split_test_amazons_all();
-        split_test_domineering_all();
-        split_test_fission_all();
-        split_test_toppling_dominoes_all();
-        split_test_gen_toads_all();
-        split_test_sheep_all();
+    split_test_amazons_all();
+    split_test_domineering_all();
+    split_test_fission_all();
+    split_test_toppling_dominoes_all();
+    split_test_gen_toads_all();
+    split_test_sheep_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -173,6 +176,7 @@ int main(int argc, const char** argv)
 
     n_bit_int_test_all();
     cgt_move_test_all();
+    grid_hash_test_all();
     cgt_nimber_test_all();
     cgt_switch_test_all();
     cgt_up_star_test_all();
