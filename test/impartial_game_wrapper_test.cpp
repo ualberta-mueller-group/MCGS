@@ -13,7 +13,6 @@
 #include "test_utilities.h"
 
 using std::string;
-const int UNKNOWN = -1;
 
 namespace {
 
@@ -36,7 +35,7 @@ void test_nim_value(const string& s, int nim_value)
     clobber_1xn c(s);
     impartial_game_wrapper g(&c);
     const int v = g.search_with_tt();
-    assert(nim_value == UNKNOWN || v == nim_value);
+    assert(v == nim_value);
 }
 
 void impartial_game_wrapper_test_values()
@@ -91,20 +90,16 @@ void test_nogo(string s, int nim_value)
     nogo_1xn c(s);
     impartial_game_wrapper g(&c);
     const int v = g.search_with_tt();
-    if (nim_value != UNKNOWN)
-        assert(v == nim_value);
+    assert(v == nim_value);
 }
 
 void impartial_game_wrapper_test_nogo()
 {
-    static int expected[] = // computed with this same program
+    static int expected[] = // computed with MCGS
         {
-            0,                                                          //
-            0,       1,       0,       1,       2, 0, 1, 0, 1, 2,       //  1-10
-            3,       1,       0,       3,       1, 0, 2, 2, 3, UNKNOWN, // 11-20
-            UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,                         //
-            UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,                         //
-            UNKNOWN, UNKNOWN                                            // 21-30
+            0,
+            0, 1, 0, 1, 2, 0, 1, 0, 1, 2, //  1-10
+            3, 1, 0, 3, 1, 0, 2, 2, 3     // 11-19
         };
 
     for (int i = 0; i < 11; ++i)
