@@ -61,12 +61,15 @@ Figure 3: Nim values for (xxxo)<sup>n</sup>, n=1..1000
 <br>(xxxo)<sup>n</sup>, n=1..1000 computed Nov 20, 2025.
 </p>
 <h3><a name="impartial-nogo"></a>Impartial NoGo</h3>
-<p>We are not aware of any previous published results on this game.</p>
+<p>We are not aware of any previous published results on this game.
+In the table, symmetric boards with rows &gt; columns are not shown.
+1&times;n values listed separately below.
+</p>
 
 <table>
-  <caption>Impartial NoGo Nim Values</caption>
+  <caption>Impartial NoGo Nim Values.</caption>
 <tr>
-  <th>rows\columns</th>
+  <th>Rows\Columns</th>
   <th>2</th>
   <th>3</th>
   <th>4</th>
@@ -95,39 +98,11 @@ Figure 3: Nim values for (xxxo)<sup>n</sup>, n=1..1000
   <td>*1</td>
   <td>*0</td>
 </tr>
-
 <tr>
   <th>4</th>
   <td>*0</td>
   <td>*0</td>
   <td>*0</td>
-</tr>
-
-<tr>
-  <th>5</th>
-  <td>*0</td>
-  <td>*1</td>
-</tr>
-
-<tr>
-  <th>6</th>
-  <td>*0</td>
-  <td>*0</td>
-</tr>
-
-<tr>
-  <th>7</th>
-  <td>*0</td>
-</tr>
-
-<tr>
-  <th>8</th>
-  <td>*1</td>
-</tr>
-
-<tr>
-  <th>9</th>
-  <td>*1</td>
 </tr>
 </table>
 
@@ -339,28 +314,33 @@ MCGS has solved all boards up to 2&times;26 on 2025-11-23.
 MCGS has solved all boards up to 3&times;13 on 2025-11-23.
 </p>
 
+<table>
+<tbody>
+<tr>
+<th>Columns</th>
+<th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+<th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th>
+<th>16</th><th>17</th><th>18</th><th>19</th><th>20</th><th>21</th>
+</tr>
+<tr>
+<td></td><td>*0</td><td>*1</td><td>*1</td><td>*4</td><td>*1</td><td>*3</td><td>*1</td>
+<td>*2</td><td>*0</td><td>*1</td><td>*2</td><td>*3</td><td>*1</td>
+<td>*4</td><td>*0</td><td>*1</td><td>*0</td><td>*2</td>
+<td>*&ge;1</td>
+</tr>
+</tbody>
+</table>
+
 <h4><a name="largercram"></a>n&times;m Cram with m, n &ge; 4</h4>
-<p>Reference: wikipedia.
-</p>
 
 <table>
 <tbody>
 <tr>
 <th>
-rows\columns
+Rows\Columns
 </th>
-<th>4</th>
-<th>5</th>
-<th>6</th>
-<th>7</th>
-<th>8</th>
-<th>9</th>
-<th>10</th>
-<th>11</th>
-<th>12</th>
-<th>13</th>
-<th>14</th>
-<th>15</th>
+<th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+<th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th>
 </tr>
 <tr>
 <th>4
@@ -420,13 +400,15 @@ rows\columns
 </tbody>
 </table>
  
-<p>Sources: 
+<p>
+Sources: From (Wikipedia).
 <br> 4&times;5, 4&times;7, 4&times;9, from (Lemoine and Viennot 2013).
 4&times;11, 4&times;13, 4&times;15 from (Beling).
-MCGS has confirmed 4&times;5 and 4&times;7 on 2025-11-23. It also computed
-even boards up to 4&times;8.
 <br> 5&times;n, n=5..9, from (Lemoine and Viennot 2013), n=10-12 (Beling).
-MCGS confirmed 5&times;5 and 5&times;6 on 2025-11-23. 
+<p>MCGS results so far (no database, no move ordering):
+MCGS has confirmed 4&times;5 and 4&times;7 on 2025-11-23. 
+It also computed even boards up to 4&times;8.
+It confirmed 5&times;5 and 5&times;6 on 2025-11-23. 
 </p>
 
 <h2><a name="references"></a>References</h2>
