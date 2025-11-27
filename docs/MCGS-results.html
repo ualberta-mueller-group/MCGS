@@ -309,30 +309,37 @@ Figure 3: Nim values for (xxxo)<sup>n</sup>, n=1..1000
 </p>
 
 <h3><a name="cram"></a>Cram = Impartial Domineering</h3>
-<p> It has been known for a long time that all even x even boards
-are *0, second player wins, by mirror strategy, and
-all even x odd boards are first player wins, by playing in the middle
+<p>It is well-known that all even &times; even boards
+are *0, second player wins, by following a mirroring strategy.
+All even &times; odd boards are first player wins, by playing in the middle
 and then mirroring.
 </p>
 
-<h4><a name="1xncram"></a>1xn Cram</h4>
-1xn Cram is the same as Dawson’s Kayles, the take-and-break octal game .07 .
+<h4><a name="1xncram"></a>1&times;n Cram</h4>
+<p>
+1&times;n Cram is the same as Dawson’s Kayles, the take-and-break octal game .07 .
 It has period 34 with only few exceptions near the start (https://oeis.org/A002187).
-
-<h4><a name="2xncram"></a>2xn Cram</h4>
+</p>
 <p>
-All 2xn boards are *0 if n even, *1 if n odd (Winning Ways, Uiterwijk 2020).
-MCGS has solved all boards up to 2x26 on 2025-11-23.
+MCGS has verified the values up to n=127, using the 2-d grid 
+implementation of impartial domineering. Grid has a 7 bit limit on 
+dimensions (width and height).
 </p>
 
-<h4><a name="3xncram"></a>3xn Cram</h4>
+<h4><a name="2xncram"></a>2&times;n Cram</h4>
 <p>
-3xn, n=3..20, from (Lemoine and Viennot 2013).
-3x21 is a first player win (Uiterwijk 2020)
-MCGS has solved all boards up to 3x13 on 2025-11-23.
+2&times;n boards are *0 for all even n, and *1 for all odd n (Winning Ways, Uiterwijk 2020).
+MCGS has solved all boards up to 2&times;26 on 2025-11-23.
 </p>
 
-<h4><a name="largercram"></a>nxm Cram with m, n &ge; 4</h4>
+<h4><a name="3xncram"></a>3&times;n Cram</h4>
+<p>
+3&times;n, n=3..20, from (Lemoine and Viennot 2013).
+3&times;21 is a first player win (Uiterwijk 2020)
+MCGS has solved all boards up to 3&times;13 on 2025-11-23.
+</p>
+
+<h4><a name="largercram"></a>n&times;m Cram with m, n &ge; 4</h4>
 <p>Reference: wikipedia.
 </p>
 
@@ -414,19 +421,26 @@ rows\columns
 </table>
  
 <p>Sources: 
-<br> 4x5, 4x7, 4x9, from (Lemoine and Viennot 2013).
-4x11, 4x13, 4x15 from (Beling).
-MCGS has confirmed 4x5 and 4x7 on 2025-11-23. (It also computed
-even boards up to 4x8.)
-<br> 5xn, n=5..9, from (Lemoine and Viennot 2013), n=10-12 (Beling).
-MCGS confirmed 5x5 and 5x6 on 2025-11-23. 
+<br> 4&times;5, 4&times;7, 4&times;9, from (Lemoine and Viennot 2013).
+4&times;11, 4&times;13, 4&times;15 from (Beling).
+MCGS has confirmed 4&times;5 and 4&times;7 on 2025-11-23. It also computed
+even boards up to 4&times;8.
+<br> 5&times;n, n=5..9, from (Lemoine and Viennot 2013), n=10-12 (Beling).
+MCGS confirmed 5&times;5 and 5&times;6 on 2025-11-23. 
 </p>
 
 <h2><a name="references"></a>References</h2>
 
 <ul>
+<li>(Beling) Piotr Beling. impartial-games README.
+https://github.com/beling/impartial-games/tree/main?tab=readme-ov-file
+</li>
 <li>
 (Dai and Chen 2022) Jiayi Dai and Xinyue Chen. Impartial Clobber Solver. Course project, University of Alberta 2022.
+</li>
+<li>
+(Lemoine and Viennot 2013) Julien Lemoine and Simon Viennot. Records - Cram.
+https://sprouts.tuxfamily.org/wiki/doku.php?id=records#cram, 2013.
 </li>
 <li>
 (Uiterwijk 2018) Uiterwijk, J. Construction and investigation of Cram endgame databases. ICGA Journal 40(4), 425–437, 2018.
@@ -436,14 +450,11 @@ MCGS confirmed 5x5 and 5x6 on 2025-11-23.
 Game Theory, ACG 2019, pp. 91-105, Springer 2020.
 </li>
 <li>
-(Lemoine and Viennot 2013) Julien Lemoine and Simon Viennot. Records - Cram.
-https://sprouts.tuxfamily.org/wiki/doku.php?id=records#cram, 2013.
-</li>
-<li>(Wikipedia) Cram (game).
+(Wikipedia) Cram (game).
 https://en.wikipedia.org/wiki/Cram_(game)
 </li>
-<li>(Beling) Piotr Beling. impartial-games README.
-https://github.com/beling/impartial-games/tree/main?tab=readme-ov-file
+<li>(Winning Ways) Elwyn Berlekamp, John Conway, and Richard Guy. 
+Winning Ways for Your Mathematical Plays. Academic Press, 1982.
 </li>
 
 </ul>
