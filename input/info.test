@@ -150,6 +150,16 @@ XOXOO...XO
             A flattened row-major representation of a 2D board with '|'
             separating the rows. i.e. 'XOX|OXO' (2x3 grid: 2 rows and 3 columns)
 
+        'int grid'
+            A flattened row-major representation of a 2D board with '|'
+            separating the rows, containing integers instead of stones. Integers
+            may be space and/or comma separated, but ',' can't come before '|'.
+
+            The following are all equivalent:
+            '0,1|2,-3'
+            '0, 1 | 2, -3'
+            '0 1 | 2 -3'
+
     Games:
         [clobber_1xn], [nogo_1xn], and [elephants]:
             Contiguous sequence of '.', 'X', and 'O'.
@@ -181,6 +191,9 @@ XOXOO...XO
 
         [fission]
             A grid of '.', 'X', and '#'.
+
+        [sheep]
+            An int grid whose values have a magnitude of at most 50.
 
         [integer_game], [nimber], and [kayles]:
             A single int.

@@ -106,7 +106,7 @@ inline void assert_black_white(bw color)
 
 inline int opponent(bw c)
 {
-    assert_black_white(c);
+    THROW_ASSERT_DEBUG(is_black_white(c));
     return BLACK + WHITE - c;
 }
 
@@ -122,7 +122,7 @@ inline void assert_empty_black_white(ebw color)
 
 inline int ebw_opponent(int c)
 {
-    assert_empty_black_white(c);
+    THROW_ASSERT_DEBUG(is_empty_black_white(c));
     if (c == EMPTY)
         return EMPTY;
     return opponent(c);

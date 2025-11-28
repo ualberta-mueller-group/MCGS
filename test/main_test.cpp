@@ -23,7 +23,7 @@
 #include "test/sheep_test.h"
 #include "split_test_sheep.h"
 #include "test/winning_moves_test.h"
-const bool RUN_OVERRIDE_TESTS = true;
+const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
 #include <string>

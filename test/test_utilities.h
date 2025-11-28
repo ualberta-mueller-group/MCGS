@@ -117,7 +117,7 @@ void assert_solve_test_file(const std::string& file_name,
         {                                                                      \
             statements;                                                        \
         }                                                                      \
-        catch (exception & exc)                                                \
+        catch (std::exception & exc)                                           \
         {                                                                      \
             threw = true;                                                      \
         }                                                                      \
