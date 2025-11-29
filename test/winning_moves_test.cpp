@@ -1,10 +1,8 @@
 #include "winning_moves_test.h"
 
-#include <iostream>
-
-using namespace std;
-
+/*
+   TODO this test was deleted
+*/
 void test_winning_moves()
 {
-    cout << "TODO deleted test: " << __FILE__ << endl;
 }
