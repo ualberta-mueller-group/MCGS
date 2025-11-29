@@ -140,25 +140,31 @@ int main(int argc, const char** argv)
         return 0;
     }
 
+    utilities_test_all();
     random_test_all();
-    grid_location_test_all();
-    bit_array_test_all();
 
     cgt_basics_test_all();
+    n_bit_int_test_all();
+    cgt_move_test_all();
+
+    bit_array_test_all();
+
+    game_type_test_all();
+
+    grid_location_test_all();
+
+
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
 
-    n_bit_int_test_all();
-    cgt_move_test_all();
     grid_hash_test_all();
-    grid_game_hashes_test_all();
     grid_mask_test_all();
+    grid_game_hashes_test_all();
+
     cgt_nimber_test_all();
     cgt_switch_test_all();
     cgt_up_star_test_all();
 
-    utilities_test_all();
-    game_type_test_all();
     safe_arithmetic_test_all();
     fraction_test_all();
 
