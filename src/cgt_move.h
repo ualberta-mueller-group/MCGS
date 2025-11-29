@@ -23,7 +23,7 @@
 
 typedef int move;
 
-namespace cgt_move_new {
+namespace cgt_move {
 
 constexpr int COLOR_BIT_IDX = 31;
 constexpr int COLOR_BIT_MASK = (1) << COLOR_BIT_IDX;
@@ -624,5 +624,5 @@ inline void move6_unpack_coords(const move& m, int_pair& coord1,
     coord3 = move6_get_coord_3(m);
 }
 
-} // namespace cgt_move_new
+} // namespace cgt_move
 

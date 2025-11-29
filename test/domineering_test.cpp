@@ -8,7 +8,7 @@
 #include <cassert>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "domineering.h"
 #include "grid_location.h"
 #include "test/test_utilities.h"
@@ -50,7 +50,7 @@ int_pair get_second_coord_for_player(const domineering* g,
 
     const int_pair coord2 = get_second_coord_for_player(g, coord1, player);
 
-    return cgt_move_new::move4_create_from_coords(coord1, coord2);
+    return cgt_move::move4_create_from_coords(coord1, coord2);
 }
 
 void compare_generated_moves(const domineering* g,

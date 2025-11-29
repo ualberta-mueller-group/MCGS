@@ -6,7 +6,7 @@
 #include <iostream>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "game.h"
 #include "strip.h"
 #include "throw_assert.h"
@@ -75,8 +75,8 @@ void toppling_dominoes::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int new_start = cgt_move_new::move2_get_part_1(m);
-    const int new_end = cgt_move_new::move2_get_part_2(m);
+    const int new_start = cgt_move::move2_get_part_1(m);
+    const int new_end = cgt_move::move2_get_part_2(m);
 
     assert(
         (_domino_start <= new_start) && //
@@ -100,7 +100,7 @@ void toppling_dominoes::undo_move()
     {
         const ::move m_enc = last_move();
 
-        cgt_move_new::move2_unpack(m_enc, new_start, new_end);
+        cgt_move::move2_unpack(m_enc, new_start, new_end);
     }
     else
     {
@@ -138,7 +138,7 @@ void toppling_dominoes::print_move(std::ostream& str, const ::move& m) const
 {
     // Board is the open interval: [low_bound, high_bound)
     int low_bound, high_bound;
-    cgt_move_new::move2_unpack(m, low_bound, high_bound);
+    cgt_move::move2_unpack(m, low_bound, high_bound);
 
     str << '[' << low_bound << ',' << high_bound << ')';
 }
@@ -300,10 +300,10 @@ toppling_dominoes_move_generator::operator bool() const
     */
 
     if (!real_right)
-        return cgt_move_new::move2_create(real_idx + 1, real_end); // LEFT
+        return cgt_move::move2_create(real_idx + 1, real_end); // LEFT
 
     else
-        return cgt_move_new::move2_create(real_start, real_idx); // RIGHT
+        return cgt_move::move2_create(real_start, real_idx); // RIGHT
 }
 
 void toppling_dominoes_move_generator::_increment(bool init)

@@ -9,7 +9,7 @@
 #include <string>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "game.h"
 #include "fission.h"
 #include "grid.h"
@@ -51,12 +51,12 @@ typedef tuple<int, int, bw> move_tuple_t;
 // target is the X being "split"
 inline ::move encode_fission_move(const int_pair& target_coord)
 {
-    return cgt_move_new::move2_create_from_coords(target_coord);
+    return cgt_move::move2_create_from_coords(target_coord);
 }
 
 inline int_pair decode_fission_move(const ::move& m)
 {
-    return cgt_move_new::move2_get_coord_1(m);
+    return cgt_move::move2_get_coord_1(m);
 }
 
 // directions where new Xs should be placed

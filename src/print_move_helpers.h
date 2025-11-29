@@ -3,7 +3,7 @@
 #include <ostream>
 #include <string>
 
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "int_pair.h"
 #include "throw_assert.h"
 

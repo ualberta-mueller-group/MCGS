@@ -10,7 +10,7 @@
 #include <cstddef>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "game.h"
 #include "grid.h"
 #include "print_move_helpers.h"
@@ -132,7 +132,7 @@ void domineering::play(const ::move& m, bw to_play)
     game::play(m, to_play);
 
     int_pair coord1, coord2;
-    cgt_move_new::move4_unpack_coords(m, coord1, coord2);
+    cgt_move::move4_unpack_coords(m, coord1, coord2);
 
     const int point1 = grid_location::coord_to_point(coord1, shape());
     const int point2 = grid_location::coord_to_point(coord2, shape());
@@ -178,10 +178,10 @@ void domineering::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    bw to_play = cgt_move_new::get_color(m_enc);
+    bw to_play = cgt_move::get_color(m_enc);
 
     int_pair coord1, coord2;
-    cgt_move_new::move4_unpack_coords(m_enc, coord1, coord2);
+    cgt_move::move4_unpack_coords(m_enc, coord1, coord2);
 
     const int point1 = grid_location::coord_to_point(coord1, shape());
     const int point2 = grid_location::coord_to_point(coord2, shape());
@@ -468,7 +468,7 @@ domineering_move_generator::operator bool() const
 ::move domineering_move_generator::gen_move() const
 {
     assert(*this);
-    return cgt_move_new::move4_create_from_coords(_loc1.get_coord(), _coord2);
+    return cgt_move::move4_create_from_coords(_loc1.get_coord(), _coord2);
 }
 
 void domineering_move_generator::_increment(bool init)

@@ -9,7 +9,7 @@
 #include <ostream>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "grid.h"
 #include "print_move_helpers.h"
 #include "grid_location.h"
@@ -101,7 +101,7 @@ void amazons::play(const ::move& m, bw to_play)
 
 
     int_pair coord1, coord2, coord3;
-    cgt_move_new::move6_unpack_coords(m, coord1, coord2, coord3);
+    cgt_move::move6_unpack_coords(m, coord1, coord2, coord3);
 
     const int_pair& s = shape();
     const int point1 = grid_location::coord_to_point(coord1, s);
@@ -169,11 +169,11 @@ void amazons::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    const bw to_play = cgt_move_new::get_color(m_enc);
+    const bw to_play = cgt_move::get_color(m_enc);
 
 
     int_pair coord1, coord2, coord3;
-    cgt_move_new::move6_unpack_coords(m_enc, coord1, coord2, coord3);
+    cgt_move::move6_unpack_coords(m_enc, coord1, coord2, coord3);
 
     const int_pair& s = shape();
     const int point1 = grid_location::coord_to_point(coord1, s);
@@ -509,7 +509,7 @@ amazons_move_generator::operator bool() const
     const int_pair& coord2 = _queen_end.get_coord();
     const int_pair& coord3 = _arrow_end.get_coord();
 
-    return cgt_move_new::move6_create_from_coords(coord1, coord2, coord3);
+    return cgt_move::move6_create_from_coords(coord1, coord2, coord3);
 }
 
 bool amazons_move_generator::_increment(bool init)

@@ -6,7 +6,7 @@
 #include <exception> // IWYU pragma: keep
 
 #include <memory>
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "game.h"
 #include "sumgame.h"
 #include "file_parser.h"
@@ -47,8 +47,8 @@ inline void assert_num_moves(const game& g, bw to_play, int num_moves)
 inline void assert_two_part_move(move_generator& mg, int from, int to)
 {
     move m = mg.gen_move();
-    assert(from == cgt_move_new::move2_get_from(m));
-    assert(to == cgt_move_new::move2_get_to(m));
+    assert(from == cgt_move::move2_get_from(m));
+    assert(to == cgt_move::move2_get_to(m));
 }
 
 void assert_solve(game& pos, bw to_play, const bool expected_result);

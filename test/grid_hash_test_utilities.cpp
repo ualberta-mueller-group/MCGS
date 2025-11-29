@@ -1,5 +1,3 @@
-#pragma once
-
 #include "grid_hash_test_utilities.h"
 
 #include <vector>

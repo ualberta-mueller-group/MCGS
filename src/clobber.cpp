@@ -1,7 +1,7 @@
 #include "clobber.h"
 #include "cgt_basics.h"
 #include <ostream>
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "game.h"
 #include "grid.h"
 #include <string>
@@ -92,7 +92,7 @@ void clobber::play(const ::move& m, bw to_play)
     game::play(m, to_play);
 
     int_pair from_coord, to_coord;
-    cgt_move_new::move4_unpack_coords(m, from_coord, to_coord);
+    cgt_move::move4_unpack_coords(m, from_coord, to_coord);
 
     const int from_point = grid_location::coord_to_point(from_coord, shape());
     const int to_point = grid_location::coord_to_point(to_coord, shape());
@@ -133,10 +133,10 @@ void clobber::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    bw to_play = cgt_move_new::get_color(m_enc);
+    bw to_play = cgt_move::get_color(m_enc);
 
     int_pair from_coord, to_coord;
-    cgt_move_new::move4_unpack_coords(m_enc, from_coord, to_coord);
+    cgt_move::move4_unpack_coords(m_enc, from_coord, to_coord);
 
     const int from_point = grid_location::coord_to_point(from_coord, shape());
     const int to_point = grid_location::coord_to_point(to_coord, shape());
@@ -463,7 +463,7 @@ clobber_move_generator::operator bool() const
     const int_pair& from_coords = _location.get_coord();
     const int_pair& to_coords = _target_location.get_coord();
 
-    return cgt_move_new::move4_create_from_coords(from_coords, to_coords);
+    return cgt_move::move4_create_from_coords(from_coords, to_coords);
 }
 
 void clobber_move_generator::_next_move(bool init)

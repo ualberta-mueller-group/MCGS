@@ -6,7 +6,7 @@
 #include <ostream>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "grid.h"
 #include "grid_location.h"
 #include "print_move_helpers.h"
@@ -88,7 +88,7 @@ void fission::play(const ::move& m, bw to_play)
     // Get points
 
     int_pair coord_start;
-    cgt_move_new::move2_unpack_coords(m, coord_start);
+    cgt_move::move2_unpack_coords(m, coord_start);
 
     grid_location loc_start(shape(), coord_start);
     assert(loc_start.valid());
@@ -162,11 +162,11 @@ void fission::undo_move()
     game::undo_move();
 
     // Decode move
-    const bw player = cgt_move_new::get_color(m_enc);
+    const bw player = cgt_move::get_color(m_enc);
 
     // Get points
     int_pair coord_start;
-    cgt_move_new::move2_unpack_coords(m_enc, coord_start);
+    cgt_move::move2_unpack_coords(m_enc, coord_start);
 
     grid_location loc_start(shape(), coord_start);
     assert(loc_start.valid());
@@ -291,7 +291,7 @@ fission_move_generator::operator bool() const
     assert(*this);
 
     const int_pair& coords = _loc.get_coord();
-    return cgt_move_new::move2_create_from_coords(coords);
+    return cgt_move::move2_create_from_coords(coords);
 }
 
 void fission_move_generator::_increment(bool init)

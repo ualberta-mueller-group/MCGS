@@ -2,7 +2,7 @@
 // Simple combinatorial games - integers
 //---------------------------------------------------------------------------
 #include "cgt_integer_game.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include <cassert>
 #include <ostream>
 
@@ -30,7 +30,7 @@ void integer_game::undo_move()
     const move m = last_move();
     game::undo_move();
 
-    const bw to_play = cgt_move_new::get_color(m);
+    const bw to_play = cgt_move::get_color(m);
     if (to_play == BLACK)
     {
         assert(_value >= 0);

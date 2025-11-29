@@ -10,7 +10,7 @@
 #include <string>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "warn_default.h"
 #include "type_table.h"
 
@@ -85,8 +85,8 @@ bool game::has_moves() const
 
 void game::play(const move& m, int to_play)
 {
-    assert(cgt_move_new::get_color(m) == 0);
-    const move mc = cgt_move_new::set_color(m, to_play);
+    assert(cgt_move::get_color(m) == 0);
+    const move mc = cgt_move::set_color(m, to_play);
     _move_stack.push_back(mc);
 
     _pre_hash_update();

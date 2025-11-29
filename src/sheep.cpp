@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "grid.h"
 #include "grid_location.h"
 #include "game.h"
@@ -113,7 +113,7 @@ void sheep::play(const ::move& m, bw to_play)
     int target_herd;
     int point_start;
     int point_end;
-    cgt_move_new::move3_unpack(m, target_herd, point_start, point_end);
+    cgt_move::move3_unpack(m, target_herd, point_start, point_end);
 
     const int old_start_herd = at(point_start);
     const int new_start_herd = old_start_herd - target_herd;
@@ -152,13 +152,13 @@ void sheep::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    const bw to_play = cgt_move_new::get_color(m_enc);
+    const bw to_play = cgt_move::get_color(m_enc);
 
     // Decode
     int target_herd;
     int point_start;
     int point_end;
-    cgt_move_new::move3_unpack(m_enc, target_herd, point_start, point_end);
+    cgt_move::move3_unpack(m_enc, target_herd, point_start, point_end);
 
     const int new_start_herd = at(point_start);
     const int old_start_herd = target_herd + new_start_herd;
@@ -228,7 +228,7 @@ void sheep::print_move(std::ostream& str, const ::move& m) const
     int target_herd;
     int from_point;
     int to_point;
-    cgt_move_new::move3_unpack(m, target_herd, from_point, to_point);
+    cgt_move::move3_unpack(m, target_herd, from_point, to_point);
 
     THROW_ASSERT(negate_is_safe(target_herd));
 
@@ -280,7 +280,7 @@ sheep_move_generator::operator bool() const
            _target_end_idx >= 0    //
     );
 
-    return cgt_move_new::move3_create(_target_size, _herd_start_idx,
+    return cgt_move::move3_create(_target_size, _herd_start_idx,
                                       _target_end_idx);
 }
 

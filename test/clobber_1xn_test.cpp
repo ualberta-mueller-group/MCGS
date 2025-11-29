@@ -2,7 +2,7 @@
 // Unit tests for the game of clobber
 //---------------------------------------------------------------------------
 #include "clobber_1xn_test.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "clobber_1xn.h"
 
 #include <cassert>
@@ -98,9 +98,9 @@ void sum_6()
 void play_two_white_moves()
 {
     clobber_1xn g("XXO");
-    g.play(cgt_move_new::move2_create(2, 1), WHITE);
+    g.play(cgt_move::move2_create(2, 1), WHITE);
     assert(g.board_as_string() == "XO.");
-    g.play(cgt_move_new::move2_create(1, 0), WHITE);
+    g.play(cgt_move::move2_create(1, 0), WHITE);
     assert(g.board_as_string() == "O..");
     g.undo_move();
     assert(g.board_as_string() == "XO.");

@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "throw_assert.h"
 #include "game.h"
 #include "strip.h"
@@ -95,8 +95,8 @@ void gen_toads::play(const ::move& m, bw to_play)
 
     assert(is_black_white(to_play));
 
-    const int distance_signed = cgt_move_new::move2_get_part_1(m);
-    const int start_idx = cgt_move_new::move2_get_part_2(m);
+    const int distance_signed = cgt_move::move2_get_part_1(m);
+    const int start_idx = cgt_move::move2_get_part_2(m);
 
     assert(LOGICAL_IMPLIES(distance_signed > 0, to_play == BLACK) && //
            LOGICAL_IMPLIES(distance_signed < 0, to_play == WHITE)    //
@@ -135,10 +135,10 @@ void gen_toads::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    const bw to_play = cgt_move_new::get_color(m_enc);
+    const bw to_play = cgt_move::get_color(m_enc);
 
-    const int distance_signed = cgt_move_new::move2_get_part_1(m_enc);
-    const int start_idx = cgt_move_new::move2_get_part_2(m_enc);
+    const int distance_signed = cgt_move::move2_get_part_1(m_enc);
+    const int start_idx = cgt_move::move2_get_part_2(m_enc);
 
     assert(LOGICAL_IMPLIES(distance_signed > 0, to_play == BLACK) && //
            LOGICAL_IMPLIES(distance_signed < 0, to_play == WHITE)    //
@@ -191,7 +191,7 @@ void gen_toads::print(ostream& str) const
 void gen_toads::print_move(std::ostream& str, const ::move& m) const
 {
     int move_delta, start_idx;
-    cgt_move_new::move2_unpack(m, move_delta, start_idx);
+    cgt_move::move2_unpack(m, move_delta, start_idx);
 
     const int end_idx = start_idx + move_delta;
 
@@ -352,7 +352,7 @@ gen_toads_move_generator::operator bool() const
 {
     assert(*this);
     // _move_distance is signed
-    return cgt_move_new::move2_create(_move_distance, _start_idx);
+    return cgt_move::move2_create(_move_distance, _start_idx);
 }
 
 void gen_toads_move_generator::_increment(bool init)

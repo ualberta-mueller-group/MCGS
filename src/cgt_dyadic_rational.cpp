@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "game.h"
 #include "safe_arithmetic.h"
 #include "utilities.h"
@@ -45,7 +45,7 @@ void dyadic_rational::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    assert(m == cgt_move_new::move2_create(_p, _q));
+    assert(m == cgt_move::move2_create(_p, _q));
     assert(_p != 0);
     if (to_play == BLACK)
         --_p;
@@ -60,9 +60,9 @@ void dyadic_rational::undo_move()
     game::undo_move();
 
     int p, q;
-    cgt_move_new::move2_unpack(m, p, q);
+    cgt_move::move2_unpack(m, p, q);
 
-    //bw to_play = cgt_move_new::get_color(m);
+    //bw to_play = cgt_move::get_color(m);
 
     _p = p;
     _q = q;
@@ -164,7 +164,7 @@ dyadic_rational_move_generator::operator bool() const
 move dyadic_rational_move_generator::gen_move() const
 {
     assert(_has_move);
-    return cgt_move_new::move2_create(_game.p(), _game.q());
+    return cgt_move::move2_create(_game.p(), _game.q());
 }
 
 //---------------------------------------------------------------------------

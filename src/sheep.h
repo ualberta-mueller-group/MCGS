@@ -11,7 +11,7 @@
 #include <cassert>
 #include <string>
 #include <utility>
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 
 #define SHEEP_ALT_MOVE
 

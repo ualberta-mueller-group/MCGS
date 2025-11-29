@@ -8,7 +8,7 @@
 #include <set>
 #include <cassert>
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "game.h"
 #include "transposition.h"
 
@@ -97,8 +97,8 @@ inline void impartial_game::play(const move& m)
        Preserves the color bit of m, because ig_wrapper_move_generator
        may use it. No other games should do this.
     */
-    const move m_no_color = cgt_move_new::remove_color(m);
-    const bw color = cgt_move_new::get_color(m);
+    const move m_no_color = cgt_move::remove_color(m);
+    const bw color = cgt_move::get_color(m);
     game::play(m_no_color, color);
     assert(last_move() == m);
 }

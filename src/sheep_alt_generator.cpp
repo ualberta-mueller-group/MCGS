@@ -42,7 +42,7 @@ sheep_alt_generator::operator bool() const
            _target_end_idx >= 0    //
     );
 
-    return cgt_move_new::move3_create(_target_size, _herd_start_idx,
+    return cgt_move::move3_create(_target_size, _herd_start_idx,
                                       _target_end_idx);
 }
 

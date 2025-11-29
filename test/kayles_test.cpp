@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <cassert>
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "test_utilities.h"
 
 namespace {

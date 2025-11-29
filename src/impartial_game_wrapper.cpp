@@ -7,7 +7,7 @@
 #include <vector>
 #include <cassert>
 #include "cgt_basics.h"
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "cgt_nimber.h"
 
 game* impartial_game_wrapper::inverse() const
@@ -236,11 +236,11 @@ move ig_wrapper_move_generator::gen_move() const
     assert(operator bool());
 
     const move m = _color_mg->gen_move();
-    assert(cgt_move_new::get_color(m) == 0);
+    assert(cgt_move::get_color(m) == 0);
 
     const bw color = _color;
 
-    return cgt_move_new::set_color(m, color);
+    return cgt_move::set_color(m, color);
 }
 
 //---------------------------------------------------------------------------

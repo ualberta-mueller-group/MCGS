@@ -10,7 +10,7 @@
 #include <cassert>
 #include <ostream>
 
-#include "cgt_move_new.h"
+#include "cgt_move.h"
 #include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "cgt_basics.h"
@@ -139,8 +139,8 @@ void nogo::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    //const int to = cgt_move_new::move1_get_part_1(m);
-    const int_pair to_coord = cgt_move_new::move2_get_coord_1(m);
+    //const int to = cgt_move::move1_get_part_1(m);
+    const int_pair to_coord = cgt_move::move2_get_coord_1(m);
     const int to_point = grid_location::coord_to_point(to_coord, shape());
 
     assert(at(to_point) == EMPTY);
@@ -188,11 +188,11 @@ void nogo::undo_move()
     const move mc = last_move();
     game::undo_move();
 
-    //const int to = cgt_move_new::move1_get_part_1(mc);
-    const int_pair to_coord = cgt_move_new::move2_get_coord_1(mc);
+    //const int to = cgt_move::move1_get_part_1(mc);
+    const int_pair to_coord = cgt_move::move2_get_coord_1(mc);
     const int to_point = grid_location::coord_to_point(to_coord, shape());
 
-    const bw player = cgt_move_new::get_color(mc);
+    const bw player = cgt_move::get_color(mc);
 
     assert(at(to_point) == player);
     //const int N = size();
@@ -720,8 +720,8 @@ nogo_move_generator::operator bool() const
 move nogo_move_generator::gen_move() const
 {
     assert(operator bool());
-    //return cgt_move_new::move1_create(_current);
-    return cgt_move_new::move2_create_from_coords(_current.get_coord());
+    //return cgt_move::move1_create(_current);
+    return cgt_move::move2_create_from_coords(_current.get_coord());
 }
 
 //---------------------------------------------------------------------------
