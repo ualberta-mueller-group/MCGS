@@ -949,20 +949,20 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
         }
     }
 
-    /*
     auto compare_fn = [](const game* g1, const game* g2) -> bool
     {
         const hash_t hash1 = g1->get_local_hash();
         const hash_t hash2 = g2->get_local_hash();
         return hash1 < hash2;
     };
-    */
 
+    /*
     auto compare_fn = [](const game* g1, const game* g2) -> bool
     {
         // Put larger games first
         return g1->order(g2) == REL_GREATER;
     };
+    */
 
     std::sort(active_games.begin(), active_games.end(), compare_fn);
 
