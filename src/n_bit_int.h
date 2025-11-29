@@ -7,6 +7,7 @@
 */
 #pragma once
 
+#include "throw_assert.h"
 #include <climits>
 
 // N bit ints must have widths in the interval [2, N_BIT_INT_MAX_BITS]
@@ -84,7 +85,7 @@ inline constexpr int shrink_int_to_n_bits(int val)
 {
     static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
 
-    assert(                                        //
+    THROW_ASSERT(                                  //
         (min_val<n_bits, signed_type>()) <= val && //
         val <= (max_val<n_bits, signed_type>())    //
     );                                             //
@@ -98,7 +99,7 @@ inline constexpr int expand_int_from_n_bits(int n_bit_val)
 {
     static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
 
-    assert(n_bit_val == (n_bit_val & value_mask<n_bits>()));
+    THROW_ASSERT(n_bit_val == (n_bit_val & value_mask<n_bits>()));
 
     if constexpr (signed_type == INT_SIGNED)
     {

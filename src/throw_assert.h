@@ -30,12 +30,12 @@
 
 // 1 arg implementation
 #define _THROW_ASSERT_1(expr)                                                  \
-    if (!(expr))                                                               \
+    if (!(expr)) [[unlikely]]                                                  \
     throw std::logic_error(_GET_THROW_MESSAGE(expr))
 
 // 2 arg implementation
 #define _THROW_ASSERT_2(expr, _exception)                                      \
-    if (!(expr))                                                               \
+    if (!(expr)) [[unlikely]]                                                  \
     {                                                                          \
         if constexpr (std::is_base_of_v<std::exception, decltype(_exception)>) \
             throw _exception;                                                  \
