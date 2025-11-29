@@ -5,7 +5,6 @@
 
 #include "global_options.h"
 #include "test/amazons_test.h"
-#include "test/db_game_generator_test.h"
 #include "test/domineering_test.h"
 #include "test/fission_test.h"
 #include "test/gen_toads_test.h"
@@ -240,7 +239,6 @@ int main(int argc, const char** argv)
     hash_types_test_all();
     grid_generator_test_all();
     sheep_grid_generator_test_all();
-    db_game_generator_test_all();
     database_test_all();
 
     test_winning_moves();

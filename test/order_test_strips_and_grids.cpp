@@ -2,17 +2,14 @@
 
 
 #include <iostream>
-#warning TODO UNCOMMENT THIS FILE
 
-#if 0
 #include <vector>
-#include <iostream>
 #include <cstddef>
 #include <cassert>
 #include <exception>
 #include <functional>
 #include "game.h"
-//#include "grid_generator.h"
+#include "grid_generator.h"
 #include "test_utilities.h"
 
 
@@ -59,7 +56,7 @@ void gen_clobber_1xn(vector<game*>& games, bool fewer)
 {
     int range = fewer ? 3 : 4;
 
-    for (grid_generator_default gen(range); gen; ++gen)
+    for (grid_generator gen(int_pair(1, range), {EMPTY, BLACK, WHITE}, true); gen; ++gen)
         games.push_back(new clobber_1xn(gen.gen_board()));
 }
 
@@ -69,7 +66,8 @@ void gen_nogo_1xn(vector<game*>& games, bool fewer)
 
     int range = fewer ? 3 : 5;
 
-    for (grid_generator_default gen(range); gen; ++gen)
+    for (grid_generator gen(int_pair(1, range), {EMPTY, BLACK, WHITE}, true);
+         gen; ++gen)
     {
         try
         {
@@ -87,7 +85,8 @@ void gen_elephants(vector<game*>& games, bool fewer)
 {
     int range = fewer ? 3 : 4;
 
-    for (grid_generator_default gen(range); gen; ++gen)
+    for (grid_generator gen(int_pair(1, range), {EMPTY, BLACK, WHITE}, true);
+         gen; ++gen)
         games.push_back(new elephants(gen.gen_board()));
 }
 
@@ -96,8 +95,10 @@ void gen_clobber(vector<game*>& games, bool fewer)
     int range_r = 2;
     int range_c = fewer ? 2 : 3;
 
-    for (grid_generator_default gen(range_r, range_c); gen; ++gen)
-        games.push_back(new clobber(gen.gen_board()));
+    for (grid_generator gen(int_pair(range_r, range_c), {EMPTY, BLACK, WHITE},
+                            false);
+         gen; ++gen)
+        games.push_back(new clobber(gen.gen_board(), gen.get_shape()));
 }
 
 void gen_nogo(vector<game*>& games, bool fewer)
@@ -107,11 +108,13 @@ void gen_nogo(vector<game*>& games, bool fewer)
     int range_r = 2;
     int range_c = fewer ? 2 : 3;
 
-    for (grid_generator_default gen(range_r, range_c); gen; ++gen)
+    for (grid_generator gen(int_pair(range_r, range_c), {EMPTY, BLACK, WHITE},
+                            false);
+         gen; ++gen)
     {
         try
         {
-            games.push_back(new nogo(gen.gen_board()));
+            games.push_back(new nogo(gen.gen_board(), gen.get_shape()));
         }
         catch (exception& exc)
         {
@@ -152,6 +155,8 @@ void test_generic(const vector<generator_function_t>& funcs)
 } // namespace
 
 //////////////////////////////////////////////////
+
+// TODO add new grid games (if we keep the order method)
 void order_test_strips_and_grids_all()
 {
     test_generic({gen_clobber_1xn});
@@ -170,12 +175,3 @@ void order_test_strips_and_grids_all()
         gen_dummy_game,
     });
 }
-#else
-using namespace std;
-
-void order_test_strips_and_grids_all()
-{
-
-    cout << "TODO UNCOMMENT " << __FILE__ << endl;
-}
-#endif

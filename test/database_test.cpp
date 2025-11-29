@@ -1,11 +1,8 @@
 #include "database_test.h"
 
-#warning TODO UNCOMMENT THIS FILE
 
 #include <iostream>
-using namespace std;
 
-#if 0
 
 #include <memory>
 #include <cassert>
@@ -15,11 +12,14 @@ using namespace std;
 #include "clobber_1xn.h"
 //#include "grid_generator.h"
 //#include "gridlike_db_game_generator.h"
+#include "grid_generator.h"
+#include "gridlike_db_game_generator.h"
 #include "sumgame.h"
 #include "nogo_1xn.h"
 #include "database.h"
 #include "utilities.h"
 
+using namespace std;
 
 
 namespace {
@@ -138,9 +138,16 @@ void test_generate()
 
     assert(db.empty());
 
+    cout << "``````````````````````````" << endl;
+
     // Generate some linear clobber entries
     {
-        gridlike_db_game_generator<clobber_1xn, grid_generator_clobber> gen(5);
+
+        grid_generator* gg =
+            new grid_generator(int_pair(1, 5), {EMPTY, BLACK, WHITE}, true);
+
+        gridlike_db_game_generator<clobber_1xn, GRIDLIKE_TYPE_STRIP> gen(gg);
+
         db.generate_entries(gen, true);
     }
 
@@ -150,7 +157,11 @@ void test_generate()
     sumgame sum(BLACK);
 
     {
-        gridlike_db_game_generator<clobber_1xn, grid_generator_clobber> gen(6);
+        grid_generator* gg =
+            new grid_generator(int_pair(1, 6), {EMPTY, BLACK, WHITE}, true);
+
+        gridlike_db_game_generator<clobber_1xn, GRIDLIKE_TYPE_STRIP> gen(gg);
+
 
         while (gen)
         {
@@ -200,9 +211,3 @@ void database_test_all()
     test_basic();
     test_generate();
 }
-#else
-void database_test_all()
-{
-    cout << "TODO uncomment " << __FILE__ << endl;
-}
-#endif
