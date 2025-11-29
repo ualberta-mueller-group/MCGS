@@ -162,7 +162,6 @@ void test_split()
 //////////////////////////////////////////////////
 void split_test_domineering_all()
 {
-    cout << "DOMINEERING SPLIT TEST" << endl;
     test_no_split();
     test_split();
 }

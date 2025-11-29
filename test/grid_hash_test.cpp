@@ -2,7 +2,6 @@
 
 
 #include <vector>
-#include <iostream>
 #include <cassert>
 #include <tuple>
 #include <string>
@@ -141,7 +140,6 @@ void test_grid_hash()
 //////////////////////////////////////////////////
 void grid_hash_test_all()
 {
-    cout << __FILE__ << endl;
     test_grid_hash();
 }
 

@@ -381,9 +381,6 @@ void test_constructors()
 //////////////////////////////////////////////////
 void gen_toads_test_all()
 {
-    cout << "TODO: " << __FILE__ << endl;
     test_constructors();
     test_moves_main();
-
-    cout << "TODO: Finish CGSuite functions related to this file" << endl;
 }

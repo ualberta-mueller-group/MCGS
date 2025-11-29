@@ -60,3 +60,50 @@ private:
 std::ostream& operator<<(std::ostream& os, const grid_mask& mask);
 
 
+////////////////////////////////////////////////// grid_mask methods
+inline grid_mask::grid_mask(unsigned int grid_hash_symmetry_mask)
+    : _gh(grid_hash_symmetry_mask), _current_shape(0, 0), _marker_count_end(0)
+{
+}
+
+inline size_t grid_mask::size() const
+{
+    assert(*this);
+    return _mask.size();
+}
+
+inline int_pair grid_mask::get_shape() const
+{
+    assert(*this);
+    return _current_shape;
+}
+
+inline const std::vector<bool>& grid_mask::get_mask() const
+{
+    assert(*this);
+    return _mask;
+}
+
+inline void grid_mask::reset()
+{
+    _mask_hash_set.clear();
+    set_shape(int_pair(0, 0));
+}
+
+inline bool grid_mask::operator[](size_t idx) const
+{
+    assert(*this);
+    return _mask[idx];
+}
+
+inline grid_mask::operator bool() const
+{
+    return _indices.size() < _marker_count_end;
+}
+
+inline void grid_mask::operator++()
+{
+    assert(*this);
+    _increment(false);
+}
+

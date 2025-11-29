@@ -15,7 +15,6 @@
 #include "search_utils.h"
 #include "clobber.h"
 
-#include "sheep.h"
 #include "sumgame.h"
 #include "throw_assert.h"
 #include "gen_experiments.h"
@@ -23,26 +22,8 @@
 
 using std::cout, std::endl, std::string;
 
-class print_on_exit
-{
-public:
-    print_on_exit(const std::string& message)
-        : _message(message)
-    {
-    }
-
-    ~print_on_exit()
-    {
-        std::cout << _message << std::flush;
-    }
-
-private:
-    std::string _message;
-};
-
 int main(int argc, char** argv)
 {
-    //print_on_exit poe("Exiting main\n");
     mcgs_init_1();
 
     cli_options opts = parse_args(argc, (const char**) argv, false);
@@ -51,10 +32,7 @@ int main(int argc, char** argv)
     if (opts.should_exit)
         return 0;
 
-    //cout << "Pre-init" << endl;
     mcgs_init_2(opts);
-    //cout << "Post-init" << endl;
-
 
     if (opts.use_player)
     {
@@ -65,13 +43,6 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (opts.nogo_test)
-    {
-        // TODO
-        THROW_ASSERT(false, "TODO uncomment nogo_split_test.cpp");
-        //nogo_split_test();
-        return 0;
-    }
 
     if (opts.run_tests)
     {

@@ -121,7 +121,7 @@ void test_split()
     for (const test_case_t& test_case : test_cases)
     {
         const string& board = get<0>(test_case);
-        const vector<string>& exp_boards = get<1>(test_case);
+        //const vector<string>& exp_boards = get<1>(test_case);
 
         // TODO uncomment this after implementing fission::_split_impl() !!
         //assert(game_split_matches<fission>(board, exp_boards));
@@ -136,7 +136,6 @@ void test_split()
 //////////////////////////////////////////////////
 void split_test_fission_all()
 {
-    cout << "FISSION SPLIT TEST" << endl;
     test_no_split();
     test_split();
 }

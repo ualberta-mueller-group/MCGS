@@ -1,6 +1,5 @@
 #include "grid_game_hashes_test.h"
 
-#include <iostream>
 #include <type_traits>
 
 #include "amazons.h"
@@ -100,8 +99,6 @@ void test_fission()
 //////////////////////////////////////////////////
 void grid_game_hashes_test_all()
 {
-    cout << __FILE__ << endl;
-
     test_amazons();
     test_nogo();
     test_clobber();

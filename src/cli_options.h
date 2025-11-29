@@ -27,8 +27,6 @@ struct cli_options
     bool run_tests;       // Run autotests
     //bool run_tests_stdin; // Run autotests from stdin
 
-    bool nogo_test;
-
     bool use_player;
 
     bool print_winning_moves;

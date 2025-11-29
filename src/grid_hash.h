@@ -10,6 +10,8 @@
     minimum of these.
 
     Orientations are enabled by passing a bit mask to the grid_hash constructor.
+
+    TODO check inlining in this file
 */
 
 /*
@@ -51,6 +53,7 @@
 #include "type_table.h"
 #include "utilities.h"
 
+// If defined: supported grid games use grid_hash class
 #define USE_GRID_HASH
 
 ////////////////////////////////////////////////// grid_hash_orientation
@@ -381,6 +384,13 @@ inline int_pair grid_hash::_get_transformed_shape(
     return _grid_shape;
 }
 
+inline void grid_hash::init_from_grid(const grid& g)
+{
+    const int_pair& shape = g.shape();
+    const game_type_t type = g.game_type();
+
+    init_from_board_and_type(g.board_const(), shape, type);
+}
 
 ////////////////////////////////////////////////// type_table stuff...
 template <class Game_T>

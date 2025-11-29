@@ -48,8 +48,6 @@ void test_no_split()
 //////////////////////////////////////////////////
 void split_test_toppling_dominoes_all()
 {
-    cout << "TOPPLING DOMINOES SPLIT TEST" << endl;
     test_no_split();
-
     ASSERT_DID_THROW(toppling_dominoes("X."));
 }

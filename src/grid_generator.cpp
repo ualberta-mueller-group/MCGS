@@ -170,42 +170,6 @@ grid_generator::grid_generator(const int_pair& max_dims,
     _increment(true);
 }
 
-grid_generator::operator bool() const
-{
-    if (_strips_only)
-        return i_grid_generator::dims_le_max_standard(_current_dims, _max_dims);
-    return i_grid_generator::dims_le_max_transpose(_current_dims, _max_dims);
-}
-
-void grid_generator::operator++()
-{
-    assert(*this);
-    _increment(false);
-}
-
-const std::vector<int>& grid_generator::gen_board() const
-{
-    assert(*this && _real_board_matches_idx_board());
-    return _real_board;
-}
-
-int_pair grid_generator::get_shape() const
-{
-    assert(*this);
-    return _current_dims;
-}
-
-bool grid_generator::only_strips() const
-{
-    return _max_dims.first <= 1;
-}
-
-int grid_generator::get_current_size() const
-{
-    assert(*this);
-    return _current_dims.first * _current_dims.second;
-}
-
 bool grid_generator::_increment(bool init)
 {
     assert(init || *this);
@@ -379,15 +343,4 @@ void grid_generator::_init_board()
     assert(_real_board_matches_idx_board());
 }
 
-bool grid_generator::_is_active_tile(int tile_idx) const
-{
-    assert(0 <= tile_idx &&              //
-           tile_idx < get_current_size() //
-    );
-
-    if (_mask.get() == nullptr)
-        return true;
-
-    return (*_mask)[tile_idx] == _mask_active_bit;
-}
 

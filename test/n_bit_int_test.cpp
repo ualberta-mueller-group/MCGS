@@ -91,8 +91,6 @@ void test_conversions()
 
 void n_bit_int_test_all()
 {
-    std::cout << __FILE__ << std::endl;
-
     test_conversions<2, INT_UNSIGNED>();
     test_conversions<2, INT_SIGNED>();
 

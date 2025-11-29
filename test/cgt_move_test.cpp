@@ -390,8 +390,6 @@ void test_move6()
 //////////////////////////////////////////////////
 void cgt_move_test_all()
 {
-    std::cout << __FILE__ << std::endl;
-
     test_colors_move2();
     test_colors_move4();
 

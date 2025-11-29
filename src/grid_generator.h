@@ -130,3 +130,52 @@ private:
     std::vector<int> _real_board;
 };
 
+////////////////////////////////////////////////// grid_generator methods
+
+inline grid_generator::operator bool() const
+{
+    if (_strips_only)
+        return i_grid_generator::dims_le_max_standard(_current_dims, _max_dims);
+    return i_grid_generator::dims_le_max_transpose(_current_dims, _max_dims);
+}
+
+inline void grid_generator::operator++()
+{
+    assert(*this);
+    _increment(false);
+}
+
+inline const std::vector<int>& grid_generator::gen_board() const
+{
+    assert(*this && _real_board_matches_idx_board());
+    return _real_board;
+}
+
+inline int_pair grid_generator::get_shape() const
+{
+    assert(*this);
+    return _current_dims;
+}
+
+inline bool grid_generator::only_strips() const
+{
+    return _max_dims.first <= 1;
+}
+
+inline int grid_generator::get_current_size() const
+{
+    assert(*this);
+    return _current_dims.first * _current_dims.second;
+}
+
+inline bool grid_generator::_is_active_tile(int tile_idx) const
+{
+    assert(0 <= tile_idx &&              //
+           tile_idx < get_current_size() //
+    );
+
+    if (_mask.get() == nullptr)
+        return true;
+
+    return (*_mask)[tile_idx] == _mask_active_bit;
+}

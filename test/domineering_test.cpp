@@ -1,6 +1,5 @@
 #include "domineering_test.h"
 
-#include <iostream>
 #include <string>
 #include <vector>
 #include <unordered_set>
@@ -17,8 +16,6 @@ using namespace std;
 
 
 namespace {
-
-
 
 ////////////////////////////////////////////////// test logic helpers
 inline grid_dir get_player_dir(bw player)
@@ -422,8 +419,6 @@ void test_constructors()
 
 void domineering_test_all()
 {
-    cout << "TODO: " << __FILE__ << endl;
-
     test_constructors();
     test_moves_main();
 }

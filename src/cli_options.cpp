@@ -26,7 +26,6 @@ cli_options::cli_options(const string& test_directory)
       gen_experiments(false),
       run_tests(false),
       //run_tests_stdin(false),
-      nogo_test(false),
       use_player(false),
       print_winning_moves(false),
       test_directory(test_directory),
@@ -385,12 +384,6 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         //    opts.run_tests_stdin = true;
         //    continue;
         //}
-
-        if (arg == "--nogo-test")
-        {
-            opts.nogo_test = true;
-            continue;
-        }
 
         if (arg == "--test-dir")
         {

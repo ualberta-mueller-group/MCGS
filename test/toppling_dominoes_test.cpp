@@ -1,7 +1,6 @@
 #include "toppling_dominoes_test.h"
 // TODO add more tests now that it no longer inherits from strip?
 
-#include <iostream>
 #include <tuple>
 #include <string>
 #include <cassert>
@@ -285,7 +284,6 @@ void test_constructors()
 
 void toppling_dominoes_test_all()
 {
-    cout << "TODO: " << __FILE__ << endl;
     test_constructors();
     test_moves_main();
 }

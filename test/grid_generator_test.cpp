@@ -401,7 +401,5 @@ void grid_generator_test_all()
     test_masked3();
     test_masked4();
     test_masked5();
-
-    cout << __FILE__ << endl;
 }
 

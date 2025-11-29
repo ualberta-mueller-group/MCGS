@@ -335,10 +335,6 @@ std::vector<int> grid::rotate_90_board(const std::vector<int>& board,
     const size_t board_n = board.size();
     new_board.reserve(board_n);
 
-    const int n_rows = shape.first;
-    const int n_cols = shape.second;
-
-
     for (grid_location loc(shape); loc.valid(); loc.increment_position())
     {
         int_pair coord0 = loc.get_coord();

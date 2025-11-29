@@ -10,22 +10,6 @@
 using namespace std;
 
 ////////////////////////////////////////////////// grid_mask methods
-grid_mask::grid_mask(unsigned int grid_hash_symmetry_mask)
-    : _gh(grid_hash_symmetry_mask), _current_shape(0, 0), _marker_count_end(0)
-{
-}
-
-size_t grid_mask::size() const
-{
-    assert(*this);
-    return _mask.size();
-}
-
-int_pair grid_mask::get_shape() const
-{
-    assert(*this);
-    return _current_shape;
-}
 
 void grid_mask::set_shape(const int_pair& shape)
 {
@@ -45,35 +29,6 @@ void grid_mask::set_shape(const int_pair& shape)
 
     if (*this)
         _increment(true);
-}
-
-const std::vector<bool>& grid_mask::get_mask() const
-{
-    assert(*this);
-    return _mask;
-}
-
-void grid_mask::reset()
-{
-    _mask_hash_set.clear();
-    set_shape(int_pair(0, 0));
-}
-
-bool grid_mask::operator[](size_t idx) const
-{
-    assert(*this);
-    return _mask[idx];
-}
-
-grid_mask::operator bool() const
-{
-    return _indices.size() < _marker_count_end;
-}
-
-void grid_mask::operator++()
-{
-    assert(*this);
-    _increment(false);
 }
 
 bool grid_mask::_increment(bool init)

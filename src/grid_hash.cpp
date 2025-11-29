@@ -2,7 +2,6 @@
 
 #include <cassert>
 
-#include "type_table.h"
 #include "grid.h"
 #include "utilities.h"
 #include "hashing.h"
@@ -53,11 +52,4 @@ void grid_hash::reset(const int_pair& grid_shape)
     }
 }
 
-void grid_hash::init_from_grid(const grid& g)
-{
-    const int_pair& shape = g.shape();
-    const game_type_t type = g.game_type();
-
-    init_from_board_and_type(g.board_const(), shape, type);
-}
 

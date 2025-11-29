@@ -1,4 +1,4 @@
-CC = c++
+CC = clang++
 LAB_COMPAT ?= 0
 
 

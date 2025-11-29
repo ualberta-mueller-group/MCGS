@@ -153,7 +153,6 @@ void test_split()
 //////////////////////////////////////////////////
 void split_test_amazons_all()
 {
-    cout << "AMAZONS SPLIT TEST" << endl;
     test_no_split();
     test_split();
 }

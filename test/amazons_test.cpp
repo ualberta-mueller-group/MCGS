@@ -397,7 +397,6 @@ void test_constructors()
 //////////////////////////////////////////////////
 void amazons_test_all()
 {
-    cout << "TODO: " << __FILE__ << endl;
     test_constructors();
     test_moves_main();
 }

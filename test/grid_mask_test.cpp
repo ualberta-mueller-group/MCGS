@@ -299,7 +299,6 @@ void test_symmetry3()
 //////////////////////////////////////////////////
 void grid_mask_test_all()
 {
-    cout << __FILE__ << endl;
     test_generation();
     test_symmetry1();
     test_symmetry2();

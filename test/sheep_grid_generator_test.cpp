@@ -6,7 +6,6 @@
 #include <vector>
 #include <utility>
 #include <cstddef>
-#include <iostream>
 #include <functional>
 
 #include "grid_generator.h"
@@ -438,8 +437,6 @@ void test_main()
 //////////////////////////////////////////////////
 void sheep_grid_generator_test_all()
 {
-    cout << __FILE__ << endl;
-
     test_main();
     manual_test();
 }
