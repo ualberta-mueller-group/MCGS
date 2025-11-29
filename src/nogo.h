@@ -20,8 +20,6 @@
 #include <cstddef>
 #include "grid_hash.h"
 
-constexpr unsigned int NOGO_GRID_HASH_MASK = GRID_HASH_ACTIVE_MASK_ALL;
-
 class nogo : public grid
 {
 public:

@@ -12,9 +12,6 @@
 
 #include "grid_hash.h"
 
-constexpr unsigned int DOMINEERING_GRID_HASH_MASK =
-    GRID_HASH_ACTIVE_MASK_MIRRORS;
-
 #define DOMINEERING_SPLIT
 
 ////////////////////////////////////////////////// class domineering

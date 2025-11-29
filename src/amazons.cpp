@@ -11,6 +11,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "grid.h"
+#include "grid_hash.h"
 #include "print_move_helpers.h"
 #include "grid_location.h"
 #include "throw_assert.h"
@@ -71,7 +72,7 @@ bool only_legal_colors(const std::vector<int>& board)
 amazons::amazons(int n_rows, int n_cols)
     : grid(n_rows, n_cols, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-      , _gh(AMAZONS_GRID_HASH_MASK)
+      , _gh(grid_hash_mask<amazons>())
 #endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
@@ -80,7 +81,7 @@ amazons::amazons(int n_rows, int n_cols)
 amazons::amazons(const std::vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-      , _gh(AMAZONS_GRID_HASH_MASK)
+      , _gh(grid_hash_mask<amazons>())
 #endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
@@ -89,7 +90,7 @@ amazons::amazons(const std::vector<int>& board, int_pair shape)
 amazons::amazons(const std::string& game_as_string)
     : grid(game_as_string, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-      , _gh(AMAZONS_GRID_HASH_MASK)
+      , _gh(grid_hash_mask<amazons>())
 #endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));

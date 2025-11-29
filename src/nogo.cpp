@@ -11,6 +11,7 @@
 #include <ostream>
 
 #include "cgt_move.h"
+#include "grid_hash.h"
 #include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "cgt_basics.h"
@@ -93,7 +94,7 @@ inline int combine_board_and_immortal_val(int board_val, int immortal_val)
 //////////////////////////////////////// nogo
 nogo::nogo(std::string game_as_string) : grid(game_as_string, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-      , _gh(NOGO_GRID_HASH_MASK)
+      , _gh(grid_hash_mask<nogo>())
 #endif
 {
     _immortal = std::vector<int>(size(), EMPTY);
@@ -108,7 +109,7 @@ nogo::nogo(std::string game_as_string) : grid(game_as_string, GRID_TYPE_COLOR)
 nogo::nogo(const std::vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-      , _gh(NOGO_GRID_HASH_MASK)
+      , _gh(grid_hash_mask<nogo>())
 #endif
 {
     _immortal = std::vector<int>(size(), EMPTY);
@@ -124,7 +125,7 @@ nogo::nogo(const std::vector<int>& board, const std::vector<int>& immortal,
            int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR), _immortal(immortal)
 #ifdef USE_GRID_HASH
-      , _gh(NOGO_GRID_HASH_MASK)
+      , _gh(grid_hash_mask<nogo>())
 #endif
 {
     _immortal_copy = _immortal;

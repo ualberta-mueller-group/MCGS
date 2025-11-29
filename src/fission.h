@@ -11,8 +11,6 @@
 
 #include "grid_hash.h"
 
-constexpr unsigned int FISSION_GRID_HASH_MASK = GRID_HASH_ACTIVE_MASK_MIRRORS;
-
 ////////////////////////////////////////////////// class fission
 class fission: public grid
 {

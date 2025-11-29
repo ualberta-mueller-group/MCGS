@@ -103,7 +103,7 @@ bool only_legal_colors(const std::vector<int>& board)
 domineering::domineering(int n_rows, int n_cols)
     : grid(n_rows, n_cols, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-      , _gh(DOMINEERING_GRID_HASH_MASK)
+      , _gh(grid_hash_mask<domineering>())
 #endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
@@ -112,7 +112,7 @@ domineering::domineering(int n_rows, int n_cols)
 domineering::domineering(const std::vector<int>& board, int_pair shape) :
     grid(board, shape, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-      , _gh(DOMINEERING_GRID_HASH_MASK)
+      , _gh(grid_hash_mask<domineering>())
 #endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
@@ -121,7 +121,7 @@ domineering::domineering(const std::vector<int>& board, int_pair shape) :
 domineering::domineering(const std::string& game_as_string):
     grid(game_as_string, GRID_TYPE_COLOR)
 #ifdef USE_GRID_HASH
-      , _gh(DOMINEERING_GRID_HASH_MASK)
+      , _gh(grid_hash_mask<domineering>())
 #endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));

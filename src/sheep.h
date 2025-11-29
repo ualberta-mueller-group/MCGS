@@ -13,6 +13,7 @@
 #include <utility>
 #include "cgt_move.h"
 
+// If defined: use sheep_alt_generator for different move ordering
 #define SHEEP_ALT_MOVE
 
 #define SHEEP_SPLIT

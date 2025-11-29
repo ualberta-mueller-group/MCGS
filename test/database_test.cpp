@@ -138,8 +138,6 @@ void test_generate()
 
     assert(db.empty());
 
-    cout << "``````````````````````````" << endl;
-
     // Generate some linear clobber entries
     {
 
