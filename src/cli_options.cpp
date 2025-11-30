@@ -27,7 +27,7 @@ cli_options::cli_options(const string& test_directory)
       run_tests(false),
       //run_tests_stdin(false),
       use_player(false),
-      print_winning_moves(false),
+      //print_winning_moves(false),
       test_directory(test_directory),
       outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
       test_timeout(cli_options::DEFAULT_TEST_TIMEOUT),
@@ -71,13 +71,19 @@ void print_help_message(const string& exec_name)
                                      "Input must start with version command. "
                                      "Causes [input string] to be ignored.");
 
-    print_flag("--print-winning-moves",
-               "Instead of solving, show winning moves for input sums.");
+    //print_flag("--print-winning-moves",
+    //           "Instead of solving, show winning moves for input sums.");
 
-    print_flag("--play-mcgs", "Play against MCGS.");
-    print_flag("--no-color", "Disable color printing for player.");
+    print_flag("--play-mcgs",
+               "Play games against MCGS. Uses [input string] "
+               "or --file to specify games. Games to play must have a run "
+               "command, but the specified color of the player to play is "
+               "ignored.");
 
-    print_flag("--play-log", "Log file name for player.");
+    print_flag("--no-color", "Disable color printing for --play-mcgs.");
+
+    print_flag("--play-log <file name>", "When specified, --play-mcgs "
+                                         "logs the game to the specified file");
 
     print_flag("--stdin",
                "Read input from stdin. Causes [input string] to be ignored.");
@@ -104,8 +110,12 @@ void print_help_message(const string& exec_name)
 
     print_flag(global::use_db.no_flag(), "Disable database usage.");
 
-    print_flag("--db-file-load <file name>", "TODO");
-    print_flag("--db-file-create <file name> \"config string\"", "TODO");
+    print_flag("--db-file-load <file name>", "Load database file. Default is "
+                                             "database.bin.");
+
+    print_flag("--db-file-create <file name> <config string>",
+               "Create and populate a new database file. See README for "
+               "details on config string syntax.");
 
     // print_flag(global::play_split.no_flag(), "Don't split games after "
     //                                          "playing a move.");
@@ -147,9 +157,6 @@ void print_help_message(const string& exec_name)
                    "ignored.");
 
     //print_flag("--run-tests-stdin", "Like --run-tests, but read from stdin.");
-
-    print_flag("--nogo-test", "Helper functionality for python script testing "
-                              "NoGo correctness, compared to SBHSolver");
 
     print_flag("--test-dir <directory name>",
                "Sets input directory for --run-tests. Default is \"" +
@@ -196,7 +203,8 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
                "Print ttable size to stdout.");
 
     print_flag(global::print_db_info.flag(),
-               "Print verbose database info to stdout.");
+               "Print verbose database info to stdout. Includes metadata of "
+               "loaded database file");
 }
 
 } // namespace
@@ -282,11 +290,11 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg == "--print-winning-moves")
-        {
-            opts.print_winning_moves = true;
-            continue;
-        }
+        //if (arg == "--print-winning-moves")
+        //{
+        //    opts.print_winning_moves = true;
+        //    continue;
+        //}
 
         if (arg == "--play-mcgs")
         {
