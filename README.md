@@ -42,11 +42,16 @@ Games". A brief high-level overview is given in the talk
     - Toppling Dominoes
     - Generalized Toads and Frogs
 - Split functions for Amazons, Domineering, and Sheep
-- Basic player. Interactively play games against MCGS with the `--play-mcgs` option!
+- Basic player. Interactively play games against MCGS with the `--play-mcgs`
+  option!
     - Optionally log games played to a file, i.e. `--play-log log.txt`
 - Configurable database
     - `--db-file-create <file name> <DB config string>`
     - See README for details
+- MCGS web site (`docs/index.html`)
+    - Contains computational results
+    - Links to a user guide, our ACG 2025 paper, and our ACG 2025 presentation
+      slides
 - More data in `input` directory
 - Input language version `1.3` --> `1.4`
 
