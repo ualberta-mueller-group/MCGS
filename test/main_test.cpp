@@ -13,13 +13,8 @@
 #include "test/grid_mask_test.h"
 #include "test/n_bit_int_test.h"
 #include "test/sheep_grid_generator_test.h"
-#include "test/split_test_amazons.h"
-#include "test/split_test_domineering.h"
-#include "test/split_test_fission.h"
-#include "test/split_test_toppling_dominoes.h"
 #include "test/toppling_dominoes_test.h"
 #include "test/sheep_test.h"
-#include "split_test_sheep.h"
 #include "test/winning_moves_test.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
@@ -140,37 +135,42 @@ int main(int argc, const char** argv)
         return 0;
     }
 
+    // Utility functions
     utilities_test_all();
     random_test_all();
 
+    fraction_test_all();
+    safe_arithmetic_test_all();
+
+    bit_array_test_all();
+
+    // CGT utility functions
     cgt_basics_test_all();
     n_bit_int_test_all();
     cgt_move_test_all();
 
-    bit_array_test_all();
-
+    // Game fundamentals
     game_type_test_all();
+    order_test_all();
+
+    hash_test_all();
+    hash_types_test_all();
 
     grid_location_test_all();
-
-
-    cgt_dyadic_rational_test_all();
-    cgt_integer_game_test_all();
-
     grid_hash_test_all();
     grid_mask_test_all();
     grid_game_hashes_test_all();
 
+    sumgame_map_view_test_all();
+    cgt_game_simplification_test_all();
+
+    // Specific games
     cgt_nimber_test_all();
     cgt_switch_test_all();
     cgt_up_star_test_all();
 
-    safe_arithmetic_test_all();
-    fraction_test_all();
-
-    order_test_all();
-    normalize_test_all();
-    split_test_all();
+    cgt_dyadic_rational_test_all();
+    cgt_integer_game_test_all();
 
     if (do_slow_tests)
     {
@@ -189,33 +189,28 @@ int main(int argc, const char** argv)
         sheep_test_all();
     }
 
+    normalize_test_all();
+    split_test_all();
+
     // Impartial games
     kayles_test_all();
     impartial_game_wrapper_test_all();
     impartial_minimax_test_all();
     impartial_sumgame_test_all();
 
+    // Other MCGS features
+    simple_text_hash_test_all();
     file_parser_test_all();
     cli_options_test_all();
-    simple_text_hash_test_all();
-
+    
     scale_test_all();
     game_bounds_test_all();
     find_bounds_test_all();
 
-    sumgame_map_view_test_all();
-
-    // NOTE: this test runs at compile time, not run time
-    // custom_traits_test_all();
-
-    cgt_game_simplification_test_all();
-
-    hash_test_all();
-    hash_types_test_all();
     grid_generator_test_all();
     sheep_grid_generator_test_all();
-    database_test_all();
 
+    database_test_all();
     test_winning_moves();
 
     cout << "SUCCESS" << endl;
