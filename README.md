@@ -66,6 +66,8 @@ Games". A brief high-level overview is given in the talk
   - Significantly speeds up database creation for grid games
   - Decreases the number of entries in the database
   - Creates more transposition table hits in some cases
+- Experimental WebAssembly build using Emscripten. `WASM=1` makefile variable
+    - Must first copy contents of `utils/wasm` to project root
 
 ### Building MCGS
 First download this repository, and enter its directory.
