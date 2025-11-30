@@ -4,7 +4,6 @@
 #include <string>
 #include <tuple>
 #include <cassert>
-#include <iostream>
 
 #include "split_test_utils.h"
 #include "domineering.h"

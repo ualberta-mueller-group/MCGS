@@ -1,6 +1,5 @@
 #include "n_bit_int_test.h"
 
-#include <iostream>
 #include <cassert>
 
 #include "n_bit_int.h"

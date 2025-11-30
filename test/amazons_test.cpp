@@ -1,6 +1,5 @@
 #include "amazons_test.h"
 
-#include <iostream>
 #include <tuple>
 #include <vector>
 #include <string>

@@ -1,7 +1,10 @@
 #include "grid_game_hashes_test.h"
 
 #include <type_traits>
+#include <string>
+#include <cassert>
 
+#include "grid.h"
 #include "amazons.h"
 #include "nogo.h"
 #include "clobber.h"

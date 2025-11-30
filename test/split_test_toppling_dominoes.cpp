@@ -5,7 +5,6 @@
 
 #include <vector>
 #include <cassert>
-#include <iostream>
 #include <string>
 
 #include "split_test_utils.h"

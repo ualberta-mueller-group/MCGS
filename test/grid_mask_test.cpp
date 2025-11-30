@@ -1,7 +1,13 @@
 #include "grid_mask_test.h"
+
+#include <vector>
+#include <tuple>
+#include <cassert>
+
 #include "grid_hash.h"
 #include "grid_mask.h"
-#include <iostream>
+#include "int_pair.h"
+
 
 using namespace std;
 

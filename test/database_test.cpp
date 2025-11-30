@@ -1,17 +1,12 @@
 #include "database_test.h"
 
 
-#include <iostream>
-
-
 #include <memory>
 #include <cassert>
 #include <optional>
 
 #include "cgt_basics.h"
 #include "clobber_1xn.h"
-//#include "grid_generator.h"
-//#include "gridlike_db_game_generator.h"
 #include "grid_generator.h"
 #include "gridlike_db_game_generator.h"
 #include "sumgame.h"

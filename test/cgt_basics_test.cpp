@@ -1,6 +1,5 @@
 #include "cgt_basics_test.h"
 #include <cassert>
-#include <iostream>
 
 #include "cgt_basics.h"
 #include "test_utilities.h"

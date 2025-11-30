@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <utility>
-#include <iostream>
 
 #include "cgt_move.h"
 #include "cgt_basics.h"

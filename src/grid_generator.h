@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <cstddef>
+#include <cassert>
 
 #include "int_pair.h"
 #include "grid_mask.h"

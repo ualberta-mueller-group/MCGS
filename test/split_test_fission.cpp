@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 #include <tuple>
-#include <iostream>
 
 #include "split_test_utils.h"
 #include "fission.h"

@@ -6,6 +6,7 @@
 #include <cstddef>
 
 #include "hashing.h"
+#include "int_pair.h"
 
 using namespace std;
 

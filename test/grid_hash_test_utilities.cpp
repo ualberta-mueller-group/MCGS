@@ -5,6 +5,7 @@
 #include "int_pair.h"
 #include "hashing.h"
 #include "grid_hash.h"
+#include "grid.h"
 
 using namespace std;
 
