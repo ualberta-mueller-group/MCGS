@@ -1077,7 +1077,7 @@ class's runtime type info struct (`type_table_t`).
         i.e. `clobber` and not `some_namespace::clobber`, because the game name text
         is used to identify `game_type_t`s on disk
 2. In the same `register_games` function, call `register_create_game_gen_fn` to
-   register a function which will greate a `i_db_game_generator` for your game.
+   register a function which will create a `i_db_game_generator` for your game.
    - The game name string should probably match the one used for ".test" files.
    - The registered function should have a signature of `i_db_game_generator*
      (const config_map&)`, or be of type
