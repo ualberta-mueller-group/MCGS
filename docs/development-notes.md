@@ -803,17 +803,6 @@ advance to the next grid.
       location.
     - `bool strips_only` indicates whether only strips should be generated, or
       both strips and grids.
-- The 2nd constructor enables usage of a `grid_mask`, which serves two purposes:
-  to generate grids in order of increasing/decreasing number of stones, and to
-  prune (some) grids using symmetry.
-    - `bool mask_active_bit` indicates the value of `grid_mask` bit which the
-      `tile_sequence` applies to. For example, to generate Clobber games in
-      order of increasing number of stones, this should be `true`, and to generate
-      NoGo games in order of decreasing number of stones, this should be `false`.
-    - `int mask_inactive_tile` the color applied to the `grid_mask` bit value
-      opposite of `mask_active_bit`.
-    - `unsigned int grid_hash_mask` the symmetry used by the `grid_mask`
-
 
 Example output for `grid_generator` using first constructor:
 ```
@@ -843,6 +832,17 @@ Example output for `grid_generator` using first constructor:
 "O|X"
 "O|O"
 ```
+
+- The 2nd constructor enables usage of a `grid_mask`, which serves two purposes:
+  to generate grids in order of increasing/decreasing number of stones, and to
+  prune (some) grids using symmetry.
+    - `bool mask_active_bit` indicates the value of `grid_mask` bit which the
+      `tile_sequence` applies to. For example, to generate Clobber games in
+      order of increasing number of stones, this should be `true`, and to generate
+      NoGo games in order of decreasing number of stones, this should be `false`.
+    - `int mask_inactive_tile` the color applied to the `grid_mask` bit value
+      opposite of `mask_active_bit`.
+    - `unsigned int grid_hash_mask` the symmetry used by the `grid_mask`
 
 Example output for `grid_generator` using second constructor. Lines marked
 as "pruned" would be pruned if `GRID_HASH_ACTIVE_MASK_ALL` were used instead:
