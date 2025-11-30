@@ -145,7 +145,8 @@ be generated too.
 
 ## grid_generator (`grid_generator.h`)
 The `i_grid_generator` interface class is similar to other generators in MCGS,
-i.e. `move_generator`. Use `operator bool` to see if the current state is valid,
+i.e. `move_generator`, and is used for generating all strips or grids up to some
+maximum size. Use `operator bool` to see if the current state is valid,
 and methods `gen_board()` and `get_shape()` to get the current grid contents
 and dimensions (in a flattened row-major format), and use `operator++` to
 advance to the next grid.
@@ -431,12 +432,8 @@ It derives from `alternating_move_game` and reimplements the
     - Represented as `int_pair` (typedef for `std::pair<int, int>`, defined in the header)
 - Implements `game::_init_hash()` and `game::_order_impl()` analogously to `strip`
 - Does not implement `game::_normalize_impl()` or `game::_undo_normalize_impl()`
-    - TODO: In most cases there are 8 equal representations of a grid
-    (4 rotations, and their transposes). We could make `grid` maintain some
-    subset of these 8, whenever it modifies the state, and have `_normalize_impl()`
-    simply change which of them is the currently "active" board. This could be
-    reasonably fast if we maintain hashes for the boards as they're modified, and
-    pick the one with the smallest hash to be the active one?
+    - Grid games should manage their own `grid_hash` objects to map equivalent
+      (by symmetry) boards to the same local hash values.
 
 ## `grid_location` class (`grid_location.h`)
 - Utility class for manipulating locations on a `grid`
@@ -623,23 +620,27 @@ The macros at the bottom of `global_options.cpp` initialize the `_name` field
 to the name of the variable in the source code.
 
 # Initialization (`mcgs_init.h`)
-Executables based on the C++ source code must call one of the `mcgs_init_all()`
-or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
-parsing command-line arguments. These functions initialize core data structures
-and global variables. Global variables should be initialized from `mcgs_init_all()`
-to avoid "Static Initialization Order Fiasco" problems, as the initialization
-order of global variables in C++ is undefined across translation units.
+Executables based on the C++ source code must immediately call
+`void mcgs_init_1()`, then (optionally) handle CLI options, and then call one of
+`void mcgs_init_2()` or `void mcgs_init_2(const cli_options&)`. These functions
+initialize core data structures and global variables. Global variables should
+be initialized from one of these functions to avoid "Static Initialization Order
+Fiasco" problems, as the initialization order of global variables in C++ is
+undefined across translation units.
 
-Things initialized by `mcgs_init_all`:
+`mcgs_init_1` initializes lookup tables used for color/char conversions.
+
+Things initialized by `mcgs_init_2` functions:
+- `grid_hash` masks stored in grid games' `type_table_t` structs
 - Serialization bookkeeping (for polymorphic types)
     - This is currently implemented but unused
 - `random.h`'s random seed and global `random_generator`
 - Global `random_table`s
 - `sumgame`'s transposition table
 - `impartial_sumgame.h`'s transposition table
-- The global `database` is initialized, either by loading `database.bin` if it
-    exists, or by creating it (generating all database entries)
-- In the future, will assign `game_type_t`s to specific games, so that their
+- The global `database` is initialized, by loading `database.bin` or a specified
+  database file (if exists)
+- In the future, may assign `game_type_t`s to specific games, so that their
 assignments are not dependent on input
 
 # Random (`random.h`)
@@ -762,7 +763,7 @@ of this value is described below.
 
 To compute the `global_hash` value for a `sumgame` `S`:
 1. Normalize each `game` of `S` by calling `game::normalize()`
-2. Sort the `game`s of `S` according to `game::order()` so that each `game` `g_i` has a subgame index `i`
+2. Sort the `game`s of `S` according to their `get_local_hash()` values so that each `game` `g_i` has a subgame index `i`
 3. For each `g_i`, get its `local_hash` value `h_i`
 4. For each `h_i`, compute a modified hash `H_i := hmod(h_i, i)`, for some hash modifier function `hmod`
     - The actual `hmod` function is `H_i := RANDOM_TABLE_MODIFIER[i, h_i]`
@@ -797,6 +798,8 @@ Important:
 2. A game's `undo_move` method must call `game::undo_move` at the START of the method (after getting the last move from the stack)
 
 This is because these base class methods do some record keeping around local hashes.
+
+NOTE: For details on dealing with grid game symmetry, see TODO
 
 ## 1. Mandatory `_init_hash` Method
 All games must implement `game::_init_hash(local_hash& hash)`. In this method,
@@ -888,41 +891,6 @@ void game::_normalize_impl()
         _mark_hash_updated();
 }
 ```
-
-## 4: Optional `_order_impl` Method
-Games can optionally implement `game::_order_impl(const game* rhs)`. `rhs` always
-has the same type as `this` -- the argument passed to `clobber_1xn::_order_impl` is always a `const clobber_1xn*`,
-and must be casted from `const game*` in the method.
-
-The returned value is a `relation` enum value (`cgt_basics.h`), and should have one of the
-following values:
-- `REL_LESS`
-- `REL_EQUAL`
-- `REL_GREATER`
-- `REL_UNKNOWN`
-    - This is returned by `game`'s default implementation
-
-i.e. return `REL_LESS` if `this` is lexicographically less than `rhs`.
-
-Example in `integer_game` (note the cast):
-```
-relation integer_game::_order_impl(const game* rhs) const
-{
-    const integer_game* other = reinterpret_cast<const integer_game*>(rhs);
-    assert(dynamic_cast<const integer_game*>(rhs) == other);
-
-    const int& val1 = value();
-    const int& val2 = other->value();
-
-    if (val1 != val2)
-        return val1 < val2 ? REL_LESS : REL_GREATER;
-
-    return REL_EQUAL;
-}
-```
-
-You can simplify unit tests for ordering by using
-`void order_test_impl(std::vector<game*>& games)` from `test/order_test_utilities.h`.
 
 # Transposition Tables (`transposition.h`)
 Defines types for transposition tables:
@@ -1238,12 +1206,13 @@ of the `type_table_t` struct:
 - `dyn_serializable_id_t`, integer with unique value for each serializable
     polymorphic type which has been registered with the serialization system.
     Ignore this for now as it is unused (but implemented)
+- And an `unsigned int` grid hash mask
 - These members should typically not be accessed directly through the struct,
     but rather through methods/functions defined by other files
 
 Allocation of each `type_table_t` is done in this file, but
 allocation/assignment of these integral values is done elsewhere, i.e.
-`game.cpp` and `dynamic_serializable.cpp`:
+`game.cpp`, `dynamic_serializable.cpp`, and `init_grid_hash_mask.cpp`:
 
 - `game.h`/`game.cpp`
     - Defines method `game_type_t game::game_type() const`
@@ -1252,6 +1221,10 @@ allocation/assignment of these integral values is done elsewhere, i.e.
         number depends on the order of `game_type()` calls since the program
         was started
     - The value is stored in the game's `type_table_t`
+
+- `grid_hash.h`
+    - Defines template function `unsigned int grid_hash_mask<Game_T>()`
+    - Value must be initialized in `init_grid_hash_mask.cpp`
 
 NOTE: If any of these methods are called in a constructor that isn't the
 most derived type, i.e. `strip` instead of `nogo_1xn`, then values may be
@@ -1267,6 +1240,9 @@ Restrictions on RTTI methods/functions:
     - For template function, `T` must inherit from `i_type_table` and be non-abstract
 - `game_type()`
     - Method provided by class `game`
+    - For template function, `T` must inherit from `game` and be non-abstract
+- `grid_hash_mask()`
+    - For both method and template function, the value must have been initialized
     - For template function, `T` must inherit from `game` and be non-abstract
 
 `game.h` defines template `T* cast_game<T*>(game*)` acting as a
@@ -1538,6 +1514,44 @@ IDs and disk type IDs. This will allow type registration order to differ
 between the program when it saves the file, and the program when it loads
 the file (i.e. across different release versions of MCGS)
 
+
+# Unused `game::_order_impl` Method
+This section describes an (as of v1.4) unused method.
+
+Games can optionally implement `game::_order_impl(const game* rhs)`. `rhs` always
+has the same type as `this` -- the argument passed to `clobber_1xn::_order_impl` is always a `const clobber_1xn*`,
+and must be casted from `const game*` in the method.
+
+The returned value is a `relation` enum value (`cgt_basics.h`), and should have one of the
+following values:
+- `REL_LESS`
+- `REL_EQUAL`
+- `REL_GREATER`
+- `REL_UNKNOWN`
+    - This is returned by `game`'s default implementation
+
+i.e. return `REL_LESS` if `this` is lexicographically less than `rhs`.
+
+Example in `integer_game` (note the cast):
+```
+relation integer_game::_order_impl(const game* rhs) const
+{
+    const integer_game* other = reinterpret_cast<const integer_game*>(rhs);
+    assert(dynamic_cast<const integer_game*>(rhs) == other);
+
+    const int& val1 = value();
+    const int& val2 = other->value();
+
+    if (val1 != val2)
+        return val1 < val2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
+}
+```
+
+You can simplify unit tests for ordering by using
+`void order_test_impl(std::vector<game*>& games)` from `test/order_test_utilities.h`.
+
 # Outstanding Issues
 ## Splitting Can Make Move Ordering Worse
 Splitting into subgames creates move ordering problems in some cases.
@@ -1795,7 +1809,6 @@ a move generator in a `std::unique_ptr`
     - Support for both non-polymorphic and polymorphic types
 - `split()` and `normalize()` methods improved for some games
 - `clobber` split is always enabled, no longer requiring an additional compilation flag
-
 
 ## After Version 1.3 (Future)
 - Add more games (i.e. Amazons)
