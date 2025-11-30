@@ -1,9 +1,9 @@
 {version 1.4}
 
 /*_
-    Results from: CGSuite
+    Results checked with: CGSuite
 
-    At least one case times out
+    At least one case times out with CGSuite
 */
 
 [impartial clobber_1xn]
@@ -11,10 +11,12 @@
 OXOOO.XO.OX.XXOOOOOOX.XO.XO.OX.OOXOXXX {N 3, B win, W win}
 OXXOOXX.XXOO.XXXOXXX.XOXOOXX.XO.XXXOOOO {N 3, B win, W win}
 XOX.OX.XOX.OX.XXO.XXXXXO.OOX.OOOOX.OXX.OOX {N 3, B win, W win}
-OXO.XXXXXO.XOX.XOOOOXXXO.OOXOOOOX.XO
 OX.XXO.OXXOOOX.OXX.OOXXO.XO.OXXOX {N 3, B win, W win}
 XOO.XXXOXXOXXOO.OXO.XOO.OX.XXO.OOOOOX {N 3, B win, W win}
 XO.XXXO.OXO.OOX.OXOX.OX.XXXXO.XO.OOX.OX {N 1, B win, W win}
 XXOOXO.XO.XOOXOOXXXXOX.XOOX.OOOXX {N 0, B loss, W loss}
 OXOOXOOX.XXXOOOOO.OXXXXOXO.OX.OXXOOO {N 2, B win, W win}
 XO.OXXXOOOOXOOXX.OOXO.OX.XXOOXOXO {N 7, B win, W win}
+
+/* No CGSuite result */
+OXO.XXXXXO.XOX.XOOOOXXXO.OOXOOOOX.XO {N 0, B loss, W loss}

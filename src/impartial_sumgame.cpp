@@ -3,21 +3,21 @@
 //---------------------------------------------------------------------------
 #include "impartial_sumgame.h"
 
-#include "cgt_nimber.h"
-#include "game.h"
-#include "impartial_game.h"
-#include "sumgame.h"
-#include "alternating_move_game.h"
-#include "solver_stats.h"
+#include <chrono>
+#include <cstddef>
+#include <cassert>
 
 #ifndef __EMSCRIPTEN__
 #include <thread>
 #include <future>
 #endif
 
-#include <chrono>
-#include <cstddef>
-#include <cassert>
+#include "alternating_move_game.h"
+#include "cgt_nimber.h"
+#include "game.h"
+#include "impartial_game.h"
+#include "solver_stats.h"
+#include "sumgame.h"
 
 namespace {
 

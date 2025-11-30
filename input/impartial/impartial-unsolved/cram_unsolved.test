@@ -1,0 +1,54 @@
+{version 1.3}
+[impartial domineering]
+
+/* 2x27, LV timeout 985s 2025-11-23 */
+..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|.. {N 1}
+
+/* 3x14, LV timeout 1490s 2025-11-23, *3 according to Glop */
+...|...|...|...|...|...|...|...|...|...|...|...|...|... {N 3}
+
+/* 3x15, not tried yet, *1 according to Glop */
+...|...|...|...|...|...|...|...|...|...|...|...|...|...|... {N 1}
+
+/* 3x16, not tried yet, *4 according to Glop */
+...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|... {N 4}
+
+/* 3x17, not tried yet, *0 according to Glop */
+...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|... {N 0}
+
+/* 3x18, not tried yet, *1 according to Glop */
+...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|... {N 1}
+
+/* 3x19, not tried yet, *0 according to Glop */
+...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|... {N 0}
+
+/* 3x20, not tried yet, *2 according to Glop */
+...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|... {N 2}
+
+/* 3x21, not tried yet, first player win according to (Uiterwijk 2018) */
+...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|... {N }
+
+/* 4x10, not tried yet, *0 */
+....|....|....|....|....|....|....|....|....|.... {N 0}
+
+/* 4x11, not tried yet, *1 according to Beling */
+/* 4x12, not tried yet, *0 */
+/* 4x13, not tried yet, *3 according to Beling */
+/* 4x14, not tried yet, *0 */
+/* 4x15, not tried yet, *4 according to Beling */
+/* 4x16, not tried yet, *0 */
+
+/* 5x8, LV timeout 2042s 2025-11-23, *1 according to Glop */
+.....|.....|.....|.....|.....|.....|.....|..... {N 1}
+
+/* 5x9, not tried yet, *1 */
+/* 5x10, not tried yet, *2 */
+/* 5x11, not tried yet, *0 */
+/* 5x12, not tried yet, *3 */
+/* 6x7, not tried yet, *5 */
+/* 6x8, not tried yet, *0 */
+/* 6x9, not tried yet, *1 */
+/* 6x10, not tried yet, *0 */
+/* 7x7, not tried yet, *1 */
+/* 7x8, not tried yet, *3 */
+/* 7x9, not tried yet, *1 */

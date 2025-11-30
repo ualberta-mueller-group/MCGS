@@ -4,10 +4,9 @@
 #include "clobber_1xn.h"
 
 #include <cassert>
+#include <cstddef>
 #include <utility>
 #include <vector>
-#include <ostream>
-#include <cstddef>
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
@@ -271,12 +270,14 @@ void clobber_1xn::print_move(std::ostream& str, const move& m) const
     print_move2_as_points(str, m);
 }
 
-string clobber_1xn::xoxo(int n)
+string clobber_1xn::xo(int n)
 {
-    string result;
-    for (int i = 0; i < n; ++i)
-        result += "XO";
-    return result;
+    return repeat_string("XO", n);
+}
+
+string clobber_1xn::xxo(int n)
+{
+    return repeat_string("XXO", n);
 }
 
 //---------------------------------------------------------------------------

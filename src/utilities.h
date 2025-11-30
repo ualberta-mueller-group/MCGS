@@ -66,7 +66,7 @@ inline bool logical_iff(bool p, bool q)
 
 #define LOGICAL_IMPLIES(p, q) (!(p) || (q))
 
-//////////////////////////////////////// string parsing utils
+//////////////////////////////////////// string utilities
 
 // like Python's string split()
 std::vector<std::string> split_string(const std::string& str);
@@ -79,6 +79,9 @@ bool string_starts_with(const std::string& str, const std::string& word);
 bool string_ends_with(const std::string& str, const std::string& word);
 
 bool string_contains_whitespace(const std::string& str);
+
+// concat n copies of str
+std::string repeat_string(const std::string& str, int n);
 
 //////////////////////////////////////// arithmetic operations
 

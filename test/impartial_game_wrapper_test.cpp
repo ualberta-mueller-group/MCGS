@@ -13,7 +13,6 @@
 #include "test_utilities.h"
 
 using std::string;
-const int UNKNOWN = -1;
 
 namespace {
 
@@ -41,21 +40,21 @@ void test_nim_value(const string& s, int nim_value)
 
 void impartial_game_wrapper_test_values()
 {
-    // Results from: J. Dai and X. Chen,
+    // Results 1-42 except 17, 21, 39, 40 from: J. Dai and X. Chen,
     // Impartial Clobber Solver,
     // CMPUT 655 project report, University of Alberta 2022
-    static int dai_chen_result[] = {
-        0,                                               //
-        1,       3, 0, 2, 0, 2, 0,       3, 1,       4,  //  1-10
-        6,       1, 0, 1, 3, 7, UNKNOWN, 3, 1,       0,  // 11-20
-        UNKNOWN, 4, 0, 1, 3, 0, 4,       0, 2,       0,  // 21-30
-        3,       1, 4, 6, 1, 0, 1,       3, UNKNOWN, -1, // 31-40
-        3,       1                                       // 41-42
+    static int expected_result[] = {
+        0,
+        1, 3, 0, 2, 0, 2, 0, 3, 1, 4, //  1-10
+        6, 1, 0, 1, 3, 7, 8, 3, 1, 0, // 11-20
+        8, 4, 0, 1, 3, 0, 4, 0, 2, 0, // 21-30
+        3, 1, 4, 6, 1, 0, 1, 3,11, 8, // 31-40
+        3, 1,11, 8,12,11, 1, 3, 0, 6  // 41-50
     };
 
-    int limit = 10;
-    for (int i = 0; i < limit; ++i)
-        test_nim_value(clobber_1xn::xoxo(i), dai_chen_result[i]);
+    int limit = 50;
+    for (int i = 0; i <= limit; ++i)
+        test_nim_value(clobber_1xn::xo(i), expected_result[i]);
 }
 
 void test_play_undo(const string& s)
@@ -91,20 +90,16 @@ void test_nogo(string s, int nim_value)
     nogo_1xn c(s);
     impartial_game_wrapper g(&c);
     const int v = g.search_with_tt();
-    if (nim_value != UNKNOWN)
-        assert(v == nim_value);
+    assert(v == nim_value);
 }
 
 void impartial_game_wrapper_test_nogo()
 {
-    static int expected[] = // computed with this same program
+    static int expected[] = // computed with MCGS
         {
-            0,                                                          //
-            0,       1,       0,       1,       2, 0, 1, 0, 1, 2,       //  1-10
-            3,       1,       0,       3,       1, 0, 2, 2, 3, UNKNOWN, // 11-20
-            UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,                         //
-            UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,                         //
-            UNKNOWN, UNKNOWN                                            // 21-30
+            0,
+            0, 1, 0, 1, 2, 0, 1, 0, 1, 2, //  1-10
+            3, 1, 0, 3, 1, 0, 2, 2, 3     // 11-19
         };
 
     for (int i = 0; i < 11; ++i)

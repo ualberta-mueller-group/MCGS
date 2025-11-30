@@ -1,0 +1,24 @@
+{version 1.3}
+[impartial clobber]
+
+/* 2x11, about 18 sec on 2025-11-19 */
+XO|OX|XO|OX|XO|OX|XO|OX|XO|OX|XO {N 3}
+
+/* 2x12, about 15 sec on 2025-11-19 */
+XO|OX|XO|OX|XO|OX|XO|OX|XO|OX|XO|OX {N 0}
+
+/* 2x13, about 109 sec on 2025-11-19 */
+XO|OX|XO|OX|XO|OX|XO|OX|XO|OX|XO|OX|XO {N 1}
+
+/* 3x7, about 12 sec on 2025-11-19 */
+XOX|OXO|XOX|OXO|XOX|OXO|XOX {N 1}
+
+/* 3x8, about 170 sec on 2025-11-19 */
+XOX|OXO|XOX|OXO|XOX|OXO|XOX|OXO {N 0}
+
+/* 4x6, about 619 sec on 2025-11-19 */
+XOXO|OXOX|XOXO|OXOX|XOXO|OXOX {N 0}
+
+/* 5x5, about 3970 sec on 2025-11-19 */
+XOXOX|OXOXO|XOXOX|OXOXO|XOXOX {N 1}
+
