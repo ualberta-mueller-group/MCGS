@@ -214,4 +214,5 @@ int main(int argc, const char** argv)
     test_winning_moves();
 
     cout << "SUCCESS" << endl;
+    return 0;
 }
