@@ -1,0 +1,88 @@
+{version 1.4}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[toppling_dominoes]
+
+OXXOOOOXXO
+OX#O#OOO#X
+XX##X#XX#X {B win, W loss}
+          
+OOOOXO#OXX
+#XXXX#OOOX
+XXOXXOXO#X {B win, W win}
+          
+XOXXXO#X#O
+OOOO##OOXX
+X#XXXO#XXX {B win, W win}
+          
+OOO#XOXXXO
+OOOXOO#XXX
+O#X#O##XOX {B win, W win}
+          
+#XOXXO#XOX
+XO##XO#OXO
+OXXXXXXOXO {B win, W loss}
+          
+OOXXXXOOXO
+OX#XXOX#X#
+XOXXX#OOOX {B win, W win}
+          
+XOXXXOOXOX
+OOOXX#OOXX
+OXOXOOXO#O {B win, W win}
+          
+OXXXXX###X
+XOOXXOOXOX
+#XOXOXXO#O {B win, W loss}
+          
+OOXX#O#OXX
+XOXOOOXXOO
+X#OOX#OXXX {B win, W win}
+          
+O##O#O#OOX
+#O#XXOXXOO
+X#XXX#XXO# {B win, W win}
+          
+X#XXXXOXXX
+OXOO#OOXOO
+XOXOOOOXOX {B win, W loss}
+          
+OXX#OXX#OO
+XX###OXXOX
+OOO#XXX##O {B loss, W win}
+          
+X#XOXX#O#X
+XOOOOXOOXX
+XXX#X#OOO# {B win, W loss}
+          
+#X##OOOX#O
+XXOXOX#XOX
+X#OXX#OXOO {B win, W win}
+          
+XXXXOOXOOX
+X##OOOXXXX
+XOO##OOOXX {B win, W loss}
+          
+XXOXXXOO#O
+#XOXOXOXOO
+OXXXOOOOOX {B win, W win}
+          
+XOOX##OXO#
+XO##X#OOOO
+XOOXXOXOXO {B win, W win}
+          
+#OXOO#XOOX
+XOOOOXXXOX
+XXO##XXXXO {B win, W loss}
+          
+OOXXXOOOXX
+X#XXXXO#XO
+OXXOO#O#XX {B win, W loss}
+          
+XX#O#OOXOO
+X#XXXOX#XO
+###O#XOO#O {B win, W win}
+

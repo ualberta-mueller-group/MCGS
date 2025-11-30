@@ -1,0 +1,26 @@
+{version 1.4}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[gen_toads]
+
+/* {-4* | -6*} --> R position (white wins) */
+1,1,0,0:X.......O.....XO.O.....X..OO.X.O.OOXO... {B loss, W win}
+
+/* {-27 | -29} --> R position (white wins) */
+1,1,0,0:X...XX.O...X.....OOOO..X...O.....O.O...O {B loss, W win}
+
+/* 3 --> L position (black wins) */
+1,1,0,0:X..X........O....X....O...O.......XO.X.. {B win, W loss}
+
+/* 0 --> P position (first loses) */
+1,1,0,0:.......X.....O..X.....O....... {B loss, W loss}
+
+/* 14 --> L position (black wins) */
+1,1,0,0:.OXO...O.O..O.X.X......X...X..OO..X....X {B win, W loss}
+
+/* -7 --> R position (white wins) */
+1,1,0,0:....OXO.....X......X.XOX..O...O...O.XXO. {B loss, W win}
+

@@ -1,0 +1,4 @@
+{version 1.4}
+[fission]
+...|..X|... {B win, W loss}
+.X.|...|... {B loss, W win}
