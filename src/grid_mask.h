@@ -19,7 +19,7 @@
 class grid_mask
 {
 public:
-    grid_mask(unsigned int grid_hash_symmetry_mask);
+    grid_mask(unsigned int grid_hash_mask);
 
     size_t size() const; // number of tiles (excluding SEP)
     int_pair get_shape() const;
@@ -61,8 +61,8 @@ std::ostream& operator<<(std::ostream& os, const grid_mask& mask);
 
 
 ////////////////////////////////////////////////// grid_mask methods
-inline grid_mask::grid_mask(unsigned int grid_hash_symmetry_mask)
-    : _gh(grid_hash_symmetry_mask), _current_shape(0, 0), _marker_count_end(0)
+inline grid_mask::grid_mask(unsigned int grid_hash_mask)
+    : _gh(grid_hash_mask), _current_shape(0, 0), _marker_count_end(0)
 {
 }
 

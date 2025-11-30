@@ -28,8 +28,8 @@ void grid_hash::reset(const int_pair& grid_shape)
 
         assert(!bit_is_1(idx1, 0));
 
-        const bool active1 = bit_is_1(_active_orientation_mask, idx1);
-        const bool active2 = bit_is_1(_active_orientation_mask, idx2);
+        const bool active1 = bit_is_1(_grid_hash_mask, idx1);
+        const bool active2 = bit_is_1(_grid_hash_mask, idx2);
 
         const grid_hash_orientation ori = GRID_HASH_ORIENTATIONS[idx1];
         const int_pair shape = _get_transformed_shape(ori);

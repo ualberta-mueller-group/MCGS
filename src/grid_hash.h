@@ -218,7 +218,7 @@ inline unsigned int get_op_mask(grid_hash_orientation ori)
 class grid_hash
 {
 public:
-    grid_hash(unsigned int active_orientation_mask);
+    grid_hash(unsigned int grid_hash_mask);
 
     void reset(const int_pair& grid_shape);
 
@@ -246,7 +246,7 @@ private:
 
     static constexpr unsigned int _N_HASHES = GRID_HASH_ORIENTATIONS.size();
 
-    const unsigned int _active_orientation_mask;
+    const unsigned int _grid_hash_mask;
 
     int_pair _grid_shape;
     std::array<local_hash, _N_HASHES> _hashes;
@@ -254,11 +254,11 @@ private:
 
 
 ////////////////////////////////////////////////// grid_hash methods
-inline grid_hash::grid_hash(unsigned int active_orientation_mask)
-    : _active_orientation_mask(active_orientation_mask)
+inline grid_hash::grid_hash(unsigned int grid_hash_mask)
+    : _grid_hash_mask(grid_hash_mask)
 {
-    assert(bit_is_1(_active_orientation_mask, GRID_HASH_ORIENTATION_0) && //
-           0 == (_active_orientation_mask &
+    assert(bit_is_1(_grid_hash_mask, GRID_HASH_ORIENTATION_0) && //
+           0 == (_grid_hash_mask &
                  ~get_bit_mask_lower<unsigned int>(_N_HASHES)) //
     );
 }
@@ -269,7 +269,7 @@ inline hash_t grid_hash::get_value() const
 
     for (unsigned int i = 0; i < _N_HASHES; i++)
     {
-        if (bit_is_1(_active_orientation_mask, i))
+        if (bit_is_1(_grid_hash_mask, i))
         {
             const hash_t h = _hashes[i].get_value();
 
@@ -295,8 +295,8 @@ void grid_hash::toggle_value(int r, int c, const T& color)
 
         assert(!bit_is_1(idx1, 0));
 
-        const bool active1 = bit_is_1(_active_orientation_mask, idx1);
-        const bool active2 = bit_is_1(_active_orientation_mask, idx2);
+        const bool active1 = bit_is_1(_grid_hash_mask, idx1);
+        const bool active2 = bit_is_1(_grid_hash_mask, idx2);
 
         if (!(active1 || active2))
             continue;

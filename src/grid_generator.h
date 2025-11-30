@@ -94,7 +94,7 @@ public:
     grid_generator(const int_pair& max_dims,
                    const std::vector<int>& tile_sequence, bool mask_active_bit,
                    int mask_inactive_tile, bool strips_only,
-                   unsigned int grid_hash_symmetry_mask);
+                   unsigned int grid_hash_mask);
 
     operator bool() const override;
     void operator++() override;
