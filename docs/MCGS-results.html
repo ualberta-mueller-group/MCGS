@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>MCGS Computational Results</title>
+</head>
+<body>
+<h1>MCGS Computational Results</h1>
+
+<p>Contents:</p>
+<ul>
+<li><a href="#partizan">Partizan Games</a></li>
+<li><a href="#impartial">Impartial Games</a>
+    <ul>
+    <li><a href="#impartial-clobber">Impartial Clobber</a></li>
+    <li><a href="#impartial-nogo">Impartial NoGo</a></li>
+    <li><a href="#cram">Cram = Impartial Domineering</a></li>
+    </ul>
+</li>
+<li><a href="#references">References</a></li>
+</ul>
+
+<h2><a name="partizan"></a>Partizan Games</h2>
+
+<h2><a name="impartial"></a>Impartial Games</h2>
+<h3><a name="impartial-clobber"></a>Impartial Clobber</h3>
+<h4><a name="impartial-clobber-1xn"></a>Impartial Linear Clobber</h4>
+<p>Repeating impartial clobber patterns are "easy", in the sense
+that the number of possible/relevant subgames is limited. 
+After most moves, the board divides into two subgames of "known" 
+nim values. "Known" means they are already stored in the 
+transposition table, from solving boards with smaller n). 
+For each new n, only a few new larger subgames need to be computed 
+and added to the table. In contrast, random starting positions allow less re-use.
+</p>
+<figure>
+<img src="images/Impartial-Clobber-xo-1-2000.pdf" alt="Impartial-Clobber-xo-1-2000">
+<figcaption>
+Figure 1: Nim values for (xo)<sup>n</sup>, n=1..2000
+</figcaption>
+</figure>
+
+<figure>
+<img src="images/Impartial-Clobber-xxo-1-1000.pdf" alt="Impartial-Clobber-xxo-1-1000">
+<figcaption>
+Figure 2: Nim values for (xxo)<sup>n</sup>, n=1..1000
+</figcaption>
+</figure>
+
+<figure>
+<img src="images/Impartial-Clobber-xxxo-1-1000.pdf" alt="Impartial-Clobber-xxxo-1-1000">
+<figcaption>
+Figure 3: Nim values for (xxxo)<sup>n</sup>, n=1..1000
+</figcaption>
+</figure>
+
+<p>History: 
+<br>(xo)<sup>n</sup>, n=1..42, except n= 17, 21, 39, 40, by (Dai and Chen 2022).
+<br>(xo)<sup>n</sup>, n=1..2000 computed Nov 20, 2025. All values from (Dai and Chen 2022) confirmed.
+<br>(xxo)<sup>n</sup>, n=1..1000 computed Nov 20, 2025.
+<br>(xxxo)<sup>n</sup>, n=1..1000 computed Nov 20, 2025.
+</p>
+<h3><a name="impartial-nogo"></a>Impartial NoGo</h3>
+<p>We are not aware of any previous published results on this game.
+In the table, symmetric boards with rows &gt; columns are not shown.
+1&times;n values listed separately below.
+</p>
+
+<table>
+  <caption>Impartial NoGo Nim Values.</caption>
+<tr>
+  <th>Rows\Columns</th>
+  <th>2</th>
+  <th>3</th>
+  <th>4</th>
+  <th>5</th>
+  <th>6</th>
+  <th>7</th>
+  <th>8</th>
+  <th>9</th>
+</tr>
+<tr>
+  <th>2</th>
+  <td>*1</td>
+  <td>*1</td>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*1</td>
+  <td>*1</td>
+</tr>
+<tr>
+  <th>3</th>
+  <td>*1</td>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*1</td>
+  <td>*0</td>
+</tr>
+<tr>
+  <th>4</th>
+  <td>*0</td>
+  <td>*0</td>
+  <td>*0</td>
+</tr>
+</table>
+
+<p>History: 
+<br>All boards computed Nov 22, 2025 with Lemoine - Viennot algorithm.
+</p>
+
+<h4><a name="impartial-nogo-1xn"></a>Impartial Linear NoGo</h4>
+<table>
+  <caption>Impartial Linear NoGo Nim Values</caption>
+<tr>
+  <th>Board Size</th>
+  <th>NoGo Position</th>
+  <th>Nim Value</th>
+  <th>Notes</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><tt>.</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><tt>..</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><tt>...</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><tt>....</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><tt>.....</tt></td>
+  <td>*2</td>
+  <td></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><tt>......</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><tt>.......</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><tt>........</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><tt>.........</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><tt>..........</tt></td>
+  <td>*2</td>
+  <td></td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><tt>...........</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><tt>............</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><tt>.............</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><tt>..............</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><tt>...............</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><tt>................</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>17</td>
+  <td><tt>.................</tt></td>
+  <td>*2</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>18</td>
+  <td><tt>..................</tt></td>
+  <td>*2</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>19</td>
+  <td><tt>...................</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>20</td>
+  <td><tt>....................</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>21</td>
+  <td><tt>.....................</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>22</td>
+  <td><tt>......................</tt></td>
+  <td>*3</td>
+  <td></td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><tt>.......................</tt></td>
+  <td>*1</td>
+  <td></td>
+</tr>
+
+<tr>
+  <td>24</td>
+  <td><tt>........................</tt></td>
+  <td>*0</td>
+  <td></td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><tt>.........................</tt></td>
+  <td>?</td>
+  <td>Timed out (1hr limit) on Nov 21, 2025</td>
+</tr>
+</table>
+
+<p>History: 
+<br>Boards 1-19 computed May 1, 2025 with MEX algorithm.
+<br>Boards 20-24 computed Nov 21, 2025 with Lemoine - Viennot algorithm.
+</p>
+
+<h3><a name="cram"></a>Cram = Impartial Domineering</h3>
+<p>It is well-known that all even &times; even boards
+are *0, second player wins, by following a mirroring strategy.
+All even &times; odd boards are first player wins, by playing in the middle
+and then mirroring.
+</p>
+
+<h4><a name="1xncram"></a>1&times;n Cram</h4>
+<p>
+1&times;n Cram is the same as Dawson’s Kayles, the take-and-break octal game .07 .
+It has period 34 with only few exceptions near the start (https://oeis.org/A002187).
+</p>
+<p>
+MCGS has verified the values up to n=127, using the 2-d grid 
+implementation of impartial domineering. Grid has a 7 bit limit on 
+dimensions (width and height).
+</p>
+
+<h4><a name="2xncram"></a>2&times;n Cram</h4>
+<p>
+2&times;n boards are *0 for all even n, and *1 for all odd n (Winning Ways, Uiterwijk 2020).
+MCGS has solved all boards up to 2&times;26 on 2025-11-23.
+</p>
+
+<h4><a name="3xncram"></a>3&times;n Cram</h4>
+<p>
+3&times;n, n=3..20, from (Lemoine and Viennot 2013).
+3&times;21 is a first player win (Uiterwijk 2020)
+MCGS has solved all boards up to 3&times;13 on 2025-11-23.
+</p>
+
+<table>
+<tbody>
+<tr>
+<th>Columns</th>
+<th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+<th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th>
+<th>16</th><th>17</th><th>18</th><th>19</th><th>20</th><th>21</th>
+</tr>
+<tr>
+<td></td><td>*0</td><td>*1</td><td>*1</td><td>*4</td><td>*1</td><td>*3</td><td>*1</td>
+<td>*2</td><td>*0</td><td>*1</td><td>*2</td><td>*3</td><td>*1</td>
+<td>*4</td><td>*0</td><td>*1</td><td>*0</td><td>*2</td>
+<td>*&ge;1</td>
+</tr>
+</tbody>
+</table>
+
+<h4><a name="largercram"></a>n&times;m Cram with m, n &ge; 4</h4>
+
+<table>
+<tbody>
+<tr>
+<th>
+Rows\Columns
+</th>
+<th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+<th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th>
+</tr>
+<tr>
+<th>4
+</th>
+<td>0</td>
+<td>2</td>
+<td>0</td>
+<td>3</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>3</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr>
+<th>5
+</th>
+<td>-</td>
+<td>0</td>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr>
+<th>6
+</th>
+<td>-</td>
+<td>-</td>
+<td>0</td>
+<td>5</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+<td>0</td>
+<td></td>
+<td>0</td>
+</tr>
+<tr>
+<th>7
+</th>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>3</td>
+<td>1
+</td>
+</tr>
+</tbody>
+</table>
+ 
+<p>
+Sources: From (Wikipedia).
+<br> 4&times;5, 4&times;7, 4&times;9, from (Lemoine and Viennot 2013).
+4&times;11, 4&times;13, 4&times;15 from (Beling).
+<br> 5&times;n, n=5..9, from (Lemoine and Viennot 2013), n=10-12 (Beling).
+<p>MCGS results so far (no database, no move ordering):
+MCGS has confirmed 4&times;5 and 4&times;7 on 2025-11-23. 
+It also computed even boards up to 4&times;8.
+It confirmed 5&times;5 and 5&times;6 on 2025-11-23. 
+</p>
+
+<h2><a name="references"></a>References</h2>
+
+<ul>
+<li>(Beling) Piotr Beling. impartial-games README.
+https://github.com/beling/impartial-games/tree/main?tab=readme-ov-file
+</li>
+<li>
+(Dai and Chen 2022) Jiayi Dai and Xinyue Chen. Impartial Clobber Solver. Course project, University of Alberta 2022.
+</li>
+<li>
+(Lemoine and Viennot 2013) Julien Lemoine and Simon Viennot. Records - Cram.
+https://sprouts.tuxfamily.org/wiki/doku.php?id=records#cram, 2013.
+</li>
+<li>
+(Uiterwijk 2018) Uiterwijk, J. Construction and investigation of Cram endgame databases. ICGA Journal 40(4), 425–437, 2018.
+</li>
+<li>
+(Uiterwijk 2020) Uiterwijk, J. Solving Cram Using Combinatorial
+Game Theory, ACG 2019, pp. 91-105, Springer 2020.
+</li>
+<li>
+(Wikipedia) Cram (game).
+https://en.wikipedia.org/wiki/Cram_(game)
+</li>
+<li>(Winning Ways) Elwyn Berlekamp, John Conway, and Richard Guy. 
+Winning Ways for Your Mathematical Plays. Academic Press, 1982.
+</li>
+
+</ul>
+
+</body>
+</html>

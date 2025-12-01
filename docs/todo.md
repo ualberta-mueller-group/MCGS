@@ -77,8 +77,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Implement more games
 - Port more algorithms to MCGS? Which?
     - Kao's temperature
-    - Dai/Chen impartial linear clobber
-    - Impartial NoGo
 
 ### Move ordering heuristics
 - Can we define some in a game-independent way?
@@ -228,13 +226,4 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 - Small todo's
     - Remove duplication between performance and unit tests:
-      Move tables of expected results into new header file.
-- Search algorithms
-    - Lemoine and Viennot, Nimbers are inevitable (2012)
-    - Also see, compare with 2022 course report
-    "Impartial Clobber Solver" by Dai and Chen
-
-- Random testing for nim sums 
-    - increase size limit as program becomes better
-    - generate 2nd player win game by adding nim sum
 

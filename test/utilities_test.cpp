@@ -27,11 +27,11 @@ void test_size_in_bits()
 
 void test_print_bits()
 {
-    typedef tuple<uint8_t, string> test_case_t;
     /*
        input
        expected output
     */
+    typedef tuple<uint8_t, string> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -63,11 +63,11 @@ void test_print_bits()
 
 void test_split_string()
 {
-    typedef tuple<string, vector<string>> test_case_t;
     /*
         input
         expected output
     */
+    typedef tuple<string, vector<string>> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -91,11 +91,11 @@ void test_split_string()
 
 void test_is_int()
 {
-    typedef tuple<string, bool> test_case_t;
     /*
        input
-       expected output
+       expected value
     */
+    typedef tuple<string, bool> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -137,13 +137,13 @@ void test_is_int()
 
 void test_string_starts_ends_with()
 {
-    typedef tuple<string, string, bool, bool> test_case_t;
     /*
         string
         word
         expected string_starts_with() result
         expected string_ends_with() result
     */
+    typedef tuple<string, string, bool, bool> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -178,11 +178,11 @@ void test_string_starts_ends_with()
 
 void test_is_power_of_2()
 {
-    typedef tuple<uint8_t, bool> test_case_t;
     /*
        input
        expected result
     */
+    typedef tuple<uint8_t, bool> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -253,6 +253,13 @@ void test_alternating_mask()
 
 void test_rotate_functions()
 {
+    /*
+        rotate distance
+        input
+        rotate_left result
+        rotate_right result
+        rotate_interleaved result
+    */
     typedef tuple<int, uint32_t, uint32_t, uint32_t, uint32_t> test_case_t;
 
     vector<test_case_t> test_cases = {
@@ -378,6 +385,11 @@ void test_rotate_functions()
 
 void test_new_vector_capacity()
 {
+    /*
+        vector access index
+        current capacity
+        expected new capcity
+    */
     typedef tuple<size_t, size_t, size_t> test_case_t;
 
     // clang-format off
@@ -418,6 +430,13 @@ void test_new_vector_capacity()
 
 void test_relation_from_search_results()
 {
+    /*
+       le_known
+       is_le
+       ge_known
+       is_ge
+       expected relation
+    */
     typedef tuple<bool, bool, bool, bool, relation> test_case_t;
 
     // clang-format off

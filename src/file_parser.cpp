@@ -12,10 +12,13 @@
 #include <utility>
 #include "cgt_basics.h"
 #include "all_game_headers.h"
+#include "fission.h"
 #include "game_case.h"
 #include "game_token_parsers.h"
 #include "parsing_utilities.h"
+#include "toppling_dominoes.h"
 #include "utilities.h"
+#include "version_info.h"
 #include <ios>
 #include <exception>
 
@@ -802,6 +805,8 @@ bool file_parser::warned_wrong_version()
 */
 void file_parser::_init_game_parsers()
 {
+    // TODO this file shouldn't include every game header. Define this function
+    // in another cpp file...
     assert(_game_map.size() == 0);
 
     _add_game_parser("clobber_1xn", new basic_parser<clobber_1xn>());
@@ -818,6 +823,12 @@ void file_parser::_init_game_parsers()
 
     _add_game_parser("nogo", new basic_parser_with_check<nogo>());
     _add_game_parser("clobber", new basic_parser<clobber>());
+    _add_game_parser("domineering", new basic_parser<domineering>());
+    _add_game_parser("amazons", new basic_parser<amazons>());
+    _add_game_parser("fission", new basic_parser<fission>());
+    _add_game_parser("toppling_dominoes", new basic_parser<toppling_dominoes>());
+    _add_game_parser("gen_toads", new basic_parameterized_game_parser<gen_toads>);
+    _add_game_parser("sheep", new basic_parser<sheep>());
 
     _add_game_parser("kayles", new int_parser<kayles>());
 }

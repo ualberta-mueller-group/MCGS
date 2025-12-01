@@ -1,0 +1,93 @@
+/*
+    Generate and print Left/Right options for use in MCGS unit tests.
+
+    NOTE: You must edit several parts of this file. See comments to understand
+    code.
+*/
+
+System.ClearAll();
+Utils();
+
+// For each game in this list, its Left/Right options are generated
+games := [
+[
+    [2, 3, 2, 1],
+    "O....X....XO....XXOO....XOXO....X....O....O"
+],
+
+[
+    [2, 3, 10, 1],
+    "O....X....XO....XXOO....XOXO....X....O....O"
+]
+];
+
+/*
+    Input: One element of the above "games" list
+    Output: One game object
+
+    You can use an existing game shorthand function from Utils.cgs
+*/
+make_game_fn := gen_toads;
+
+/*
+    Input: A single game (one of Left or Right's options)
+    Output: The (quoted) board string, extracted from to_string(pos)
+*/
+def position_to_board_string(pos) begin
+    assert(pos is Game);
+    str := to_string(opt);
+
+    str := str.Replace("GenToadsAndFrogs.Position(", "");
+    str := str.Replace(")", "");
+
+    str := elephants_to_mcgs(str);
+
+    str := str + ",";
+
+    str;
+end
+
+lines := MutableList();
+for i from 1 to games.Size do
+    game_spec := games[i];
+
+    g := make_game_fn(game_spec);
+    g_params := game_spec[1];
+    g_board := game_spec[2];
+
+    l_opts := g.LeftOptions;
+    r_opts := g.RightOptions;
+
+    lines.Add("{");
+
+    param_string := "<TAB>" + collection_to_cpp_vector_string(g_params) + ",";
+    lines.Add(param_string);
+
+    lines.Add("<TAB>\"" + g_board + "\",");
+
+    lines.Add("<TAB>{");
+    for j from 1 to l_opts.Size do
+        opt := l_opts[j];
+        str := position_to_board_string(opt);
+        lines.Add("<TAB><TAB>" + str);
+    end
+
+    lines.Add("<TAB>},");
+    lines.Add("<TAB>{");
+
+    for j from 1 to r_opts.Size do
+        opt := r_opts[j];
+        str := position_to_board_string(opt);
+        lines.Add("<TAB><TAB>" + str);
+    end
+
+    lines.Add("<TAB>},");
+    lines.Add("},");
+
+    if i + 1 <= games.Size then
+        lines.Add("");
+    end
+end
+
+out_string := join(lines, "<NL>");
+print(out_string);

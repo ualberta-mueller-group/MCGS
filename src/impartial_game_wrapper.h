@@ -93,7 +93,7 @@ inline void impartial_game_wrapper::play(const move& m)
        play() functions.
     */
     const bw color = cgt_move::get_color(m);
-    const move m_no_color = cgt_move::decode(m);
+    const move m_no_color = cgt_move::remove_color(m);
 
     _game->play(m_no_color, color);
     impartial_game::play(m);

@@ -31,9 +31,12 @@ class impartial_game : public game
 {
 public:
     impartial_game();
-    // solve single game; store result in _nim_value
+    
+    // Solve *this as a single game; store result in _nim_value
     // tt_size is expressed as exponent of 2, e.g. 24 means 2^24
     int search_with_tt(int tt_size = 24) const;
+    
+    // Solve *this with a given tt
     int search_impartial_game(impartial_tt& tt) const;
 
     /*
@@ -97,7 +100,7 @@ inline void impartial_game::play(const move& m)
        Preserves the color bit of m, because ig_wrapper_move_generator
        may use it. No other games should do this.
     */
-    const move m_no_color = cgt_move::decode(m);
+    const move m_no_color = cgt_move::remove_color(m);
     const bw color = cgt_move::get_color(m);
     game::play(m_no_color, color);
     assert(last_move() == m);

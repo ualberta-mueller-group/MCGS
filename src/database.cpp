@@ -7,10 +7,15 @@
     to write unsafe code with this...
 */
 #include <cassert>
+#include <chrono>
+#include <ctime>
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <memory>
 #include <iostream>
+
 #include "database.h"
 #include "sumgame.h"
 #include "iobuffer.h"
@@ -20,12 +25,61 @@
 #include "type_table.h"
 #include "clobber_1xn.h"
 #include "utilities.h"
+#include "version_info.h"
 
 using namespace std;
+
+////////////////////////////////////////////////// helper functions
+namespace {
+
+string get_time_string()
+{
+    string time_string;
+
+    const std::chrono::time_point time = std::chrono::system_clock::now();
+    const std::time_t time_converted = std::chrono::system_clock::to_time_t(time);
+
+    const char* time_ctime = std::ctime(&time_converted);
+    assert(time_ctime != nullptr);
+
+    while (true)
+    {
+        const char c = *time_ctime;
+        ++time_ctime;
+
+        if (c == 0 || c == '\n')
+            break;
+
+        time_string.push_back(c);
+    }
+
+    return time_string;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////// database methods
 database::database() : _sum(nullptr), _game_count(0)
 {
+}
+
+/*
+    - MCGS version
+    - Date created
+    - Game config string
+*/
+void database::update_metadata_string(const string& config_string)
+{
+    _metadata_string.clear();
+
+    // TODO commit hash instead?
+    _metadata_string += "Version: \"" + string(MCGS_VERSION_STRING) + "\"\n";
+
+    // Date
+    _metadata_string += "Date created: \"" + get_time_string() + "\"\n";
+
+    // Game config
+    _metadata_string += "DB config string: \"" + config_string + "\"";
 }
 
 void database::set_partizan(const game& g, const db_entry_partizan& entry)
@@ -94,6 +148,7 @@ void database::save(const std::string& filename) const
 {
     obuffer os(filename);
 
+    serializer<string>::save(os, _metadata_string);
     serializer<tree_partizan_t>::save(os, _tree_partizan);
     serializer<tree_impartial_t>::save(os, _tree_impartial);
     serializer<type_mapper>::save(os, _mapper);
@@ -108,6 +163,7 @@ void database::load(const std::string& filename)
 
     ibuffer is(filename);
 
+    _metadata_string = serializer<string>::load(is);
     _tree_partizan = serializer<tree_partizan_t>::load(is);
     _tree_impartial = serializer<tree_impartial_t>::load(is);
     _mapper = serializer<type_mapper>::load(is);
@@ -122,7 +178,7 @@ void database::clear()
     _mapper.clear();
 }
 
-void database::generate_entries(db_game_generator& gen, bool silent)
+void database::generate_entries(i_db_game_generator& gen, bool silent)
 {
     while (gen)
     {
@@ -189,21 +245,29 @@ void database::_generate_entry_single(game* g, bool silent)
 //////////////////////////////////////////////////
 std::ostream& operator<<(std::ostream& os, const database& db)
 {
-    os << db._mapper << '\n';
+    const unordered_map<game_type_t, string>& disk_type_to_name_map =
+        db._mapper.get_disk_type_to_name_map();
 
-    os << "Partizan game types: " << db._tree_partizan.size() << '\n';
-    for (const auto& it : db._tree_partizan)
+    os << "# of Partizan game types: " << db._tree_partizan.size() << '\n';
+
+    for (const pair<const game_type_t, database::terminal_layer_partizan_t>& p :
+         db._tree_partizan)
     {
-        os << "Game type: " << it.first << ' ';
-        os << "Count: " << it.second.size() << '\n';
+        const game_type_t disk_type = p.first;
+        const database::terminal_layer_partizan_t& layer = p.second;
+
+        auto it = disk_type_to_name_map.find(disk_type);
+        THROW_ASSERT(it != disk_type_to_name_map.end());
+
+        const string& game_name = it->second;
+
+        os << "\tGame type: \"" << game_name << "\" ";
+        os << "Count: " << layer.size() << '\n';
     }
 
-    // os << "Impartial game types: " << db._tree_impartial.size() << '\n';
-    // for (const auto& it : db._tree_impartial)
-    //{
-    //     os << "Game type: " << it.first << ' ';
-    //     os << "Count: " << it.second.size() << '\n';
-    // }
+    os << "=== Database metadata string begin ===" << "\n";
+    os << db._metadata_string << "\n";
+    os << "=== Database metadata string end ===" << "\n";
 
     return os;
 }

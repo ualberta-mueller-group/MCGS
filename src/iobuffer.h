@@ -118,11 +118,6 @@ private:
 };
 
 ////////////////////////////////////////////////// ibuffer methods
-inline ibuffer::ibuffer(const std::string& file_name)
-    : _fs(file_name, OPEN_MODE)
-{
-    assert(_fs.is_open());
-}
 
 inline void ibuffer::close()
 {

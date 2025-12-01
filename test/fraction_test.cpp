@@ -49,10 +49,9 @@ void test_basic()
 
 void test_comparison()
 {
-    typedef tuple<fraction, fraction, relation, bool, bool, bool, bool, bool,
-                  bool>
-        test_case_t;
     /*
+        LHS fraction
+        RHS fraction
            One bool per line:
        <
        <=
@@ -61,6 +60,9 @@ void test_comparison()
        >
        >=
     */
+    typedef tuple<fraction, fraction, relation, bool, bool, bool, bool, bool,
+                  bool>
+        test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -198,12 +200,12 @@ void test_negation()
 
 void test_integral_part()
 {
-    typedef tuple<fraction, int, fraction> test_case_t;
     /*
        before
        removed integral component
        after
     */
+    typedef tuple<fraction, int, fraction> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -245,13 +247,13 @@ void test_add_sub()
     typedef optional<fraction> input_t;
     typedef optional<fraction> exp_t;
 
-    typedef tuple<fraction, input_t, input_t, exp_t> test_case_t;
     /*
         before
-        to add
-        to subtract
-        result
+        to add (when absent, don't add)
+        to subtract (when absent, don't subtract)
+        result (when absent, neither add/subtract should succeed)
     */
+    typedef tuple<fraction, input_t, input_t, exp_t> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -346,13 +348,13 @@ void test_raise_denominator()
     typedef optional<int> input_t;
     typedef optional<fraction> exp_t;
 
-    typedef tuple<fraction, input_t, input_t, exp_t> test_case_t;
     /*
         before
-        input of raise_denominator_by_pow2
-        input of raise_denominator_to
-        expected result
+        input of raise_denominator_by_pow2 (when absent, skip operation)
+        input of raise_denominator_to (when absent, skip operation)
+        expected result (when absent, neither operation should succeed)
     */
+    typedef tuple<fraction, input_t, input_t, exp_t> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -403,12 +405,12 @@ void test_mul2_bottom()
 {
     typedef optional<fraction> exp_t;
 
-    typedef tuple<fraction, int, exp_t> test_case_t;
     /*
        before
        input to mul2_bottom
-       expected result
+       expected result (when absent, operation should not succeed)
     */
+    typedef tuple<fraction, int, exp_t> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases
@@ -443,6 +445,11 @@ void test_mul2_bottom()
 
 void test_illegal()
 {
+    /*
+       top
+       bottom
+       true IFF fraction is illegal
+    */
     typedef tuple<int, int, bool> test_case_t;
 
     // clang-format off

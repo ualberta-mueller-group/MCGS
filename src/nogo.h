@@ -18,6 +18,7 @@
 #include <string>
 #include <ostream>
 #include <cstddef>
+#include "grid_hash.h"
 
 class nogo : public grid
 {
@@ -29,6 +30,7 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
+    // checks that all stones have liberties
     bool is_legal() const;
 
     std::vector<int> immortal() const { return _immortal; }
@@ -36,6 +38,7 @@ public:
 protected:
     void _init_hash(local_hash& hash) const override;
     split_result _split_impl() const override;
+
 
 public:
     game* inverse() const override;
@@ -45,6 +48,7 @@ public:
     {
         str << "nogo:" << board_as_string();
     }
+    void print_move(std::ostream& str, const move& m) const override;
 
 private:
     std::vector<int> _immortal; // BORDER for immortal points (stones),
@@ -52,6 +56,10 @@ private:
                                 // WHITE for W-Go due to board partitioning,
                                 // EMPTY for others.
     std::vector<int> _immortal_copy; // A copy for undoing move
+
+#ifdef USE_GRID_HASH
+    mutable grid_hash _gh;
+#endif
 };
 
 // Compact nogo board for fast legality checking and board partitioning.
@@ -129,7 +137,7 @@ public:
         std::vector<bool>& region_markers);
 
     static std::vector<nogo_board> split(const nogo_board& board);
+
 };
 
-std::ostream& operator<<(std::ostream& out, const nogo& g);
 std::ostream& operator<<(std::ostream& os, const nogo_board& board);

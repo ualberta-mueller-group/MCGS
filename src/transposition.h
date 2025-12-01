@@ -14,6 +14,7 @@
 #include "throw_assert.h"
 #include "global_options.h"
 
+
 ////////////////////////////////////////////////// class ttable
 template <class Entry>
 class ttable
@@ -107,12 +108,13 @@ template <class Entry>
 ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     : _n_index_bits(index_bits),
       _n_tag_bits(size_in_bits<hash_t>() - index_bits),
-      _n_entries(1 << index_bits),
+      _n_entries(size_t(1) << index_bits),
       _bools_per_entry(n_packed_bools)
 {
     assert(index_bits > 0);
-    // strictly less -- avoid shifting entire width of hash_t
-    assert(index_bits < size_in_bits<hash_t>());
+    // avoid shifting entire width of hash_t or size_t
+    assert(index_bits < size_in_bits<hash_t>() &&
+           index_bits < size_in_bits<size_t>());
 
     //// Initialize numeric variables
     // entries
@@ -129,9 +131,21 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
 
     _tags_arr_size = _n_entries * _bytes_per_tag;
 
+    THROW_ASSERT((_n_entries == (_tags_arr_size / _bytes_per_tag)) &&   //
+                     (_bytes_per_tag == (_tags_arr_size / _n_entries)), //
+                 "ttable too large!");
+
     // bools
     const size_t total_bools = _n_entries * _bools_per_entry;
-    _bools_arr_size = 1 + total_bools / size_in_bits<unsigned int>();
+
+    THROW_ASSERT(LOGICAL_IMPLIES(
+                     (_bools_per_entry != 0),                               //
+                     (_n_entries == (total_bools / _bools_per_entry)) &&    //
+                         (_bools_per_entry == (total_bools / _n_entries))), //
+                 "ttable has too many packed bools!");
+
+    _bools_arr_size = 1 + (total_bools / size_in_bits<unsigned int>());
+
 
     //// Estimate memory cost
     // TODO: DEBUG PRINTING

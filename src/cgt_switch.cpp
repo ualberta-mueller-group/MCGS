@@ -37,7 +37,7 @@ void switch_game::play(const move& m, bw to_play)
 
 void switch_game::undo_move()
 {
-    const int m = cgt_move::decode(last_move());
+    const int m = cgt_move::remove_color(last_move());
     game::undo_move();
 
     assert(is_rational());

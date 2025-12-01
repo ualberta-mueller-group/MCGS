@@ -5,35 +5,44 @@
 #include <iostream>
 #include <string>
 
+#include "basic_player.h"
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
-#include "gen_experiments.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
 #include "search_utils.h"
+#include "clobber.h"
 
-#include "nogo_split_test.h"
 #include "sumgame.h"
+#include "throw_assert.h"
+#include "gen_experiments.h"
+#include "winning_moves.h"
 
 using std::cout, std::endl, std::string;
 
 int main(int argc, char** argv)
 {
+    mcgs_init_1();
+
     cli_options opts = parse_args(argc, (const char**) argv, false);
 
     // i.e. ./MCGS --help
     if (opts.should_exit)
         return 0;
 
-    mcgs_init_all(opts);
+    mcgs_init_2(opts);
 
-    if (opts.nogo_test)
+    if (opts.use_player)
     {
-        nogo_split_test();
+        file_parser* parser = opts.parser.get();
+        THROW_ASSERT(parser != nullptr, "No games specified for player");
+
+        play_games(*parser, opts.play_log_name);
         return 0;
     }
+
 
     if (opts.run_tests)
     {
@@ -42,11 +51,18 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (opts.run_tests_stdin)
+    if (opts.print_winning_moves)
     {
-        run_autotests_stdin(opts.outfile_name, opts.test_timeout);
+        //print_winning_moves_impl(opts.parser);
+        print_winning_moves_new(opts.parser);
         return 0;
     }
+
+    //if (opts.run_tests_stdin)
+    //{
+    //    run_autotests_stdin(opts.outfile_name, opts.test_timeout);
+    //    return 0;
+    //}
 
     if (opts.gen_experiments)
     {
@@ -97,6 +113,7 @@ int main(int argc, char** argv)
 
     if (random_table::did_resize_warning())
         random_table::print_resize_warning();
+
 
     return 0;
 }

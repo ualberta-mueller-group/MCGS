@@ -2,8 +2,8 @@
 // Impartial game - kayles
 //---------------------------------------------------------------------------
 #include "kayles.h"
-#include "cgt_move.h"
 #include "cgt_basics.h"
+#include "cgt_move.h"
 #include "hashing.h"
 
 #include <ostream>
@@ -17,15 +17,15 @@ move kayles::encode(int take, int smaller, int larger)
     assert(take == 1 || take == 2);
     assert(larger >= smaller);
     int first = 2 * smaller + take - 1;
-    return cgt_move::two_part_move(first, larger);
+    return cgt_move::move2_create(first, larger);
 }
 
 // Decode move back to triple (take, smaller, larger)
 void kayles::_decode(move m, int& take, int& smaller, int& larger)
 {
-    larger = cgt_move::second(m);
+    larger = cgt_move::move2_get_part_2(m);
     assert(larger >= 0);
-    int f = cgt_move::first(m);
+    int f = cgt_move::move2_get_part_1(m);
     smaller = f / 2;
     assert(smaller >= 0);
     assert(larger >= smaller);
@@ -47,7 +47,7 @@ void kayles::play(const move& m)
 
 void kayles::undo_move()
 {
-    const move m = cgt_move::decode(last_move());
+    const move m = cgt_move::remove_color(last_move());
     game::undo_move();
     int take, smaller, larger;
     _decode(m, take, smaller, larger);
@@ -60,7 +60,7 @@ void kayles::print(std::ostream& str) const
     str << "kayles: " << _value;
 }
 
-void kayles::print_move(move m, std::ostream& str)
+void kayles::print_kayles_move(move m, std::ostream& str)
 {
     int take, smaller, larger;
     _decode(m, take, smaller, larger);
@@ -91,14 +91,18 @@ relation kayles::_order_impl(const game* rhs) const
 split_result kayles::_split_impl() const
 {
     assert(_value >= _smaller_part);
-    split_result result = split_result(vector<game*>());
-    if (_value > 0) // At least one subgame left
+    assert(_smaller_part >= 0);
+    if (_smaller_part == 0)
+        return {};
+    else // two subgames
     {
-        result->push_back(new kayles(_value));
-        if (_smaller_part > 0) // two subgames
-            result->push_back(new kayles(_smaller_part));
+        split_result sr = split_result(vector<game*>());
+        sr->push_back(new kayles(_value));
+        sr->push_back(new kayles(_smaller_part));
+        kayles& nc_kayles = const_cast<kayles&>(*this);
+        nc_kayles._smaller_part = 0;
+        return sr;
     }
-    return result;
 }
 
 // Values from https://en.wikipedia.org/wiki/Kayles

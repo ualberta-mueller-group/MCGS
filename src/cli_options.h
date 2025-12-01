@@ -8,6 +8,8 @@
 #include <string>
 #include <exception>
 
+#include "init_database.h"
+
 /*
     Variables resulting from command line options. "parser" may be nullptr
 */
@@ -23,14 +25,24 @@ struct cli_options
     bool gen_experiments;
 
     bool run_tests;       // Run autotests
-    bool run_tests_stdin; // Run autotests from stdin
+    //bool run_tests_stdin; // Run autotests from stdin
 
-    bool nogo_test;
+    bool use_player;
+
+    bool print_winning_moves;
 
     std::string test_directory;
     std::string outfile_name;        // CSV output file
     unsigned long long test_timeout; // ms
 
+    std::string play_log_name;
+
+    std::string db_file_name;
+    init_database_enum init_database_type;
+    std::string db_config_string;
+
+
+    static constexpr const char* DEFAULT_RELATIVE_DB_FILE = "database.bin";
     static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";
     static constexpr const char* DEFAULT_TEST_OUTFILE = "out.csv";
     static constexpr const unsigned long long DEFAULT_TEST_TIMEOUT = 500;

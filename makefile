@@ -1,4 +1,25 @@
 CC = c++
+LAB_COMPAT ?= 0
+
+
+EMCC_COMPILE_FLAGS :=
+EMCC_LINK_FLAGS :=
+EMCC_EXTENSION :=
+
+ifneq (,$(filter $(WASM),1 true))
+	#EMCC_COMPILE_FLAGS := -sNO_DISABLE_EXCEPTION_CATCHING
+	EMCC_LINK_FLAGS := -lembind -sALLOW_MEMORY_GROWTH -sMAXIMUM_MEMORY=4GB --preload-file database.bin --preload-file input -sEXPORTED_RUNTIME_METHODS=FS
+	EMCC_EXTENSION := .js
+	CC = em++
+endif
+
+
+# If --output-sync is supported, use it for recursive make calls.
+# This will make compiler errors clearer i.e. if using make -j <N_JOBS>
+SYNC_FLAG :=
+ifneq (,$(findstring output-sync,$(.FEATURES)))
+	SYNC_FLAG := --output-sync=recurse
+endif
 
 ##### Handle compiler flags, especially those for debugging.
 ##### See documentation below this section.
@@ -30,8 +51,19 @@ ifneq (,$(filter $(ASAN),leak address)) # ASAN=leak or ASAN=address
 	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN)
 endif
 
-NORMAL_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
-TEST_FLAGS_BASE = -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST)
+NORMAL_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS)
+TEST_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST)
+
+ifneq (,$(filter $(WASM),1 true))
+	NORMAL_FLAGS_BASE := $(filter-out -pthread,$(NORMAL_FLAGS_BASE))
+	TEST_FLAGS_BASE := $(filter-out -pthread,$(TEST_FLAGS_BASE))
+endif
+
+
+ifneq (,$(filter $(LAB_COMPAT),1 true))
+	NORMAL_FLAGS_BASE := $(NORMAL_FLAGS_BASE) -DLAB_MACHINE_COMPAT
+	TEST_FLAGS_BASE := $(TEST_FLAGS_BASE) -DLAB_MACHINE_COMPAT
+endif
 
 
 #         Makefile Variables
@@ -84,10 +116,13 @@ TEST_DIR = test
 RELEASE_BUILD_DIR = build/release
 TEST_BUILD_DIR = build/test
 
+# using -j <N_JOBS> with --output-sync makes programs think they're not outputting
+# to a terminal, so they don't print color...
+COLOR_FLAGS := -fdiagnostics-color=always
 INC = -I. -I$(SRC_DIR)
 
-NORMAL_FLAGS := $(NORMAL_FLAGS_BASE) $(INC)
-TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC)
+NORMAL_FLAGS := $(NORMAL_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
+TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
 
 # args: files, directory prefix, file extension
 FN_OUTPATH = \
@@ -152,25 +187,25 @@ endif
 tidy:
 	$(eval LINT_FILES ?= $(ALL_CPP_FILES))
 	$(eval NORMAL_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(NORMAL_FLAGS)))
-	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS) -x c++ 2>&1 | tee tidy_result.txt
 
 #$(eval LINT_FILES ?= $(MCGS_SRC) $(MCGS_SRC_H))
 tidy_release:
 	$(eval LINT_FILES ?= $(MCGS_SRC))
 	$(eval NORMAL_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(NORMAL_FLAGS)))
-	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(NORMAL_FLAGS) -x c++ 2>&1 | tee tidy_result.txt
 
 #$(eval LINT_FILES ?= $(MCGS_TEST_SRC) $(MCGS_TEST_SRC_H))
 tidy_test:
 	$(eval LINT_FILES ?= $(MCGS_TEST_SRC))
 	$(eval TEST_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(TEST_FLAGS)))
-	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS)  -x c++ 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG) $(LINT_FILES) -- $(TEST_FLAGS) -x c++ 2>&1 | tee tidy_result.txt
 
 tidy_headers:
 	$(eval LINT_FILES ?= $(ALL_SRC_FILES))
 	$(eval LINT_FILES := $(filter %.h, $(LINT_FILES)))
 	$(eval NORMAL_FLAGS := $(call FN_TIDY_DEBUG_FLAGS,$(NORMAL_FLAGS)))
-	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS)  -x c++-header 2>&1 | tee tidy_result.txt
+	@clang-tidy --config-file=$(TIDY_CONFIG_HEADERS) $(LINT_FILES) -- $(NORMAL_FLAGS) -x c++-header 2>&1 | tee tidy_result.txt
 
 
 # Format targets
@@ -193,26 +228,26 @@ find_todo:
 
 ifeq ($(CAN_BUILD), 1)
 MCGS: $(MCGS_OBJS)
-	$(CC) $(USE_FLAGS) $^ -o $@
+	$(CC) $(USE_FLAGS) $^ -o $@$(EMCC_EXTENSION) $(EMCC_LINK_FLAGS) $(EMCC_COMPILE_FLAGS)
 
 MCGS_test: $(MCGS_TEST_OBJS)
-	$(CC) $(USE_FLAGS) $^ -o $@
+	$(CC) $(USE_FLAGS) $^ -o $@$(EMCC_EXTENSION) $(EMCC_LINK_FLAGS) $(EMCC_COMPILE_FLAGS)
 
 else
 .PHONY: MCGS MCGS_test
 
 MCGS:
-	$(MAKE) $@ USE_FLAGS="$(NORMAL_FLAGS)" DEPS="$(MCGS_DEPS)" BUILD_DIR="$(RELEASE_BUILD_DIR)"
+	$(MAKE) $(SYNC_FLAG) $@ USE_FLAGS="$(NORMAL_FLAGS)" DEPS="$(MCGS_DEPS)" BUILD_DIR="$(RELEASE_BUILD_DIR)"
 
 MCGS_test:
-	$(MAKE) $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)" BUILD_DIR="$(TEST_BUILD_DIR)"
+	$(MAKE) $(SYNC_FLAG) $@ USE_FLAGS="$(TEST_FLAGS)" DEPS="$(MCGS_TEST_DEPS)" BUILD_DIR="$(TEST_BUILD_DIR)"
 
 endif
 
 
 # Simple targets
 clean:
-	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM *.d main/*.d test/*.d
+	-rm -r *.o main/*.o test/*.o MCGS MCGS_test MCGS_test.dSYM *.d main/*.d test/*.d MCGS.wasm MCGS.js MCGS.data
 	-rm -rf build
 
 test: MCGS_test
@@ -226,7 +261,7 @@ test-fast: MCGS_test
 # TODO should this call mkdir like this? There's probably a better way
 $(BUILD_DIR)/%.o: %.cpp
 	-mkdir -p $(dir $@)
-	$(CC) $(USE_FLAGS) -x c++ -MMD -MP -c $< -o $@
+	$(CC) $(USE_FLAGS) -x c++ -MMD -MP -c $< -o $@ $(EMCC_COMPILE_FLAGS)
 
 
 -include $(DEPS)

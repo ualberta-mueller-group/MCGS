@@ -2,6 +2,7 @@
 // Simple combinatorial games - integers
 //---------------------------------------------------------------------------
 #include "cgt_integer_game.h"
+#include "cgt_move.h"
 #include <cassert>
 #include <ostream>
 

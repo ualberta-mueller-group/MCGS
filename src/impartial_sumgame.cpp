@@ -3,16 +3,21 @@
 //---------------------------------------------------------------------------
 #include "impartial_sumgame.h"
 
-#include "cgt_nimber.h"
-#include "game.h"
-#include "impartial_game.h"
-#include "sumgame.h"
-#include "alternating_move_game.h"
-#include <thread>
-#include <future>
 #include <chrono>
 #include <cstddef>
 #include <cassert>
+
+#ifndef __EMSCRIPTEN__
+#include <thread>
+#include <future>
+#endif
+
+#include "alternating_move_game.h"
+#include "cgt_nimber.h"
+#include "game.h"
+#include "impartial_game.h"
+#include "solver_stats.h"
+#include "sumgame.h"
 
 namespace {
 
@@ -26,6 +31,8 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
     int sum_nim_value = 0;
 
     impartial_tt& tt = tt_optional.value();
+
+    stats::inc_node_count();
 
     for (game* g : s.subgames())
     {
@@ -66,6 +73,7 @@ int search_impartial_sumgame(const sumgame& s)
     return result;
 }
 
+#ifndef __EMSCRIPTEN__
 std::optional<int> search_impartial_sumgame_with_timeout(
     const sumgame& s, unsigned long long timeout)
 {
@@ -109,6 +117,26 @@ std::optional<int> search_impartial_sumgame_with_timeout(
     assert(value >= 0);
     return std::optional<int>(value);
 }
+#else
+// TODO emscripten pthreads
+std::optional<int> search_impartial_sumgame_with_timeout(
+    const sumgame& s, unsigned long long timeout)
+{
+    bool over_time = false;
+
+    assert_restore_sumgame ars(s);
+
+    for (game* g : s.subgames())
+        g->normalize();
+
+    int result = search_impartial_sumgame_cancellable(s, over_time);
+
+    for (game* g : s.subgames())
+        g->undo_normalize();
+
+    return result;
+}
+#endif
 
 void init_impartial_sumgame_ttable(size_t idx_bits)
 {

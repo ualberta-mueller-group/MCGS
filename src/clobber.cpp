@@ -1,18 +1,36 @@
 #include "clobber.h"
 #include "cgt_basics.h"
 #include <ostream>
+#include "cgt_move.h"
 #include "game.h"
 #include "grid.h"
 #include <string>
-#include "cgt_move.h"
 #include <cstddef>
 #include <cassert>
 #include <algorithm>
 #include <utility>
 #include <vector>
+#include "grid_hash.h"
 #include "grid_location.h"
+#include "print_move_helpers.h"
+#include "throw_assert.h"
 
 using namespace std;
+
+////////////////////////////////////////////////// helpers
+namespace {
+
+// TODO number of bits is decreasing...
+
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x))
+            return false;
+    return true;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////// move generator
 class clobber_move_generator : public move_generator
@@ -35,47 +53,79 @@ private:
     size_t _dir_idx;
 
     int _location_point;
+
+    grid_location _target_location;
     int _target_point;
     bool _has_move;
 };
 
 ////////////////////////////////////////////////// clobber
-clobber::clobber(int n_rows, int n_cols) : grid(n_rows, n_cols)
+clobber::clobber(int n_rows, int n_cols) : grid(n_rows, n_cols, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(grid_hash_mask<clobber>())
+#endif
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
-clobber::clobber(const vector<int>& board, int_pair shape) : grid(board, shape)
+clobber::clobber(const vector<int>& board, int_pair shape)
+    : grid(board, shape, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(grid_hash_mask<clobber>())
+#endif
+
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
-clobber::clobber(const string& game_as_string) : grid(game_as_string)
+clobber::clobber(const string& game_as_string)
+    : grid(game_as_string, GRID_TYPE_COLOR)
+#ifdef USE_GRID_HASH
+      , _gh(grid_hash_mask<clobber>())
+#endif
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 void clobber::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int from = cgt_move::from(m);
-    const int to = cgt_move::to(m);
+    int_pair from_coord, to_coord;
+    cgt_move::move4_unpack_coords(m, from_coord, to_coord);
+
+    const int from_point = grid_location::coord_to_point(from_coord, shape());
+    const int to_point = grid_location::coord_to_point(to_coord, shape());
 
     const bw opp = opponent(to_play);
-    assert(checked_is_color(from, to_play));
-    assert(checked_is_color(to, opp));
+    assert(checked_is_color(from_point, to_play));
+    assert(checked_is_color(to_point, opp));
 
     if (_hash_updatable())
     {
         local_hash& hash = _get_hash_ref();
-        hash.toggle_value(2 + from, to_play);
-        hash.toggle_value(2 + to, opp);
 
-        hash.toggle_value(2 + from, EMPTY);
-        hash.toggle_value(2 + to, to_play);
+#ifdef USE_GRID_HASH
+        _gh.toggle_value(from_coord, to_play);
+        _gh.toggle_value(to_coord, opp);
+
+        _gh.toggle_value(from_coord, EMPTY);
+        _gh.toggle_value(to_coord, to_play);
+
+        hash.__set_value(_gh.get_value());
+#else
+        hash.toggle_value(2 + from_point, to_play);
+        hash.toggle_value(2 + to_point, opp);
+
+        hash.toggle_value(2 + from_point, EMPTY);
+        hash.toggle_value(2 + to_point, to_play);
+#endif
+
         _mark_hash_updated();
     }
 
-    replace(from, EMPTY);
-    replace(to, to_play);
+    replace(from_point, EMPTY);
+    replace(to_point, to_play);
 }
 
 void clobber::undo_move()
@@ -83,28 +133,44 @@ void clobber::undo_move()
     const ::move m_enc = last_move();
     game::undo_move();
 
-    bw to_play;
-    int to;
-    int from = cgt_move::decode3(m_enc, &to, &to_play);
+    bw to_play = cgt_move::get_color(m_enc);
+
+    int_pair from_coord, to_coord;
+    cgt_move::move4_unpack_coords(m_enc, from_coord, to_coord);
+
+    const int from_point = grid_location::coord_to_point(from_coord, shape());
+    const int to_point = grid_location::coord_to_point(to_coord, shape());
 
     const bw opp = opponent(to_play);
 
-    assert(checked_is_color(from, EMPTY));
-    assert(checked_is_color(to, to_play));
+    assert(checked_is_color(from_point, EMPTY));
+    assert(checked_is_color(to_point, to_play));
 
     if (_hash_updatable())
     {
+        // TODO hard coded "2" should go away...
         local_hash& hash = _get_hash_ref();
-        hash.toggle_value(2 + from, EMPTY);
-        hash.toggle_value(2 + to, to_play);
 
-        hash.toggle_value(2 + from, to_play);
-        hash.toggle_value(2 + to, opp);
+#ifdef USE_GRID_HASH
+        _gh.toggle_value(from_coord, EMPTY);
+        _gh.toggle_value(to_coord, to_play);
+
+        _gh.toggle_value(from_coord, to_play);
+        _gh.toggle_value(to_coord, opp);
+
+        hash.__set_value(_gh.get_value());
+#else
+        hash.toggle_value(2 + from_point, EMPTY);
+        hash.toggle_value(2 + to_point, to_play);
+
+        hash.toggle_value(2 + from_point, to_play);
+        hash.toggle_value(2 + to_point, opp);
+#endif
         _mark_hash_updated();
     }
 
-    replace(from, to_play);
-    replace(to, opp);
+    replace(from_point, to_play);
+    replace(to_point, opp);
 }
 
 bool clobber::is_move(const int& from, const int& to, bw to_play) const
@@ -334,6 +400,14 @@ split_result clobber::_split_impl() const
     return result;
 }
 
+#ifdef USE_GRID_HASH
+void clobber::_init_hash(local_hash& hash) const
+{
+    _gh.init_from_grid(*this);
+    hash.__set_value(_gh.get_value());
+}
+#endif
+
 move_generator* clobber::create_move_generator(bw to_play) const
 {
     return new clobber_move_generator(*this, to_play);
@@ -342,6 +416,12 @@ move_generator* clobber::create_move_generator(bw to_play) const
 void clobber::print(ostream& str) const
 {
     str << "clobber:" << board_as_string();
+}
+
+void clobber::print_move(std::ostream& str, const ::move& m) const
+{
+    // (from, to)
+    print_move4_as_coords(str, m, shape());
 }
 
 game* clobber::inverse() const
@@ -356,6 +436,7 @@ clobber_move_generator::clobber_move_generator(const clobber& game, bw to_play)
       _location(game.shape()),
       _dir_idx(0),
       _location_point(0),
+      _target_location(game.shape()),
       _target_point(0),
       _has_move(false)
 {
@@ -377,9 +458,12 @@ clobber_move_generator::operator bool() const
 ::move clobber_move_generator::gen_move() const
 {
     assert(*this);
-    assert(_location.valid());
+    assert(_location.valid() && _target_location.valid());
 
-    return cgt_move::two_part_move(_location_point, _target_point);
+    const int_pair& from_coords = _location.get_coord();
+    const int_pair& to_coords = _target_location.get_coord();
+
+    return cgt_move::move4_create_from_coords(from_coords, to_coords);
 }
 
 void clobber_move_generator::_next_move(bool init)
@@ -401,10 +485,16 @@ void clobber_move_generator::_next_move(bool init)
     {
         const grid_dir dir = GRID_DIRS_CARDINAL[_dir_idx];
 
-        bool valid_neighbor = _location.get_neighbor_point(_target_point, dir);
+        _target_location.set_coord(_location.get_coord());
+        assert(_target_location.valid());
+
+        bool valid_neighbor = _target_location.move(dir);
+
         if (valid_neighbor)
         {
             _location_point = _location.get_point();
+            _target_point = _target_location.get_point();
+
             _has_move = _game.is_move(_location_point, _target_point, player);
         }
 

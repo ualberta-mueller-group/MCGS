@@ -14,6 +14,7 @@ This document includes more detailed information than `README.md`, including des
 - [Random (`random.h`)](#random-randomh)
 - [Hashing (`hashing.h`)](#hashing-hashingh)
 - [Adding Hashing To Games](#adding-hashing-to-games)
+- [Grid/Strip Generators, and Grid Game Hashes](#gridstrip-generators-and-grid-game-hashes)
 - [Transposition Tables (`transposition.h`)](#transposition-tables-transpositionh)
 - [Database (`database.h`, `global_database.h`)](#database-databaseh-global_databaseh)
 - [Adding A Game To the Database](#adding-a-game-to-the-database)
@@ -22,6 +23,7 @@ This document includes more detailed information than `README.md`, including des
 - [Sumgame Simplification (cgt_game_simplification.h)](#sumgame-simplification-cgt_game_simplificationh)
 - [Bounds (`bounds.h`)](#bounds-boundsh)
 - [Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)](#serialization-iobufferh-serializerh-dynamic_serializableh)
+- [Unused `game::_order_impl` Method](#unused-game_order_impl-method)
 - [Outstanding Issues](#outstanding-issues)
 - [Design Choices and Remaining Uglinesses](#design-choices-and-remaining-uglinesses)
 - [Misc Future Optimizations](#misc-future-optimizations)
@@ -29,6 +31,7 @@ This document includes more detailed information than `README.md`, including des
 - [Versions](#versions)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 # Search and Solving a Game
 - Two classes implement minimax game solving: `alternating_move_game` and `sumgame`
@@ -101,15 +104,6 @@ data, from the global database object (`get_global_database()` in
 ## Solver Stats
 During search, `sumgame::_solve_with_timeout()` records events using the global
 instance of the `solver_stats` class (defined in `solver_stats.h`).
-
-This includes:
-- Node count (calls to `sumgame::_solve_with_timeout`)
-- Transposition table lookup hit/miss count
-- Database lookup hit/miss count
-- Maximum search depth
-
-TODO: These are currently only printed to csv output for the experiments in the paper,
-and are discarded for other tests i.e. `./MCGS --run-tests`
 
 # More On Data Types
 
@@ -197,12 +191,8 @@ It derives from `alternating_move_game` and reimplements the
     - Represented as `int_pair` (typedef for `std::pair<int, int>`, defined in the header)
 - Implements `game::_init_hash()` and `game::_order_impl()` analogously to `strip`
 - Does not implement `game::_normalize_impl()` or `game::_undo_normalize_impl()`
-    - TODO: In most cases there are 8 equal representations of a grid
-    (4 rotations, and their transposes). We could make `grid` maintain some
-    subset of these 8, whenever it modifies the state, and have `_normalize_impl()`
-    simply change which of them is the currently "active" board. This could be
-    reasonably fast if we maintain hashes for the boards as they're modified, and
-    pick the one with the smallest hash to be the active one?
+    - Grid games should manage their own `grid_hash` objects to map equivalent
+      (by symmetry) boards to the same local hash values.
 
 ## `grid_location` class (`grid_location.h`)
 - Utility class for manipulating locations on a `grid`
@@ -272,10 +262,10 @@ as there are several similar looking functions?
     - TODO: perhaps we should evaluate this lazily?
 
 
-
 # More On Extending the `game` Class
 - In every game `x`'s implementation:
     - `x::play()` must immediately call `game::play()`
+        - For impartial games, call `impartial_game::play()` instead
     - `x::undo_move()` must immediately call `last_move()` and then `game::undo_move()`
 - Move generators are accessible only through the abstract game interface `create_move_generator`
     - Generators are dynamically allocated - wrap each use in a `std::unique_ptr`
@@ -301,6 +291,10 @@ and affects the `move` returned by `game::last_move()`
 - Impartial games support added in version 1.2
 - Main differences between `impartial_game` and `game`:
     1. `play(m)` does not take a color argument
+        - Must still implement both `play(m)` and `play(m, to_play)`, possibly
+        with one calling the other
+        - Instead of calling `game::play()` at the start,
+        call `impartial_game::play()`
     2. `move_generator` does not take a color argument
     3. Completely different solving algorithms:
         - Evaluate any impartial game to a nim value
@@ -384,23 +378,27 @@ The macros at the bottom of `global_options.cpp` initialize the `_name` field
 to the name of the variable in the source code.
 
 # Initialization (`mcgs_init.h`)
-Executables based on the C++ source code must call one of the `mcgs_init_all()`
-or `mcgs_init_all(const cli_options& opts)` functions after (optionally)
-parsing command-line arguments. These functions initialize core data structures
-and global variables. Global variables should be initialized from `mcgs_init_all()`
-to avoid "Static Initialization Order Fiasco" problems, as the initialization
-order of global variables in C++ is undefined across translation units.
+Executables based on the C++ source code must immediately call
+`void mcgs_init_1()`, then (optionally) handle CLI options, and then call one of
+`void mcgs_init_2()` or `void mcgs_init_2(const cli_options&)`. These functions
+initialize core data structures and global variables. Global variables should
+be initialized from one of these functions to avoid "Static Initialization Order
+Fiasco" problems, as the initialization order of global variables in C++ is
+undefined across translation units.
 
-Things initialized by `mcgs_init_all`:
+`mcgs_init_1` initializes lookup tables used for color/char conversions.
+
+Things initialized by `mcgs_init_2` functions:
+- `grid_hash` masks stored in grid games' `type_table_t` structs
 - Serialization bookkeeping (for polymorphic types)
     - This is currently implemented but unused
 - `random.h`'s random seed and global `random_generator`
 - Global `random_table`s
 - `sumgame`'s transposition table
 - `impartial_sumgame.h`'s transposition table
-- The global `database` is initialized, either by loading `database.bin` if it
-    exists, or by creating it (generating all database entries)
-- In the future, will assign `game_type_t`s to specific games, so that their
+- The global `database` is initialized, by loading `database.bin` or a specified
+  database file (if exists)
+- In the future, may assign `game_type_t`s to specific games, so that their
 assignments are not dependent on input
 
 # Random (`random.h`)
@@ -513,6 +511,9 @@ Methods:
     - Reset the hash to 0
 - `get_value()`
     - Get the current `hash_t` value
+- `__set_value(hash_t new_value)`
+    - Used by grid games which compute their local hash values using a `grid_hash`.
+      Should be called with the value of `grid_hash::get_value()`
 
 ## `global_hash` Class
 Manages the `hash_t` of a `sumgame`.
@@ -523,7 +524,7 @@ of this value is described below.
 
 To compute the `global_hash` value for a `sumgame` `S`:
 1. Normalize each `game` of `S` by calling `game::normalize()`
-2. Sort the `game`s of `S` according to `game::order()` so that each `game` `g_i` has a subgame index `i`
+2. Sort the `game`s of `S` according to their `get_local_hash()` values so that each `game` `g_i` has a subgame index `i`
 3. For each `g_i`, get its `local_hash` value `h_i`
 4. For each `h_i`, compute a modified hash `H_i := hmod(h_i, i)`, for some hash modifier function `hmod`
     - The actual `hmod` function is `H_i := RANDOM_TABLE_MODIFIER[i, h_i]`
@@ -558,6 +559,9 @@ Important:
 2. A game's `undo_move` method must call `game::undo_move` at the START of the method (after getting the last move from the stack)
 
 This is because these base class methods do some record keeping around local hashes.
+
+NOTE: For details on dealing with grid game symmetry, see
+[grid_hash (`grid_hash.h`)](#grid_hash-grid_hashh) after reading this section.
 
 ## 1. Mandatory `_init_hash` Method
 All games must implement `game::_init_hash(local_hash& hash)`. In this method,
@@ -650,40 +654,229 @@ void game::_normalize_impl()
 }
 ```
 
-## 4: Optional `_order_impl` Method
-Games can optionally implement `game::_order_impl(const game* rhs)`. `rhs` always
-has the same type as `this` -- the argument passed to `clobber_1xn::_order_impl` is always a `const clobber_1xn*`,
-and must be casted from `const game*` in the method.
+# Grid/Strip Generators, and Grid Game Hashes
+The following subsections describe helper classes which may be useful for grid
+and strip games. The final subsection on `grid_generator`s is applicable to both
+grid and strip games, and preceding subsections describe helper classes which
+are applicable to `grid_generator`s and grid games, but are unlikely to be
+directly used by strip games.
 
-The returned value is a `relation` enum value (`cgt_basics.h`), and should have one of the
-following values:
-- `REL_LESS`
-- `REL_EQUAL`
-- `REL_GREATER`
-- `REL_UNKNOWN`
-    - This is returned by `game`'s default implementation
+## grid_hash (`grid_hash.h`)
+The `grid_hash` class is used to compute local hashes for grids and grid games
+which have rotational and/or transpose symmetry. It owns and manages 8
+`local_hash` objects, one for each possible orientation of a grid. It computes
+the local hashes for all specified orientations of a grid, and takes the
+minimum as the final value.
 
-i.e. return `REL_LESS` if `this` is lexicographically less than `rhs`.
+For example, given the first Clobber board in the list below, its local hash is
+computed along with those for the 7 boards  below it (obtained by
+rotating/transposing the first board), and the final hash value is defined to
+be the minimum of all 8:
+- "XO.|.X."
+- ".X|XO|.."
+- ".X.|.OX"
+- "..|OX|X."
+- "X.|OX|.."
+- ".X.|XO."
+- "..|XO|.X"
+- ".OX|.X."
 
-Example in `integer_game` (note the cast):
+- Construct a `grid_hash` with a bit mask indicating which orientations of
+  grids should be mapped to the same hash values.
+    - Indices of bits in the mask are specified by the `grid_hash_orientation`
+      enum.
+    - The name of each enum value indicates a clockwise rotation in degrees,
+      optionally followed by a transpose operation. i.e.
+      `GRID_HASH_ORIENTATION_180T` denotes a 180 degree clockwise rotation
+      followed by a transpose.
+    - Common grid hash masks are provided by `grid_hash.h` as constants.
+        - `GRID_HASH_ACTIVE_MASK_IDENTITY` indicates that a grid game has no
+          symmetry. It is equivalent to computing local hashes
+          without using a `grid_hash`, and is used by no games.
+        - `GRID_HASH_ACTIVE_MASK_ALL` indicates that all 8 orientations are
+          equivalent. Used by Clobber, NoGo, and Amazons.
+        - `GRID_HASH_ACTIVE_MASK_MIRRORS` indicates that boards obtained
+          through vertical and/or horizontal mirroring are equivalent. Used by
+          Domineering and Fission.
+- Grid games using `grid_hash` should store their grid hash mask globally by
+  initializing it in `init_grid_hash_mask.cpp`. This will store it in the
+  game's `type_table_t` struct. It can then be accessed by the
+  `grid_hash_mask<Game_T>()` template function.
+- There are two ways to compute the local hash of a grid game using
+  `grid_hash`. Do one of the following two options and then call the
+  `grid_hash::get_value()` method to get the final local hash value, then
+  call the `local_hash::__set_value()` method with this hash value (i.e. in your
+  game's `_init_hash`, `play`, and `undo_move` methods).
+   1. Call the `grid_hash::init_from_board_and_type<T>()` template method.
+       - Template parameter `T` denotes the type of element inside the grid's
+         board. For most games, `T` is `int`.
+       - Method arguments are the board contents (in a flattened row-major
+         representation), board dimensions, and the `game_type_t` of the grid
+         game.
+   2. Manually reimplement option 1 if your game's board is split across
+      several `vector`s. NoGo does this because each board location has a stone
+      color and metadata indicating stones which are "immortal", and these
+      are stored in separate `vector`s of the same size. Steps:
+      1. Call the `grid_hash::reset` method with the grid dimensions of your
+         game.
+      2. Call the `grid_hash::toggle_type` method with the `game_type_t` of your
+         game.
+      3. Call the `grid_hash::toggle_value` method for each element in the grid,
+         indicating the (0-indexed) row and column coordinates in the original
+         grid.
+
+NOTE: grid hash masks must have the `GRID_HASH_ORIENTATION_0` bit set to 1 (a
+board must be equivalent to itself), AND the set of masked orientations must
+be "complete" in that every masked orientation must result in another masked
+orientation after applying any of the masked transformations. For example, a mask
+with only `0` and `90` is illegal, because `90` requires `180` and `270` to
+be set as well. There is currently no assertion to check for the latter of
+these two conditions.
+
+
+## grid_mask (`grid_mask.h`)
+A `grid_mask` provides a bit mask over grids, and a way to iterate over all
+such masks for given fixed grid dimensions.
+
+- Construct a `grid_mask` with a grid hash mask indicating symmetries to prune.
+- The `set_shape()` method must be called with the grid dimensions of the
+  masks you want to generate.
+- A mask is skipped if its `grid_hash` value matches a previously generated
+  mask. Use the `reset()` method to forget all previously generated masks.
+  - Calling `set_shape(int_pair(3, 3))` and iterating over all 3x3 masks, then
+    attempting the same process again without first calling `reset()`,
+    will produce no masks.
+- The `get_mask()` method returns a const reference to the current mask, in a
+  flattened row-major representation.
+- Use `operator bool` to see if the current state is valid, and `operator++` to
+  go to the next mask.
+  - All masks with `N` `true` bits are generated before generating all masks
+    with `N+1` `true` bits.
+
+Example mask sequence when constructing with the grid hash mask
+`GRID_HASH_ACTIVE_MASK_ALL` and calling `set_shape(int_pair(2, 2))`:
+- `[0, 0, 0, 0]`
+- `[1, 0, 0, 0]`
+- skipped: `[0, 1, 0, 0]`
+- skipped: `[0, 0, 1, 0]`
+- skipped: `[0, 0, 0, 1]`
+- `[1, 1, 0, 0]`
+- skipped: `[1, 0, 1, 0]`
+- `[1, 0, 0, 1]`
+- skipped: `[0, 1, 1, 0]`
+- skipped: `[0, 1, 0, 1]`
+- skipped: `[0, 0, 1, 1]`
+- `[1, 1, 1, 0]`
+- skipped: `[1, 1, 0, 1]`
+- skipped: `[1, 0, 1, 1]`
+- skipped: `[0, 1, 1, 1]`
+- `[1, 1, 1, 1]`
+
+If `GRID_HASH_ACTIVE_MASK_IDENTITY` is used instead, the skipped masks will
+be generated too.
+
+## grid_generator (`grid_generator.h`)
+The `i_grid_generator` interface class is similar to other generators in MCGS,
+i.e. `move_generator`, and is used for generating all strips or grids up to some
+maximum size. Use `operator bool` to see if the current state is valid,
+and methods `gen_board()` and `get_shape()` to get the current grid contents
+and dimensions (in a flattened row-major format), and use `operator++` to
+advance to the next grid.
+
+- `only_strips()` method indicates whether or not the generator will only
+  produce boards having at most 1 row.
+- The interface class defines `static` helper functions for incrementing grid
+  dimensions. See comments in `grid_generator.h`.
+
+- Two classes implement the `i_grid_generator` interface: `grid_generator`
+  (`grid_generator.h`), and `sheep_grid_generator` (`sheep_grid_generator.h`).
+
+`grid_generator` has two constructors with several arguments:
+- Arguments common to both constructors:
+    - `const int_pair& max_dims` dimensions of largest grid to generate. For
+      non-strips, the order of dimensions does not matter, i.e. `{2, 3}`
+      produces the same behavior as `{3, 2}`. Dimension increments may either
+      swap the current dimensions, or increment one of them (unless
+      `strips_only` is `true`, in which case the row dimension is always 1 after
+      the initial 0x0 board).
+    - `const std::vector<int>& tile_sequence` sequence of colors for each grid
+      location.
+    - `bool strips_only` indicates whether only strips should be generated, or
+      both strips and grids.
+
+Example output for `grid_generator` using first constructor:
 ```
-relation integer_game::_order_impl(const game* rhs) const
-{
-    const integer_game* other = reinterpret_cast<const integer_game*>(rhs);
-    assert(dynamic_cast<const integer_game*>(rhs) == other);
-
-    const int& val1 = value();
-    const int& val2 = other->value();
-
-    if (val1 != val2)
-        return val1 < val2 ? REL_LESS : REL_GREATER;
-
-    return REL_EQUAL;
-}
+// max_dims = {1, 2}
+// tile_sequence = {EMPTY, BLACK, WHITE}
+// only_strips = false
+""
+"."
+"X"
+"O"
+".."
+".X"
+".O"
+"X."
+"XX"
+"XO"
+"O."
+"OX"
+"OO"
+".|."
+".|X"
+".|O"
+"X|."
+"X|X"
+"X|O"
+"O|."
+"O|X"
+"O|O"
 ```
 
-You can simplify unit tests for ordering by using
-`void order_test_impl(std::vector<game*>& games)` from `test/order_test_utilities.h`.
+- The 2nd constructor enables usage of a `grid_mask`, which serves two purposes:
+  to generate grids in order of increasing/decreasing number of stones, and to
+  prune (some) grids using symmetry.
+    - `bool mask_active_bit` indicates the value of `grid_mask` bit which the
+      `tile_sequence` applies to. For example, to generate Clobber games in
+      order of increasing number of stones, this should be `true`, and to generate
+      NoGo games in order of decreasing number of stones, this should be `false`.
+    - `int mask_inactive_tile` the color applied to the `grid_mask` bit value
+      opposite of `mask_active_bit`.
+    - `unsigned int grid_hash_mask` the symmetry used by the `grid_mask`
+
+Example output for `grid_generator` using second constructor. Lines marked
+as "pruned" would be pruned if `GRID_HASH_ACTIVE_MASK_ALL` were used instead:
+```
+// max_dims = {1, 2}
+// tile_sequece = {BLACK, WHITE}
+// mask_active_bit = true
+// mask_inactive_tile = EMPTY
+// strips_only = false
+// grid_hash_mask = GRID_HASH_ACTIVE_MASK_IDENTITY
+""
+"."
+"X"
+"O"
+".."
+"X."
+"O."
+".X" // pruned
+".O" // pruned
+"XX"
+"XO"
+"OX"
+"OO"
+".|." // pruned
+"X|." // pruned
+"O|." // pruned
+".|X" // pruned
+".|O" // pruned
+"X|X" // pruned
+"X|O" // pruned
+"O|X" // pruned
+"O|O" // pruned
+```
+
 
 # Transposition Tables (`transposition.h`)
 Defines types for transposition tables:
@@ -832,47 +1025,28 @@ implied).
 ## Database Generation
 Several types are used for database generation:
 
-- `grid_generator` (`grid_generator.h`)
-    - See documentation in header file for more details
-    - Interface class for iterating over string representations of grid and
-        strip games
-    - `grid_generator_base` and `grid_generator_masked` are abstract classes
-        implementing some basic functionality
-    - `grid_generator_clobber`, `grid_generator_nogo`, and
-        `grid_generator_default` are non-abstract classes
-    - `grid_generator_clobber` and `grid_generator_nogo` are used to iterate
-        in order of increasing or decreasing number of stones
-    - `grid_generator_default` starts from a board full of `EMPTY` points, and
-        treats the board like a base 3 string, ending with all points being
-        `WHITE`
+- `i_grid_generator` (`grid_generator.h`)
+    - Interface class for generating grids and strips
+    - See [grid_generator (`grid_generator.h`)](#grid_generator-grid_generatorh)
 
-The current non-abstract `grid_generators` take dimensions of a "max shape",
-i.e. `RxC` for non-negative integers `R` (row count) and `C` (column count),
-and generate strings for all grids having a shape less or equal.
-- For max shape `1x1`, the order of shapes is `0x0`, `1x1`
-- For `2x2`, it is `0x0`, `1x1`, `1x2`, `2x1`, `2x2`
-- For `2x1`, `1x2` is omitted, as its width is greater than `2x1`'s
-- Strip game strings are generated by choosing `R` to be 1, so that the
-generated strings don't contain row separators (`SEP` `'|'`)
-
-- `db_game_generator` (`db_game_generator.h`)
+- `i_db_game_generator` (`db_game_generator.h`)
     - Interface class for iterating over games, defining the order of database
-        entry generation. Passed to `database::generate_entries(db_game_generator&)`
-    - `gridlike_db_game_generator<Game_T, Generator_T>`
-        (`gridlike_db_game_generator.h`) is a non-abstract `db_game_generator`
+        entry generation. Passed to `database::generate_entries(i_db_game_generator&)`
+    - `gridlike_db_game_generator<Game_T, gridlike_type>`
+        (`gridlike_db_game_generator.h`) is a non-abstract `i_db_game_generator`
         for grid and strip games
+        - `Game_T` must be some non-abstract game type
+        - `gridlike_type` is a value from the `gridlike_type_enum` enum,
+           specifying whether the game type should be treated like a strip or a
+           grid
+        - Constructor takes a `i_grid_generator*`, which the caller gives up
+          ownership of.
+        - Generates all games produced by the `i_grid_generator` which are
+          legal. Legal games are those which can be constructed without
+          throwing an exception, and, if method `bool Game_T::is_legal() const`
+          exists, the method returns true.
 
-        - `Game_T` must be some non-abstract game derived from `strip` or `grid`
-        - `Generator_T` must be some non-abstract `grid_generator` type
-        - Two constructors: one takes `RxC` max shape, the other takes `C` max
-            columns. The `RxC` constructor is only legal if `Game_T` is derived
-            from `grid`, otherwise a compile time error will be raised
-        - Generates all games in `Generator_T`'s ordering, which are legal.
-            Legal games are those which can be constructed without throwing an
-            exception, and, if method `bool Game_T::is_legal() const` exists,
-            the method returns true.
-
-Given a `db_game_generator`, `database::generate_entries` consumes games from
+Given an `i_db_game_generator`, `database::generate_entries` consumes games from
 the generator, and for each generated game `g`:
 1. `g.split()` is called
 2. If `g` didn't split, `g.normalize()` is called
@@ -889,33 +1063,68 @@ current `grid_generator`s, so boards with meaningful immortal markers are
 found by calling `split()`
 
 # Adding A Game To the Database
-1. In `init_database.cpp`, in the `register_types` function, use the
+If your game is a grid game, first set its grid hash mask in
+`init_grid_hash_mask.cpp`. If your grid game does not use the `grid_hash` class,
+set this value to `GRID_HASH_ACTIVE_MASK_IDENTITY`. This value can later be
+accessed by calling `grid_hash_mask<Game_T>()`, and is stored inside of the game
+class's runtime type info struct (`type_table_t`).
+
+1. In `init_database.cpp`, in the `register_games` function, use the
     `DATABASE_REGISTER_TYPE` macro to make the database aware of your game's
     `game_type_t` value.
 
     - IMPORTANT: write the game class name as it appears, with nothing extra,
         i.e. `clobber` and not `some_namespace::clobber`, because the game name text
         is used to identify `game_type_t`s on disk
-2. In `init_database.cpp`, in the `fill_database` function, add a
-    `db_game_generator` to the `generators` vector
-    - The methods of the `db_game_generator` interface are analogous to those of
-    `move_generator`s. You may be able to reuse
-    `gridlike_db_game_generator<Game_T, Generator_T>` for your game, if it's a `grid` or `strip` game.
-    - The `db_game_generator` should generate each game such that all immediate
-    child positions in the search tree (those reachable by 1 move) will have
-    been previously generated. This is not a hard requirement, but will speed up
-    database generation
-    - Implementing methods `game::_normalize_impl` and
-    `game::_undo_normalize_impl` for your game may reduce the size of the
-    database, and the time required to generate it
-    - You can add impartial games to the database, but currently they will be
-    treated like partizan games. Their entries will only be used by
-    the minimax search of `sumgame`, and will contain outcome classes and not
-    nim values
+2. In the same `register_games` function, call `register_create_game_gen_fn` to
+   register a function which will create a `i_db_game_generator` for your game.
+   - The game name string should probably match the one used for ".test" files.
+   - The registered function should have a signature of `i_db_game_generator*
+     (const config_map&)`, or be of type
+     `std::function<i_db_game_generator*(const config_map&)>`
+   - The caller of the registered function becomes the owner of the returned
+     `i_db_game_generator*`
+   - See `create_game_gen_fn.h` for grid game examples
+       - You may be able to reuse a function from this file. This file defines
+         function templates which return a function when called. The returned
+         function is the one that should be registered.
+   - See the next subsection on `config_map`s
+   - The `i_db_game_generator` should generate each game such that all
+     immediate child positions in the search tree (those reachable by 1 move)
+     will have been previously generated. This is not a hard requirement, but
+     will speed up database generation
+   - Implementing methods `game::_normalize_impl` and
+     `game::_undo_normalize_impl` for your game may reduce the size of the
+     database, and the time required to generate it
+   - You can add impartial games to the database, but currently they will be
+     treated like partizan games. Their entries will only be used by the
+     minimax search of `sumgame`, and will contain outcome classes and not nim
+     values
 
-Recompile, delete `database.bin`, then re-run MCGS, i.e. `./MCGS ""` (note the
-empty game string). This will re-generate the database. Now `sumgame` solve
-methods will use your game's database entries.
+Recompile, then re-run MCGS with `--db-file-create` (see the README for
+examples). Now `sumgame`'s "solve" methods will use the database entries of
+your game (if present in the database file).
+
+## config_map (`config_map.h`)
+`config_map` is a helper class for parsing values from the database config
+string. It's constructed with a substring of the database config string for
+a specific game to be generated. The substring's contents are a series of
+0 or more key/value pairs. Key and value are separated by a '=' character, and
+each pair ends with a mandatory ';' character.
+
+- `get_XYZ(const string& key)` methods return a `std::optional` which holds a
+  value IFF the value string corresponding to the key can be converted to the
+  requested value.
+  - For example, if the `config_map` was constructed with a string
+    "some_key = 4;", then the call `get_int("some_key")` would return a
+    `std::optional<int>` containing the integer `4`.
+  - If instead the string were "some_key = abc;" or "some_other_key = 4;",
+    `get_int("some_key")` would return a `std::optional<int>` holding no value.
+
+- Method `void check_unused_keys()` throws if some key/value pair had no
+  conversion attempted. Used to catch typos in the database config string. This
+  is called automatically during database initialization.
+
 
 # Safe Arithmetic Functions (`safe_arithmetic.h`)
 This section uses the term "wrapping" to mean either underflow or overflow.
@@ -999,12 +1208,13 @@ of the `type_table_t` struct:
 - `dyn_serializable_id_t`, integer with unique value for each serializable
     polymorphic type which has been registered with the serialization system.
     Ignore this for now as it is unused (but implemented)
+- And an `unsigned int` grid hash mask
 - These members should typically not be accessed directly through the struct,
     but rather through methods/functions defined by other files
 
 Allocation of each `type_table_t` is done in this file, but
 allocation/assignment of these integral values is done elsewhere, i.e.
-`game.cpp` and `dynamic_serializable.cpp`:
+`game.cpp`, `dynamic_serializable.cpp`, and `init_grid_hash_mask.cpp`:
 
 - `game.h`/`game.cpp`
     - Defines method `game_type_t game::game_type() const`
@@ -1013,6 +1223,10 @@ allocation/assignment of these integral values is done elsewhere, i.e.
         number depends on the order of `game_type()` calls since the program
         was started
     - The value is stored in the game's `type_table_t`
+
+- `grid_hash.h`
+    - Defines template function `unsigned int grid_hash_mask<Game_T>()`
+    - Value must be initialized in `init_grid_hash_mask.cpp`
 
 NOTE: If any of these methods are called in a constructor that isn't the
 most derived type, i.e. `strip` instead of `nogo_1xn`, then values may be
@@ -1028,6 +1242,9 @@ Restrictions on RTTI methods/functions:
     - For template function, `T` must inherit from `i_type_table` and be non-abstract
 - `game_type()`
     - Method provided by class `game`
+    - For template function, `T` must inherit from `game` and be non-abstract
+- `grid_hash_mask()`
+    - For both method and template function, the value must have been initialized
     - For template function, `T` must inherit from `game` and be non-abstract
 
 `game.h` defines template `T* cast_game<T*>(game*)` acting as a
@@ -1299,6 +1516,44 @@ IDs and disk type IDs. This will allow type registration order to differ
 between the program when it saves the file, and the program when it loads
 the file (i.e. across different release versions of MCGS)
 
+
+# Unused `game::_order_impl` Method
+This section describes an (as of v1.4) unused method.
+
+Games can optionally implement `game::_order_impl(const game* rhs)`. `rhs` always
+has the same type as `this` -- the argument passed to `clobber_1xn::_order_impl` is always a `const clobber_1xn*`,
+and must be casted from `const game*` in the method.
+
+The returned value is a `relation` enum value (`cgt_basics.h`), and should have one of the
+following values:
+- `REL_LESS`
+- `REL_EQUAL`
+- `REL_GREATER`
+- `REL_UNKNOWN`
+    - This is returned by `game`'s default implementation
+
+i.e. return `REL_LESS` if `this` is lexicographically less than `rhs`.
+
+Example in `integer_game` (note the cast):
+```
+relation integer_game::_order_impl(const game* rhs) const
+{
+    const integer_game* other = reinterpret_cast<const integer_game*>(rhs);
+    assert(dynamic_cast<const integer_game*>(rhs) == other);
+
+    const int& val1 = value();
+    const int& val2 = other->value();
+
+    if (val1 != val2)
+        return val1 < val2 ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
+}
+```
+
+You can simplify unit tests for ordering by using
+`void order_test_impl(std::vector<game*>& games)` from `test/order_test_utilities.h`.
+
 # Outstanding Issues
 ## Splitting Can Make Move Ordering Worse
 Splitting into subgames creates move ordering problems in some cases.
@@ -1414,6 +1669,8 @@ a move generator in a `std::unique_ptr`
        ```
        make clean && make DEBUG=1 ASAN=address && ./MCGS --run-tests
        ```
+       Check list of default implementation warnings at the end to see if some
+       games are missing implementations of functions.
     2. Run larger test set with default compilation flags (also quite slow):
        ```
        make clean && make && ./MCGS --run-tests --test-dir input/main_tests
@@ -1555,10 +1812,53 @@ a move generator in a `std::unique_ptr`
 - `split()` and `normalize()` methods improved for some games
 - `clobber` split is always enabled, no longer requiring an additional compilation flag
 
+## Version 1.4 Additions
+### New Features
+- New games (see `input/info.test` for syntax)
+    - Amazons
+    - Domineering
+    - Fission
+    - Battle Sheep
+        - Implementation of: https://www.blueorangegames.com/games/battle-sheep
+    - Toppling Dominoes
+    - Generalized Toads and Frogs
+- Split functions for Amazons, Domineering, and Sheep
+- Basic player. Interactively play games against MCGS with the `--play-mcgs`
+  option!
+    - Optionally log games played to a file, i.e. `--play-log log.txt`
+- Configurable database
+    - `--db-file-create <file name> <DB config string>`
+    - See README for details
+- `--print-winning-moves` CLI option prints winning moves for input sums
+    - Has limitations, see `./MCGS -h`
+- MCGS web site (`docs/index.html`)
+    - Contains computational results
+    - Links to a user guide, our ACG 2025 paper, and our ACG 2025 presentation
+      slides
+- More data in `input` directory
+- Input language version `1.3` --> `1.4`
 
-## After Version 1.3 (Future)
-- Add more games (i.e. Amazons)
-- Simple interactive player
+### Major Code Additions
+- `game::_order_impl` (lexicographic comparison method) is no longer used
+- Refactored `cgt_move.h` and `cgt_basics.h`
+    - `cgt_basics.h` defines colors, and functions to convert between `int` and
+      `char` representations of colors
+    - `cgt_move.h` defines several multi part move functions
+        - Move layout structs simplify the work of adding new multi part moves
+- Grid generator classes merged into one single `grid_generator` class
+    - See development notes for important usage details
+- `grid_hash` class maps grid games having rotation/transpose symmetry to the
+  same local hashes
+  - Manually added to grid games on a per-game basis. See development notes for
+    instructions.
+  - Significantly speeds up database creation for grid games
+  - Decreases the number of entries in the database
+  - Creates more transposition table hits in some cases
+- Experimental WebAssembly build using Emscripten. `WASM=1` makefile variable
+    - Must first copy contents of `utils/wasm` to project root
+
+
+## After Version 1.4 (Future)
 - Improve database
     - Support querying sums
     - Impartial game support

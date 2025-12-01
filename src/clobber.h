@@ -9,6 +9,8 @@
 #include <string>
 #include <ostream>
 
+#include "grid_hash.h"
+
 class clobber : public grid
 {
 public:
@@ -22,11 +24,17 @@ public:
     bool is_move(const int& from, const int& to, bw to_play) const;
 
 protected:
-    // Disabled for now, too slow...
     split_result _split_impl() const override;
+
+#ifdef USE_GRID_HASH
+    void _init_hash(local_hash& hash) const override;
+
+    mutable grid_hash _gh;
+#endif
 
 public:
     move_generator* create_move_generator(bw to_play) const override;
     void print(std::ostream& str) const override;
+    void print_move(std::ostream& str, const move& m) const override;
     game* inverse() const override; // caller takes ownership
 };

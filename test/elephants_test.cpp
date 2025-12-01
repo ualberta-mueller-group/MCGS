@@ -90,12 +90,12 @@ void zero4()
     assert(*mg2);
 
     const move m1 = mg1->gen_move();
-    assert(cgt_move::from(m1) == 0);
-    assert(cgt_move::to(m1) == 1);
+    assert(cgt_move::move2_get_from(m1) == 0);
+    assert(cgt_move::move2_get_to(m1) == 1);
 
     const move m2 = mg2->gen_move();
-    assert(cgt_move::from(m2) == 13);
-    assert(cgt_move::to(m2) == 12);
+    assert(cgt_move::move2_get_from(m2) == 13);
+    assert(cgt_move::move2_get_to(m2) == 12);
 }
 
 void simple1()
@@ -112,7 +112,7 @@ void simple1()
 
     auto add_move = [](vector<move>& vec, int from, int to) -> void
     {
-        vec.push_back(cgt_move::two_part_move(from, to));
+        vec.push_back(cgt_move::move2_create(from, to));
     };
 
     add_move(black_moves, 0, 1);
@@ -142,7 +142,7 @@ void simple2()
 
     auto add_move = [](vector<move>& vec, int from, int to) -> void
     {
-        vec.push_back(cgt_move::two_part_move(from, to));
+        vec.push_back(cgt_move::move2_create(from, to));
     };
 
     add_move(black_moves, 0, 1);
@@ -161,9 +161,9 @@ void manual1()
     elephants pos("X..X.X.O.OO.XX.O");
 
     assert(pos.board_as_string() == "X..X.X.O.OO.XX.O");
-    pos.play(cgt_move::two_part_move(3, 4), BLACK);
+    pos.play(cgt_move::move2_create(3, 4), BLACK);
     assert(pos.board_as_string() == "X...XX.O.OO.XX.O");
-    pos.play(cgt_move::two_part_move(7, 6), WHITE);
+    pos.play(cgt_move::move2_create(7, 6), WHITE);
     assert(pos.board_as_string() == "X...XXO..OO.XX.O");
 }
 
@@ -176,10 +176,10 @@ void undo1()
 {
     elephants pos(".X.O.X..O.O");
 
-    pos.play(cgt_move::two_part_move(1, 2), BLACK);
+    pos.play(cgt_move::move2_create(1, 2), BLACK);
     assert(pos.board_as_string() == "..XO.X..O.O");
 
-    pos.play(cgt_move::two_part_move(10, 9), WHITE);
+    pos.play(cgt_move::move2_create(10, 9), WHITE);
     assert(pos.board_as_string() == "..XO.X..OO.");
 
     pos.undo_move();
@@ -192,9 +192,9 @@ void undo1()
 void undo2()
 {
     elephants pos(".OO.X.O.XOX..O..X.X");
-    pos.play(cgt_move::two_part_move(1, 0), WHITE);
+    pos.play(cgt_move::move2_create(1, 0), WHITE);
     assert(pos.board_as_string() == "O.O.X.O.XOX..O..X.X");
-    pos.play(cgt_move::two_part_move(2, 1), WHITE);
+    pos.play(cgt_move::move2_create(2, 1), WHITE);
     assert(pos.board_as_string() == "OO..X.O.XOX..O..X.X");
 
     pos.undo_move();

@@ -2,15 +2,20 @@
     TODO: We really need a split_and_normalize() method
 */
 #include "elephants.h"
-#include "cgt_basics.h"
-#include "cgt_move.h"
-#include "strip.h"
-#include "iobuffer.h"
-#include "utilities.h"
+
 #include <vector>
 #include <cassert>
 #include <utility>
 #include <cstddef>
+#include <ostream>
+
+#include "cgt_basics.h"
+#include "cgt_move.h"
+#include "print_move_helpers.h"
+#include "strip.h"
+#include "iobuffer.h"
+#include "throw_assert.h"
+#include "utilities.h"
 
 using std::string, std::pair;
 using std::vector;
@@ -232,15 +237,25 @@ inline void filter_ranges(const vector<int>& board,
             filtered_ranges.emplace_back(range);
 }
 
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x))
+            return false;
+    return true;
+}
+
 } // namespace
 
 //////////////////////////////////////// elephants
 elephants::elephants(const string& game_as_string) : strip(game_as_string)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 elephants::elephants(const vector<int>& board) : strip(board)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 void elephants::play(const move& m, bw to_play)
@@ -249,8 +264,8 @@ void elephants::play(const move& m, bw to_play)
 
     assert_black_white(to_play);
 
-    int from = cgt_move::from(m);
-    int to = cgt_move::to(m);
+    const int from = cgt_move::move2_get_from(m);
+    const int to = cgt_move::move2_get_to(m);
 
     assert(checked_is_color(from, to_play));
     assert(checked_is_color(to, EMPTY));
@@ -278,9 +293,9 @@ void elephants::undo_move()
     move mc = game::last_move();
     game::undo_move();
 
-    int to;
-    bw to_play;
-    int from = cgt_move::decode3(mc, &to, &to_play);
+    const int from = cgt_move::move2_get_from(mc);
+    const int to = cgt_move::move2_get_to(mc);
+    bw to_play = cgt_move::get_color(mc);
 
     assert(is_black_white(to_play));
     assert(checked_is_color(from, EMPTY));
@@ -427,6 +442,12 @@ move_generator* elephants::create_move_generator(bw to_play) const
     return new elephants_move_generator(*this, to_play);
 }
 
+void elephants::print_move(std::ostream& str, const move& m) const
+{
+    // from, to
+    print_move2_as_points(str, m);
+}
+
 game* elephants::inverse() const
 {
     return new elephants(inverse_mirror_board());
@@ -468,7 +489,7 @@ elephants_move_generator::operator bool() const
 move elephants_move_generator::gen_move() const
 {
     assert(is_move(_idx, _idx + _dir, to_play()));
-    return cgt_move::two_part_move(_idx, _idx + _dir);
+    return cgt_move::move2_create(_idx, _idx + _dir);
 }
 
 bool elephants_move_generator::is_move(int from, int to, bw to_play) const

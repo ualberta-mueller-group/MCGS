@@ -56,6 +56,29 @@ bool is_int(const string& str)
     return true;
 }
 
+// TODO unit test this
+bool is_unsigned_int(const std::string& str)
+{
+    const size_t N = str.size();
+
+    if (N == 0)
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < N; i++)
+    {
+        const char& c = str[i];
+
+        if (!isdigit(c))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool string_starts_with(const std::string& str, const std::string& word)
 {
     if (word.size() > str.size())
@@ -98,6 +121,25 @@ bool string_ends_with(const std::string& str, const std::string& word)
     }
 
     return true;
+}
+
+bool string_contains_whitespace(const std::string& str)
+{
+    for (const char& c : str)
+        if (std::isspace(c))
+            return true;
+
+    return false;
+}
+
+// Could implement a fancier version with repeated doubling,
+// but it's not worth doing
+std::string repeat_string(const std::string& str, int n)
+{
+    string result;
+    for (int i = 0; i < n; ++i)
+        result += str;
+    return result;
 }
 
 uint64_t ms_since_epoch()

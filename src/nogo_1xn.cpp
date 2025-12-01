@@ -3,13 +3,15 @@
 //---------------------------------------------------------------------------
 #include "nogo_1xn.h"
 
-#include <memory>
 #include <cassert>
-#include <utility>
-#include <ostream>
 #include <cstddef>
+#include <memory>
+#include <ostream>
+#include <utility>
 #include <vector>
 
+#include "cgt_move.h"
+#include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "iobuffer.h"
 #include "cgt_basics.h"
@@ -42,18 +44,29 @@ vector<int> block_simplify(const vector<int>& board)
 
     return result;
 }
+
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x))
+            return false;
+    return true;
+}
+
 } // namespace
 
 //////////////////////////////////////// nogo_1xn
-nogo_1xn::nogo_1xn(const vector<int>& board) : strip(board)
+nogo_1xn::nogo_1xn(string game_as_string) : strip(game_as_string)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 #ifdef NOGO_DEBUG
     THROW_ASSERT(is_legal());
 #endif
 }
 
-nogo_1xn::nogo_1xn(string game_as_string) : strip(game_as_string)
+nogo_1xn::nogo_1xn(const vector<int>& board) : strip(board)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 #ifdef NOGO_DEBUG
     THROW_ASSERT(is_legal());
 #endif
@@ -98,7 +111,7 @@ void nogo_1xn::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int to = m;
+    const int to = cgt_move::move1_get_part_1(m);
     assert(at(to) == EMPTY);
 
     // incremental hash
@@ -118,7 +131,7 @@ void nogo_1xn::undo_move()
     const move mc = last_move();
     game::undo_move();
 
-    const int to = cgt_move::decode(mc);
+    const int to = cgt_move::move1_get_part_1(mc);
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
 
@@ -147,7 +160,6 @@ dyn_serializable* nogo_1xn::load_impl(ibuffer& is)
 /*
    implements "XO split" from
    Henry's paper
-
 */
 split_result nogo_1xn::_split_impl() const
 {
@@ -235,14 +247,19 @@ game* nogo_1xn::inverse() const
     return new nogo_1xn(inverse_board());
 }
 
+void nogo_1xn::print_move(std::ostream& str, const move& m) const
+{
+    // to
+    print_move1_as_points(str, m);
+}
+
 std::ostream& operator<<(std::ostream& out, const nogo_1xn& g)
 {
     out << g.board_as_string();
     return out;
 }
 
-//---------------------------------------------------------------------------
-
+//////////////////////////////////////// nogo_1xn_move_generator
 class nogo_1xn_move_generator : public move_generator
 {
 public:
@@ -330,7 +347,7 @@ nogo_1xn_move_generator::operator bool() const
 move nogo_1xn_move_generator::gen_move() const
 {
     assert(operator bool());
-    return _current;
+    return cgt_move::move1_create(_current);
 }
 
 //---------------------------------------------------------------------------

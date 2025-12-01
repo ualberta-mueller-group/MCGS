@@ -102,11 +102,29 @@ namespace global {
 // These WILL be printed with ./MCGS --print-optimizations
 INIT_GLOBAL_WITH_SUMMARY(random_seed, uint64_t, 7753);
 INIT_GLOBAL_WITH_SUMMARY(simplify_basic_cgt, bool, true);
-INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);
-INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 24);
+
+#ifdef LAB_MACHINE_COMPAT
+INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 27);     // ~656 MiB
+INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 26); // ~576 MiB
+#endif
+
+#ifdef __EMSCRIPTEN__
+INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 27);     // 27 -> ~656 MiB
+INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 26); // 26 -> ~576 MiB
+INIT_GLOBAL_WITH_SUMMARY(use_db, bool, false);
+#else
+INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 27);
+INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 26);
+//INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);     // ~1312 MiB
+//INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 27); // ~1152 MiB
 INIT_GLOBAL_WITH_SUMMARY(use_db, bool, true);
+#endif
+
+
 INIT_GLOBAL_WITH_SUMMARY(clear_tt, bool, false);
+INIT_GLOBAL_WITH_SUMMARY(count_sums, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(experiment_seed, uint64_t, 0);
+//INIT_GLOBAL_WITH_SUMMARY(alt_imp_search, bool, false);
 
 INIT_GLOBAL_WITH_SUMMARY(play_normalize, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(dedupe_movegen, bool, true);
@@ -115,5 +133,7 @@ INIT_GLOBAL_WITH_SUMMARY(dedupe_movegen, bool, true);
 INIT_GLOBAL_WITHOUT_SUMMARY(silence_warnings, bool, false);
 INIT_GLOBAL_WITHOUT_SUMMARY(print_ttable_size, bool, false);
 INIT_GLOBAL_WITHOUT_SUMMARY(play_split, bool, true);
+INIT_GLOBAL_WITHOUT_SUMMARY(print_db_info, bool, false);
+INIT_GLOBAL_WITHOUT_SUMMARY(player_color, bool, true);
 
 } // namespace global

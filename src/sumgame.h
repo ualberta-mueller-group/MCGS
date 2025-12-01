@@ -6,6 +6,7 @@
 #include "alternating_move_game.h"
 #include "cgt_move.h"
 #include "game.h"
+#include <atomic>
 #include <ctime>
 #include "global_options.h"
 #include "sumgame_change_record.h"
@@ -46,6 +47,7 @@ enum sumgame_undo_code
 //////////////////////////////////////// sumgame_move
 struct sumgame_move
 {
+    sumgame_move() {} // TODO remove this?
     sumgame_move(int subg, move m) : subgame_idx(subg), m(m) {}
 
     int subgame_idx;
@@ -55,7 +57,10 @@ struct sumgame_move
 //////////////////////////////////////// play_record
 struct play_record
 {
-    play_record(sumgame_move sm) : did_split(false), sm(sm), new_games() {}
+    play_record(sumgame_move sm)
+        : did_split(false), sm(sm), new_games(), deactivated_g(false)
+    {
+    }
 
     inline void add_game(game* game) { new_games.push_back(game); }
 
@@ -63,6 +68,7 @@ struct play_record
     sumgame_move sm;
     // doesn't own games, just stores them for debugging
     std::vector<game const*> new_games;
+    bool deactivated_g;
 };
 
 //////////////////////////////////////// solve_result
@@ -100,6 +106,7 @@ public:
     void add(game* g);
     void add(std::vector<game*>& gs);
     void pop(const game* g);
+    void pop(const std::vector<game*>& gs);
 
     bool solve() const override;
 
@@ -135,6 +142,9 @@ public:
 
     bool all_impartial() const; // considers inactive games
 
+    // Used by player
+    std::optional<sumgame_move> get_winning_or_random_move(bw for_player) const;
+
     // called by mcgs_init_all()
     static void init_sumgame(size_t index_bits);
     static void reset_ttable();
@@ -159,7 +169,7 @@ private:
     void _debug_extra() const;
     void _assert_games_unique() const;
 
-    mutable bool _should_stop;
+    mutable std::atomic<bool> _should_stop;
     mutable bool _need_cgt_simplify;
     mutable global_hash _sumgame_hash;
     std::vector<game*> _subgames;

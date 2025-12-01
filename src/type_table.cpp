@@ -1,8 +1,18 @@
 #include "type_table.h"
+
 #include <typeinfo>
 #include <typeindex>
+#include <cassert>
 #include <unordered_map>
 #include <memory>
+
+bool type_table_t::_initialized = false;
+
+void type_table_t::set_initialized()
+{
+    assert(!_initialized);
+    _initialized = true;
+}
 
 namespace {
 std::unordered_map<std::type_index, std::shared_ptr<type_table_t>>

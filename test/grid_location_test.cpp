@@ -7,11 +7,35 @@
 #include <tuple>
 #include <cassert>
 #include <cstddef>
+#include "sheep.h"
 
 using namespace std;
 
 namespace {
 namespace grid_location_test {
+
+void test_increment_impl(const grid& g, int num_points)
+{
+    int i = 0;
+    for (grid_location loc(g.shape()); loc.valid(); loc.increment_position())
+        ++i;
+
+    assert(i == num_points);
+}
+
+void test_increment()
+{
+    test_increment_impl(sheep("50"), 1);
+    test_increment_impl(sheep("5 0"), 2);
+    test_increment_impl(sheep("5 | 0"), 2);
+    test_increment_impl(sheep("0 2|-2 0"), 4);
+    test_increment_impl(sheep("0 2|-2 0|-3 6"), 6);
+    test_increment_impl(sheep("0 2 3|-2 0 -4"), 6);
+    test_increment_impl(sheep("5 0 0|0 0 3|0 0 0"), 9);
+    test_increment_impl(sheep("5 0|0 0|0 0|0 0|0 0|0 0"), 12);
+    test_increment_impl(sheep("5 0 0 0 3|0 0 0 0 0"), 10);
+}
+
 void test_get_set()
 {
     // 2 rows, 3 columns
@@ -389,6 +413,7 @@ namespace grid_generator_test {
 
 void grid_location_test_all()
 {
+    grid_location_test::test_increment();
     grid_location_test::test_get_set();
     grid_location_test::test_mutators();
     grid_location_test::test_exceptions();

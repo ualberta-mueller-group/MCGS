@@ -6,6 +6,7 @@
 #include "cgt_move.h"
 #include "database.h"
 #include "global_database.h"
+#include "random.h"
 #include "type_table.h"
 #include "game.h"
 
@@ -25,8 +26,10 @@
 #include <iostream>
 #include <memory>
 
+#ifndef __EMSCRIPTEN__
 #include <thread>
 #include <future>
+#endif
 
 #include <cassert>
 #include <unordered_set>
@@ -236,6 +239,12 @@ void sumgame::pop(const game* g)
     _subgames.pop_back();
 }
 
+void sumgame::pop(const std::vector<game*>& gs)
+{
+    for (auto it = gs.rbegin(); it != gs.rend(); it++)
+        pop(*it);
+}
+
 const bool PRINT_SUBGAMES = false;
 
 // Solve combinatorial game - find winner
@@ -262,6 +271,7 @@ bool sumgame::solve() const
         ~4s with clock(), and ~11s with chrono...
 
 */
+#ifndef __EMSCRIPTEN__
 optional<solve_result> sumgame::solve_with_timeout(
     unsigned long long timeout) const
 {
@@ -315,6 +325,33 @@ optional<solve_result> sumgame::solve_with_timeout(
 
     return future.get();
 }
+#else
+// TODO emscripten pthreads
+optional<solve_result> sumgame::solve_with_timeout(
+    unsigned long long timeout) const
+{
+    assert_restore_sumgame ars(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+    sum._pre_solve_pass();
+
+    {
+        const int active = sum.num_active_games();
+        THROW_ASSERT(active >= 0);
+        stats::set_n_subgames(static_cast<uint64_t>(active));
+    }
+
+    _should_stop = false;
+    _need_cgt_simplify = true;
+
+
+    optional<solve_result> result = sum._solve_with_timeout(0);
+
+    sum._undo_pre_solve_pass();
+
+    return result;
+}
+#endif
 
 bool sumgame::solve_with_games(std::vector<game*>& gs) const
 {
@@ -370,6 +407,8 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
     depth++;
     stats::inc_node_count();
     stats::update_search_depth(depth);
+    if (global::count_sums())
+        stats::count_sum(*this);
 
     if (PRINT_SUBGAMES)
     {
@@ -609,6 +648,7 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 
         // Don't normalize g, it's no longer part of the sum
         g->set_active(false);
+        record.deactivated_g = true;
 
         for (game* gp : *sr)
         {
@@ -622,7 +662,17 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
     else
     {
         if (global::play_normalize())
+        {
             g->normalize();
+
+            // TODO has_moves() is maybe slow...
+            if (!g->has_moves())
+            {
+                g->set_active(false);
+                record.deactivated_g = true;
+            }
+        }
+
     }
 
     alternating_move_game::play(mv);
@@ -642,7 +692,9 @@ void sumgame::undo_move()
     if (record.did_split)
     {
         assert(global::play_split());
-        assert(!s->is_active()); // should have been deactivated on last split
+        assert(
+            !s->is_active() &&
+            record.deactivated_g); // should have been deactivated on last split
 
         s->set_active(true);
 
@@ -663,15 +715,20 @@ void sumgame::undo_move()
     else
     {
         if (global::play_normalize())
+        {
+            if (record.deactivated_g)
+                s->set_active(true);
+
             s->undo_normalize();
+        }
     }
 
-    const move subm = cgt_move::decode(s->last_move());
+    const move subm = cgt_move::remove_color(s->last_move());
 
     assert(                                                         //
         sm.m == subm ||                                             //
         (                                                           //
-            (cgt_move::decode(sm.m) == subm) &&                     //
+            (cgt_move::remove_color(sm.m) == subm) &&                     //
             (s->game_type() == game_type<impartial_game_wrapper>()) //
             )                                                       //
     );                                                              //
@@ -726,13 +783,14 @@ std::vector<unsigned int> get_oc_indexable_vector()
 {
     std::vector<unsigned int> vec;
 
-    constexpr outcome_class OC_MAX = std::max({
-        outcome_class::U,
-        outcome_class::L,
-        outcome_class::R,
-        outcome_class::P,
-        outcome_class::N,
-    });
+    static const outcome_class OC_MAX =
+        std::max({
+            outcome_class::U,
+            outcome_class::L,
+            outcome_class::R,
+            outcome_class::P,
+            outcome_class::N,
+        });
 
     vec.resize(OC_MAX + 1, 0);
     return vec;
@@ -891,20 +949,20 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
         }
     }
 
-    /*
     auto compare_fn = [](const game* g1, const game* g2) -> bool
     {
         const hash_t hash1 = g1->get_local_hash();
         const hash_t hash2 = g2->get_local_hash();
         return hash1 < hash2;
     };
-    */
 
+    /*
     auto compare_fn = [](const game* g1, const game* g2) -> bool
     {
         // Put larger games first
         return g1->order(g2) == REL_GREATER;
     };
+    */
 
     std::sort(active_games.begin(), active_games.end(), compare_fn);
 
@@ -930,6 +988,51 @@ bool sumgame::all_impartial() const
             return false;
 
     return true;
+}
+
+std::optional<sumgame_move> sumgame::get_winning_or_random_move(
+    bw for_player) const
+{
+    assert(is_black_white(for_player));
+    assert_restore_sumgame ars(*this);
+
+    const bw prev_player = to_play();
+
+    sumgame& sum = const_cast<sumgame&>(*this);
+    sum.set_to_play(for_player);
+
+    std::unique_ptr<sumgame_move_generator> gen(
+        sum.create_sum_move_generator(for_player));
+
+    std::vector<sumgame_move> moves;
+
+    while (*gen)
+    {
+        moves.emplace_back(gen->gen_sum_move());
+        const sumgame_move& sm = moves.back();
+        ++(*gen);
+
+        assert(sum.to_play() == for_player);
+        sum.play_sum(sm, for_player);
+        assert(sum.to_play() == ::opponent(for_player));
+        bool opp_loss = !sum.solve();
+        sum.undo_move();
+
+        if (opp_loss)
+        {
+            sum.set_to_play(prev_player);
+            return sm;
+        }
+    }
+
+    sum.set_to_play(prev_player);
+
+    if (moves.empty())
+        return {};
+
+    // TODO: random_generator should work for arbitrary types...
+    const uint32_t choice = get_global_rng().get_u32(0, moves.size() - 1);
+    return moves[choice];
 }
 
 void sumgame::init_sumgame(size_t index_bits)

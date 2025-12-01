@@ -1,0 +1,29 @@
+{version 1.4}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[impartial toppling_dominoes]
+
+XXO##XXO#X {N 10}
+XXOOOXOXOX {N 10}
+#O###OO#XX {N 10}
+#XXXOXO### {N 10}
+OOXXOXXXOO {N 10}
+##XX#OOOO# {N 10}
+OOXXO#O#XX {N 10}
+##XOOXXXX# {N 10}
+O#OX##X#X# {N 10}
+X##OXOO#O# {N 10}
+O#O#O#O#XX {N 10}
+XX#O#O#OXX {N 10}
+O#OOX#OOXX {N 10}
+##OXO#XO## {N 10}
+##O####XXO {N 10}
+XO##XOO#XX {N 10}
+##XOXX#OXX {N 10}
+#OXXO##O#X {N 10}
+OOO#O#XXXO {N 10}
+XXX#OOXXOO {N 10}
+

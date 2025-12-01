@@ -89,6 +89,9 @@ bool consume_mandatory_comma(const std::vector<std::string>& string_tokens,
 */
 bool get_fraction_list(const std::string& line, std::vector<fraction>& fracs);
 
+// like get_fraction_list() but for ints
+bool get_int_list(const std::string& line, std::vector<int>& ints);
+
 bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx,
                      std::vector<run_command_t>& run_commands);
 

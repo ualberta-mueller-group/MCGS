@@ -10,6 +10,7 @@
 
 #include <array>
 #include "grid.h"
+#include "int_pair.h"
 #include "throw_assert.h"
 #include <cassert>
 
@@ -73,6 +74,15 @@ static constexpr std::array<grid_dir, 8> GRID_DIRS_ALL {
     GRID_DIR_DOWN_LEFT,  //
     GRID_DIR_LEFT,       //
     GRID_DIR_UP_LEFT,    //
+};
+
+static constexpr std::array<grid_dir, 6> GRID_DIRS_HEX {
+    GRID_DIR_UP,         //
+    GRID_DIR_UP_RIGHT,   //
+    GRID_DIR_RIGHT,      //
+    GRID_DIR_DOWN,       //
+    GRID_DIR_DOWN_LEFT,  //
+    GRID_DIR_LEFT,       //
 };
 
 ////////////////////////////////////////////////// class grid_location

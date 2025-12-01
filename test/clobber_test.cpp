@@ -1,5 +1,4 @@
 #include "clobber_test.h"
-#include "cgt_move.h"
 #include "clobber.h"
 
 #include "test/test_utilities.h"
@@ -9,7 +8,6 @@
 #include <tuple>
 #include "grid_test_utilities.h"
 
-using cgt_move::two_part_move;
 using std::cout, std::endl, std::vector, std::string, std::tuple;
 
 namespace {
@@ -65,6 +63,9 @@ void test_outcomes2()
 // check black/white outcomes: various boards
 void test_outcomes3()
 {
+    /*
+       clobber board string, result (black first), result (white first)
+    */
     typedef tuple<string, bool, bool> test_case_t;
 
     // clang-format off
@@ -92,12 +93,12 @@ void test_outcomes3()
 // check move generator moves
 void test_moves()
 {
-    typedef tuple<string, vector<string>, vector<string>> test_case_t;
     /*
         board
         sequence of boards for black moves
         sequence of boards for white moves
     */
+    typedef tuple<string, vector<string>, vector<string>> test_case_t;
 
     // clang-format off
     vector<test_case_t> test_cases =

@@ -13,6 +13,18 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <unordered_set>
+
+std::unordered_set<move> get_generated_moves_for_player(const game* g,
+                                                        bw player);
+
+// TODO unit test and document this (and other functions in this file)
+void test_moves_as_strings_for_player(
+    game* g, bw player, const std::vector<std::string>& exp_move_strings,
+    const std::string& game_prefix);
+
+std::unordered_set<std::string> get_generated_moves_as_strings_for_player(
+    game* g, bw player);
 
 inline void assert_move(move_generator& mg, int mv)
 {
@@ -35,8 +47,8 @@ inline void assert_num_moves(const game& g, bw to_play, int num_moves)
 inline void assert_two_part_move(move_generator& mg, int from, int to)
 {
     move m = mg.gen_move();
-    assert(from == cgt_move::from(m));
-    assert(to == cgt_move::to(m));
+    assert(from == cgt_move::move2_get_from(m));
+    assert(to == cgt_move::move2_get_to(m));
 }
 
 void assert_solve(game& pos, bw to_play, const bool expected_result);
@@ -105,7 +117,7 @@ void assert_solve_test_file(const std::string& file_name,
         {                                                                      \
             statements;                                                        \
         }                                                                      \
-        catch (exception & exc)                                                \
+        catch (std::exception & exc)                                           \
         {                                                                      \
             threw = true;                                                      \
         }                                                                      \

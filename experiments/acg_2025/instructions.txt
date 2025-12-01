@@ -1,0 +1,44 @@
+==================== Files in This Directory ====================
+- experiments.test2
+    Input data of experiments used in ACG 2025 paper.
+- experiment_results.tar
+    Archive of output data of experiments used in ACG 2025 paper.
+- experiments.sh
+    Bash script to run the ACG 2025 paper experiments. Uses experiments.test2,
+    runtests.py, and diagram.py files included in this directory. You can edit
+    experiments.sh if you want to generate a new experiments.test2 input file.
+- runtests.py
+    Test runner which uses multiple MCGS processes in parallel to run test
+    cases for all ablation levels. Output is experiment_results directory.
+    Pre-configured the same way as run for the ACG 2025 paper, but note that
+    this will use lots of memory and CPU threads. See configuration under
+    "Edit these" comment at the top.
+- diagram.py
+    Uses experiment_results output directory to create diagram images for
+    the experiments. Uses the Python libraries "matplotlib" and "numpy".
+
+==================== Running the Experiments ====================
+Copy the contents of this directory into the project's root directory after
+checking out commit hash 4113a903b24744b901173e5d18f06484887415ba, replacing
+that commit's versions of these files with those from this directory.
+
+Edit the options near the top of runtests.py if necessary, then run
+experiments.sh.
+
+First, this will delete database.bin and any diagrams/output data from previous
+runs. database.bin will be rebuilt using MCGS. The ".test2" file is like a
+".test" file but each test case is on its own line. Metadata is encoded into
+comments of each test case.
+
+Next, the tests will be run with runtests.py, and this will generate
+many csv files (creating the experiment_results directory).
+
+Lastly, diagram.py will be used to read the csvs, and create/save diagrams as
+images (creating the diagrams directory).
+
+==================== Other Information ====================
+src/gen_experiments.cpp is the code that generates the input data file
+(experiments.test2). The included input file was generated using the
+aforementioned commit, though note that its exact contents are
+machine/compiler-dependent.
+

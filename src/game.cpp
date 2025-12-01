@@ -1,18 +1,29 @@
+#include "game.h"
+
 #include <array>
 #include <cassert>
 #include <limits>
 #include <memory>
 #include <iostream>
 #include <cstddef>
+#include <sstream>
+#include <string>
 
-#include "game.h"
 #include "cgt_basics.h"
+#include "cgt_move.h"
 #include "warn_default.h"
 #include "type_table.h"
 
 using std::unique_ptr;
 
 game_type_t game::_next_game_type = 1;
+
+std::string game::to_string() const
+{
+    std::stringstream str;
+    str << *this;
+    return str.str();
+}
 
 std::ostream& operator<<(std::ostream& os, const split_result& split)
 {
@@ -42,6 +53,15 @@ std::ostream& operator<<(std::ostream& os, const split_result& split)
     return os;
 }
 
+bool game::has_moves_for(bw player) const
+{
+    assert(is_black_white(player));
+    move_generator* gen = create_move_generator(player);
+    const bool move_exists = *gen;
+    delete gen;
+    return move_exists;
+}
+
 bool game::has_moves() const
 {
     unique_ptr<move_generator> gen_b =
@@ -66,7 +86,7 @@ bool game::has_moves() const
 void game::play(const move& m, int to_play)
 {
     assert(cgt_move::get_color(m) == 0);
-    const move mc = cgt_move::encode(m, to_play);
+    const move mc = cgt_move::set_color(m, to_play);
     _move_stack.push_back(mc);
 
     _pre_hash_update();

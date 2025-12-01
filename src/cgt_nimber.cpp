@@ -2,6 +2,7 @@
 // Simple combinatorial games - nimbers
 //---------------------------------------------------------------------------
 #include "cgt_nimber.h"
+#include "cgt_move.h"
 #include <cassert>
 #include <ostream>
 #include <vector>
@@ -10,7 +11,7 @@ void nimber::play(const move& m, bw to_play)
 {
     impartial_game::play(m, to_play);
 
-    const int number = cgt_move::second(m);
+    const int number = cgt_move::move1_get_part_1(m);
     assert(number > 0);
     assert(number <= _value);
     _value -= number;
@@ -18,10 +19,10 @@ void nimber::play(const move& m, bw to_play)
 
 void nimber::undo_move()
 {
-    const move m = cgt_move::decode(last_move());
+    const move m = last_move();
     game::undo_move();
 
-    const int number = cgt_move::second(m);
+    const int number = cgt_move::move1_get_part_1(m);
     assert(number > 0);
     _value += number;
 }
@@ -90,7 +91,7 @@ nimber_move_generator::operator bool() const
 
 move nimber_move_generator::gen_move() const
 {
-    return cgt_move::two_part_move(0, _current_number);
+    return cgt_move::move1_create(_current_number);
 }
 
 //---------------------------------------------------------------------------

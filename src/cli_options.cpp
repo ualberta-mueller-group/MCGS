@@ -3,12 +3,16 @@
 #include <cstdlib>
 #include <filesystem>
 #include <string>
+#include <type_traits>
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <exception>
 #include <cstdint>
 #include "file_parser.h"
 #include "global_options.h"
+#include "init_database.h"
+#include "string_to_int.h"
 #include "utilities.h"
 #include <cassert>
 
@@ -21,11 +25,16 @@ cli_options::cli_options(const string& test_directory)
       should_exit(false),
       gen_experiments(false),
       run_tests(false),
-      run_tests_stdin(false),
-      nogo_test(false),
+      //run_tests_stdin(false),
+      use_player(false),
+      print_winning_moves(false),
       test_directory(test_directory),
       outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
-      test_timeout(cli_options::DEFAULT_TEST_TIMEOUT)
+      test_timeout(cli_options::DEFAULT_TEST_TIMEOUT),
+      play_log_name(),
+      db_file_name(cli_options::DEFAULT_RELATIVE_DB_FILE),
+      init_database_type(INIT_DATABASE_AUTO),
+      db_config_string()
 {
 }
 
@@ -62,6 +71,23 @@ void print_help_message(const string& exec_name)
                                      "Input must start with version command. "
                                      "Causes [input string] to be ignored.");
 
+    print_flag("--play-mcgs",
+               "Play games against MCGS. Uses [input string] "
+               "or --file to specify games. Games to play must have a run "
+               "command, but the specified color of the player to play is "
+               "ignored.");
+
+    print_flag("--no-color", "Disable color printing for --play-mcgs.");
+
+    print_flag("--play-log <file name>", "When specified, --play-mcgs "
+                                         "logs the game to the specified file");
+
+    print_flag("--print-winning-moves",
+               "Print the winning moves for the "
+               "specified player of each sum. Uses [input string] or --file to "
+               "specify games. NOTE: currently only works for strip/grid games, "
+               "and doesn't work with impartial wrapper games.");
+
     print_flag("--stdin",
                "Read input from stdin. Causes [input string] to be ignored.");
 
@@ -87,6 +113,13 @@ void print_help_message(const string& exec_name)
 
     print_flag(global::use_db.no_flag(), "Disable database usage.");
 
+    print_flag("--db-file-load <file name>", "Load database file. Default is "
+                                             "database.bin.");
+
+    print_flag("--db-file-create <file name> <config string>",
+               "Create and populate a new database file. See README for "
+               "details on config string syntax.");
+
     // print_flag(global::play_split.no_flag(), "Don't split games after "
     //                                          "playing a move.");
 
@@ -108,6 +141,9 @@ void print_help_message(const string& exec_name)
                "generation. 0 means seed with current time. Default: " +
                    global::experiment_seed.get_default_str());
 
+    //print_flag(global::alt_imp_search.flag(),
+    //           "Enable alternative search algorithm for impartial games.");
+
     cout << "Testing framework flags:" << endl;
     cout << endl;
     cout << "\tThese flags only have an effect when using \"--run-tests\"."
@@ -123,10 +159,7 @@ void print_help_message(const string& exec_name)
                    "\". Causes other input (i.e. from file, stdin etc) to be "
                    "ignored.");
 
-    print_flag("--run-tests-stdin", "Like --run-tests, but read from stdin.");
-
-    print_flag("--nogo-test", "Helper functionality for python script testing "
-                              "NoGo correctness, compared to SBHSolver");
+    //print_flag("--run-tests-stdin", "Like --run-tests, but read from stdin.");
 
     print_flag("--test-dir <directory name>",
                "Sets input directory for --run-tests. Default is \"" +
@@ -145,6 +178,10 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     print_flag(global::clear_tt.flag(),
                "Clear ttable between test runs. Default: " +
                    global::clear_tt.get_default_str() + ".");
+
+    print_flag(global::count_sums.flag(), "Count unique sums found during "
+               "search. Only applies to partizan solve commands i.e. {B} or "
+               "{W}, but not {N}. Will slow down search somewhat.");
 
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
@@ -167,6 +204,10 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag(global::print_ttable_size.flag(),
                "Print ttable size to stdout.");
+
+    print_flag(global::print_db_info.flag(),
+               "Print verbose database info to stdout. Includes metadata of "
+               "loaded database file");
 }
 
 } // namespace
@@ -177,10 +218,16 @@ cli_options parse_args(int argc, const char** argv, bool silent)
     bool print_optimizations = false;
 
     assert(argc >= 1);
+
+#ifndef __EMSCRIPTEN__
     std::filesystem::path abs_exec_path = std::filesystem::canonical(argv[0]);
     std::filesystem::path parent_path = abs_exec_path.parent_path();
     std::filesystem::path default_test_path =
         parent_path / cli_options::DEFAULT_RELATIVE_TEST_PATH;
+#else
+    std::filesystem::path default_test_path =
+        cli_options::DEFAULT_RELATIVE_TEST_PATH;
+#endif
 
     cli_options opts(default_test_path.string());
 
@@ -246,6 +293,38 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == "--print-winning-moves")
+        {
+            opts.print_winning_moves = true;
+            continue;
+        }
+
+        if (arg == "--play-mcgs")
+        {
+            opts.use_player = true;
+            continue;
+        }
+
+        if (arg == "--play-log")
+        {
+            arg_idx++;
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception(
+                    "Error: Got --play-log but no file path");
+            }
+
+            opts.play_log_name = arg_next;
+            continue;
+        }
+
+        if (arg == "--no-color")
+        {
+            global::player_color.set(false);
+            continue;
+        }
+
         if (arg == "-h" || arg == "--help")
         {
             if (!silent)
@@ -293,6 +372,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == global::print_db_info.flag())
+        {
+            global::print_db_info.set(true);
+            continue;
+        }
+
         if (arg == "--gen-experiments")
         {
             opts.gen_experiments = true;
@@ -305,17 +390,11 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg == "--run-tests-stdin")
-        {
-            opts.run_tests_stdin = true;
-            continue;
-        }
-
-        if (arg == "--nogo-test")
-        {
-            opts.nogo_test = true;
-            continue;
-        }
+        //if (arg == "--run-tests-stdin")
+        //{
+        //    opts.run_tests_stdin = true;
+        //    continue;
+        //}
 
         if (arg == "--test-dir")
         {
@@ -354,14 +433,19 @@ cli_options parse_args(int argc, const char** argv, bool silent)
                 throw cli_options_exception(
                     "Error: got --test-timeout but no timeout");
             }
-
-            if (!is_int(arg_next))
+            
+            try
             {
-                throw cli_options_exception(
-                    "Error: --test-timeout argument not an integer");
-            }
+                static_assert(std::is_same_v<unsigned long long,
+                                             decltype(opts.test_timeout)>);
 
-            opts.test_timeout = atoi(arg_next.c_str());
+                opts.test_timeout = str_to_ull(arg_next);
+            }
+            catch (const exception& exc)
+            {
+                throw cli_options_exception("Error: --test-timeout argument "
+                        "not an unsigned integer, or out of range");
+            }
 
             continue;
         }
@@ -369,6 +453,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::clear_tt.flag())
         {
             global::clear_tt.set(true);
+            continue;
+        }
+
+        if (arg == global::count_sums.flag())
+        {
+            global::count_sums.set(true);
             continue;
         }
 
@@ -384,12 +474,26 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         {
             arg_idx++;
 
-            if (!is_int(arg_next))
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: got " +
+                                            global::tt_sumgame_idx_bits.flag() +
+                                            " but no value");
+            }
+
+            static_assert(sizeof(size_t) >= sizeof(unsigned short));
+            unsigned short n_index_bits;
+
+            try
+            {
+                n_index_bits = str_to_ush(arg_next);
+            }
+            catch (const exception& exc)
+            {
                 throw cli_options_exception(
                     "Error: " + global::tt_sumgame_idx_bits.flag() +
-                    " value not an int");
-
-            const size_t n_index_bits = atoi(arg_next.c_str());
+                    " value not an unsigned integer, or out of range");
+            }
 
             global::tt_sumgame_idx_bits.set(n_index_bits);
             continue;
@@ -399,12 +503,26 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         {
             arg_idx++;
 
-            if (!is_int(arg_next))
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception("Error: got " +
+                                            global::tt_imp_sumgame_idx_bits.flag() +
+                                            " but no value");
+            }
+
+            static_assert(sizeof(size_t) >= sizeof(unsigned short));
+            unsigned short n_index_bits;
+
+            try
+            {
+                n_index_bits = str_to_ush(arg_next);
+            }
+            catch (const exception& exc)
+            {
                 throw cli_options_exception(
                     "Error: " + global::tt_imp_sumgame_idx_bits.flag() +
-                    " value not an int");
-
-            const size_t n_index_bits = atoi(arg_next.c_str());
+                    " value not an unsigned integer, or out of range");
+            }
 
             global::tt_imp_sumgame_idx_bits.set(n_index_bits);
             continue;
@@ -415,6 +533,51 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             global::use_db.set(false);
             continue;
         }
+
+        if (arg == "--db-file-load")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: --db-file-load but no file name given");
+
+            if (opts.init_database_type != INIT_DATABASE_AUTO)
+                throw cli_options_exception(
+                    "Error: --db-file-load used, but another \"--db-file*\" "
+                    "option already used");
+
+            opts.init_database_type = INIT_DATABASE_LOAD;
+            opts.db_file_name = arg_next;
+
+            continue;
+        }
+
+        if (arg == "--db-file-create")
+        {
+            const int arg_idx_config_string = arg_idx + 2;
+            arg_idx += 2;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: --db-file-create but no file name given");
+
+            if (arg_idx_config_string >= arg_n)
+                throw cli_options_exception(
+                    "Error: --db-file-create but no config string given");
+
+            if (opts.init_database_type != INIT_DATABASE_AUTO)
+                throw cli_options_exception(
+                    "Error: --db-file-create used, but another \"--db-file*\" "
+                    "option already used");
+
+            opts.init_database_type = INIT_DATABASE_CREATE;
+            opts.db_file_name = arg_next;
+            opts.db_config_string = args[arg_idx_config_string];
+
+            continue;
+        }
+
 
         // if (arg == global::play_split.no_flag())
         //{
@@ -484,7 +647,15 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg.size() >= 0 && arg.front() != '-')
+        //if (arg == global::alt_imp_search.flag())
+        //{
+        //    global::alt_imp_search.set(true);
+        //    continue;
+        //}
+
+        if (arg.size() >= 0 &&                                  //
+            LOGICAL_IMPLIES(arg.size() > 0, arg.front() != '-') //
+        )
         {
             // the rest of args is input to the file_parser
 

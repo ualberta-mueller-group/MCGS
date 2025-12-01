@@ -14,6 +14,8 @@
 #include <cassert>
 #include <ostream>
 
+#include "throw_assert.h"
+
 class kayles : public impartial_game
 {
 public:
@@ -31,7 +33,7 @@ public:
     bool is_split() const { return _smaller_part > 0; }
 
     static int static_result(int n);
-    static void print_move(move m, std::ostream& str);
+    static void print_kayles_move(move m, std::ostream& str);
     static move encode(int take, int smaller, int larger);
     static void init_cache();
     void set_solved(int nim_value) override;
@@ -52,7 +54,7 @@ private:
 inline kayles::kayles(int value)
     : impartial_game(), _value(value), _smaller_part(0)
 {
-    assert(_value >= 0);
+    THROW_ASSERT(_value >= 0);
 }
 
 inline void kayles::play(const move& m, bw ignore_to_play)

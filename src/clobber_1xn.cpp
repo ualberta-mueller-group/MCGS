@@ -3,19 +3,20 @@
 //---------------------------------------------------------------------------
 #include "clobber_1xn.h"
 
+#include <cassert>
+#include <cstddef>
+#include <utility>
+#include <vector>
+#include <ostream>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "print_move_helpers.h"
 #include "strip.h"
+#include "throw_assert.h"
 #include "utilities.h"
 #include "iobuffer.h"
-#include <cassert>
-#include <utility>
-#include <vector>
-#include <cstddef>
-#include <ostream>
-
-class clobber_1xn_db_game_generator;
 
 using std::string, std::pair, std::vector;
 
@@ -70,23 +71,33 @@ void get_subgame_boundaries(const std::vector<int>& board,
         boundaries.emplace_back(chunk_start, N - chunk_start);
 }
 
+bool only_legal_colors(const std::vector<int>& board)
+{
+    for (const int& x : board)
+        if (!is_empty_black_white(x))
+            return false;
+    return true;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////
 clobber_1xn::clobber_1xn(const vector<int>& board) : strip(board)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 clobber_1xn::clobber_1xn(std::string game_as_string) : strip(game_as_string)
 {
+    THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 void clobber_1xn::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int from = cgt_move::from(m);
-    const int to = cgt_move::to(m);
+    const int from = cgt_move::move2_get_from(m);
+    const int to = cgt_move::move2_get_to(m);
     assert(at(from) == to_play);
     assert(at(to) == opponent(to_play));
 
@@ -112,9 +123,8 @@ void clobber_1xn::undo_move()
     const move mc = last_move();
     game::undo_move();
 
-    const move m = cgt_move::decode(mc);
-    const int from = cgt_move::from(m);
-    const int to = cgt_move::to(m);
+    const int from = cgt_move::move2_get_from(mc);
+    const int to = cgt_move::move2_get_to(mc);
 
     const bw player = cgt_move::get_color(mc);
     assert(at(from) == EMPTY);
@@ -255,20 +265,20 @@ game* clobber_1xn::inverse() const
     return new clobber_1xn(inverse_board());
 }
 
-string clobber_1xn::xoxo(int n)
+void clobber_1xn::print_move(std::ostream& str, const move& m) const
 {
-    string result;
-    for (int i = 0; i < n; ++i)
-        result += "XO";
-    return result;
+    // from, to
+    print_move2_as_points(str, m);
 }
 
-//---------------------------------------------------------------------------
-
-std::ostream& operator<<(std::ostream& out, const clobber_1xn& g)
+string clobber_1xn::xo(int n)
 {
-    out << g.board_as_string();
-    return out;
+    return repeat_string("XO", n);
+}
+
+string clobber_1xn::xxo(int n)
+{
+    return repeat_string("XXO", n);
 }
 
 //---------------------------------------------------------------------------
@@ -358,7 +368,7 @@ clobber_1xn_move_generator::operator bool() const
 move clobber_1xn_move_generator::gen_move() const
 {
     assert(operator bool());
-    return cgt_move::two_part_move(_current, _current + _dir);
+    return cgt_move::move2_create(_current, _current + _dir);
 }
 
 //---------------------------------------------------------------------------

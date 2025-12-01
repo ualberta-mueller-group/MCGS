@@ -240,7 +240,7 @@ move ig_wrapper_move_generator::gen_move() const
 
     const bw color = _color;
 
-    return cgt_move::encode(m, color);
+    return cgt_move::set_color(m, color);
 }
 
 //---------------------------------------------------------------------------

@@ -1,0 +1,29 @@
+{version 1.4}
+
+/*_
+    Results from: CGSuite 2.1.1
+*/
+
+[gen_toads]
+
+2,3,2,0:...O.OX...OX.XO. {B loss, W win}
+2,3,2,0:..XXO...O....... {B win, W loss}
+2,3,2,0:.........O.OXXO. {B loss, W win}
+2,3,2,0:.O...OX..X.X.O.. {B loss, W loss}
+2,3,2,0:XO.O...OX.XX..O. {B win, W loss}
+2,3,2,0:.O..XO..OX....O. {B win, W win}
+2,3,2,0:O....X.....O.XXX {B loss, W win}
+2,3,2,0:..O....X.OOO..X. {B loss, W win}
+2,3,2,0:..O..XXO........ {B win, W loss}
+2,3,2,0:OO.X...X...X.... {B win, W loss}
+2,3,2,0:...O..OO....X.X. {B loss, W win}
+2,3,2,0:OX...XXOO.X....O {B win, W loss}
+2,3,2,0:XOOO......X..O.. {B loss, W win}
+2,3,2,0:XX....O.OXX..... {B win, W loss}
+2,3,2,0:.XO..X....O....X {B win, W win}
+2,3,2,0:....O..O..X....X {B loss, W win}
+2,3,2,0:XO.OO.OX.X..X... {B win, W loss}
+2,3,2,0:.X.......XO.X..O {B win, W loss}
+2,3,2,0:.OOO.X...XX.O... {B win, W loss}
+2,3,2,0:.X.O.OO....O.X.. {B loss, W win}
+
