@@ -14,6 +14,7 @@
 #include "config_map.h"
 #include "db_game_generator.h"
 #include "grid_generator.h"
+#include "grid_hash.h"
 #include "gridlike_db_game_generator.h"
 #include "grid.h"
 #include "strip.h"
@@ -76,9 +77,13 @@ create_game_gen_fn_t get_gridlike_create_game_gen_fn(
                      max_dims->second >= 0   //
         );
 
+        unsigned int ghm = GRID_HASH_ACTIVE_MASK_IDENTITY;
+        if constexpr (gridlike_type == GRIDLIKE_TYPE_GRID)
+            ghm = grid_hash_mask<Gridlike_Game_T>();
+
         grid_generator* gg = new grid_generator(
             max_dims.value(), tile_sequence, mask_active_bit,
-            mask_inactive_tile, STRIPS_ONLY, grid_hash_mask<Gridlike_Game_T>());
+            mask_inactive_tile, STRIPS_ONLY, ghm);
 
         return new gridlike_db_game_generator<Gridlike_Game_T, gridlike_type>(
             gg);
