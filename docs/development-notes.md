@@ -1812,9 +1812,53 @@ a move generator in a `std::unique_ptr`
 - `split()` and `normalize()` methods improved for some games
 - `clobber` split is always enabled, no longer requiring an additional compilation flag
 
-## After Version 1.3 (Future)
-- Add more games (i.e. Amazons)
-- Simple interactive player
+## Version 1.4 Additions
+### New Features
+- New games (see `input/info.test` for syntax)
+    - Amazons
+    - Domineering
+    - Fission
+    - Battle Sheep
+        - Implementation of: https://www.blueorangegames.com/games/battle-sheep
+    - Toppling Dominoes
+    - Generalized Toads and Frogs
+- Split functions for Amazons, Domineering, and Sheep
+- Basic player. Interactively play games against MCGS with the `--play-mcgs`
+  option!
+    - Optionally log games played to a file, i.e. `--play-log log.txt`
+- Configurable database
+    - `--db-file-create <file name> <DB config string>`
+    - See README for details
+- `--print-winning-moves` CLI option prints winning moves for input sums
+    - Has limitations, see `./MCGS -h`
+- MCGS web site (`docs/index.html`)
+    - Contains computational results
+    - Links to a user guide, our ACG 2025 paper, and our ACG 2025 presentation
+      slides
+- More data in `input` directory
+- Input language version `1.3` --> `1.4`
+
+### Major Code Additions
+- `game::_order_impl` (lexicographic comparison method) is no longer used
+- Refactored `cgt_move.h` and `cgt_basics.h`
+    - `cgt_basics.h` defines colors, and functions to convert between `int` and
+      `char` representations of colors
+    - `cgt_move.h` defines several multi part move functions
+        - Move layout structs simplify the work of adding new multi part moves
+- Grid generator classes merged into one single `grid_generator` class
+    - See development notes for important usage details
+- `grid_hash` class maps grid games having rotation/transpose symmetry to the
+  same local hashes
+  - Manually added to grid games on a per-game basis. See development notes for
+    instructions.
+  - Significantly speeds up database creation for grid games
+  - Decreases the number of entries in the database
+  - Creates more transposition table hits in some cases
+- Experimental WebAssembly build using Emscripten. `WASM=1` makefile variable
+    - Must first copy contents of `utils/wasm` to project root
+
+
+## After Version 1.4 (Future)
 - Improve database
     - Support querying sums
     - Impartial game support
