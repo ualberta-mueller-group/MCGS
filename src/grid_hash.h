@@ -313,7 +313,7 @@ void grid_hash::toggle_value(int r, int c, const T& color)
         {
             local_hash& hash1 = _hashes[idx1];
             const int point1 = grid_location::coord_to_point(coords, shape);
-            hash1.toggle_value(2 + point1, color);
+            hash1.toggle_value<T>(2 + point1, color);
         }
 
         if (active2)
@@ -321,7 +321,7 @@ void grid_hash::toggle_value(int r, int c, const T& color)
             local_hash& hash2 = _hashes[idx2];
             const int point2 = grid_location::coord_to_point(coords_transpose,
                                                              shape_transpose);
-            hash2.toggle_value(2 + point2, color);
+            hash2.toggle_value<T>(2 + point2, color);
         }
     }
 }
@@ -329,7 +329,7 @@ void grid_hash::toggle_value(int r, int c, const T& color)
 template <class T>
 inline void grid_hash::toggle_value(const int_pair& coord, const T& color)
 {
-    toggle_value(coord.first, coord.second, color);
+    toggle_value<T>(coord.first, coord.second, color);
 }
 
 inline void grid_hash::toggle_type(game_type_t type)
@@ -350,7 +350,7 @@ void grid_hash::init_from_board_and_type(const std::vector<T>& board,
     for (int r = 0; r < shape.first; r++)
     {
         for (int c = 0; c < shape.second; c++)
-            toggle_value(r, c, board[pos + c]);
+            toggle_value<T>(r, c, board[pos + c]);
 
         pos += shape.second;
     }
