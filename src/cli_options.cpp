@@ -27,7 +27,7 @@ cli_options::cli_options(const string& test_directory)
       run_tests(false),
       //run_tests_stdin(false),
       use_player(false),
-      //print_winning_moves(false),
+      print_winning_moves(false),
       test_directory(test_directory),
       outfile_name(cli_options::DEFAULT_TEST_OUTFILE),
       test_timeout(cli_options::DEFAULT_TEST_TIMEOUT),
@@ -71,9 +71,6 @@ void print_help_message(const string& exec_name)
                                      "Input must start with version command. "
                                      "Causes [input string] to be ignored.");
 
-    //print_flag("--print-winning-moves",
-    //           "Instead of solving, show winning moves for input sums.");
-
     print_flag("--play-mcgs",
                "Play games against MCGS. Uses [input string] "
                "or --file to specify games. Games to play must have a run "
@@ -84,6 +81,12 @@ void print_help_message(const string& exec_name)
 
     print_flag("--play-log <file name>", "When specified, --play-mcgs "
                                          "logs the game to the specified file");
+
+    print_flag("--print-winning-moves",
+               "Print the winning moves for the "
+               "specified player of each sum. Uses [input string] or --file to "
+               "specify games. NOTE: currently only works for strip/grid games, "
+               "and doesn't work with impartial wrapper games.");
 
     print_flag("--stdin",
                "Read input from stdin. Causes [input string] to be ignored.");
@@ -290,11 +293,11 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        //if (arg == "--print-winning-moves")
-        //{
-        //    opts.print_winning_moves = true;
-        //    continue;
-        //}
+        if (arg == "--print-winning-moves")
+        {
+            opts.print_winning_moves = true;
+            continue;
+        }
 
         if (arg == "--play-mcgs")
         {

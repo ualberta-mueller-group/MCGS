@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <utility>
 #include <vector>
+#include <ostream>
 
 #include "cgt_basics.h"
 #include "cgt_move.h"

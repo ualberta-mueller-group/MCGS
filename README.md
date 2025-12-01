@@ -38,7 +38,8 @@ Games". A brief high-level overview is given in the talk
     - Amazons
     - Domineering
     - Fission
-    - Sheep
+    - Battle Sheep
+        - Implementation of: https://www.blueorangegames.com/games/battle-sheep
     - Toppling Dominoes
     - Generalized Toads and Frogs
 - Split functions for Amazons, Domineering, and Sheep
@@ -48,6 +49,8 @@ Games". A brief high-level overview is given in the talk
 - Configurable database
     - `--db-file-create <file name> <DB config string>`
     - See README for details
+- `--print-winning-moves` CLI option prints winning moves for input sums
+    - Has limitations, see `./MCGS -h`
 - MCGS web site (`docs/index.html`)
     - Contains computational results
     - Links to a user guide, our ACG 2025 paper, and our ACG 2025 presentation

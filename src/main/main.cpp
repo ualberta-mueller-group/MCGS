@@ -18,6 +18,7 @@
 #include "sumgame.h"
 #include "throw_assert.h"
 #include "gen_experiments.h"
+#include "winning_moves.h"
 
 using std::cout, std::endl, std::string;
 
@@ -50,14 +51,12 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    /* TODO enable in version 1.5
     if (opts.print_winning_moves)
     {
         //print_winning_moves_impl(opts.parser);
         print_winning_moves_new(opts.parser);
         return 0;
     }
-    */
 
     //if (opts.run_tests_stdin)
     //{

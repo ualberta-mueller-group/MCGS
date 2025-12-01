@@ -29,7 +29,7 @@ struct cli_options
 
     bool use_player;
 
-    //bool print_winning_moves;
+    bool print_winning_moves;
 
     std::string test_directory;
     std::string outfile_name;        // CSV output file
