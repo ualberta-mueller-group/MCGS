@@ -999,12 +999,13 @@ on its `game_type_t`, and the random number generator implementation.
 Differing compilers, machine
 architectures, order of `DATABASE_REGISTER_TYPE()` calls
 (resulting in different `game_type_t`s), and differing order of `game_type()`
-calls before `init_database()` completes, will make a database file
+calls before `init_database()`, will make a database file
 incompatible.
 
 In the future, changes to `random.h`, and the `type_mapper` class, may make
-database files portable. Currently `type_mapper` is used in the `database` class
-but is ineffective.
+database files portable. Currently `type_mapper` is used in the `database`
+class but is ineffective (though it currently prints warnings if the runtime
+`game_type_t`s don't match those from the loaded file).
 
 # Database (`database.h`, `global_database.h`)
 `database.h` defines the `database` class, and two database entry structs. The
