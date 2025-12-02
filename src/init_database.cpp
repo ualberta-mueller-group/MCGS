@@ -23,6 +23,7 @@
 #include "clobber_1xn.h"
 #include "grid_generator.h"
 #include "gridlike_db_game_generator.h"
+#include "impartial_game_wrapper.h"
 #include "nogo_1xn.h"
 #include "elephants.h"
 
@@ -64,30 +65,31 @@ i_db_game_generator* create_sheep_gen(const config_map& config)
     return new gridlike_db_game_generator<sheep, GRIDLIKE_TYPE_GRID>(gg);
 }
 
-} // namespace
-
-namespace {
-unordered_map<string, create_game_gen_fn_t> create_gen_funcs;
+// bool is true IFF the game is impartial
+unordered_map<string, std::pair<create_game_gen_fn_t, bool>> create_gen_funcs;
 
 void register_games(database& db);
 
 
-void register_create_game_gen_fn(const string& name, create_game_gen_fn_t& fn)
+void register_create_game_gen_fn(const string& name, bool is_impartial, create_game_gen_fn_t& fn)
 {
     THROW_ASSERT(
         name.size() > 0,
         "Attempted to register create_game_gen_fn_t for game with blank name!");
 
-    auto inserted = create_gen_funcs.emplace(name, fn);
+    auto inserted = create_gen_funcs.emplace(name, std::make_pair(fn, is_impartial));
 
     THROW_ASSERT(inserted.second,
                  "create_game_gen_fn_t registered twice for game \"" + name +
                      "\"!");
+
+    if (!is_impartial)
+        register_create_game_gen_fn("impartial " + name, true, fn);
 }
 
-void register_create_game_gen_fn(const string& name, create_game_gen_fn_t&& fn)
+void register_create_game_gen_fn(const string& name, bool is_impartial, create_game_gen_fn_t&& fn)
 {
-    register_create_game_gen_fn(name, fn);
+    register_create_game_gen_fn(name, is_impartial, fn);
 }
 
 void fill_database(database& db, const string& db_config_string, bool dry_run)
@@ -104,10 +106,11 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
             const string& game_name = config_pair.first;
             const string& game_config = config_pair.second;
 
-            auto create_fn_it = create_gen_funcs.find(game_name);
+            auto create_fn_pair_it = create_gen_funcs.find(game_name);
+
 
             THROW_ASSERT(
-                create_fn_it != create_gen_funcs.end(),
+                create_fn_pair_it != create_gen_funcs.end(),
                 "Error: DB config references game \"" + game_name +
                     "\" which has no registered create_game_gen_fn_t!");
 
@@ -115,12 +118,14 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
                          "Error: DB config references game \"" + game_name +
                              "\" twice!");
 
+            pair<create_game_gen_fn_t, bool>& fn_pair = create_fn_pair_it->second;
+            create_game_gen_fn_t& fn = fn_pair.first;
+            const bool is_impartial = fn_pair.second;
 
             i_db_game_generator* gen = nullptr;
 
             {
                 config_map config(game_config);
-                create_game_gen_fn_t& fn = create_fn_it->second;
                 gen = fn(config);
                 config.check_unused_keys();
             }
@@ -128,7 +133,12 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
             THROW_ASSERT(gen != nullptr);
 
             if (!dry_run)
-                db.generate_entries(*gen);
+            {
+                if (is_impartial)
+                    db.generate_entries_impartial(*gen);
+                else
+                    db.generate_entries_partizan(*gen);
+            }
 
             delete gen;
         }
@@ -314,11 +324,18 @@ void register_games(database& db)
     */
     assert(create_gen_funcs.empty());
 
+    /*
+       TODO impartial wrapper games having the same game_type_t is problematic
+       because their DB entries will all be stored in the same terminal
+       layer...
+    */
+    DATABASE_REGISTER_TYPE(db, impartial_game_wrapper);
+
     // clobber_1xn
     DATABASE_REGISTER_TYPE(db, clobber_1xn);
 
     register_create_game_gen_fn(
-        "clobber_1xn",
+        "clobber_1xn", false,
         get_gridlike_create_game_gen_fn<clobber_1xn, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE}, true, EMPTY));
 
@@ -326,7 +343,7 @@ void register_games(database& db)
     DATABASE_REGISTER_TYPE(db, nogo_1xn);
 
     register_create_game_gen_fn(
-        "nogo_1xn",
+        "nogo_1xn", false,
         get_gridlike_create_game_gen_fn<nogo_1xn, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE}, false, EMPTY));
 
@@ -334,7 +351,7 @@ void register_games(database& db)
     DATABASE_REGISTER_TYPE(db, elephants);
 
     register_create_game_gen_fn(
-        "elephants",
+        "elephants", false,
         get_gridlike_create_game_gen_fn<elephants, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE, EMPTY}));
 
@@ -342,21 +359,21 @@ void register_games(database& db)
     DATABASE_REGISTER_TYPE(db, clobber);
 
     register_create_game_gen_fn(
-        "clobber", get_gridlike_create_game_gen_fn<clobber, GRIDLIKE_TYPE_GRID>(
+        "clobber", false, get_gridlike_create_game_gen_fn<clobber, GRIDLIKE_TYPE_GRID>(
                        {BLACK, WHITE}, true, EMPTY));
 
     // nogo
     DATABASE_REGISTER_TYPE(db, nogo);
 
     register_create_game_gen_fn(
-        "nogo", get_gridlike_create_game_gen_fn<nogo, GRIDLIKE_TYPE_GRID>(
+        "nogo", false, get_gridlike_create_game_gen_fn<nogo, GRIDLIKE_TYPE_GRID>(
                     {BLACK, WHITE}, false, EMPTY));
 
     // domineering
     DATABASE_REGISTER_TYPE(db, domineering);
 
     register_create_game_gen_fn(
-        "domineering",
+        "domineering", false,
         get_gridlike_create_game_gen_fn<domineering, GRIDLIKE_TYPE_GRID>(
             {EMPTY}, true, BORDER));
 
@@ -364,28 +381,28 @@ void register_games(database& db)
     DATABASE_REGISTER_TYPE(db, amazons);
 
     register_create_game_gen_fn(
-        "amazons", get_gridlike_create_game_gen_fn<amazons, GRIDLIKE_TYPE_GRID>(
+        "amazons", false, get_gridlike_create_game_gen_fn<amazons, GRIDLIKE_TYPE_GRID>(
                        {BORDER, BLACK, WHITE}, false, EMPTY));
 
     // fission
     DATABASE_REGISTER_TYPE(db, fission);
 
     register_create_game_gen_fn(
-        "fission", get_gridlike_create_game_gen_fn<fission, GRIDLIKE_TYPE_GRID>(
+        "fission", false, get_gridlike_create_game_gen_fn<fission, GRIDLIKE_TYPE_GRID>(
                        {BORDER, BLACK}, false, EMPTY));
 
     // toppling_dominoes
     DATABASE_REGISTER_TYPE(db, toppling_dominoes);
 
     register_create_game_gen_fn(
-        "toppling_dominoes",
+        "toppling_dominoes", false,
         get_gridlike_create_game_gen_fn<toppling_dominoes, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE}, true, BORDER));
 
     // sheep
     DATABASE_REGISTER_TYPE(db, sheep);
 
-    register_create_game_gen_fn("sheep", create_sheep_gen);
+    register_create_game_gen_fn("sheep", false, create_sheep_gen);
 }
 
 } // namespace

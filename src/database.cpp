@@ -17,6 +17,7 @@
 #include <iostream>
 
 #include "database.h"
+#include "impartial_sumgame.h"
 #include "sumgame.h"
 #include "iobuffer.h"
 #include "serializer.h"
@@ -26,6 +27,7 @@
 #include "clobber_1xn.h"
 #include "utilities.h"
 #include "version_info.h"
+#include "impartial_game_wrapper.h"
 
 using namespace std;
 
@@ -178,7 +180,7 @@ void database::clear()
     _mapper.clear();
 }
 
-void database::generate_entries(i_db_game_generator& gen, bool silent)
+void database::generate_entries_partizan(i_db_game_generator& gen, bool silent)
 {
     while (gen)
     {
@@ -192,7 +194,7 @@ void database::generate_entries(i_db_game_generator& gen, bool silent)
             for (game* sg : *sr)
             {
                 sg->normalize();
-                _generate_entry_single(sg, silent);
+                _generate_entry_single_partizan(sg, silent);
                 delete sg;
             }
 
@@ -201,11 +203,63 @@ void database::generate_entries(i_db_game_generator& gen, bool silent)
 
         // Normalize, handle g
         g->normalize();
-        _generate_entry_single(g.get(), silent);
+        _generate_entry_single_partizan(g.get(), silent);
     }
 }
 
-void database::_generate_entry_single(game* g, bool silent)
+void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
+{
+    while (gen)
+    {
+        /*
+           g can be partizan OR impartial. If partizan, we must wrap it
+           in an impartial_game_wrapper
+        */
+        std::unique_ptr<game> g(gen.gen_game());
+        ++gen;
+
+        assert(logical_iff(                                   //
+            g->is_impartial(),                                //
+            dynamic_cast<impartial_game*>(g.get()) != nullptr //
+            ));                                               //
+
+        if (!g->is_impartial())
+        {
+            game* g_temp = g.release();
+            g.reset(new impartial_game_wrapper(g_temp, true));
+            // g now holds the wrapper, which now owns the game originally in g
+        }
+
+        assert(dynamic_cast<impartial_game*>(g.get()) != nullptr);
+        impartial_game* ig = static_cast<impartial_game*>(g.get());
+
+        // If game splits, handle subgames
+        split_result sr = ig->split();
+        if (sr.has_value())
+        {
+            for (game* sg : *sr)
+            {
+                assert(sg->is_impartial() &&                        //
+                       dynamic_cast<impartial_game*>(sg) != nullptr //
+                );
+
+                impartial_game* sg_impartial = static_cast<impartial_game*>(sg);
+                sg_impartial->normalize();
+
+                _generate_entry_single_impartial(sg_impartial, silent);
+                delete sg;
+            }
+
+            continue;
+        }
+
+        // Normalize, handle ig
+        ig->normalize();
+        _generate_entry_single_impartial(ig, silent);
+    }
+}
+
+void database::_generate_entry_single_partizan(game* g, bool silent)
 {
     if (get_partizan(*g).has_value())
         return;
@@ -242,6 +296,40 @@ void database::_generate_entry_single(game* g, bool silent)
         cout << " DONE" << endl;
 }
 
+void database::_generate_entry_single_impartial(impartial_game* ig, bool silent)
+{
+    if (get_impartial(*ig).has_value())
+        return;
+
+    // bool print_game = true;
+    bool print_game = !silent && ((_game_count % 128) == 0);
+
+    if (print_game)
+        cout << "Game # " << _game_count << ": " << *ig << std::flush;
+    _game_count++;
+
+    sumgame& s = _get_sumgame();
+    assert(s.num_total_games() == 0);
+
+    s.add(ig);
+
+    int nim_value = search_impartial_sumgame(s);
+    assert(nim_value >= 0);
+
+    s.pop(ig);
+
+    db_entry_impartial entry;
+    entry.nim_value = nim_value;
+
+    set_impartial(*ig, entry);
+    assert(s.num_total_games() == 0);
+
+    if (print_game)
+        cout << " DONE" << endl;
+}
+
+
+
 //////////////////////////////////////////////////
 std::ostream& operator<<(std::ostream& os, const database& db)
 {
@@ -249,6 +337,7 @@ std::ostream& operator<<(std::ostream& os, const database& db)
         db._mapper.get_disk_type_to_name_map();
 
     os << "# of Partizan game types: " << db._tree_partizan.size() << '\n';
+    os << "# of Impartial game types: " << db._tree_impartial.size() << '\n';
 
     for (const pair<const game_type_t, database::terminal_layer_partizan_t>& p :
          db._tree_partizan)
@@ -264,6 +353,23 @@ std::ostream& operator<<(std::ostream& os, const database& db)
         os << "\tGame type: \"" << game_name << "\" ";
         os << "Count: " << layer.size() << '\n';
     }
+
+    for (const pair<const game_type_t, database::terminal_layer_impartial_t>& p :
+         db._tree_impartial)
+    {
+        const game_type_t disk_type = p.first;
+        const database::terminal_layer_impartial_t& layer = p.second;
+
+        auto it = disk_type_to_name_map.find(disk_type);
+        THROW_ASSERT(it != disk_type_to_name_map.end());
+
+        const string& game_name = it->second;
+
+        os << "\tGame type: \"" << game_name << "\" ";
+        os << "Count: " << layer.size() << '\n';
+    }
+
+
 
     os << "=== Database metadata string begin ===" << "\n";
     os << db._metadata_string << "\n";

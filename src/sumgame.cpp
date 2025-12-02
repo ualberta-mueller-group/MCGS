@@ -416,6 +416,13 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
         print(cout);
     }
 
+    //cout << "vvvvvvvvvvvvvvvvvvvv\n";
+    //cout << *this;
+    simplify_impartial();
+    //cout << *this;
+    //cout << "^^^^^^^^^^^^^^^^^^^^\n";
+    //cout << endl;
+
     {
         std::optional<solve_result> result = simplify_db();
 
@@ -839,6 +846,102 @@ ebw analyze_outcome_count_vector(const std::vector<unsigned int>& counts,
 }
 
 } // namespace
+
+
+void sumgame::simplify_impartial()
+{
+    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_IMPARTIAL);
+    if (!global::use_db())
+        return;
+
+    _change_record_stack.emplace_back();
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+   
+    database& db = get_global_database();
+
+    int n_known_values = 0; // nimbers and impartial_games
+    int n_known_non_nimbers = 0; // known values which are not nimbers
+
+    int final_nim_sum = 0;
+
+    const int N_SUBGAMES = num_total_games();
+    for (int i = 0; i < N_SUBGAMES; i++)
+    {
+        game* sg = subgame(i);
+        if (!sg->is_active() || !sg->is_impartial())
+            continue;
+
+        assert(dynamic_cast<impartial_game*>(sg) != nullptr);
+
+        // Don't need to look up nimber
+        if (sg->game_type() == game_type<nimber>())
+        {
+            assert(dynamic_cast<nimber*>(sg) != nullptr);
+            nimber* sg_nimber = static_cast<nimber*>(sg);
+
+            n_known_values++;
+            nimber::add_nimber(final_nim_sum, sg_nimber->value());
+
+            // Actually deactivate later
+            cr.deactivated_games.push_back(sg);
+            continue;
+        }
+
+        assert(dynamic_cast<nimber*>(sg) == nullptr);
+
+        std::optional<db_entry_impartial> entry = db.get_impartial(*sg);
+
+        if (!entry.has_value())
+            continue;
+
+        n_known_values++;
+        n_known_non_nimbers++;
+        // Actually deactivate later
+        cr.deactivated_games.push_back(sg);
+        nimber::add_nimber(final_nim_sum, entry.value().nim_value);
+    }
+
+    if (n_known_values < 2 && n_known_non_nimbers == 0)
+    {
+        cr.deactivated_games.clear();
+        assert(cr.added_games.empty());
+        return;
+    }
+
+    for (game* sg : cr.deactivated_games)
+    {
+        assert(sg->is_active());
+        sg->set_active(false);
+    }
+
+    nimber* nim_sum_as_nimber = new nimber(final_nim_sum);
+
+    cr.added_games.push_back(nim_sum_as_nimber);
+    add(nim_sum_as_nimber);
+}
+
+void sumgame::undo_simplify_impartial()
+{
+    _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_IMPARTIAL);
+    if (!global::use_db())
+        return;
+
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    pop(cr.added_games);
+    for (game* g : cr.added_games)
+        delete g;
+    cr.added_games.clear();
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+    cr.deactivated_games.clear();
+
+    _change_record_stack.pop_back();
+}
 
 std::optional<solve_result> sumgame::simplify_db()
 {

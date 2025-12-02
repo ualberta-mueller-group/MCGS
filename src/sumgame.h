@@ -41,6 +41,7 @@ enum sumgame_undo_code
     SUMGAME_UNDO_SIMPLIFY_BASIC,
     SUMGAME_UNDO_PLAY,
     SUMGAME_UNDO_SIMPLIFY_DB,
+    SUMGAME_UNDO_SIMPLIFY_IMPARTIAL,
     SUMGAME_UNDO_PRE_SOLVE_PASS,
 };
 
@@ -99,6 +100,9 @@ public:
     void undo_move() override;
     void simplify_basic();
     void undo_simplify_basic();
+
+    void simplify_impartial();
+    void undo_simplify_impartial();
 
     std::optional<solve_result> simplify_db();
     void undo_simplify_db();

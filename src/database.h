@@ -20,6 +20,7 @@
 #include "sumgame.h"
 #include "db_game_generator.h"
 #include "type_mapper.h"
+#include "impartial_game.h"
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
     db.register_type(#game_class_name, game_type<game_class_name>())
@@ -99,7 +100,8 @@ public:
     bool empty() const;
 
     // silent=true silences printing to stdout
-    void generate_entries(i_db_game_generator& gen, bool silent = false);
+    void generate_entries_partizan(i_db_game_generator& gen, bool silent = false);
+    void generate_entries_impartial(i_db_game_generator& gen, bool silent = false);
 
 private:
     friend std::ostream& operator<<(std::ostream& os, const database& db);
@@ -116,7 +118,8 @@ private:
     uint64_t _game_count;          // count incremented by generate_entries()
 
     sumgame& _get_sumgame();
-    void _generate_entry_single(game* g, bool silent);
+    void _generate_entry_single_partizan(game* g, bool silent);
+    void _generate_entry_single_impartial(impartial_game* ig, bool silent);
 
     std::string _metadata_string;
     tree_partizan_t _tree_partizan;
