@@ -24,14 +24,25 @@ void type_mapper::register_type(const string& type_name,
     if (it == _disk_types.end())
     {
         // Disk type doesn't exist; create it
-        disk_type = _next_disk_type;
-        _next_disk_type++;
+
+        ///disk_type = _next_disk_type;
+        disk_type = runtime_type;
+
+        ///_next_disk_type++;
         _disk_types[type_name] = disk_type;
     }
     else
     {
         // Use existing disk type
         disk_type = it->second;
+
+        if (runtime_type != it->second)
+        {
+            cout << "WARNING: game type \"" << type_name
+                 << "\" has type ID mismatch with loaded database file. DB "
+                    "lookups won't work for this game. Rebuild DB file to fix "
+                    "this..." << endl;
+        }
     }
 
     // runtime_type's mapped disk type (should be 0)
