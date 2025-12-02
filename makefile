@@ -253,8 +253,8 @@ clean:
 test: MCGS_test
 	./MCGS_test
 
-test-fast: MCGS_test
-	./MCGS_test --no-slow-tests
+test_extra: MCGS_test
+	./MCGS_test --extra-tests
 
 
 # Object file target

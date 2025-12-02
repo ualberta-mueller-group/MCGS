@@ -10,13 +10,13 @@
 
 using namespace std;
 
-#define TEST_LOOP(var, layout_t, move_part, body)                              \
+#define TEST_LOOP(var, layout_t, move_part, full_interval, body)               \
     for (int var = move_part_min<layout_t, move_part>();                       \
-         var <= move_part_max<layout_t, move_part>(); var++)                   \
+         var <= move_part_max<layout_t, move_part>();                          \
+         var += (full_interval ? 1 : 8))                                      \
     {                                                                          \
         body                                                                   \
     }
-
 
 namespace {
 
@@ -109,7 +109,7 @@ void test_colors_move4()
 
 }
 
-void test_move1()
+void test_move1(bool test_full_interval)
 {
     // Parts/coordinates, extracted from a move with "unpack" functions
     int p1_unpack;
@@ -117,7 +117,7 @@ void test_move1()
     // Parts/coordinates, extracted from a move with "get" functions
     int p1_get;
 
-    TEST_LOOP(p1, cgt_move::move1_layout, 1, {
+    TEST_LOOP(p1, cgt_move::move1_layout, 1, test_full_interval, {
 
         // Test different ways of creating the move
         const ::move m_create_parts =
@@ -140,7 +140,7 @@ void test_move1()
     });
 }
 
-void test_move2()
+void test_move2(bool test_full_interval)
 {
     // Parts/coordinates, extracted from a move with "unpack" functions
     int p1_unpack, p2_unpack;
@@ -150,8 +150,8 @@ void test_move2()
     int p1_get, p2_get;
     int_pair c1_get;
 
-    TEST_LOOP(p1, cgt_move::move2_layout, 1, {
-    TEST_LOOP(p2, cgt_move::move2_layout, 2, {
+    TEST_LOOP(p1, cgt_move::move2_layout, 1, test_full_interval, {
+    TEST_LOOP(p2, cgt_move::move2_layout, 2, test_full_interval, {
 
         // Test different ways of creating the move
         const int_pair c1(p1, p2);
@@ -194,7 +194,7 @@ void test_move2()
     }}));
 }
 
-void test_move3()
+void test_move3(bool test_full_interval)
 {
     // Parts/coordinates, extracted from a move with "unpack" functions
     int p1_unpack, p2_unpack, p3_unpack;
@@ -202,9 +202,9 @@ void test_move3()
     // Parts/coordinates, extracted from a move with "get" functions
     int p1_get, p2_get, p3_get;
 
-    TEST_LOOP(p1, cgt_move::move3_layout, 1, {
-    TEST_LOOP(p2, cgt_move::move3_layout, 2, {
-    TEST_LOOP(p3, cgt_move::move3_layout, 3, {
+    TEST_LOOP(p1, cgt_move::move3_layout, 1, test_full_interval, {
+    TEST_LOOP(p2, cgt_move::move3_layout, 2, test_full_interval, {
+    TEST_LOOP(p3, cgt_move::move3_layout, 3, test_full_interval, {
 
         // Test different ways of creating the move
         const ::move m_create_parts =
@@ -235,7 +235,7 @@ void test_move3()
 }
 
 
-void test_move4()
+void test_move4(bool test_full_interval)
 {
     // Parts/coordinates, extracted from a move with "unpack" functions
     int p1_unpack, p2_unpack, p3_unpack, p4_unpack;
@@ -245,10 +245,10 @@ void test_move4()
     int p1_get, p2_get, p3_get, p4_get;
     int_pair c1_get, c2_get;
 
-    TEST_LOOP(p1, cgt_move::move4_layout, 1, {
-    TEST_LOOP(p2, cgt_move::move4_layout, 2, {
-    TEST_LOOP(p3, cgt_move::move4_layout, 3, {
-    TEST_LOOP(p4, cgt_move::move4_layout, 4, {
+    TEST_LOOP(p1, cgt_move::move4_layout, 1, test_full_interval, {
+    TEST_LOOP(p2, cgt_move::move4_layout, 2, test_full_interval, {
+    TEST_LOOP(p3, cgt_move::move4_layout, 3, test_full_interval, {
+    TEST_LOOP(p4, cgt_move::move4_layout, 4, test_full_interval, {
 
         // Test different ways of creating the move
         const int_pair c1(p1, p2);
@@ -303,7 +303,7 @@ void test_move4()
     }}}}))));
 }
 
-void test_move6()
+void test_move6(bool test_full_interval)
 {
     // Parts/coordinates, extracted from a move with "unpack" functions
     int p1_unpack, p2_unpack, p3_unpack, p4_unpack, p5_unpack, p6_unpack;
@@ -313,12 +313,12 @@ void test_move6()
     int p1_get, p2_get, p3_get, p4_get, p5_get, p6_get;
     int_pair c1_get, c2_get, c3_get;
 
-    TEST_LOOP(p1, cgt_move::move6_layout, 1, {
-    TEST_LOOP(p2, cgt_move::move6_layout, 2, {
-    TEST_LOOP(p3, cgt_move::move6_layout, 3, {
-    TEST_LOOP(p4, cgt_move::move6_layout, 4, {
-    TEST_LOOP(p5, cgt_move::move6_layout, 5, {
-    TEST_LOOP(p6, cgt_move::move6_layout, 6, {
+    TEST_LOOP(p1, cgt_move::move6_layout, 1, test_full_interval, {
+    TEST_LOOP(p2, cgt_move::move6_layout, 2, test_full_interval, {
+    TEST_LOOP(p3, cgt_move::move6_layout, 3, test_full_interval, {
+    TEST_LOOP(p4, cgt_move::move6_layout, 4, test_full_interval, {
+    TEST_LOOP(p5, cgt_move::move6_layout, 5, test_full_interval, {
+    TEST_LOOP(p6, cgt_move::move6_layout, 6, test_full_interval, {
 
         // Test different ways of creating the move
         const int_pair c1(p1, p2);
@@ -387,14 +387,14 @@ void test_move6()
 } // namespace
 
 //////////////////////////////////////////////////
-void cgt_move_test_all()
+void cgt_move_test_all(bool extra_tests)
 {
     test_colors_move2();
     test_colors_move4();
 
-    test_move1();
-    test_move2();
-    test_move3();
-    test_move4();
-    test_move6();
+    test_move1(extra_tests);
+    test_move2(extra_tests);
+    test_move3(extra_tests);
+    test_move4(extra_tests);
+    test_move6(extra_tests);
 }
