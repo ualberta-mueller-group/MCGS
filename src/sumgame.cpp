@@ -914,10 +914,13 @@ void sumgame::simplify_impartial()
         sg->set_active(false);
     }
 
-    nimber* nim_sum_as_nimber = new nimber(final_nim_sum);
+    if (final_nim_sum != 0)
+    {
+        nimber* nim_sum_as_nimber = new nimber(final_nim_sum);
 
-    cr.added_games.push_back(nim_sum_as_nimber);
-    add(nim_sum_as_nimber);
+        cr.added_games.push_back(nim_sum_as_nimber);
+        add(nim_sum_as_nimber);
+    }
 }
 
 void sumgame::undo_simplify_impartial()
@@ -928,9 +931,13 @@ void sumgame::undo_simplify_impartial()
 
     sumgame_impl::change_record& cr = _change_record_stack.back();
 
+    for (game* g : cr.added_games)
+        assert(g->is_active());
+
     pop(cr.added_games);
     for (game* g : cr.added_games)
         delete g;
+
     cr.added_games.clear();
 
     for (game* g : cr.deactivated_games)
