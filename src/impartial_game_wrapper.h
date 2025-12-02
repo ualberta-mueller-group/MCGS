@@ -17,6 +17,10 @@
 class impartial_game_wrapper : public impartial_game
 {
 public:
+    /*
+       TODO the default should be that the wrapper takes ownership of the
+       game...
+    */
     impartial_game_wrapper(game* g); // game still owned by caller
     impartial_game_wrapper(game* g,
                            bool owns_game); // if true, game is owned by callee
