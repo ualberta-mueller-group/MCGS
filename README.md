@@ -120,6 +120,8 @@ For a full description of input syntax, including game-specific input syntax,
 see [input/info.test](input/info.test).
 
 ### Using the Database
+NOTE: Database files from previous versions are not compatible with version 1.4.
+
 The database is loaded from `database.bin` automatically on startup if it
 exists and `--no-use-db` is not specified. `--db-file-load <file name>` is used
 to specify a different file. This file is not included in the repository and
