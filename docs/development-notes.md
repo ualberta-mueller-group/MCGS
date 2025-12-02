@@ -16,6 +16,7 @@ This document includes more detailed information than `README.md`, including des
 - [Adding Hashing To Games](#adding-hashing-to-games)
 - [Grid/Strip Generators, and Grid Game Hashes](#gridstrip-generators-and-grid-game-hashes)
 - [Transposition Tables (`transposition.h`)](#transposition-tables-transpositionh)
+- [Database File Portability](#database-file-portability)
 - [Database (`database.h`, `global_database.h`)](#database-databaseh-global_databaseh)
 - [Adding A Game To the Database](#adding-a-game-to-the-database)
 - [Safe Arithmetic Functions (`safe_arithmetic.h`)](#safe-arithmetic-functions-safe_arithmetich)
@@ -183,6 +184,7 @@ It derives from `alternating_move_game` and reimplements the
     - `game::_init_hash()` (hash derived from only the board state)
     - `game::_normalize_impl()` and `game::_undo_normalize_impl()` (reverse/un-reverse board based on lexicographical ordering)
         - This assumes that reversing the board doesn't change the value of the game
+        - NOTE: This doesnt use `_order_impl()`, it compares board contents
     - `game::_order_impl()` (lexicographical ordering)
 
 ## `grid` class (`grid.h`)
@@ -400,6 +402,8 @@ Things initialized by `mcgs_init_2` functions:
   database file (if exists)
 - In the future, may assign `game_type_t`s to specific games, so that their
 assignments are not dependent on input
+    - `game_type_t`s for games registered in the database have well-defined order
+      once `init_database()` runs
 
 # Random (`random.h`)
 - Defines `random_generator` class
@@ -988,6 +992,20 @@ sr.init_entry();
 sr.set_bool(0, win);
 ```
 
+# Database File Portability
+Database files are not yet portable. The local hash of a game is dependent
+on its `game_type_t`, and the random number generator implementation.
+
+Differing compilers, machine
+architectures, order of `DATABASE_REGISTER_TYPE()` calls
+(resulting in different `game_type_t`s), and differing order of `game_type()`
+calls before `init_database()` completes, will make a database file
+incompatible.
+
+In the future, changes to `random.h`, and the `type_mapper` class, may make
+database files portable. Currently `type_mapper` is used in the `database` class
+but is ineffective.
+
 # Database (`database.h`, `global_database.h`)
 `database.h` defines the `database` class, and two database entry structs. The
 struct `db_entry_partizan` is used to store outcome classes for partizan games,
@@ -1010,17 +1028,6 @@ implied).
     - Each tree is two layers of `std::unordered_map`. The first indexed by
         game type (`game_type_t`), the second is indexed by local
         hash (`hash_t`), yielding an entry struct
-    - Uses `type_mapper` class (`type_mapper.h`) to translate between run time allocated
-        `game_type_t` values, and disk `game_type_t` values
-
-        - This means the order of `game_type()` calls (more particularly, which
-            game class has which value for its `game_type_t`) is allowed to be
-            undefined. It doesn't matter whether `game_type<clobber>()` is
-            `1` or `2` etc -- the database translates these using its own
-            internal mapping saved in the database file
-
-            - This is quick, simply indexing into a vector using the run time
-                `game_type_t` to get the disk equivalent
 
 ## Database Generation
 Several types are used for database generation:

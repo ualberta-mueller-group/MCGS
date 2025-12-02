@@ -170,6 +170,11 @@ info for the loaded database file. This includes the date created, number of
 each game type contained by the file, and the config string used to generate
 the file.
 
+NOTE: Database files are not portable, and may only work on the same machine
+that generated them, assuming the same compiler and C++ standard library
+implementation is used. If you are a developer looking to extend MCGS, see:
+[Database File Portability](#database-file-portability)
+
 ### Using the Testing Framework
 The testing framework included in MCGS is used to generate, compare, and
 analyze performance and correctness data from MCGS. The command:
