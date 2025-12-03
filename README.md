@@ -33,6 +33,11 @@ Games". A brief high-level overview is given in the talk
     - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
 ### Version 1.4 Additions
+#### Changes Since Version 1.4-Prerelease
+- Fixed compilation error on Mac OS
+- Very long unit tests made faster
+- Compatibility warnings added to [Using the Database](#using-the-database) section
+    - Added extra checks for loading database files
 #### New Features
 - New games (see `input/info.test` for syntax)
     - Amazons
@@ -100,7 +105,8 @@ make test -j 4
 ```
 This will build and then run `./MCGS_test`, and on successful completion of
 unit tests, the text "SUCCESS" should appear. Running all tests can take
-several seconds, depending on your hardware.
+several seconds, depending on your hardware. The `test_extra` makefile target
+runs some unit tests on larger ranges of values, which takes much longer.
 
 ### Using MCGS
 `MCGS` can read input from a file, or as a quoted command line argument, or
