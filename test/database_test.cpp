@@ -141,7 +141,7 @@ void test_generate()
 
         gridlike_db_game_generator<clobber_1xn, GRIDLIKE_TYPE_STRIP> gen(gg);
 
-        db.generate_entries(gen, true);
+        db.generate_entries_partizan(gen, true);
     }
 
     assert(!db.empty());
