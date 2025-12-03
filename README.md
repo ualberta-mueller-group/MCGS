@@ -1,4 +1,4 @@
-# MCGS V1.4
+# MCGS V1.4.1
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
@@ -33,11 +33,12 @@ Games". A brief high-level overview is given in the talk
     - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
 ### Version 1.4 Additions
-#### Changes Since Version 1.4-Prerelease
+#### 1.4.1 Fixes
 - Fixed compilation error on Mac OS
 - Very long unit tests made faster
 - Compatibility warnings added to [Using the Database](#using-the-database) section
     - Added extra checks for loading database files
+- Increase default transposition table size to match previous versions
 #### New Features
 - New games (see `input/info.test` for syntax)
     - Amazons
