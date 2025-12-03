@@ -4,10 +4,8 @@
 #include <cassert>
 #include <unordered_map>
 #include <utility>
-#include <cstddef>
 #include <iostream>
 
-#include "utilities.h"
 #include "type_table.h"
 #include "throw_assert.h"
 
@@ -16,68 +14,75 @@ using namespace std;
 void type_mapper::register_type(const string& type_name,
                                 game_type_t runtime_type)
 {
-    // Search for existing disk type
-    auto it = _disk_types.find(type_name);
+    assert(runtime_type > 0);
 
-    game_type_t disk_type = 0; // 0 is invalid type
+    auto name_search = _name_to_id_map.find(type_name);
 
-    if (it == _disk_types.end())
+    // type name has a disk type
+    if (name_search != _name_to_id_map.end())
     {
-        // Disk type doesn't exist; create it
-        disk_type = _next_disk_type;
-        _next_disk_type++;
-        _disk_types[type_name] = disk_type;
+        const game_type_t disk_type = name_search->second;
+
+        if (runtime_type == disk_type)
+        {
+            THROW_ASSERT(!_type_is_valid(runtime_type)); // no double register
+            _mark_type_valid(runtime_type);
+            THROW_ASSERT(_type_is_valid(runtime_type));
+        }
+        else
+        {
+            cout << "WARNING: Database game_type_t mismatch for game \""
+                 << type_name
+                 << "\" (the loaded file has this game name, but assigns it a "
+                    "different game_type_t). DB lookups will not work for this "
+                    "game. To fix this, create a new DB file."
+                 << endl;
+
+            THROW_ASSERT(!_type_is_valid(runtime_type));
+        }
     }
-    else
+    else // type name has no disk type
     {
-        // Use existing disk type
-        disk_type = it->second;
+        auto type_search = _id_to_name_map.find(runtime_type);
+
+        if (type_search == _id_to_name_map.end())
+        {
+            // we can safely allow this translation
+            _name_to_id_map[type_name] = runtime_type;
+            _id_to_name_map[runtime_type] = type_name;
+
+            THROW_ASSERT(!_type_is_valid(runtime_type));
+            _mark_type_valid(runtime_type);
+            THROW_ASSERT(_type_is_valid(runtime_type));
+        }
+        else
+        {
+            cout
+                << "WARNING: Database game_type_t mismatch for game \""
+                << type_name
+                << "\" (the loaded file does not have this game name, but uses "
+                   "the game_type_t for it). DB lookups will not work for this "
+                   "game. To fix this, create a new DB file."
+                << endl;
+
+            THROW_ASSERT(!_type_is_valid(runtime_type));
+        }
     }
-
-    // runtime_type's mapped disk type (should be 0)
-    game_type_t& mapped_type = _type_remapping_ref(runtime_type);
-
-    // runtime_type not already registered, AND disk_type is valid
-    THROW_ASSERT(mapped_type == 0 && disk_type > 0);
-
-    mapped_type = disk_type;
-
-    assert(translate_type(runtime_type) == disk_type);
 }
 
 unordered_map<game_type_t, string> type_mapper::get_disk_type_to_name_map()
     const
 {
-    unordered_map<game_type_t, string> disk_type_to_name_map;
-
-    for (const pair<const string, game_type_t>& p : _disk_types)
-    {
-        auto inserted = disk_type_to_name_map.emplace(p.second, p.first);
-        assert(inserted.second);
-    }
-
-    return disk_type_to_name_map;
+    return _id_to_name_map;
 }
 
-game_type_t& type_mapper::_type_remapping_ref(game_type_t runtime_type)
-{
-    if (!(runtime_type < _type_remappings.size()))
-    {
-        const size_t new_size =
-            new_vector_capacity(runtime_type, _type_remappings.size());
-        _type_remappings.resize(new_size, 0);
-    }
-
-    assert(runtime_type < _type_remappings.size());
-    return _type_remappings[runtime_type];
-}
 
 //////////////////////////////////////////////////
 ostream& operator<<(ostream& os, const type_mapper& mapper)
 {
 
     os << "Types in mapper: \n";
-    for (const auto& it : mapper._disk_types)
+    for (const auto& it : mapper._id_to_name_map)
     {
         os << it.first << " -> " << it.second << '\n';
     }

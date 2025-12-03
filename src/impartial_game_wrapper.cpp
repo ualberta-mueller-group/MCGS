@@ -12,7 +12,7 @@
 
 game* impartial_game_wrapper::inverse() const
 {
-    return new impartial_game_wrapper(_game->inverse());
+    return new impartial_game_wrapper(_game->inverse(), true);
 }
 
 void impartial_game_wrapper::print(std::ostream& str) const

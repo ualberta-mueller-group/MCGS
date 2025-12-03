@@ -33,6 +33,11 @@ Games". A brief high-level overview is given in the talk
     - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
 ### Version 1.4 Additions
+#### Changes Since Version 1.4-Prerelease
+- Fixed compilation error on Mac OS
+- Very long unit tests made faster
+- Compatibility warnings added to [Using the Database](#using-the-database) section
+    - Added extra checks for loading database files
 #### New Features
 - New games (see `input/info.test` for syntax)
     - Amazons
@@ -100,7 +105,8 @@ make test -j 4
 ```
 This will build and then run `./MCGS_test`, and on successful completion of
 unit tests, the text "SUCCESS" should appear. Running all tests can take
-several seconds, depending on your hardware.
+several seconds, depending on your hardware. The `test_extra` makefile target
+runs some unit tests on larger ranges of values, which takes much longer.
 
 ### Using MCGS
 `MCGS` can read input from a file, or as a quoted command line argument, or
@@ -120,6 +126,8 @@ For a full description of input syntax, including game-specific input syntax,
 see [input/info.test](input/info.test).
 
 ### Using the Database
+NOTE: Database files from previous versions are not compatible with version 1.4.
+
 The database is loaded from `database.bin` automatically on startup if it
 exists and `--no-use-db` is not specified. `--db-file-load <file name>` is used
 to specify a different file. This file is not included in the repository and
@@ -169,6 +177,11 @@ The command line option `--print-db-info` can be specified to print database
 info for the loaded database file. This includes the date created, number of
 each game type contained by the file, and the config string used to generate
 the file.
+
+NOTE: Database files are not portable, and may only work on the same machine
+that generated them, assuming the same compiler and C++ standard library
+implementation is used. If you are a developer looking to extend MCGS, see:
+[development-notes.md (Database File Portability)](docs/development-notes.md#database-file-portability).
 
 ### Using the Testing Framework
 The testing framework included in MCGS is used to generate, compare, and

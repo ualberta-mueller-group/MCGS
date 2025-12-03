@@ -90,7 +90,7 @@ void print_usage(const char* exec_name)
     cout << endl;
 
     cout << "Flags:" << endl;
-    print_flag("--no-slow-tests", "Skip running tests which take longer.");
+    print_flag("--extra-tests", "Run extra tests which may take a long time.");
     print_flag("-h, --help", "Print this message and exit.");
 }
 } // namespace
@@ -110,16 +110,16 @@ int main(int argc, const char** argv)
         return 0;
     }
 
-    bool do_slow_tests = true;
+    bool do_extra_tests = false;
 
     // arg parse loop
     for (int i = 1; i < argc; i++) // skip executable name
     {
         string arg = argv[i];
 
-        if (arg == "--no-slow-tests")
+        if (arg == "--extra-tests")
         {
-            do_slow_tests = false;
+            do_extra_tests = true;
             continue;
         }
 
@@ -147,7 +147,7 @@ int main(int argc, const char** argv)
     // CGT utility functions
     cgt_basics_test_all();
     n_bit_int_test_all();
-    cgt_move_test_all();
+    cgt_move_test_all(do_extra_tests);
 
     // Game fundamentals
     game_type_test_all();
@@ -172,22 +172,22 @@ int main(int argc, const char** argv)
     cgt_dyadic_rational_test_all();
     cgt_integer_game_test_all();
 
-    if (do_slow_tests)
-    {
-        clobber_1xn_test_all();
-        clobber_test_all();
-        nogo_1xn_test_all();
-        nogo_test_all();
-        elephants_test_all(); // takes several seconds
-        sumgame_test_all();
+    //if (do_slow_tests)
+    //{
+    clobber_1xn_test_all();
+    clobber_test_all();
+    nogo_1xn_test_all();
+    nogo_test_all();
+    elephants_test_all(); // takes several seconds
+    sumgame_test_all();
 
-        domineering_test_all();
-        amazons_test_all();
-        fission_test_all();
-        toppling_dominoes_test_all();
-        gen_toads_test_all();
-        sheep_test_all();
-    }
+    domineering_test_all();
+    amazons_test_all();
+    fission_test_all();
+    toppling_dominoes_test_all();
+    gen_toads_test_all();
+    sheep_test_all();
+    //}
 
     normalize_test_all();
     split_test_all();

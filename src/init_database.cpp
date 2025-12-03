@@ -318,90 +318,83 @@ namespace {
 
 void register_games(database& db)
 {
-    /*
-        Types used to query the database must be registered, but order doesn't
-        matter. The database maps runtime game type IDs to disk game type IDs.
-    */
     assert(create_gen_funcs.empty());
 
     /*
-       TODO impartial wrapper games having the same game_type_t is problematic
-       because their DB entries will all be stored in the same terminal
-       layer...
+        Types used to query the database must be registered. The order matters:
+        see the "Database File Portability" section in development-notes.md
+    */
+
+
+    /*
+        TODO impartial wrapper games having the same game_type_t is problematic
+        because their DB entries will all be stored in the same terminal
+        layer...
     */
     DATABASE_REGISTER_TYPE(db, impartial_game_wrapper);
 
-    // clobber_1xn
     DATABASE_REGISTER_TYPE(db, clobber_1xn);
+    DATABASE_REGISTER_TYPE(db, nogo_1xn);
+    DATABASE_REGISTER_TYPE(db, elephants);
+    DATABASE_REGISTER_TYPE(db, clobber);
+    DATABASE_REGISTER_TYPE(db, nogo);
+    DATABASE_REGISTER_TYPE(db, domineering);
+    DATABASE_REGISTER_TYPE(db, amazons);
+    DATABASE_REGISTER_TYPE(db, fission);
+    DATABASE_REGISTER_TYPE(db, toppling_dominoes);
+    DATABASE_REGISTER_TYPE(db, sheep);
 
+    // clobber_1xn
     register_create_game_gen_fn(
         "clobber_1xn", false,
         get_gridlike_create_game_gen_fn<clobber_1xn, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE}, true, EMPTY));
 
     // nogo_1xn
-    DATABASE_REGISTER_TYPE(db, nogo_1xn);
-
     register_create_game_gen_fn(
         "nogo_1xn", false,
         get_gridlike_create_game_gen_fn<nogo_1xn, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE}, false, EMPTY));
 
     // elephants
-    DATABASE_REGISTER_TYPE(db, elephants);
-
     register_create_game_gen_fn(
         "elephants", false,
         get_gridlike_create_game_gen_fn<elephants, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE, EMPTY}));
 
     // clobber
-    DATABASE_REGISTER_TYPE(db, clobber);
-
     register_create_game_gen_fn(
         "clobber", false, get_gridlike_create_game_gen_fn<clobber, GRIDLIKE_TYPE_GRID>(
                        {BLACK, WHITE}, true, EMPTY));
 
     // nogo
-    DATABASE_REGISTER_TYPE(db, nogo);
-
     register_create_game_gen_fn(
         "nogo", false, get_gridlike_create_game_gen_fn<nogo, GRIDLIKE_TYPE_GRID>(
                     {BLACK, WHITE}, false, EMPTY));
 
     // domineering
-    DATABASE_REGISTER_TYPE(db, domineering);
-
     register_create_game_gen_fn(
         "domineering", false,
         get_gridlike_create_game_gen_fn<domineering, GRIDLIKE_TYPE_GRID>(
             {EMPTY}, true, BORDER));
 
     // amazons
-    DATABASE_REGISTER_TYPE(db, amazons);
-
     register_create_game_gen_fn(
         "amazons", false, get_gridlike_create_game_gen_fn<amazons, GRIDLIKE_TYPE_GRID>(
                        {BORDER, BLACK, WHITE}, false, EMPTY));
 
     // fission
-    DATABASE_REGISTER_TYPE(db, fission);
-
     register_create_game_gen_fn(
         "fission", false, get_gridlike_create_game_gen_fn<fission, GRIDLIKE_TYPE_GRID>(
                        {BORDER, BLACK}, false, EMPTY));
 
     // toppling_dominoes
-    DATABASE_REGISTER_TYPE(db, toppling_dominoes);
-
     register_create_game_gen_fn(
         "toppling_dominoes", false,
         get_gridlike_create_game_gen_fn<toppling_dominoes, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE}, true, BORDER));
 
     // sheep
-    DATABASE_REGISTER_TYPE(db, sheep);
-
     register_create_game_gen_fn("sheep", false, create_sheep_gen);
 }
 
