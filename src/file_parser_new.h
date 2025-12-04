@@ -18,16 +18,15 @@
 
 ////////////////////////////////////////////////// forward declarations
 class i_fp_visitor;
-class fp_visitor;
 class fp_visitor_print;
 
 class i_fp_expr;
-//class fp_expr_version;
+
+class i_fp_expr_content;
 class fp_expr_title;
 class fp_expr_game;
 class fp_expr_comment;
 
-class fp_expr_curly_block;
 class i_fp_expr_command;
 class fp_expr_command_solve_bw;
 class fp_expr_command_solve_n;
@@ -43,14 +42,13 @@ public:
     virtual ~i_fp_visitor() {}
 
 
-    virtual void visit(fp_chunk& chunk) = 0;
+    virtual void visit(const fp_chunk& chunk, int case_idx) = 0;
     //virtual void visit(fp_expr_version& expr) = 0;
-    virtual void visit(fp_expr_title& expr) = 0;
-    virtual void visit(fp_expr_game& expr) = 0;
-    virtual void visit(fp_expr_comment& expr) = 0;
-    virtual void visit(fp_expr_curly_block& expr) = 0;
-    virtual void visit(fp_expr_command_solve_bw& expr) = 0;
-    virtual void visit(fp_expr_command_solve_n& expr) = 0;
+    virtual void visit(const fp_expr_title& expr) = 0;
+    virtual void visit(const fp_expr_game& expr) = 0;
+    virtual void visit(const fp_expr_comment& expr) = 0;
+    virtual void visit(const fp_expr_command_solve_bw& expr) = 0;
+    virtual void visit(const fp_expr_command_solve_n& expr) = 0;
     //virtual void visit(fp_expr_command_winning_moves& expr) = 0;
 
 private:
@@ -63,7 +61,7 @@ public:
     i_fp_expr(int line_no);
     virtual ~i_fp_expr() {}
 
-    virtual void accept(i_fp_visitor& visitor) = 0;
+    virtual void accept(i_fp_visitor& visitor) const = 0;
 
     int get_line_no() const;
 
@@ -78,6 +76,20 @@ inline i_fp_expr::i_fp_expr(int line_no) : _line_no(line_no)
 inline int i_fp_expr::get_line_no() const
 {
     return _line_no;
+}
+
+//////////////////////////////////////// interface i_fp_expr_content
+class i_fp_expr_content: public i_fp_expr
+{
+public:
+    i_fp_expr_content(int line_no);
+
+private:
+};
+
+inline i_fp_expr_content::i_fp_expr_content(int line_no)
+    : i_fp_expr(line_no)
+{
 }
 
 //////////////////////////////////////// interface i_fp_expr_command
@@ -96,11 +108,11 @@ inline i_fp_expr_command::i_fp_expr_command(int line_no)
 
 ////////////////////////////////////////////////// classes
 //////////////////////////////////////// class fp_expr_title
-class fp_expr_title: public i_fp_expr
+class fp_expr_title: public i_fp_expr_content
 {
 public:
     fp_expr_title(int line_no, const std::string& title);
-    void accept(i_fp_visitor& visitor) override;
+    void accept(i_fp_visitor& visitor) const override;
 
     const std::string& get_title() const;
 
@@ -109,12 +121,12 @@ private:
 };
 
 inline fp_expr_title::fp_expr_title(int line_no, const std::string& title)
-    : i_fp_expr(line_no),
+    : i_fp_expr_content(line_no),
       _title(title)
 {
 }
 
-inline void fp_expr_title::accept(i_fp_visitor& visitor)
+inline void fp_expr_title::accept(i_fp_visitor& visitor) const
 {
     visitor.visit(*this);
 }
@@ -124,13 +136,12 @@ inline const std::string& fp_expr_title::get_title() const
     return _title;
 }
 
-
 //////////////////////////////////////// class fp_expr_game
-class fp_expr_game: public i_fp_expr
+class fp_expr_game: public i_fp_expr_content
 {
 public:
     fp_expr_game(int line_no, const std::string& game_token, bool is_bracketed);
-    void accept(i_fp_visitor& visitor) override;
+    void accept(i_fp_visitor& visitor) const override;
 
     const std::string& get_game_token() const;
     bool is_bracketed() const;
@@ -142,7 +153,7 @@ private:
 
 inline fp_expr_game::fp_expr_game(int line_no, const std::string& game_token,
                            bool is_bracketed)
-    : i_fp_expr(line_no),
+    : i_fp_expr_content(line_no),
       _game_token(game_token),
       _is_bracketed(is_bracketed)
 {
@@ -150,7 +161,7 @@ inline fp_expr_game::fp_expr_game(int line_no, const std::string& game_token,
                                  _is_bracketed));
 }
 
-inline void fp_expr_game::accept(i_fp_visitor& visitor)
+inline void fp_expr_game::accept(i_fp_visitor& visitor) const
 {
     visitor.visit(*this);
 }
@@ -173,11 +184,11 @@ enum fp_expr_comment_type
     FP_EXPR_COMMENT_TYPE_SILENT,
 };
 
-class fp_expr_comment: public i_fp_expr
+class fp_expr_comment: public i_fp_expr_content
 {
 public:
     fp_expr_comment(int line_no, const std::string& comment_string);
-    void accept(i_fp_visitor& visitor) override;
+    void accept(i_fp_visitor& visitor) const override;
 
     const std::string& get_comment() const;
     fp_expr_comment_type get_comment_type() const;
@@ -191,14 +202,14 @@ private:
 
 inline fp_expr_comment::fp_expr_comment(int line_no,
                                         const std::string& comment_string)
-    : i_fp_expr(line_no),
+    : i_fp_expr_content(line_no),
       _comment(comment_string)
 {
     _comment_type = FP_EXPR_COMMENT_TYPE_SHARED;
     _number = -1;
 }
 
-inline void fp_expr_comment::accept(i_fp_visitor& visitor)
+inline void fp_expr_comment::accept(i_fp_visitor& visitor) const
 {
     visitor.visit(*this);
 }
@@ -219,61 +230,6 @@ inline int fp_expr_comment::get_number() const
     return _number;
 }
 
-
-//////////////////////////////////////// class fp_expr_curly_block
-class fp_expr_curly_block: public i_fp_expr
-{
-public:
-    fp_expr_curly_block(int line_no);
-    void accept(i_fp_visitor& visitor) override;
-
-    void add_command(i_fp_expr_command* command);
-    void clear_commands();
-
-    int n_commands() const;
-    i_fp_expr_command& get_command(int idx);
-
-private:
-    std::vector<std::unique_ptr<i_fp_expr_command>> _commands;
-
-};
-
-inline fp_expr_curly_block::fp_expr_curly_block(int line_no)
-    : i_fp_expr(line_no)
-{
-}
-
-inline void fp_expr_curly_block::accept(i_fp_visitor& visitor)
-{
-    visitor.visit(*this);
-}
-
-inline void fp_expr_curly_block::add_command(i_fp_expr_command* command)
-{
-    _commands.emplace_back(command);
-}
-
-inline void fp_expr_curly_block::clear_commands()
-{
-    _commands.clear();
-}
-
-inline int fp_expr_curly_block::n_commands() const
-{
-    const size_t n_elements = _commands.size();
-    assert(0 <= n_elements && n_elements <= std::numeric_limits<int>::max());
-
-    return static_cast<int>(n_elements);
-}
-
-inline i_fp_expr_command& fp_expr_curly_block::get_command(int idx)
-{
-    assert(idx < n_commands());
-    return *(_commands[idx]);
-
-}
-
-
 //////////////////////////////////////// class fp_expr_command_solve_bw
 enum minimax_outcome_enum
 {
@@ -288,7 +244,7 @@ public:
     fp_expr_command_solve_bw(int line_no, bw player,
                              minimax_outcome_enum expected_outcome);
 
-    void accept(i_fp_visitor& visitor) override;
+    void accept(i_fp_visitor& visitor) const override;
 
     bw get_player() const;
     minimax_outcome_enum get_expected_outcome() const;
@@ -306,7 +262,7 @@ inline fp_expr_command_solve_bw::fp_expr_command_solve_bw(int line_no, bw player
 {
 }
 
-inline void fp_expr_command_solve_bw::accept(i_fp_visitor& visitor)
+inline void fp_expr_command_solve_bw::accept(i_fp_visitor& visitor) const
 {
     visitor.visit(*this);
 }
@@ -327,7 +283,7 @@ class fp_expr_command_solve_n: public i_fp_expr_command
 public:
     fp_expr_command_solve_n(int line_no, const std::optional<int>& expected_nim_value);
 
-    void accept(i_fp_visitor& visitor) override;
+    void accept(i_fp_visitor& visitor) const override;
 
     const std::optional<int>& get_expected_nim_value() const;
 
@@ -342,7 +298,7 @@ inline fp_expr_command_solve_n::fp_expr_command_solve_n(
 {
 }
 
-inline void fp_expr_command_solve_n::accept(i_fp_visitor& visitor)
+inline void fp_expr_command_solve_n::accept(i_fp_visitor& visitor) const
 {
     visitor.visit(*this);
 }
@@ -359,22 +315,28 @@ class fp_chunk
 public:
     fp_chunk();
 
-    // exprs
-    void add_expr(i_fp_expr* expr);
-    void clear_exprs();
+    // content exprs
+    int n_content_exprs() const;
+    void add_content_expr(i_fp_expr_content* expr);
+    const i_fp_expr_content& get_content_expr(int idx) const;
+    void clear_content_exprs();
 
-    int n_exprs() const;
-    i_fp_expr& get_expr(int idx);
+    // command exprs
+    int n_command_exprs() const;
+    void add_command_expr(i_fp_expr_command* expr);
+    const i_fp_expr_command& get_command_expr(int idx) const;
+    void clear_command_exprs();
 
     // version string
     void set_version_string(const std::string& version_string);
     void clear_version_string();
-
     bool has_version_string() const;
     const std::optional<std::string>& get_version_string() const;
 
 private:
-    std::vector<std::unique_ptr<i_fp_expr>> _exprs;
+    std::vector<std::unique_ptr<i_fp_expr_content>> _content_exprs;
+    std::vector<std::unique_ptr<i_fp_expr_command>> _command_exprs;
+
     std::optional<std::string> _version_string;
 };
 
@@ -382,28 +344,50 @@ inline fp_chunk::fp_chunk()
 {
 }
 
-inline void fp_chunk::add_expr(i_fp_expr* expr)
+inline int fp_chunk::n_content_exprs() const
 {
-    _exprs.emplace_back(expr);
-}
-
-inline void fp_chunk::clear_exprs()
-{
-    _exprs.clear();
-}
-
-inline int fp_chunk::n_exprs() const
-{
-    const size_t n_elements = _exprs.size();
-    assert(0 <= n_elements && n_elements <= std::numeric_limits<int>::max());
-
+    const size_t n_elements = _content_exprs.size();
+    THROW_ASSERT(0 <= n_elements && n_elements <= std::numeric_limits<int>::max());
     return static_cast<int>(n_elements);
 }
 
-inline i_fp_expr& fp_chunk::get_expr(int idx)
+inline void fp_chunk::add_content_expr(i_fp_expr_content* expr)
 {
-    assert(idx < n_exprs());
-    return *(_exprs[idx]);
+    _content_exprs.emplace_back(expr);
+}
+
+inline const i_fp_expr_content& fp_chunk::get_content_expr(int idx) const
+{
+    assert(idx < n_content_exprs());
+    return *(_content_exprs[idx]);
+}
+
+inline void fp_chunk::clear_content_exprs()
+{
+    _content_exprs.clear();
+}
+
+inline int fp_chunk::n_command_exprs() const
+{
+    const size_t n_elements = _command_exprs.size();
+    THROW_ASSERT(0 <= n_elements && n_elements <= std::numeric_limits<int>::max());
+    return static_cast<int>(n_elements);
+}
+
+inline void fp_chunk::add_command_expr(i_fp_expr_command* expr)
+{
+    _command_exprs.emplace_back(expr);
+}
+
+inline const i_fp_expr_command& fp_chunk::get_command_expr(int idx) const
+{
+    assert(idx < n_command_exprs());
+    return *(_command_exprs[idx]);
+}
+
+inline void fp_chunk::clear_command_exprs()
+{
+    _command_exprs.clear();
 }
 
 inline void fp_chunk::set_version_string(const std::string& version_string)
@@ -432,13 +416,12 @@ class fp_visitor_print: i_fp_visitor
 public:
     fp_visitor_print();
 
-    void visit(fp_chunk& chunk) override;
-    void visit(fp_expr_title& expr) override;
-    void visit(fp_expr_game& expr) override;
-    void visit(fp_expr_comment& expr) override;
-    void visit(fp_expr_curly_block& expr) override;
-    void visit(fp_expr_command_solve_bw& expr) override;
-    void visit(fp_expr_command_solve_n& expr) override;
+    void visit(const fp_chunk& chunk, int case_idx) override;
+    void visit(const fp_expr_title& expr) override;
+    void visit(const fp_expr_game& expr) override;
+    void visit(const fp_expr_comment& expr) override;
+    void visit(const fp_expr_command_solve_bw& expr) override;
+    void visit(const fp_expr_command_solve_n& expr) override;
 
 private:
 };
@@ -447,30 +430,40 @@ inline fp_visitor_print::fp_visitor_print()
 {
 }
 
-inline void fp_visitor_print::visit(fp_chunk& chunk)
+inline void fp_visitor_print::visit(const fp_chunk& chunk, int case_idx)
 {
+    THROW_ASSERT(case_idx < chunk.n_command_exprs());
+
     std::cout << "VISITING CHUNK" << std::endl;
 
-    const int n_exprs = chunk.n_exprs();
+    {
+        std::cout << "CHUNK CONTENT EXPRS:" << std::endl;
 
-    for (int i = 0; i < n_exprs; i++)
-        chunk.get_expr(i).accept(*this);
+        const int n_content_exprs = chunk.n_content_exprs();
+        for (int i = 0; i < n_content_exprs; i++)
+            chunk.get_content_expr(i).accept(*this);
+    }
+
+    {
+        std::cout << "CHUNK COMMAND EXPR:" << std::endl;
+        chunk.get_command_expr(case_idx).accept(*this);
+    }
 }
 
-inline void fp_visitor_print::visit(fp_expr_title& expr)
+inline void fp_visitor_print::visit(const fp_expr_title& expr)
 {
     std::cout << "|" << expr.get_line_no() << "| ";
     std::cout << "TITLE: " << expr.get_title() << std::endl;
 }
 
-inline void fp_visitor_print::visit(fp_expr_game& expr)
+inline void fp_visitor_print::visit(const fp_expr_game& expr)
 {
     std::cout << "|" << expr.get_line_no() << "| ";
     std::cout << "GAME (BRACKETED: " << expr.is_bracketed() << ") \"";
     std::cout << expr.get_game_token() << "\"" << std::endl;
 }
 
-inline void fp_visitor_print::visit(fp_expr_comment& expr)
+inline void fp_visitor_print::visit(const fp_expr_comment& expr)
 {
     std::cout << "|" << expr.get_line_no() << "| ";
     std::cout << "COMMENT (TYPE: " << expr.get_comment_type();
@@ -482,19 +475,7 @@ inline void fp_visitor_print::visit(fp_expr_comment& expr)
     std::cout << ") \"" << expr.get_comment() << "\"" << std::endl;
 }
 
-inline void fp_visitor_print::visit(fp_expr_curly_block& expr)
-{
-    std::cout << "|" << expr.get_line_no() << "| ";
-    std::cout << "CURLY {" << std::endl;
-
-    const int n_commands = expr.n_commands();
-    for (int i = 0; i < n_commands; i++)
-        expr.get_command(i).accept(*this);
-
-    std::cout << "END CURLY }" << std::endl;
-}
-
-inline void fp_visitor_print::visit(fp_expr_command_solve_bw& expr)
+inline void fp_visitor_print::visit(const fp_expr_command_solve_bw& expr)
 {
     std::cout << "|" << expr.get_line_no() << "| ";
     std::cout << "SOLVE BW: ";
@@ -525,7 +506,7 @@ inline void fp_visitor_print::visit(fp_expr_command_solve_bw& expr)
     std::cout << std::endl;
 }
 
-inline void fp_visitor_print::visit(fp_expr_command_solve_n& expr)
+inline void fp_visitor_print::visit(const fp_expr_command_solve_n& expr)
 {
     std::cout << "|" << expr.get_line_no() << "| ";
 
@@ -539,7 +520,6 @@ inline void fp_visitor_print::visit(fp_expr_command_solve_n& expr)
 
     std::cout << std::endl;
 }
-
 
 //////////////////////////////////////////////////
 void test_file_parser_new_stuff();
