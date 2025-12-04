@@ -16,22 +16,48 @@
 #include <iostream>
 #include <optional>
 
+// TODO think of a better name for fp_visitor_generate...
+
 ////////////////////////////////////////////////// forward declarations
-class i_fp_visitor;
-class fp_visitor_print;
+class i_fp_visitor; // interface for visitors to fp_chunk (a chunk of input)
+class fp_visitor_print; // visits fp_chunk and prints it to some std::ostream
+class fp_visitor_generate; // visits fp_chunk and gives you a test case
 
-class i_fp_expr;
+/*
+    void fp_visitor_print::visit(const fp_chunk&, int command_idx, ostream&)
+    void fp_visitor_generate::visit(const fp_chunk&, int command_idx, game_case&)
+*/
 
-class i_fp_expr_content;
-class fp_expr_title;
-class fp_expr_game;
-class fp_expr_comment;
+class i_fp_expr; // interface for all input expressions
 
-class i_fp_expr_command;
-class fp_expr_command_solve_bw;
-class fp_expr_command_solve_n;
+class i_fp_expr_content; // interface for all non-command expressions
+class fp_expr_title; // game title i.e. "[clobber]"
+class fp_expr_game; // game token, i.e. "XXO" or "(1, 2)"
+class fp_expr_comment; // comment (possibly prefixed by "_", "#0", "#1", or "#2")
+
+class i_fp_expr_command; // interface for all commands inside of curly braces
+class fp_expr_command_solve_bw; // solve for BLACK or WHITE
+class fp_expr_command_solve_n; // solve nim value
 //class fp_expr_command_winning_moves;
 
+/*
+    Represents a chunk of input (CLI game string, or .test file, or stdin)
+
+    Content expressions should be visited first, then command expression(s)
+
+    The "print" visitor may visit all command expressions
+    The "generate" visitor will only visit one command expression
+
+    TODO record the last title expression added, and keep it after
+    the expression vectors are cleared. Chunks can have implicit titles which
+    carry over from a previous chunk. This is easy to handle for the "generate"
+    visitor: if a game is visited before any title, check some persistent
+    fp_chunk variable holding the implicit title.
+
+    For the "print" visitor this is a problem. Titles should be annotated? The
+    output file should be an AST?
+
+*/
 class fp_chunk;
 
 ////////////////////////////////////////////////// interfaces
