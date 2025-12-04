@@ -340,6 +340,43 @@ Two functions do this: `search_impartial_sumgame` and
     - These functions use a persistent transposition table, just like `sumgame`,
     but both tables are independent from each other
 
+## Impartial Games - the Lemoine - Viennot algorithms
+- Added in version 1.5
+- Overview of approach:
+    - The tt stores the win/loss results of sums G + *n, where
+      G is an impartial game position, and *n is a nimber.
+    - If G + *n is a loss then G = *n
+    - If G + *n is a win then G != *n
+    - Special case: P + *0 = P
+- Algorithm 1:
+    - If G is splittable, use Algorithm 2: compute nimbers of most subgames and return nim-sum
+    - If G is not splittable:
+        - Search all position options `Pj + *n` and all 
+        nimber options `P + *i`, with `i<n`.
+        - If all options are winning, `G + *n` is a loss
+- Algorithm 2: `G = G1 + ... Gk`, compute boolean outcome of G + *n
+    - Estimate expected difficulty of all Gi, leave hardest game Gk for last
+    - Compute nimber ni = Gi for all `i<k`, compute nim sum 
+      `*nprime = n1 + ... + n_{k-1} + n`
+    - Boolean search `Gk + *nprime`
+- Algorithm 3: Compute nimber of G:
+    - Try `(G + *n)` for n = 0, 1, ... until a loss is found.
+    - If `G + *n` is a loss, then `G + *n = 0`, and `G = *n`
+- The solver interface is analogous to impartial_game.h, except:
+    - This implementation uses functions in a namespace,
+      not methods of impartial_game
+    - The type of transposition table (tt) is different
+    
+- TODO's
+    - In Algorithm 2, add a heuristic for hardest game. Right now, it just takes the last game in the list.
+    - Also allow impartial_sumgame to use this algorithm for 
+solving each subgame
+    - Check out the improvements in Beling's implementation in
+https://github.com/beling/impartial-games/blob/main/igs/src/solver/lvb.rs
+vs.
+https://github.com/beling
+/impartial-games/blob/main/igs/src/solver/lv.rs
+
 # Global Options (`global_options.h`)
 This file defines the `global_option` class, representing a global variable
 which is part of MCGS's configuration.

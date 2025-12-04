@@ -8,7 +8,9 @@
 #include <set>
 
 #include "cgt_nimber.h"
+#include "global_options.h"
 #include "hashing.h"
+#include "impartial_lemoine_viennot.h"
 #include "solver_stats.h"
 #include "transposition.h"
 
@@ -53,8 +55,15 @@ void impartial_game::set_solved(int nim_value)
 
 int impartial_game::search_with_tt(int tt_size) const
 {
-    impartial_tt tt(tt_size, 0);
-    return search_impartial_game(tt);
+    if (global::alt_imp_search.get())
+    {
+        return lemoine_viennot::search_with_tt(*this);
+    }
+    else
+    {
+        impartial_tt tt(tt_size, 0);
+        return search_impartial_game(tt);
+    }
 }
 
 int impartial_game::search_impartial_game(impartial_tt& tt) const

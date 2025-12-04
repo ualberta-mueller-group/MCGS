@@ -15,13 +15,18 @@
 #include "alternating_move_game.h"
 #include "cgt_nimber.h"
 #include "game.h"
+#include "global_options.h"
 #include "impartial_game.h"
+#include "impartial_lemoine_viennot.h"
 #include "solver_stats.h"
 #include "sumgame.h"
 
 namespace {
-
-std::optional<impartial_tt> tt_optional; // mcgs_init_all() must be called first
+// mcgs_init::init_impartial_sumgame() and 
+// mcgs_init::init_lemoine_viennot_hashtable() 
+// must be called first
+std::optional<impartial_tt> tt_optional;
+std::optional<lemoine_viennot::lv_bool_tt> lv_tt_optional;
 
 // Calling thread may assign "true" to over_time to stop search
 int search_impartial_sumgame_cancellable(const sumgame& s,
@@ -31,6 +36,7 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
     int sum_nim_value = 0;
 
     impartial_tt& tt = tt_optional.value();
+    lemoine_viennot::lv_bool_tt& lv_tt = lv_tt_optional.value();
 
     stats::inc_node_count();
 
@@ -49,13 +55,18 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
             result = ig->nim_value();
         else
         {
-            result = ig->search_impartial_game_cancellable(tt, over_time);
+            if (global::alt_imp_search.get())
+                result = search_impartial_game(*ig, lv_tt);
+            else
+                result = ig->search_impartial_game_cancellable(tt, over_time);
 
             if (over_time)
                 return -1;
             assert(result >= 0);
 
-            assert(ig->num_moves_played() > 0 || ig->is_solved());
+            // TODO LV should also set is_solved?
+            // Or get rid of is_solved ?
+            // assert(ig->num_moves_played() > 0 || ig->is_solved());
         }
 
         assert(result >= 0);
@@ -140,8 +151,10 @@ std::optional<int> search_impartial_sumgame_with_timeout(
 
 void init_impartial_sumgame_ttable(size_t idx_bits)
 {
-    assert(!tt_optional.has_value());
     assert(idx_bits > 0);
-
+    assert(!tt_optional.has_value());
     tt_optional.emplace(idx_bits, 0);
+
+    assert(!lv_tt_optional.has_value());
+    lv_tt_optional.emplace(idx_bits, 0);
 }
