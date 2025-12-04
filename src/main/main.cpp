@@ -9,6 +9,7 @@
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
+#include "file_parser_new.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
@@ -33,6 +34,9 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
+
+    test_file_parser_new_stuff();
+    return 0;
 
     if (opts.use_player)
     {
