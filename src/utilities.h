@@ -83,6 +83,11 @@ bool string_contains_whitespace(const std::string& str);
 // concat n copies of str
 std::string repeat_string(const std::string& str, int n);
 
+inline bool is_newline(char c)
+{
+    return c == '\n' || c == '\v' || c == '\f' || c == '\r';
+}
+
 //////////////////////////////////////// arithmetic operations
 
 // TODO make this work for negative values, and make it a template

@@ -3,6 +3,7 @@
 #include <functional>
 #include <iostream>
 #include <cassert>
+#include <sstream>
 #include <string>
 #include <istream>
 #include <unordered_map>
@@ -12,6 +13,7 @@
 #include <utility>
 #include "cgt_basics.h"
 #include "all_game_headers.h"
+#include "file_parser_new.h"
 #include "fission.h"
 #include "game_case.h"
 #include "game_token_parsers.h"
@@ -41,145 +43,6 @@ bool file_parser::override_assert_correct_version = false;
 
 unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 
-//////////////////////////////////////////////////////////// file_token_iterator
-
-file_token_iterator::file_token_iterator(istream* stream, bool delete_stream)
-    : _main_stream_ptr(stream),
-      _delete_stream(delete_stream),
-      _line_number(-1),
-      _token_buffer(),
-      _token_idx(0)
-{
-    _token_buffer.reserve(8);
-}
-
-file_token_iterator::~file_token_iterator()
-{
-    _cleanup();
-}
-
-int file_token_iterator::line_number() const
-{
-    // Don't call without getting a valid token first
-    assert(_line_number >= 0);
-
-    return _line_number + 1;
-}
-
-bool file_token_iterator::get_token(string& token)
-{
-    token.clear();
-
-    // Check if token buffer has data
-    if (_token_idx < _token_buffer.size())
-    {
-        const token_info& ti = _token_buffer[_token_idx];
-        _token_idx++;
-
-        _line_number = ti.line_number;
-        token = ti.token_string;
-
-        return true;
-    }
-
-    // Check if stream has more tokens
-    if (_get_token_from_stream(token))
-    {
-        _token_buffer.emplace_back(token, _line_number);
-        _token_idx++;
-
-        assert(_token_idx == _token_buffer.size());
-
-        return true;
-    }
-
-    return false;
-}
-
-bool file_token_iterator::_get_token_from_stream(string& token)
-{
-    assert(_main_stream_ptr != nullptr);
-    token.clear();
-
-    istream& main_stream = *_main_stream_ptr;
-
-    // Check if current line has more tokens
-    if (_line_stream && _line_stream >> token)
-    {
-        return true;
-    }
-
-    if (_line_stream.fail() && !_line_stream.eof())
-    {
-        throw ios_base::failure("file_token_iterator operator++ line IO error");
-    }
-
-    // Scroll through the file's lines until we get a token
-    string next_line;
-    while (main_stream && getline(main_stream, next_line) &&
-           !main_stream.fail())
-    {
-        _line_number++;
-        _line_stream = stringstream(next_line);
-
-        if (_line_stream && _line_stream >> token && !_line_stream.fail())
-        {
-            return true;
-        }
-
-        if (_line_stream.fail() && !_line_stream.eof())
-        {
-            throw ios_base::failure(
-                "file_token_iterator operator++ line IO error");
-        }
-    }
-
-    if (main_stream.fail() && !main_stream.eof())
-    {
-        throw ios_base::failure("file_token_iterator operator++ file IO error");
-    }
-
-    // no remaining tokens
-    return false;
-}
-
-void file_token_iterator::consume()
-{
-    vector<token_info> new_buffer;
-    new_buffer.reserve(_token_buffer.size() - _token_idx);
-
-    for (size_t i = _token_idx; i < _token_buffer.size(); i++)
-    {
-        new_buffer.push_back(_token_buffer[i]);
-    }
-
-    _token_buffer.clear();
-    _token_buffer = std::move(new_buffer);
-    _token_idx = 0;
-}
-
-void file_token_iterator::rewind()
-{
-    _token_idx = 0;
-}
-
-void file_token_iterator::_cleanup()
-{
-    if (_delete_stream && _main_stream_ptr != nullptr)
-    {
-        // close if it's a file...
-        ifstream* file = dynamic_cast<ifstream*>(_main_stream_ptr);
-
-        if (file != nullptr && file->is_open())
-        {
-            file->close();
-        }
-
-        delete _main_stream_ptr;
-    }
-
-    _main_stream_ptr = nullptr;
-}
 
 //////////////////////////////////////////////////////////// helper functions
 namespace {
@@ -260,7 +123,7 @@ void strip_enclosing(string& str, const string& open, const string& close)
 // Private constructor -- use static functions instead
 file_parser::file_parser(istream* stream, bool delete_stream,
                          bool do_version_check)
-    : _iterator(stream, delete_stream),
+    : _tokenizer(stream, delete_stream),
       _do_version_check(do_version_check),
       _section_title(""),
       _line_number(0),
@@ -357,7 +220,6 @@ void file_parser::_add_game_parser_impartial(
 match_state file_parser::_get_enclosed(const string& open, const string& close,
                                        bool allow_inner)
 {
-    token_iterator& iterator = _iterator;
     match_state state = MATCH_UNKNOWN;
     const size_t n_enclosing_chars = open.size() + close.size();
 
@@ -408,11 +270,11 @@ match_state file_parser::_get_enclosed(const string& open, const string& close,
     }
 
     string new_token;
-    while (iterator.get_token(new_token))
+    while (_tokenizer.get_token(new_token))
     {
         assert(!match_state_conclusive(state));
 
-        _token += " " + new_token;
+        _token += new_token;
 
         update_match_state();
         if (match_state_conclusive(state))
@@ -460,13 +322,13 @@ bool file_parser::_match(const string& open, const string& close,
         }
         strip_enclosing(_token, open, close);
 
-        _iterator.consume();
+        _tokenizer.consume();
         return true;
     }
 
     if (state == MATCH_NOT_FOUND)
     {
-        _iterator.rewind();
+        _tokenizer.rewind();
         _token = token_copy;
         return false;
     }
@@ -636,12 +498,13 @@ bool file_parser::parse_chunk(game_case& gc)
         _cases[i].cleanup_games();
     }
 
-    token_iterator& iterator = _iterator;
-
-    while (iterator.get_token(_token))
+    while (_tokenizer.get_token(_token))
     {
-        _line_number = iterator.line_number();
-        iterator.consume();
+        _line_number = _tokenizer.line_start();
+        _tokenizer.consume();
+
+        if (_tokenizer.is_whitespace())
+            continue;
 
         // Check version (for file)
         if (_do_version_check)
@@ -760,6 +623,13 @@ bool file_parser::parse_chunk(game_case& gc)
     return false;
 }
 
+void file_parser::print_ast() const
+{
+    return;
+    fp_visitor_print visitor;
+    visitor.visit(_chunk, _next_case_idx - 1);
+}
+
 file_parser* file_parser::from_stdin()
 {
     return new file_parser(&cin, false, false);
@@ -779,9 +649,9 @@ file_parser* file_parser::from_file(const string& file_name)
     return new file_parser(stream, true, true);
 }
 
-file_parser* file_parser::from_string(const string& string)
+file_parser* file_parser::from_string(const string& str)
 {
-    return new file_parser(new stringstream(string), true, false);
+    return new file_parser(new stringstream(str), true, false);
 }
 
 bool file_parser::warned_wrong_version()

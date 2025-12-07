@@ -1,19 +1,72 @@
 /*
-   prototyping for file parser refactor
+    TODO remaining tasks:
 
-   TODO move some functions to cpp file
+    0. Enumerate all classes and function signatures before writing any more
+       code...
+
+    1. Make a file_parser2 class (copy existing code and rename it).
+       Make it maintain an fp_chunk:
+
+       bool file_parser2::parse_chunk();
+
+       int file_parser2::n_test_cases() const;
+       csv_row file_parser2::run_test_case(int idx) const; // don't implement
+       vector<game*> file_parser2::get_games() const;
+
+       const fp_chunk& file_parser2::get_fp_chunk() const;
+
+       Implement everything except run_test_case(). The new parse_chunk() is
+       a bit awkward, but it's not possible to know if there's a chunk to
+       be read without trying to read it, which either results in possibly
+       blocking, or more complex code...
+
+       Allow empty command braces
+
+    3. Add a csv_row struct/class. Wrap some fields in std::optional, and have
+       a `bool is_complete` check to ensure mandatory fields are filled in?
+       Add utility functions for fields that are annoying to populate, i.e.
+       time, game string, hash, etc
+
+    4. Make file_parser2::run_test_case() call one of the utility functions
+       implementing the actual solving/winning move enumeration
+
+
+    NOTES:
+    - Empty command braces should be allowed. --play-mcgs doesn't care about the
+      actual command, just the games.
+
+    - When adding the winning moves test, remove --print-winning-moves.
+      Instead make this a command: "{B winning moves?}" to print, and
+      "{B winning moves move1, move2, move3...}" to specify moves
+
+    - file_parser2 should use several visitors to implement these methods:
+
+      csv_row visitor_run_test::visit(const fp_chunk&, int test_idx) const;
+      vector<game*> visitor_get_games::visit(const fp_chunk&) const;
+
+      Class visitor_run_test should gather both the comments and games,
+      then call the correct utility function to generate the csv_row.
+
+      Class visitor_get_games should just return the games
+
+      How to copy chunks to a file?
+
+      // -1 test_idx will print command "{}"
+      optional<string> visitor_print_test(const fp_chunk&, int test_idx, const
+          optional<string>&, ostream&) const;
+
+*/
+
+/*
+   prototyping for file parser refactor
 */
 #pragma once
 
 #include "cgt_basics.h"
-#include "throw_assert.h"
-#include "utilities.h"
-#include <limits>
 #include <string>
 #include <vector>
 #include <memory>
 #include <cassert>
-#include <iostream>
 #include <optional>
 
 // TODO think of a better name for fp_visitor_generate...
@@ -67,15 +120,12 @@ class i_fp_visitor
 public:
     virtual ~i_fp_visitor() {}
 
-
     virtual void visit(const fp_chunk& chunk, int case_idx) = 0;
-    //virtual void visit(fp_expr_version& expr) = 0;
     virtual void visit(const fp_expr_title& expr) = 0;
     virtual void visit(const fp_expr_game& expr) = 0;
     virtual void visit(const fp_expr_comment& expr) = 0;
     virtual void visit(const fp_expr_command_solve_bw& expr) = 0;
     virtual void visit(const fp_expr_command_solve_n& expr) = 0;
-    //virtual void visit(fp_expr_command_winning_moves& expr) = 0;
 
 private:
 };
@@ -95,15 +145,6 @@ private:
     const int _line_no;
 };
 
-inline i_fp_expr::i_fp_expr(int line_no) : _line_no(line_no)
-{
-}
-
-inline int i_fp_expr::get_line_no() const
-{
-    return _line_no;
-}
-
 //////////////////////////////////////// interface i_fp_expr_content
 class i_fp_expr_content: public i_fp_expr
 {
@@ -113,10 +154,6 @@ public:
 private:
 };
 
-inline i_fp_expr_content::i_fp_expr_content(int line_no)
-    : i_fp_expr(line_no)
-{
-}
 
 //////////////////////////////////////// interface i_fp_expr_command
 class i_fp_expr_command: public i_fp_expr
@@ -126,11 +163,6 @@ public:
 
 private:
 };
-
-inline i_fp_expr_command::i_fp_expr_command(int line_no)
-    : i_fp_expr(line_no)
-{
-}
 
 ////////////////////////////////////////////////// classes
 //////////////////////////////////////// class fp_expr_title
@@ -145,22 +177,6 @@ public:
 private:
     const std::string _title;
 };
-
-inline fp_expr_title::fp_expr_title(int line_no, const std::string& title)
-    : i_fp_expr_content(line_no),
-      _title(title)
-{
-}
-
-inline void fp_expr_title::accept(i_fp_visitor& visitor) const
-{
-    visitor.visit(*this);
-}
-
-inline const std::string& fp_expr_title::get_title() const
-{
-    return _title;
-}
 
 //////////////////////////////////////// class fp_expr_game
 class fp_expr_game: public i_fp_expr_content
@@ -177,30 +193,6 @@ private:
     const bool _is_bracketed;
 };
 
-inline fp_expr_game::fp_expr_game(int line_no, const std::string& game_token,
-                           bool is_bracketed)
-    : i_fp_expr_content(line_no),
-      _game_token(game_token),
-      _is_bracketed(is_bracketed)
-{
-    THROW_ASSERT(LOGICAL_IMPLIES(string_contains_whitespace(_game_token),
-                                 _is_bracketed));
-}
-
-inline void fp_expr_game::accept(i_fp_visitor& visitor) const
-{
-    visitor.visit(*this);
-}
-
-inline const std::string& fp_expr_game::get_game_token() const
-{
-    return _game_token;
-}
-
-inline bool fp_expr_game::is_bracketed() const
-{
-    return _is_bracketed;
-}
 
 //////////////////////////////////////// class fp_expr_comment
 enum fp_expr_comment_type
@@ -226,36 +218,6 @@ private:
     int _number;
 };
 
-inline fp_expr_comment::fp_expr_comment(int line_no,
-                                        const std::string& comment_string)
-    : i_fp_expr_content(line_no),
-      _comment(comment_string)
-{
-    _comment_type = FP_EXPR_COMMENT_TYPE_SHARED;
-    _number = -1;
-}
-
-inline void fp_expr_comment::accept(i_fp_visitor& visitor) const
-{
-    visitor.visit(*this);
-}
-
-inline const std::string& fp_expr_comment::get_comment() const
-{
-    return _comment;
-}
-
-inline fp_expr_comment_type fp_expr_comment::get_comment_type() const
-{
-    return _comment_type;
-}
-
-inline int fp_expr_comment::get_number() const
-{
-    THROW_ASSERT(_comment_type == FP_EXPR_COMMENT_TYPE_SHARED);
-    return _number;
-}
-
 //////////////////////////////////////// class fp_expr_command_solve_bw
 enum minimax_outcome_enum
 {
@@ -280,28 +242,6 @@ private:
     const minimax_outcome_enum _expected_outcome;
 };
 
-inline fp_expr_command_solve_bw::fp_expr_command_solve_bw(int line_no, bw player,
-                         minimax_outcome_enum expected_outcome)
-    : i_fp_expr_command(line_no),
-      _player(player),
-      _expected_outcome(expected_outcome)
-{
-}
-
-inline void fp_expr_command_solve_bw::accept(i_fp_visitor& visitor) const
-{
-    visitor.visit(*this);
-}
-
-inline bw fp_expr_command_solve_bw::get_player() const
-{
-    return _player;
-}
-
-inline minimax_outcome_enum fp_expr_command_solve_bw::get_expected_outcome() const
-{
-    return _expected_outcome;
-}
 
 //////////////////////////////////////// class fp_expr_command_solve_n
 class fp_expr_command_solve_n: public i_fp_expr_command
@@ -316,24 +256,6 @@ public:
 private:
     const std::optional<int> _expected_nim_value;
 };
-
-inline fp_expr_command_solve_n::fp_expr_command_solve_n(
-    int line_no, const std::optional<int>& expected_nim_value)
-    : i_fp_expr_command(line_no),
-      _expected_nim_value(expected_nim_value)
-{
-}
-
-inline void fp_expr_command_solve_n::accept(i_fp_visitor& visitor) const
-{
-    visitor.visit(*this);
-}
-
-inline const std::optional<int>& fp_expr_command_solve_n::
-    get_expected_nim_value() const
-{
-    return _expected_nim_value;
-}
 
 //////////////////////////////////////// class fp_chunk
 class fp_chunk
@@ -366,77 +288,8 @@ private:
     std::optional<std::string> _version_string;
 };
 
-inline fp_chunk::fp_chunk()
-{
-}
 
-inline int fp_chunk::n_content_exprs() const
-{
-    const size_t n_elements = _content_exprs.size();
-    THROW_ASSERT(0 <= n_elements && n_elements <= std::numeric_limits<int>::max());
-    return static_cast<int>(n_elements);
-}
-
-inline void fp_chunk::add_content_expr(i_fp_expr_content* expr)
-{
-    _content_exprs.emplace_back(expr);
-}
-
-inline const i_fp_expr_content& fp_chunk::get_content_expr(int idx) const
-{
-    assert(idx < n_content_exprs());
-    return *(_content_exprs[idx]);
-}
-
-inline void fp_chunk::clear_content_exprs()
-{
-    _content_exprs.clear();
-}
-
-inline int fp_chunk::n_command_exprs() const
-{
-    const size_t n_elements = _command_exprs.size();
-    THROW_ASSERT(0 <= n_elements && n_elements <= std::numeric_limits<int>::max());
-    return static_cast<int>(n_elements);
-}
-
-inline void fp_chunk::add_command_expr(i_fp_expr_command* expr)
-{
-    _command_exprs.emplace_back(expr);
-}
-
-inline const i_fp_expr_command& fp_chunk::get_command_expr(int idx) const
-{
-    assert(idx < n_command_exprs());
-    return *(_command_exprs[idx]);
-}
-
-inline void fp_chunk::clear_command_exprs()
-{
-    _command_exprs.clear();
-}
-
-inline void fp_chunk::set_version_string(const std::string& version_string)
-{
-    _version_string = version_string;
-}
-
-inline void fp_chunk::clear_version_string()
-{
-    _version_string.reset();
-}
-
-inline bool fp_chunk::has_version_string() const
-{
-    return _version_string.has_value();
-}
-
-inline const std::optional<std::string>& fp_chunk::get_version_string() const
-{
-    return _version_string;
-}
-
-//////////////////////////////////////// class fp_visito
+//////////////////////////////////////// class fp_visitor_print
 class fp_visitor_print: i_fp_visitor
 {
 public:
@@ -452,100 +305,6 @@ public:
 private:
 };
 
-inline fp_visitor_print::fp_visitor_print()
-{
-}
-
-inline void fp_visitor_print::visit(const fp_chunk& chunk, int case_idx)
-{
-    THROW_ASSERT(case_idx < chunk.n_command_exprs());
-
-    std::cout << "VISITING CHUNK" << std::endl;
-
-    {
-        std::cout << "CHUNK CONTENT EXPRS:" << std::endl;
-
-        const int n_content_exprs = chunk.n_content_exprs();
-        for (int i = 0; i < n_content_exprs; i++)
-            chunk.get_content_expr(i).accept(*this);
-    }
-
-    {
-        std::cout << "CHUNK COMMAND EXPR:" << std::endl;
-        chunk.get_command_expr(case_idx).accept(*this);
-    }
-}
-
-inline void fp_visitor_print::visit(const fp_expr_title& expr)
-{
-    std::cout << "|" << expr.get_line_no() << "| ";
-    std::cout << "TITLE: " << expr.get_title() << std::endl;
-}
-
-inline void fp_visitor_print::visit(const fp_expr_game& expr)
-{
-    std::cout << "|" << expr.get_line_no() << "| ";
-    std::cout << "GAME (BRACKETED: " << expr.is_bracketed() << ") \"";
-    std::cout << expr.get_game_token() << "\"" << std::endl;
-}
-
-inline void fp_visitor_print::visit(const fp_expr_comment& expr)
-{
-    std::cout << "|" << expr.get_line_no() << "| ";
-    std::cout << "COMMENT (TYPE: " << expr.get_comment_type();
-    std::cout << " NUMBER: ";
-    if (expr.get_comment_type() == FP_EXPR_COMMENT_TYPE_NUMBERED)
-        std::cout << expr.get_number();
-    else
-        std::cout << "?";
-    std::cout << ") \"" << expr.get_comment() << "\"" << std::endl;
-}
-
-inline void fp_visitor_print::visit(const fp_expr_command_solve_bw& expr)
-{
-    std::cout << "|" << expr.get_line_no() << "| ";
-    std::cout << "SOLVE BW: ";
-    std::cout << color_to_player_char(expr.get_player()) << " ";
-    const minimax_outcome_enum expected_outcome = expr.get_expected_outcome();
-
-    switch (expected_outcome)
-    {
-        case MINIMAX_OUTCOME_NONE:
-        {
-            std::cout << "?";
-            break;
-        }
-
-        case MINIMAX_OUTCOME_WIN:
-        {
-            std::cout << "WIN";
-            break;
-        }
-
-        case MINIMAX_OUTCOME_LOSS:
-        {
-            std::cout << "LOSS";
-            break;
-        }
-    }
-
-    std::cout << std::endl;
-}
-
-inline void fp_visitor_print::visit(const fp_expr_command_solve_n& expr)
-{
-    std::cout << "|" << expr.get_line_no() << "| ";
-
-    std::cout << "SOLVE N: ";
-    const std::optional<int>& expected_nim_value = expr.get_expected_nim_value();
-
-    if (expected_nim_value.has_value())
-        std::cout << expected_nim_value.value();
-    else
-        std::cout << "?";
-
-    std::cout << std::endl;
-}
 
 //////////////////////////////////////////////////
 void test_file_parser_new_stuff();

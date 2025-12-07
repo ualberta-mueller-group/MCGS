@@ -17,6 +17,7 @@
 #include "clobber.h"
 
 #include "sumgame.h"
+#include "istream_tokenizer.h"
 #include "throw_assert.h"
 #include "gen_experiments.h"
 #include "winning_moves.h"
@@ -35,8 +36,9 @@ int main(int argc, char** argv)
 
     mcgs_init_2(opts);
 
-    test_file_parser_new_stuff();
-    return 0;
+    //test_file_parser_new_stuff();
+    //test_istream_tokenizer();
+    //return 0;
 
     if (opts.use_player)
     {
@@ -82,6 +84,8 @@ int main(int argc, char** argv)
 
         while (opts.parser->parse_chunk(gc))
         {
+            opts.parser->print_ast();
+
             if (!first_case)
                 cout << endl;
 
