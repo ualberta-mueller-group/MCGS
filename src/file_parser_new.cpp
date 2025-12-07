@@ -1,8 +1,11 @@
 #include "file_parser_new.h"
 
+#include <cctype>
 #include <iostream>
+#include "cgt_basics.h"
 #include "throw_assert.h"
 #include "utilities.h"
+#include "string_to_int.h"
 
 //////////////////////////////////////////////////
 
@@ -80,8 +83,49 @@ fp_expr_comment::fp_expr_comment(int line_no,
     : i_fp_expr_content(line_no),
       _comment(comment_string)
 {
+    // Default is shared
     _comment_type = FP_EXPR_COMMENT_TYPE_SHARED;
     _number = -1;
+
+    // Silent comment?
+    if (!_comment.empty() && _comment[0] == '_')
+    {
+        _comment_type = FP_EXPR_COMMENT_TYPE_SILENT;
+        return;
+    }
+
+    // Numbered comment?
+    if (_comment.empty() || _comment[0] != '#')
+        return;
+
+    std::string comment_number_string;
+    size_t n_skip_chars = 1;
+
+    // Get digits
+    for (size_t i = 1; i < _comment.size(); i++)
+    {
+        const char c = _comment[i];
+        n_skip_chars++;
+
+        if (std::isspace(c))
+            break;
+
+        comment_number_string.push_back(c);
+    }
+
+    std::optional<int> comment_number_int = str_to_i_opt(comment_number_string);
+
+    if (!comment_number_int.has_value() || comment_number_int.value() < 0)
+    {
+        THROW_ASSERT(false); // TODO make this throw a parser exception
+
+        //throw parser_exception("Comment with '#' missing or bad number",
+        //                       BAD_COMMENT_FORMAT);
+    }
+
+    _comment = _comment.substr(n_skip_chars);
+    _comment_type = FP_EXPR_COMMENT_TYPE_NUMBERED;
+    _number = comment_number_int.value();
 }
 
 void fp_expr_comment::accept(i_fp_visitor& visitor) const
@@ -101,7 +145,7 @@ fp_expr_comment_type fp_expr_comment::get_comment_type() const
 
 int fp_expr_comment::get_number() const
 {
-    THROW_ASSERT(_comment_type == FP_EXPR_COMMENT_TYPE_SHARED);
+    THROW_ASSERT(_comment_type == FP_EXPR_COMMENT_TYPE_NUMBERED);
     return _number;
 }
 
@@ -226,14 +270,12 @@ fp_visitor_print::fp_visitor_print()
 {
 }
 
-void fp_visitor_print::visit(const fp_chunk& chunk, int case_idx)
+void fp_visitor_print::visit_chunk(const fp_chunk& chunk)
 {
-    THROW_ASSERT(case_idx < chunk.n_command_exprs());
-
-    std::cout << "VISITING CHUNK" << std::endl;
+    std::cout << "|CHUNK|" << std::endl;
 
     {
-        std::cout << "CHUNK CONTENT EXPRS:" << std::endl;
+        std::cout << "|CHUNK CONTENT EXPRS|" << std::endl;
 
         const int n_content_exprs = chunk.n_content_exprs();
         for (int i = 0; i < n_content_exprs; i++)
@@ -241,41 +283,45 @@ void fp_visitor_print::visit(const fp_chunk& chunk, int case_idx)
     }
 
     {
-        std::cout << "CHUNK COMMAND EXPR:" << std::endl;
-        chunk.get_command_expr(case_idx).accept(*this);
+        std::cout << "|CHUNK COMMAND EXPRS|" << std::endl;
+        const int n_command_exprs = chunk.n_command_exprs();
+
+        for (int i = 0; i < n_command_exprs; i++)
+            chunk.get_command_expr(i).accept(*this);
     }
 }
 
 void fp_visitor_print::visit(const fp_expr_title& expr)
 {
-    std::cout << "|" << expr.get_line_no() << "| ";
-    std::cout << "TITLE: " << expr.get_title() << std::endl;
+    std::cout << "|TITLE L" << expr.get_line_no() << "| ``";
+    std::cout << expr.get_title() << "``" << std::endl;
 }
 
 void fp_visitor_print::visit(const fp_expr_game& expr)
 {
-    std::cout << "|" << expr.get_line_no() << "| ";
-    std::cout << "GAME (BRACKETED: " << expr.is_bracketed() << ") \"";
-    std::cout << expr.get_game_token() << "\"" << std::endl;
+    std::cout << "|GAME L" << expr.get_line_no() << "| ";
+    std::cout << "(Bracketed: " << expr.is_bracketed() << ") ``";
+    std::cout << expr.get_game_token() << "``" << std::endl;
 }
 
 void fp_visitor_print::visit(const fp_expr_comment& expr)
 {
-    std::cout << "|" << expr.get_line_no() << "| ";
-    std::cout << "COMMENT (TYPE: " << expr.get_comment_type();
-    std::cout << " NUMBER: ";
-    if (expr.get_comment_type() == FP_EXPR_COMMENT_TYPE_NUMBERED)
-        std::cout << expr.get_number();
-    else
+    std::cout << "|COMMENT L" << expr.get_line_no() << "| ";
+    std::cout << "(Type: " << expr.get_comment_type() << " Number: ";
+    if (expr.get_comment_type() != FP_EXPR_COMMENT_TYPE_NUMBERED)
         std::cout << "?";
-    std::cout << ") \"" << expr.get_comment() << "\"" << std::endl;
+    else
+        std::cout << expr.get_number();
+
+    std::cout << ") ``" << expr.get_comment() << "``" << std::endl;
 }
 
 void fp_visitor_print::visit(const fp_expr_command_solve_bw& expr)
 {
-    std::cout << "|" << expr.get_line_no() << "| ";
-    std::cout << "SOLVE BW: ";
-    std::cout << color_to_player_char(expr.get_player()) << " ";
+    std::cout << "|SOLVE_BW L" << expr.get_line_no();
+    std::cout << "| (Player: " << color_to_player_char(expr.get_player());
+    std::cout << " Expected: ";
+
     const minimax_outcome_enum expected_outcome = expr.get_expected_outcome();
 
     switch (expected_outcome)
@@ -288,25 +334,24 @@ void fp_visitor_print::visit(const fp_expr_command_solve_bw& expr)
 
         case MINIMAX_OUTCOME_WIN:
         {
-            std::cout << "WIN";
+            std::cout << "Win";
             break;
         }
 
         case MINIMAX_OUTCOME_LOSS:
         {
-            std::cout << "LOSS";
+            std::cout << "Loss";
             break;
         }
     }
-
-    std::cout << std::endl;
+    std::cout << ")" << std::endl;
 }
 
 void fp_visitor_print::visit(const fp_expr_command_solve_n& expr)
 {
-    std::cout << "|" << expr.get_line_no() << "| ";
+    std::cout << "|SOLVE_N L" << expr.get_line_no() << "| ";
+    std::cout << "(Expected: ";
 
-    std::cout << "SOLVE N: ";
     const std::optional<int>& expected_nim_value = expr.get_expected_nim_value();
 
     if (expected_nim_value.has_value())
@@ -314,7 +359,7 @@ void fp_visitor_print::visit(const fp_expr_command_solve_n& expr)
     else
         std::cout << "?";
 
-    std::cout << std::endl;
+    std::cout << ")" << std::endl;
 }
 
 
@@ -335,9 +380,7 @@ void test_file_parser_new_stuff()
         new fp_expr_command_solve_bw(5, WHITE, MINIMAX_OUTCOME_NONE));
 
     fp_visitor_print visitor;
+    visitor.visit_chunk(chunk);
 
-    const int n_commands = chunk.n_command_exprs();
-    for (int i = 0; i < n_commands; i++)
-        visitor.visit(chunk, i);
 }
 

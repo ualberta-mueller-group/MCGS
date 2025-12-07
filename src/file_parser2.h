@@ -1,9 +1,9 @@
 /*
-    file_parser class implements the main parsing logic for .test files,
+    file_parser2 class implements the main parsing logic for .test files,
     games passed through stdin, and the game string passed as a CLI argument
 
     To register a new game type with the parser, see
-    file_parser::_init_game_parsers() in the cpp file
+    file_parser2::_init_game_parsers() in the cpp file
 */
 #pragma once
 #include <sstream>
@@ -19,19 +19,11 @@
 #include <cstddef>
 #include <cstdlib>
 
-// IWYU pragma: begin_exports
-#include "game_case.h"
-// IWYU pragma: end_exports
 
 
-// How many game_cases can be created by a single "run" command, i.e.
-// "{B win, W loss}"
-#define FILE_PARSER_MAX_CASES 3
+////////////////////////////////////////////////// file_parser2
 
-
-////////////////////////////////////////////////// file_parser
-
-namespace file_parser_impl {
+namespace file_parser2_impl {
 
 enum match_state
 {
@@ -50,21 +42,21 @@ enum match_state
     // token not found (not an error state; the requested match doesn't occur)
     MATCH_NOT_FOUND,
 };
-} // namespace file_parser_impl
+} // namespace file_parser2_impl
 
 /*
-    file_parser:
+    file_parser2:
         reads input from stdin, string, or file. Use static constructor
-   functions to create a file_parser i.e. from_stdin()
+   functions to create a file_parser2 i.e. from_stdin()
 
         call parse_chunk() to get next game_case
 */
-class file_parser
+class file_parser2
 {
 private:
     // constructor should be private, user calls static constructor functions
     // instead
-    file_parser(std::istream* stream, bool delete_stream,
+    file_parser2(std::istream* stream, bool delete_stream,
                 bool do_version_check);
 
     void _version_check(const std::string& version_string);
@@ -79,7 +71,7 @@ private:
         std::shared_ptr<game_token_parser>& gp_shared);
 
     // token-generating helper functions
-    file_parser_impl::match_state _get_enclosed(const std::string& open,
+    file_parser2_impl::match_state _get_enclosed(const std::string& open,
                                                 const std::string& close,
                                                 bool allow_inner);
 
@@ -87,40 +79,47 @@ private:
                 const std::string& match_name, bool allow_inner);
 
     // functions to handle current token
-    bool _parse_game();
+    //bool _parse_game();
     bool _parse_command();
 
     std::string _get_error_start();
 
 public:
     // Prevent accidental memory bugs
-    file_parser() = delete;
-    file_parser(const file_parser& other) = delete;
-    file_parser& operator=(const file_parser& other) = delete;
+    file_parser2() = delete;
+    file_parser2(const file_parser2& other) = delete;
+    file_parser2& operator=(const file_parser2& other) = delete;
+    file_parser2(file_parser2&&) = delete;
+    file_parser2& operator=(file_parser2&&) = delete;
 
-    ~file_parser();
+    ~file_parser2();
 
-    /*  Get next game_case. True if valid case, false if no more cases.
-            Caller must first clean up previous game_case
-    */
-    bool parse_chunk(game_case& gc);
+    bool parse_chunk();
+
+    int n_test_cases() const;
+    // csv_row run_test_case(int test_idx) const;
+    std::vector<game*> get_games() const;
+    // const std::string& file_name() const;
+
+
+    void print_ast() const;
 
     // static constructor functions
-    static file_parser* from_stdin();
-    static file_parser* from_file(const std::string& file_name);
-    static file_parser* from_string(const std::string& string);
+    static file_parser2* from_stdin();
+    static file_parser2* from_file(const std::string& file_name);
+    static file_parser2* from_string(const std::string& string);
 
     // Used by unit tests to check whether a warning was printed
     bool warned_wrong_version();
 
-    // When true, file_parser prints info to stdout as it parses the input
+    // When true, file_parser2 prints info to stdout as it parses the input
     static bool debug_printing;
     static bool silence_warnings;
     static bool override_assert_correct_version;
 
 private:
     // initializes parsers for every game. Called automatically upon
-    // construction of first file_parser this is where new game_token_parsers
+    // construction of first file_parser2 this is where new game_token_parsers
     // are registered
     static void _init_game_parsers();
 
@@ -128,7 +127,7 @@ private:
     static std::unordered_map<std::string, std::shared_ptr<game_token_parser>>
         _game_map;
 
-    fp_chunk _chunk;
+    std::optional<fp_chunk> _chunk;
 
     // input source
     istream_tokenizer _tokenizer;
@@ -140,16 +139,6 @@ private:
     std::string _section_title;
     int _line_number;
     std::string _token;
-
-    /*
-        Because the "run" command comes AFTER the games are specified,
-            and because games are mutable, the parser has to store multiple
-            copies of the game list, i.e. {B, W} requires two separate but
-            equal game lists
-    */
-    game_case _cases[FILE_PARSER_MAX_CASES];
-    int _case_count; // number of cases created by a previous parse_chunk() call
-    int _next_case_idx; // next case to consume from a previous parse
 
     bool _warned_wrong_version;
 };

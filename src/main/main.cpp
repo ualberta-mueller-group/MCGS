@@ -21,6 +21,7 @@
 #include "throw_assert.h"
 #include "gen_experiments.h"
 #include "winning_moves.h"
+#include "test_file_parser2.h"
 
 using std::cout, std::endl, std::string;
 
@@ -36,9 +37,10 @@ int main(int argc, char** argv)
 
     mcgs_init_2(opts);
 
+    test_file_parser2_stuff();
     //test_file_parser_new_stuff();
     //test_istream_tokenizer();
-    //return 0;
+    return 0;
 
     if (opts.use_player)
     {
@@ -84,8 +86,6 @@ int main(int argc, char** argv)
 
         while (opts.parser->parse_chunk(gc))
         {
-            opts.parser->print_ast();
-
             if (!first_case)
                 cout << endl;
 

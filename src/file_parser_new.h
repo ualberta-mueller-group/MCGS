@@ -120,7 +120,6 @@ class i_fp_visitor
 public:
     virtual ~i_fp_visitor() {}
 
-    virtual void visit(const fp_chunk& chunk, int case_idx) = 0;
     virtual void visit(const fp_expr_title& expr) = 0;
     virtual void visit(const fp_expr_game& expr) = 0;
     virtual void visit(const fp_expr_comment& expr) = 0;
@@ -213,7 +212,7 @@ public:
     int get_number() const;
 
 private:
-    const std::string _comment;
+    std::string _comment;
     fp_expr_comment_type _comment_type;
     int _number;
 };
@@ -295,7 +294,8 @@ class fp_visitor_print: i_fp_visitor
 public:
     fp_visitor_print();
 
-    void visit(const fp_chunk& chunk, int case_idx) override;
+    void visit_chunk(const fp_chunk& chunk);
+
     void visit(const fp_expr_title& expr) override;
     void visit(const fp_expr_game& expr) override;
     void visit(const fp_expr_comment& expr) override;
