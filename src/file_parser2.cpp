@@ -451,14 +451,14 @@ bool file_parser2::_match(const string& open, const string& close,
 //}
 
 namespace {
-bool get_fp_expr_run_command_solve_bw(const int line_number,
+i_fp_expr_command* get_fp_expr_run_command_solve_bw(const int line_number,
                                       const vector<string>& string_tokens,
-                                      size_t& idx, fp_chunk& chunk)
+                                      size_t& idx)
 {
     const size_t N = string_tokens.size();
 
     if (!(idx < N))
-        return false;
+        return nullptr;
 
     const string& player_token = string_tokens[idx];
     idx++;
@@ -471,7 +471,7 @@ bool get_fp_expr_run_command_solve_bw(const int line_number,
         player = WHITE;
 
     if (player == EMPTY)
-        return false;
+        return nullptr;
 
     minimax_outcome_enum expected_outcome = MINIMAX_OUTCOME_NONE;
 
@@ -490,25 +490,23 @@ bool get_fp_expr_run_command_solve_bw(const int line_number,
         THROW_ASSERT(expected_outcome != MINIMAX_OUTCOME_NONE);
     }
 
-    chunk.add_command_expr(
-        new fp_expr_command_solve_bw(line_number, player, expected_outcome));
-    return true;
+    return new fp_expr_command_solve_bw(line_number, player, expected_outcome);
 }
 
-bool get_fp_expr_run_command_solve_n(const int line_number,
+i_fp_expr_command* get_fp_expr_run_command_solve_n(const int line_number,
                                      const vector<string>& string_tokens,
-                                     size_t& idx, fp_chunk& chunk)
+                                     size_t& idx)
 {
     const size_t N = string_tokens.size();
 
     if (!(idx < N))
-        return false;
+        return nullptr;
 
     const string& player_token = string_tokens[idx];
     idx++;
 
     if (player_token != "N")
-        return false;
+        return nullptr;
 
     std::optional<int> expected_nimber;
 
@@ -523,10 +521,7 @@ bool get_fp_expr_run_command_solve_n(const int line_number,
         THROW_ASSERT(expected_nimber.has_value() && expected_nimber.value() >= 0);
     }
 
-    chunk.add_command_expr(
-        new fp_expr_command_solve_n(line_number, expected_nimber));
-
-    return true;
+    return new fp_expr_command_solve_n(line_number, expected_nimber);
 }
 
 bool get_fp_expr_run_command(const int line_number,
@@ -535,12 +530,22 @@ bool get_fp_expr_run_command(const int line_number,
 {
     const size_t idx_start = idx;
 
-    if (get_fp_expr_run_command_solve_bw(line_number, string_tokens, idx, chunk))
+    i_fp_expr_command* expr = nullptr;
+
+    expr = get_fp_expr_run_command_solve_bw(line_number, string_tokens, idx);
+    if (expr != nullptr)
+    {
+        chunk.add_command_expr(expr);
         return true;
+    }
     idx = idx_start;
 
-    if (get_fp_expr_run_command_solve_n(line_number, string_tokens, idx, chunk))
+    expr = get_fp_expr_run_command_solve_n(line_number, string_tokens, idx);
+    if (expr != nullptr)
+    {
+        chunk.add_command_expr(expr);
         return true;
+    }
     idx = idx_start;
 
     return false;

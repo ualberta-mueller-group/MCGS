@@ -93,14 +93,23 @@ fp_expr_comment::fp_expr_comment(int line_no,
     _number = -1;
 
     // Silent comment?
-    if (!_comment.empty() && _comment[0] == '_')
+    if (checked_is_element(_comment, 0, '_'))
     {
+        // TODO proper parser error
+        THROW_ASSERT(
+            LOGICAL_IMPLIES(_comment.size() > 1, std::isspace(_comment[1])));
+
+        size_t n_skip_chars = 1;
+        if (_comment.size() > 1)
+            n_skip_chars++;
+
         _comment_type = FP_EXPR_COMMENT_TYPE_SILENT;
+        _comment = _comment.substr(n_skip_chars);
         return;
     }
 
     // Numbered comment?
-    if (_comment.empty() || _comment[0] != '#')
+    if (!checked_is_element(_comment, 0, '#'))
         return;
 
     std::string comment_number_string;

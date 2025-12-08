@@ -66,6 +66,43 @@ inline bool logical_iff(bool p, bool q)
 
 #define LOGICAL_IMPLIES(p, q) (!(p) || (q))
 
+// TODO unit test
+// TODO naming?
+template <class Element_T, class Idx_T>
+bool checked_is_element(const std::vector<Element_T>& vec, Idx_T idx,
+                        const Element_T& element)
+{
+    static_assert(std::is_integral_v<Idx_T>);
+    assert(idx >= 0);
+
+    using idx_unsigned_t = std::make_unsigned_t<Idx_T>;
+    const idx_unsigned_t idx_uns = static_cast<idx_unsigned_t>(idx);
+
+    if (!(idx_uns < vec.size()))
+        return false;
+
+    return vec[idx] == element;
+}
+
+template <class Idx_T>
+bool checked_is_element(const std::string& str, Idx_T idx,
+                        char element)
+{
+    static_assert(std::is_integral_v<Idx_T>);
+    assert(idx >= 0);
+
+    using idx_unsigned_t = std::make_unsigned_t<Idx_T>;
+    const idx_unsigned_t idx_uns = static_cast<idx_unsigned_t>(idx);
+
+    if (!(idx_uns < str.size()))
+        return false;
+
+    return str[idx] == element;
+}
+
+
+
+
 //////////////////////////////////////// string utilities
 
 // like Python's string split()
