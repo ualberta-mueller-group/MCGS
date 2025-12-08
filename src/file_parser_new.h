@@ -68,6 +68,7 @@
 #include <memory>
 #include <cassert>
 #include <optional>
+#include "test_case_enums.h"
 
 // TODO think of a better name for fp_visitor_generate...
 
@@ -153,14 +154,16 @@ public:
 private:
 };
 
-
 //////////////////////////////////////// interface i_fp_expr_command
 class i_fp_expr_command: public i_fp_expr
 {
 public:
-    i_fp_expr_command(int file_no);
+    i_fp_expr_command(int file_no, command_type_enum command_type);
+
+    command_type_enum get_command_type() const;
 
 private:
+    const command_type_enum _command_type;
 };
 
 ////////////////////////////////////////////////// classes

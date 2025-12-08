@@ -22,5 +22,5 @@ struct csv_row
     std::optional<uint64_t> unique_node_count; // _run_impl() (helper)
     std::optional<test_case_status_enum> status; // _run_impl()
     std::optional<std::string> comments; // test_case construction
-    std::optional<test_case_type_enum> test_case_type; // test_case construction
+    std::optional<command_type_enum> command_type; // test_case construction
 };

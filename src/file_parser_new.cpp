@@ -3,6 +3,7 @@
 #include <cctype>
 #include <iostream>
 #include "cgt_basics.h"
+#include "test_case_enums.h"
 #include "throw_assert.h"
 #include "utilities.h"
 #include "string_to_int.h"
@@ -19,18 +20,22 @@ int i_fp_expr::get_line_no() const
     return _line_no;
 }
 
-
 //////////////////////////////////////// i_fp_expr_content methods
 i_fp_expr_content::i_fp_expr_content(int line_no)
     : i_fp_expr(line_no)
 {
 }
 
-
 //////////////////////////////////////// i_fp_expr_command methods
-i_fp_expr_command::i_fp_expr_command(int line_no)
-    : i_fp_expr(line_no)
+i_fp_expr_command::i_fp_expr_command(int line_no, command_type_enum command_type)
+    : i_fp_expr(line_no),
+      _command_type()
 {
+}
+
+command_type_enum i_fp_expr_command::get_command_type() const
+{
+    return _command_type;
 }
 
 //////////////////////////////////////// fp_expr_title methods
@@ -152,7 +157,7 @@ int fp_expr_comment::get_number() const
 //////////////////////////////////////// fp_expr_command_solve_bw methods
 fp_expr_command_solve_bw::fp_expr_command_solve_bw(int line_no, bw player,
                          minimax_outcome_enum expected_outcome)
-    : i_fp_expr_command(line_no),
+    : i_fp_expr_command(line_no, COMMAND_TYPE_SOLVE_BW),
       _player(player),
       _expected_outcome(expected_outcome)
 {
@@ -177,7 +182,7 @@ minimax_outcome_enum fp_expr_command_solve_bw::get_expected_outcome() const
 //////////////////////////////////////// fp_expr_command_solve_n methods
 fp_expr_command_solve_n::fp_expr_command_solve_n(
     int line_no, const std::optional<int>& expected_nim_value)
-    : i_fp_expr_command(line_no),
+    : i_fp_expr_command(line_no, COMMAND_TYPE_SOLVE_N),
       _expected_nim_value(expected_nim_value)
 {
 }

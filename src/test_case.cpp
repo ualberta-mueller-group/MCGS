@@ -1,12 +1,13 @@
 #include "test_case.h"
+#include "test_case_enums.h"
 
 using namespace std;
 
 ////////////////////////////////////////////////// i_test_case methods
-i_test_case::i_test_case(test_case_type_enum test_case_type,
+i_test_case::i_test_case(command_type_enum command_type,
                          std::vector<game*> games)
     : _games(games),
-      _test_case_type(test_case_type),
+      _command_type(command_type),
       _did_run(false)
 {
 }
@@ -17,9 +18,9 @@ i_test_case::~i_test_case()
         delete g;
 }
 
-test_case_type_enum i_test_case::get_test_case_type() const
+command_type_enum i_test_case::get_command_type() const
 {
-    return _test_case_type;
+    return _command_type;
 }
 
 bool i_test_case::did_run() const
@@ -39,27 +40,26 @@ csv_row& i_test_case::get_csv_row()
     return _csv_row;
 }
 
-////////////////////////////////////////////////// test_case_bw_solve methods
-test_case_bw_solve::test_case_bw_solve(fp_expr_command_solve_bw expr,
+////////////////////////////////////////////////// test_case_solve_bw methods
+test_case_solve_bw::test_case_solve_bw(fp_expr_command_solve_bw expr,
                                        std::vector<game*> games)
-    : i_test_case(TEST_CASE_TYPE_BW_SOLVE, games),
+    : i_test_case(COMMAND_TYPE_SOLVE_BW, games),
     _expr(expr)
 {
 }
 
-void test_case_bw_solve::_run_impl()
+void test_case_solve_bw::_run_impl()
 {
 }
 
-////////////////////////////////////////////////// test_case_n_solve methods
-
-test_case_n_solve::test_case_n_solve(fp_expr_command_solve_n expr,
+////////////////////////////////////////////////// test_case_solve_n methods
+test_case_solve_n::test_case_solve_n(fp_expr_command_solve_n expr,
                                      std::vector<game*> games)
-    : i_test_case(TEST_CASE_TYPE_N_SOLVE, games),
+    : i_test_case(COMMAND_TYPE_SOLVE_N, games),
       _expr(expr)
 {
 }
 
-void test_case_n_solve::_run_impl()
+void test_case_solve_n::_run_impl()
 {
 }

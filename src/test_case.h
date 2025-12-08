@@ -11,10 +11,10 @@
 class i_test_case
 {
 public:
-    i_test_case(test_case_type_enum test_case_type, std::vector<game*> games);
+    i_test_case(command_type_enum command_type, std::vector<game*> games);
     virtual ~i_test_case();
 
-    test_case_type_enum get_test_case_type() const;
+    command_type_enum get_command_type() const;
     bool did_run() const;
 
     void run();
@@ -28,15 +28,15 @@ protected:
     csv_row _csv_row;
 
 private:
-    const test_case_type_enum _test_case_type;
+    const command_type_enum _command_type;
     bool _did_run;
 };
 
 ////////////////////////////////////////////////// class test_case_bw_solve
-class test_case_bw_solve: public i_test_case
+class test_case_solve_bw: public i_test_case
 {
 public:
-    test_case_bw_solve(fp_expr_command_solve_bw expr, std::vector<game*> games);
+    test_case_solve_bw(fp_expr_command_solve_bw expr, std::vector<game*> games);
 
 protected:
     void _run_impl() override;
@@ -45,10 +45,10 @@ protected:
 };
 
 ////////////////////////////////////////////////// class test_case_n_solve
-class test_case_n_solve: public i_test_case
+class test_case_solve_n: public i_test_case
 {
 public:
-    test_case_n_solve(fp_expr_command_solve_n expr, std::vector<game*> games);
+    test_case_solve_n(fp_expr_command_solve_n expr, std::vector<game*> games);
 
 protected:
     void _run_impl() override;

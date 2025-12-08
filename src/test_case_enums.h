@@ -1,11 +1,11 @@
 #pragma once
 
 ////////////////////////////////////////////////// enums
-enum test_case_type_enum
+enum command_type_enum
 {
-    TEST_CASE_TYPE_BW_SOLVE = 0,
-    TEST_CASE_TYPE_N_SOLVE,
-    TEST_CASE_TYPE_WINNING_MOVES,
+    COMMAND_TYPE_SOLVE_BW = 0,
+    COMMAND_TYPE_SOLVE_N,
+    COMMAND_TYPE_WINNING_MOVES,
 };
 
 enum test_case_status_enum
