@@ -74,7 +74,6 @@
 
 ////////////////////////////////////////////////// forward declarations
 class i_fp_visitor; // interface for visitors to fp_chunk (a chunk of input)
-class fp_visitor_print; // visits fp_chunk and prints it to some std::ostream
 
 /*
     void fp_visitor_print::visit(const fp_chunk&, int command_idx, ostream&)

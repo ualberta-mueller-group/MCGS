@@ -20,6 +20,8 @@
 #include "file_parser_new.h"
 #include "istream_tokenizer.h"
 #include "game_token_parsers.h"
+#include "test_case.h"
+#include "test_case_enums.h"
 
 
 ////////////////////////////////////////////////// file_parser2
@@ -96,10 +98,11 @@ public:
     ~file_parser2();
 
     bool parse_chunk();
-
-    int n_test_cases() const;
-    // csv_row run_test_case(int test_idx) const;
     std::vector<game*> get_games() const;
+    int n_test_cases() const;
+    command_type_enum get_test_case_type(int test_case_idx) const;
+    std::shared_ptr<i_test_case> get_test_case(int test_case_idx) const;
+
     // const std::string& file_name() const;
 
 

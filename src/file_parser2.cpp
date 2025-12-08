@@ -754,6 +754,28 @@ bool file_parser2::parse_chunk()
     return false;
 }
 
+std::vector<game*> file_parser2::get_games() const
+{
+    THROW_ASSERT(false, "TODO"); // TODO
+}
+
+int file_parser2::n_test_cases() const
+{
+    assert(_chunk.has_value());
+    return _chunk->n_command_exprs();
+}
+
+command_type_enum file_parser2::get_test_case_type(int test_case_idx) const
+{
+    assert(_chunk.has_value() && test_case_idx < n_test_cases());
+    return _chunk.value().get_command_expr(test_case_idx).get_command_type();
+}
+
+std::shared_ptr<i_test_case> file_parser2::get_test_case(int test_case_idx) const
+{
+    THROW_ASSERT(false, "TODO"); // TODO
+}
+
 void file_parser2::print_ast() const
 {
     fp_visitor_print visitor;

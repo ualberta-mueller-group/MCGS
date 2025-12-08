@@ -100,9 +100,6 @@ bool checked_is_element(const std::string& str, Idx_T idx,
     return str[idx] == element;
 }
 
-
-
-
 //////////////////////////////////////// string utilities
 
 // like Python's string split()

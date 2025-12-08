@@ -316,7 +316,6 @@ void test_file_parser_new_stuff()
 {
     fp_chunk chunk;
 
-
     chunk.add_content_expr(new fp_expr_title(1, "clobber_1xn"));
     chunk.add_content_expr(new fp_expr_game(2, "XO", false));
     chunk.add_content_expr(new fp_expr_game(3, "XO XOXX", true));
@@ -329,6 +328,5 @@ void test_file_parser_new_stuff()
 
     fp_visitor_print visitor;
     visitor.visit_chunk(chunk);
-
 }
 
