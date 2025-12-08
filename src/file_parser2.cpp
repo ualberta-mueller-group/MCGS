@@ -524,6 +524,83 @@ i_fp_expr_command* get_fp_expr_run_command_solve_n(const int line_number,
     return new fp_expr_command_solve_n(line_number, expected_nimber);
 }
 
+i_fp_expr_command* get_fp_expr_run_command_winning_moves(const int line_number,
+                                     const vector<string>& string_tokens,
+                                     size_t& idx)
+{
+    const size_t N = string_tokens.size();
+
+    if (!(idx + 2 < N))
+        return nullptr;
+
+    const string& winning_token = string_tokens[idx];
+    const string& moves_token = string_tokens[idx + 1];
+    const string& player_token = string_tokens[idx + 2];
+    idx += 3;
+
+    if (winning_token != "winning" || moves_token != "moves")
+        return nullptr;
+
+    optional<ebw> player;
+
+    if (player_token == "B")
+        player = BLACK;
+    if (player_token == "W")
+        player = WHITE;
+    if (player_token == "N")
+        player = EMPTY;
+
+    if (!player.has_value())
+        return nullptr;
+
+    optional<vector<string>> expected_moves(vector<string>({}));
+    assert(expected_moves.has_value());
+
+    for (; idx < N; idx++)
+    {
+        const string& move_string = string_tokens[idx];
+
+        if (is_comma(move_string))
+            break;
+
+        expected_moves->emplace_back(move_string);
+    }
+
+    if (expected_moves->size() == 1)
+    {
+        // Careful! This reference is invalidated while still in scope
+        const string& move_string = expected_moves->back();
+
+        if (move_string == "None")
+        {
+            expected_moves->pop_back();
+            assert(expected_moves.value().empty());
+        }
+        else if (move_string == "?")
+        {
+            expected_moves.reset();
+            assert(!expected_moves.has_value());
+        }
+    }
+
+    return new fp_expr_command_winning_moves(line_number, player.value(),
+                                             expected_moves);
+}
+
+#ifdef CALL_PARSE_FN_MACRO
+#error Macro already defined
+#endif
+
+#define CALL_PARSE_FN_MACRO(fn) \
+    expr = fn(line_number, string_tokens, idx); \
+    if (expr != nullptr) \
+    { \
+        chunk.add_command_expr(expr); \
+        return true; \
+    } \
+    idx = idx_start; \
+    static_assert(true)
+
 bool get_fp_expr_run_command(const int line_number,
                              const vector<string>& string_tokens, size_t& idx,
                              fp_chunk& chunk)
@@ -532,24 +609,15 @@ bool get_fp_expr_run_command(const int line_number,
 
     i_fp_expr_command* expr = nullptr;
 
-    expr = get_fp_expr_run_command_solve_bw(line_number, string_tokens, idx);
-    if (expr != nullptr)
-    {
-        chunk.add_command_expr(expr);
-        return true;
-    }
-    idx = idx_start;
-
-    expr = get_fp_expr_run_command_solve_n(line_number, string_tokens, idx);
-    if (expr != nullptr)
-    {
-        chunk.add_command_expr(expr);
-        return true;
-    }
-    idx = idx_start;
+    CALL_PARSE_FN_MACRO(get_fp_expr_run_command_solve_bw);
+    CALL_PARSE_FN_MACRO(get_fp_expr_run_command_solve_n);
+    CALL_PARSE_FN_MACRO(get_fp_expr_run_command_winning_moves);
 
     return false;
 }
+#undef CALL_PARSE_FN_MACRO
+
+
 } // namespace
 
 // actually parses block...

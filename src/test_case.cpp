@@ -50,6 +50,7 @@ test_case_solve_bw::test_case_solve_bw(fp_expr_command_solve_bw expr,
 
 void test_case_solve_bw::_run_impl()
 {
+    THROW_ASSERT(false, "TODO");
 }
 
 ////////////////////////////////////////////////// test_case_solve_n methods
@@ -62,4 +63,21 @@ test_case_solve_n::test_case_solve_n(fp_expr_command_solve_n expr,
 
 void test_case_solve_n::_run_impl()
 {
+    THROW_ASSERT(false, "TODO");
 }
+
+//////////////////////////////////////////////////
+// test_case_winning_moves methods
+
+test_case_winning_moves::test_case_winning_moves(
+    fp_expr_command_winning_moves expr, std::vector<game*> games)
+    : i_test_case(COMMAND_TYPE_WINNING_MOVES, games),
+      _expr(expr)
+{
+}
+
+void test_case_winning_moves::_run_impl()
+{
+    THROW_ASSERT(false, "TODO");
+}
+

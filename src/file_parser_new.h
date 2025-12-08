@@ -92,7 +92,7 @@ class fp_expr_comment; // comment (possibly prefixed by "_", "#0", "#1", or "#2"
 class i_fp_expr_command; // interface for all commands inside of curly braces
 class fp_expr_command_solve_bw; // solve for BLACK or WHITE
 class fp_expr_command_solve_n; // solve nim value
-//class fp_expr_command_winning_moves;
+class fp_expr_command_winning_moves;
 
 /*
     Represents a chunk of input (CLI game string, or .test file, or stdin)
@@ -126,6 +126,7 @@ public:
     virtual void visit(const fp_expr_comment& expr) = 0;
     virtual void visit(const fp_expr_command_solve_bw& expr) = 0;
     virtual void visit(const fp_expr_command_solve_n& expr) = 0;
+    virtual void visit(const fp_expr_command_winning_moves& expr) = 0;
 
 private:
 };
@@ -158,7 +159,7 @@ private:
 class i_fp_expr_command: public i_fp_expr
 {
 public:
-    i_fp_expr_command(int file_no, command_type_enum command_type);
+    i_fp_expr_command(int line_no, command_type_enum command_type);
 
     command_type_enum get_command_type() const;
 
@@ -259,6 +260,28 @@ private:
     const std::optional<int> _expected_nim_value;
 };
 
+//////////////////////////////////////////////////
+// class fp_expr_command_winning_moves
+
+class fp_expr_command_winning_moves: public i_fp_expr_command
+{
+public:
+    fp_expr_command_winning_moves(
+        int line_no, ebw player,
+        std::optional<std::vector<std::string>> expected_winning_moves);
+
+    void accept(i_fp_visitor& visitor) const override;
+
+    ebw get_player() const;
+    const std::optional<std::vector<std::string>>& get_expected_winning_moves()
+        const;
+
+
+private:
+    const ebw _player;
+    const std::optional<std::vector<std::string>> _expected_winning_moves;
+};
+
 //////////////////////////////////////// class fp_chunk
 class fp_chunk
 {
@@ -304,6 +327,7 @@ public:
     void visit(const fp_expr_comment& expr) override;
     void visit(const fp_expr_command_solve_bw& expr) override;
     void visit(const fp_expr_command_solve_n& expr) override;
+    void visit(const fp_expr_command_winning_moves& expr) override;
 
 private:
 };

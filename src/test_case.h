@@ -55,3 +55,16 @@ protected:
 
     const fp_expr_command_solve_n _expr;
 };
+
+////////////////////////////////////////////////// class test_case_winning_moves
+class test_case_winning_moves: public i_test_case
+{
+public:
+    test_case_winning_moves(fp_expr_command_winning_moves expr,
+                            std::vector<game*> games);
+
+protected:
+    void _run_impl() override;
+
+    const fp_expr_command_winning_moves _expr;
+};

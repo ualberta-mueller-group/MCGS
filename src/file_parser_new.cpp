@@ -3,6 +3,7 @@
 #include <cctype>
 #include <iostream>
 #include "cgt_basics.h"
+#include "search_utils.h"
 #include "test_case_enums.h"
 #include "throw_assert.h"
 #include "utilities.h"
@@ -207,6 +208,35 @@ const std::optional<int>& fp_expr_command_solve_n::
     return _expected_nim_value;
 }
 
+//////////////////////////////////////////////////
+// fp_expr_command_winning_moves methods
+
+fp_expr_command_winning_moves::fp_expr_command_winning_moves(
+    int line_no, ebw player,
+    std::optional<std::vector<std::string>> expected_winning_moves)
+    : i_fp_expr_command(line_no, COMMAND_TYPE_WINNING_MOVES),
+      _player(player),
+      _expected_winning_moves(expected_winning_moves)
+{
+}
+
+void fp_expr_command_winning_moves::accept(i_fp_visitor& visitor) const
+{
+    visitor.visit(*this);
+}
+
+ebw fp_expr_command_winning_moves::get_player() const
+{
+    return _player;
+}
+
+const std::optional<std::vector<std::string>>& fp_expr_command_winning_moves::
+    get_expected_winning_moves() const
+{
+    return _expected_winning_moves;
+}
+
+
 
 //////////////////////////////////////// fp_chunk methods
 fp_chunk::fp_chunk()
@@ -373,6 +403,37 @@ void fp_visitor_print::visit(const fp_expr_command_solve_n& expr)
     else
         std::cout << "?";
 
+    std::cout << ")" << std::endl;
+}
+
+void fp_visitor_print::visit(const fp_expr_command_winning_moves& expr)
+{
+    std::cout << "|WINNING_MOVES L" << expr.get_line_no() << "| ";
+    std::cout << "(Player: " << player_name_bw_imp(expr.get_player()) << " ";
+    std::cout << "Expected: ";
+
+    const std::optional<std::vector<std::string>>& expected =
+        expr.get_expected_winning_moves();
+
+    if (!expected.has_value())
+        std::cout << "?";
+    else
+    {
+        const size_t n_moves = expected->size();
+
+        if (n_moves == 0)
+            std::cout << "NONE";
+
+        for (size_t i = 0; i < n_moves; i++)
+        {
+            std::cout << "``";
+            std::cout << (*expected)[i];
+            std::cout << "``";
+
+            if (i + 1 < n_moves)
+                std::cout << " ";
+        }
+    }
     std::cout << ")" << std::endl;
 }
 
