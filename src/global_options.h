@@ -164,6 +164,7 @@ extern global_option<bool> clear_tt;
 extern global_option<bool> count_sums;
 extern global_option<uint64_t> experiment_seed;
 extern global_option<bool> alt_imp_search;
+extern global_option<bool> use_complexity_score;
 
 extern global_option<bool> play_normalize;
 extern global_option<bool> dedupe_movegen;

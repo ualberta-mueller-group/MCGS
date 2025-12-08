@@ -144,6 +144,10 @@ void print_help_message(const string& exec_name)
     print_flag(global::alt_imp_search.flag(),
                "Enable alternative search algorithm for impartial games.");
 
+    print_flag(global::use_complexity_score.flag(), "Use complexity score "
+               "heuristic for impartial game search (when "
+               + global::alt_imp_search.flag() + " is also used).");
+
     cout << "Testing framework flags:" << endl;
     cout << endl;
     cout << "\tThese flags only have an effect when using \"--run-tests\"."
@@ -650,6 +654,13 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::alt_imp_search.flag())
         {
             global::alt_imp_search.set(true);
+            continue;
+        }
+
+
+        if (arg == global::use_complexity_score.flag())
+        {
+            global::use_complexity_score.set(true);
             continue;
         }
 

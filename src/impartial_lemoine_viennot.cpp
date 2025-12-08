@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <optional>
+#include <algorithm>
 #include "cgt_nimber.h"
 #include "hashing.h"
 #include "impartial_game.h"
