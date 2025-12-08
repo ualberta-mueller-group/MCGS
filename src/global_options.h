@@ -163,7 +163,9 @@ extern global_option<bool> use_db;
 extern global_option<bool> clear_tt;
 extern global_option<bool> count_sums;
 extern global_option<uint64_t> experiment_seed;
+// Use Lemoine - Viennot algorithm for impartial games instead of MEX
 extern global_option<bool> alt_imp_search;
+// Use virtual game::complexity_score() to define the hardest subgame in sum
 extern global_option<bool> use_complexity_score;
 
 extern global_option<bool> play_normalize;
