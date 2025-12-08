@@ -304,11 +304,16 @@ public:
     bool has_version_string() const;
     const std::optional<std::string>& get_version_string() const;
 
+    const std::optional<fp_expr_title>& get_implicit_title() const;
+
 private:
     std::vector<std::unique_ptr<i_fp_expr_content>> _content_exprs;
     std::vector<std::unique_ptr<i_fp_expr_command>> _command_exprs;
 
     std::optional<std::string> _version_string;
+
+    std::optional<fp_expr_title> _implicit_title;
+    std::optional<fp_expr_title> _last_title;
 };
 
 

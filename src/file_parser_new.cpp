@@ -253,6 +253,13 @@ int fp_chunk::n_content_exprs() const
 
 void fp_chunk::add_content_expr(i_fp_expr_content* expr)
 {
+    {
+        const fp_expr_title* expr_as_title = dynamic_cast<fp_expr_title*>(expr);
+
+        if (expr_as_title != nullptr)
+            _last_title.emplace(*expr_as_title);
+    }
+
     _content_exprs.emplace_back(expr);
 }
 
@@ -265,6 +272,13 @@ const i_fp_expr_content& fp_chunk::get_content_expr(int idx) const
 void fp_chunk::clear_content_exprs()
 {
     _content_exprs.clear();
+
+    if (_last_title.has_value())
+    {
+        _implicit_title.emplace(_last_title.value());
+        _last_title.reset();
+        assert(!_last_title.has_value());
+    }
 }
 
 int fp_chunk::n_command_exprs() const
@@ -310,6 +324,10 @@ const std::optional<std::string>& fp_chunk::get_version_string() const
     return _version_string;
 }
 
+const std::optional<fp_expr_title>& fp_chunk::get_implicit_title() const
+{
+    return _implicit_title;
+}
 
 //////////////////////////////////////////////////
 void test_file_parser_new_stuff()
