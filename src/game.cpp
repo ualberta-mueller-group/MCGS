@@ -87,6 +87,11 @@ void game::undo_move()
     _move_stack.pop_back();
 }
 
+int game::complexity_score() const
+{
+    return 1;
+}
+
 hash_t game::get_local_hash() const
 {
     if (_hash_state == HASH_STATE_UP_TO_DATE)

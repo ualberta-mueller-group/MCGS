@@ -10,11 +10,28 @@
 #include "impartial_game.h"
 #include "transposition.h"
 
+// Use complexity_score to define hardest subgame in sum
+const bool USE_COMPLEXITY_SCORE = true;
+
 namespace {
-    // TODO implement some subgame complexity heuristic?
-    game* find_hardest(const std::vector<game*>& subgames)
+    
+    inline bool compare_complexity_score(const game* a, const game* b)
     {
-        return subgames.back();
+        return a->complexity_score() < b->complexity_score();
+    }
+    
+    game* find_hardest(const std::vector<game*>& games)
+    {
+        if (USE_COMPLEXITY_SCORE)
+        {
+            auto hardest = std::max_element(games.begin(), games.end(),
+                                            compare_complexity_score);
+            return *hardest;
+        }
+        else
+        {
+            return games.back();
+        }
     }
 
 } // namespace

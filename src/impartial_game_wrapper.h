@@ -27,6 +27,7 @@ public:
 
     ~impartial_game_wrapper();
 
+    int complexity_score() const override;
     void play(const move& m) override;
     void undo_move() override;
     move_generator* create_move_generator() const override;
@@ -87,6 +88,15 @@ inline impartial_game_wrapper::~impartial_game_wrapper()
     if (_owns_game)
         delete _game;
 }
+
+inline int impartial_game_wrapper::complexity_score() const
+{
+    // TODO if complexity is 
+    // defined by moves or by the game tree, then we should consider 
+    // both players for complexity of the impartial version
+    return _game->complexity_score(); 
+}
+
 
 inline void impartial_game_wrapper::play(const move& m)
 {

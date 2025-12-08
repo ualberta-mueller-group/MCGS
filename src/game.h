@@ -107,6 +107,9 @@ protected:
     void _mark_hash_updated() const;
 
 public:
+    /* A measure of how complicated this (sub-)game is */
+    virtual int complexity_score() const;
+    
     virtual move_generator* create_move_generator(bw to_play) const = 0;
 
     /*
