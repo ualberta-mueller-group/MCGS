@@ -18,5 +18,7 @@ void test_file_parser2_stuff()
 
         fp->print_ast();
     }
+
+    delete fp;
 }
 
