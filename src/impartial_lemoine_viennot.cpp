@@ -3,16 +3,14 @@
 //---------------------------------------------------------------------------
 #include "impartial_lemoine_viennot.h"
 
-#include <vector>
-#include <optional>
 #include <algorithm>
+#include <optional>
+#include <vector>
 #include "cgt_nimber.h"
+#include "global_options.h"
 #include "hashing.h"
 #include "impartial_game.h"
 #include "transposition.h"
-
-// Use complexity_score to define hardest subgame in sum
-const bool USE_COMPLEXITY_SCORE = true;
 
 namespace {
     
@@ -23,7 +21,7 @@ namespace {
     
     game* find_hardest(const std::vector<game*>& games)
     {
-        if (USE_COMPLEXITY_SCORE)
+        if (global::use_complexity_score())
         {
             auto hardest = std::max_element(games.begin(), games.end(),
                                             compare_complexity_score);
