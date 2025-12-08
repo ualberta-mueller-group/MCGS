@@ -14,10 +14,10 @@ public:
     double get_duration_ms() const;
 
 private:
-    using chrono_clock_t = std::chrono::high_resolution_clock;
-    using chrono_time_point_t = std::chrono::time_point<chrono_clock_t>;
+    using stopwatch_clock_t = std::chrono::high_resolution_clock;
+    using stopwatch_time_point_t = std::chrono::time_point<stopwatch_clock_t>;
 
-    std::optional<chrono_time_point_t> _start_time;
-    std::optional<chrono_time_point_t> _end_time;
+    std::optional<stopwatch_time_point_t> _start_time;
+    std::optional<stopwatch_time_point_t> _end_time;
     mutable std::optional<double> _time_ms;
 };

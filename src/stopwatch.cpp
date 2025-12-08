@@ -13,7 +13,7 @@ void stopwatch::start()
     assert(!_start_time.has_value() && !_end_time.has_value() &&
            !_time_ms.has_value());
 
-    _start_time = stopwatch::chrono_clock_t::now();
+    _start_time = stopwatch_clock_t::now();
 }
 
 void stopwatch::stop()
@@ -21,7 +21,7 @@ void stopwatch::stop()
     assert(_start_time.has_value() && !_end_time.has_value() &&
            !_time_ms.has_value());
 
-    _end_time = stopwatch::chrono_clock_t::now();
+    _end_time = stopwatch_clock_t::now();
 }
 
 double stopwatch::get_duration_ms() const
