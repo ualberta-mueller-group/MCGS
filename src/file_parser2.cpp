@@ -1,4 +1,5 @@
 #include "file_parser2.h"
+
 #include <cstdlib>
 #include <functional>
 #include <iostream>
@@ -11,6 +12,8 @@
 #include <vector>
 #include <fstream>
 #include <utility>
+#include <ios>
+
 #include "cgt_basics.h"
 #include "all_game_headers.h"
 #include "file_parser_new.h"
@@ -22,8 +25,8 @@
 #include "toppling_dominoes.h"
 #include "utilities.h"
 #include "version_info.h"
-#include <ios>
-#include <exception>
+
+#include "visitor_print.h"
 
 /*
     NOTE: here we should usually throw instead of using assert() for many

@@ -75,7 +75,6 @@
 ////////////////////////////////////////////////// forward declarations
 class i_fp_visitor; // interface for visitors to fp_chunk (a chunk of input)
 class fp_visitor_print; // visits fp_chunk and prints it to some std::ostream
-class fp_visitor_generate; // visits fp_chunk and gives you a test case
 
 /*
     void fp_visitor_print::visit(const fp_chunk&, int command_idx, ostream&)
@@ -313,24 +312,6 @@ private:
     std::optional<std::string> _version_string;
 };
 
-
-//////////////////////////////////////// class fp_visitor_print
-class fp_visitor_print: i_fp_visitor
-{
-public:
-    fp_visitor_print();
-
-    void visit_chunk(const fp_chunk& chunk);
-
-    void visit(const fp_expr_title& expr) override;
-    void visit(const fp_expr_game& expr) override;
-    void visit(const fp_expr_comment& expr) override;
-    void visit(const fp_expr_command_solve_bw& expr) override;
-    void visit(const fp_expr_command_solve_n& expr) override;
-    void visit(const fp_expr_command_winning_moves& expr) override;
-
-private:
-};
 
 
 //////////////////////////////////////////////////
