@@ -18,4 +18,8 @@ extends
 into line 18 */
 XXOXXOXXO {B win, W loss, N 5}
 [clobber_1xn]
-XXOXXO {winning moves B 0:2-3, winning moves W None, winning moves B ?}
+XXOXXXO {winning moves B 0:2-3 0:4-3 0:6-7, winning moves W None, winning moves B ?}
+[amazons]
+...|.X.|... {winning moves B ?}
+[amazons]
+.....|.....|..X..|.....|..... {winning moves B ?, winning moves W None, winning moves W ?}
