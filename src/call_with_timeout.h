@@ -2,6 +2,19 @@
     TODO there's probably a better way to do this but it works...
 
     Get rid of this idea entirely?
+
+
+    Better solutions (?):
+
+    1. Instead of creating a thread that calls the function, make the
+       stop_source create a thread that requests the stop, and call the function
+       on the main thread, passing a stop_token to it
+
+    OR
+
+    2. Check if previous slowness of std::chrono is from some inefficient
+       conversion between time formats, or something else i.e. waiting for
+       syscalls
 */
 #pragma once
 #include <optional>
