@@ -17,12 +17,13 @@ public:
     command_type_enum get_command_type() const;
     bool did_run() const;
 
-    void run();
+    void run(unsigned long long timeout);
 
+    const std::vector<game*>& get_games() const;
     csv_row& get_csv_row();
 
 protected:
-    virtual void _run_impl() = 0;
+    virtual void _run_impl(unsigned long long timeout) = 0;
 
     std::vector<game*> _games;
     csv_row _csv_row;
@@ -39,7 +40,7 @@ public:
     test_case_solve_bw(fp_expr_command_solve_bw expr, std::vector<game*> games);
 
 protected:
-    void _run_impl() override;
+    void _run_impl(unsigned long long timeout) override;
 
     const fp_expr_command_solve_bw _expr;
 };
@@ -51,7 +52,7 @@ public:
     test_case_solve_n(fp_expr_command_solve_n expr, std::vector<game*> games);
 
 protected:
-    void _run_impl() override;
+    void _run_impl(unsigned long long timeout) override;
 
     const fp_expr_command_solve_n _expr;
 };
@@ -63,8 +64,11 @@ public:
     test_case_winning_moves(fp_expr_command_winning_moves expr,
                             std::vector<game*> games);
 
+    static std::optional<std::string> winning_moves_string(
+        const std::optional<std::vector<std::string>>& winning_moves);
+
 protected:
-    void _run_impl() override;
+    void _run_impl(unsigned long long timeout) override;
 
     const fp_expr_command_winning_moves _expr;
 };

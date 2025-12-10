@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <ostream>
 #include <utility>
+#include <optional>
 
 #include "cgt_basics.h"
 
@@ -22,6 +23,7 @@
 #else
 #define IS_WINDOWS false
 #endif
+
 
 //////////////////////////////////////// general utility functions
 template <class T>
@@ -105,6 +107,10 @@ bool checked_is_element(const std::string& str, Idx_T idx,
 // like Python's string split()
 std::vector<std::string> split_string(const std::string& str);
 
+// like Python's string join()
+std::string string_join(const std::vector<std::string>& strings,
+                        const std::string& delimiter = " ");
+
 bool is_int(const std::string& str);
 // TODO doesn't recognize -0
 bool is_unsigned_int(const std::string& str);
@@ -120,6 +126,24 @@ std::string repeat_string(const std::string& str, int n);
 inline bool is_newline(char c)
 {
     return c == '\n' || c == '\v' || c == '\f' || c == '\r';
+}
+
+template <class T>
+std::string to_n_digit_mantissa(double val, T n_mantissa_digits)
+{
+    static_assert(std::is_integral_v<T>);
+    assert(n_mantissa_digits >= 0);
+
+    constexpr char const* FORMAT = "%.*f";
+
+    const int size = snprintf(nullptr, 0, FORMAT, n_mantissa_digits, val) + 1;
+    // variable length arrays are not part of the C++ standard; use vector
+    std::vector<char> buffer(size);
+
+    int got_size = snprintf(buffer.data(), size, FORMAT, n_mantissa_digits, val);
+    assert(size == got_size + 1);
+
+    return std::string(buffer.data());
 }
 
 //////////////////////////////////////// arithmetic operations
@@ -357,3 +381,37 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 }
 
 outcome_class bools_to_outcome_class(bool black_wins, bool white_wins);
+
+// optional printing
+template <class T>
+class print_optional
+{
+public:
+    print_optional(const std::optional<T>& opt,
+                   const std::string& default_text = "<NULL>")
+        : _opt(opt), _default_text(default_text)
+    {
+    }
+
+private:
+    const std::optional<T>& _opt;
+    const std::string& _default_text;
+
+    template <class T2>
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const print_optional<T2>& print_opt);
+};
+
+template <class T>
+std::ostream& operator<<(std::ostream& os, const print_optional<T>& print_opt)
+{
+    const std::optional<T>& opt = print_opt._opt;
+
+    if (opt.has_value())
+        os << opt.value();
+    else
+        os << print_opt._default_text;
+
+    return os;
+}
+

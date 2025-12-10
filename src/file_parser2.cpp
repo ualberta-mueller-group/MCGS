@@ -1,5 +1,6 @@
 #include "file_parser2.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
@@ -26,6 +27,7 @@
 #include "utilities.h"
 #include "version_info.h"
 
+#include "visitor_generate.h"
 #include "visitor_print.h"
 
 /*
@@ -586,6 +588,9 @@ i_fp_expr_command* get_fp_expr_run_command_winning_moves(const int line_number,
         }
     }
 
+    if (expected_moves.has_value())
+        std::sort(expected_moves->begin(), expected_moves->end());
+
     return new fp_expr_command_winning_moves(line_number, player.value(),
                                              expected_moves);
 }
@@ -629,8 +634,6 @@ bool file_parser2::_parse_command()
     vector<string> string_tokens = get_string_tokens(_token, {','});
     const size_t N = string_tokens.size();
 
-    cout << string_tokens << endl;
-
     if (N == 0)
         return true;
 
@@ -652,10 +655,15 @@ bool file_parser2::_parse_command()
     return true;
 }
 
-// print start of parser error text (including line number)
+// get start of parser error text (including line number)
 string file_parser2::_get_error_start()
 {
-    return "Parser error on line " + to_string(_line_number) + ": ";
+    return _get_error_start(_line_number);
+}
+
+string file_parser2::_get_error_start(int line_number)
+{
+    return "Parser error on line " + to_string(line_number) + ": ";
 }
 
 file_parser2::~file_parser2()
@@ -756,7 +764,10 @@ bool file_parser2::parse_chunk()
 
 std::vector<game*> file_parser2::get_games() const
 {
-    THROW_ASSERT(false, "TODO"); // TODO
+    assert(_chunk.has_value());
+    visitor_generate visitor;
+
+    return visitor.get_games(_chunk.value());
 }
 
 int file_parser2::n_test_cases() const
@@ -773,13 +784,66 @@ command_type_enum file_parser2::get_test_case_type(int test_case_idx) const
 
 std::shared_ptr<i_test_case> file_parser2::get_test_case(int test_case_idx) const
 {
-    THROW_ASSERT(false, "TODO"); // TODO
+    visitor_generate visitor;
+    i_test_case* test_case = visitor.get_test_case(_chunk.value(), test_case_idx);
+
+    return shared_ptr<i_test_case>(test_case);
 }
 
 void file_parser2::print_ast() const
 {
     fp_visitor_print visitor;
     visitor.visit_chunk(_chunk.value());
+}
+
+game* file_parser2::construct_game(const std::string& title, int line_number,
+                                   const std::string& game_token)
+{
+    if (title.size() == 0)
+    {
+        string why = _get_error_start(line_number) +
+                     "game token found but section title missing";
+        throw parser_exception(why, MISSING_SECTION_TITLE);
+    }
+
+    auto it = _game_map.find(title);
+
+    if (it == _game_map.end())
+    {
+        string why =
+            _get_error_start(line_number) +
+            "game token found, but game parser doesn't exist for section \"";
+        why += title + "\"";
+        throw parser_exception(why, MISSING_SECTION_PARSER);
+    }
+
+    game_token_parser* gp = (it->second).get();
+
+    game* g = nullptr;
+
+    try
+    {
+        g = gp->parse_game(game_token);
+    }
+    catch (exception& e)
+    {
+        cerr << _get_error_start(line_number) << e.what();
+        throw e;
+    }
+
+    if (g == nullptr)
+    {
+        // This won't leak memory when caught because the game_cases
+        // will be cleaned up when the file_parser2 is destructed
+        string why = _get_error_start(line_number) +
+                     "game parser for section \"" + title;
+        why += "\" failed to parse game token: \"" + game_token + "\"";
+        throw parser_exception(why, FAILED_GAME_TOKEN_PARSE);
+    }
+    else
+    {
+        return g;
+    }
 }
 
 file_parser2* file_parser2::from_stdin()

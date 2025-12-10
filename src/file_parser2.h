@@ -86,6 +86,7 @@ private:
     bool _parse_command();
 
     std::string _get_error_start();
+    static std::string _get_error_start(int line_number);
 
 public:
     // Prevent accidental memory bugs
@@ -107,6 +108,8 @@ public:
 
 
     void print_ast() const;
+    static game* construct_game(const std::string& title, int line_number,
+                                const std::string& game_token);
 
     // static constructor functions
     static file_parser2* from_stdin();

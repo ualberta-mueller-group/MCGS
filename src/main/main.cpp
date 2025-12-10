@@ -5,9 +5,9 @@
 #include <iostream>
 #include <string>
 
-#include "basic_player.h"
+//#include "basic_player.h"
 #include "cli_options.h"
-#include "file_parser.h"
+#include "file_parser2.h"
 #include "autotests.h"
 #include "file_parser_new.h"
 #include "mcgs_init.h"
@@ -20,10 +20,49 @@
 #include "istream_tokenizer.h"
 #include "throw_assert.h"
 #include "gen_experiments.h"
-#include "winning_moves.h"
+//#include "winning_moves.h"
 #include "test_file_parser2.h"
 
 using std::cout, std::endl, std::string;
+
+namespace {
+
+
+void run_test_from_main(std::shared_ptr<i_test_case> test_case,
+                        const cli_options& opts)
+{
+    const std::vector<game*>& games = test_case->get_games();
+    const csv_row& row = test_case->get_csv_row();
+
+    cout << "Test type: " << row.get_command_type_string() << endl;
+    for (game* g : games)
+        cout << "\t" << *g << endl;
+
+    if (games.empty())
+        cout << "\t" << "<no games specified>" << endl;
+
+    cout << "Player: " << print_optional(row.player) << endl;
+    cout << "Expected: " << print_optional(row.expected_result, "?") << endl;
+
+    if (opts.dry_run)
+        cout << "Not running search..." << endl;
+    else
+    {
+        if (global::clear_tt())
+            sumgame::reset_ttable();
+
+        test_case->run(0);
+
+        cout << "Got: " << print_optional(row.result) << endl;
+        cout << "Time (ms): " << row.get_time_ms_string() << endl;
+        cout << "Status: " << row.get_status_string() << endl;
+    }
+
+    assert(row.comments.has_value());
+    if (!row.comments->empty())
+        cout << "\"" << row.comments.value() << "\"" << endl;
+}
+} // namespace
 
 int main(int argc, char** argv)
 {
@@ -37,19 +76,14 @@ int main(int argc, char** argv)
 
     mcgs_init_2(opts);
 
-    test_file_parser2_stuff();
-    //test_file_parser_new_stuff();
-    //test_istream_tokenizer();
-    return 0;
+    //if (opts.use_player)
+    //{
+    //    file_parser2* parser = opts.parser.get();
+    //    THROW_ASSERT(parser != nullptr, "No games specified for player");
 
-    if (opts.use_player)
-    {
-        file_parser* parser = opts.parser.get();
-        THROW_ASSERT(parser != nullptr, "No games specified for player");
-
-        play_games(*parser, opts.play_log_name);
-        return 0;
-    }
+    //    play_games(*parser, opts.play_log_name);
+    //    return 0;
+    //}
 
 
     if (opts.run_tests)
@@ -59,13 +93,13 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (opts.print_winning_moves)
-    {
-        //print_winning_moves_impl(opts.parser);
-        print_winning_moves_new(opts.parser);
-        return 0;
-    }
+    //if (opts.print_winning_moves)
+    //{
+    //    print_winning_moves_new(opts.parser);
+    //    return 0;
+    //}
 
+    // Don't uncomment?
     //if (opts.run_tests_stdin)
     //{
     //    run_autotests_stdin(opts.outfile_name, opts.test_timeout);
@@ -81,41 +115,25 @@ int main(int argc, char** argv)
     // Run sums from input
     if (opts.parser)
     {
-        game_case gc;
         bool first_case = true;
+        std::shared_ptr<file_parser2> parser = opts.parser;
 
-        while (opts.parser->parse_chunk(gc))
+        while (parser->parse_chunk())
         {
-            if (!first_case)
-                cout << endl;
+            const int n_test_cases = parser->n_test_cases();
 
-            for (game* g : gc.games)
-                cout << "\t" << *g << endl;
-
-            if (gc.games.size() == 0)
-                cout << "\t" << "<no games specified>" << endl;
-
-            cout << "Player: " << player_name_bw_imp(gc.to_play) << endl;
-            cout << "Expected: " << gc.expected_value.str() << endl;
-
-            if (opts.dry_run)
-                cout << "Not running search..." << endl;
-            else
+            for (int test_number = 0; test_number < n_test_cases; test_number++)
             {
-                if (global::clear_tt() && !first_case)
-                    sumgame::reset_ttable();
+                std::shared_ptr<i_test_case> test_case =
+                    parser->get_test_case(test_number);
 
-                search_result sr = gc.run(0);
-                cout << "Got: " << sr.value_str() << endl;
-                cout << "Time (ms): " << sr.duration_str() << endl;
-                cout << "Status: " << sr.status_str() << endl;
+                if (!first_case)
+                    cout << endl;
+
+                run_test_from_main(test_case, opts);
+
+                first_case = false;
             }
-
-            if (gc.comments.size() > 0)
-                cout << "\"" << gc.comments << "\"" << endl;
-
-            gc.cleanup_games();
-            first_case = false;
         }
     }
 
