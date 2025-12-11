@@ -232,7 +232,7 @@ move ig_wrapper_move_generator::gen_move() const
 {
     /* NOTE: impartial_game_wrapper color hack
 
-       Here we encode the partizan game's move generator color into the color
+       Here we encode the partisan game's move generator color into the color
        bit of the move. This is safe only if no other move generators do this,
        and we don't generate a move from another ig_wrapper_move_generator.
     */

@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// A wrapper to turn any partizan game into an impartial one.
+// A wrapper to turn any partisan game into an impartial one.
 // The impartial game moves are the union of the black and white moves.
 //
 //---------------------------------------------------------------------------
@@ -35,7 +35,7 @@ public:
 
     // These functions needed by game class interface
     // They also make it possible to include any
-    // impartial game in any possibly (partizan) sum
+    // impartial game in any possibly (partisan) sum
     void play(const move& m, bw ignore_to_play) override;
     move_generator* create_move_generator(bw ignore_to_play) const override;
 
@@ -102,7 +102,7 @@ inline void impartial_game_wrapper::play(const move& m)
 {
     /* NOTE: impartial_game_wrapper color hack
 
-       m's color bit is used to encode the color of the partizan game's
+       m's color bit is used to encode the color of the partisan game's
        move generator. We must preserve this information when calling other
        play() functions.
     */
@@ -119,7 +119,7 @@ inline void impartial_game_wrapper::play(const move& m, bw to_play)
     /* NOTE: impartial_game_wrapper color hack
 
     - to_play is the current minimax search player, and can be discarded.
-    - m's color bit corresponds to the partizan game's move generator color,
+    - m's color bit corresponds to the partisan game's move generator color,
         and must be preserved.
     */
 

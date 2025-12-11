@@ -312,7 +312,7 @@ and affects the `move` returned by `game::last_move()`
        in `impartial_sumgame_test`
 - New game `kayles` - a simple and solved impartial game
 - Impartial game wrapper `impartial_game_wrapper`
-    - Allows any (partizan) game to be played in an
+    - Allows any (partisan) game to be played in an
       impartial way
     - Both players can play the moves of both BLACK and WHITE
       in the underlying game
@@ -1046,14 +1046,14 @@ class but is ineffective (though it currently prints warnings if the runtime
 
 # Database (`database.h`, `global_database.h`)
 `database.h` defines the `database` class, and two database entry structs. The
-struct `db_entry_partizan` is used to store outcome classes for partizan games,
+struct `db_entry_partisan` is used to store outcome classes for partisan games,
 and the struct `db_entry_impartial` is used to store nim values for impartial
 games. The database is not used by `MCGS_test` (CLI option `--no-use-db` is
 implied).
 
-- `set_partizan` and `set_impartial` methods take a game (single `game`) and
+- `set_partisan` and `set_impartial` methods take a game (single `game`) and
     entry, and store the entry in the database using the game's local hash value
-- `get_partizan` and `get_impartial` methods take a game, and return a
+- `get_partisan` and `get_impartial` methods take a game, and return a
     `std::optional` of the corresponding entry type. The value is empty (i.e.
     `returned_entry.has_value() == false`) if the entry is not found
 - `save` and `load` methods save/load the entire database to/from a file
@@ -1061,7 +1061,7 @@ implied).
     `database& get_global_database()` (`global_database.h`), after
     `mcgs_init_all()` completes.
 - `database` has its own sumgame that it uses to solve outcome classes
-- The data is stored in two separate "trees", one tree for partizan games, the
+- The data is stored in two separate "trees", one tree for partisan games, the
     other for impartial games
     - Each tree is two layers of `std::unordered_map`. The first indexed by
         game type (`game_type_t`), the second is indexed by local
@@ -1142,7 +1142,7 @@ class's runtime type info struct (`type_table_t`).
      `game::_undo_normalize_impl` for your game may reduce the size of the
      database, and the time required to generate it
    - You can add impartial games to the database, but currently they will be
-     treated like partizan games. Their entries will only be used by the
+     treated like partisan games. Their entries will only be used by the
      minimax search of `sumgame`, and will contain outcome classes and not nim
      values
 
@@ -1821,7 +1821,7 @@ a move generator in a `std::unique_ptr`
 ## Version 1.3 (Completed)
 ### New Features
 - First database implementation (`database.h`, `global_database.h`)
-    - Currently stores outcome classes for single (partizan) normalized subgames
+    - Currently stores outcome classes for single (partisan) normalized subgames
     - `sumgame` uses outcome classes from the database to speed up search
     - `db_game_generator`s (`db_game_generator.h`) define the order of database
     entry generation for a game type

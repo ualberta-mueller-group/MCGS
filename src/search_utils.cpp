@@ -183,7 +183,7 @@ string search_result::duration_str() const
 }
 
 ////////////////////////////////////////////////// search functions
-search_result search_partizan(const sumgame& sum,
+search_result search_partisan(const sumgame& sum,
                               const search_value* expected_value,
                               unsigned long long timeout)
 {
@@ -210,7 +210,7 @@ search_result search_partizan(const sumgame& sum,
     return result;
 }
 
-search_result search_partizan(const vector<game*>& games, bw to_play,
+search_result search_partisan(const vector<game*>& games, bw to_play,
                               const search_value* expected_value,
                               unsigned long long timeout)
 {
@@ -221,7 +221,7 @@ search_result search_partizan(const vector<game*>& games, bw to_play,
     for (game* g : games)
         sum.add(g);
 
-    return search_partizan(sum, expected_value, timeout);
+    return search_partisan(sum, expected_value, timeout);
 }
 
 search_result search_impartial(const sumgame& sum,
@@ -229,7 +229,7 @@ search_result search_impartial(const sumgame& sum,
                                unsigned long long timeout)
 {
     if (!sum.all_impartial())
-        throw std::logic_error("Sum contains partizan games");
+        throw std::logic_error("Sum contains partisan games");
 
     search_result result;
 

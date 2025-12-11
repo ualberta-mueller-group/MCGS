@@ -48,23 +48,23 @@ void test_basic()
     nogo_1xn g4("XX.O..");
 
     // Can't find these entries
-    assert(!db.get_partizan(g1).has_value());
-    assert(!db.get_partizan(g2).has_value());
-    assert(!db.get_partizan(g3).has_value());
+    assert(!db.get_partisan(g1).has_value());
+    assert(!db.get_partisan(g2).has_value());
+    assert(!db.get_partisan(g3).has_value());
 
     // Insert entry for g1, should be available for g1 and g2
     {
 
-        db_entry_partizan entry;
+        db_entry_partisan entry;
         entry.outcome = outcome_class::L;
-        db.set_partizan(g1, entry);
+        db.set_partisan(g1, entry);
 
         assert(!db.empty());
 
-        optional<db_entry_partizan> query1 = db.get_partizan(g1);
-        optional<db_entry_partizan> query2 = db.get_partizan(g2);
-        optional<db_entry_partizan> query3 = db.get_partizan(g3);
-        optional<db_entry_partizan> query4 = db.get_partizan(g4);
+        optional<db_entry_partisan> query1 = db.get_partisan(g1);
+        optional<db_entry_partisan> query2 = db.get_partisan(g2);
+        optional<db_entry_partisan> query3 = db.get_partisan(g3);
+        optional<db_entry_partisan> query4 = db.get_partisan(g4);
 
         assert(!db.empty());
         assert(query1.has_value() && query1->outcome == outcome_class::L);
@@ -74,16 +74,16 @@ void test_basic()
 
     // Now insert another entry for g3
     {
-        db_entry_partizan entry;
+        db_entry_partisan entry;
         entry.outcome = outcome_class::N;
-        db.set_partizan(g3, entry);
+        db.set_partisan(g3, entry);
 
         assert(!db.empty());
 
-        optional<db_entry_partizan> query1 = db.get_partizan(g1);
-        optional<db_entry_partizan> query2 = db.get_partizan(g2);
-        optional<db_entry_partizan> query3 = db.get_partizan(g3);
-        optional<db_entry_partizan> query4 = db.get_partizan(g4);
+        optional<db_entry_partisan> query1 = db.get_partisan(g1);
+        optional<db_entry_partisan> query2 = db.get_partisan(g2);
+        optional<db_entry_partisan> query3 = db.get_partisan(g3);
+        optional<db_entry_partisan> query4 = db.get_partisan(g4);
 
         assert(!db.empty());
         assert(query1.has_value() && query1->outcome == outcome_class::L);
@@ -94,16 +94,16 @@ void test_basic()
 
     // Insert entry for same board but different game
     {
-        db_entry_partizan entry;
+        db_entry_partisan entry;
         entry.outcome = outcome_class::P;
-        db.set_partizan(g4, entry);
+        db.set_partisan(g4, entry);
 
         assert(!db.empty());
 
-        optional<db_entry_partizan> query1 = db.get_partizan(g1);
-        optional<db_entry_partizan> query2 = db.get_partizan(g2);
-        optional<db_entry_partizan> query3 = db.get_partizan(g3);
-        optional<db_entry_partizan> query4 = db.get_partizan(g4);
+        optional<db_entry_partisan> query1 = db.get_partisan(g1);
+        optional<db_entry_partisan> query2 = db.get_partisan(g2);
+        optional<db_entry_partisan> query3 = db.get_partisan(g3);
+        optional<db_entry_partisan> query4 = db.get_partisan(g4);
 
         assert(!db.empty());
         assert(query1.has_value() && query1->outcome == outcome_class::L);
@@ -115,10 +115,10 @@ void test_basic()
     db.clear();
     assert(db.empty());
 
-    optional<db_entry_partizan> query1 = db.get_partizan(g1);
-    optional<db_entry_partizan> query2 = db.get_partizan(g2);
-    optional<db_entry_partizan> query3 = db.get_partizan(g3);
-    optional<db_entry_partizan> query4 = db.get_partizan(g4);
+    optional<db_entry_partisan> query1 = db.get_partisan(g1);
+    optional<db_entry_partisan> query2 = db.get_partisan(g2);
+    optional<db_entry_partisan> query3 = db.get_partisan(g3);
+    optional<db_entry_partisan> query4 = db.get_partisan(g4);
 
     assert(!query1.has_value());
     assert(!query2.has_value());
@@ -141,7 +141,7 @@ void test_generate()
 
         gridlike_db_game_generator<clobber_1xn, GRIDLIKE_TYPE_STRIP> gen(gg);
 
-        db.generate_entries_partizan(gen, true);
+        db.generate_entries_partisan(gen, true);
     }
 
     assert(!db.empty());
@@ -177,7 +177,7 @@ void test_generate()
 
             const int len = g_clobber->size();
 
-            optional<db_entry_partizan> entry = db.get_partizan(*g_clobber);
+            optional<db_entry_partisan> entry = db.get_partisan(*g_clobber);
 
             if (len > 5)
                 assert(!entry.has_value());

@@ -44,7 +44,7 @@ There are 5 types of 'things' that appear in input:
             white to lose and black to win.
                 {W loss, B win}
             Solve the current game, getting its nim value. Only legal if sum
-            contains no partizan games.
+            contains no partisan games.
                 {N}
             Same as above, but expect nim value of 5.
                 {N 5}
@@ -209,7 +209,7 @@ XOXOO...XO
 
         [impartial <GAME_NAME>]
             An impartial version of a game with name <GAME_NAME>. Accepts same
-            input as partizan version.
+            input as partisan version.
 */
 
 /*_

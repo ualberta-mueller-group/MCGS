@@ -184,7 +184,7 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
                    global::clear_tt.get_default_str() + ".");
 
     print_flag(global::count_sums.flag(), "Count unique sums found during "
-               "search. Only applies to partizan solve commands i.e. {B} or "
+               "search. Only applies to partisan solve commands i.e. {B} or "
                "{W}, but not {N}. Will slow down search somewhat.");
 
     // Remove these? Keep them in this separate section instead?

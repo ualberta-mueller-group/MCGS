@@ -59,7 +59,7 @@ search_result game_case::run(unsigned long long timeout) const
     else
     {
         assert(is_black_white(to_play));
-        return search_partizan(games, to_play, &expected_value, timeout);
+        return search_partisan(games, to_play, &expected_value, timeout);
     }
 }
 
