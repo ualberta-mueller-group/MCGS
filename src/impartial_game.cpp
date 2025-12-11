@@ -55,14 +55,14 @@ void impartial_game::set_solved(int nim_value)
 
 int impartial_game::search_with_tt(int tt_size) const
 {
-    if (global::alt_imp_search.get())
-    {
-        return lemoine_viennot::search_with_tt(*this);
-    }
-    else
+    if (global::impartial_algorithm_mex.get())
     {
         impartial_tt tt(tt_size, 0);
         return search_impartial_game(tt);
+    }
+    else
+    {
+        return lemoine_viennot::search_with_tt(*this);
     }
 }
 

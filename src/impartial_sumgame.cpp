@@ -31,15 +31,15 @@ std::optional<lemoine_viennot::lv_bool_tt> lv_tt_optional;
 
 int search_impartial(impartial_game* ig, const bool& over_time)
 {
-    if (global::alt_imp_search.get())
-    {
-        lemoine_viennot::lv_bool_tt& lv_tt = lv_tt_optional.value();
-        return search_impartial_game(*ig, lv_tt, over_time);
-    }
-    else
+    if (global::impartial_algorithm_mex.get())
     {
         impartial_tt& tt = tt_optional.value();
         return ig->search_impartial_game_cancellable(tt, over_time);
+    }
+    else
+    {
+        lemoine_viennot::lv_bool_tt& lv_tt = lv_tt_optional.value();
+        return search_impartial_game(*ig, lv_tt, over_time);
     }
 }
 
@@ -162,18 +162,18 @@ void init_impartial_sumgame_ttable(size_t idx_bits)
 {
     assert(idx_bits > 0);
 
-    if (global::alt_imp_search.get())
-    {
-        assert(!lv_tt_optional.has_value());
-        if (global::print_ttable_size())
-            std::cout << "LV-TT ";
-        lv_tt_optional.emplace(idx_bits, 0);
-    }
-    else
+    if (global::impartial_algorithm_mex.get())
     {
         assert(!tt_optional.has_value());
         if (global::print_ttable_size())
             std::cout << "Mex-TT ";
         tt_optional.emplace(idx_bits, 0);
+    }
+    else
+    {
+        assert(!lv_tt_optional.has_value());
+        if (global::print_ttable_size())
+            std::cout << "LV-TT ";
+        lv_tt_optional.emplace(idx_bits, 0);
     }
 }
