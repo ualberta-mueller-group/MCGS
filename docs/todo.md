@@ -39,9 +39,14 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 # Current tasks
 
-# Future tasks
+## Issues for V1.5
+- try to alternate black/white moves in impartial generator
+- try storing both nimbers and boolean values in tt
+- get rid of `_nim_value` in impartial game object, just use tt?
+- use database for impartial solvers
+    - test performance
 
-## V1.4 (?)
+## Remaining Issues from V1.4
 - transposition table
     - Replacement policy?
 - performance testing
@@ -56,27 +61,30 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - SBHSolver needs some slight modification
     - use CGSuite for impartial 2D nogo
 
-## Possible steps for Versions 1.X
-- Important or good to have before V2
-- Medium priority
+# Future tasks
+### Next few versions
+- Version 1.6: focus on more information in DB
+    - simplest equal game
+    - prepare for thermograph DB
+- Version 1.7: integrate thermographs in solving algorithms
+    - compute TG
+    - store TG in TT and DB
+    - use bounds from TG for solving hot games
+    - Compare with Amazons solver
+- Version 1.8: cleanup and performance improvement
+    - No big new features
+    - Focus on performance testing, tuning, code review and cleanup
+    
 
-### Text interface to play game vs MCGS
-- Initialise a game
-- Keep and update state during game
-- Show state
-- Prompt and accept human's move
-- Compute a winning reply
-- At end, show final result
-- Show strip, grid as simple text. How about Kayles? Can also show as strip?
+### Implement more games
+- Col, Snort
 
-### More games
-- Domineering/Cram
-- Amazons
-
-### Define some student course projects using MCGS
-- Implement more games
-- Port more algorithms to MCGS? Which?
-    - Kao's temperature
+### Port more algorithms to MCGS
+- Thermographs cgt-light
+- Locally informed...(code from Mueller and Li paper)
+- Amazons solver? Compare after we have thermographs?
+- Kao's mean and temperature search
+    - 2022 student project for the simple case, single move option
 
 ### Move ordering heuristics
 - Can we define some in a game-independent way?
@@ -157,14 +165,17 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Improve MCGS CLI args
     - Some arg combinations don't make sense and should maybe throw or print a warning?
         - i.e. "--test-timeout" without "--run-tests"
+        - Martin: yes I once wasted 20 minutes trying to figure out why my tests did not run, when I forgot a --run-tests. Either the other test-related flags should silently add the --run-tests, or it should complain.
     - Arg parsing loop could be cleaned up/abstracted a bit
     - Unify "--help" page styles across scripts/executables
 - Rename `x_1xn` to `x_strip` ?
 - Rename `x_game` to `game_x`? E.g. `integer_game` to `game_integer` ?
 
 
-## Version 2 and beyond
-- Grab a CGT seminar spot to talk about MCGS and give a demo
+## Publications and Talks
+- Grab a CGT online seminar spot to talk about MCGS and give a demo
+- Feb 20, 2026: CG 2026 submission
+- Mar 19-22, 2026: CG conference Japan
 
 ## Beyond Version 2
 - Search heuristics
@@ -196,6 +207,8 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Search stats: node count, leaf count, time, depth
     - Later: transposition hits, simplifications, zero removal, inverse removal
     - Partially complete, mostly just need to expand, and include in csv output
+    - Option to use node limit instead of time limit
+        - Useful to run multiple tests concurrently
 - `simplify()` hook for game
     - use cases? Use inverse()?
     - Will become really important after we have database
