@@ -67,13 +67,14 @@ int search_with_tt(const impartial_game& g, int tt_size = 24);
 
 // Boolean solver for g + *n. "Algorithm 1" in Lemoine and Viennot
 bool search_g_plus_nimber(const impartial_game& g, int n, 
-                          lv_bool_tt& tt);
+                          lv_bool_tt& tt, const bool& over_time);
 
 // Boolean solver for sum(g_i) + *n. "Algorithm 2" in Lemoine and Viennot
 bool search_sum_plus_nimber(const split_result& subgames, int n,                                                     
-                            lv_bool_tt& tt);
+                            lv_bool_tt& tt, const bool& over_time);
 
 // Compute n such that g = *n. "Algorithm 3" in Lemoine and Viennot.
-int search_impartial_game(const impartial_game& g, lv_bool_tt& tt);
+int search_impartial_game(const impartial_game& g, lv_bool_tt& tt,
+                          const bool& over_time);
 
 } // namespace lemoine_viennot

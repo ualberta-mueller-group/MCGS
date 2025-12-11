@@ -10,6 +10,7 @@
 #include "global_options.h"
 #include "hashing.h"
 #include "impartial_game.h"
+#include "solver_stats.h"
 #include "transposition.h"
 
 namespace {
@@ -87,21 +88,25 @@ inline bool tt_lookup(lv_bool_tt& tt,
 int search_with_tt(const impartial_game& g, int tt_size)
 {
     lv_bool_tt tt(tt_size, 0);
-    return search_impartial_game(g, tt);
+    return search_impartial_game(g, tt, false);
 }
 
 // Compute n such that g = *n. "Algorithm 3" in Lemoine and Viennot.
-int search_impartial_game(const impartial_game& g, lv_bool_tt& tt)
+// Calling thread may assign "true" to over_time to stop search
+int search_impartial_game(const impartial_game& g, lv_bool_tt& tt, const bool& over_time)
 {
     int n = 0;
     for ( ; ; ++n)
-        if (! search_g_plus_nimber(g, n, tt))
+        if (over_time || ! search_g_plus_nimber(g, n, tt, over_time))
             break;
     return n;
 }
 
-// check in tt if g = *i for i<n. In that case, no search is needed
+// check in tt if g+ *i = loss, so g = *i for any i<n. 
+// In that case, no further search is needed
 // to prove that g + *n  = *i + *n != *0 is a win
+// It is very likely more efficient to store nimbers as well, 
+// in a second hash table. Especially for games equal to large nimbers.
 bool pre_search_probe(const impartial_game& g, int n, lv_bool_tt& tt)
 {
     for (int i = 0; i < n; ++i)
@@ -118,13 +123,16 @@ bool pre_search_probe(const impartial_game& g, int n, lv_bool_tt& tt)
 
 // Boolean solver for g + *n. "Algorithm 1" in Lemoine and Viennot
 bool search_g_plus_nimber(const impartial_game& g, int n,
-                          lv_bool_tt& tt)
+                          lv_bool_tt& tt, const bool& over_time)
 {
     bool result;
     if (tt_lookup(tt, &g, n, result))
         return result;
     if (pre_search_probe(g, n, tt))
         return true;
+    if (over_time)
+        return false; // return value does not matter?
+    stats::inc_node_count();
 
     // Part A: search all position options Gi + *n 
     // If any option is a loss, then G + *n is a win
@@ -138,7 +146,7 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
         split_result sr = g_nonconst->split();
         if (sr) // split found a sum
         {
-            const bool move_result = search_sum_plus_nimber(sr, n, tt);
+            const bool move_result = search_sum_plus_nimber(sr, n, tt, over_time);
             for (game* subgame : *sr)
                delete subgame;
 
@@ -154,7 +162,7 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
         else // no split, solve same subgame
         {
             g_nonconst->normalize();
-            const bool move_result = search_g_plus_nimber(*g_nonconst, n, tt);
+            const bool move_result = search_g_plus_nimber(*g_nonconst, n, tt, over_time);
             g_nonconst->undo_normalize();
             if (! move_result)
             {
@@ -169,7 +177,7 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
     // Part B: search all nimber options G + *i, i<n.
     for(int i = 0; i < n; ++i)
     {
-        const bool move_result = search_g_plus_nimber(g, i, tt);
+        const bool move_result = search_g_plus_nimber(g, i, tt, over_time);
         if (! move_result)
         {
             tt_store(tt, &g, n, true);
@@ -183,17 +191,17 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
 }
 
 // Helper function that casts game to impartial, then solves.
-inline bool search_game_nimber(game *g, int nimber, lv_bool_tt& tt)
+inline bool search_game_nimber(game *g, int nimber, lv_bool_tt& tt, const bool& over_time)
 {
     const impartial_game* gi =
        static_cast<const impartial_game*>(g);
-    return search_g_plus_nimber(*gi, nimber, tt);
+    return search_g_plus_nimber(*gi, nimber, tt, over_time);
     
 }
 
 // Boolean solver for sum(g_i) + *n. "Algorithm 2" in Lemoine and Viennot
 bool search_sum_plus_nimber(const split_result& subgames, int n,
-                            lv_bool_tt& tt)
+                            lv_bool_tt& tt, const bool& over_time)
 {
     assert(subgames);    
     if (subgames->size() == 0)
@@ -203,7 +211,7 @@ bool search_sum_plus_nimber(const split_result& subgames, int n,
     else if (subgames->size() == 1)
     {
         game* subgame = subgames->front();
-        return search_game_nimber(subgame, n, tt);
+        return search_game_nimber(subgame, n, tt, over_time);
     }
     
     game* hardest = find_hardest(*subgames);
@@ -215,11 +223,13 @@ bool search_sum_plus_nimber(const split_result& subgames, int n,
             const impartial_game* g = 
                static_cast<const impartial_game*>(subgame);
         // TODO? g->normalize();
-            const int subgame_nimber = search_impartial_game(*g, tt);
+            const int subgame_nimber = search_impartial_game(*g, tt, over_time);
+            if (over_time)
+                return false;
             nimber::add_nimber(nim_sum, subgame_nimber);
         }
     }
-    return search_game_nimber(hardest, nim_sum, tt);
+    return search_game_nimber(hardest, nim_sum, tt, over_time);
 }
 
 } // namespace lemoine_viennot
