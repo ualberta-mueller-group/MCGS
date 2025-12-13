@@ -221,11 +221,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 # Future discussion topics
 ## Database/next version
 - What can be reused from previous solvers? What's game-specific?
-- Hashing for sum games
-    - In general, similar to Taylor's and Henry's approach
-        - Main problem: mixing games, or game + simple abstract values
-    - Game-specific hash functions?
-    - Game ID decides which hash to use?
 - Simplification of sums
     - Mostly, this will need the DB first
 - Database
@@ -235,8 +230,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - E.g. clobber: multiples of up, up-star
     - Binary search to find confusion interval
 
-## More Impartial Games Support
-
-- Small todo's
-    - Remove duplication between performance and unit tests:
+# Small todo's
+    - Remove duplication between performance and unit tests
+    - Add one-line documentation for these options in global_options.h
 
