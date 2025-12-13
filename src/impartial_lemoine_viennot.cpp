@@ -7,14 +7,30 @@
 #include <optional>
 #include <vector>
 #include "cgt_nimber.h"
+#include "database.h"
+#include "global_database.h"
 #include "global_options.h"
 #include "hashing.h"
 #include "impartial_game.h"
 #include "solver_stats.h"
 #include "transposition.h"
 
+const int NO_DB_RESULT = -1;
+
 namespace {
     
+    int db_lookup(const impartial_game& g)
+    {
+        if (global::use_db())
+        {
+            database& db = get_global_database();
+            std::optional<db_entry_impartial> entry = db.get_impartial(g);
+            if (entry.has_value())
+                return entry.value().nim_value;
+        }
+        return NO_DB_RESULT;
+    }
+
     inline bool compare_complexity_score(const game* a, const game* b)
     {
         return a->complexity_score() < b->complexity_score();
@@ -95,6 +111,10 @@ int search_with_tt(const impartial_game& g, int tt_size)
 // Calling thread may assign "true" to over_time to stop search
 int search_impartial_game(const impartial_game& g, lv_bool_tt& tt, const bool& over_time)
 {
+    const int db_result = db_lookup(g);
+    if (db_result != NO_DB_RESULT)
+        return db_result;
+
     int n = 0;
     for ( ; ; ++n)
         if (over_time || ! search_g_plus_nimber(g, n, tt, over_time))
@@ -128,6 +148,9 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
     bool result;
     if (tt_lookup(tt, &g, n, result))
         return result;
+    const int db_result = db_lookup(g);
+    if (db_result != NO_DB_RESULT)
+        return db_result != n;
     if (pre_search_probe(g, n, tt))
         return true;
     if (over_time)
