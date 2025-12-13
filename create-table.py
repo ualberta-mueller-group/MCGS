@@ -626,29 +626,32 @@ infile.seek(0)
 reader = csv.DictReader(infile)
 assert_correct_reader_fields(reader)
 
+table_lines = []
 
 # Start HTML table string
-table_string = "<table id=\"data-table\">\n"
+table_lines.append("<table id=\"data-table\">\n")
 
 # Column names header
-table_string += "<tr class=\"row-header\">\n"
+table_lines.append("<tr class=\"row-header\">\n")
 for field in output_field_list:
     games_cell = field == "Games"
     games_cell = " class=\"games-cell\" " if games_cell else ""
-    table_string += f"<th{games_cell}>{field}</th>\n"
-table_string += "</tr>\n"
+    table_lines.append(f"<th{games_cell}>{field}</th>\n")
+table_lines.append("</tr>\n")
 
 # Column index row (hidden by default)
-table_string += "<tr class=\"row-header\" id=\"col-indices\">\n"
+table_lines.append("<tr class=\"row-header\" id=\"col-indices\">\n")
 for i in range(len(output_field_list)):
-    table_string += f"<th class=\"th-index\">(COL{i})</th>\n"
-table_string += "</tr>\n"
+    table_lines.append(f"<th class=\"th-index\">(COL{i})</th>\n")
+table_lines.append("</tr>\n")
 
 
 # Read each input row, making an output row
 total_test_count = 0
 input_file_key_sequence = []
 
+
+row_strings = []
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
     total_test_count += 1
@@ -695,9 +698,10 @@ for reader_row in reader:
         row_text += "</div></td>\n"
     row_text += "</tr>\n"
 
-    table_string += row_text
+    table_lines.append(row_text)
 
-table_string += "</table>\n"
+table_lines.append("</table>\n")
+table_string = "".join(table_lines)
 infile.close()
 
 # Check for diverging tests or test order
@@ -837,9 +841,9 @@ vis_checkbox_list = "".join(vis_checkbox_list)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH PYTHON WARNINGS -->", warning_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH METADATA -->", metadata_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH COLUMN OPTIONS -->", column_options_string)
+html_template_string = html_template_string.replace("<!-- REPLACE WITH VIS CHECKBOXES -->", vis_checkbox_list)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH SCRIPT -->", script_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH TABLE -->", table_string)
-html_template_string = html_template_string.replace("<!-- REPLACE WITH VIS CHECKBOXES -->", vis_checkbox_list)
 
 
 outfile = open(outfile_name, "w")
