@@ -4,7 +4,6 @@ let g_filterText = "";
 let g_include = true;
 let g_regex = false;
 let g_searchColumn = -1;
-let g_sortByTime = false;
 let g_columnVisibility = [];
 let g_sortFn = null;
 
@@ -168,7 +167,7 @@ function setTableFilterText() {
     }
 }
 
-function sortTableByTime() {
+function sortTableByFn() {
     const table = document.getElementById("data-table");
     const tableRows = table.rows;
 
@@ -184,33 +183,7 @@ function sortTableByTime() {
         dataRows.push(row);
     }
 
-    /*
-    dataRows.sort((row1, row2) => {
-        const cells1 = row1.cells;
-        const cells2 = row2.cells;
-
-        const timeString1 = cells1[pyvar_timeColumnIndex].innerText;
-        const timeString2 = cells2[pyvar_timeColumnIndex].innerText;
-
-        const time1 = Number.parseFloat(timeString1);
-        const time2 = Number.parseFloat(timeString2);
-
-        if (isNaN(time1) && isNaN(time2))
-            return 0;
-
-        if (isNaN(time1))
-            return -1;
-        else if (isNaN(time2))
-            return 1;
-
-        if (time1 == time2)
-            return 0;
-
-        return time1 > time2 ? -1 : 1;
-    });
-    */
-
-    dataRows.sort(getSortFn_num(pyvar_timeColumnIndex));
+    dataRows.sort(g_sortFn);
 
     const dataRowsLength = dataRows.length;
     for (let i = 0; i < dataRowsLength; i++)
@@ -230,9 +203,8 @@ function showHideTableColumns() {
 }
 
 function sortTable() {
-    if (g_sortByTime)
-        sortTableByTime();
-    else {
+
+    if (g_sortFn === null) {
         const table = document.getElementById("data-table");
 
         const initialRowOrderLength = initialRowOrder.length;
@@ -243,7 +215,51 @@ function sortTable() {
                 continue;
             table.appendChild(initialRowOrder[i]);
         }
+    } else {
+        sortTableByFn();
     }
+}
+
+function handleSortRadioChange(new_val) {
+    console.log("Changing sort key to " + new_val);
+    switch (new_val) {
+        case "none": {
+            g_sortFn = null;
+            break;
+        }
+
+        case "time": {
+            g_sortFn = getSortFn_num(pyvar_timeColumnIndex);
+            break;
+        }
+
+        case "node-count": {
+            g_sortFn = getSortFn_num(pyvar_node_countColumnIndex);
+            break;
+        }
+
+        default: {
+            console.log(`Unrecognized \"sort by\" function: \"${new_val}\"`);
+            g_sortFn = sortFn_identity;
+            break;
+        }
+    }
+}
+
+function initializeSortRadio() {
+    const elements =
+        document.querySelectorAll("#sort-radio-list li input[type=radio]");
+
+    for (let element of elements) {
+        element.addEventListener("change", (e) => {
+            handleSortRadioChange(e.target.value);
+            refresh();
+        });
+    }
+
+    const initialValue = document.querySelector("input[name=sort-radio-value]:checked").value;
+    console.log(`Initial value is \"${initialValue}\"`);
+    handleSortRadioChange(initialValue);
 }
 
 /*
@@ -275,8 +291,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterTextExclude = document.getElementById("filter-text-exclude");
     const filterTextRegex = document.getElementById("filter-text-regex");
     const filterColumnSelect = document.getElementById("filter-text-column-select");
-    const sortByTimeCheckbox = document.getElementById("sort-by-time-checkbox");
-
 
     const problemSummary = document.getElementById("problem-summary");
 
@@ -344,8 +358,6 @@ document.addEventListener("DOMContentLoaded", () => {
     g_include = !filterTextExclude.checked;
     g_regex = filterTextRegex.checked;
     g_searchColumn = filterColumnSelect.value;
-    g_sortByTime = sortByTimeCheckbox.checked;
-
 
     filterTextInput.addEventListener("input", (e) => {
         g_filterText = e.target.value;
@@ -372,11 +384,6 @@ document.addEventListener("DOMContentLoaded", () => {
         refresh();
     });
 
-    sortByTimeCheckbox.addEventListener("change", (e) => {
-        g_sortByTime = e.target.checked;
-        refresh();
-    });
-
     // Set up column visibility
     const visCheckboxes = document.getElementsByClassName("vis-checkbox");
     const visCheckboxesLength = visCheckboxes.length;
@@ -395,6 +402,8 @@ document.addEventListener("DOMContentLoaded", () => {
             refresh();
         });
     }
+
+    initializeSortRadio();
 
     refresh();
 

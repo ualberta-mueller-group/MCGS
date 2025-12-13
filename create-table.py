@@ -548,14 +548,11 @@ else:
     add_row_function(row_style)
 
 
-time_column_index = -1
 
+column_indices = {}
 for i, alias in enumerate(output_field_dict):
-    if alias == "time":
-        time_column_index = i
-        break
+    column_indices[alias] = i
 
-assert time_column_index != -1
 
 
 ######################################## process rows
@@ -820,7 +817,9 @@ html_template_file.close()
 
 script_file = open(src_dir + "/table-template.js", "r")
 script_string = ""
-script_string += f"const pyvar_timeColumnIndex = {time_column_index};"
+script_string += f"const pyvar_timeColumnIndex = {column_indices["time"]};"
+script_string += f"const pyvar_node_countColumnIndex = {column_indices["node_count"]};"
+
 script_string += script_file.read()
 script_file.close()
 

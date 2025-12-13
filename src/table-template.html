@@ -221,6 +221,31 @@
                 display: inline-block;
             }
 
+            #sort-radio-div {
+                background-color: red;
+                vertical-align: top;
+                display: inline-block;
+            }
+
+            #sort-radio-list {
+                list-style: none;
+                display: inline-block;
+                overflow-y: scroll;
+                overscroll-behavior: contain;
+                background-color: orange;
+                max-height: 16em;
+                box-shadow: black 1px 1px 2px;
+            }
+
+            #sort-radio-list li {
+                background-color: yellow;
+                display: table-row;
+            }
+
+            #sort-radio-list li * {
+                background-color: green;
+                display: table-cell;
+            }
 
         </style>
 
@@ -302,6 +327,33 @@
                     <!-- REPLACE WITH VIS CHECKBOXES -->
                 </ul>
             </div> <!-- #vis-checkbox-div -->
+
+
+            <div id="sort-radio-div">
+                <p>Sort by:</p>
+                <ul id="sort-radio-list">
+                    <li>
+                    <input type="radio" name="sort-radio-value" value="none" id="sort-radio-none">
+                    </input>
+                    <label for="sort-radio-none">None</label>
+                    </li>
+
+                    <li>
+                    <input type="radio" name="sort-radio-value" value="time" id="sort-radio-time">
+                    </input>
+                    <label for="sort-radio-time">Time (ms)</label>
+                    </li>
+
+                    <li>
+                    <input type="radio" name="sort-radio-value" value="node-count" id="sort-radio-node-count">
+                    </input>
+                    <label for="sort-radio-nodes">Node Count</label>
+                    </li>
+
+
+                </ul>
+            </div> <!-- #sort-radio-div -->
+
         </div> <!-- .grid-right -->
 
     </div> <!-- #top-grid -->
