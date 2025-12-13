@@ -22,8 +22,9 @@
 
             table {
                 table-layout: auto;
-                border-collapse: collapse;
                 width: 100vw;
+                border-spacing: 0;
+                border-collapse: collapse;
             }
 
             tr {
@@ -124,6 +125,11 @@
                 background-color: #afafaf;
             }
 
+            #outcome-filter-dropdown {
+                margin-top: 1.2em;
+                margin-bottom: 1.2em;
+            }
+
             div.sep {
                 background-color: red;
                 width: 15px;
@@ -157,6 +163,65 @@
                 visibility: hidden;
             }
 
+            #top-grid {
+                display: grid;
+                grid-template-columns: 3fr 1fr;
+                grid-auto-rows: auto;
+                padding-bottom: 10px;
+                width: 100vw;
+            }
+
+            .grid-left-top {
+                grid-column: 1;
+                grid-row: 1;
+            }
+
+            .grid-left-bottom {
+                grid-column: 1;
+                grid-row: 2;
+            }
+
+            .grid-right {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+            }
+
+            #vis-checkbox-div {
+                display: inline-block;
+            }
+
+            #vis-checkbox-list {
+                list-style: none;
+                display: inline-block;
+                overflow-y: scroll;
+                overflow-x: auto;
+                background-color: #afafaf;
+                max-height: 16em;
+                box-shadow: black 1px 1px 2px;
+            }
+
+
+            #vis-checkbox-list li {
+                display: table-row;
+            }
+
+            #vis-checkbox-list li * {
+                display: table-cell;
+            }
+
+            .hide-column {
+                display: none;
+            }
+
+            .games-cell {
+                min-width: 12em;
+            }
+
+            .input-div {
+                display: inline-block;
+            }
+
+
         </style>
 
         <script>
@@ -167,53 +232,79 @@
 
     <body>
 
-        <!-- REPLACE WITH METADATA -->
+    <div id="top-grid">
+        <div class="grid-left-top">
+            <!-- REPLACE WITH METADATA -->
 
-    <p id="problem-summary"></p>
-    <!-- REPLACE WITH PYTHON WARNINGS -->
+            <p id="problem-summary"></p>
+            <!-- REPLACE WITH PYTHON WARNINGS -->
+        </div> <!-- .grid-left-top -->
 
-    <div class="select-div">
-        <label for="outcome-filter-dropdown">Show rows: </label>
-        <select name="outcome-filter" id="outcome-filter-dropdown">
-            <option value="all">All</option>
-            <option value="problem">Problems</option>
-            <option value="fail">Fails</option>
-            <option value="diverging-result">Diverging results</option>
-            <option value="timeout">Timeouts</option>
-            <option value="hash">Bad hashes</option>
-            <option value="duplicate">Duplicate Tests</option>
-            <option value="no-problem">No problems</option>
-        </select>
-    </div>
 
-    <div class="filter-text-div">
+        <div class="grid-left-bottom">
 
-        <label for="filter-text-input">Search: </label>
-        <textarea type="text" id="filter-text-input"></textarea>
+            <div class="input-div">
+                <label for="outcome-filter-dropdown">Show rows: </label>
+                <select name="outcome-filter" id="outcome-filter-dropdown">
+                    <option value="all">All</option>
+                    <option value="problem">Problems</option>
+                    <option value="fail">Fails</option>
+                    <option value="diverging-result">Diverging results</option>
+                    <option value="timeout">Timeouts</option>
+                    <option value="hash">Bad hashes</option>
+                    <option value="duplicate">Duplicate Tests</option>
+                    <option value="no-problem">No problems</option>
+                </select>
+            </div>
 
-        <div class="sep"></div>
+            <br>
 
-        <label for="filter-text-exclude">Exclude</label>
-        <input type="checkbox" id="filter-text-exclude">
+            <div class="input-div">
+                <label for="filter-text-input">Search: </label>
+                <textarea type="text" id="filter-text-input"></textarea>
+            </div>
 
-        <div class="sep"></div>
+            <div class="sep"></div>
 
-        <label for="filter-text-regex">Regex</label>
-        <input type="checkbox" id="filter-text-regex">
+            <div class="input-div">
+                <label for="filter-text-exclude">Exclude</label>
+                <input type="checkbox" id="filter-text-exclude">
+            </div>
 
-        <div class="sep"></div>
+            <div class="sep"></div>
 
-        <label for="filter-text-column-select">Search column: </label>
-        <select id="filter-text-column-select">
-            <!-- REPLACE WITH COLUMN OPTIONS -->
-        </select>
+            <div class="input-div">
+                <label for="filter-text-regex">Regex</label>
+                <input type="checkbox" id="filter-text-regex">
+            </div>
 
-        <div class="sep"></div>
+            <div class="sep"></div>
 
-        <label for="sort-by-time-checkbox">Sort by time</label>
-        <input type="checkbox" id="sort-by-time-checkbox">
+            <div class="input-div">
+                <label for="filter-text-column-select">Search column: </label>
+                <select id="filter-text-column-select">
+                    <!-- REPLACE WITH COLUMN OPTIONS -->
+                </select>
+            </div>
 
-    </div>
+            <div class="sep"></div>
+
+            <div class="input-div">
+                <label for="sort-by-time-checkbox">Sort by time</label>
+                <input type="checkbox" id="sort-by-time-checkbox">
+            </div>
+        </div> <!-- .grid-left-bottom -->
+
+        <div class="grid-right">
+            <div id="vis-checkbox-div">
+                <p>Visibility:</p>
+                <ul id="vis-checkbox-list">
+                    <!-- REPLACE WITH VIS CHECKBOXES -->
+                </ul>
+            </div> <!-- #vis-checkbox-div -->
+        </div> <!-- .grid-right -->
+
+    </div> <!-- #top-grid -->
 
         <!-- REPLACE WITH TABLE -->
 

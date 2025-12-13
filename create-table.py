@@ -299,6 +299,7 @@ def row_populate_double_mode(input_rows, output_row):
 
 
     # Populate and style comparison fields
+    output_row["games"]["css_classes"].append("games-cell")
 
     # style hash
     if comparison_row is not None:
@@ -632,7 +633,9 @@ table_string = "<table id=\"data-table\">\n"
 # Column names header
 table_string += "<tr class=\"row-header\">\n"
 for field in output_field_list:
-    table_string += f"<th>{field}</th>\n"
+    games_cell = field == "Games"
+    games_cell = " class=\"games-cell\" " if games_cell else ""
+    table_string += f"<th{games_cell}>{field}</th>\n"
 table_string += "</tr>\n"
 
 # Column index row (hidden by default)
@@ -782,12 +785,62 @@ script_string += f"const pyvar_timeColumnIndex = {time_column_index};"
 script_string += script_file.read()
 script_file.close()
 
+# Visibility checkboxes
+vis_checkbox_default_disabled = set()
+
+
+def vis_default_hide(cols1, cols2):
+    assert type(cols1) is list
+    assert type(cols2) is list
+
+    for field in cols1:
+        if field not in output_field_list:
+            return
+
+    for field in cols2:
+        vis_checkbox_default_disabled.add(field)
+
+
+vis_checkbox_default_disabled.add("File")
+vis_checkbox_default_disabled.add("Case")
+vis_checkbox_default_disabled.add("Expected Result")
+vis_checkbox_default_disabled.add("Old Status")
+vis_checkbox_default_disabled.add("Old Result")
+vis_checkbox_default_disabled.add("Old Unique Sum Count")
+vis_checkbox_default_disabled.add("Input hash")
+
+vis_default_hide(["Regression"], ["Status"])
+
+vis_checkbox_list = []
+for i in range(len(output_field_list)):
+    output_field = output_field_list[i]
+    vis_checkbox_list.append("<li>\n")
+
+
+    checked = output_field not in vis_checkbox_default_disabled
+    checked = "checked" if checked else ""
+
+    input_element = f"<input type=\"checkbox\" id=\"vis{i}-checkbox\" "
+    input_element += f"name=\"vis{i}-value\" data-col={i} {checked} "
+    input_element += "class=\"vis-checkbox\"/>\n"
+
+    vis_checkbox_list.append(input_element)
+
+    label_element = f"<label for=\"vis{i}-checkbox\">"
+    label_element += output_field + "</label>"
+    vis_checkbox_list.append(label_element)
+
+    vis_checkbox_list.append("</li>\n")
+vis_checkbox_list = "".join(vis_checkbox_list)
+
 # Replace the smaller things first (order of these affects performance)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH PYTHON WARNINGS -->", warning_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH METADATA -->", metadata_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH COLUMN OPTIONS -->", column_options_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH SCRIPT -->", script_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH TABLE -->", table_string)
+html_template_string = html_template_string.replace("<!-- REPLACE WITH VIS CHECKBOXES -->", vis_checkbox_list)
+
 
 outfile = open(outfile_name, "w")
 outfile.write(html_template_string)

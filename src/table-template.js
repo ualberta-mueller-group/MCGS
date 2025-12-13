@@ -5,6 +5,7 @@ let g_include = true;
 let g_regex = false;
 let g_searchColumn = -1;
 let g_sortByTime = false;
+let g_columnVisibility = [];
 
 const initialRowOrder = [];
 
@@ -188,6 +189,18 @@ function sortTableByTime() {
         table.appendChild(dataRows[i]);
 }
 
+function showHideTableColumns() {
+    let rows = document.querySelectorAll(".row, .row-header");
+
+    const columnCount = g_columnVisibility.length;
+    for (let r of rows) {
+        let children = r.children;
+        for (let c = 0; c < columnCount; c++) {
+            children[c].classList.toggle("hide-column", !g_columnVisibility[c]);
+        }
+    }
+}
+
 function sortTable() {
     if (g_sortByTime)
         sortTableByTime();
@@ -214,6 +227,7 @@ function refresh() {
     showHideIndices();
     setTableFilter();
     setTableFilterText();
+    showHideTableColumns();
     sortTable();
 }
 
@@ -334,6 +348,25 @@ document.addEventListener("DOMContentLoaded", () => {
         g_sortByTime = e.target.checked;
         refresh();
     });
+
+    // Set up column visibility
+    const visCheckboxes = document.getElementsByClassName("vis-checkbox");
+    const visCheckboxesLength = visCheckboxes.length;
+
+    g_columnVisibility = Array(visCheckboxesLength).fill(true); 
+
+    for (let i = 0; i < visCheckboxesLength; i++) {
+        let checkbox = visCheckboxes[i];
+
+        if (!checkbox.checked) {
+            g_columnVisibility[i] = false;
+        }
+
+        checkbox.addEventListener("change", (e) => {
+            g_columnVisibility[i] = e.target.checked;
+            refresh();
+        });
+    }
 
     refresh();
 
