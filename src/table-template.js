@@ -47,6 +47,39 @@ function getSortFn_num(columnIdx) {
     };
 }
 
+function getRowNumDiffValue(row, columnIdx1, columnIdx2) {
+    const cells = row.cells;
+    const val1String = cells[columnIdx1].dataset["num"];
+    const val2String = cells[columnIdx2].dataset["num"];
+
+    const time1 = Number.parseFloat(val1String);
+    const time2 = Number.parseFloat(val2String);
+
+    return time1 - time2;
+}
+
+function getSortFn_numDiff(columnIdx1, columnIdx2, greaterFirst) {
+    return (row1, row2) => {
+        const diff1 = getRowNumDiffValue(row1, columnIdx1, columnIdx2);
+        const diff2 = getRowNumDiffValue(row2, columnIdx1, columnIdx2);
+
+        if (isNaN(diff1) && isNaN(diff2))
+            return 0;
+
+        if (isNaN(diff1))
+            return -1;
+        else if (isNaN(diff2))
+            return 1;
+
+        if (diff1 == diff2)
+            return 0;
+
+        if (greaterFirst)
+            return diff1 > diff2 ? -1 : 1;
+        return diff1 < diff2 ? -1 : 1;
+    };
+}
+
 // Hide or show certain rows of the table
 function setTableFilter() {
 
@@ -238,6 +271,30 @@ function handleSortRadioChange(new_val) {
             break;
         }
 
+        case "time-speedup": {
+            g_sortFn = getSortFn_numDiff(pyvar_timeColumnIndex,
+                                         pyvar_old_timeColumnIndex, false);
+            break;
+        }
+
+        case "time-slowdown": {
+            g_sortFn = getSortFn_numDiff(pyvar_timeColumnIndex,
+                                         pyvar_old_timeColumnIndex, true);
+            break;
+        }
+
+        case "node-count-speedup": {
+            g_sortFn = getSortFn_numDiff(pyvar_node_countColumnIndex,
+                                         pyvar_old_node_countColumnIndex, false);
+            break;
+        }
+
+        case "node-count-slowdown": {
+            g_sortFn = getSortFn_numDiff(pyvar_node_countColumnIndex,
+                                         pyvar_old_node_countColumnIndex, true);
+            break;
+        }
+
         default: {
             console.log(`Unrecognized \"sort by\" function: \"${new_val}\"`);
             g_sortFn = sortFn_identity;
@@ -246,7 +303,25 @@ function handleSortRadioChange(new_val) {
     }
 }
 
+function deleteRadioOptions(radioIds) {
+    for (const id of radioIds) {
+        const element = document.querySelector(`#sort-radio-list li #${id}`);
+        const parent = element.parentElement;
+        console.log(parent);
+        parent.remove();
+    }
+}
+
 function initializeSortRadio() {
+    // Delete radio options for non-existent columns
+    if (typeof(pyvar_old_timeColumnIndex) === "undefined") {
+        deleteRadioOptions(["sort-radio-time-speedup", "sort-radio-time-slowdown"]);
+    }
+
+    if (typeof(pyvar_old_node_countColumnIndex) === "undefined") {
+        deleteRadioOptions(["sort-radio-node-count-speedup", "sort-radio-node-count-slowdown"]);
+    }
+
     const elements =
         document.querySelectorAll("#sort-radio-list li input[type=radio]");
 
@@ -255,11 +330,17 @@ function initializeSortRadio() {
             handleSortRadioChange(e.target.value);
             refresh();
         });
+
+        // Set visible
+        element.parentElement.classList.toggle("hide-radio", false);
     }
 
     const initialValue = document.querySelector("input[name=sort-radio-value]:checked").value;
     console.log(`Initial value is \"${initialValue}\"`);
     handleSortRadioChange(initialValue);
+
+
+
 }
 
 /*

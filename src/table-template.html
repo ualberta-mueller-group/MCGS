@@ -222,7 +222,6 @@
             }
 
             #sort-radio-div {
-                background-color: red;
                 vertical-align: top;
                 display: inline-block;
             }
@@ -231,20 +230,23 @@
                 list-style: none;
                 display: inline-block;
                 overflow-y: scroll;
+                overflow-x: auto;
                 overscroll-behavior: contain;
-                background-color: orange;
                 max-height: 16em;
                 box-shadow: black 1px 1px 2px;
+                background-color: #afafaf;
             }
 
             #sort-radio-list li {
-                background-color: yellow;
                 display: table-row;
             }
 
             #sort-radio-list li * {
-                background-color: green;
                 display: table-cell;
+            }
+
+            .hide-radio {
+                display: none !important;
             }
 
         </style>
@@ -314,10 +316,6 @@
 
             <div class="sep"></div>
 
-            <div class="input-div">
-                <label for="sort-by-time-checkbox">Sort by time</label>
-                <input type="checkbox" id="sort-by-time-checkbox">
-            </div>
         </div> <!-- .grid-left-bottom -->
 
         <div class="grid-right">
@@ -328,28 +326,50 @@
                 </ul>
             </div> <!-- #vis-checkbox-div -->
 
-
             <div id="sort-radio-div">
                 <p>Sort by:</p>
                 <ul id="sort-radio-list">
-                    <li>
-                    <input type="radio" name="sort-radio-value" value="none" id="sort-radio-none">
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="none" id="sort-radio-none" checked>
                     </input>
                     <label for="sort-radio-none">None</label>
                     </li>
 
-                    <li>
+                    <li class="hide-radio">
                     <input type="radio" name="sort-radio-value" value="time" id="sort-radio-time">
                     </input>
                     <label for="sort-radio-time">Time (ms)</label>
                     </li>
 
-                    <li>
+                    <li class="hide-radio">
                     <input type="radio" name="sort-radio-value" value="node-count" id="sort-radio-node-count">
                     </input>
-                    <label for="sort-radio-nodes">Node Count</label>
+                    <label for="sort-radio-node-count">Node Count</label>
                     </li>
 
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="time-speedup" id="sort-radio-time-speedup">
+                    </input>
+                    <label for="sort-radio-time-speedup">Time speedup</label>
+                    </li>
+
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="time-slowdown" id="sort-radio-time-slowdown">
+                    </input>
+                    <label for="sort-radio-time-slowdown">Time slowdown</label>
+                    </li>
+
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="node-count-speedup" id="sort-radio-node-count-speedup">
+                    </input>
+                    <label for="sort-radio-node-count-speedup">Node count speedup</label>
+                    </li>
+
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="node-count-slowdown" id="sort-radio-node-count-slowdown">
+                    </input>
+                    <label for="sort-radio-node-count-slowdown">Node count slowdown</label>
+                    </li>
 
                 </ul>
             </div> <!-- #sort-radio-div -->

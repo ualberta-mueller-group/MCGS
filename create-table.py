@@ -276,6 +276,14 @@ def annotate_output_row_data(output_row):
     add_data_to_cell(output_row["node_count"], "num",
                      output_row["node_count"]["text"])
 
+    if "old_time" in output_row:
+        add_data_to_cell(output_row["old_time"],
+                         "num", output_row["old_time"]["text"])
+
+    if "old_node_count" in output_row:
+        add_data_to_cell(output_row["old_node_count"],
+                         "num", output_row["old_node_count"]["text"])
+
 
 # Populate output row when comparison_file is absent
 def row_populate_single_mode(input_rows, output_row):
@@ -819,6 +827,13 @@ script_file = open(src_dir + "/table-template.js", "r")
 script_string = ""
 script_string += f"const pyvar_timeColumnIndex = {column_indices["time"]};"
 script_string += f"const pyvar_node_countColumnIndex = {column_indices["node_count"]};"
+if "old_time" in column_indices:
+    script_string += f"const pyvar_old_timeColumnIndex = {column_indices["old_time"]};"
+
+if "old_node_count" in column_indices:
+    script_string += f"const pyvar_old_node_countColumnIndex = {column_indices["old_node_count"]};"
+
+
 
 script_string += script_file.read()
 script_file.close()
