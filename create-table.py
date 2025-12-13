@@ -256,7 +256,25 @@ The output_row passed to the first function in the pipeline only contains
 
 # Default values for a cell contained by a row
 def new_default_cell(text):
-    return {"css_classes": ["cell"], "text": text}
+    return {"css_classes": ["cell"], "text": text, "data": {}}
+
+
+def add_data_to_cell(cell, data_key, data_val):
+    assert type(cell) is dict
+    assert type(data_key) is str
+
+    cell_data = cell["data"]
+    assert data_key not in cell_data
+    cell_data[data_key] = data_val
+
+
+def annotate_output_row_data(output_row):
+    output_row["games"]["css_classes"].append("games-cell")
+
+    add_data_to_cell(output_row["time"], "num", output_row["time"]["text"])
+
+    add_data_to_cell(output_row["node_count"], "num",
+                     output_row["node_count"]["text"])
 
 
 # Populate output row when comparison_file is absent
@@ -266,6 +284,8 @@ def row_populate_single_mode(input_rows, output_row):
     # Just copy the fields (assumes aliases are the same for input and output)
     for alias in output_field_dict:
         output_row[alias] = new_default_cell(input_row[alias])
+
+    annotate_output_row_data(output_row)
 
 
 # Add some CSS classes
@@ -299,7 +319,6 @@ def row_populate_double_mode(input_rows, output_row):
 
 
     # Populate and style comparison fields
-    output_row["games"]["css_classes"].append("games-cell")
 
     # style hash
     if comparison_row is not None:
@@ -353,6 +372,8 @@ def row_populate_double_mode(input_rows, output_row):
         output_row["regression"]["css_classes"].append(regression_css)
     if regression_css_row is not None:
         output_row["css_classes"].append(regression_css_row)
+
+    annotate_output_row_data(output_row)
 
 
 def get_faster(new_time, old_time):
@@ -692,8 +713,22 @@ for reader_row in reader:
             continue
         cell = output_row[alias]
         cell_class_string = " ".join(cell["css_classes"])
+
+        cell_data = cell["data"]
+        cell_data_list = []
+        for k, v in cell_data.items():
+            assert type(k) is str
+            v = str(v)
+            cell_data_list.append(f"data-{k}=\"{v}\"")
+
+        cell_data_string = ""
+        if len(cell_data_list) > 0:
+            cell_data_string = " " + " ".join(cell_data_list) + " "
+
         col_title = output_field_dict[alias]
-        row_text += f"<td title=\"{col_title}\" class=\"{cell_class_string}\"><div>"
+        row_text += f"<td title=\"{col_title}\" class=\"{cell_class_string}\""
+        row_text += cell_data_string
+        row_text += "><div>"
         row_text += cell["text"]
         row_text += "</div></td>\n"
     row_text += "</tr>\n"

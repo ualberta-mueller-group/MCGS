@@ -6,6 +6,7 @@ let g_regex = false;
 let g_searchColumn = -1;
 let g_sortByTime = false;
 let g_columnVisibility = [];
+let g_sortFn = null;
 
 const initialRowOrder = [];
 
@@ -22,6 +23,29 @@ function showHideIndices() {
     } else {
         indexRow.hidden = false;
     }
+}
+
+function getSortFn_num(columnIdx) {
+    return (row1, row2) => {
+        const data1 = row1.cells[columnIdx].dataset["num"];
+        const data2 = row2.cells[columnIdx].dataset["num"];
+
+        const time1 = Number.parseFloat(data1);
+        const time2 = Number.parseFloat(data2);
+
+        if (isNaN(time1) && isNaN(time2))
+            return 0;
+
+        if (isNaN(time1))
+            return -1;
+        else if (isNaN(time2))
+            return 1;
+
+        if (time1 == time2)
+            return 0;
+
+        return time1 > time2 ? -1 : 1;
+    };
 }
 
 // Hide or show certain rows of the table
@@ -160,6 +184,7 @@ function sortTableByTime() {
         dataRows.push(row);
     }
 
+    /*
     dataRows.sort((row1, row2) => {
         const cells1 = row1.cells;
         const cells2 = row2.cells;
@@ -183,6 +208,9 @@ function sortTableByTime() {
 
         return time1 > time2 ? -1 : 1;
     });
+    */
+
+    dataRows.sort(getSortFn_num(pyvar_timeColumnIndex));
 
     const dataRowsLength = dataRows.length;
     for (let i = 0; i < dataRowsLength; i++)
