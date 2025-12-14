@@ -358,16 +358,37 @@ def row_populate_double_mode(input_rows, output_row):
     # faster
     faster_by_string = "N/A"
     faster_css = None
+    faster_frac = "NaN"
     if comparison_row is not None:
-        if input_row["status"] == "TIMEOUT" or comparison_row["status"] == "TIMEOUT":
-            faster_by_string = "???"
-        else:
-            num1 = float(input_row["time"])
-            num2 = float(comparison_row["time"])
-            faster_by_string, faster_css = get_faster(num1, num2)
+        num1 = float(input_row["time"])
+        num2 = float(comparison_row["time"])
+        faster_by_string, faster_css, faster_frac = get_faster(num1, num2, False)
+
+        #if input_row["status"] == "TIMEOUT" or comparison_row["status"] == "TIMEOUT":
+        #    faster_by_string = "???"
+        #    faster_css = None
     output_row["faster"] = new_default_cell(faster_by_string)
     if faster_css is not None:
         output_row["faster"]["css_classes"].append(faster_css)
+    add_data_to_cell(output_row["faster"], "num", faster_frac)
+
+    # node_faster
+    node_faster_string = "N/A"
+    node_faster_css = None
+    node_faster_frac = "NaN"
+    if comparison_row is not None:
+        num1 = float(input_row["node_count"])
+        num2 = float(comparison_row["node_count"])
+        node_faster_string, node_faster_css, node_faster_frac = get_faster(
+            num1, num2, True)
+
+        #if input_row["status"] == "TIMEOUT" or comparison_row["status"] == "TIMEOUT":
+        #    node_faster_string = "???"
+        #    node_faster_css = None
+    output_row["node_faster"] = new_default_cell(node_faster_string)
+    if node_faster_css is not None:
+        output_row["node_faster"]["css_classes"].append(node_faster_css)
+    add_data_to_cell(output_row["node_faster"], "num", node_faster_frac)
 
     # regression
     regression = "N/A"
@@ -379,14 +400,16 @@ def row_populate_double_mode(input_rows, output_row):
     if regression_css is not None:
         output_row["regression"]["css_classes"].append(regression_css)
     if regression_css_row is not None:
-        output_row["css_classes"].append(regression_css_row)
+        output_row["css_classes"] = regression_css_row
 
     annotate_output_row_data(output_row)
 
 
-def get_faster(new_time, old_time):
-    new_time = max(0.0001, new_time)
-    old_time = max(0.0001, old_time)
+# epsilon either 0.0001 or 1
+def get_faster(new_time, old_time, as_node_count):
+    epsilon_time = 1 if as_node_count else 0.0001
+    new_time = max(epsilon_time, new_time)
+    old_time = max(epsilon_time, old_time)
 
     time_max = max(new_time, old_time)
     time_min = min(new_time, old_time)
@@ -395,7 +418,8 @@ def get_faster(new_time, old_time):
     assert frac >= 1.0
 
     text = "{:.2f}x ".format(frac)
-    text += "AS FAST" if new_time < old_time else "AS SLOW"
+    better = new_time < old_time
+    text += "AS FAST" if better else "AS SLOW"
 
     css = None
 
@@ -403,7 +427,7 @@ def get_faster(new_time, old_time):
     if frac >= (1.0 + time_threshold_frac) and abs(diff) >= time_threshold_abs:
         css = "cell-slower" if diff > 0 else "cell-faster"
 
-    return text, css
+    return text, css, str(frac if better else -frac)
 
 
 def get_regression(input_row, comparison_row):
@@ -542,6 +566,7 @@ else:
     add_output_col("node_count", "Node Count")
     add_output_col("unique_sum_count", "Unique Sum Count")
     add_output_col("faster", "Time Improvement") #
+    add_output_col("node_faster", "Node Count Improvement") #
     add_output_col("old_time", "Old Time (ms)")
     add_output_col("old_node_count", "Old Node Count")
     add_output_col("old_unique_sum_count", "Old Unique Sum Count")
@@ -825,14 +850,11 @@ html_template_file.close()
 
 script_file = open(src_dir + "/table-template.js", "r")
 script_string = ""
-script_string += f"const pyvar_timeColumnIndex = {column_indices["time"]};"
-script_string += f"const pyvar_node_countColumnIndex = {column_indices["node_count"]};"
-if "old_time" in column_indices:
-    script_string += f"const pyvar_old_timeColumnIndex = {column_indices["old_time"]};"
 
-if "old_node_count" in column_indices:
-    script_string += f"const pyvar_old_node_countColumnIndex = {column_indices["old_node_count"]};"
-
+script_string += "const pyvar_columnIndices = {\n"
+for k in column_indices:
+    script_string += f"\t{k}: {column_indices[k]},\n"
+script_string += "};\n\n"
 
 
 script_string += script_file.read()
@@ -847,30 +869,30 @@ def vis_default_hide(cols1, cols2):
     assert type(cols2) is list
 
     for field in cols1:
-        if field not in output_field_list:
+        if field not in output_field_dict:
             return
 
     for field in cols2:
         vis_checkbox_default_disabled.add(field)
 
 
-vis_checkbox_default_disabled.add("File")
-vis_checkbox_default_disabled.add("Case")
-vis_checkbox_default_disabled.add("Expected Result")
-vis_checkbox_default_disabled.add("Old Status")
-vis_checkbox_default_disabled.add("Old Result")
-vis_checkbox_default_disabled.add("Old Unique Sum Count")
-vis_checkbox_default_disabled.add("Input hash")
+vis_checkbox_default_disabled.add("file")
+vis_checkbox_default_disabled.add("case")
+vis_checkbox_default_disabled.add("expected_result")
+vis_checkbox_default_disabled.add("unique_sum_count")
+vis_checkbox_default_disabled.add("old_status")
+vis_checkbox_default_disabled.add("old_result")
+vis_checkbox_default_disabled.add("old_unique_sum_count")
+vis_checkbox_default_disabled.add("hash")
 
-vis_default_hide(["Regression"], ["Status"])
+vis_default_hide(["regression"], ["status"])
 
 vis_checkbox_list = []
-for i in range(len(output_field_list)):
-    output_field = output_field_list[i]
+for i, k in enumerate(output_field_dict):
+    output_field = output_field_dict[k]
     vis_checkbox_list.append("<li>\n")
 
-
-    checked = output_field not in vis_checkbox_default_disabled
+    checked = k not in vis_checkbox_default_disabled
     checked = "checked" if checked else ""
 
     input_element = f"<input type=\"checkbox\" id=\"vis{i}-checkbox\" "

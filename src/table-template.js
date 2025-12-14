@@ -5,9 +5,22 @@ let g_include = true;
 let g_regex = false;
 let g_searchColumn = -1;
 let g_columnVisibility = [];
-let g_sortFn = null;
+let g_radioSortFn = null;
 
 const initialRowOrder = [];
+
+function hasColumn(colName) {
+    return pyvar_columnIndices.hasOwnProperty(colName);
+}
+
+function getColumnIdx(colName) {
+    const idx = pyvar_columnIndices[colName];
+
+    if (typeof(idx) !== "number")
+        console.error(`Tried to get index for non-existent column ${colName}`);
+
+    return idx;
+}
 
 function showTable() {
     const table = document.getElementById("data-table");
@@ -24,7 +37,10 @@ function showHideIndices() {
     }
 }
 
-function getSortFn_num(columnIdx) {
+// uses data-num HTML attribute, NOT the cell's text
+function getSortFn_num(columnName, greaterFirst) {
+    const columnIdx = getColumnIdx(columnName)
+
     return (row1, row2) => {
         const data1 = row1.cells[columnIdx].dataset["num"];
         const data2 = row2.cells[columnIdx].dataset["num"];
@@ -32,51 +48,24 @@ function getSortFn_num(columnIdx) {
         const time1 = Number.parseFloat(data1);
         const time2 = Number.parseFloat(data2);
 
+        let ordinal;
+
         if (isNaN(time1) && isNaN(time2))
             return 0;
-
-        if (isNaN(time1))
-            return -1;
-        else if (isNaN(time2))
-            return 1;
 
         if (time1 == time2)
             return 0;
 
-        return time1 > time2 ? -1 : 1;
-    };
-}
-
-function getRowNumDiffValue(row, columnIdx1, columnIdx2) {
-    const cells = row.cells;
-    const val1String = cells[columnIdx1].dataset["num"];
-    const val2String = cells[columnIdx2].dataset["num"];
-
-    const time1 = Number.parseFloat(val1String);
-    const time2 = Number.parseFloat(val2String);
-
-    return time1 - time2;
-}
-
-function getSortFn_numDiff(columnIdx1, columnIdx2, greaterFirst) {
-    return (row1, row2) => {
-        const diff1 = getRowNumDiffValue(row1, columnIdx1, columnIdx2);
-        const diff2 = getRowNumDiffValue(row2, columnIdx1, columnIdx2);
-
-        if (isNaN(diff1) && isNaN(diff2))
-            return 0;
-
-        if (isNaN(diff1))
-            return -1;
-        else if (isNaN(diff2))
-            return 1;
-
-        if (diff1 == diff2)
-            return 0;
+        if (isNaN(time1))
+            ordinal = -1;
+        else if (isNaN(time2))
+            ordinal =  1;
+        else
+            ordinal = time1 < time2 ? -1 : 1;
 
         if (greaterFirst)
-            return diff1 > diff2 ? -1 : 1;
-        return diff1 < diff2 ? -1 : 1;
+            return -ordinal;
+        return ordinal;
     };
 }
 
@@ -216,7 +205,7 @@ function sortTableByFn() {
         dataRows.push(row);
     }
 
-    dataRows.sort(g_sortFn);
+    dataRows.sort(g_radioSortFn);
 
     const dataRowsLength = dataRows.length;
     for (let i = 0; i < dataRowsLength; i++)
@@ -236,8 +225,7 @@ function showHideTableColumns() {
 }
 
 function sortTable() {
-
-    if (g_sortFn === null) {
+    if (g_radioSortFn === null) {
         const table = document.getElementById("data-table");
 
         const initialRowOrderLength = initialRowOrder.length;
@@ -257,47 +245,43 @@ function handleSortRadioChange(new_val) {
     console.log("Changing sort key to " + new_val);
     switch (new_val) {
         case "none": {
-            g_sortFn = null;
+            g_radioSortFn = null;
             break;
         }
 
         case "time": {
-            g_sortFn = getSortFn_num(pyvar_timeColumnIndex);
+            g_radioSortFn = getSortFn_num("time", true);
             break;
         }
 
         case "node-count": {
-            g_sortFn = getSortFn_num(pyvar_node_countColumnIndex);
+            g_radioSortFn = getSortFn_num("node_count", true);
             break;
         }
 
         case "time-speedup": {
-            g_sortFn = getSortFn_numDiff(pyvar_timeColumnIndex,
-                                         pyvar_old_timeColumnIndex, false);
+            g_radioSortFn = getSortFn_num("faster", true);
             break;
         }
 
         case "time-slowdown": {
-            g_sortFn = getSortFn_numDiff(pyvar_timeColumnIndex,
-                                         pyvar_old_timeColumnIndex, true);
+            g_radioSortFn = getSortFn_num("faster", false);
             break;
         }
 
         case "node-count-speedup": {
-            g_sortFn = getSortFn_numDiff(pyvar_node_countColumnIndex,
-                                         pyvar_old_node_countColumnIndex, false);
+            g_radioSortFn = getSortFn_num("node_faster", true);
             break;
         }
 
         case "node-count-slowdown": {
-            g_sortFn = getSortFn_numDiff(pyvar_node_countColumnIndex,
-                                         pyvar_old_node_countColumnIndex, true);
+            g_radioSortFn = getSortFn_num("node_faster", false);
             break;
         }
 
         default: {
             console.log(`Unrecognized \"sort by\" function: \"${new_val}\"`);
-            g_sortFn = sortFn_identity;
+            g_radioSortFn = sortFn_identity;
             break;
         }
     }
@@ -314,11 +298,12 @@ function deleteRadioOptions(radioIds) {
 
 function initializeSortRadio() {
     // Delete radio options for non-existent columns
-    if (typeof(pyvar_old_timeColumnIndex) === "undefined") {
+
+    if (!hasColumn("faster")) {
         deleteRadioOptions(["sort-radio-time-speedup", "sort-radio-time-slowdown"]);
     }
 
-    if (typeof(pyvar_old_node_countColumnIndex) === "undefined") {
+    if (!hasColumn("node_faster")) {
         deleteRadioOptions(["sort-radio-node-count-speedup", "sort-radio-node-count-slowdown"]);
     }
 
