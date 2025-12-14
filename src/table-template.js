@@ -6,8 +6,50 @@ let g_regex = false;
 let g_searchColumn = -1;
 let g_columnVisibility = [];
 let g_radioSortFn = null;
+let g_regressionsFirst = false;
 
 const initialRowOrder = [];
+
+const regressionOrdinalMap = {
+    "NEW FAIL": 0,
+    "NEW TIMEOUT": 1,
+    "NEW COMPLETED": 2,
+    "NEW PASS": 3,
+
+    "STILL FAIL": 4,
+    "STILL TIMEOUT": 4,
+    "STILL COMPLETED": 4,
+    "STILL PASS": 4,
+    "N/A": 4,
+};
+
+function getRegressionOrdinal(regressionCellText) {
+    const ordinal = regressionOrdinalMap[regressionCellText];
+
+    if (typeof(ordinal) !== "number") {
+        console.error(`Couldn't get regression ordinal for regression cell text ${regressionCellText}`);
+        return regressionOrdinalMap["N/A"];
+    }
+
+    return ordinal;
+}
+
+function getSortFn_regression() {
+    const regressionIdx = getColumnIdx("regression");
+
+    return (row1, row2) => {
+        const row1Text = row1.cells[regressionIdx].innerText;
+        const row2Text = row2.cells[regressionIdx].innerText;
+
+        const ordinal1 = getRegressionOrdinal(row1Text);
+        const ordinal2 = getRegressionOrdinal(row2Text);
+
+        if (ordinal1 == ordinal2)
+            return 0;
+
+        return ordinal1 < ordinal2 ? -1 : 1;
+    };
+}
 
 function hasColumn(colName) {
     return pyvar_columnIndices.hasOwnProperty(colName);
@@ -189,7 +231,7 @@ function setTableFilterText() {
     }
 }
 
-function sortTableByFn() {
+function sortTableByFn(sortFn) {
     const table = document.getElementById("data-table");
     const tableRows = table.rows;
 
@@ -205,7 +247,7 @@ function sortTableByFn() {
         dataRows.push(row);
     }
 
-    dataRows.sort(g_radioSortFn);
+    dataRows.sort(sortFn);
 
     const dataRowsLength = dataRows.length;
     for (let i = 0; i < dataRowsLength; i++)
@@ -224,20 +266,48 @@ function showHideTableColumns() {
     }
 }
 
-function sortTable() {
-    if (g_radioSortFn === null) {
-        const table = document.getElementById("data-table");
+function restoreInitialRowOrder() {
+    const table = document.getElementById("data-table");
 
-        const initialRowOrderLength = initialRowOrder.length;
-        for (let i = 0; i < initialRowOrderLength; i++)
-        {
-            const row = initialRowOrder[i];
-            if (row.hidden)
-                continue;
-            table.appendChild(initialRowOrder[i]);
-        }
+    const initialRowOrderLength = initialRowOrder.length;
+    for (let i = 0; i < initialRowOrderLength; i++)
+    {
+        const row = initialRowOrder[i];
+        if (row.hidden)
+            continue;
+        table.appendChild(initialRowOrder[i]);
+    }
+}
+
+function getGlobalSortFn() {
+    if (!g_regressionsFirst) {
+        if (g_radioSortFn !== null)
+            return g_radioSortFn;
+        return null;
+    }
+
+    const regressionFn = getSortFn_regression();
+
+    if (g_radioSortFn === null)
+        return regressionFn;
+
+    return (row1, row2) => {
+        const regressionOrder = regressionFn(row1, row2);
+
+        if (regressionOrder !== 0)
+            return regressionOrder;
+
+        return g_radioSortFn(row1, row2);
+    };
+}
+
+function sortTable() {
+    const sortFn = getGlobalSortFn();
+
+    if (sortFn === null) {
+        restoreInitialRowOrder();
     } else {
-        sortTableByFn();
+        sortTableByFn(sortFn);
     }
 }
 
@@ -357,6 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterTextExclude = document.getElementById("filter-text-exclude");
     const filterTextRegex = document.getElementById("filter-text-regex");
     const filterColumnSelect = document.getElementById("filter-text-column-select");
+    const regressionsFirst = document.getElementById("regressions-first-checkbox");
 
     const problemSummary = document.getElementById("problem-summary");
 
@@ -424,6 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
     g_include = !filterTextExclude.checked;
     g_regex = filterTextRegex.checked;
     g_searchColumn = filterColumnSelect.value;
+    g_regressionsFirst = regressionsFirst.checked;
 
     filterTextInput.addEventListener("input", (e) => {
         g_filterText = e.target.value;
@@ -449,6 +521,18 @@ document.addEventListener("DOMContentLoaded", () => {
         g_searchColumn = e.target.value;
         refresh();
     });
+
+    if (hasColumn("regression")) {
+        regressionsFirst.parentNode.classList.toggle("hide-radio", false);
+
+        regressionsFirst.addEventListener("change", (e) => {
+            g_regressionsFirst = e.target.checked;
+            refresh();
+        });
+
+    } else {
+        regressionsFirst.parentNode.remove();
+    }
 
     // Set up column visibility
     const visCheckboxes = document.getElementsByClassName("vis-checkbox");
