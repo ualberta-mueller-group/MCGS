@@ -266,7 +266,7 @@ function setAggregationText(tableRows) {
 
     // Node rate
     lines.push([
-        "💨",
+        "🚀",
         `Node rate (nodes/second): ${fmt0(1000 * (node_count_total / time_total))} n/s`
     ]);
     
@@ -333,7 +333,7 @@ function setAggregationText(tableRows) {
         const clause3 = `${fmt0(old_rate)} n/s → ${fmt0(new_rate)} n/s`;
 
         lines.push([
-            "🔎💨",
+            "🔎🚀",
             `Compared node rate: (${clause1}) — (${clause2}) — (${clause3})`
         ]);
     }
