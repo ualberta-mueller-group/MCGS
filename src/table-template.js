@@ -34,6 +34,334 @@ function getRegressionOrdinal(regressionCellText) {
     return ordinal;
 }
 
+function divMod(top, bottom) {
+    return [Math.floor(top / bottom), top % bottom];
+}
+
+function percentString(val1, val2) {
+    const larger = Math.max(val1, val2);
+    const smaller = Math.min(val1, val2);
+    return nDigitMantissaString(100.0 * (larger / smaller), 2) + "%";
+}
+
+function nDigitMantissaString(num, nDigits) {
+    num = num.toFixed(nDigits);
+
+    if (nDigits === 0)
+        return num;
+
+    if (num.length === 0)
+        return num;
+
+    let popCount = 0;
+
+    for (let idx = num.length - 1; idx >= 0; idx--) {
+        const c = num[idx];
+
+        if (c === "0") {
+            popCount++;
+            continue;
+        }
+
+        if (c === ".") {
+            popCount++;
+            break;
+        }
+
+        break;
+    }
+
+    return num.substr(0, num.length - popCount);
+}
+
+function commaSeparatedInt(num) {
+    num = Math.floor(num).toString();
+
+    const chunks = [];
+
+    const numLength = num.length;
+    for (let idx = numLength; idx > 0; ) {
+        const chunkLength = Math.min(3, idx);
+        chunks.push(num.substr(idx - chunkLength, chunkLength));
+
+        idx -= chunkLength;
+    }
+
+    chunks.reverse();
+    return chunks.join(",");
+}
+
+function timeMsToTimeObj(timeMs) {
+    if (typeof(timeMs) !== "number")
+        console.error(`timeMsToTimeObj argument not a number: "${timeMs}"`);
+
+    const timeObj = {
+        ms: timeMs,
+        s: 0,
+        m: 0,
+        h: 0,
+        d: 0,
+    };
+
+    if (timeObj.ms < 0) {
+        console.error(`timeMsToTimeObj argument negative: "${timeMs}"`);
+        return timeObj;
+    }
+
+    // To seconds?
+    if (timeObj.ms < 1000.0)
+        return timeObj;
+    [timeObj.s, timeObj.ms] = divMod(timeObj.ms, 1000.0);
+
+    // To minutes?
+    if (timeObj.s < 60.0)
+        return timeObj;
+    [timeObj.m, timeObj.s] = divMod(timeObj.s, 60.0);
+
+    // To hours?
+    if (timeObj.m < 60)
+        return timeObj;
+    [timeObj.h, timeObj.m] = divMod(timeObj.h, 60.0);
+
+    // To days?
+    if (timeObj.h < 24)
+        return timeObj;
+    [timeObj.d, timeObj.h] = divMod(timeObj.h, 24.0);
+
+    return timeObj;
+}
+
+function timeObjToString(timeObj) {
+    const props = ["ms", "s", "m", "h", "d"];
+
+    let error = false;
+    for (const p of props) {
+        if (!timeObj.hasOwnProperty(p)) {
+            error = true;
+            break;
+        }
+    }
+
+    if (error)
+        console.error(`timeObjToString argument missing field ${timeObj}`);
+
+    let result = [];
+
+    const addProp = (val, name, format) => {
+        //const pluralText = val > 1 ? "s" : "";
+        const valFmt = format ? Math.floor(val) : val;
+
+        if (val > 0)
+            result.push(`${valFmt}${name}`);
+    };
+
+    addProp(timeObj.d, "d", false);
+    addProp(timeObj.h, "h", false);
+    addProp(timeObj.m, "m", false);
+    addProp(timeObj.s, "s", false);
+    addProp(timeObj.ms, "ms", true);
+
+    return result.join(", ");
+}
+
+function formatTimeMs(timeMs) {
+    return timeObjToString(timeMsToTimeObj(timeMs));
+}
+
+function setAggregationText(tableRows) {
+    let rows_hidden = 0;
+    let rows_shown = 0;
+
+    // Time
+    let time_total = 0;
+    const time_idx = getColumnIdx("time");
+
+    // Node count
+    let node_count_total = 0;
+    const node_count_idx = getColumnIdx("node_count");
+
+    // Old time
+    let old_time_total = 0;
+    const has_old_time = hasColumn("old_time");
+    const old_time_idx = has_old_time ? getColumnIdx("old_time") : undefined;
+
+    // Old node count
+    let old_node_count_total = 0;
+    const has_old_node_count = hasColumn("old_node_count");
+    const old_node_count_idx = has_old_node_count ?
+        getColumnIdx("old_node_count") : undefined;
+
+    const tableRowsLength = tableRows.length;
+    for (let i = 2; i < tableRowsLength; i++) {
+        const row = tableRows[i];
+        const cells = row.cells;
+
+        if (row.hidden) {
+            rows_hidden++;
+            continue;
+        }
+
+        rows_shown++;
+
+        // Time
+        const time = parseFloat(cells[time_idx].dataset["num"])
+        time_total += time;
+
+        // Node count
+        const node_count = parseFloat(cells[node_count_idx].dataset["num"])
+        node_count_total += node_count;
+
+        if (has_old_time) {
+            const old_time = parseFloat(cells[old_time_idx].dataset["num"])
+            old_time_total += old_time;
+        }
+
+        if (has_old_node_count) {
+            const old_node_count = parseFloat(cells[old_node_count_idx].dataset["num"])
+            old_node_count_total += old_node_count;
+        }
+    }
+
+    const fmt0 = (num) => {
+        return commaSeparatedInt(num);
+    };
+
+    const fmtMs = (num) => {
+        return formatTimeMs(num);
+    };
+
+    const getNodeRate = (total_nodes, total_ms) => {
+        return 1000.0 * (total_nodes / total_ms);
+    };
+
+    const getFasterPhrase = (isBetter) => {
+        return isBetter ? "FASTER BY" : "SLOWER BY";
+    };
+
+    const getAsFastPhrase = (isBetter) => {
+        return isBetter ? "AS FAST" : "AS SLOW";
+    };
+
+    const lines = [];
+
+    const rows_total = rows_shown + rows_hidden;
+
+    // Row counts
+    lines.push([
+        "👀",
+        `${fmt0(rows_shown)} of ${fmt0(rows_total)} rows shown (${fmt0(rows_hidden)} hidden)`
+    ]);
+
+    // Total time
+    lines.push([
+        "⏳",
+        `Total time: ${fmtMs(time_total)} (${fmt0(time_total)} ms)`
+    ]);
+
+    // Total nodes
+    lines.push([
+        "🧮",
+        `Total nodes: ${fmt0(node_count_total)} nodes`
+    ]);
+
+    // Node rate
+    lines.push([
+        "💨",
+        `Node rate (nodes/second): ${fmt0(1000 * (node_count_total / time_total))} n/s`
+    ]);
+    
+
+    // Compare time
+    if (has_old_time) {
+        let timeDiff = time_total - old_time_total;
+        const isBetter = timeDiff <= 0;
+        timeDiff = Math.abs(timeDiff);
+
+        const fasterPhrase = getFasterPhrase(isBetter);
+        const asFastPhrase = getAsFastPhrase(isBetter);
+
+        const percent = percentString(time_total, old_time_total);
+
+        const clause1 = `${percent} ${asFastPhrase}`;
+        const clause2 = `${fasterPhrase}: ${fmtMs(timeDiff)} ↔ ${fmt0(timeDiff)} ms`;
+        const clause3 = `${fmt0(old_time_total)} ms → ${fmt0(time_total)} ms`;
+
+        lines.push([
+            "🔎⏳",
+            `Compared total time: (${clause1}) — (${clause2}) — (${clause3})`
+        ]);
+    }
+
+    // Compare nodes
+    if (has_old_node_count) {
+        let nodeDiff = node_count_total - old_node_count_total;
+        const isBetter = nodeDiff <= 0;
+        nodeDiff = Math.abs(nodeDiff);
+
+        const fasterPhrase = getFasterPhrase(isBetter);
+        const asFastPhrase = getAsFastPhrase(isBetter);
+
+        const percent = percentString(node_count_total, old_node_count_total);
+
+        const clause1 = `${percent} ${asFastPhrase}`;
+        const clause2 = `${fasterPhrase} ${fmt0(nodeDiff)} nodes`;
+        const clause3 = `${fmt0(old_node_count_total)} nodes → ${fmt0(node_count_total)} nodes`;
+
+        lines.push([
+            "🔎🧮",
+            `Compared node count: (${clause1}) — (${clause2}) — (${clause3})`
+        ]);
+    }
+
+    // Compare node rate
+    if (has_old_time && has_old_node_count) {
+        const old_rate = getNodeRate(old_node_count_total, old_time_total);
+        const new_rate = getNodeRate(node_count_total, time_total);
+
+
+        let rateDiff = new_rate - old_rate;
+        const isBetter = rateDiff >= 0;
+        rateDiff = Math.abs(rateDiff);
+
+        const fasterPhrase = getFasterPhrase(isBetter);
+        const asFastPhrase = getAsFastPhrase(isBetter);
+
+        const percent = percentString(new_rate, old_rate);
+
+        const clause1 = `${percent} ${asFastPhrase}`;
+        const clause2 = `${fasterPhrase}: ${fmt0(rateDiff)} n/s`;
+        const clause3 = `${fmt0(old_rate)} n/s → ${fmt0(new_rate)} n/s`;
+
+        lines.push([
+            "🔎💨",
+            `Compared node rate: (${clause1}) — (${clause2}) — (${clause3})`
+        ]);
+    }
+
+    const aggregationList = document.getElementById("aggregation-list");
+
+    // Clear elements
+    while (aggregationList.firstChild)
+        aggregationList.removeChild(aggregationList.firstChild);
+
+    // Make new elements
+    for (const linePair of lines) {
+        const [emoji, text] = linePair;
+        const lineElement = document.createElement("li");
+
+        const emojiElement = document.createElement("span");
+        emojiElement.innerHTML = emoji;
+        emojiElement.classList.toggle("emoji-shadow", true);
+
+        const textElement = document.createElement("span");
+        textElement.innerHTML = " " + text;
+
+        lineElement.appendChild(emojiElement);
+        lineElement.appendChild(textElement);
+        aggregationList.appendChild(lineElement);
+    }
+}
+
 function getSortFn_regression() {
     const regressionIdx = getColumnIdx("regression");
 
@@ -393,9 +721,6 @@ function initializeSortRadio() {
     const initialValue = document.querySelector("input[name=sort-radio-value]:checked").value;
     console.log(`Initial value is \"${initialValue}\"`);
     handleSortRadioChange(initialValue);
-
-
-
 }
 
 /*
@@ -409,6 +734,8 @@ function refresh() {
     setTableFilterText();
     showHideTableColumns();
     sortTable();
+
+    setAggregationText(document.getElementById("data-table").rows);
 }
 
 // Wait for the document to finish loading before doing anything

@@ -84,7 +84,6 @@
                 padding-bottom: 20px;
             }
 
-
             td.break-anywhere div {
                 overflow-wrap: anywhere;
             }
@@ -196,9 +195,7 @@
                 overflow-y: scroll;
                 overflow-x: auto;
                 overscroll-behavior: contain;
-                background-color: #afafaf;
                 max-height: 16em;
-                box-shadow: black 1px 1px 3px;
                 border-spacing: 3px 1px;
             }
 
@@ -235,8 +232,6 @@
                 overflow-x: auto;
                 overscroll-behavior: contain;
                 max-height: 16em;
-                box-shadow: black 1px 1px 3px;
-                background-color: #afafaf;
                 border-spacing: 3px 1px;
             }
 
@@ -250,6 +245,28 @@
 
             .hide-radio {
                 display: none !important;
+            }
+
+            #aggregation-div {
+                padding-left: 1em;
+                list-style-type: disc;
+                margin: 0px 3px 5px 3px;
+            }
+
+            #aggregation-list li {
+                margin-bottom: 5px;
+                font-size: 110%;
+            }
+
+            .emoji-shadow {
+                text-shadow: 2px 2px 2px black;
+            }
+
+            .widget {
+                border-radius: 8px;
+                box-shadow: 1px 1px 3px black;
+                background-color: #cfcfcf;
+                border: 1px solid #8f8f8f;
             }
 
         </style>
@@ -327,14 +344,14 @@
         </div> <!-- .grid-left-bottom -->
 
         <div class="grid-right">
-            <div id="vis-checkbox-div">
+            <div id="vis-checkbox-div" class="widget">
                 <p>Column visibility:</p>
                 <ul id="vis-checkbox-list">
                     <!-- REPLACE WITH VIS CHECKBOXES -->
                 </ul>
             </div> <!-- #vis-checkbox-div -->
 
-            <div id="sort-radio-div">
+            <div id="sort-radio-div" class="widget">
                 <p>Sort by:</p>
                 <ul id="sort-radio-list">
                     <li class="hide-radio">
@@ -385,7 +402,10 @@
         </div> <!-- .grid-right -->
 
     </div> <!-- #top-grid -->
-
+    <div id="aggregation-div" class="widget">
+        <ul id="aggregation-list">
+        </ul>
+    </div> <!-- aggregation-div -->
         <!-- REPLACE WITH TABLE -->
 
     </body>
