@@ -11,11 +11,7 @@ and benefit from existing game-independent optimizations. Future versions will
 include hooks for game-specific optimizations, and implement many general
 search optimizations.
 
-The overall approach and future plans will be described in a forthcoming
-document "The Design of MCGS: A Minimax Search-based Solver for Combinatorial
-Games". A brief high-level overview is given in the talk
-[A Search-based Approach for Solving Sum Games](https://webdocs.cs.ualberta.ca/~mmueller/cgt/talks/2025-CGTC-MCGS.pdf).
-
+Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of results so far are available from the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
 
 ### Sections
 - [Version 1.4 Additions](#version-14-additions)
@@ -56,7 +52,7 @@ Games". A brief high-level overview is given in the talk
     - See README for details
 - `--print-winning-moves` CLI option prints winning moves for input sums
     - Has limitations, see `./MCGS -h`
-- MCGS web site (`docs/index.html`)
+- [MCGS web page](https://ualberta-mueller-group.github.io/MCGS)
     - Contains computational results
     - Links to a user guide, our ACG 2025 paper, and our ACG 2025 presentation
       slides

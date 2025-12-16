@@ -56,31 +56,13 @@ std::ostream& operator<<(std::ostream& os, const split_result& split)
 bool game::has_moves_for(bw player) const
 {
     assert(is_black_white(player));
-    move_generator* gen = create_move_generator(player);
-    const bool move_exists = *gen;
-    delete gen;
-    return move_exists;
+    auto gen = unique_ptr<move_generator>(create_move_generator(player));
+    return *gen;
 }
 
 bool game::has_moves() const
 {
-    unique_ptr<move_generator> gen_b =
-        unique_ptr<move_generator>(create_move_generator(BLACK));
-
-    if (*gen_b)
-    {
-        return true;
-    }
-
-    unique_ptr<move_generator> gen_w =
-        unique_ptr<move_generator>(create_move_generator(WHITE));
-
-    if (*gen_w)
-    {
-        return true;
-    }
-
-    return false;
+    return has_moves_for(BLACK) || has_moves_for(WHITE);
 }
 
 void game::play(const move& m, int to_play)
@@ -103,6 +85,11 @@ void game::undo_move()
     __pop_undo_code(GAME_UNDO_PLAY);
 #endif
     _move_stack.pop_back();
+}
+
+int game::complexity_score() const
+{
+    return 1;
 }
 
 hash_t game::get_local_hash() const

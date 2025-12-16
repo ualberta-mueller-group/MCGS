@@ -9,6 +9,9 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "cgt_nimber.h"
+#include "pitm_move_generator.h"
+
+const bool USE_PITM = false;
 
 game* impartial_game_wrapper::inverse() const
 {
@@ -155,7 +158,9 @@ private:
 
     const game* _game; // the wrapped game, not the wrapper itself
     ebw _color;
-    move_generator* _color_mg;
+    move_generator* _mg_black;
+    move_generator* _mg_white;
+    move_generator* _generator;
 };
 
 ig_wrapper_move_generator::ig_wrapper_move_generator(
@@ -163,47 +168,47 @@ ig_wrapper_move_generator::ig_wrapper_move_generator(
     : move_generator(BLACK),
       _game(wrapper.wrapped_game()),
       _color(BLACK),
-      _color_mg(_game->create_move_generator(BLACK))
+      _mg_black(_game->create_move_generator(BLACK)),
+      _mg_white(_game->create_move_generator(WHITE)),
+      _generator(nullptr)
 {
+    if (USE_PITM)
+    {
+        _mg_black = new pitm_move_generator(_mg_black, BLACK);
+        _mg_white = new pitm_move_generator(_mg_white, WHITE);
+    }
+    _generator = _mg_black;
     _next_move(true);
 }
 
 ig_wrapper_move_generator::~ig_wrapper_move_generator()
 {
-    if (_color_mg != nullptr)
-        delete _color_mg;
+    delete _mg_black;
+    delete _mg_white;
 }
 
 void ig_wrapper_move_generator::_next_color()
 {
     assert(_color == BLACK || _color == WHITE);
-    assert(_color_mg != nullptr);
-
-    delete _color_mg;
-    _color_mg = nullptr;
-
     _color = (_color == BLACK) ? WHITE : EMPTY;
-
-    if (_color != EMPTY)
-        _color_mg = _game->create_move_generator(_color);
+    if (_color == WHITE)
+        _generator = _mg_white;
 }
 
 void ig_wrapper_move_generator::_next_move(bool init)
 {
     assert(_color != EMPTY);
-    assert(_color_mg != nullptr);
-    assert(init || *_color_mg);
 
     // Try current move generator
     if (!init)
-        ++(*_color_mg);
-    bool found_move = *_color_mg;
+        ++(*_generator);
+    bool found_move = *_generator;
 
     // Try next colors
     while (!found_move && _color != EMPTY)
     {
         _next_color();
-        found_move = (_color != EMPTY) && *_color_mg;
+        found_move = (_color != EMPTY) && *_generator;
     }
 }
 
@@ -218,9 +223,7 @@ ig_wrapper_move_generator::operator bool() const
     if (_color == EMPTY)
         return false;
 
-    assert(_color_mg != nullptr);
-    const bool has_move = *_color_mg;
-
+    const bool has_move = *_generator;
     assert(has_move);
     return has_move;
 }
@@ -229,13 +232,13 @@ move ig_wrapper_move_generator::gen_move() const
 {
     /* NOTE: impartial_game_wrapper color hack
 
-       Here we encode the partizan game's move generator color into the color
+       Here we encode the partisan game's move generator color into the color
        bit of the move. This is safe only if no other move generators do this,
        and we don't generate a move from another ig_wrapper_move_generator.
     */
     assert(operator bool());
 
-    const move m = _color_mg->gen_move();
+    const move m = _generator->gen_move();
     assert(cgt_move::get_color(m) == 0);
 
     const bw color = _color;

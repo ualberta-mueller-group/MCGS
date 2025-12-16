@@ -53,7 +53,7 @@ public:
 
     // These functions needed by game class interface
     // They also make it possible to include an
-    // impartial game in any (possibly partizan) sum
+    // impartial game in any (possibly partisan) sum
     void play(const move& m, bw to_play) override;
     move_generator* create_move_generator(bw ignore_to_play) const override;
 

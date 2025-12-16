@@ -141,8 +141,12 @@ void print_help_message(const string& exec_name)
                "generation. 0 means seed with current time. Default: " +
                    global::experiment_seed.get_default_str());
 
-    print_flag(global::alt_imp_search.flag(),
-               "Enable alternative search algorithm for impartial games.");
+    print_flag(global::impartial_algorithm_mex.flag(),
+               "Use Mex search algorithm for impartial games.");
+
+    print_flag(global::use_complexity_score.flag(), "Use complexity score "
+               "heuristic for impartial game search (when "
+               + global::impartial_algorithm_mex.flag() + " is not used).");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -180,7 +184,7 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
                    global::clear_tt.get_default_str() + ".");
 
     print_flag(global::count_sums.flag(), "Count unique sums found during "
-               "search. Only applies to partizan solve commands i.e. {B} or "
+               "search. Only applies to partisan solve commands i.e. {B} or "
                "{W}, but not {N}. Will slow down search somewhat.");
 
     // Remove these? Keep them in this separate section instead?
@@ -647,9 +651,16 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg == global::alt_imp_search.flag())
+        if (arg == global::impartial_algorithm_mex.flag())
         {
-            global::alt_imp_search.set(true);
+            global::impartial_algorithm_mex.set(true);
+            continue;
+        }
+
+
+        if (arg == global::use_complexity_score.flag())
+        {
+            global::use_complexity_score.set(true);
             continue;
         }
 

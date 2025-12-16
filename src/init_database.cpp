@@ -137,7 +137,7 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
                 if (is_impartial)
                     db.generate_entries_impartial(*gen);
                 else
-                    db.generate_entries_partizan(*gen);
+                    db.generate_entries_partisan(*gen);
             }
 
             delete gen;

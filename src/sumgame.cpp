@@ -974,7 +974,7 @@ std::optional<solve_result> sumgame::simplify_db()
 
         outcome_class oc = outcome_class::U;
 
-        std::optional<db_entry_partizan> entry = db.get_partizan(*g);
+        std::optional<db_entry_partisan> entry = db.get_partisan(*g);
         stats::db_access(entry.has_value());
 
         if (entry.has_value())
