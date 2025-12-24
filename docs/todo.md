@@ -130,6 +130,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
         - feed it a game as a CLI arg along with "--dry-run", check if it crashed
 - Some way to scale tests? Just generate new batches of increasingly large random tests?
     - Other solvers may be unable to verify these (i.e. CGSuite)
+- How to use test results? Standard criteria for when program Version A is better than Version B? Cumulative total number of problems solved? Which time limit?
 
 ### Ownership of games in `sumgame`
 - Decide and document semantics of game-in-sumgame. 
@@ -233,4 +234,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 # Small todo's
     - Remove duplication between performance and unit tests
     - Add one-line documentation for these options in global_options.h
+    - domineering/cram, fill in single squares after move even if no split happens
+    - Should DB hits also be stored in the TT? Do some tests.
+    - rename the current use_complexity_score flag to make it clear that it is only for the LV algorithm
 
