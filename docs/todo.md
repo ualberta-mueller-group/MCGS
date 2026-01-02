@@ -86,6 +86,17 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Kao's mean and temperature search
     - 2022 student project for the simple case, single move option
 
+### Complexity Score
+- measure complexity of a subgame
+- implemented a hook game::complexity_score() in Version 1.5
+    - equal to size() for strip and grid
+    - 1 for all other games
+- Compare with Complexity Score 1..4 in SEGClobber
+- Currently only used in impartial games, LV algorithm, to select the
+   last subgame to search
+- Can be used to select "simplest" subgame in other circumstances
+- Can be used for move ordering within a subgame, with a 1 ply search
+
 ### Move ordering heuristics
 - Can we define some in a game-independent way?
 - Play in the middle heuristic
