@@ -8,6 +8,8 @@
 #include <thread>
 #include <future>
 
+#include "mcgs_stop_token.h"
+
 #define MAX_FIB 1024
 
 namespace {
@@ -62,6 +64,34 @@ std::optional<int> fib_timeout_token(const timeout_token& tt, int n)
     fib_flags[n] = true;
     return *f1 + *f2;
 }
+
+inline std::optional<int> fib_mcgs_stop_token(const mcgs_stop_token& st, int n)
+{
+    n_calls++;
+    if (n < 2)
+    {
+        fib_flags[n] = true;
+        return n;
+    }
+
+    if (st.stop_requested())
+        return {};
+    const std::optional<int> f1 = fib_mcgs_stop_token(st, n - 1);
+
+    if (st.stop_requested())
+        return {};
+    const std::optional<int> f2 = fib_mcgs_stop_token(st, n - 2);
+
+    if (!f1.has_value() || !f2.has_value())
+        return {};
+
+    //if (st.stop_requested())
+    //    return {};
+
+    fib_flags[n] = true;
+    return *f1 + *f2;
+}
+
 
 std::optional<int> fib_thread_ub(const std::atomic<bool>& should_stop, int n)
 {
@@ -142,12 +172,18 @@ void test_timeout_token()
     assert(n < MAX_FIB);
     init_flags();
 
+    std::cout << "Starting" << std::endl;
 
     //timeout_token tt;
     //tt.start(TIMEOUT_MS);
     //fib_timeout_token(tt, n);
 
-    call_thread_ub(TIMEOUT_MS, n);
+    //call_thread_ub(TIMEOUT_MS, n);
+
+    mcgs_stop_source ss;
+    mcgs_stop_token st = ss.get_stop_token();
+    ss.start_timeout(TIMEOUT_MS);
+    fib_mcgs_stop_token(st, n);
 
     const int best = max_flag();
     std::cout << "Best: " << best << std::endl;
