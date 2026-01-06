@@ -22,6 +22,7 @@
 #include "gen_experiments.h"
 //#include "winning_moves.h"
 #include "test_file_parser2.h"
+#include "basic_player.h"
 
 using std::cout, std::endl, std::string;
 
@@ -73,14 +74,15 @@ int main(int argc, char** argv)
 
     mcgs_init_2(opts);
 
-    //if (opts.use_player)
-    //{
-    //    file_parser2* parser = opts.parser.get();
-    //    THROW_ASSERT(parser != nullptr, "No games specified for player");
+    if (opts.use_player)
+    {
+        std::shared_ptr<file_parser2> parser = opts.parser;
 
-    //    play_games(*parser, opts.play_log_name);
-    //    return 0;
-    //}
+        if (parser.get() != nullptr)
+            play_games(*parser, opts.play_log_name);
+
+        return 0;
+    }
 
 
     if (opts.run_tests)

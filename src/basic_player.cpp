@@ -21,7 +21,7 @@
 #include "string_to_int.h"
 #include "throw_assert.h"
 #include "cgt_basics.h"
-#include "file_parser.h"
+#include "file_parser2.h"
 #include "global_options.h"
 #include "kayles.h"
 #include "strip.h"
@@ -806,17 +806,16 @@ bool has_kayles(const vector<game*>& games)
 } // namespace
 
 //////////////////////////////////////////////////
-void play_games(file_parser& parser, const string& log_name)
+void play_games(file_parser2& parser, const string& log_name)
 {
     init_streams(log_name);
 
-    game_case gc;
     sumgame sum(BLACK);
 
-    while (parser.parse_chunk(gc))
+    while (parser.parse_chunk())
     {
         assert(sum.num_total_games() == 0);
-        vector<game*>& games = gc.games;
+        vector<game*> games = parser.get_games();
 
         THROW_ASSERT(!has_kayles(games),
                      "Kayles not currently supported by player!");
@@ -834,7 +833,8 @@ void play_games(file_parser& parser, const string& log_name)
 
         sum.pop(games);
 
-        gc.cleanup_games();
+        for (game* g : games)
+            delete g;
 
         if (cin.eof())
             break;
