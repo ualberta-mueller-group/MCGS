@@ -11,6 +11,8 @@
 class timeout_token
 {
 public:
+    timeout_token();
+
     // true IFF start() has been called, and reset() has not since been called
     bool is_initialized() const;
 
@@ -29,15 +31,26 @@ private:
 };
 
 ////////////////////////////////////////////////// timeout_token methods
+inline timeout_token::timeout_token()
+    : _infinite_time(false)
+{
+}
+
 inline void timeout_token::start(unsigned long long timeout_ms)
 {
     assert(!is_initialized());
 
     if (timeout_ms == 0)
+    {
         _infinite_time = true;
+        _end_time.reset();
+    }
     else
+    {
+        _infinite_time = false;
         _end_time =
             timeout_clock_t::now() + std::chrono::milliseconds(timeout_ms);
+    }
 
     assert(is_initialized());
 }
@@ -63,4 +76,7 @@ inline bool timeout_token::stop_requested() const
 
     return timeout_clock_t::now() > _end_time.value();
 }
+
+//////////////////////////////////////////////////
+void test_timeout_token();
 
