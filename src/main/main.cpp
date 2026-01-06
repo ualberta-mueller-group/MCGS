@@ -48,9 +48,6 @@ void run_test_from_main(std::shared_ptr<i_test_case> test_case,
         cout << "Not running search..." << endl;
     else
     {
-        if (global::clear_tt())
-            sumgame::reset_ttable();
-
         test_case->run(0);
 
         cout << "Got: " << print_optional(row.result) << endl;

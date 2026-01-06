@@ -151,6 +151,8 @@ public:
 
     // called by mcgs_init_all()
     static void init_sumgame(size_t index_bits);
+
+    // Called by derived classes of i_test_case, in their _run_impl() methods
     static void reset_ttable();
 
 private:

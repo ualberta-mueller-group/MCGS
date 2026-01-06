@@ -96,6 +96,9 @@ void test_case_solve_bw::_run_impl(unsigned long long timeout)
 {
     stopwatch sw;
 
+    if (global::clear_tt())
+        sumgame::reset_ttable();
+
     sumgame s(_expr.get_player());
 
     sw.start();
@@ -189,6 +192,9 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
     THROW_ASSERT(is_black_white(_expr.get_player()));
 
     stopwatch sw;
+
+    if (global::clear_tt())
+        sumgame::reset_ttable();
 
     sumgame sum(_expr.get_player());
 

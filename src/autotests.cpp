@@ -96,11 +96,6 @@ void run_autotests(const string& root_test_directory, const string& outfile_name
                 row.fill_autotest_fields(relative_file_path.string(), file_test_idx);
 
                 // Run the test
-
-                if (global::clear_tt()) // TODO should these be handled elsewhere?
-                    sumgame::reset_ttable();
-                stats::reset_stats();
-
                 test_case->run(test_timeout);
 
                 // Write CSV row

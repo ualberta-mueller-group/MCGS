@@ -1,6 +1,8 @@
 /*
-    Solver statistics tracking. Must call reset_stats() after each
-    sumgame::solve
+    Solver statistics tracking.
+    
+    Must call reset_stats() before every test case. This should be done
+    in i_test_case::run()
 */
 #pragma once
 
