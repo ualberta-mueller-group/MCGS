@@ -106,7 +106,7 @@ inline bool mcgs_stop_token::stop_requested() const
 
 ////////////////////////////////////////////////// mcgs_stop_source methods
 inline mcgs_stop_source::mcgs_stop_source()
-    : _should_stop(new std::atomic<bool>())
+    : _should_stop(new std::atomic<bool>(false))
 {
     _should_stop->store(false, std::memory_order_relaxed);
 }
