@@ -265,8 +265,9 @@ game* clobber_1xn::inverse() const
     return new clobber_1xn(inverse_board());
 }
 
-void clobber_1xn::print_move(std::ostream& str, const move& m) const
+void clobber_1xn::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
+    assert(is_black_white(to_play));
     // from, to
     print_move2_as_points(str, m);
 }

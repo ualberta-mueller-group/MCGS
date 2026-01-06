@@ -31,6 +31,10 @@ public:
     void play(const move& m) override;
     void undo_move() override;
     move_generator* create_move_generator() const override;
+    void print_move(std::ostream& str, const move& m,
+                    ebw to_play_ignore) const override;
+    void print_move(std::ostream& str, const move& m) const;
+
     void print(std::ostream& str) const override;
 
     // These functions needed by game class interface

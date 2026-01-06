@@ -60,4 +60,3 @@ inline mcgs_stop_token mcgs_stop_source::get_token()
 {
     return mcgs_stop_token(_should_stop);
 }
-

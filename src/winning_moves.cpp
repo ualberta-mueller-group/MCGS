@@ -124,7 +124,7 @@ void print_winning_moves_for_player(sumgame& sum, bw player)
             const game* g = sum.subgame_const(sm.subgame_idx);
 
             stringstream stream;
-            g->print_move(stream, sm.m);
+            g->print_move(stream, sm.m, player);
             const std::string& str = stream.str();
             assert(!string_contains_whitespace(str));
 

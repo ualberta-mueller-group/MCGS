@@ -10,6 +10,7 @@
 #include "game.h"
 #include "strip.h"
 #include "throw_assert.h"
+#include "utilities.h"
 
 using namespace std;
 
@@ -74,9 +75,12 @@ toppling_dominoes::toppling_dominoes(const string& game_as_string)
 void toppling_dominoes::play(const ::move& m, bw to_play)
 {
     game::play(m, to_play);
+    _index_stack.emplace_back(_domino_start, _domino_end);
 
-    const int new_start = cgt_move::move2_get_part_1(m);
-    const int new_end = cgt_move::move2_get_part_2(m);
+    // Compute state update
+    const pair<int, int> new_bounds = _move_to_bounds(m, to_play);
+    const int& new_start = new_bounds.first;
+    const int& new_end = new_bounds.second;
 
     assert(
         (_domino_start <= new_start) && //
@@ -91,22 +95,17 @@ void toppling_dominoes::play(const ::move& m, bw to_play)
 
 void toppling_dominoes::undo_move()
 {
+    assert(
+        num_moves_played() > 0 &&                                            //
+        static_cast<unsigned int>(num_moves_played()) == _index_stack.size() //
+    );
+
     game::undo_move();
+    const pair<int, int> bounds_prev = _index_stack.back();
+    _index_stack.pop_back();
 
-    int new_start;
-    int new_end;
-
-    if (num_moves_played() > 0)
-    {
-        const ::move m_enc = last_move();
-
-        cgt_move::move2_unpack(m_enc, new_start, new_end);
-    }
-    else
-    {
-        new_start = 0;
-        new_end = _initial_dominoes.size();
-    }
+    const int& new_start = bounds_prev.first;
+    const int& new_end = bounds_prev.second;
 
     assert(
         (_domino_start >= new_start) && //
@@ -134,13 +133,19 @@ void toppling_dominoes::print(ostream& str) const
         str << color_to_char(get_domino_at(i));
 }
 
-void toppling_dominoes::print_move(std::ostream& str, const ::move& m) const
+void toppling_dominoes::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
-    // Board is the open interval: [low_bound, high_bound)
-    int low_bound, high_bound;
-    cgt_move::move2_unpack(m, low_bound, high_bound);
+    assert(is_black_white(to_play));
 
-    str << '[' << low_bound << ',' << high_bound << ')';
+    const int domino_virtual = cgt_move::move2_get_part_1(m);
+    const int topple_right_virtual_int = cgt_move::move2_get_part_2(m);
+
+    assert(topple_right_virtual_int == false || //
+           topple_right_virtual_int == true);   //
+
+    const bool topple_right_virtual = static_cast<bool>(topple_right_virtual_int);
+
+    str << (domino_virtual + 1) << (topple_right_virtual ? 'R' : 'L');
 }
 
 game* toppling_dominoes::inverse() const
@@ -174,6 +179,36 @@ const vector<int> toppling_dominoes::current_dominoes() const
         dominoes.push_back(get_domino_at(i));
 
     return dominoes;
+}
+
+pair<int, int> toppling_dominoes::_move_to_bounds(::move m, bw to_play) const
+{
+    assert(is_black_white(to_play));
+
+    const int domino_virtual = cgt_move::move2_get_part_1(m);
+    const int topple_right_virtual_int = cgt_move::move2_get_part_2(m);
+
+    assert(topple_right_virtual_int == false || //
+           topple_right_virtual_int == true);   //
+
+    const int domino_real = _idx_virtual_to_real(domino_virtual);
+
+    const bool topple_right_virtual =
+        static_cast<bool>(topple_right_virtual_int);
+
+    const bool topple_right_real =
+        _domino_flip_orientation ? !topple_right_virtual : topple_right_virtual;
+
+    const int& real_start = _domino_start;
+    const int& real_end = _domino_end;
+
+    assert(_initial_dominoes[domino_real] == BORDER ||
+           _initial_dominoes[domino_real] == to_play);
+
+    if (!topple_right_real)
+        return {domino_real + 1, real_end}; // LEFT
+    else
+        return {real_start, domino_real}; // RIGHT
 }
 
 void toppling_dominoes::_init_hash(local_hash& hash) const
@@ -285,25 +320,29 @@ toppling_dominoes_move_generator::operator bool() const
 {
     assert(*this);
 
-    const int real_idx = _g._idx_virtual_to_real(_domino_idx);
-    const bool real_right =
-        _g._domino_flip_orientation ? !_topple_right : _topple_right;
+    ///const int real_idx = _g._idx_virtual_to_real(_domino_idx);
+    ///const bool real_right =
+    ///    _g._domino_flip_orientation ? !_topple_right : _topple_right;
 
-    const int real_start = _g._domino_start;
-    const int real_end = _g._domino_end;
+    ///const int real_start = _g._domino_start;
+    ///const int real_end = _g._domino_end;
 
-    /*
-       Currently board is: [real_start, real_end)
+    ////*
+    ///   Currently board is: [real_start, real_end)
 
-       If topple left: [real_idx + 1, real_end)
-       If topple right: [real_start, real_idx)
-    */
+    ///   If topple left: [real_idx + 1, real_end)
+    ///   If topple right: [real_start, real_idx)
+    ///*/
 
-    if (!real_right)
-        return cgt_move::move2_create(real_idx + 1, real_end); // LEFT
+    ///if (!real_right)
+    ///    return cgt_move::move2_create(real_idx + 1, real_end); // LEFT
 
-    else
-        return cgt_move::move2_create(real_start, real_idx); // RIGHT
+    ///else
+    ///    return cgt_move::move2_create(real_start, real_idx); // RIGHT
+
+
+    // Virtual idx
+    return cgt_move::move2_create(_domino_idx, _topple_right);
 }
 
 void toppling_dominoes_move_generator::_increment(bool init)

@@ -26,7 +26,7 @@ public:
     move_generator* create_move_generator(bw to_play) const override;
 
     void print(std::ostream& str) const override;
-    void print_move(std::ostream& str, const move& m) const override;
+    void print_move(std::ostream& str, const move& m, ebw to_play) const override;
 
     game* inverse() const override;
 
@@ -40,6 +40,7 @@ protected:
 
     void _flip();
     int _idx_virtual_to_real(int idx_virtual) const;
+    std::pair<int, int> _move_to_bounds(move m, bw to_play) const;
 
     void _init_hash(local_hash& hash) const override;
     void _normalize_impl() override;
@@ -50,9 +51,11 @@ protected:
     int _domino_end; // real index of 1 past last domino
     bool _domino_flip_orientation; // IFF true: reverse index
 
+    // start, end pair for moves played
+    std::vector<std::pair<int, int>> _index_stack;
+
     std::vector<bool> _normalize_did_flip;
     const std::vector<int> _initial_dominoes;
-
 };
 
 ////////////////////////////////////////////////// toppling_dominoes methods

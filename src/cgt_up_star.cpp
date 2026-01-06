@@ -192,4 +192,19 @@ move_generator* up_star::create_move_generator(bw to_play) const
     return new up_star_move_generator(*this, to_play);
 }
 
+void up_star::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_black_white(to_play));
+
+    const int delta_v = cgt_move::move2_get_part_1(m);
+    const bool flip_star = static_cast<bool>(cgt_move::move2_get_part_2(m));
+
+    const int new_ups = _value + delta_v;
+    const bool new_star = flip_star ? !_star : _star;
+
+    str << new_ups;
+    if (new_star)
+        str << '*';
+}
+
 //---------------------------------------------------------------------------

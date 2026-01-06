@@ -25,6 +25,7 @@ public:
     void play(const move& m, bw ignore_to_play) override;
     void undo_move() override;
     move_generator* create_move_generator() const override;
+    void print_move(std::ostream& str, const move& m, ebw to_play) const override;
     void print(std::ostream& str) const override;
     game* inverse() const override;
 

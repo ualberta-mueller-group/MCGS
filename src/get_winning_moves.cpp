@@ -47,7 +47,7 @@ vector<string> get_winning_moves_for_player(sumgame& sum, bw player)
 
             stringstream stream;
             stream << sm.subgame_idx << ':';
-            g->print_move(stream, sm.m);
+            g->print_move(stream, sm.m, player);
 
             const std::string& str = stream.str();
             assert(!string_contains_whitespace(str));

@@ -188,8 +188,10 @@ void gen_toads::print(ostream& str) const
     str << board_as_string();
 }
 
-void gen_toads::print_move(std::ostream& str, const ::move& m) const
+void gen_toads::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
+    assert(is_black_white(to_play));
+
     int move_delta, start_idx;
     cgt_move::move2_unpack(m, move_delta, start_idx);
 

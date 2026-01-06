@@ -135,7 +135,7 @@ void test_case_solve_n::_run_impl(unsigned long long timeout)
 
     for (game* g : _games)
         if (!g->is_impartial())
-            throw std::logic_error("Sum contains partizan games");
+            throw std::logic_error("Sum contains partisan games");
 
     sw.start();
     sum.add(_games);

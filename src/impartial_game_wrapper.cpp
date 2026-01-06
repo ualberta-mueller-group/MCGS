@@ -251,3 +251,17 @@ move_generator* impartial_game_wrapper::create_move_generator() const
 {
     return new ig_wrapper_move_generator(*this);
 }
+
+void impartial_game_wrapper::print_move(std::ostream& str, const move& m,
+                                        ebw to_play_ignore) const
+{
+    print_move(str, m);
+}
+
+void impartial_game_wrapper::print_move(std::ostream& str, const move& m) const
+{
+    const bw color = cgt_move::get_color(m);
+    const ::move m_no_color = cgt_move::remove_color(m);
+
+    _game->print_move(str, m_no_color, color);
+}

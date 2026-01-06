@@ -223,8 +223,10 @@ void sheep::print(ostream& str) const
     }
 }
 
-void sheep::print_move(std::ostream& str, const ::move& m) const
+void sheep::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
+    assert(is_black_white(to_play));
+
     int target_herd;
     int from_point;
     int to_point;

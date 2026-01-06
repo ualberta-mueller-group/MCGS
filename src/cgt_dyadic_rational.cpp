@@ -2,6 +2,7 @@
 // Simple combinatorial games - dyadic rationals
 //---------------------------------------------------------------------------
 #include "cgt_dyadic_rational.h"
+#include "cgt_basics.h"
 #include "cgt_integer_game.h"
 #include "cgt_move.h"
 #include "game.h"
@@ -172,3 +173,13 @@ move_generator* dyadic_rational::create_move_generator(bw to_play) const
 {
     return new dyadic_rational_move_generator(*this, to_play);
 }
+
+void dyadic_rational::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_black_white(to_play));
+    assert(p() != 0);
+
+    str << (to_play == BLACK ? "DEC" : "INC");
+}
+
+

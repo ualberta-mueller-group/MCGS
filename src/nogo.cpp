@@ -362,8 +362,9 @@ game* nogo::inverse() const
     return new nogo(inverse_board(), new_immortal, shape());
 }
 
-void nogo::print_move(std::ostream& str, const move& m) const
+void nogo::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
+    assert(is_black_white(to_play));
     // (to)
     print_move2_as_coords(str, m, shape());
 }

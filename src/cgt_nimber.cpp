@@ -2,6 +2,7 @@
 // Simple combinatorial games - nimbers
 //---------------------------------------------------------------------------
 #include "cgt_nimber.h"
+#include "cgt_basics.h"
 #include "cgt_move.h"
 #include <cassert>
 #include <ostream>
@@ -99,5 +100,16 @@ move_generator* nimber::create_move_generator() const
 {
     return new nimber_move_generator(*this);
 }
+
+void nimber::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_empty_black_white(to_play));
+
+    const int number = cgt_move::move1_get_part_1(m);
+    assert(number > 0 && number <= _value);
+
+    str << '*' << (_value - number);
+}
+
 
 //---------------------------------------------------------------------------
