@@ -7,6 +7,7 @@
 #include "test_case_enums.h"
 #include "utilities.h"
 #include <cctype>
+#include <string>
 
 using namespace std;
 
@@ -87,6 +88,46 @@ test_case_status_enum csv_test_case_status(
     return TEST_CASE_STATUS_FAIL;
 }
 
+/*
+   Sanitize field contents of a CSV row (for printing to file)
+       1. Strip left and right whitespace
+       2. Replace double quotes with 2 single quotes
+       3. Wrap the result in double quotes
+*/
+string csv_format_field(const string& field)
+{
+    // Remove leading/trailing whitespace, replace double quotes with 2 single
+    // quotes
+    string sanitized_field;
+
+    sanitized_field.push_back('\"');
+
+    bool past_left_whitespace = false;
+
+    const size_t N = field.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        const char& c = field[i];
+
+        if (!past_left_whitespace && std::isspace(c))
+            continue;
+        else
+            past_left_whitespace = true;
+
+        if (c == '\"')
+            sanitized_field += "''";
+        else
+            sanitized_field.push_back(c);
+    }
+
+    while (sanitized_field.size() > 0 && std::isspace(sanitized_field.back()))
+        sanitized_field.pop_back();
+
+    sanitized_field.push_back('\"');
+    return sanitized_field;
+}
+
+
 } // namespace
 
 bool csv_row::has_visitor_fields() const
@@ -114,6 +155,11 @@ bool csv_row::has_post_test_fields() const
         node_count.has_value(); //
 
     // result.has_value() &&   //
+}
+
+bool csv_row::has_autotest_fields() const
+{
+    return file.has_value() && case_number.has_value();
 }
 
 void csv_row::fill_visitor_fields(const vector<string>& comments,
@@ -166,6 +212,13 @@ void csv_row::fill_post_test_fields(const optional<string>& result,
     assert(has_post_test_fields());
 }
 
+void csv_row::fill_autotest_fields(const std::string& file, int case_number)
+{
+    assert(has_pre_test_fields() && !has_autotest_fields());
+    this->file = file;
+    this->case_number = case_number;
+}
+
 string csv_row::get_status_string() const
 {
     if (status.has_value())
@@ -186,3 +239,74 @@ string csv_row::get_time_ms_string() const
         return to_n_digit_mantissa(time_ms.value(), 2);
     return "?";
 }
+
+#ifdef CSV_FIELD
+#error CSV_FIELD macro already defined...
+#endif
+
+#define CSV_FIELD(field_optional, expr) \
+    row_strings.push_back(field_optional.has_value() ? (expr) : "N/A"); \
+    static_assert(true)
+
+vector<string> csv_row::get_row_field_strings() const
+{
+    vector<string> row_strings;
+
+    CSV_FIELD(file, file.value());
+    CSV_FIELD(case_number, to_string(case_number.value()));
+    CSV_FIELD(games, games.value());
+    CSV_FIELD(player, player.value());
+    CSV_FIELD(expected_result, expected_result.value());
+    CSV_FIELD(result, result.value());
+    CSV_FIELD(time_ms, get_time_ms_string());
+    CSV_FIELD(status, get_status_string());
+    CSV_FIELD(comments, comments.value());
+
+    //CSV_FIELD(command_type, get_command_type_string());
+
+    CSV_FIELD(node_count, to_string(node_count.value()));
+    CSV_FIELD(unique_node_count, to_string(unique_node_count.value()));
+    CSV_FIELD(input_hash, input_hash.value());
+
+    return row_strings;
+}
+
+#undef CSV_FIELD
+
+vector<string> csv_row::get_header_field_strings()
+{
+    vector<string> header;
+
+    header.push_back("File");
+    header.push_back("Case");
+    header.push_back("Games");
+    header.push_back("Player");
+    header.push_back("Expected Result");
+    header.push_back("Result");
+    header.push_back("Time (ms)");
+    header.push_back("Status");
+    header.push_back("Comments");
+    header.push_back("Node Count");
+    header.push_back("Unique Sum Count");
+    header.push_back("Input hash");
+
+    return header;
+}
+
+
+////////////////////////////////////////////////// utility functions
+void write_csv_field_strings(ostream& os, const vector<string>& fields)
+{
+    const size_t N = fields.size();
+
+    for (size_t i = 0; i < N; i++)
+    {
+        os << csv_format_field(fields[i]);
+
+        if (i + 1 < N)
+            os << ',';
+    }
+
+    os << '\n';
+}
+
