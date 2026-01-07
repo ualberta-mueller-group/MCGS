@@ -33,3 +33,18 @@ std::string test_case_status_to_string(test_case_status_enum test_case_status)
     THROW_ASSERT(false);
 }
 
+test_case_status_enum evaluate_test_case_status(
+    const std::optional<std::string>& result,
+    const std::optional<std::string>& expected_result)
+{
+    if (!result.has_value())
+        return TEST_CASE_STATUS_TIMEOUT;
+
+    if (!expected_result.has_value())
+        return TEST_CASE_STATUS_COMPLETED;
+
+    if (result.value() == expected_result.value())
+        return TEST_CASE_STATUS_PASS;
+
+    return TEST_CASE_STATUS_FAIL;
+}

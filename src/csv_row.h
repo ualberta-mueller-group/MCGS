@@ -28,8 +28,22 @@ public:
         const std::vector<game*>& games, std::optional<ebw> player,
         const std::optional<std::string>& expected_result);
 
+    /*
+        For reporting test results.
+
+        The non-verbose version infers the test status by comparing the result
+        to the expected result.
+
+        The verbose version is used by tests which provide more meaningful
+        output i.e. the "winning moves" test showing a diff of the expected
+        moves and computed moves
+    */
     void fill_post_test_fields(const std::optional<std::string>& result,
                                double time_ms);
+
+    void fill_post_test_fields_verbose(
+        const std::optional<std::string>& alt_result, double time_ms,
+        test_case_status_enum test_case_status);
 
     void fill_autotest_fields(const std::string& file, int case_number);
 

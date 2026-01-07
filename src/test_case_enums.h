@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <optional>
 
 ////////////////////////////////////////////////// enums
 enum command_type_enum
@@ -21,3 +22,7 @@ enum test_case_status_enum
 };
 
 std::string test_case_status_to_string(test_case_status_enum test_case_status);
+
+test_case_status_enum evaluate_test_case_status(
+    const std::optional<std::string>& result,
+    const std::optional<std::string>& expected_result);

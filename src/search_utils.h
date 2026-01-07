@@ -1,4 +1,6 @@
 #pragma once
+#warning TODO delete/replace __FILE__ (use test_case.h in most cases)
+
 /*
     Utilities for solving both partisan and impartial sums. Used by main.cpp
         and autotests.cpp to run tests.

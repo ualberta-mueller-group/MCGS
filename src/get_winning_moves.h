@@ -34,9 +34,39 @@ std::optional<std::vector<std::string>> get_winning_moves_with_timeout_token(
 // "get_winning_moves_XYZ" functions don't use this
 void sort_winning_moves(std::vector<std::string>& winning_moves);
 
+////////////////////////////////////////////////// class winning_moves_diff_t
+class winning_moves_diff_t
+{
+public:
+    winning_moves_diff_t(const std::vector<std::string>& computed_moves,
+                         const std::vector<std::string>& expected_moves);
 
-////////////////////////////////////////////////// function implementations
+    // Moves are sorted according to sort_winning_moves()
+    const std::vector<std::string>& get_extra_moves() const;
+    const std::vector<std::string>& get_missing_moves() const;
+
+    std::string get_diff_string(bool prepend_diff_symbols) const;
+
+private:
+    std::vector<std::string> _extra_moves;
+    std::vector<std::string> _missing_moves;
+};
+
+////////////////////////////////////////////////// misc function implementations
 inline void sort_winning_moves(std::vector<std::string>& winning_moves)
 {
     std::sort(winning_moves.begin(), winning_moves.end());
+}
+
+////////////////////////////////////////////////// winning_moves_diff_t methods
+inline const std::vector<std::string>& winning_moves_diff_t::get_extra_moves()
+    const
+{
+    return _extra_moves;
+}
+
+inline const std::vector<std::string>& winning_moves_diff_t::get_missing_moves()
+    const
+{
+    return _missing_moves;
 }

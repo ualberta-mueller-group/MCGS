@@ -73,21 +73,6 @@ string csv_player_string(const optional<ebw>& player)
     return "IMP";
 }
 
-test_case_status_enum csv_test_case_status(
-    const optional<string>& result, const optional<string>& expected_result)
-{
-    if (!result.has_value())
-        return TEST_CASE_STATUS_TIMEOUT;
-
-    if (!expected_result.has_value())
-        return TEST_CASE_STATUS_COMPLETED;
-
-    if (result.value() == expected_result.value())
-        return TEST_CASE_STATUS_PASS;
-
-    return TEST_CASE_STATUS_FAIL;
-}
-
 /*
    Sanitize field contents of a CSV row (for printing to file)
        1. Strip left and right whitespace
@@ -192,13 +177,23 @@ void csv_row::fill_pre_test_fields(
 void csv_row::fill_post_test_fields(const optional<string>& result,
                                     double time_ms)
 {
+    const test_case_status_enum status =
+        evaluate_test_case_status(result, this->expected_result);
+
+    fill_post_test_fields_verbose(result, time_ms, status);
+}
+
+void csv_row::fill_post_test_fields_verbose(
+    const optional<string>& alt_result, double time_ms,
+    test_case_status_enum test_case_status)
+{
     assert(has_pre_test_fields());
     assert(!has_post_test_fields());
 
-    this->result = result;
+    this->result = alt_result;
     this->time_ms = time_ms;
 
-    this->status = csv_test_case_status(result, this->expected_result);
+    this->status = test_case_status;
 
     const solver_stats& stats = stats::get_global_stats();
     this->node_count = stats.node_count;

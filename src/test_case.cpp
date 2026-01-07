@@ -1,8 +1,10 @@
 #include "test_case.h"
 #include "cgt_basics.h"
+#include "csv_row.h"
 #include "file_parser_new.h"
 #include "get_winning_moves.h"
 #include "impartial_sumgame.h"
+#include "search_utils.h"
 #include "solver_stats.h"
 #include "stopwatch.h"
 #include "test_case_enums.h"
@@ -213,7 +215,7 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
     src.start_timeout(timeout);
 
     sum.add(_games);
-    optional<vector<string>> winning_moves =
+    const optional<vector<string>> computed_moves =
         get_winning_moves_with_timeout_token(sum, player, tok);
     sum.pop(_games);
 
@@ -222,7 +224,47 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
     src.cancel_timeout();
 
     // Report results
-    const optional<string> result_string = winning_moves_string(winning_moves);
-    _csv_row.fill_post_test_fields(result_string, sw.get_duration_ms());
-}
+    assert(_csv_row.has_pre_test_fields());
 
+    const optional<string> result_string = winning_moves_string(computed_moves);
+    const optional<string>& expected_string = _csv_row.expected_result;
+
+    const test_case_status_enum status =
+        evaluate_test_case_status(result_string, expected_string);
+
+    const double duration_ms = sw.get_duration_ms();
+
+    switch (status)
+    {
+        case TEST_CASE_STATUS_TIMEOUT:
+        case TEST_CASE_STATUS_COMPLETED:
+        {
+            _csv_row.fill_post_test_fields(result_string, duration_ms);
+            break;
+        }
+
+        case TEST_CASE_STATUS_PASS:
+        {
+            _csv_row.fill_post_test_fields_verbose("OK", duration_ms, status);
+            break;
+        }
+
+        case TEST_CASE_STATUS_FAIL:
+        {
+            const optional<vector<string>>& expected_moves =
+                _expr.get_expected_winning_moves();
+
+            THROW_ASSERT(computed_moves.has_value() &&
+                         expected_moves.has_value());
+
+            winning_moves_diff_t diff(computed_moves.value(),
+                                      expected_moves.value());
+
+            const string diff_string = diff.get_diff_string(true);
+
+            _csv_row.fill_post_test_fields_verbose(diff_string, duration_ms,
+                                                   status);
+            break;
+        }
+    }
+}
