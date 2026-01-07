@@ -274,7 +274,6 @@ public:
     const std::optional<std::vector<std::string>>& get_expected_winning_moves()
         const;
 
-
 private:
     const ebw _player;
     const std::optional<std::vector<std::string>> _expected_winning_moves;

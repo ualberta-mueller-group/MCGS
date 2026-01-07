@@ -237,8 +237,6 @@ const std::optional<std::vector<std::string>>& fp_expr_command_winning_moves::
     return _expected_winning_moves;
 }
 
-
-
 //////////////////////////////////////// fp_chunk methods
 fp_chunk::fp_chunk()
 {

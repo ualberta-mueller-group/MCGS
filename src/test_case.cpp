@@ -181,11 +181,13 @@ optional<string> test_case_winning_moves::winning_moves_string(
     if (!winning_moves.has_value())
         return {};
 
-    const vector<string>& winning_moves_vec = winning_moves.value();
+    vector<string> winning_moves_vec = winning_moves.value();
+    sort_winning_moves(winning_moves_vec);
+
     if (winning_moves_vec.empty())
         return "None";
 
-    return string_join(winning_moves_vec);
+    return string_join(winning_moves_vec, " ");
 }
 
 void test_case_winning_moves::_run_impl(unsigned long long timeout)
@@ -221,7 +223,6 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
 
     // Report results
     const optional<string> result_string = winning_moves_string(winning_moves);
-
     _csv_row.fill_post_test_fields(result_string, sw.get_duration_ms());
 }
 

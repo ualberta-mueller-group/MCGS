@@ -21,6 +21,7 @@
 #include "fission.h"
 #include "game_case.h"
 #include "game_token_parsers.h"
+#include "get_winning_moves.h"
 #include "parsing_utilities.h"
 #include "string_to_int.h"
 #include "toppling_dominoes.h"
@@ -558,7 +559,7 @@ i_fp_expr_command* get_fp_expr_run_command_winning_moves(const int line_number,
     if (!player.has_value())
         return nullptr;
 
-    optional<vector<string>> expected_moves(vector<string>({}));
+    optional<vector<string>> expected_moves = vector<string>();
     assert(expected_moves.has_value());
 
     for (; idx < N; idx++)
@@ -571,26 +572,27 @@ i_fp_expr_command* get_fp_expr_run_command_winning_moves(const int line_number,
         expected_moves->emplace_back(move_string);
     }
 
-    if (expected_moves->size() == 1)
+    const size_t n_move_strings = expected_moves.value().size();
+
+    // Expected result unspecified
+    if (n_move_strings == 0)
+        expected_moves.reset();
+
+    if (n_move_strings == 1)
     {
+        assert(expected_moves.has_value());
+
         // Careful! This reference is invalidated while still in scope
         const string& move_string = expected_moves->back();
 
         if (move_string == "None")
         {
             expected_moves->pop_back();
-            assert(expected_moves.value().empty());
-        }
-        else if (move_string == "?")
-        {
-            expected_moves.reset();
-            assert(!expected_moves.has_value());
+            assert(expected_moves->empty());
         }
     }
 
-    if (expected_moves.has_value())
-        std::sort(expected_moves->begin(), expected_moves->end());
-
+    // Moves are sorted further down the line
     return new fp_expr_command_winning_moves(line_number, player.value(),
                                              expected_moves);
 }

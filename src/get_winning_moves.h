@@ -10,6 +10,7 @@
 */
 #pragma once
 
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <optional>
@@ -17,6 +18,7 @@
 #include "cgt_basics.h"
 #include "sumgame.h"
 #include "timeout_token.h"
+
 
 // Never times out
 std::vector<std::string> get_winning_moves(sumgame& sum, bw player);
@@ -28,3 +30,13 @@ std::optional<std::vector<std::string>> get_winning_moves_with_timeout(
 // Uses timeout_token
 std::optional<std::vector<std::string>> get_winning_moves_with_timeout_token(
     sumgame& sum, bw player, const timeout_token& timeout_tok);
+
+// "get_winning_moves_XYZ" functions don't use this
+void sort_winning_moves(std::vector<std::string>& winning_moves);
+
+
+////////////////////////////////////////////////// function implementations
+inline void sort_winning_moves(std::vector<std::string>& winning_moves)
+{
+    std::sort(winning_moves.begin(), winning_moves.end());
+}
