@@ -3,14 +3,7 @@
 //---------------------------------------------------------------------------
 #pragma once
 
-#include "alternating_move_game.h"
-#include "cgt_move.h"
-#include "game.h"
-#include <atomic>
 #include <ctime>
-#include "global_options.h"
-#include "sumgame_change_record.h"
-#include "transposition.h"
 #include <memory>
 #include <vector>
 #include <set>
@@ -19,6 +12,15 @@
 #include <utility>
 #include <ostream>
 #include <cassert>
+
+#include "alternating_move_game.h"
+#include "cgt_move.h"
+#include "game.h"
+#include "global_options.h"
+#include "sumgame_change_record.h"
+#include "transposition.h"
+#include "timeout_token.h"
+
 
 struct ttable_sumgame_entry
 {
@@ -115,12 +117,16 @@ public:
     bool solve() const override;
 
     /*
-        Timeout is in milliseconds. 0 means never timeout.
+        Timeout is in milliseconds. 0 means never timeout
 
         On timeout, the returned optional has no value
     */
     std::optional<solve_result> solve_with_timeout(
         unsigned long long timeout) const;
+
+    // If timeout_token is absent, search never times out
+    std::optional<solve_result> solve_with_timeout_token(
+        const std::optional<timeout_token>& timeout_tok_optional) const;
 
     bool solve_with_games(std::vector<game*>& gs) const;
     bool solve_with_games(game* g) const;
@@ -164,9 +170,16 @@ private:
     bool _over_time() const;
     game* _pop_game();
 
-    // For root level call, depth should be 0. For recursive calls,
-    // pass depth + 1
-    std::optional<solve_result> _solve_with_timeout(uint64_t depth);
+    /*
+        Main search logic. Respects timeout defined by sumgame::_over_time(),
+        which uses a (possibly absent) timeout_token. If not present, search
+        never times out.
+
+        For root level call, depth should be 0. For recursive calls,
+        pass depth + 1
+    */
+    std::optional<solve_result> _solve_impl(uint64_t depth);
+
     void _push_undo_code(sumgame_undo_code code);
     void _pop_undo_code(sumgame_undo_code code);
 
@@ -175,7 +188,7 @@ private:
     void _debug_extra() const;
     void _assert_games_unique() const;
 
-    mutable std::atomic<bool> _should_stop;
+    std::optional<timeout_token> _timeout_tok;
     mutable bool _need_cgt_simplify;
     mutable global_hash _sumgame_hash;
     std::vector<game*> _subgames;

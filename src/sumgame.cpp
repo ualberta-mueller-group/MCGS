@@ -26,11 +26,6 @@
 #include <iostream>
 #include <memory>
 
-#ifndef __EMSCRIPTEN__
-#include <thread>
-#include <future>
-#endif
-
 #include <cassert>
 #include <unordered_set>
 #include <vector>
@@ -261,97 +256,49 @@ bool sumgame::solve() const
     return result.value().win;
 }
 
-/*
-    Spawns a thread that runs _solve_with_timeout(), then blocks until
-        the thread returns, or the timeout has elapsed. It seems using
-        std::chrono or clock() to check timeouts is very slow.
-
-        As of writing this, unit tests take 1s to complete when no
-        timeout is implemented, 1s when timeout is implemented with threads,
-        ~4s with clock(), and ~11s with chrono...
-
-*/
-#ifndef __EMSCRIPTEN__
 optional<solve_result> sumgame::solve_with_timeout(
     unsigned long long timeout) const
 {
-    assert_restore_sumgame ars(*this);
-    sumgame& sum = const_cast<sumgame&>(*this);
+    timeout_source src;
+    timeout_token tok = src.get_timeout_token();
 
-    sum._pre_solve_pass();
-
-    {
-        const int active = sum.num_active_games();
-        THROW_ASSERT(active >= 0);
-        stats::set_n_subgames(static_cast<uint64_t>(active));
-    }
-
-    _should_stop = false;
-    _need_cgt_simplify = true;
-
-    // spawn a thread, then wait with a timeout for it to complete
-    std::promise<optional<solve_result>> promise;
-    std::future<optional<solve_result>> future = promise.get_future();
-
-    std::thread thr([&]() -> void
-    {
-        optional<solve_result> result = sum._solve_with_timeout(0);
-        promise.set_value(result);
-    });
-
-    std::future_status status = std::future_status::ready;
-
-    if (timeout == 0)
-    {
-        future.wait();
-    }
-    else
-    {
-        status = future.wait_for(std::chrono::milliseconds(timeout));
-    }
-
-    if (timeout != 0 && status == std::future_status::timeout)
-    {
-        // Stop the thread
-        _should_stop = true;
-    }
-
-    future.wait();
-    thr.join();
-
-    assert(future.valid());
-
-    sum._undo_pre_solve_pass();
-
-    return future.get();
-}
-#else
-// TODO emscripten pthreads
-optional<solve_result> sumgame::solve_with_timeout(
-    unsigned long long timeout) const
-{
-    assert_restore_sumgame ars(*this);
-    sumgame& sum = const_cast<sumgame&>(*this);
-
-    sum._pre_solve_pass();
-
-    {
-        const int active = sum.num_active_games();
-        THROW_ASSERT(active >= 0);
-        stats::set_n_subgames(static_cast<uint64_t>(active));
-    }
-
-    _should_stop = false;
-    _need_cgt_simplify = true;
-
-
-    optional<solve_result> result = sum._solve_with_timeout(0);
-
-    sum._undo_pre_solve_pass();
+    src.start_timeout(timeout);
+    optional<solve_result> result = solve_with_timeout_token(tok);
+    src.cancel_timeout();
 
     return result;
 }
-#endif
+
+optional<solve_result> sumgame::solve_with_timeout_token(
+    const optional<timeout_token>& timeout_tok_optional) const
+{
+    assert_restore_sumgame ars(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+    // Set up timeout_token
+    assert(!sum._timeout_tok.has_value());
+    sum._timeout_tok.reset();
+    if (timeout_tok_optional.has_value())
+        sum._timeout_tok = timeout_tok_optional.value();
+
+    sum._pre_solve_pass();
+
+    {
+        const int active = sum.num_active_games();
+        THROW_ASSERT(active >= 0);
+        stats::set_n_subgames(static_cast<uint64_t>(active));
+    }
+
+    _need_cgt_simplify = true;
+
+    optional<solve_result> result = sum._solve_impl(0);
+
+    sum._undo_pre_solve_pass();
+
+    sum._timeout_tok.reset();
+
+    return result;
+}
 
 bool sumgame::solve_with_games(std::vector<game*>& gs) const
 {
@@ -392,7 +339,7 @@ bool sumgame::solve_with_games(game* g) const
     return result;
 }
 
-optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
+optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 {
 #ifdef SUMGAME_DEBUG
     _debug_extra();
@@ -464,7 +411,7 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
 
         if (!found)
         {
-            optional<solve_result> child_result = _solve_with_timeout(depth);
+            optional<solve_result> child_result = _solve_impl(depth);
 
             if (!child_result.has_value() || _over_time())
                 return solve_result::invalid();
@@ -543,7 +490,9 @@ void sumgame::_assert_games_unique() const
 
 bool sumgame::_over_time() const
 {
-    return _should_stop;
+    if (_timeout_tok.has_value())
+        return _timeout_tok->stop_requested();
+    return false;
 }
 
 void sumgame::_pre_solve_pass()
