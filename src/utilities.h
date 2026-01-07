@@ -13,6 +13,8 @@
 #include <ostream>
 #include <utility>
 #include <optional>
+#include <set>
+#include <unordered_set>
 
 #include "cgt_basics.h"
 
@@ -377,6 +379,53 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
     }
 
     os << ']';
+    return os;
+}
+
+// set printing
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::set<T>& std_set)
+{
+    os << '{';
+
+    auto it = std_set.begin();
+    const auto end = std_set.end();
+
+    while (it != end)
+    {
+        os << *it;
+
+        ++it;
+
+        if (it != end)
+            os << ", ";
+    }
+
+    os << '}';
+    return os;
+}
+
+// unordered_set printing
+template <class T>
+std::ostream& operator<<(std::ostream& os,
+                         const std::unordered_set<T>& std_oset)
+{
+    os << '{';
+
+    auto it = std_oset.begin();
+    const auto end = std_oset.end();
+
+    while (it != end)
+    {
+        os << *it;
+
+        ++it;
+
+        if (it != end)
+            os << ", ";
+    }
+
+    os << '}';
     return os;
 }
 

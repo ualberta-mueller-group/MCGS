@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 //#include "basic_player.h"
@@ -24,44 +25,18 @@
 #include "test_file_parser2.h"
 #include "basic_player.h"
 
-using std::cout, std::endl, std::string;
+using std::cout, std::endl, std::flush, std::string;
 
+////////////////////////////////////////////////// forward declarations
 namespace {
-
+string get_games_string(const std::vector<game*>& games);
 
 void run_test_from_main(std::shared_ptr<i_test_case> test_case,
-                        const cli_options& opts)
-{
-    const std::vector<game*>& games = test_case->get_games();
-    const csv_row& row = test_case->get_csv_row();
+                        const cli_options& opts);
 
-    cout << "Test type: " << row.get_command_type_string() << endl;
-    for (game* g : games)
-        cout << "\t" << *g << endl;
-
-    if (games.empty())
-        cout << "\t" << "<no games specified>" << endl;
-
-    cout << "Player: " << print_optional(row.player) << endl;
-    cout << "Expected: " << print_optional(row.expected_result, "?") << endl;
-
-    if (opts.dry_run)
-        cout << "Not running search..." << endl;
-    else
-    {
-        test_case->run(0);
-
-        cout << "Got: " << print_optional(row.result) << endl;
-        cout << "Time (ms): " << row.get_time_ms_string() << endl;
-        cout << "Status: " << row.get_status_string() << endl;
-    }
-
-    assert(row.comments.has_value());
-    if (!row.comments->empty())
-        cout << "\"" << row.comments.value() << "\"" << endl;
-}
 } // namespace
 
+////////////////////////////////////////////////// main function
 int main(int argc, char** argv)
 {
     mcgs_init_1();
@@ -142,3 +117,51 @@ int main(int argc, char** argv)
 
     return 0;
 }
+
+////////////////////////////////////////////////// utility functions
+namespace {
+string get_games_string(const std::vector<game*>& games)
+{
+    if (games.empty())
+        return "\t<no games specified>\n";
+
+    std::stringstream stream;
+
+    for (const game* g : games)
+        stream << '\t' << *g << '\n';
+
+    return stream.str();
+}
+
+void run_test_from_main(std::shared_ptr<i_test_case> test_case,
+                        const cli_options& opts)
+{
+    const std::vector<game*>& games = test_case->get_games();
+    const csv_row& row = test_case->get_csv_row();
+
+    cout << "Test type: " << row.get_command_type_string() << endl;
+    cout << get_games_string(games) << flush;
+    cout << "Player: " << print_optional(row.player, "<N/A>") << endl;
+
+    if (row.expected_result.has_value())
+        cout << "Expected: " << row.expected_result.value() << endl;
+
+    if (opts.dry_run)
+        cout << "Not running search..." << endl;
+    else
+    {
+        test_case->run(0);
+
+        if (row.result.has_value())
+            cout << "Got: " << row.result.value() << endl;
+
+        cout << "Time (ms): " << row.get_time_ms_string() << endl;
+        cout << "Status: " << row.get_status_string() << endl;
+    }
+
+    assert(row.comments.has_value());
+    if (!row.comments->empty())
+        cout << "\"" << row.comments.value() << "\"" << endl;
+}
+
+} // namespace

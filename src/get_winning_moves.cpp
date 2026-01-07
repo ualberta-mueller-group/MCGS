@@ -139,8 +139,8 @@ winning_moves_diff_t::winning_moves_diff_t(const vector<string>& computed_moves,
                                            const vector<string>& expected_moves)
 
 {
-    set<string> computed_set(computed_moves.begin(), computed_moves.end());
-    set<string> expected_set(expected_moves.begin(), expected_moves.end());
+    const set<string> computed_set(computed_moves.begin(), computed_moves.end());
+    const set<string> expected_set(expected_moves.begin(), expected_moves.end());
 
     // extra = computed - expected
     set_difference(computed_set.begin(), computed_set.end(), //
