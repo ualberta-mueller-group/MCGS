@@ -23,7 +23,6 @@
 //#include "winning_moves.h"
 #include "test_file_parser2.h"
 #include "basic_player.h"
-#include "timeout_token.h"
 
 using std::cout, std::endl, std::string;
 
@@ -74,10 +73,6 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
-
-    test_timeout_token();
-    return 0;
-
 
     if (opts.use_player)
     {

@@ -1,83 +1,132 @@
 /*
-    Utilities for handling timeouts
+    Utilities for managing timeouts
+
+    (std::chrono spends too much time in system calls, and our previous
+    timeout mechanism was messy and may have had UB)
+
+    class timeout_token is used by functions which should respect timeouts,
+    to poll whether time has run out (i.e. sumgame::solve_with_timeout). 
+
+    class timeout_source manages the timeout, and creates a timeout_token
+    which has access to the shared timeout state. The timeout_token is only
+    valid for the lifetime of the timeout_source which created it.
+
+    Example usage:
+        timeout_source src;
+        timeout_token tok = src.get_timeout_token();
+
+        src.start_timeout(timeout_ms); // Time starts running here
+        std::optional<int> fib = fibonacci(tok, ...); // May or may not time out
+        src.cancel_timeout(); // Call regardless of completion/timeout status
+
+    start_timeout() creates a thread which blocks until the timeout
+    expires or cancel_timeout() is called. cancel_timeout() destroys the thread.
+    The thread will be destroyed by the timeout_source destructor if present,
+    but it's probably best to destroy the thread once it's no longer needed.
+
+    The consuming function may pass around the timeout_token either by value
+    or by reference.
+
+    TODO: Have we avoided all UB? Is std::memory_order_relaxed good enough (
+    so long as a stale value can't be read forever)???
 */
 #pragma once
 
-#include <chrono>
-#include <optional>
 #include <cassert>
+#include <atomic>
+#include <thread>
+#include <optional>
+#include <future>
 
 ////////////////////////////////////////////////// class timeout_token
 class timeout_token
 {
 public:
-    timeout_token();
+    explicit timeout_token(std::atomic<bool>* should_stop);
 
-    // true IFF start() has been called, and reset() has not since been called
-    bool is_initialized() const;
-
-    // 0 means infinite time
-    void start(unsigned long long timeout_ms); // must not be initialized yet
-    void reset();
-
-    bool stop_requested() const; // must be initialized first
+    bool stop_requested() const;
 
 private:
-    using timeout_clock_t = std::chrono::steady_clock;
-    using timeout_time_point_t = std::chrono::time_point<timeout_clock_t>;
+    std::atomic<bool>* _should_stop;
+};
 
-    bool _infinite_time;
-    std::optional<timeout_time_point_t> _end_time;
+////////////////////////////////////////////////// class timeout_source
+class timeout_source
+{
+public:
+    timeout_source();
+    ~timeout_source();
+
+    // No copy
+    timeout_source(const timeout_source&) = delete;
+    timeout_source& operator=(const timeout_source&) = delete;
+
+    // No move
+    timeout_source(timeout_source&&) = delete;
+    timeout_source& operator=(timeout_source&&) = delete;
+
+    // Has time run out?
+    bool stop_requested() const;
+
+    // true IFF timeout thread exists
+    bool timeout_running() const;
+
+    // creates timeout thread. 0 means never time out
+    void start_timeout(unsigned long long timeout_ms);
+
+    // destroy timeout thread (after safely stopping it)
+    // NOTE: call this regardless of whether the task completed or timed out.
+    void cancel_timeout();
+
+    // Create a lightweight object which can poll the timeout state
+    timeout_token get_timeout_token();
+
+private:
+    std::shared_ptr<std::atomic<bool>> _should_stop;
+
+    std::optional<std::thread> _timeout_thread;
+    std::optional<std::promise<void>> _promise; // set to wake up timeout thread
+    std::optional<std::future<void>> _future; // timeout thread blocks on this
 };
 
 ////////////////////////////////////////////////// timeout_token methods
-inline timeout_token::timeout_token()
-    : _infinite_time(false)
+inline timeout_token::timeout_token(std::atomic<bool>* should_stop)
+    : _should_stop(should_stop)
 {
-}
-
-inline void timeout_token::start(unsigned long long timeout_ms)
-{
-    assert(!is_initialized());
-
-    if (timeout_ms == 0)
-    {
-        _infinite_time = true;
-        _end_time.reset();
-    }
-    else
-    {
-        _infinite_time = false;
-        _end_time =
-            timeout_clock_t::now() + std::chrono::milliseconds(timeout_ms);
-    }
-
-    assert(is_initialized());
-}
-
-inline void timeout_token::reset()
-{
-    _infinite_time = false;
-    _end_time.reset();
-    assert(!is_initialized());
-}
-
-inline bool timeout_token::is_initialized() const
-{
-    return _infinite_time || _end_time.has_value();
 }
 
 inline bool timeout_token::stop_requested() const
 {
-    assert(is_initialized());
-    
-    if (_infinite_time)
-        return false;
-
-    return timeout_clock_t::now() > _end_time.value();
+    return _should_stop->load(std::memory_order_relaxed);
 }
 
-//////////////////////////////////////////////////
-void test_timeout_token();
+////////////////////////////////////////////////// timeout_source methods
+inline timeout_source::timeout_source()
+    : _should_stop(new std::atomic<bool>(false))
+{
+    _should_stop->store(false, std::memory_order_relaxed);
+}
 
+inline timeout_source::~timeout_source()
+{
+    // Destroy thread if necessary
+    if (timeout_running())
+        cancel_timeout();
 
+    assert(!timeout_running());
+}
+
+inline bool timeout_source::stop_requested() const
+{
+    return _should_stop->load(std::memory_order_relaxed);
+}
+
+inline bool timeout_source::timeout_running() const
+{
+    return _timeout_thread.has_value();
+}
+
+inline timeout_token timeout_source::get_timeout_token()
+{
+    return timeout_token(_should_stop.get());
+}
