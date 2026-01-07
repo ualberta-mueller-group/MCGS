@@ -2,16 +2,23 @@ CC = c++
 LAB_COMPAT ?= 0
 
 
+
 EMCC_COMPILE_FLAGS :=
 EMCC_LINK_FLAGS :=
 EMCC_EXTENSION :=
+
+
+MACHINE_FLAGS := -march=native -mtune=native
 
 ifneq (,$(filter $(WASM),1 true))
 	#EMCC_COMPILE_FLAGS := -sNO_DISABLE_EXCEPTION_CATCHING
 	EMCC_LINK_FLAGS := -lembind -sALLOW_MEMORY_GROWTH -sMAXIMUM_MEMORY=4GB --preload-file database.bin --preload-file input -sEXPORTED_RUNTIME_METHODS=FS
 	EMCC_EXTENSION := .js
 	CC = em++
+
+	MACHINE_FLAGS :=
 endif
+
 
 
 # If --output-sync is supported, use it for recursive make calls.
@@ -51,8 +58,8 @@ ifneq (,$(filter $(ASAN),leak address)) # ASAN=leak or ASAN=address
 	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN)
 endif
 
-NORMAL_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS) -march=native -mtune=native
-TEST_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST) -march=native -mtune=native
+NORMAL_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS) $(MACHINE_FLAGS)
+TEST_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST) $(MACHINE_FLAGS)
 
 ifneq (,$(filter $(WASM),1 true))
 	NORMAL_FLAGS_BASE := $(filter-out -pthread,$(NORMAL_FLAGS_BASE))

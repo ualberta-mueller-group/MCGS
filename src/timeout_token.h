@@ -23,6 +23,8 @@
     expires or cancel_timeout() is called. cancel_timeout() destroys the thread.
     The thread will be destroyed by the timeout_source destructor if present,
     but it's probably best to destroy the thread once it's no longer needed.
+    When a timeout of 0 is used, no thread is created, and the timeout never
+    ends.
 
     The consuming function may pass around the timeout_token either by value
     or by reference.
@@ -34,9 +36,12 @@
 
 #include <cassert>
 #include <atomic>
-#include <thread>
 #include <optional>
+
+#ifndef __EMSCRIPTEN__
+#include <thread>
 #include <future>
+#endif
 
 ////////////////////////////////////////////////// class timeout_token
 class timeout_token
@@ -84,9 +89,13 @@ public:
 private:
     std::shared_ptr<std::atomic<bool>> _should_stop;
 
+    bool _infinite_time; // true IFF timeout 0
+
+#ifndef __EMSCRIPTEN__
     std::optional<std::thread> _timeout_thread;
     std::optional<std::promise<void>> _promise; // set to wake up timeout thread
     std::optional<std::future<void>> _future; // timeout thread blocks on this
+#endif
 };
 
 ////////////////////////////////////////////////// timeout_token methods
@@ -102,9 +111,11 @@ inline bool timeout_token::stop_requested() const
 
 ////////////////////////////////////////////////// timeout_source methods
 inline timeout_source::timeout_source()
-    : _should_stop(new std::atomic<bool>(false))
+    : _should_stop(new std::atomic<bool>(false)),
+      _infinite_time(false)
 {
     _should_stop->store(false, std::memory_order_relaxed);
+    assert(!timeout_running());
 }
 
 inline timeout_source::~timeout_source()
@@ -123,7 +134,11 @@ inline bool timeout_source::stop_requested() const
 
 inline bool timeout_source::timeout_running() const
 {
-    return _timeout_thread.has_value();
+#ifndef __EMSCRIPTEN__
+    return _infinite_time || _timeout_thread.has_value();
+#else
+    return _infinite_time;
+#endif
 }
 
 inline timeout_token timeout_source::get_timeout_token()

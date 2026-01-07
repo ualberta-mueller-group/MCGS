@@ -7,11 +7,18 @@
 #include <future>
 #include <chrono>
 
+#ifndef __EMSCRIPTEN__
 void timeout_source::start_timeout(unsigned long long timeout_ms)
 {
     assert(!timeout_running());
 
     _should_stop->store(false, std::memory_order_relaxed);
+
+    if (timeout_ms == 0)
+    {
+        _infinite_time = true;
+        return;
+    }
 
     _promise.emplace();
     assert(_promise.has_value());
@@ -37,15 +44,36 @@ void timeout_source::cancel_timeout()
 {
     assert(timeout_running());
 
-    // The timeout thread is blocking on the corresponding std::future.
-    // Here we signal it to wake up
-    _promise->set_value();
-    _timeout_thread->join();
+    _infinite_time = false;
 
-    // Does this order matter?
-    _timeout_thread.reset();
-    _future.reset();
-    _promise.reset();
+    if (_timeout_thread.has_value())
+    {
+        // The timeout thread is blocking on the corresponding std::future.
+        // Here we signal it to wake up
+        _promise->set_value();
+        _timeout_thread->join();
+
+        // Does this order matter?
+        _timeout_thread.reset();
+        _future.reset();
+        _promise.reset();
+    }
 
     assert(!timeout_running());
 }
+#else
+void timeout_source::start_timeout(unsigned long long timeout_ms)
+{
+    assert(!timeout_running());
+    _should_stop->store(false, std::memory_order_relaxed);
+    _infinite_time = true;
+    assert(timeout_running());
+}
+
+void timeout_source::cancel_timeout()
+{
+    assert(timeout_running());
+    _infinite_time = false;
+    assert(!timeout_running());
+}
+#endif
