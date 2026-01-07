@@ -357,6 +357,15 @@ std::ostream& operator<<(std::ostream& os, const split_result& split);
 
 void print_options(std::ostream& os, game* g, bool endline = true);
 
+template <class T>
+inline bool all_games_impartial(const T& container)
+{
+    for (const game* g : container)
+        if (!g->is_impartial())
+            return false;
+    return true;
+}
+
 //---------------------------------------------------------------------------
 
 template <class T> // NOLINTNEXTLINE(readability-identifier-naming)

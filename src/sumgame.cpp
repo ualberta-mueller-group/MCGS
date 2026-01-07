@@ -1039,12 +1039,7 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 
 bool sumgame::all_impartial() const
 {
-    const int N = num_total_games();
-    for (int i = 0; i < N; i++)
-        if (!subgame(i)->is_impartial())
-            return false;
-
-    return true;
+    return all_games_impartial(_subgames);
 }
 
 std::optional<sumgame_move> sumgame::get_winning_or_random_move(
