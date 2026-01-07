@@ -270,16 +270,14 @@ optional<solve_result> sumgame::solve_with_timeout(
 }
 
 optional<solve_result> sumgame::solve_with_timeout_token(
-    const optional<timeout_token>& timeout_tok_optional) const
+    const timeout_token& timeout_tok) const
 {
     assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
     // Set up timeout_token
     assert(!sum._timeout_tok.has_value());
-    sum._timeout_tok.reset();
-    if (timeout_tok_optional.has_value())
-        sum._timeout_tok = timeout_tok_optional.value();
+    sum._timeout_tok = timeout_tok;
 
     sum._pre_solve_pass();
 

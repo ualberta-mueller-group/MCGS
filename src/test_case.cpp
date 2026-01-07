@@ -6,6 +6,7 @@
 #include "solver_stats.h"
 #include "stopwatch.h"
 #include "test_case_enums.h"
+#include "timeout_token.h"
 #include "utilities.h"
 #include <string>
 
@@ -189,23 +190,38 @@ optional<string> test_case_winning_moves::winning_moves_string(
 
 void test_case_winning_moves::_run_impl(unsigned long long timeout)
 {
-    THROW_ASSERT(is_black_white(_expr.get_player()));
+    THROW_ASSERT(is_black_white(_expr.get_player())); // TODO handle EMPTY?
 
-    stopwatch sw;
+    // Test setup
+    vector<game*>& games = _games;
+    const ebw player = _expr.get_player();
 
     if (global::clear_tt())
         sumgame::reset_ttable();
 
-    sumgame sum(_expr.get_player());
+    sumgame sum(player);
 
+    // Initialize stopwatch/timeout helpers
+    stopwatch sw;
+    timeout_source src;
+    timeout_token tok = src.get_timeout_token();
+    
+    // Start test
     sw.start();
-    sum.add(_games);
-    vector<string> winning_moves =
-        get_winning_moves_for_player(sum, _expr.get_player());
-    sum.pop(_games);
-    sw.stop();
+    src.start_timeout(timeout);
 
+    sum.add(_games);
+    optional<vector<string>> winning_moves =
+        get_winning_moves_with_timeout_token(sum, player, tok);
+    sum.pop(_games);
+
+    // End test
+    sw.stop();
+    src.cancel_timeout();
+
+    // Report results
     const optional<string> result_string = winning_moves_string(winning_moves);
+
     _csv_row.fill_post_test_fields(result_string, sw.get_duration_ms());
 }
 

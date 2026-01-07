@@ -124,9 +124,8 @@ public:
     std::optional<solve_result> solve_with_timeout(
         unsigned long long timeout) const;
 
-    // If timeout_token is absent, search never times out
     std::optional<solve_result> solve_with_timeout_token(
-        const std::optional<timeout_token>& timeout_tok_optional) const;
+        const timeout_token& timeout_tok) const;
 
     bool solve_with_games(std::vector<game*>& gs) const;
     bool solve_with_games(game* g) const;

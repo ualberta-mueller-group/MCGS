@@ -1,5 +1,7 @@
 #include "winning_moves.h"
 
+#warning TODO delete __FILE__ (use other implementation which has timeouts)
+
 #include <sstream>
 #include <vector>
 #include <memory>
