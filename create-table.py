@@ -321,7 +321,7 @@ def row_populate_double_mode(input_rows, output_row):
     comparison_row = input_rows[1] if len(input_rows) >= 2 else None
 
     # Populate simple fields
-    simple_fields = ["file", "case", "games", "player", "expected_result", "result", "time", "status", "comments", "node_count", "unique_sum_count", "hash"]
+    simple_fields = ["file", "case", "games", "player", "expected_result", "result", "time", "status", "comments", "command_type", "node_count", "unique_sum_count", "hash"]
     for alias in simple_fields:
         output_row[alias] = new_default_cell(input_row[alias])
 
@@ -533,6 +533,7 @@ add_input_col("result", "Result")
 add_input_col("time", "Time (ms)")
 add_input_col("status", "Status")
 add_input_col("comments", "Comments")
+add_input_col("command_type", "Type")
 add_input_col("node_count", "Node Count")
 add_input_col("unique_sum_count", "Unique Sum Count")
 add_input_col("hash", "Input hash")
@@ -550,6 +551,7 @@ if comparison_file_name is None:
     add_output_col("unique_sum_count", "Unique Sum Count")
     add_output_col("status", "Status")
     add_output_col("comments", "Comments")
+    add_output_col("command_type", "Type")
 
     add_row_function(row_populate_single_mode)
     add_row_function(row_style)
@@ -575,6 +577,7 @@ else:
     add_output_col("old_status", "Old Status")
     add_output_col("old_result", "Old Result")
     add_output_col("comments", "Comments")
+    add_output_col("command_type", "Type")
     add_output_col("hash", "Input hash")
 
     add_row_function(row_populate_double_mode)

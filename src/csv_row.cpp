@@ -257,7 +257,7 @@ vector<string> csv_row::get_row_field_strings() const
     CSV_FIELD(status, get_status_string());
     CSV_FIELD(comments, comments.value());
 
-    //CSV_FIELD(command_type, get_command_type_string());
+    CSV_FIELD(command_type, get_command_type_string());
 
     CSV_FIELD(node_count, to_string(node_count.value()));
     CSV_FIELD(unique_node_count, to_string(unique_node_count.value()));
@@ -281,6 +281,7 @@ vector<string> csv_row::get_header_field_strings()
     header.push_back("Time (ms)");
     header.push_back("Status");
     header.push_back("Comments");
+    header.push_back("Type");
     header.push_back("Node Count");
     header.push_back("Unique Sum Count");
     header.push_back("Input hash");
