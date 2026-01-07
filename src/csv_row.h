@@ -86,5 +86,7 @@ public:
         3. Wrap the result in double quotes
 
     Join fields with ','. Print line to stream (including newline).
+
+    NOTE: flushes ostream
 */
 void write_csv_field_strings(std::ostream& os, const std::vector<std::string>& fields);

@@ -101,8 +101,7 @@ void run_autotests(const string& root_test_directory, const string& outfile_name
                 // Write CSV row
                 vector<string> row_fields = row.get_row_field_strings();
                 assert(row_fields.size() == header_fields.size());
-                write_csv_field_strings(outfile, row_fields);
-                outfile.flush(); // no partial results on crash
+                write_csv_field_strings(outfile, row_fields); // flushes stream
 
                 file_test_idx++;
             }

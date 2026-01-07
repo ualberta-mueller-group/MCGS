@@ -303,6 +303,6 @@ void write_csv_field_strings(ostream& os, const vector<string>& fields)
             os << ',';
     }
 
-    os << '\n';
+    os << endl;
 }
 
