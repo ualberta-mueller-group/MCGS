@@ -574,6 +574,8 @@ game* sumgame::_pop_game()
 
 void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 {
+    assert(is_black_white(to_play));
+
     _push_undo_code(SUMGAME_UNDO_PLAY);
 
     _play_record_stack.push_back(play_record(sm));

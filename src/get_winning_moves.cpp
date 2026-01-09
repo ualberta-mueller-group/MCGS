@@ -19,16 +19,18 @@
 using namespace std;
 
 namespace {
-optional<bool> is_winning_move(sumgame& sum, const sumgame_move& sm, ebw player,
+optional<bool> is_winning_move(sumgame& sum, const sumgame_move& sm, bw player,
+                               bool use_impartial_search,
                                const timeout_token& timeout_tok)
 {
-    assert(is_empty_black_white(player));
+    assert_restore_sumgame ars(sum);
+    assert(is_black_white(player));
 
     optional<bool> is_winning;
 
     sum.play_sum(sm, player);
 
-    if (is_black_white(player))
+    if (!use_impartial_search)
     {
         const optional<solve_result> result =
             sum.solve_with_timeout_token(timeout_tok);
@@ -83,14 +85,16 @@ optional<vector<string>> get_winning_moves_impl(
     assert(is_empty_black_white(player));
     optional<vector<string>> winning_moves = vector<string>();
 
+    const bool use_impartial = (player == EMPTY);
+    const bw use_player = use_impartial ? BLACK : player;
+
     assert_restore_sumgame ars1(sum);
     const bw restore_player = sum.to_play();
 
     bool over_time = false;
 
-    const bw move_gen_player = is_black_white(player) ? player : BLACK;
     unique_ptr<sumgame_move_generator> gen(
-        sum.create_sum_move_generator(move_gen_player));
+        sum.create_sum_move_generator(use_player));
 
     while (*gen)
     {
@@ -100,7 +104,8 @@ optional<vector<string>> get_winning_moves_impl(
             break;
 
         sumgame_move sm = gen->gen_sum_move();
-        optional<bool> is_winning_opt = is_winning_move(sum, sm, player, timeout_tok);
+        optional<bool> is_winning_opt =
+            is_winning_move(sum, sm, use_player, use_impartial, timeout_tok);
 
         if (!is_winning_opt.has_value())
         {
@@ -114,7 +119,7 @@ optional<vector<string>> get_winning_moves_impl(
         if (is_winning)
         {
             assert_restore_sumgame ars3(sum);
-            const string winning_move = sum_move_string(sum, sm, player);
+            const string winning_move = sum_move_string(sum, sm, use_player);
             winning_moves.value().emplace_back(winning_move);
         }
 
