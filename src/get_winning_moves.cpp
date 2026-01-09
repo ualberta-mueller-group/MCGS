@@ -163,51 +163,16 @@ string winning_moves_diff_t::get_diff_string(bool prepend_diff_symbols) const
 {
     string diff_string;
 
-    const size_t n_moves = _extra_moves.size() + _missing_moves.size();
+    if (!_missing_moves.empty())
+        diff_string += "Missing: " + string_join(_missing_moves, " ");
 
-    // Reserve enough space
+    if (!_extra_moves.empty())
     {
-        size_t n_move_chars = 0;
-
-        for (const string& str : _extra_moves)
-            n_move_chars += str.size();
-        for (const string& str : _missing_moves)
-            n_move_chars += str.size();
-
-        size_t total_chars = 0;
-        total_chars += n_moves; // diff symbols
-        if (n_moves > 0)
-            total_chars += n_moves - 1; // space separators
-        total_chars += n_move_chars; // move contents
-
-        diff_string.reserve(total_chars);
-    }
-
-    size_t move_idx = 0;
-
-    for (const string& extra : _extra_moves)
-    {
-        if (prepend_diff_symbols)
-            diff_string.push_back('+');
-
-        diff_string += extra;
-
-        move_idx++;
-        if (move_idx < n_moves)
+        if (!diff_string.empty())
             diff_string.push_back(' ');
+
+        diff_string += "Extra: " + string_join(_extra_moves, " ");
     }
-
-    for (const string& missing : _missing_moves)
-    {
-        if (prepend_diff_symbols)
-            diff_string.push_back('-');
-
-        diff_string += missing;
-
-        move_idx++;
-        if (move_idx < n_moves)
-            diff_string.push_back(' ');
-    }
-
+    
     return diff_string;
 }
