@@ -13,56 +13,102 @@
 #include <ostream>
 #include <unordered_set>
 
+#include "global_options.h"
 #include "hashing.h"
 #include "sumgame.h"
 
-//////////////////////////////////////////////////
+////////////////////////////////////////////////// struct solver_stats
 struct solver_stats
 {
     void reset();
+    void print_search_statistics(std::ostream& ostr) const;
 
-    uint64_t node_count;
+    double get_tt_hit_rate() const;
+    double get_db_hit_rate() const;
 
+    // TT accesses
     uint64_t tt_hits;
     uint64_t tt_misses;
 
+    // DB accesses
     uint64_t db_hits;
     uint64_t db_misses;
 
-    uint64_t search_depth;
+    // Nodes
+    uint64_t search_node_count;
+    uint64_t max_search_depth;
+    std::optional<std::unordered_set<hash_t>> search_node_hashes;
 
-    size_t n_subgames;
-
-    std::optional<std::unordered_set<hash_t>> sum_hashes;
-
-    void print_search_statistics(std::ostream& ostr);
+    // Subgames
+    size_t initial_subgame_count;
+    size_t max_subgame_count;
 };
 
-//////////////////////////////////////////////////
+// Global solver_stats object
 namespace stats {
-// TODO make these methods instead of global functions...
+extern solver_stats __global_stats; // NOLINT(readability-identifier-naming)
+} // namespace stats
 
+////////////////////////////////////////////////// Stats/reporting functions
+//////////////////////////////////////// Declarations
+namespace stats {
+
+// Get/print/reset
+const solver_stats& get_global_stats();
+void print_global_stats(std::ostream& ostr);
+void reset_global_stats();
+
+// Report TT/DB access
+void report_tt_access(bool hit);
+void report_db_access(bool hit);
+
+// Report per-node
+void report_search_node(const sumgame& sum, ebw to_play, uint64_t depth);
+void report_search_node(const std::vector<game*>& games, ebw to_play,
+                        uint64_t depth);
+void report_search_node(const game* g, ebw to_play, uint64_t depth);
+
+// Report initial
+void report_initial_values(size_t initial_subgame_count);
+
+} // namespace stats
+
+//////////////////////////////////////// Implementations
+namespace stats {
+// Implementation details
 // NOLINTBEGIN(readability-identifier-naming)
-extern solver_stats __global_stats;
-
-// NOLINTEND(readability-identifier-naming)
-
-inline void reset_stats()
+inline void __report_search_node_common(size_t subgame_count, uint64_t depth)
 {
-    __global_stats.reset();
+    __global_stats.search_node_count++;
+
+    __global_stats.max_search_depth =
+        std::max(__global_stats.max_search_depth, depth);
+
+    __global_stats.max_subgame_count =
+        std::max(__global_stats.max_subgame_count, subgame_count);
 }
+
+void __count_search_node_hash(const sumgame& sum, ebw to_play);
+void __count_search_node_hash(const std::vector<game*>& games, ebw to_play);
+void __count_search_node_hash(const game* g, ebw to_play);
+// NOLINTEND(readability-identifier-naming)
 
 inline const solver_stats& get_global_stats()
 {
     return __global_stats;
 }
 
-inline void inc_node_count()
+inline void print_global_stats(std::ostream& ostr)
 {
-    __global_stats.node_count++;
+    __global_stats.print_search_statistics(ostr);
 }
 
-inline void tt_access(bool hit)
+inline void reset_global_stats()
+{
+    __global_stats.reset();
+}
+
+inline void report_tt_access(bool hit)
 {
     if (hit)
         __global_stats.tt_hits++;
@@ -70,7 +116,7 @@ inline void tt_access(bool hit)
         __global_stats.tt_misses++;
 }
 
-inline void db_access(bool hit)
+inline void report_db_access(bool hit)
 {
     if (hit)
         __global_stats.db_hits++;
@@ -78,19 +124,47 @@ inline void db_access(bool hit)
         __global_stats.db_misses++;
 }
 
-inline void update_search_depth(const uint64_t& current_depth)
+inline void report_search_node(const sumgame& sum, ebw to_play, uint64_t depth)
 {
-    __global_stats.search_depth =
-        std::max(__global_stats.search_depth, current_depth);
+    __report_search_node_common(sum.num_active_games(), depth);
+
+    if (global::count_sums())
+        __count_search_node_hash(sum, to_play);
 }
 
-inline void set_n_subgames(const size_t& n_subgames)
+inline void report_search_node(const std::vector<game*>& games, ebw to_play,
+                        uint64_t depth)
 {
-    __global_stats.n_subgames = n_subgames;
+    size_t n_active = 0;
+    for (const game* g : games)
+        if (g->is_active())
+            n_active++;
+
+    __report_search_node_common(n_active, depth);
+
+    if (global::count_sums())
+        __count_search_node_hash(games, to_play);
 }
 
-void count_sum(const sumgame& sum);
+inline void report_search_node(const game* g, ebw to_play, uint64_t depth)
+{
+    assert(g->is_active());
 
-void print_search_statistics(std::ostream& ostr);
+    __report_search_node_common(1, depth);
+
+    if (global::count_sums())
+        __count_search_node_hash(g, to_play);
+
+}
+
+inline void report_initial_values(size_t initial_subgame_count)
+{
+    __global_stats.initial_subgame_count = initial_subgame_count;
+}
 
 } // namespace stats
+
+////////////////////////////////////////////////// init global_hash
+namespace mcgs_init {
+void init_solver_stats();
+} // namespace mcgs_init

@@ -39,7 +39,7 @@ inline bool tt_lookup(impartial_tt& tt, impartial_game* g, int& nim_value)
     const bool is_valid = tt_result.entry_valid();
     if (is_valid)
         nim_value = tt_result.get_entry().nim_value;
-    stats::tt_access(is_valid);
+    stats::report_tt_access(is_valid);
     return is_valid;
 }
 } // namespace
@@ -81,7 +81,8 @@ int impartial_game::search_impartial_game_cancellable(
         return -1;
 
     // TODO increment before or after is_solved()?
-    stats::inc_node_count();
+    //stats::inc_node_count();
+    stats::report_search_node(this, EMPTY, 0); // TODO depth?
 
     if (is_solved())
         return nim_value();
