@@ -39,6 +39,7 @@ inline bool tt_lookup(impartial_tt& tt, impartial_game* g, int& nim_value)
     const bool is_valid = tt_result.entry_valid();
     if (is_valid)
         nim_value = tt_result.get_entry().nim_value;
+    stats::tt_access(is_valid);
     return is_valid;
 }
 } // namespace

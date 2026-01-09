@@ -39,7 +39,9 @@ int search_impartial(impartial_game* ig, const bool& over_time)
     else
     {
         lemoine_viennot::lv_bool_tt& lv_tt = lv_tt_optional.value();
-        return search_impartial_game(*ig, lv_tt, over_time);
+        const int result = search_impartial_game(*ig, lv_tt, over_time);
+        stats::print_search_statistics(std::cout);
+        return result;
     }
 }
 
