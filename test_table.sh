@@ -1,5 +1,1 @@
-<<<<<<< Updated upstream
 make -j && ./MCGS --run-tests --test-timeout 5 --test-dir input/autotests/elephants_autotests --out-file 1.csv && ./MCGS --run-tests --test-timeout 5 --test-dir input/autotests/elephants_autotests --out-file 2.csv && python3 create-table.py 1.csv --compare-to 2.csv -o out.html && rm 1.csv 2.csv
-=======
-make -j 9 && ./MCGS --run-tests --test-timeout 5 --test-dir input/autotests/elephants_autotests --out-file 1.csv && ./MCGS --run-tests --test-timeout 5 --test-dir input/autotests/elephants_autotests --out-file 2.csv && python3 create-table.py 1.csv --compare-to 2.csv -o out.html && rm 1.csv 2.csv
->>>>>>> Stashed changes

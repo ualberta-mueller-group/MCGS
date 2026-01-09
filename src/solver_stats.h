@@ -24,13 +24,8 @@ struct solver_stats
     void print_search_statistics(std::ostream& ostr) const;
 
 <<<<<<< Updated upstream
-<<<<<<< Updated upstream
     double get_tt_hit_rate() const;
     double get_db_hit_rate() const;
-=======
-    std::optional<double> get_tt_hit_rate() const;
-    std::optional<double> get_db_hit_rate() const;
->>>>>>> Stashed changes
 =======
     std::optional<double> get_tt_hit_rate() const;
     std::optional<double> get_db_hit_rate() const;
@@ -47,13 +42,8 @@ struct solver_stats
     // Nodes
     uint64_t search_node_count;
 <<<<<<< Updated upstream
-<<<<<<< Updated upstream
     uint64_t max_search_depth;
     std::optional<std::unordered_set<hash_t>> search_node_hashes;
-=======
-    std::optional<std::unordered_set<hash_t>> search_node_hashes;
-    uint64_t max_search_depth;
->>>>>>> Stashed changes
 =======
     std::optional<std::unordered_set<hash_t>> search_node_hashes;
     uint64_t max_search_depth;

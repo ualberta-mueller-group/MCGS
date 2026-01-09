@@ -9,11 +9,7 @@
 #include <cctype>
 #include <string>
 
-<<<<<<< Updated upstream
 #define CSV_MISSING_TEXT "???"
-=======
-#define CSV_MISSING_TEXT "N/A"
->>>>>>> Stashed changes
 
 using namespace std;
 
@@ -211,7 +207,6 @@ void csv_row::fill_post_test_fields_verbose(
 
     const solver_stats& stats = stats::get_global_stats();
 <<<<<<< Updated upstream
-<<<<<<< Updated upstream
     this->node_count = stats.search_node_count;
 
     if (global::count_sums())
@@ -221,9 +216,6 @@ void csv_row::fill_post_test_fields_verbose(
     }
 =======
 
-=======
-
->>>>>>> Stashed changes
     this->tt_hits = stats.tt_hits;
     this->tt_misses = stats.tt_misses;
     this->tt_hit_rate = stats.get_tt_hit_rate();
@@ -239,9 +231,6 @@ void csv_row::fill_post_test_fields_verbose(
 
     this->initial_subgame_count = stats.initial_subgame_count;
     this->max_subgame_count = stats.max_subgame_count;
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
 >>>>>>> Stashed changes
 
     assert(has_post_test_fields());
