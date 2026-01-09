@@ -9,6 +9,8 @@
 #include <cctype>
 #include <string>
 
+#define CSV_MISSING_TEXT "N/A"
+
 using namespace std;
 
 namespace {
@@ -112,6 +114,14 @@ string csv_format_field(const string& field)
     return sanitized_field;
 }
 
+string optional_double_to_string(optional<double> val)
+{
+    if (!val.has_value())
+        return CSV_MISSING_TEXT;
+
+    return to_n_digit_mantissa(val.value(), 2);
+}
+
 
 } // namespace
 
@@ -196,13 +206,22 @@ void csv_row::fill_post_test_fields_verbose(
     this->status = test_case_status;
 
     const solver_stats& stats = stats::get_global_stats();
-    this->node_count = stats.node_count;
 
-    if (global::count_sums())
-    {
-        assert(stats.sum_hashes.has_value());
-        this->unique_node_count = stats.sum_hashes->size();
-    }
+    this->tt_hits = stats.tt_hits;
+    this->tt_misses = stats.tt_misses;
+    this->tt_hit_rate = stats.get_tt_hit_rate();
+
+    this->db_hits = stats.db_hits;
+    this->db_misses = stats.db_misses;
+    this->db_hit_rate = stats.get_db_hit_rate();
+
+    this->node_count = stats.search_node_count;
+    if (stats.search_node_hashes.has_value())
+        this->unique_node_count = stats.search_node_hashes->size();
+    this->max_depth = stats.max_search_depth;
+
+    this->initial_subgame_count = stats.initial_subgame_count;
+    this->max_subgame_count = stats.max_subgame_count;
 
     assert(has_post_test_fields());
 }
@@ -218,21 +237,19 @@ string csv_row::get_status_string() const
 {
     if (status.has_value())
         return test_case_status_to_string(status.value());
-    return "?";
+    return CSV_MISSING_TEXT;
 }
 
 string csv_row::get_command_type_string() const
 {
     if (command_type.has_value())
         return command_type_to_string(command_type.value());
-    return "?";
+    return CSV_MISSING_TEXT;
 }
 
 string csv_row::get_time_ms_string() const
 {
-    if (time_ms.has_value())
-        return to_n_digit_mantissa(time_ms.value(), 2);
-    return "?";
+    return optional_double_to_string(time_ms);
 }
 
 #ifdef CSV_FIELD
@@ -240,7 +257,7 @@ string csv_row::get_time_ms_string() const
 #endif
 
 #define CSV_FIELD(field_optional, expr) \
-    row_strings.push_back(field_optional.has_value() ? (expr) : "N/A"); \
+    row_strings.push_back(field_optional.has_value() ? (expr) : CSV_MISSING_TEXT); \
     static_assert(true)
 
 vector<string> csv_row::get_row_field_strings() const
@@ -259,8 +276,21 @@ vector<string> csv_row::get_row_field_strings() const
 
     CSV_FIELD(command_type, get_command_type_string());
 
+    CSV_FIELD(tt_hits, to_string(tt_hits.value()));
+    CSV_FIELD(tt_misses, to_string(tt_misses.value()));
+    CSV_FIELD(tt_hit_rate, optional_double_to_string(tt_hit_rate));
+
+    CSV_FIELD(db_hits, to_string(db_hits.value()));
+    CSV_FIELD(db_misses, to_string(db_misses.value()));
+    CSV_FIELD(db_hit_rate, optional_double_to_string(db_hit_rate));
+
     CSV_FIELD(node_count, to_string(node_count.value()));
     CSV_FIELD(unique_node_count, to_string(unique_node_count.value()));
+    CSV_FIELD(max_depth, to_string(max_depth.value()));
+
+    CSV_FIELD(initial_subgame_count, to_string(initial_subgame_count.value()));
+    CSV_FIELD(max_subgame_count, to_string(max_subgame_count.value()));
+
     CSV_FIELD(input_hash, input_hash.value());
 
     return row_strings;
@@ -281,9 +311,24 @@ vector<string> csv_row::get_header_field_strings()
     header.push_back("Time (ms)");
     header.push_back("Status");
     header.push_back("Comments");
+
     header.push_back("Type");
+
+    header.push_back("TT Hits");
+    header.push_back("TT Misses");
+    header.push_back("TT Hit Rate");
+
+    header.push_back("DB Hits");
+    header.push_back("DB Misses");
+    header.push_back("DB Hit Rate");
+
     header.push_back("Node Count");
-    header.push_back("Unique Sum Count");
+    header.push_back("Unique Node Count");
+    header.push_back("Max Depth");
+
+    header.push_back("Initial Subgames");
+    header.push_back("Max Subgames");
+
     header.push_back("Input hash");
 
     return header;

@@ -284,7 +284,7 @@ optional<solve_result> sumgame::solve_with_timeout_token(
     {
         const int active = sum.num_active_games();
         THROW_ASSERT(active >= 0);
-        stats::set_n_subgames(static_cast<uint64_t>(active));
+        stats::report_initial_values(active);
     }
 
     _need_cgt_simplify = true;
@@ -350,10 +350,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
         return solve_result::invalid();
 
     depth++;
-    stats::inc_node_count();
-    stats::update_search_depth(depth);
-    if (global::count_sums())
-        stats::count_sum(*this);
+    stats::report_search_node(*this, to_play(), depth);
 
     if (PRINT_SUBGAMES)
     {
@@ -460,10 +457,8 @@ std::optional<ttable_sumgame::search_result> sumgame::_do_ttable_lookup() const
 
     const hash_t current_hash = get_global_hash();
 
-    std::optional<ttable_sumgame::search_result> sr = _tt->search(current_hash);
-    assert(sr.has_value());
-
-    stats::tt_access((*sr).entry_valid());
+    ttable_sumgame::search_result sr = _tt->search(current_hash);
+    stats::report_tt_access(sr.entry_valid());
 
     return sr;
 }
@@ -837,6 +832,7 @@ void sumgame::simplify_impartial()
         assert(dynamic_cast<nimber*>(sg) == nullptr);
 
         std::optional<db_entry_impartial> entry = db.get_impartial(*sg);
+        stats::report_db_access(entry.has_value());
 
         if (!entry.has_value())
             continue;
@@ -922,7 +918,7 @@ std::optional<solve_result> sumgame::simplify_db()
         outcome_class oc = outcome_class::U;
 
         std::optional<db_entry_partisan> entry = db.get_partisan(*g);
-        stats::db_access(entry.has_value());
+        stats::report_db_access(entry.has_value());
 
         if (entry.has_value())
             oc = entry->outcome;
@@ -983,58 +979,7 @@ void sumgame::print(std::ostream& str) const
 
 hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 {
-    if (invalidate_game_hashes)
-        for (game* g : _subgames)
-            g->invalidate_hash();
-
-    _sumgame_hash.reset();
-    _sumgame_hash.set_to_play(to_play());
-
-    std::vector<game*> active_games;
-
-    {
-        const int N = this->num_total_games();
-
-        for (int i = 0; i < N; i++)
-        {
-            game* g = this->subgame(i);
-
-            if (!g->is_active())
-                continue;
-
-            active_games.push_back(g);
-        }
-    }
-
-    auto compare_fn = [](const game* g1, const game* g2) -> bool
-    {
-        const hash_t hash1 = g1->get_local_hash();
-        const hash_t hash2 = g2->get_local_hash();
-        return hash1 < hash2;
-    };
-
-    /*
-    auto compare_fn = [](const game* g1, const game* g2) -> bool
-    {
-        // Put larger games first
-        return g1->order(g2) == REL_GREATER;
-    };
-    */
-
-    std::sort(active_games.begin(), active_games.end(), compare_fn);
-
-    {
-        const size_t N = active_games.size();
-
-        for (size_t i = 0; i < N; i++)
-        {
-            game* g = active_games[i];
-            assert(g->is_active());
-            _sumgame_hash.add_subgame(i, g);
-        }
-    }
-
-    return _sumgame_hash.get_value();
+    return _sumgame_hash.get_global_hash_value(subgames(), to_play());
 }
 
 bool sumgame::all_impartial() const

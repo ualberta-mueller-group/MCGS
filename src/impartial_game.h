@@ -11,6 +11,7 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "transposition.h"
+#include "timeout_token.h"
 
 //---------------------------------------------------------------------------
 // Transposition table for impartial games
@@ -45,7 +46,7 @@ public:
         search_impartial_sumgame_with_timeout (impartial_sumgame.cpp)
     */
     int search_impartial_game_cancellable(impartial_tt& tt,
-                                          const bool& over_time) const;
+                                          const timeout_token& timeout_tok) const;
 
     // Impartial game interface
     virtual void play(const move& m);

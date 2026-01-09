@@ -2,6 +2,7 @@
 // Implementation of impartial sumgame search
 //---------------------------------------------------------------------------
 #include "impartial_sumgame.h"
+#include "timeout_token.h"
 
 #include <chrono>
 #include <cstddef>
@@ -29,34 +30,35 @@ namespace {
 std::optional<impartial_tt> tt_optional;
 std::optional<lemoine_viennot::lv_bool_tt> lv_tt_optional;
 
-int search_impartial(impartial_game* ig, const bool& over_time)
+int search_impartial(impartial_game* ig, const timeout_token& timeout_tok)
 {
     if (global::impartial_algorithm_mex.get())
     {
         impartial_tt& tt = tt_optional.value();
-        return ig->search_impartial_game_cancellable(tt, over_time);
+        return ig->search_impartial_game_cancellable(tt, timeout_tok);
     }
     else
     {
         lemoine_viennot::lv_bool_tt& lv_tt = lv_tt_optional.value();
-        const int result = search_impartial_game(*ig, lv_tt, over_time);
-        stats::print_search_statistics(std::cout);
+        const int result = search_impartial_game(*ig, lv_tt, timeout_tok);
+        stats::print_global_stats(std::cout);
         return result;
     }
 }
 
 // Calling thread may assign "true" to over_time to stop search
 int search_impartial_sumgame_cancellable(const sumgame& s,
-                                         const bool& over_time)
+                                         const timeout_token& timeout_tok)
 {
     assert_restore_sumgame ar(s);
     int sum_nim_value = 0;
 
-    stats::inc_node_count();
+    //stats::inc_node_count();
+    stats::report_search_node(s, EMPTY, 0); // TODO depth?
 
     for (game* g : s.subgames())
     {
-        if (over_time)
+        if (timeout_tok.stop_requested())
             return -1;
 
         if (!g->is_active())
@@ -69,9 +71,9 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
             result = ig->nim_value();
         else
         {
-            result = search_impartial(ig, over_time);
+            result = search_impartial(ig, timeout_tok);
 
-            if (over_time)
+            if (timeout_tok.stop_requested())
                 return -1;
             assert(result >= 0);
 
@@ -90,75 +92,38 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
 
 int search_impartial_sumgame(const sumgame& s)
 {
-    int result = search_impartial_sumgame_cancellable(s, false);
+    timeout_source src;
+    timeout_token timeout_tok = src.get_timeout_token();
+    src.start_timeout(0);
+    int result = search_impartial_sumgame_cancellable(s, timeout_tok);
+
     assert(result >= 0);
     return result;
 }
 
-#ifndef __EMSCRIPTEN__
 std::optional<int> search_impartial_sumgame_with_timeout(
     const sumgame& s, unsigned long long timeout)
 {
-    bool over_time = false;
-
     assert_restore_sumgame ars(s);
-    for (game* g : s.subgames())
-        g->normalize();
 
-    std::promise<int> promise;
-    std::future<int> future = promise.get_future();
-
-    std::thread thr([&]() -> void
-    {
-        int result = search_impartial_sumgame_cancellable(s, over_time);
-        promise.set_value(result);
-    });
-
-    std::future_status status = std::future_status::ready;
-
-    if (timeout == 0)
-        future.wait();
-    else
-        status = future.wait_for(std::chrono::milliseconds(timeout));
-
-    if (status == std::future_status::timeout)
-        over_time = true;
-
-    future.wait();
-    thr.join();
-
-    for (game* g : s.subgames())
-        g->undo_normalize();
-
-    assert(future.valid());
-
-    if (over_time)
-        return std::optional<int>();
-
-    int value = future.get();
-    assert(value >= 0);
-    return std::optional<int>(value);
-}
-#else
-// TODO emscripten pthreads
-std::optional<int> search_impartial_sumgame_with_timeout(
-    const sumgame& s, unsigned long long timeout)
-{
-    bool over_time = false;
-
-    assert_restore_sumgame ars(s);
+    timeout_source src;
+    timeout_token timeout_tok = src.get_timeout_token();
+    src.start_timeout(timeout);
 
     for (game* g : s.subgames())
         g->normalize();
 
-    int result = search_impartial_sumgame_cancellable(s, over_time);
+    const int result = search_impartial_sumgame_cancellable(s, timeout_tok);
 
     for (game* g : s.subgames())
         g->undo_normalize();
 
+    if (timeout_tok.stop_requested())
+        return {};
+
+    assert(result >= 0);
     return result;
 }
-#endif
 
 void init_impartial_sumgame_ttable(size_t idx_bits)
 {

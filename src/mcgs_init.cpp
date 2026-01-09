@@ -8,6 +8,7 @@
 #include "init_grid_hash_mask.h"
 #include "init_hashing.h"
 #include "init_impartial_sumgame.h"
+#include "solver_stats.h"
 #include "init_lemoine_viennot.h"
 #include "init_random.h"
 #include "init_serialization.h"
@@ -43,6 +44,7 @@ void mcgs_init_2(const cli_options& opts)
     mcgs_init::init_serialization();
     mcgs_init::init_random();
     mcgs_init::init_hashing();
+    mcgs_init::init_solver_stats();
     mcgs_init::init_sumgame(global::tt_sumgame_idx_bits());
     mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits());
     mcgs_init::init_lemoine_viennot_hashtable();
