@@ -59,34 +59,21 @@ public:
     std::vector<std::string> get_row_field_strings() const;
     static std::vector<std::string> get_header_field_strings();
 
-    std::optional<std::string> file;             // autotests
-    std::optional<int> case_number;              // autotests
-    std::optional<std::string> games;            // visitor
-    std::optional<std::string> player;           // visitor
-    std::optional<std::string> expected_result;  // pre test
-    std::optional<std::string> result;           // post test
-    std::optional<double> time_ms;               // post test
-    std::optional<test_case_status_enum> status; // post test
-    std::optional<std::string> comments;         // visitor
+    std::optional<std::string> file;               // autotests
+    std::optional<int> case_number;                // autotests
+    std::optional<std::string> games;              // visitor
+    std::optional<std::string> player;             // visitor
+    std::optional<std::string> expected_result;    // pre test
+    std::optional<std::string> result;             // post test
+    std::optional<double> time_ms;                 // post test
+    std::optional<test_case_status_enum> status;   // post test
+    std::optional<std::string> comments;           // visitor
 
     std::optional<command_type_enum> command_type; // visitor
 
-    std::optional<uint64_t> tt_hits;   // post test
-    std::optional<uint64_t> tt_misses; // post test
-    std::optional<double> tt_hit_rate; // post test
-
-    std::optional<uint64_t> db_hits;   // post test
-    std::optional<uint64_t> db_misses; // post test
-    std::optional<double> db_hit_rate; // post test
-
-    std::optional<uint64_t> node_count;        // post test
-    std::optional<uint64_t> unique_node_count; // post test
-    std::optional<uint64_t> max_depth;         // post test
-
-    std::optional<size_t> initial_subgame_count; // post test
-    std::optional<size_t> max_subgame_count; // post test
-
-    std::optional<std::string> input_hash; // visitor
+    std::optional<uint64_t> node_count;            // post test
+    std::optional<uint64_t> unique_node_count;     // post test
+    std::optional<std::string> input_hash;         // visitor
 };
 
 /*

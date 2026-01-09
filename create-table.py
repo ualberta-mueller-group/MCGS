@@ -321,33 +321,10 @@ def row_populate_double_mode(input_rows, output_row):
     comparison_row = input_rows[1] if len(input_rows) >= 2 else None
 
     # Populate simple fields
-    simple_fields = [
-        "file",
-        "case",
-        "games",
-        "player",
-        "expected_result",
-        "result",
-        "time",
-        "status",
-        "comments",
-        "command_type",
-        "node_count",
-        "unique_node_count",
-        "hash",
-        "tt_hits",
-        "tt_misses",
-        "tt_hit_rate",
-        "db_hits",
-        "db_misses",
-        "db_hit_rate",
-        "max_depth",
-        "initial_subgames",
-        "max_subgames",
-    ]
-
+    simple_fields = ["file", "case", "games", "player", "expected_result", "result", "time", "status", "comments", "command_type", "node_count", "unique_sum_count", "hash"]
     for alias in simple_fields:
         output_row[alias] = new_default_cell(input_row[alias])
+
 
     # Populate and style comparison fields
 
@@ -374,9 +351,9 @@ def row_populate_double_mode(input_rows, output_row):
     old_node_count_text = comparison_row["node_count"] if (comparison_row is not None) else "N/A"
     output_row["old_node_count"] = new_default_cell(old_node_count_text)
 
-    # old_unique_node_count
-    old_unique_node_count_text = comparison_row["unique_node_count"] if (comparison_row is not None) else "N/A"
-    output_row["old_unique_node_count"] = new_default_cell(old_unique_node_count_text )
+    # old_unique_sum_count
+    old_unique_sum_count_text = comparison_row["unique_sum_count"] if (comparison_row is not None) else "N/A"
+    output_row["old_unique_sum_count"] = new_default_cell(old_unique_sum_count_text )
 
     # faster
     faster_by_string = "N/A"
@@ -556,24 +533,9 @@ add_input_col("result", "Result")
 add_input_col("time", "Time (ms)")
 add_input_col("status", "Status")
 add_input_col("comments", "Comments")
-
 add_input_col("command_type", "Type")
-
-add_input_col("tt_hits", "TT Hits")
-add_input_col("tt_misses", "TT Misses")
-add_input_col("tt_hit_rate", "TT Hit Rate")
-
-add_input_col("db_hits", "DB Hits")
-add_input_col("db_misses", "DB Misses")
-add_input_col("db_hit_rate", "DB Hit Rate")
-
 add_input_col("node_count", "Node Count")
-add_input_col("unique_node_count", "Unique Node Count")
-add_input_col("max_depth", "Max Depth")
-
-add_input_col("initial_subgames", "Initial Subgames")
-add_input_col("max_subgames", "Max Subgames")
-
+add_input_col("unique_sum_count", "Unique Sum Count")
 add_input_col("hash", "Input hash")
 
 # The order of these output columns defines the output order
@@ -585,22 +547,8 @@ if comparison_file_name is None:
     add_output_col("expected_result", "Expected Result")
     add_output_col("result", "Result")
     add_output_col("time", "Time (ms)")
-
-    add_output_col("tt_hits", "TT Hits")
-    add_output_col("tt_misses", "TT Misses")
-    add_output_col("tt_hit_rate", "TT Hit Rate")
-
-    add_output_col("db_hits", "DB Hits")
-    add_output_col("db_misses", "DB Misses")
-    add_output_col("db_hit_rate", "DB Hit Rate")
-
     add_output_col("node_count", "Node Count")
-    add_output_col("unique_node_count", "Unique Node Count")
-    add_output_col("max_depth", "Max Depth")
-
-    add_output_col("initial_subgames", "Initial Subgames")
-    add_output_col("max_subgames", "Max Subgames")
-
+    add_output_col("unique_sum_count", "Unique Sum Count")
     add_output_col("status", "Status")
     add_output_col("comments", "Comments")
     add_output_col("command_type", "Type")
@@ -617,27 +565,13 @@ else:
     add_output_col("expected_result", "Expected Result")
     add_output_col("result", "Result")
     add_output_col("time", "Time (ms)")
-
-    add_output_col("tt_hits", "TT Hits")
-    add_output_col("tt_misses", "TT Misses")
-    add_output_col("tt_hit_rate", "TT Hit Rate")
-
-    add_output_col("db_hits", "DB Hits")
-    add_output_col("db_misses", "DB Misses")
-    add_output_col("db_hit_rate", "DB Hit Rate")
-
     add_output_col("node_count", "Node Count")
-    add_output_col("unique_node_count", "Unique Node Count")
-    add_output_col("max_depth", "Max Depth")
-
-    add_output_col("initial_subgames", "Initial Subgames")
-    add_output_col("max_subgames", "Max Subgames")
-
+    add_output_col("unique_sum_count", "Unique Sum Count")
     add_output_col("faster", "Time Improvement") #
     add_output_col("node_faster", "Node Count Improvement") #
     add_output_col("old_time", "Old Time (ms)")
     add_output_col("old_node_count", "Old Node Count")
-    add_output_col("old_unique_node_count", "Old Unique Node Count")
+    add_output_col("old_unique_sum_count", "Old Unique Sum Count")
     add_output_col("status", "Status")
     add_output_col("regression", "Regression") #
     add_output_col("old_status", "Old Status")
@@ -948,22 +882,11 @@ def vis_default_hide(cols1, cols2):
 vis_checkbox_default_disabled.add("file")
 vis_checkbox_default_disabled.add("case")
 vis_checkbox_default_disabled.add("expected_result")
-vis_checkbox_default_disabled.add("unique_node_count")
+vis_checkbox_default_disabled.add("unique_sum_count")
 vis_checkbox_default_disabled.add("old_status")
 vis_checkbox_default_disabled.add("old_result")
-vis_checkbox_default_disabled.add("old_unique_node_count")
+vis_checkbox_default_disabled.add("old_unique_sum_count")
 vis_checkbox_default_disabled.add("hash")
-
-vis_checkbox_default_disabled.add("tt_hits")
-vis_checkbox_default_disabled.add("tt_misses")
-vis_checkbox_default_disabled.add("tt_hit_rate")
-vis_checkbox_default_disabled.add("db_hits")
-vis_checkbox_default_disabled.add("db_misses")
-vis_checkbox_default_disabled.add("db_hit_rate")
-vis_checkbox_default_disabled.add("max_depth")
-vis_checkbox_default_disabled.add("initial_subgames")
-vis_checkbox_default_disabled.add("max_subgames")
-
 
 vis_default_hide(["regression"], ["status"])
 
