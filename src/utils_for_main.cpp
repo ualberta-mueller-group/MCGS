@@ -6,8 +6,11 @@
 #include <memory>
 #include <iostream>
 
+#include "cgt_basics.h"
 #include "cli_options.h"
 #include "game.h"
+#include "search_utils.h"
+#include "sumgame.h"
 #include "test_case.h"
 #include "get_winning_moves.h"
 #include "utilities.h"
@@ -24,6 +27,15 @@ string get_winning_moves_string(vector<string>& winning_moves)
 
     const string joined = string_join(winning_moves, " ");
     return joined;
+}
+
+void print_winning_moves_for_player(sumgame& sum, ebw player)
+{
+    assert_restore_sumgame ars(sum);
+    vector<string> moves = get_winning_moves(sum, player);
+
+    cout << player_name_bw_imp(player) << " winning moves:\n";
+    cout << get_winning_moves_string(moves) << endl;
 }
 
 } // namespace
@@ -72,6 +84,7 @@ void run_test_from_main(shared_ptr<i_test_case> test_case,
         cout << "\"" << row.comments.value() << "\"" << endl;
 }
 
+
 void print_winning_moves_by_chunk(shared_ptr<file_parser2> parser)
 {
     assert(parser.get() != nullptr);
@@ -94,20 +107,14 @@ void print_winning_moves_by_chunk(shared_ptr<file_parser2> parser)
 
         cout << games_string << flush;
 
+        if (sum.all_impartial())
         {
-            assert_restore_sumgame ars(sum);
-            vector<string> moves_black = get_winning_moves(sum, BLACK);
-
-            cout << "Black winning moves: \n";
-            cout << get_winning_moves_string(moves_black) << endl;
+            print_winning_moves_for_player(sum, EMPTY);
         }
-
+        else
         {
-            assert_restore_sumgame ars(sum);
-            vector<string> moves_white = get_winning_moves(sum, WHITE);
-
-            cout << "White winning moves: \n";
-            cout << get_winning_moves_string(moves_white) << endl;
+            print_winning_moves_for_player(sum, BLACK);
+            print_winning_moves_for_player(sum, WHITE);
         }
 
         sum.pop(games);
