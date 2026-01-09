@@ -4,11 +4,13 @@
 */
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <cstddef>
-#include <algorithm>
 #include <optional>
+#include <ostream>
 #include <unordered_set>
+
 #include "hashing.h"
 #include "sumgame.h"
 
@@ -30,6 +32,8 @@ struct solver_stats
     size_t n_subgames;
 
     std::optional<std::unordered_set<hash_t>> sum_hashes;
+
+    void print_search_statistics(std::ostream& ostr);
 };
 
 //////////////////////////////////////////////////
@@ -84,5 +88,7 @@ inline void set_n_subgames(const size_t& n_subgames)
 }
 
 void count_sum(const sumgame& sum);
+
+void print_search_statistics(std::ostream& ostr);
 
 } // namespace stats
