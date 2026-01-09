@@ -196,12 +196,12 @@ void csv_row::fill_post_test_fields_verbose(
     this->status = test_case_status;
 
     const solver_stats& stats = stats::get_global_stats();
-    this->node_count = stats.search_node_count;
+    this->node_count = stats.node_count;
 
     if (global::count_sums())
     {
-        assert(stats.search_node_hashes.has_value());
-        this->unique_node_count = stats.search_node_hashes->size();
+        assert(stats.sum_hashes.has_value());
+        this->unique_node_count = stats.sum_hashes->size();
     }
 
     assert(has_post_test_fields());

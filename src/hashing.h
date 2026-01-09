@@ -8,7 +8,6 @@
 #include <cstdint>
 // IWYU pragma: end_exports
 
-#include <optional>
 #include <vector>
 #include <cstddef>
 #include <climits>
@@ -75,8 +74,6 @@ private:
 template <class T>
 hash_t random_table::get_zobrist_val(size_t position, const T& color)
 {
-    static_assert(std::is_integral_v<T>);
-
     static_assert((sizeof(T) * CHAR_BIT) / 8 <= 16); // T at most 16 bytes
     // Size of T should be multiple of a byte
     static_assert((sizeof(T) * CHAR_BIT) % 8 == 0);
@@ -200,7 +197,7 @@ private:
 class global_hash
 {
 public:
-    global_hash() : _value(0) { _reserve_space(32); }
+    global_hash() : _value(0), _to_play(EMPTY) { _reserve_space(32); }
 
     void reset();
     hash_t get_value() const;
@@ -208,13 +205,7 @@ public:
     void add_subgame(size_t subgame_idx, const game* g);
     void remove_subgame(size_t subgame_idx, const game* g);
 
-    void set_to_play(ebw to_play);
-
-    hash_t get_global_hash_value(const std::vector<game*>& games, ebw to_play,
-                                 bool invalidate_game_hashes = false);
-
-    hash_t get_global_hash_value(const game* g, ebw to_play,
-                                 bool invalidate_game_hashes = false);
+    void set_to_play(bw to_play);
 
 private:
     void _resize_if_out_of_range(size_t subgame_idx);
@@ -225,7 +216,7 @@ private:
 
     hash_t _value;
 
-    std::optional<ebw> _to_play;
+    ebw _to_play;
     std::vector<hash_t> _subgame_hashes;
     std::vector<bool> _subgame_valid_mask;
 };

@@ -1,19 +1,16 @@
 #include "hashing.h"
-#include "cgt_basics.h"
 #include "global_options.h"
-#include "throw_assert.h"
 #include "utilities.h"
 #include "type_table.h"
-#include "game.h"
-
 #include <iostream>
+#include "game.h"
 #include <limits>
 #include <type_traits>
 #include <memory>
 #include <vector>
 #include <random>
+#include "throw_assert.h"
 #include <cstddef>
-#include <algorithm>
 #include <cassert>
 #include <stdexcept>
 
@@ -150,14 +147,14 @@ void local_hash::toggle_type(game_type_t type)
 void global_hash::reset()
 {
     _value = 0;
-    _to_play.reset();
+    _to_play = EMPTY;
     _subgame_hashes.clear();
     _subgame_valid_mask.clear();
 }
 
 hash_t global_hash::get_value() const
 {
-    assert(_to_play.has_value()); // Don't forget to set the player
+    assert(_to_play != EMPTY); // Don't forget to set the player
     return _value;
 }
 
@@ -185,86 +182,20 @@ void global_hash::remove_subgame(size_t subgame_idx, const game* g)
     _subgame_hashes[subgame_idx] = 0;
 }
 
-void global_hash::set_to_play(ebw new_to_play)
+void global_hash::set_to_play(bw new_to_play)
 {
-    assert(is_empty_black_white(new_to_play));
+    assert(new_to_play == BLACK || new_to_play == WHITE);
 
     random_table& rt = get_global_random_table(RANDOM_TABLE_PLAYER);
 
-    if (_to_play.has_value())
+    if (_to_play != EMPTY)
     {
-        _value ^= rt.get_zobrist_val(0, _to_play.value());
-        //_to_play.reset();
+        _value ^= rt.get_zobrist_val(0, _to_play);
+        _to_play = EMPTY;
     }
 
     _to_play = new_to_play;
     _value ^= rt.get_zobrist_val(0, new_to_play);
-}
-
-hash_t global_hash::get_global_hash_value(const std::vector<game*>& games,
-                                          ebw to_play,
-                                          bool invalidate_game_hashes)
-{
-    if (invalidate_game_hashes)
-        for (const game* g : games)
-            g->invalidate_hash();
-
-    reset();
-    set_to_play(to_play);
-
-    std::vector<game*> active_games;
-
-    {
-        const size_t N = games.size();
-
-        for (size_t i = 0; i < N; i++)
-        {
-            game* g = games[i];
-
-            if (!g->is_active())
-                continue;
-
-            active_games.push_back(g);
-        }
-    }
-
-    auto compare_fn = [](const game* g1, const game* g2) -> bool
-    {
-        const hash_t hash1 = g1->get_local_hash();
-        const hash_t hash2 = g2->get_local_hash();
-        return hash1 < hash2;
-    };
-
-    std::sort(active_games.begin(), active_games.end(), compare_fn);
-
-    {
-        const size_t N = active_games.size();
-
-        for (size_t i = 0; i < N; i++)
-        {
-            game* g = active_games[i];
-            assert(g->is_active());
-            add_subgame(i, g);
-        }
-    }
-
-    return get_value();
-}
-
-hash_t global_hash::get_global_hash_value(const game* g, ebw to_play,
-                                          bool invalidate_game_hashes)
-{
-    assert(g->is_active());
-
-    if (invalidate_game_hashes)
-        g->invalidate_hash();
-
-    reset();
-    set_to_play(to_play);
-
-    add_subgame(0, g);
-
-    return get_value();
 }
 
 void global_hash::_resize_if_out_of_range(size_t subgame_idx)

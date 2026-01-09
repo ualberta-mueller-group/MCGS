@@ -25,7 +25,7 @@ namespace {
         {
             database& db = get_global_database();
             std::optional<db_entry_impartial> entry = db.get_impartial(g);
-            stats::report_db_access(entry.has_value());
+            stats::db_access(entry.has_value());
             if (entry.has_value())
                 return entry.value().nim_value;
         }
@@ -99,7 +99,7 @@ inline bool tt_lookup(lv_bool_tt& tt,
     {
         result = tt_result.get_entry().value;
     }
-    stats::report_tt_access(is_valid);
+    stats::tt_access(is_valid);
     return is_valid;
 }
 
@@ -157,22 +157,7 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
         return true;
     if (over_time)
         return false; // return value does not matter?
-
-    //stats::inc_node_count();
-    stats::report_search_node(&g, EMPTY, 0);
-    /*
-        TODO: depth?
-
-        TODO: Count node before or after TT/DB lookup? Sumgame solve functions
-              count before
-
-        TODO: the node hash inserted into "solver_stats::search_node_hashes"
-              from this call is wrong. Possible solution: 
-              "report_search_node_verbose()" which forces caller to compute all
-              applicable fields (and only applicable fields i.e. no node hash
-              if the CLI option for it was not enabled)
-    */
-
+    stats::inc_node_count();
 
     // Part A: search all position options Gi + *n 
     // If any option is a loss, then G + *n is a win

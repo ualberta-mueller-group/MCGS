@@ -40,7 +40,7 @@ int search_impartial(impartial_game* ig, const bool& over_time)
     {
         lemoine_viennot::lv_bool_tt& lv_tt = lv_tt_optional.value();
         const int result = search_impartial_game(*ig, lv_tt, over_time);
-        stats::print_global_stats(std::cout);
+        stats::print_search_statistics(std::cout);
         return result;
     }
 }
@@ -52,8 +52,7 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
     assert_restore_sumgame ar(s);
     int sum_nim_value = 0;
 
-    //stats::inc_node_count();
-    stats::report_search_node(s, EMPTY, 0); // TODO depth?
+    stats::inc_node_count();
 
     for (game* g : s.subgames())
     {

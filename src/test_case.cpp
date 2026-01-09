@@ -48,7 +48,7 @@ void i_test_case::run(unsigned long long timeout)
            !_csv_row.has_post_test_fields()   //
     );
 
-    stats::reset_global_stats();
+    stats::reset_stats();
     _run_impl(timeout);
 
     assert(_csv_row.has_visitor_fields() &&  //
@@ -200,12 +200,6 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
     vector<game*>& games = _games;
     const ebw player = _expr.get_player();
 
-    // TODO janky workaround for "initial subgames"
-    size_t initial_subgame_count = 0;
-    for (const game* g : games)
-        if (g->is_active())
-            initial_subgame_count++;
-
     if (global::clear_tt())
         sumgame::reset_ttable();
 
@@ -231,14 +225,6 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
 
     // Report results
     assert(_csv_row.has_pre_test_fields());
-
-    /*
-        TODO: janky workaround for "initial subgames"
-
-        This overwritten value should be shown in the CSV, because it gets set
-        along with other post-test fields
-    */
-    stats::report_initial_values(initial_subgame_count);
 
     const optional<string> result_string = winning_moves_string(computed_moves);
     const optional<string>& expected_string = _csv_row.expected_result;
