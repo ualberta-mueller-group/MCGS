@@ -23,15 +23,15 @@
 
 
 // Never times out
-std::vector<std::string> get_winning_moves(sumgame& sum, bw player);
+std::vector<std::string> get_winning_moves(sumgame& sum, ebw player);
 
 // Timeout in ms, 0 means never timeout
 std::optional<std::vector<std::string>> get_winning_moves_with_timeout(
-    sumgame& sum, bw player, unsigned long long timeout_ms);
+    sumgame& sum, ebw player, unsigned long long timeout_ms);
 
 // Uses timeout_token
 std::optional<std::vector<std::string>> get_winning_moves_with_timeout_token(
-    sumgame& sum, bw player, const timeout_token& timeout_tok);
+    sumgame& sum, ebw player, const timeout_token& timeout_tok);
 
 // "get_winning_moves_XYZ" functions don't use this
 void sort_winning_moves(std::vector<std::string>& winning_moves);

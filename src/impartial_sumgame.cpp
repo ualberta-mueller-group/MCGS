@@ -41,7 +41,7 @@ int search_impartial(impartial_game* ig, const timeout_token& timeout_tok)
     {
         lemoine_viennot::lv_bool_tt& lv_tt = lv_tt_optional.value();
         const int result = search_impartial_game(*ig, lv_tt, timeout_tok);
-        stats::print_global_stats(std::cout);
+        //stats::print_global_stats(std::cout);
         return result;
     }
 }
@@ -101,14 +101,10 @@ int search_impartial_sumgame(const sumgame& s)
     return result;
 }
 
-std::optional<int> search_impartial_sumgame_with_timeout(
-    const sumgame& s, unsigned long long timeout)
+std::optional<int> search_impartial_sumgame_with_timeout_token(
+    const sumgame& s, const timeout_token& timeout_tok)
 {
     assert_restore_sumgame ars(s);
-
-    timeout_source src;
-    timeout_token timeout_tok = src.get_timeout_token();
-    src.start_timeout(timeout);
 
     for (game* g : s.subgames())
         g->normalize();
@@ -123,6 +119,18 @@ std::optional<int> search_impartial_sumgame_with_timeout(
 
     assert(result >= 0);
     return result;
+}
+
+std::optional<int> search_impartial_sumgame_with_timeout(
+    const sumgame& s, unsigned long long timeout)
+{
+    assert_restore_sumgame ars(s);
+
+    timeout_source src;
+    timeout_token timeout_tok = src.get_timeout_token();
+    src.start_timeout(timeout);
+
+    return search_impartial_sumgame_with_timeout_token(s, timeout_tok);
 }
 
 void init_impartial_sumgame_ttable(size_t idx_bits)

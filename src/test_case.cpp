@@ -2,12 +2,14 @@
 #include "cgt_basics.h"
 #include "csv_row.h"
 #include "file_parser_new.h"
+#include "game.h"
 #include "get_winning_moves.h"
 #include "impartial_sumgame.h"
 #include "search_utils.h"
 #include "solver_stats.h"
 #include "stopwatch.h"
 #include "test_case_enums.h"
+#include "throw_assert.h"
 #include "timeout_token.h"
 #include "utilities.h"
 #include <string>
@@ -167,9 +169,14 @@ namespace {
 
 test_case_winning_moves::test_case_winning_moves(
     fp_expr_command_winning_moves expr, std::vector<game*> games)
-    : i_test_case(COMMAND_TYPE_WINNING_MOVES, games),
-      _expr(expr)
+    : i_test_case(COMMAND_TYPE_WINNING_MOVES, games), _expr(expr)
 {
+    THROW_ASSERT(                         //
+        LOGICAL_IMPLIES(                  //
+            _expr.get_player() == EMPTY,  //
+            all_games_impartial(_games)), //
+        "Sum contains partisan games");   //
+
     const optional<string> expected_result_string =
         winning_moves_string(expr.get_expected_winning_moves());
 
@@ -194,11 +201,12 @@ optional<string> test_case_winning_moves::winning_moves_string(
 
 void test_case_winning_moves::_run_impl(unsigned long long timeout)
 {
-    THROW_ASSERT(is_black_white(_expr.get_player())); // TODO handle EMPTY?
+    THROW_ASSERT(is_empty_black_white(_expr.get_player()));
 
     // Test setup
     vector<game*>& games = _games;
     const ebw player = _expr.get_player();
+    const bw sum_player = is_black_white(player) ? player : BLACK;
 
     // TODO janky workaround for "initial subgames"
     size_t initial_subgame_count = 0;
@@ -209,7 +217,7 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
     if (global::clear_tt())
         sumgame::reset_ttable();
 
-    sumgame sum(player);
+    sumgame sum(sum_player);
 
     // Initialize stopwatch/timeout helpers
     stopwatch sw;

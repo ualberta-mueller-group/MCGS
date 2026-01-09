@@ -12,12 +12,49 @@
 
 #include "cgt_basics.h"
 #include "game.h"
+#include "impartial_sumgame.h"
 #include "sumgame.h"
 #include "utilities.h"
 
 using namespace std;
 
 namespace {
+optional<bool> is_winning_move(sumgame& sum, const sumgame_move& sm, ebw player,
+                               const timeout_token& timeout_tok)
+{
+    assert(is_empty_black_white(player));
+
+    optional<bool> is_winning;
+
+    sum.play_sum(sm, player);
+
+    if (is_black_white(player))
+    {
+        const optional<solve_result> result =
+            sum.solve_with_timeout_token(timeout_tok);
+
+        if (result.has_value())
+            is_winning = !result->win;
+    }
+    else
+    {
+        const optional<int> nim_value_opt =
+            search_impartial_sumgame_with_timeout_token(sum, timeout_tok);
+
+        if (nim_value_opt.has_value())
+        {
+            const int nim_value = nim_value_opt.value();
+            assert(nim_value >= 0);
+
+            is_winning = (nim_value == 0);
+        }
+    }
+
+    sum.undo_move();
+
+    return is_winning;
+}
+
 string sum_move_string(const sumgame& sum, const sumgame_move& sm, ebw player)
 {
     const game* g = sum.subgame_const(sm.subgame_idx);
@@ -34,21 +71,27 @@ string sum_move_string(const sumgame& sum, const sumgame_move& sm, ebw player)
 }
 
 optional<vector<string>> get_winning_moves_impl(
-    sumgame& sum, bw player, const timeout_token& timeout_tok)
+    sumgame& sum, ebw player, const timeout_token& timeout_tok)
 {
-    assert(is_black_white(player));
+    THROW_ASSERT(                       //
+        LOGICAL_IMPLIES(                //
+            player == EMPTY,            //
+            sum.all_impartial()         //
+            ),                          //
+        "Sum contains partisan games"); //
+
+    assert(is_empty_black_white(player));
     optional<vector<string>> winning_moves = vector<string>();
 
     assert_restore_sumgame ars1(sum);
     const bw restore_player = sum.to_play();
 
-    sum.set_to_play(player);
-    const bw opp = opponent(player);
-
     bool over_time = false;
 
+    const bw move_gen_player = is_black_white(player) ? player : BLACK;
     unique_ptr<sumgame_move_generator> gen(
-        sum.create_sum_move_generator(player));
+        sum.create_sum_move_generator(move_gen_player));
+
     while (*gen)
     {
         over_time = timeout_tok.stop_requested();
@@ -57,36 +100,20 @@ optional<vector<string>> get_winning_moves_impl(
             break;
 
         sumgame_move sm = gen->gen_sum_move();
-        optional<solve_result> opponent_result;
+        optional<bool> is_winning_opt = is_winning_move(sum, sm, player, timeout_tok);
 
-        {
-            assert_restore_sumgame ars2(sum);
-
-            assert(sum.to_play() == player);
-            sum.play_sum(sm, player);
-
-            // Winning move IFF opponent loses
-            assert(sum.to_play() == opp);
-            opponent_result = sum.solve_with_timeout_token(timeout_tok);
-
-            sum.undo_move();
-            assert(sum.to_play() == player);
-        }
-
-        if (!opponent_result.has_value())
+        if (!is_winning_opt.has_value())
         {
             over_time = true;
             assert(timeout_tok.stop_requested());
-
             break;
         }
 
-        const bool is_winning_move = !opponent_result.value().win;
+        const bool is_winning = is_winning_opt.value();
 
-        assert_restore_sumgame ars3(sum);
-
-        if (is_winning_move)
+        if (is_winning)
         {
+            assert_restore_sumgame ars3(sum);
             const string winning_move = sum_move_string(sum, sm, player);
             winning_moves.value().emplace_back(winning_move);
         }
@@ -102,11 +129,10 @@ optional<vector<string>> get_winning_moves_impl(
     return winning_moves;
 }
 
-
 } // namespace
 
 //////////////////////////////////////////////////
-vector<string> get_winning_moves(sumgame& sum, bw player)
+vector<string> get_winning_moves(sumgame& sum, ebw player)
 {
     optional<vector<string>> result =
         get_winning_moves_with_timeout(sum, player, 0);
@@ -116,7 +142,7 @@ vector<string> get_winning_moves(sumgame& sum, bw player)
 }
 
 optional<vector<string>> get_winning_moves_with_timeout(
-    sumgame& sum, bw player, unsigned long long timeout_ms)
+    sumgame& sum, ebw player, unsigned long long timeout_ms)
 {
     timeout_source src;
     timeout_token tok = src.get_timeout_token();
@@ -130,7 +156,7 @@ optional<vector<string>> get_winning_moves_with_timeout(
 }
 
 optional<vector<string>> get_winning_moves_with_timeout_token(
-    sumgame& sum, bw player, const timeout_token& timeout_tok)
+    sumgame& sum, ebw player, const timeout_token& timeout_tok)
 {
     return get_winning_moves_impl(sum, player, timeout_tok);
 }
