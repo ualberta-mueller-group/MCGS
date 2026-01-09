@@ -10,7 +10,11 @@
 #include <string>
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #define CSV_MISSING_TEXT "???"
+=======
+#define CSV_MISSING_TEXT "N/A"
+>>>>>>> Stashed changes
 =======
 #define CSV_MISSING_TEXT "N/A"
 >>>>>>> Stashed changes
@@ -212,6 +216,7 @@ void csv_row::fill_post_test_fields_verbose(
     const solver_stats& stats = stats::get_global_stats();
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     this->node_count = stats.search_node_count;
 
     if (global::count_sums())
@@ -221,6 +226,9 @@ void csv_row::fill_post_test_fields_verbose(
     }
 =======
 
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes
@@ -240,6 +248,9 @@ void csv_row::fill_post_test_fields_verbose(
     this->initial_subgame_count = stats.initial_subgame_count;
     this->max_subgame_count = stats.max_subgame_count;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

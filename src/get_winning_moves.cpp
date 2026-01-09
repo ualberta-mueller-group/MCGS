@@ -102,6 +102,7 @@ optional<vector<string>> get_winning_moves_impl(
     return winning_moves;
 }
 
+
 } // namespace
 
 //////////////////////////////////////////////////

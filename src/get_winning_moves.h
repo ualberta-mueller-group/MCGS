@@ -11,11 +11,13 @@
 #pragma once
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 #include <string>
 #include <optional>
 
 #include "cgt_basics.h"
+#include "file_parser2.h"
 #include "sumgame.h"
 #include "timeout_token.h"
 
