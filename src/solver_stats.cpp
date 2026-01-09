@@ -43,7 +43,11 @@ void solver_stats::reset()
 
 #define PRINT_FIELD(field) \
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     ostr << "\n#field " << (field); \
+=======
+    ostr << "\n" #field " " << (field); \
+>>>>>>> Stashed changes
 =======
     ostr << "\n" #field " " << (field); \
 >>>>>>> Stashed changes
@@ -52,7 +56,11 @@ void solver_stats::reset()
 #define PRINT_FIELD_OPTIONAL(field, expr) \
     if (field.has_value()) \
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         ostr << "\n#expr " << (expr); \
+=======
+        ostr << "\n" #expr " " << (expr); \
+>>>>>>> Stashed changes
 =======
         ostr << "\n" #expr " " << (expr); \
 >>>>>>> Stashed changes
@@ -70,8 +78,13 @@ void solver_stats::print_search_statistics(std::ostream& ostr) const
 
     PRINT_FIELD(search_node_count);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     PRINT_FIELD(max_search_depth);
     PRINT_FIELD_OPTIONAL(search_node_hashes, search_node_hashes->size());
+=======
+    PRINT_FIELD_OPTIONAL(search_node_hashes, search_node_hashes->size());
+    PRINT_FIELD(max_search_depth);
+>>>>>>> Stashed changes
 =======
     PRINT_FIELD_OPTIONAL(search_node_hashes, search_node_hashes->size());
     PRINT_FIELD(max_search_depth);
@@ -97,7 +110,10 @@ void solver_stats::print_search_statistics(std::ostream& ostr) const
 #undef PRINT_FIELD_OPTIONAL
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 std::optional<double> solver_stats::get_tt_hit_rate() const
 {
     const uint64_t total = tt_hits + tt_misses;
@@ -118,6 +134,9 @@ std::optional<double> solver_stats::get_db_hit_rate() const
     return (double) db_hits / (double) total;
 }
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 ////////////////////////////////////////////////// Stats/reporting functions
 namespace stats {
@@ -128,8 +147,13 @@ std::optional<global_hash> hash_helper;
 hash_t get_node_hash(const std::vector<game*>& games, ebw to_play)
 {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     assert(hash_helper.has_value());
     return hash_helper->get_global_hash_value(games, to_play);
+=======
+assert(hash_helper.has_value());
+return hash_helper->get_global_hash_value(games, to_play);
+>>>>>>> Stashed changes
 =======
 assert(hash_helper.has_value());
 return hash_helper->get_global_hash_value(games, to_play);
@@ -139,8 +163,13 @@ return hash_helper->get_global_hash_value(games, to_play);
 hash_t get_node_hash(const game* g, ebw to_play)
 {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     assert(hash_helper.has_value());
     return hash_helper->get_global_hash_value(g, to_play);
+=======
+assert(hash_helper.has_value());
+return hash_helper->get_global_hash_value(g, to_play);
+>>>>>>> Stashed changes
 =======
 assert(hash_helper.has_value());
 return hash_helper->get_global_hash_value(g, to_play);
@@ -152,22 +181,29 @@ return hash_helper->get_global_hash_value(g, to_play);
 void __count_search_node_hash(const sumgame& sum, ebw to_play)
 {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     assert(__global_stats.search_node_hashes.has_value() &&
            global::count_sums());
 
     const hash_t node_hash = get_node_hash(sum.subgames(), to_play);
     __global_stats.search_node_hashes->insert(node_hash);
 =======
+=======
+>>>>>>> Stashed changes
 assert(__global_stats.search_node_hashes.has_value() &&
        global::count_sums());
 
 const hash_t node_hash = get_node_hash(sum.subgames(), to_play);
 __global_stats.search_node_hashes->insert(node_hash);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
 
 void __count_search_node_hash(const std::vector<game*>& games, ebw to_play)
 {
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     assert(__global_stats.search_node_hashes.has_value() &&
            global::count_sums());
@@ -175,16 +211,22 @@ void __count_search_node_hash(const std::vector<game*>& games, ebw to_play)
     const hash_t node_hash = get_node_hash(games, to_play);
     __global_stats.search_node_hashes->insert(node_hash);
 =======
+=======
+>>>>>>> Stashed changes
 assert(__global_stats.search_node_hashes.has_value() &&
        global::count_sums());
 
 const hash_t node_hash = get_node_hash(games, to_play);
 __global_stats.search_node_hashes->insert(node_hash);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
 
 void __count_search_node_hash(const game* g, ebw to_play)
 {
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     assert(__global_stats.search_node_hashes.has_value() &&
            global::count_sums());
@@ -192,11 +234,16 @@ void __count_search_node_hash(const game* g, ebw to_play)
     const hash_t node_hash = get_node_hash(g, to_play);
     __global_stats.search_node_hashes->insert(node_hash);
 =======
+=======
+>>>>>>> Stashed changes
 assert(__global_stats.search_node_hashes.has_value() &&
        global::count_sums());
 
 const hash_t node_hash = get_node_hash(g, to_play);
 __global_stats.search_node_hashes->insert(node_hash);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
 
@@ -207,8 +254,13 @@ namespace mcgs_init {
 void init_solver_stats()
 {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     assert(!stats::hash_helper.has_value());
     stats::hash_helper.emplace();
+=======
+assert(!stats::hash_helper.has_value());
+stats::hash_helper.emplace();
+>>>>>>> Stashed changes
 =======
 assert(!stats::hash_helper.has_value());
 stats::hash_helper.emplace();
