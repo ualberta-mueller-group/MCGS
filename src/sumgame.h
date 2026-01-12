@@ -158,7 +158,7 @@ public:
     static void init_sumgame(size_t index_bits);
 
     // Called by derived classes of i_test_case, in their _run_impl() methods
-    static void reset_ttable();
+    static void clear_ttable();
 
 private:
     class undo_stack_unwinder;
@@ -284,7 +284,7 @@ inline hash_t sumgame::game_hash() const
     return get_global_hash();
 }
 
-inline void sumgame::reset_ttable()
+inline void sumgame::clear_ttable()
 {
     assert(global::clear_tt());
 

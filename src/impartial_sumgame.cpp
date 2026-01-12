@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 #include "impartial_sumgame.h"
 #include "timeout_token.h"
+#include "utilities.h"
 
 #include <chrono>
 #include <cstddef>
@@ -152,3 +153,22 @@ void init_impartial_sumgame_ttable(size_t idx_bits)
         lv_tt_optional.emplace(idx_bits, 0);
     }
 }
+
+void clear_impartial_sumgame_ttable()
+{
+    assert(global::clear_tt());
+
+    assert(                                             //
+        logical_iff(global::impartial_algorithm_mex(),  //
+                    tt_optional.has_value()) &&         //
+        logical_iff(!global::impartial_algorithm_mex(), //
+                    lv_tt_optional.has_value())         //
+    );                                                  //
+
+    if (tt_optional.has_value())
+        tt_optional->clear();
+
+    if (lv_tt_optional.has_value())
+        lv_tt_optional->clear();
+}
+

@@ -4,6 +4,7 @@
 #include "file_parser_new.h"
 #include "game.h"
 #include "get_winning_moves.h"
+#include "global_options.h"
 #include "impartial_sumgame.h"
 #include "search_utils.h"
 #include "solver_stats.h"
@@ -102,7 +103,7 @@ void test_case_solve_bw::_run_impl(unsigned long long timeout)
     stopwatch sw;
 
     if (global::clear_tt())
-        sumgame::reset_ttable();
+        sumgame::clear_ttable();
 
     sumgame s(_expr.get_player());
 
@@ -138,6 +139,9 @@ test_case_solve_n::test_case_solve_n(fp_expr_command_solve_n expr,
 void test_case_solve_n::_run_impl(unsigned long long timeout)
 {
     stopwatch sw;
+
+    if (global::clear_tt())
+        clear_impartial_sumgame_ttable();
 
     sumgame sum(BLACK);
 
@@ -215,7 +219,12 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
             initial_subgame_count++;
 
     if (global::clear_tt())
-        sumgame::reset_ttable();
+    {
+        if (is_black_white(player))
+            sumgame::clear_ttable();
+        else
+            clear_impartial_sumgame_ttable();
+    }
 
     sumgame sum(sum_player);
 
