@@ -6,6 +6,7 @@
 #include "sumgame.h"
 #include "impartial_sumgame.h"
 #include "game.h"
+#include "test_case_enums.h"
 #include "throw_assert.h"
 #include <chrono>
 #include <ratio>
@@ -18,23 +19,23 @@ using namespace std;
 ////////////////////////////////////////////////// helpers
 namespace {
 
-test_status_t compare_search_values(const search_value* found_value,
+test_case_status_enum compare_search_values(const search_value* found_value,
                                     const search_value* expected_value)
 {
     assert(found_value != nullptr);
 
     if (found_value->type() == SEARCH_VALUE_TYPE_NONE)
-        return TEST_STATUS_TIMEOUT;
+        return TEST_CASE_STATUS_TIMEOUT;
 
     if (                                                 //
         expected_value == nullptr ||                     //
         expected_value->type() == SEARCH_VALUE_TYPE_NONE //
         )                                                //
-        return TEST_STATUS_COMPLETED;
+        return TEST_CASE_STATUS_COMPLETED;
 
     THROW_ASSERT(found_value->type() == expected_value->type());
-    return *found_value == *expected_value ? TEST_STATUS_PASS
-                                           : TEST_STATUS_FAIL;
+    return *found_value == *expected_value ? TEST_CASE_STATUS_PASS
+                                           : TEST_CASE_STATUS_FAIL;
 }
 
 } // namespace
@@ -134,24 +135,6 @@ void search_value::set_nimber(int new_nimber)
     _value_nimber = new_nimber;
 }
 
-////////////////////////////////////////////////// test_status_t
-string test_status_to_string(test_status_t status)
-{
-    switch (status)
-    {
-        case TEST_STATUS_TIMEOUT:
-            return "TIMEOUT";
-        case TEST_STATUS_PASS:
-            return "PASS";
-        case TEST_STATUS_FAIL:
-            return "FAIL";
-        case TEST_STATUS_COMPLETED:
-            return "COMPLETED";
-    }
-
-    THROW_ASSERT(false);
-}
-
 ////////////////////////////////////////////////// search_result
 string search_result::player_str() const
 {
@@ -165,7 +148,7 @@ string search_result::value_str() const
 
 string search_result::status_str() const
 {
-    return test_status_to_string(status);
+    return test_case_status_to_string(status);
 }
 
 string search_result::duration_str() const

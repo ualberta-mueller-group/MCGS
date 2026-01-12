@@ -1,4 +1,5 @@
 #pragma once
+#include "test_case_enums.h"
 #warning TODO delete/replace __FILE__ (use test_case.h in most cases)
 
 /*
@@ -50,16 +51,6 @@ private:
     int _value_nimber;
 };
 
-////////////////////////////////////////////////// test_status_t
-enum test_status_t
-{
-    TEST_STATUS_TIMEOUT = 0,
-    TEST_STATUS_PASS,
-    TEST_STATUS_FAIL,
-    TEST_STATUS_COMPLETED,
-};
-
-std::string test_status_to_string(test_status_t status);
 
 ////////////////////////////////////////////////// search_result
 struct search_result
@@ -71,7 +62,7 @@ struct search_result
 
     ebw player;
     search_value value;
-    test_status_t status;
+    test_case_status_enum status;
     double duration;
 };
 
