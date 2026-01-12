@@ -61,6 +61,8 @@ public:
     std::vector<std::string> get_row_field_strings() const;
     static std::vector<std::string> get_header_field_strings();
 
+    static std::string csv_game_string(const std::vector<game*>& games);
+
     std::optional<std::string> file;             // autotests
     std::optional<int> case_number;              // autotests
     std::optional<std::string> games;            // visitor

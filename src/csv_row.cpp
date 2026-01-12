@@ -13,26 +13,6 @@
 using namespace std;
 
 namespace {
-string csv_game_string(const vector<game*>& games)
-{
-    stringstream stream;
-
-    const size_t N = games.size();
-    for (size_t i = 0; i < N; i++)
-    {
-        const game* g = games[i];
-        g->print(stream);
-
-        if (i + 1 < N)
-        {
-            stream << " ";
-        }
-    }
-
-    string game_string = stream.str();
-
-    return game_string;
-}
 
 string csv_comment_string(const vector<string>& comments)
 {
@@ -333,6 +313,26 @@ vector<string> csv_row::get_header_field_strings()
     return header;
 }
 
+string csv_row::csv_game_string(const vector<game*>& games)
+{
+    stringstream stream;
+
+    const size_t N = games.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        const game* g = games[i];
+        g->print(stream);
+
+        if (i + 1 < N)
+        {
+            stream << " ";
+        }
+    }
+
+    string game_string = stream.str();
+
+    return game_string;
+}
 
 ////////////////////////////////////////////////// utility functions
 void write_csv_field_strings(ostream& os, const vector<string>& fields)

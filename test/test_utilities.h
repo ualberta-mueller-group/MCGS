@@ -98,13 +98,27 @@ void assert_sum_outcomes(bool black_outcome, bool white_outcome,
 
 void assert_inverse_sum_zero(game* g);
 
+const std::string UNIT_TEST_INPUT_DIR = "test/input/unit_tests/";
+
+/*
+   TODO what fields?
+*/
+namespace file_parser_test {
+
+constexpr const char* WIN_TEXT = "Win";
+constexpr const char* LOSS_TEXT = "Loss";
+
 void assert_file_parser_output(file_parser* parser,
-                               std::vector<game_case*>& expected_cases);
+    const std::vector<csv_row*>& expected_output);
 
 void assert_file_parser_output_file(const std::string& file_name,
-                                    std::vector<game_case*>& expected_cases);
+    const std::vector<csv_row*>& expected_output);
 
-const std::string UNIT_TEST_INPUT_DIR = "test/input/unit_tests/";
+void add_row(std::vector<csv_row*>& rows, ebw player,
+             std::optional<std::string>&& exp_result,
+             std::vector<game*>&& games, command_type_enum type);
+
+} // namespace file_parser_test 
 
 void assert_solve_test_file(const std::string& file_name,
                             int expected_case_count);

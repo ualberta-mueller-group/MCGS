@@ -1,8 +1,12 @@
 #include "file_parser_test.h"
+#include "csv_row.h"
+#include "test_case.h"
+#include "test_case_enums.h"
 #include "test_utilities.h"
 #include "all_game_headers.h"
 #include "file_parser.h"
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <iostream>
 #include <string>
@@ -29,15 +33,15 @@ enum version_warn
 void assert_throw_status(file_parser* parser, bool should_throw,
                          parser_exception_code code, version_warn vw)
 {
-    game_case gc;
-
     bool did_throw = false;
 
     try
     {
-        while (parser->parse_chunk(gc))
+        while (parser->parse_chunk())
         {
-            gc.cleanup_games();
+            const int n_test_cases = parser->n_test_cases();
+            for (int i = 0; i < n_test_cases; i++)
+                std::shared_ptr<i_test_case> test_case = parser->get_test_case(i);
         }
     }
     catch (parser_exception& e)
@@ -47,8 +51,6 @@ void assert_throw_status(file_parser* parser, bool should_throw,
         assert(e.code() == code);
         did_throw = true;
     }
-
-    gc.cleanup_games();
 
     if (vw != MAYBE_WARN)
     {
@@ -286,37 +288,57 @@ void e2e_test19()
 void e2e_test20()
 {
     // First figure out how many cases are in the file
-    int ncases = 0;
+    int actual_cases = 0;
 
     string file_name = INPUT_ROOT_DIR + "partial_read.test";
 
     {
         file_parser* parser = file_parser::from_file(file_name);
-        game_case gc;
 
-        while (parser->parse_chunk(gc))
+        while (parser->parse_chunk())
         {
-            ncases++;
-            gc.cleanup_games();
+            const int n_test_cases = parser->n_test_cases();
+            for (int i = 0; i < n_test_cases; i++)
+            {
+                std::shared_ptr<i_test_case> test_case = parser->get_test_case(i);
+                actual_cases++;
+            }
         }
 
         delete parser;
     }
 
-    int half = ncases / 2;
+    int half = actual_cases / 2;
 
-    assert(ncases >= 6);
+    assert(actual_cases >= 6);
     assert(half >= 2);
 
     // Read the file again, but only read half of it
     {
         file_parser* parser = file_parser::from_file(file_name);
-        game_case gc;
 
-        for (int i = 0; i < half; i++)
+        int did_read = 0;
+
+        while (parser->parse_chunk())
         {
-            assert(parser->parse_chunk(gc));
-            gc.cleanup_games();
+            bool should_break = false;
+
+            const int n_test_cases = parser->n_test_cases();
+
+            for (int i = 0; i < n_test_cases; i++)
+            {
+                std::shared_ptr<i_test_case> test_cases = parser->get_test_case(i);
+                did_read++;
+
+                if (did_read == half)
+                {
+                    should_break = true;
+                    break;
+                }
+            }
+
+            if (should_break)
+                break;
         }
 
         delete parser;
@@ -326,137 +348,153 @@ void e2e_test20()
 }
 
 ////////////////////////////// some sums of games
+#define WIN_TEXT "Win"
+#define LOSS_TEXT "Loss"
 
 void e2e_test21()
 {
-    vector<game_case*> cases;
+    using namespace file_parser_test;
+    std::vector<csv_row*> rows;
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+    add_row(rows, BLACK, WIN_TEXT, {new nogo_1xn("X..O")},
+                              COMMAND_TYPE_SOLVE_BW);
+    add_row(rows, WHITE, WIN_TEXT, {new nogo_1xn("X..O")},
+                              COMMAND_TYPE_SOLVE_BW);
 
-        gc->to_play = BLACK;
-        gc->expected_value.set_win(true);
-        gc->games.push_back(new nogo_1xn("X..O"));
-    }
+    add_row(rows, BLACK, LOSS_TEXT,
+                              {new integer_game(4), new integer_game(-5)},
+                              COMMAND_TYPE_SOLVE_BW);
+    add_row(rows, WHITE, WIN_TEXT,
+                              {new integer_game(4), new integer_game(-5)},
+                              COMMAND_TYPE_SOLVE_BW);
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+    add_row(rows, BLACK, WIN_TEXT,
+                              {new clobber_1xn("XOXOXOXO")},
+                              COMMAND_TYPE_SOLVE_BW);
+    add_row(rows, WHITE, {}, {new clobber_1xn("XOXOXOXO")},
+                              COMMAND_TYPE_SOLVE_BW);
 
-        gc->to_play = WHITE;
-        gc->expected_value.set_win(true);
-        gc->games.push_back(new nogo_1xn("X..O"));
-    }
+    add_row(rows, BLACK, LOSS_TEXT, {},
+                              COMMAND_TYPE_SOLVE_BW);
+    add_row(rows, WHITE, LOSS_TEXT, {},
+                              COMMAND_TYPE_SOLVE_BW);
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+#warning DELETE COMMENTED OUT OLD CODE IN THIS FILE
 
-        gc->to_play = BLACK;
-        gc->expected_value.set_win(false);
-        gc->games.push_back(new integer_game(4));
-        gc->games.push_back(new integer_game(-5));
-    }
+    ////////////////////
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+    //{
+    //    game_case* gc = new game_case();
+    //    cases.push_back(gc);
 
-        gc->to_play = WHITE;
-        gc->expected_value.set_win(true);
-        gc->games.push_back(new integer_game(4));
-        gc->games.push_back(new integer_game(-5));
-    }
+    //    gc->to_play = BLACK;
+    //    gc->expected_value.set_win(true);
+    //    gc->games.push_back(new nogo_1xn("X..O"));
+    //}
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+    //{
+    //    game_case* gc = new game_case();
+    //    cases.push_back(gc);
 
-        gc->to_play = BLACK;
-        gc->expected_value.set_win(true);
-        gc->games.push_back(new clobber_1xn("XOXOXOXO"));
-    }
+    //    gc->to_play = WHITE;
+    //    gc->expected_value.set_win(true);
+    //    gc->games.push_back(new nogo_1xn("X..O"));
+    //}
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+    //{
+    //    game_case* gc = new game_case();
+    //    cases.push_back(gc);
 
-        gc->to_play = WHITE;
-        gc->games.push_back(new clobber_1xn("XOXOXOXO"));
-    }
+    //    gc->to_play = BLACK;
+    //    gc->expected_value.set_win(false);
+    //    gc->games.push_back(new integer_game(4));
+    //    gc->games.push_back(new integer_game(-5));
+    //}
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+    //{
+    //    game_case* gc = new game_case();
+    //    cases.push_back(gc);
 
-        gc->to_play = BLACK;
-        gc->expected_value.set_win(false);
-    }
+    //    gc->to_play = WHITE;
+    //    gc->expected_value.set_win(true);
+    //    gc->games.push_back(new integer_game(4));
+    //    gc->games.push_back(new integer_game(-5));
+    //}
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+    //{
+    //    game_case* gc = new game_case();
+    //    cases.push_back(gc);
 
-        gc->to_play = WHITE;
-        gc->expected_value.set_win(false);
-    }
+    //    gc->to_play = BLACK;
+    //    gc->expected_value.set_win(true);
+    //    gc->games.push_back(new clobber_1xn("XOXOXOXO"));
+    //}
 
-    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames1.test", cases);
+    //{
+    //    game_case* gc = new game_case();
+    //    cases.push_back(gc);
 
-    for (game_case* gc : cases)
-    {
-        gc->cleanup_games();
-        delete gc;
-    }
+    //    gc->to_play = WHITE;
+    //    gc->games.push_back(new clobber_1xn("XOXOXOXO"));
+    //}
+
+  ///{
+  ///      game_case* gc = new game_case();
+  ///      cases.push_back(gc);
+
+  ///      gc->to_play = BLACK;
+  ///      gc->expected_value.set_win(false);
+  ///  }
+
+  ///  {
+  ///      game_case* gc = new game_case();
+  ///      cases.push_back(gc);
+
+  ///      gc->to_play = WHITE;
+  ///      gc->expected_value.set_win(false);
+  ///  }
+
+    assert_file_parser_output_file(
+        INPUT_ROOT_DIR + "sumgames1.test", rows);
 }
 
 void e2e_test22()
 {
-    vector<game_case*> cases;
+    using namespace file_parser_test;
 
-    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames2.test", cases);
-
-    for (game_case* gc : cases)
-    {
-        gc->cleanup_games();
-        delete gc;
-    }
+    vector<csv_row*> rows;
+    assert_file_parser_output_file(
+        INPUT_ROOT_DIR + "sumgames2.test", rows);
 }
 
 void e2e_test23()
 {
-    vector<game_case*> cases;
+    using namespace file_parser_test;
 
-    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames3.test", cases);
-
-    for (game_case* gc : cases)
-    {
-        gc->cleanup_games();
-        delete gc;
-    }
+    vector<csv_row*> rows;
+    assert_file_parser_output_file(
+        INPUT_ROOT_DIR + "sumgames3.test", rows);
 }
 
 void e2e_test24()
 {
-    vector<game_case*> cases;
+    using namespace file_parser_test;
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+    vector<csv_row*> rows;
 
-        gc->to_play = BLACK;
-        gc->expected_value.set_win(false);
-        gc->games.push_back(new clobber_1xn("XOOX"));
-    }
+    add_row(rows, BLACK, LOSS_TEXT, {new clobber_1xn("XOOX")},
+            COMMAND_TYPE_SOLVE_BW);
 
-    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames4.test", cases);
+    //{
+    //    game_case* gc = new game_case();
+    //    cases.push_back(gc);
 
-    for (game_case* gc : cases)
-    {
-        gc->cleanup_games();
-        delete gc;
-    }
+    //    gc->to_play = BLACK;
+    //    gc->expected_value.set_win(false);
+    //    gc->games.push_back(new clobber_1xn("XOOX"));
+    //}
+
+    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames4.test", rows);
 }
 
 // Comment stuff...
@@ -464,27 +502,45 @@ void e2e_test24()
 // Make sure _, #0, #1 all work
 void e2e_test25()
 {
-    file_parser* p = file_parser::from_file(INPUT_ROOT_DIR + "comments.test");
+    auto get_all_test_comments =
+        [](const std::string& file_name) -> std::vector<std::string>
+    {
+        std::vector<std::string> comments;
+        file_parser* p = file_parser::from_file(file_name);
 
-    game_case case1;
-    game_case case2;
-    assert(p->parse_chunk(case1));
-    assert(p->parse_chunk(case2));
+        while (p->parse_chunk())
+        {
+            const int n_test_cases = p->n_test_cases();
 
-    assert(case1.comments.find("A") != string::npos);
-    assert(case1.comments.find("B") == string::npos);
-    assert(case1.comments.find("C") != string::npos);
-    assert(case1.comments.find("D") == string::npos);
+            for (int i = 0; i < n_test_cases; i++)
+            {
+                std::shared_ptr<i_test_case> test_case = p->get_test_case(i);
+                comments.emplace_back(test_case->get_csv_row().comments.value());
+            }
+        }
 
-    assert(case2.comments.find("A") != string::npos);
-    assert(case2.comments.find("B") == string::npos);
-    assert(case2.comments.find("C") == string::npos);
-    assert(case2.comments.find("D") != string::npos);
+        delete p;
+        return comments;
+    };
 
-    case1.cleanup_games();
-    case2.cleanup_games();
+    std::vector<std::string> comments =
+        get_all_test_comments(INPUT_ROOT_DIR + "comments.test");
 
-    delete p;
+    assert(comments.size() == 2);
+
+    const std::string& comments1 = comments[0];
+    const std::string& comments2 = comments[1];
+
+
+    assert(comments1.find("A") != string::npos);
+    assert(comments1.find("B") == string::npos);
+    assert(comments1.find("C") != string::npos);
+    assert(comments1.find("D") == string::npos);
+
+    assert(comments2.find("A") != string::npos);
+    assert(comments2.find("B") == string::npos);
+    assert(comments2.find("C") == string::npos);
+    assert(comments2.find("D") != string::npos);
 }
 
 //"#3"
