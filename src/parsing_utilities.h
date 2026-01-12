@@ -6,7 +6,6 @@
 #include <vector>
 #include <cstddef>
 #include "fraction.h"
-#include "game_case.h"
 #include "search_utils.h"
 
 struct run_command_t

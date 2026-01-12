@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #include "test_case_enums.h"
-#include "game_case.h"
+#include "game.h"
 
 #define CSV_MISSING_TEXT "N/A"
 

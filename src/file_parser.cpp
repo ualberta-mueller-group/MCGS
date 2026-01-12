@@ -19,7 +19,6 @@
 #include "all_game_headers.h"
 #include "file_parser_ast.h"
 #include "fission.h"
-#include "game_case.h"
 #include "game_token_parsers.h"
 #include "get_winning_moves.h"
 #include "parsing_utilities.h"
@@ -345,116 +344,6 @@ bool file_parser::_match(const string& open, const string& close,
 
     return false;
 }
-
-// parse the current token using a game_token_parser, add result to game_cases
-//bool file_parser::_parse_game()
-//{
-//    if (_section_title.size() == 0)
-//    {
-//        string why =
-//            _get_error_start() + "game token found but section title missing";
-//        throw parser_exception(why, MISSING_SECTION_TITLE);
-//
-//        return false;
-//    }
-//
-//    auto it = _game_map.find(_section_title);
-//
-//    if (it == _game_map.end())
-//    {
-//        string why =
-//            _get_error_start() +
-//            "game token found, but game parser doesn't exist for section \"";
-//        why += _section_title + "\"";
-//        throw parser_exception(why, MISSING_SECTION_PARSER);
-//
-//        return false;
-//    }
-//
-//    game_token_parser* gp = (it->second).get();
-//
-//    for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
-//    {
-//        game* g = nullptr;
-//
-//        try
-//        {
-//            g = gp->parse_game(_token);
-//        }
-//        catch (exception& e)
-//        {
-//            cerr << _get_error_start() << e.what();
-//            throw e;
-//        }
-//
-//        if (g == nullptr)
-//        {
-//
-//            // This won't leak memory when caught because the game_cases
-//            // will be cleaned up when the file_parser is destructed
-//            string why = _get_error_start() + "game parser for section \"" +
-//                         _section_title;
-//            why += "\" failed to parse game token: \"" + _token + "\"";
-//            throw parser_exception(why, FAILED_GAME_TOKEN_PARSE);
-//
-//            return false;
-//        }
-//        else
-//        {
-//            _cases[i].games.push_back(g);
-//
-//            // Update hash. Should include section title for every token
-//            string hashable_chunk = _section_title + _token;
-//            _cases[i].hash.update(hashable_chunk);
-//        }
-//    }
-//
-//    return true;
-//}
-
-
-//bool file_parser::_parse_command()
-//{
-//    assert(_case_count == 0);
-//
-//    vector<run_command_t> command_list;
-//    bool success = get_run_command_list(_token, command_list);
-//
-//    if (!success)
-//    {
-//        string why = "failed to parse run command: \"" + _token + "\"";
-//        throw parser_exception(why, FAILED_CASE_COMMAND);
-//    }
-//
-//    if (command_list.empty())
-//    {
-//        string why = "run command with no cases";
-//        throw parser_exception(why, EMPTY_CASE_COMMAND);
-//    }
-//
-//    if (command_list.size() > FILE_PARSER_MAX_CASES)
-//    {
-//        string why =
-//            _get_error_start() + "run command has too many cases, maximum is: ";
-//        why += to_string(FILE_PARSER_MAX_CASES);
-//        throw parser_exception(why, CASE_LIMIT_EXCEEDED);
-//    }
-//
-//    const size_t n_commands = command_list.size();
-//    for (size_t i = 0; i < n_commands; i++)
-//    {
-//        run_command_t& rc = command_list[i];
-//        game_case& gc = _cases[i];
-//
-//        gc.impartial = rc.player == EMPTY;
-//        gc.to_play = rc.player;
-//        gc.expected_value = rc.expected_value;
-//
-//        _case_count++;
-//    }
-//
-//    return true;
-//}
 
 namespace {
 i_fp_expr_command* get_fp_expr_run_command_solve_bw(const int line_number,
@@ -835,8 +724,6 @@ game* file_parser::construct_game(const std::string& title, int line_number,
 
     if (g == nullptr)
     {
-        // This won't leak memory when caught because the game_cases
-        // will be cleaned up when the file_parser is destructed
         string why = _get_error_start(line_number) +
                      "game parser for section \"" + title;
         why += "\" failed to parse game token: \"" + game_token + "\"";

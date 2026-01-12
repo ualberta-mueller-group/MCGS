@@ -11,15 +11,8 @@
 #include <optional>
 #include "test_case_enums.h"
 
-// TODO think of a better name for fp_visitor_generate...
-
 ////////////////////////////////////////////////// forward declarations
 class i_fp_visitor; // interface for visitors to fp_chunk (a chunk of input)
-
-/*
-    void fp_visitor_print::visit(const fp_chunk&, int command_idx, ostream&)
-    void fp_visitor_generate::visit(const fp_chunk&, int command_idx, game_case&)
-*/
 
 class i_fp_expr; // interface for all input expressions
 

@@ -51,8 +51,6 @@ enum match_state
     file_parser:
         reads input from stdin, string, or file. Use static constructor
    functions to create a file_parser i.e. from_stdin()
-
-        call parse_chunk() to get next game_case
 */
 class file_parser
 {
