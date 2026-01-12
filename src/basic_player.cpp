@@ -21,7 +21,7 @@
 #include "string_to_int.h"
 #include "throw_assert.h"
 #include "cgt_basics.h"
-#include "file_parser2.h"
+#include "file_parser.h"
 #include "global_options.h"
 #include "kayles.h"
 #include "strip.h"
@@ -806,7 +806,7 @@ bool has_kayles(const vector<game*>& games)
 } // namespace
 
 //////////////////////////////////////////////////
-void play_games(file_parser2& parser, const string& log_name)
+void play_games(file_parser& parser, const string& log_name)
 {
     init_streams(log_name);
 

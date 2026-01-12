@@ -1,4 +1,4 @@
-#include "file_parser2.h"
+#include "file_parser.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -33,7 +33,7 @@
 
 /*
     NOTE: here we should usually throw instead of using assert() for many
-        file_parser2 functions; many errors will be from bad user input rather
+        file_parser functions; many errors will be from bad user input rather
    than programming bugs, and exceptions also make unit testing easier
 
     Version command is optional, BUT STILL CHECKED, when reading from string
@@ -41,14 +41,14 @@
 
 using namespace std;
 
-using namespace file_parser2_impl;
+using namespace file_parser_impl;
 
 //////////////////////////////////////////////////////////// static members
-bool file_parser2::debug_printing = false;
-bool file_parser2::silence_warnings = false;
-bool file_parser2::override_assert_correct_version = false;
+bool file_parser::debug_printing = false;
+bool file_parser::silence_warnings = false;
+bool file_parser::override_assert_correct_version = false;
 
-unordered_map<string, shared_ptr<game_token_parser>> file_parser2::_game_map;
+unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 
 
 //////////////////////////////////////////////////////////// helper functions
@@ -125,10 +125,10 @@ void strip_enclosing(string& str, const string& open, const string& close)
 
 } // namespace
 
-////////////////////////////////////////////////// file_parser2
+////////////////////////////////////////////////// file_parser
 
 // Private constructor -- use static functions instead
-file_parser2::file_parser2(istream* stream, bool delete_stream,
+file_parser::file_parser(istream* stream, bool delete_stream,
                          bool do_version_check)
     : _tokenizer(stream, delete_stream),
       _do_version_check(do_version_check),
@@ -143,13 +143,13 @@ file_parser2::file_parser2(istream* stream, bool delete_stream,
     }
 }
 
-void file_parser2::_version_check(const string& version_string)
+void file_parser::_version_check(const string& version_string)
 {
     const string& expected = FILE_PARSER_VERSION_STRING;
 
     if (version_string != expected)
     {
-        if (!file_parser2::silence_warnings)
+        if (!file_parser::silence_warnings)
         {
             cerr << "WARNING: Parser version mismatch. Expected \"" + expected +
                         "\", got: \"";
@@ -164,7 +164,7 @@ void file_parser2::_version_check(const string& version_string)
     }
 }
 
-void file_parser2::_add_game_parser(const string& game_title,
+void file_parser::_add_game_parser(const string& game_title,
                                    game_token_parser* gp)
 {
     assert(gp != nullptr);
@@ -181,7 +181,7 @@ void file_parser2::_add_game_parser(const string& game_title,
     _add_game_parser_impartial(game_title, it.first->second);
 }
 
-void file_parser2::_add_game_parser_impartial(
+void file_parser::_add_game_parser_impartial(
     const string& game_title, shared_ptr<game_token_parser>& gp_shared)
 {
     assert(gp_shared.get() != nullptr);
@@ -222,7 +222,7 @@ void file_parser2::_add_game_parser_impartial(
     (1 5 3)[clobber_1xn]
     which doesn't match
 */
-match_state file_parser2::_get_enclosed(const string& open, const string& close,
+match_state file_parser::_get_enclosed(const string& open, const string& close,
                                        bool allow_inner)
 {
     match_state state = MATCH_UNKNOWN;
@@ -309,7 +309,7 @@ match_state file_parser2::_get_enclosed(const string& open, const string& close,
    match doesn't occur, returns false, rewinds the token stream, and leaves
    _token as it was before
 */
-bool file_parser2::_match(const string& open, const string& close,
+bool file_parser::_match(const string& open, const string& close,
                          const string& match_name, bool allow_inner)
 {
     assert(_token.size() > 0);
@@ -321,7 +321,7 @@ bool file_parser2::_match(const string& open, const string& close,
 
     if (state == MATCH_FULL)
     {
-        if (file_parser2::debug_printing)
+        if (file_parser::debug_printing)
         {
             cout << "Got " << match_name << ": " << _token << endl;
         }
@@ -347,7 +347,7 @@ bool file_parser2::_match(const string& open, const string& close,
 }
 
 // parse the current token using a game_token_parser, add result to game_cases
-//bool file_parser2::_parse_game()
+//bool file_parser::_parse_game()
 //{
 //    if (_section_title.size() == 0)
 //    {
@@ -391,7 +391,7 @@ bool file_parser2::_match(const string& open, const string& close,
 //        {
 //
 //            // This won't leak memory when caught because the game_cases
-//            // will be cleaned up when the file_parser2 is destructed
+//            // will be cleaned up when the file_parser is destructed
 //            string why = _get_error_start() + "game parser for section \"" +
 //                         _section_title;
 //            why += "\" failed to parse game token: \"" + _token + "\"";
@@ -413,7 +413,7 @@ bool file_parser2::_match(const string& open, const string& close,
 //}
 
 
-//bool file_parser2::_parse_command()
+//bool file_parser::_parse_command()
 //{
 //    assert(_case_count == 0);
 //
@@ -631,7 +631,7 @@ bool get_fp_expr_run_command(const int line_number,
 } // namespace
 
 // actually parses block...
-bool file_parser2::_parse_command()
+bool file_parser::_parse_command()
 {
     vector<string> string_tokens = get_string_tokens(_token, {','});
     const size_t N = string_tokens.size();
@@ -658,21 +658,21 @@ bool file_parser2::_parse_command()
 }
 
 // get start of parser error text (including line number)
-string file_parser2::_get_error_start()
+string file_parser::_get_error_start()
 {
     return _get_error_start(_line_number);
 }
 
-string file_parser2::_get_error_start(int line_number)
+string file_parser::_get_error_start(int line_number)
 {
     return "Parser error on line " + to_string(line_number) + ": ";
 }
 
-file_parser2::~file_parser2()
+file_parser::~file_parser()
 {
 }
 
-bool file_parser2::parse_chunk()
+bool file_parser::parse_chunk()
 {
     if (!_chunk.has_value())
         _chunk.emplace();
@@ -752,7 +752,7 @@ bool file_parser2::parse_chunk()
         }
 
         // Must be game token
-        if (file_parser2::debug_printing)
+        if (file_parser::debug_printing)
         {
             cout << "Got simple token: " << _token << endl;
         }
@@ -764,7 +764,7 @@ bool file_parser2::parse_chunk()
     return false;
 }
 
-std::vector<game*> file_parser2::get_games() const
+std::vector<game*> file_parser::get_games() const
 {
     assert(_chunk.has_value());
     visitor_generate visitor;
@@ -772,19 +772,19 @@ std::vector<game*> file_parser2::get_games() const
     return visitor.get_games(_chunk.value());
 }
 
-int file_parser2::n_test_cases() const
+int file_parser::n_test_cases() const
 {
     assert(_chunk.has_value());
     return _chunk->n_command_exprs();
 }
 
-command_type_enum file_parser2::get_test_case_type(int test_case_idx) const
+command_type_enum file_parser::get_test_case_type(int test_case_idx) const
 {
     assert(_chunk.has_value() && test_case_idx < n_test_cases());
     return _chunk.value().get_command_expr(test_case_idx).get_command_type();
 }
 
-std::shared_ptr<i_test_case> file_parser2::get_test_case(int test_case_idx) const
+std::shared_ptr<i_test_case> file_parser::get_test_case(int test_case_idx) const
 {
     visitor_generate visitor;
     i_test_case* test_case = visitor.get_test_case(_chunk.value(), test_case_idx);
@@ -792,13 +792,13 @@ std::shared_ptr<i_test_case> file_parser2::get_test_case(int test_case_idx) cons
     return shared_ptr<i_test_case>(test_case);
 }
 
-void file_parser2::print_ast() const
+void file_parser::print_ast() const
 {
     fp_visitor_print visitor;
     visitor.visit_chunk(_chunk.value());
 }
 
-game* file_parser2::construct_game(const std::string& title, int line_number,
+game* file_parser::construct_game(const std::string& title, int line_number,
                                    const std::string& game_token)
 {
     if (title.size() == 0)
@@ -836,7 +836,7 @@ game* file_parser2::construct_game(const std::string& title, int line_number,
     if (g == nullptr)
     {
         // This won't leak memory when caught because the game_cases
-        // will be cleaned up when the file_parser2 is destructed
+        // will be cleaned up when the file_parser is destructed
         string why = _get_error_start(line_number) +
                      "game parser for section \"" + title;
         why += "\" failed to parse game token: \"" + game_token + "\"";
@@ -848,31 +848,31 @@ game* file_parser2::construct_game(const std::string& title, int line_number,
     }
 }
 
-file_parser2* file_parser2::from_stdin()
+file_parser* file_parser::from_stdin()
 {
-    return new file_parser2(&cin, false, false);
+    return new file_parser(&cin, false, false);
 }
 
-file_parser2* file_parser2::from_file(const string& file_name)
+file_parser* file_parser::from_file(const string& file_name)
 {
     ifstream* stream = new ifstream(file_name);
 
     if (!stream->is_open())
     {
         delete stream;
-        throw ios_base::failure("file_parser2 failed to open file \"" +
+        throw ios_base::failure("file_parser failed to open file \"" +
                                 file_name + "\"");
     }
 
-    return new file_parser2(stream, true, true);
+    return new file_parser(stream, true, true);
 }
 
-file_parser2* file_parser2::from_string(const string& str)
+file_parser* file_parser::from_string(const string& str)
 {
-    return new file_parser2(new stringstream(str), true, false);
+    return new file_parser(new stringstream(str), true, false);
 }
 
-bool file_parser2::warned_wrong_version()
+bool file_parser::warned_wrong_version()
 {
     return _warned_wrong_version;
 }
@@ -891,7 +891,7 @@ bool file_parser2::warned_wrong_version()
         game produced by the parser passed to add_game_parser, with an
         impartial_game_wrapper.
 */
-void file_parser2::_init_game_parsers()
+void file_parser::_init_game_parsers()
 {
     // TODO this file shouldn't include every game header. Define this function
     // in another cpp file...

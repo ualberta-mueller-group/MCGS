@@ -1,5 +1,5 @@
 #pragma once
 #include <string>
-#include "file_parser2.h"
+#include "file_parser.h"
 
-void play_games(file_parser2& parser, const std::string& log_name);
+void play_games(file_parser& parser, const std::string& log_name);

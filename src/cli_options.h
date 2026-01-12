@@ -3,7 +3,7 @@
 */
 #pragma once
 
-#include "file_parser2.h"
+#include "file_parser.h"
 #include <memory>
 #include <string>
 #include <exception>
@@ -18,7 +18,7 @@ struct cli_options
     cli_options(const std::string& test_directory);
     ~cli_options();
 
-    std::shared_ptr<file_parser2> parser;
+    std::shared_ptr<file_parser> parser;
     bool dry_run;     // Do dry run without running games
     bool should_exit; // Exit from main() i.e. when "--help" used
 

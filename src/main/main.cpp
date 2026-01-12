@@ -8,7 +8,7 @@
 
 //#include "basic_player.h"
 #include "cli_options.h"
-#include "file_parser2.h"
+#include "file_parser.h"
 #include "autotests.h"
 #include "file_parser_ast.h"
 #include "get_winning_moves.h"
@@ -23,7 +23,6 @@
 #include "throw_assert.h"
 #include "gen_experiments.h"
 //#include "winning_moves.h"
-#include "test_file_parser2.h"
 #include "basic_player.h"
 #include "utils_for_main.h"
 
@@ -44,7 +43,7 @@ int main(int argc, char** argv)
 
     if (opts.use_player)
     {
-        std::shared_ptr<file_parser2> parser = opts.parser;
+        std::shared_ptr<file_parser> parser = opts.parser;
 
         if (parser.get() != nullptr)
             play_games(*parser, opts.play_log_name);
@@ -83,7 +82,7 @@ int main(int argc, char** argv)
     if (opts.parser)
     {
         bool first_case = true;
-        std::shared_ptr<file_parser2> parser = opts.parser;
+        std::shared_ptr<file_parser> parser = opts.parser;
 
         while (parser->parse_chunk())
         {

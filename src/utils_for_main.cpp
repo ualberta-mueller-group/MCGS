@@ -85,7 +85,7 @@ void run_test_from_main(shared_ptr<i_test_case> test_case,
 }
 
 
-void print_winning_moves_by_chunk(shared_ptr<file_parser2> parser)
+void print_winning_moves_by_chunk(shared_ptr<file_parser> parser)
 {
     assert(parser.get() != nullptr);
 

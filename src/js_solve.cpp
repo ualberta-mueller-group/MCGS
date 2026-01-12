@@ -6,7 +6,7 @@
 
 #include "csv_row.h"
 #include "emscripten.h" // IWYU pragma: keep
-#include "file_parser2.h"
+#include "file_parser.h"
 #include "test_case.h"
 
 using namespace std;
@@ -14,7 +14,7 @@ using namespace std;
 // TODO refactor so main.cpp and this function use the same logic...
 js_struct js_solve(const std::string& game_string)
 {
-    file_parser2* fp = file_parser2::from_string(game_string);
+    file_parser* fp = file_parser::from_string(game_string);
 
     stringstream stream;
 

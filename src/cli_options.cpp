@@ -9,7 +9,7 @@
 #include <memory>
 #include <exception>
 #include <cstdint>
-#include "file_parser2.h"
+#include "file_parser.h"
 #include "global_options.h"
 #include "init_database.h"
 #include "string_to_int.h"
@@ -270,7 +270,7 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             {
                 // cout << "Reading game input from stdin" << endl;
                 opts.parser =
-                    shared_ptr<file_parser2>(file_parser2::from_stdin());
+                    shared_ptr<file_parser>(file_parser::from_stdin());
             }
 
             continue;
@@ -291,7 +291,7 @@ cli_options parse_args(int argc, const char** argv, bool silent)
                 // cout << "Reading game input from file: \"" << arg_next <<
                 // "\"" << endl;
                 opts.parser =
-                    shared_ptr<file_parser2>(file_parser2::from_file(arg_next));
+                    shared_ptr<file_parser>(file_parser::from_file(arg_next));
             }
 
             continue;
@@ -354,13 +354,13 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
         if (arg == "--parser-debug")
         {
-            file_parser2::debug_printing = true;
+            file_parser::debug_printing = true;
             continue;
         }
 
         if (arg == "--assert-correct-version")
         {
-            file_parser2::override_assert_correct_version = true;
+            file_parser::override_assert_correct_version = true;
             continue;
         }
 
@@ -685,7 +685,7 @@ cli_options parse_args(int argc, const char** argv, bool silent)
                 const string& input = args[arg_idx];
 
                 opts.parser =
-                    shared_ptr<file_parser2>(file_parser2::from_string(input));
+                    shared_ptr<file_parser>(file_parser::from_string(input));
             }
 
             break;

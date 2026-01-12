@@ -15,7 +15,7 @@
 #include "cgt_basics.h"
 #include "csv_row.h"
 #include "solver_stats.h"
-#include "file_parser2.h"
+#include "file_parser.h"
 #include "global_options.h"
 #include "search_utils.h"
 #include "test_case.h"
@@ -77,8 +77,8 @@ void run_autotests(const string& root_test_directory, const string& outfile_name
             filesystem::relative(file_path, filesystem::path(root_test_directory));
 
         // Open test file
-        unique_ptr<file_parser2> parser =
-            unique_ptr<file_parser2>(file_parser2::from_file(file_name));
+        unique_ptr<file_parser> parser =
+            unique_ptr<file_parser>(file_parser::from_file(file_name));
 
 
         int file_test_idx = 0;

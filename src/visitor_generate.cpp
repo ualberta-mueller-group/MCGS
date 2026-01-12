@@ -6,7 +6,7 @@
 */
 
 #include "visitor_generate.h"
-#include "file_parser2.h"
+#include "file_parser.h"
 #include "file_parser_ast.h"
 #include "test_case.h"
 
@@ -78,7 +78,7 @@ void visitor_generate::visit(const fp_expr_game& expr)
 
     _ctx->input_hash.update(title_token + game_token);
 
-    game* g = file_parser2::construct_game(title_token, expr.get_line_no(),
+    game* g = file_parser::construct_game(title_token, expr.get_line_no(),
                                            game_token);
 
     _ctx->games.emplace_back(g);
