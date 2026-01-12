@@ -5,15 +5,8 @@
 #include "timeout_token.h"
 #include "utilities.h"
 
-#include <chrono>
 #include <cstddef>
 #include <cassert>
-#include <ostream>
-
-#ifndef __EMSCRIPTEN__
-#include <thread>
-#include <future>
-#endif
 
 #include "alternating_move_game.h"
 #include "cgt_nimber.h"
@@ -41,13 +34,13 @@ int search_impartial(impartial_game* ig, const timeout_token& timeout_tok)
     else
     {
         lemoine_viennot::lv_bool_tt& lv_tt = lv_tt_optional.value();
-        const int result = search_impartial_game(*ig, lv_tt, timeout_tok);
-        //stats::print_global_stats(std::cout);
+        const int result =
+            lemoine_viennot::search_impartial_game(*ig, lv_tt, timeout_tok);
+        // stats::print_global_stats(std::cout);
         return result;
     }
 }
 
-// Calling thread may assign "true" to over_time to stop search
 int search_impartial_sumgame_cancellable(const sumgame& s,
                                          const timeout_token& timeout_tok)
 {

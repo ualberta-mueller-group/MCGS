@@ -115,7 +115,6 @@ int search_with_tt(const impartial_game& g, int tt_size)
 }
 
 // Compute n such that g = *n. "Algorithm 3" in Lemoine and Viennot.
-// Calling thread may assign "true" to over_time to stop search
 int search_impartial_game(const impartial_game& g, lv_bool_tt& tt, const timeout_token& timeout_tok)
 {
     const int db_result = db_lookup(g);
