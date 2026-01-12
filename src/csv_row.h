@@ -8,6 +8,8 @@
 #include "test_case_enums.h"
 #include "game_case.h"
 
+#define CSV_MISSING_TEXT "N/A"
+
 /*
    Comments indicate where each field might be filled in
 */

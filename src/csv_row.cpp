@@ -9,7 +9,6 @@
 #include <cctype>
 #include <string>
 
-#define CSV_MISSING_TEXT "N/A"
 
 using namespace std;
 
