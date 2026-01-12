@@ -17,7 +17,7 @@
 
 #include "cgt_basics.h"
 #include "all_game_headers.h"
-#include "file_parser_new.h"
+#include "file_parser_ast.h"
 #include "fission.h"
 #include "game_case.h"
 #include "game_token_parsers.h"

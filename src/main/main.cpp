@@ -10,7 +10,7 @@
 #include "cli_options.h"
 #include "file_parser2.h"
 #include "autotests.h"
-#include "file_parser_new.h"
+#include "file_parser_ast.h"
 #include "get_winning_moves.h"
 #include "mcgs_init.h"
 #include "hashing.h"

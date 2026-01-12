@@ -17,7 +17,7 @@
 #include <cstdlib>
 
 
-#include "file_parser_new.h"
+#include "file_parser_ast.h"
 #include "istream_tokenizer.h"
 #include "game_token_parsers.h"
 #include "test_case.h"

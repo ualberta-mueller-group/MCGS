@@ -315,7 +315,3 @@ private:
     std::optional<fp_expr_title> _last_title;
 };
 
-
-
-//////////////////////////////////////////////////
-void test_file_parser_new_stuff();

@@ -7,7 +7,7 @@
 
 #include "visitor_generate.h"
 #include "file_parser2.h"
-#include "file_parser_new.h"
+#include "file_parser_ast.h"
 #include "test_case.h"
 
 using namespace std;

@@ -1,4 +1,4 @@
-#include "file_parser_new.h"
+#include "file_parser_ast.h"
 
 #include <cctype>
 #include <iostream>
@@ -325,24 +325,5 @@ const std::optional<std::string>& fp_chunk::get_version_string() const
 const std::optional<fp_expr_title>& fp_chunk::get_implicit_title() const
 {
     return _implicit_title;
-}
-
-//////////////////////////////////////////////////
-void test_file_parser_new_stuff()
-{
-    fp_chunk chunk;
-
-    chunk.add_content_expr(new fp_expr_title(1, "clobber_1xn"));
-    chunk.add_content_expr(new fp_expr_game(2, "XO", false));
-    chunk.add_content_expr(new fp_expr_game(3, "XO XOXX", true));
-    chunk.add_content_expr(new fp_expr_comment(4, "aodisjfdbfiofj"));
-
-    chunk.add_command_expr(
-        new fp_expr_command_solve_bw(5, BLACK, MINIMAX_OUTCOME_WIN));
-    chunk.add_command_expr(
-        new fp_expr_command_solve_bw(5, WHITE, MINIMAX_OUTCOME_NONE));
-
-    fp_visitor_print visitor;
-    visitor.visit_chunk(chunk);
 }
 

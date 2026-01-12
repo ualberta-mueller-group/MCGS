@@ -1,7 +1,7 @@
 #include "test_case.h"
 #include "cgt_basics.h"
 #include "csv_row.h"
-#include "file_parser_new.h"
+#include "file_parser_ast.h"
 #include "game.h"
 #include "get_winning_moves.h"
 #include "global_options.h"

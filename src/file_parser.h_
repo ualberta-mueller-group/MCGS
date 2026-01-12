@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "file_parser_new.h"
+#include "file_parser_ast.h"
 #include "istream_tokenizer.h"
 #include "game_token_parsers.h"
 #include <memory>

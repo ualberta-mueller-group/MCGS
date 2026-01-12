@@ -3,7 +3,7 @@
 */
 #pragma once
 
-#include "file_parser_new.h"
+#include "file_parser_ast.h"
 #include "game.h"
 #include "simple_text_hash.h"
 #include "test_case.h"
