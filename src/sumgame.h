@@ -294,9 +294,7 @@ inline void sumgame::reset_ttable()
         return;
     }
 
-    const size_t index_bits = _tt->n_index_bits();
-    const size_t entry_bools = _tt->n_entry_bools();
-    _tt.reset(new ttable_sumgame(index_bits, entry_bools));
+    _tt->clear();
 }
 
 //---------------------------------------------------------------------------
