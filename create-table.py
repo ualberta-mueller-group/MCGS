@@ -618,8 +618,13 @@ else:
     add_output_col("games", "Games")
     add_output_col("player", "Player")
     add_output_col("expected_result", "Expected Result")
+
     add_output_col("result", "Result")
+    add_output_col("old_result", "Old Result")
+
     add_output_col("time", "Time (ms)")
+    add_output_col("old_time", "Old Time (ms)")
+    add_output_col("faster", "Time Improvement") #
 
     add_output_col("tt_hits", "TT Hits")
     add_output_col("tt_misses", "TT Misses")
@@ -630,21 +635,21 @@ else:
     add_output_col("db_hit_rate", "DB Hit Rate")
 
     add_output_col("node_count", "Node Count")
+    add_output_col("old_node_count", "Old Node Count")
+    add_output_col("node_faster", "Node Count Improvement") #
+
     add_output_col("unique_node_count", "Unique Node Count")
+    add_output_col("old_unique_node_count", "Old Unique Node Count")
+
     add_output_col("max_depth", "Max Depth")
 
     add_output_col("initial_subgames", "Initial Subgames")
     add_output_col("max_subgames", "Max Subgames")
 
-    add_output_col("faster", "Time Improvement") #
-    add_output_col("node_faster", "Node Count Improvement") #
-    add_output_col("old_time", "Old Time (ms)")
-    add_output_col("old_node_count", "Old Node Count")
-    add_output_col("old_unique_node_count", "Old Unique Node Count")
     add_output_col("status", "Status")
-    add_output_col("regression", "Regression") #
     add_output_col("old_status", "Old Status")
-    add_output_col("old_result", "Old Result")
+
+    add_output_col("regression", "Regression") #
     add_output_col("comments", "Comments")
     add_output_col("command_type", "Type")
     add_output_col("hash", "Input hash")
