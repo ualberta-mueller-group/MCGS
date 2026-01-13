@@ -16,6 +16,21 @@ std::string command_type_to_string(command_type_enum command_type)
     THROW_ASSERT(false);
 }
 
+std::string minimax_outcome_to_string(minimax_outcome_enum minimax_outcome)
+{
+    switch (minimax_outcome)
+    {
+        case MINIMAX_OUTCOME_NONE:
+            return "None";
+        case MINIMAX_OUTCOME_WIN:
+            return "Win";
+        case MINIMAX_OUTCOME_LOSS:
+            return "Loss";
+    }
+
+    THROW_ASSERT(false);
+}
+
 std::string test_case_status_to_string(test_case_status_enum test_case_status)
 {
     switch (test_case_status)

@@ -6,9 +6,15 @@
 */
 
 #include "visitor_generate.h"
+#include "cgt_basics.h"
 #include "file_parser.h"
 #include "file_parser_ast.h"
+#include "search_utils.h"
 #include "test_case.h"
+#include "test_case_enums.h"
+#include "utilities.h"
+#include <cmath>
+#include <string>
 
 using namespace std;
 
@@ -117,6 +123,14 @@ void visitor_generate::visit(const fp_expr_command_solve_bw& expr)
 {
     assert(_ctx.has_value() && !_ctx->result_test_case.has_value());
 
+    {
+        simple_text_hash& input_hash = _ctx->input_hash;
+        input_hash.update(command_type_to_string(expr.get_command_type()));
+
+        input_hash.update(string(1, color_to_player_char(expr.get_player())));
+        input_hash.update(minimax_outcome_to_string(expr.get_expected_outcome()));
+    }
+
     _ctx->result_test_case =
         new test_case_solve_bw(expr, std::move(_ctx->games));
 }
@@ -125,6 +139,16 @@ void visitor_generate::visit(const fp_expr_command_solve_n& expr)
 {
     assert(_ctx.has_value() && !_ctx->result_test_case.has_value());
 
+    {
+        simple_text_hash& input_hash = _ctx->input_hash;
+        input_hash.update(command_type_to_string(expr.get_command_type()));
+
+        const optional<int>& exp_value_opt = expr.get_expected_nim_value();
+        const int exp_value =
+            exp_value_opt.has_value() ? exp_value_opt.value() : -1;
+        input_hash.update(to_string(exp_value));
+    }
+
     _ctx->result_test_case =
         new test_case_solve_n(expr, std::move(_ctx->games));
 }
@@ -132,6 +156,24 @@ void visitor_generate::visit(const fp_expr_command_solve_n& expr)
 void visitor_generate::visit(const fp_expr_command_winning_moves& expr)
 {
     assert(_ctx.has_value() && !_ctx->result_test_case.has_value());
+
+    {
+        simple_text_hash& input_hash = _ctx->input_hash;
+        input_hash.update(command_type_to_string(expr.get_command_type()));
+        input_hash.update(player_name_bw_imp(expr.get_player()));
+
+        const optional<vector<string>>& exp_moves_opt =
+            expr.get_expected_winning_moves();
+
+        if (exp_moves_opt.has_value())
+        {
+            const vector<string>& exp_moves = exp_moves_opt.value();
+            input_hash.update(exp_moves.empty() ? "NO MOVES"
+                                                : string_join(exp_moves, " "));
+        }
+        else
+            input_hash.update("???");
+    }
 
     _ctx->result_test_case =
         new test_case_winning_moves(expr, std::move(_ctx->games));

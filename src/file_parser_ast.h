@@ -154,12 +154,6 @@ private:
 };
 
 //////////////////////////////////////// class fp_expr_command_solve_bw
-enum minimax_outcome_enum
-{
-    MINIMAX_OUTCOME_NONE = 0,
-    MINIMAX_OUTCOME_WIN,
-    MINIMAX_OUTCOME_LOSS,
-};
 
 class fp_expr_command_solve_bw: public i_fp_expr_command
 {
