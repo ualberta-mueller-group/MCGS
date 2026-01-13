@@ -76,6 +76,12 @@ unordered_map<game_type_t, string> type_mapper::get_disk_type_to_name_map()
     return _id_to_name_map;
 }
 
+bool type_mapper::operator==(const type_mapper& other) const
+{
+    return                                            //
+        (_name_to_id_map == other._name_to_id_map) && //
+        (_id_to_name_map == other._id_to_name_map);   //
+}
 
 //////////////////////////////////////////////////
 ostream& operator<<(ostream& os, const type_mapper& mapper)

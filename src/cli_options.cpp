@@ -212,6 +212,9 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
     print_flag(global::print_db_info.flag(),
                "Print verbose database info to stdout. Includes metadata of "
                "loaded database file");
+
+    print_flag("--db-file-compare <file name 1> <file name 2>",
+               "Compare contents of two database files");
 }
 
 } // namespace
@@ -381,6 +384,26 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             global::print_db_info.set(true);
             continue;
         }
+
+        if (arg == "--db-file-compare")
+        {
+            const int arg_idx_file_2 = arg_idx + 2;
+            arg_idx += 2;
+
+            if (                             //
+                arg_next.empty() ||          //
+                arg_idx_file_2 >= arg_n ||   //
+                args[arg_idx_file_2].empty() //
+                )                            //
+                throw cli_options_exception(
+                    "Error: --db-file-compare given but file name missing");
+
+            opts.db_file_name_compare_1 = arg_next;
+            opts.db_file_name_compare_2 = args[arg_idx_file_2];
+
+            continue;
+        }
+
 
         if (arg == "--gen-experiments")
         {

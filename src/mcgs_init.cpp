@@ -3,6 +3,7 @@
 #include <cassert>
 #include "cgt_basics.h"
 #include "cli_options.h"
+#include "compare_databases.h"
 #include "global_options.h"
 #include "init_database.h"
 #include "init_grid_hash_mask.h"
@@ -15,6 +16,7 @@
 #include "init_sumgame.h"
 #include "throw_assert.h"
 #include "type_table.h"
+#include "utilities.h"
 
 namespace {
 bool already_initialized = false;
@@ -48,6 +50,14 @@ void mcgs_init_2(const cli_options& opts)
     mcgs_init::init_sumgame(global::tt_sumgame_idx_bits());
     mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits());
     mcgs_init::init_lemoine_viennot_hashtable();
+
+    // Handle --db-file-compare
+    THROW_ASSERT(logical_iff(opts.db_file_name_compare_1.has_value(),
+                             opts.db_file_name_compare_2.has_value()));
+
+    if (opts.db_file_name_compare_1.has_value())
+        compare_databases(opts.db_file_name_compare_1.value(),
+                          opts.db_file_name_compare_2.value());
 
     const init_database_enum init_type =
         global::use_db.get() ? opts.init_database_type : INIT_DATABASE_NONE;

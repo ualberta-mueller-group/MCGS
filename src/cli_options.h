@@ -41,6 +41,8 @@ struct cli_options
     init_database_enum init_database_type;
     std::string db_config_string;
 
+    std::optional<std::string> db_file_name_compare_1;
+    std::optional<std::string> db_file_name_compare_2;
 
     static constexpr const char* DEFAULT_RELATIVE_DB_FILE = "database.bin";
     static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";

@@ -29,9 +29,21 @@
 struct db_entry_partisan
 {
     db_entry_partisan() : outcome(outcome_class::U) {}
+    bool operator==(const db_entry_partisan& other) const;
+    bool operator!=(const db_entry_partisan& other) const;
 
     outcome_class outcome;
 };
+
+inline bool db_entry_partisan::operator==(const db_entry_partisan& other) const
+{
+    return outcome == other.outcome;
+}
+
+inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
+{
+    return !(*this == other);
+}
 
 //////////////////////////////////////// serializer<db_entry_partisan>
 template <>
@@ -54,9 +66,22 @@ struct serializer<db_entry_partisan>
 struct db_entry_impartial
 {
     db_entry_impartial() : nim_value(-1) {}
+    bool operator==(const db_entry_impartial& other) const;
+    bool operator!=(const db_entry_impartial& other) const;
 
     int nim_value;
 };
+
+inline bool db_entry_impartial::operator==(
+    const db_entry_impartial& other) const
+{
+    return nim_value == other.nim_value;
+}
+
+inline bool db_entry_impartial::operator!=(const db_entry_impartial& other) const
+{
+    return !(*this == other);
+}
 
 //////////////////////////////////////// serializer<db_entry_impartial>
 template <>
@@ -98,6 +123,8 @@ public:
 
     void clear();
     bool empty() const;
+
+    bool is_equal(const database& other) const;
 
     // silent=true silences printing to stdout
     void generate_entries_partisan(i_db_game_generator& gen, bool silent = false);

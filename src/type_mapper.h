@@ -30,6 +30,9 @@ public:
     std::unordered_map<game_type_t, std::string> get_disk_type_to_name_map()
         const;
 
+    bool operator==(const type_mapper& other) const;
+    bool operator!=(const type_mapper& other) const;
+
 private:
     std::unordered_map<std::string, game_type_t> _name_to_id_map;
     std::unordered_map<game_type_t, std::string> _id_to_name_map;
@@ -87,6 +90,11 @@ inline game_type_t type_mapper::translate_type(game_type_t runtime_type) const
     if (!_type_is_valid(runtime_type))
         return 0;
     return runtime_type;
+}
+
+inline bool type_mapper::operator!=(const type_mapper& other) const
+{
+    return !(*this == other);
 }
 
 inline bool type_mapper::_type_is_valid(game_type_t runtime_type) const
