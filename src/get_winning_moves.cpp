@@ -57,13 +57,16 @@ optional<bool> is_winning_move(sumgame& sum, const sumgame_move& sm, bw player,
     return is_winning;
 }
 
-string sum_move_string(const sumgame& sum, const sumgame_move& sm, ebw player)
+string sum_move_string(const sumgame& sum, const sumgame_move& sm, ebw player,
+                       bool with_subgame_idx)
 {
     const game* g = sum.subgame_const(sm.subgame_idx);
 
     stringstream stream;
 
-    stream << sm.subgame_idx << ':';
+    if (with_subgame_idx)
+        stream << sm.subgame_idx << ':';
+
     g->print_move(stream, sm.m, player);
 
     const string str = stream.str();
@@ -87,6 +90,7 @@ optional<vector<string>> get_winning_moves_impl(
 
     const bool use_impartial = (player == EMPTY);
     const bw use_player = use_impartial ? BLACK : player;
+    const bool with_subgame_idx = sum.num_active_games() > 1;
 
     assert_restore_sumgame ars1(sum);
     const bw restore_player = sum.to_play();
@@ -119,7 +123,9 @@ optional<vector<string>> get_winning_moves_impl(
         if (is_winning)
         {
             assert_restore_sumgame ars3(sum);
-            const string winning_move = sum_move_string(sum, sm, use_player);
+            const string winning_move =
+                sum_move_string(sum, sm, use_player, with_subgame_idx);
+
             winning_moves.value().emplace_back(winning_move);
         }
 
