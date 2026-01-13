@@ -41,16 +41,16 @@ function divMod(top, bottom) {
 function percentString(val1, val2) {
     const larger = Math.max(val1, val2);
     const smaller = Math.min(val1, val2);
-    return nDigitMantissaString(100.0 * (larger / smaller), 2) + "%";
+    return (100.0 * (larger / smaller)).toFixed(2) + "%";
 }
 
 function multiplierString(val1, val2) {
     const larger = Math.max(val1, val2);
     const smaller = Math.min(val1, val2);
-    return nDigitMantissaString(larger / smaller, 2) + "x";
+    return (larger / smaller).toFixed(2) + "x";
 }
 
-function nDigitMantissaString(num, nDigits) {
+function toFixedNoTrailing0(num, nDigits) {
     num = num.toFixed(nDigits);
 
     if (nDigits === 0)
