@@ -584,6 +584,7 @@ if comparison_file_name is None:
     add_output_col("file", "File")
     add_output_col("case", "Case")
     add_output_col("games", "Games")
+    add_output_col("command_type", "Type")
     add_output_col("player", "Player")
     add_output_col("expected_result", "Expected Result")
     add_output_col("result", "Result")
@@ -606,7 +607,6 @@ if comparison_file_name is None:
 
     add_output_col("status", "Status")
     add_output_col("comments", "Comments")
-    add_output_col("command_type", "Type")
 
     add_row_function(row_populate_single_mode)
     add_row_function(row_style)
@@ -616,6 +616,7 @@ else:
     add_output_col("file", "File")
     add_output_col("case", "Case")
     add_output_col("games", "Games")
+    add_output_col("command_type", "Type")
     add_output_col("player", "Player")
     add_output_col("expected_result", "Expected Result")
 
@@ -651,7 +652,6 @@ else:
 
     add_output_col("regression", "Regression") #
     add_output_col("comments", "Comments")
-    add_output_col("command_type", "Type")
     add_output_col("hash", "Input hash")
 
     add_row_function(row_populate_double_mode)
