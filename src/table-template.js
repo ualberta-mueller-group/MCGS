@@ -44,6 +44,12 @@ function percentString(val1, val2) {
     return nDigitMantissaString(100.0 * (larger / smaller), 2) + "%";
 }
 
+function multiplierString(val1, val2) {
+    const larger = Math.max(val1, val2);
+    const smaller = Math.min(val1, val2);
+    return nDigitMantissaString(larger / smaller, 2) + "x";
+}
+
 function nDigitMantissaString(num, nDigits) {
     num = num.toFixed(nDigits);
 
@@ -242,6 +248,11 @@ function setAggregationText(tableRows) {
         return isBetter ? "AS FAST" : "AS SLOW";
     };
 
+    const getAsFewPhrase = (isBetter) => {
+        return isBetter ? "AS FEW" : "AS MANY";
+    };
+
+
     const lines = [];
 
     const rows_total = rows_shown + rows_hidden;
@@ -255,7 +266,7 @@ function setAggregationText(tableRows) {
     // Total time
     lines.push([
         "⏳",
-        `Total time: ${fmtMs(time_total)} (${fmt0(time_total)} ms)`
+        `Total time: ${fmtMs(time_total)} ＝ ${fmt0(time_total)} ms`
     ]);
 
     // Total nodes
@@ -280,11 +291,12 @@ function setAggregationText(tableRows) {
         const fasterPhrase = getFasterPhrase(isBetter);
         const asFastPhrase = getAsFastPhrase(isBetter);
 
-        const percent = percentString(time_total, old_time_total);
+        const percent = multiplierString(time_total, old_time_total);
 
         const clause1 = `${percent} ${asFastPhrase}`;
-        const clause2 = `${fasterPhrase}: ${fmtMs(timeDiff)} ↔ ${fmt0(timeDiff)} ms`;
-        const clause3 = `${fmt0(old_time_total)} ms → ${fmt0(time_total)} ms`;
+        const clause2 = `${fasterPhrase}: ${fmtMs(timeDiff)} ＝ ${fmt0(timeDiff)} ms`;
+        //const clause3 = `${fmt0(old_time_total)} ms → ${fmt0(time_total)} ms`;
+        const clause3 = `${fmt0(time_total)} ms ← ${fmt0(old_time_total)} ms`;
 
         lines.push([
             "🔎⏳",
@@ -299,13 +311,15 @@ function setAggregationText(tableRows) {
         nodeDiff = Math.abs(nodeDiff);
 
         const fasterPhrase = getFasterPhrase(isBetter);
-        const asFastPhrase = getAsFastPhrase(isBetter);
+        const asFewPhrase = getAsFewPhrase(isBetter);
 
-        const percent = percentString(node_count_total, old_node_count_total);
+        const percent = multiplierString(node_count_total, old_node_count_total);
 
-        const clause1 = `${percent} ${asFastPhrase}`;
-        const clause2 = `${fasterPhrase} ${fmt0(nodeDiff)} nodes`;
-        const clause3 = `${fmt0(old_node_count_total)} nodes → ${fmt0(node_count_total)} nodes`;
+        const clause1 = `${percent} ${asFewPhrase}`;
+        const clause2 = `${fasterPhrase}: ${fmt0(nodeDiff)} nodes`;
+        //const clause3 = `${fmt0(old_node_count_total)} nodes → ${fmt0(node_count_total)} nodes`;
+        const clause3 = `${fmt0(node_count_total)} nodes ← ${fmt0(old_node_count_total)} nodes`;
+
 
         lines.push([
             "🔎🧮",
@@ -326,11 +340,12 @@ function setAggregationText(tableRows) {
         const fasterPhrase = getFasterPhrase(isBetter);
         const asFastPhrase = getAsFastPhrase(isBetter);
 
-        const percent = percentString(new_rate, old_rate);
+        const percent = multiplierString(new_rate, old_rate);
 
         const clause1 = `${percent} ${asFastPhrase}`;
         const clause2 = `${fasterPhrase}: ${fmt0(rateDiff)} n/s`;
-        const clause3 = `${fmt0(old_rate)} n/s → ${fmt0(new_rate)} n/s`;
+        //const clause3 = `${fmt0(old_rate)} n/s → ${fmt0(new_rate)} n/s`;
+        const clause3 = `${fmt0(new_rate)} n/s ← ${fmt0(old_rate)} n/s`;
 
         lines.push([
             "🔎🚀",

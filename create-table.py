@@ -442,7 +442,10 @@ def get_faster(new_time, old_time, as_node_count):
 
     text = "{:.2f}x ".format(frac)
     better = new_time < old_time
-    text += "AS FAST" if better else "AS SLOW"
+    if as_node_count:
+        text += "AS FEW" if better else "AS MANY"
+    else:
+        text += "AS FAST" if better else "AS SLOW"
 
     css = None
 
