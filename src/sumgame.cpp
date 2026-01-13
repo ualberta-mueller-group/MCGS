@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <numeric>
 #include <utility>
 #include <optional>
 #include <ctime>
@@ -358,20 +359,13 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
         print(cout);
     }
 
-    //cout << "vvvvvvvvvvvvvvvvvvvv\n";
-    //cout << *this;
-    simplify_impartial();
-    //cout << *this;
-    //cout << "^^^^^^^^^^^^^^^^^^^^\n";
-    //cout << endl;
 
     {
+        simplify_impartial();
         std::optional<solve_result> result = simplify_db();
 
         if (result.has_value())
-
-            if (result.has_value())
-                return result;
+            return result.value();
     }
 
     simplify_basic();
@@ -795,13 +789,15 @@ ebw analyze_outcome_count_vector(const std::vector<unsigned int>& counts,
 void sumgame::simplify_impartial()
 {
     _push_undo_code(SUMGAME_UNDO_SIMPLIFY_IMPARTIAL);
+
     if (!global::use_db())
         return;
 
+    database& db = get_global_database();
+
+    // Push record
     _change_record_stack.emplace_back();
     sumgame_impl::change_record& cr = _change_record_stack.back();
-   
-    database& db = get_global_database();
 
     int n_known_values = 0; // nimbers and impartial_games
     int n_known_non_nimbers = 0; // known values which are not nimbers
@@ -871,6 +867,7 @@ void sumgame::simplify_impartial()
 void sumgame::undo_simplify_impartial()
 {
     _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_IMPARTIAL);
+
     if (!global::use_db())
         return;
 
@@ -910,29 +907,59 @@ std::optional<solve_result> sumgame::simplify_db()
     std::vector<unsigned int> counts = get_oc_indexable_vector();
 
     // Search all active games
-    const int N = num_total_games();
-    for (int i = 0; i < N; i++)
+    const int N_SUBGAMES = num_total_games();
+    int n_active_games = 0;
+
+    for (int subgame_idx = 0; subgame_idx < N_SUBGAMES; subgame_idx++)
     {
-        game* g = subgame(i);
+        game* g = subgame(subgame_idx);
         if (!g->is_active())
             continue;
 
+        n_active_games++;
+
+        // Get g's outcome class
         outcome_class oc = outcome_class::U;
 
-        std::optional<db_entry_partisan> entry = db.get_partisan(*g);
-        stats::report_db_access(entry.has_value());
+        if (g->is_impartial())
+        {
+            /*
+               Because simplify_impartial() should be called prior to this
+               function, one of the following must hold:
+                   1. g is a nimber
+                   2. g is not a nimber, AND is not in the database
+            */
+            if (g->game_type() == game_type<nimber>())
+            {
+                assert(dynamic_cast<nimber*>(g) != nullptr);
+                nimber* g_nimber = static_cast<nimber*>(g);
 
-        if (entry.has_value())
-            oc = entry->outcome;
+                const int g_nim_value = g_nimber->value();
+                assert(g_nim_value >= 0);
+
+                oc = (g_nim_value == 0) ? outcome_class::P : outcome_class::N;
+            }
+        }
+        else
+        {
+            std::optional<db_entry_partisan> entry = db.get_partisan(*g);
+            stats::report_db_access(entry.has_value());
+
+            if (entry.has_value())
+                oc = entry->outcome;
+        }
 
         counts[oc]++;
 
         if (oc == outcome_class::P)
         {
             cr.deactivated_games.push_back(g);
+            assert(g->is_active());
             g->set_active(false);
         }
     }
+
+    assert(std::accumulate(counts.begin(), counts.end(), 0) == n_active_games);
 
     const ebw winner = analyze_outcome_count_vector(counts, to_play());
 
