@@ -1,5 +1,7 @@
 #include "stopwatch.h"
 #include <cassert>
+#include <chrono>
+#include <ratio>
 
 void stopwatch::reset()
 {

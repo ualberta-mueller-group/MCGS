@@ -2,7 +2,11 @@
 
 #include <cassert>
 #include <unordered_set>
+#include <iostream>
+#include <optional>
+#include <vector>
 
+#include "cgt_basics.h"
 #include "global_options.h"
 #include "hashing.h"
 #include "sumgame.h"

@@ -1,8 +1,6 @@
 #include "autotests.h"
 
 #include <string>
-#include <sstream>
-#include <cstdio>
 #include <ios>
 #include <iostream>
 #include <filesystem>
@@ -10,18 +8,12 @@
 #include <vector>
 #include <cassert>
 #include <memory>
-#include <algorithm>
 
-#include "cgt_basics.h"
 #include "csv_row.h"
-#include "solver_stats.h"
 #include "file_parser.h"
 #include "global_options.h"
-#include "search_utils.h"
 #include "test_case.h"
 #include "throw_assert.h"
-#include "utilities.h"
-#include "sumgame.h"
 #include "hashing.h"
 #include "game.h"
 #include "file_iterator.h"

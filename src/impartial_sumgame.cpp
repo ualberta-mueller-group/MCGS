@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <cassert>
+#include <iostream>
 
 #include "alternating_move_game.h"
 #include "cgt_nimber.h"

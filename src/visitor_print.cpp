@@ -4,8 +4,13 @@
 #include <string>
 #include <optional>
 #include <cstddef>
+#include <vector>
 
+#include "cgt_basics.h"
 #include "search_utils.h"
+#include "file_parser_ast.h"
+#include "test_case_enums.h"
+
 
 //////////////////////////////////////// fp_visitor_print methods
 fp_visitor_print::fp_visitor_print()

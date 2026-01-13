@@ -3,24 +3,19 @@
 //---------------------------------------------------------------------------
 
 #include <iostream>
-#include <sstream>
 #include <string>
+#include <memory>
 
 //#include "basic_player.h"
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
-#include "file_parser_ast.h"
-#include "get_winning_moves.h"
+#include "test_case.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
-#include "search_utils.h"
 #include "clobber.h"
 
-#include "sumgame.h"
-#include "istream_tokenizer.h"
-#include "throw_assert.h"
 #include "gen_experiments.h"
 //#include "winning_moves.h"
 #include "basic_player.h"

@@ -3,11 +3,14 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "csv_row.h"
 #include "emscripten.h" // IWYU pragma: keep
 #include "file_parser.h"
 #include "test_case.h"
+#include "game.h"
+#include "utilities.h"
 
 using namespace std;
 

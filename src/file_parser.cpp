@@ -1,7 +1,7 @@
 #include "file_parser.h"
 
-#include <algorithm>
 #include <cstdlib>
+#include <exception>
 #include <functional>
 #include <iostream>
 #include <cassert>
@@ -12,23 +12,27 @@
 #include <memory>
 #include <vector>
 #include <fstream>
+#include <optional>
 #include <utility>
 #include <ios>
 
 #include "cgt_basics.h"
+#include "test_case_enums.h"
 #include "all_game_headers.h"
 #include "file_parser_ast.h"
 #include "fission.h"
 #include "game_token_parsers.h"
-#include "get_winning_moves.h"
 #include "parsing_utilities.h"
 #include "string_to_int.h"
 #include "toppling_dominoes.h"
 #include "utilities.h"
+#include "test_case.h"
 #include "version_info.h"
 
 #include "visitor_generate.h"
 #include "visitor_print.h"
+#include "throw_assert.h"
+
 
 /*
     NOTE: here we should usually throw instead of using assert() for many

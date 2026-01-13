@@ -1,4 +1,7 @@
 #include "test_case_enums.h"
+
+#include <optional>
+
 #include "throw_assert.h"
 
 std::string command_type_to_string(command_type_enum command_type)

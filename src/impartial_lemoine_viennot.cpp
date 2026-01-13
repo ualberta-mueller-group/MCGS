@@ -4,6 +4,8 @@
 #include "impartial_lemoine_viennot.h"
 
 #include <algorithm>
+#include <memory>
+#include <cassert>
 #include <optional>
 #include <vector>
 #include "cgt_nimber.h"

@@ -14,6 +14,8 @@
 #include "game.h"
 #include "impartial_sumgame.h"
 #include "sumgame.h"
+#include "timeout_token.h"
+#include "throw_assert.h"
 #include "utilities.h"
 
 using namespace std;

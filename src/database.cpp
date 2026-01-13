@@ -18,6 +18,7 @@
 
 #include "database.h"
 #include "impartial_sumgame.h"
+#include "impartial_game.h"
 #include "sumgame.h"
 #include "iobuffer.h"
 #include "serializer.h"

@@ -6,15 +6,23 @@
 */
 
 #include "visitor_generate.h"
+
+#include <string>
+#include <vector>
+#include <cassert>
+#include <utility>
+#include <optional>
+
 #include "cgt_basics.h"
 #include "file_parser.h"
+#include "game.h"
+#include "csv_row.h"
+#include "throw_assert.h"
 #include "file_parser_ast.h"
 #include "search_utils.h"
 #include "test_case.h"
 #include "test_case_enums.h"
 #include "utilities.h"
-#include <cmath>
-#include <string>
 
 using namespace std;
 

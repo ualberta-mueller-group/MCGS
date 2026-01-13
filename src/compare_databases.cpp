@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include "database.h"
+#include "throw_assert.h"
 
 using namespace std;
 

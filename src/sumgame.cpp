@@ -17,9 +17,9 @@
 #include "throw_assert.h"
 #include "cgt_up_star.h"
 #include "alternating_move_game.h"
+#include "timeout_token.h"
 
 #include <algorithm>
-#include <chrono>
 #include <numeric>
 #include <utility>
 #include <optional>

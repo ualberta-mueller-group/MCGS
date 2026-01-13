@@ -4,13 +4,13 @@
 #include <string>
 #include <cassert>
 #include <iostream>
+#include <utility>
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
 #include "strip.h"
 #include "throw_assert.h"
-#include "utilities.h"
 
 using namespace std;
 

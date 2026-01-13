@@ -1,13 +1,18 @@
 #include "csv_row.h"
 #include "cgt_basics.h"
 #include "global_options.h"
-#include "parsing_utilities.h"
-#include "search_utils.h"
 #include "solver_stats.h"
 #include "test_case_enums.h"
 #include "utilities.h"
+#include "game.h"
 #include <cctype>
+#include <sstream>
 #include <string>
+#include <vector>
+#include <optional>
+#include <cstddef>
+#include <cassert>
+#include <iostream>
 
 
 using namespace std;

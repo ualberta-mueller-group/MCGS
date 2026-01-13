@@ -1,4 +1,11 @@
 #include "test_case.h"
+
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <cassert>
+#include <cstddef>
+
 #include "cgt_basics.h"
 #include "csv_row.h"
 #include "file_parser_ast.h"
@@ -6,14 +13,12 @@
 #include "get_winning_moves.h"
 #include "global_options.h"
 #include "impartial_sumgame.h"
-#include "search_utils.h"
 #include "solver_stats.h"
 #include "stopwatch.h"
 #include "test_case_enums.h"
 #include "throw_assert.h"
 #include "timeout_token.h"
 #include "utilities.h"
-#include <string>
 
 using namespace std;
 

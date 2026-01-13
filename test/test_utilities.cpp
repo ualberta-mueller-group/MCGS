@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <optional>
 #include "game.h"
-#include "search_utils.h"
 #include "sumgame.h"
 #include "alternating_move_game.h"
 #include "test_case.h"
