@@ -7,6 +7,8 @@ Checks: "-*,
   bugprone-assert-side-effect,
   cppcoreguidelines-virtual-class-destructor,
   readability-duplicate-include,
+  bugprone-optional-value-conversion,
+  bugprone-unchecked-optional-access,
   misc-include-cleaner,"
 
 WarningsAsErrors: "-*,
@@ -18,6 +20,8 @@ WarningsAsErrors: "-*,
   bugprone-assert-side-effect,
   cppcoreguidelines-virtual-class-destructor,
   readability-duplicate-include,
+  bugprone-optional-value-conversion,
+  bugprone-unchecked-optional-access,
   misc-include-cleaner,"
 
 HeaderFilterRegex: .h
