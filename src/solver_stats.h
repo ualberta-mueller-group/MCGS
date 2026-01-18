@@ -1,6 +1,6 @@
 /*
     Solver statistics tracking.
-    
+
     Must call reset_stats() before every test case. This should be done
     in i_test_case::run()
 */
@@ -96,13 +96,15 @@ namespace stats {
 // NOLINTBEGIN(readability-identifier-naming)
 inline void __report_search_node_common(size_t subgame_count, uint64_t depth)
 {
-    __global_stats.search_node_count++;
+    solver_stats& stats = __global_stats;
 
-    __global_stats.max_search_depth =
-        std::max(__global_stats.max_search_depth, depth);
+    stats.search_node_count++;
 
-    __global_stats.max_subgame_count =
-        std::max(__global_stats.max_subgame_count, subgame_count);
+    stats.max_search_depth =
+        std::max(stats.max_search_depth, depth);
+
+    stats.max_subgame_count =
+        std::max(stats.max_subgame_count, subgame_count);
 }
 
 void __report_search_node_initial(size_t initial_subgame_count);
@@ -111,6 +113,7 @@ void __count_search_node_hash(const sumgame& sum, ebw to_play);
 void __count_search_node_hash(const std::vector<game*>& games, ebw to_play);
 void __count_search_node_hash(const game* g, ebw to_play);
 void __count_search_node_hash(hash_t node_hash);
+
 // NOLINTEND(readability-identifier-naming)
 
 inline const solver_stats& get_global_stats()
@@ -147,6 +150,7 @@ inline void report_db_access(bool hit)
 inline void report_search_node(const sumgame& sum, ebw to_play, uint64_t depth)
 {
     const int n_active = sum.num_active_games();
+
     __report_search_node_common(n_active, depth);
 
     if (global::count_sums())
@@ -157,7 +161,7 @@ inline void report_search_node(const sumgame& sum, ebw to_play, uint64_t depth)
 }
 
 inline void report_search_node(const std::vector<game*>& games, ebw to_play,
-                        uint64_t depth)
+                               uint64_t depth)
 {
     size_t n_active = 0;
     for (const game* g : games)

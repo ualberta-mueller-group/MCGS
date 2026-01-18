@@ -118,7 +118,7 @@ inline bool search_game_nimber(game *g, int nimber, lv_bool_tt& tt, const timeou
    is true, to produce a node_hash value to be passed to
    stats::report_search_node_verbose()
 */
-hash_t get_subgames_plus_nimber_hash_for_stats(const split_result& sr, int nimber)
+hash_t get_subgames_plus_nimber_hash_for_stats(const split_result& sr, int nim_value)
 {
     assert(sr);
     assert(global::count_sums());
@@ -126,7 +126,7 @@ hash_t get_subgames_plus_nimber_hash_for_stats(const split_result& sr, int nimbe
     global_hash& hash_helper = stats::get_global_hash_helper();
 
     const hash_t subgames_hash = hash_helper.get_global_hash_value(sr.value(), EMPTY);
-    const hash_t nimber_hash = nimber_hashcode::get(nimber);
+    const hash_t nimber_hash = nimber(nim_value).get_local_hash();
     return subgames_hash ^ nimber_hash;
 }
 

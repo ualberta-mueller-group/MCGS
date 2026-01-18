@@ -14,7 +14,6 @@
 // Global solver_stats object
 solver_stats stats::__global_stats;
 
-
 ////////////////////////////////////////////////// solver_stats methods
 void solver_stats::reset()
 {
@@ -28,9 +27,9 @@ void solver_stats::reset()
 
     // Nodes
     search_node_count = 0;
-    max_search_depth = 0;
     if (global::count_sums())
         search_node_hashes = std::unordered_set<hash_t>();
+    max_search_depth = 0;
 
     // Subgames
     max_subgame_count = 0;
@@ -48,13 +47,13 @@ void solver_stats::reset()
 #error Macro PRINT_FIELD_OPTIONAL already defined...
 #endif
 
-#define PRINT_FIELD(field) \
-    ostr << "\n" #field " " << (field); \
+#define PRINT_FIELD(field)                                                     \
+    ostr << "\n" #field " " << (field);                                        \
     static_assert(true)
 
-#define PRINT_FIELD_OPTIONAL(field, expr) \
-    if (field.has_value()) \
-        ostr << "\n" #expr " " << (expr); \
+#define PRINT_FIELD_OPTIONAL(field, expr)                                      \
+    if (field.has_value())                                                     \
+        ostr << "\n" #expr " " << (expr);                                      \
     static_assert(true)
 
 void solver_stats::print_search_statistics(std::ostream& ostr) const
@@ -76,15 +75,15 @@ void solver_stats::print_search_statistics(std::ostream& ostr) const
 
     ostr << std::endl;
 
-    //ostr << "\nSearch statistics:\nnode_count " << node_count
-    //     << "\ntt_hits " << tt_hits
-    //     << "\ntt_misses " << tt_misses
-    //     << "\ndb_hits " << db_hits
-    //     << "\ndb_misses " << db_misses
-    //     << "\nsearch_depth " << search_depth
-    //     << "\nn_subgames " << n_subgames
-    //     // << "\nsum_hashes " << sum_hashes.size() TODO if has_value()...
-    //     << std::endl;
+    // ostr << "\nSearch statistics:\nnode_count " << node_count
+    //      << "\ntt_hits " << tt_hits
+    //      << "\ntt_misses " << tt_misses
+    //      << "\ndb_hits " << db_hits
+    //      << "\ndb_misses " << db_misses
+    //      << "\nsearch_depth " << search_depth
+    //      << "\nn_subgames " << n_subgames
+    //      // << "\nsum_hashes " << sum_hashes.size() TODO if has_value()...
+    //      << std::endl;
 }
 
 #undef PRINT_FIELD
@@ -117,17 +116,17 @@ std::optional<global_hash> hash_helper;
 
 hash_t get_node_hash(const std::vector<game*>& games, ebw to_play)
 {
-assert(hash_helper.has_value());
-return hash_helper->get_global_hash_value(games, to_play);
+    assert(hash_helper.has_value());
+    return hash_helper->get_global_hash_value(games, to_play);
 }
 
 hash_t get_node_hash(const game* g, ebw to_play)
 {
-assert(hash_helper.has_value());
-return hash_helper->get_global_hash_value(g, to_play);
+    assert(hash_helper.has_value());
+    return hash_helper->get_global_hash_value(g, to_play);
 }
 
-} // namespace 
+} // namespace
 
 global_hash& get_global_hash_helper()
 {
@@ -186,7 +185,7 @@ void __count_search_node_hash(hash_t node_hash)
 namespace mcgs_init {
 void init_solver_stats()
 {
-assert(!stats::hash_helper.has_value());
-stats::hash_helper.emplace();
+    assert(!stats::hash_helper.has_value());
+    stats::hash_helper.emplace();
 }
 } // namespace mcgs_init

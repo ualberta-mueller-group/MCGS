@@ -366,6 +366,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 
     simplify_basic();
 
+
     /*      NOTE:
        This is sort of a nested optional. If sumgame's ttable is disabled (i.e.
        it uses 0 index bits), then tt_result doesn't hold a search_result.
