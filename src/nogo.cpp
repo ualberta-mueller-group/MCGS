@@ -367,6 +367,7 @@ void nogo::print_move(std::ostream& str, const move& m, ebw to_play) const
     assert(is_black_white(to_play));
     // (to)
     print_move2_as_coords(str, m, shape());
+    str << '_' << color_to_char(to_play);
 }
 
 //////////////////////////////////////// nogo_rule
