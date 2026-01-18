@@ -12,11 +12,14 @@
 #include <optional>
 #include <ostream>
 #include <unordered_set>
+#include <vector>
+#include <cassert>
 
 #include "global_options.h"
 #include "hashing.h"
 #include "sumgame.h"
 #include "utilities.h"
+#include "cgt_basics.h"
 
 constexpr uint64_t INITIAL_SEARCH_DEPTH = 0;
 

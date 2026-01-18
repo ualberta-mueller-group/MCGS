@@ -3,6 +3,10 @@
 */
 #pragma once
 
+#include <vector>
+#include <optional>
+#include <string>
+
 #include "file_parser_ast.h"
 #include "game.h"
 #include "simple_text_hash.h"

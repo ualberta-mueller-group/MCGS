@@ -7,6 +7,8 @@
 
 #include <set>
 #include <cassert>
+#include <cstdint>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"

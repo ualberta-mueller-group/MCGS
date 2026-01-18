@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <cstddef>
+#include <string>
 
 ////////////////////////////////////////////////// class istream_tokenizer
 class istream_tokenizer

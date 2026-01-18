@@ -6,7 +6,11 @@
 #include <exception> // IWYU pragma: keep
 
 #include <memory>
+#include <optional>
+
+#include "test_case_enums.h"
 #include "cgt_move.h"
+#include "csv_row.h"
 #include "game.h"
 #include "sumgame.h"
 #include "file_parser.h"

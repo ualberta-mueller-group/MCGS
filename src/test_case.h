@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <optional>
+#include <string>
 
 #include "game.h"
 #include "file_parser_ast.h"

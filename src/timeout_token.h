@@ -37,6 +37,7 @@
 #include <cassert>
 #include <atomic>
 #include <optional>
+#include <memory>
 
 #ifndef __EMSCRIPTEN__
 #include <thread>

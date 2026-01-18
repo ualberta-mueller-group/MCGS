@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <cstddef>
+#include <ostream>
 
 #include "test_case_enums.h"
 #include "game.h"

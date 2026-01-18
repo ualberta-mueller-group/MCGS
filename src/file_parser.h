@@ -6,17 +6,15 @@
     file_parser::_init_game_parsers() in the cpp file
 */
 #pragma once
-#include <sstream>
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <memory>
 #include <exception>
 #include <iostream>
-#include <cstddef>
-#include <cstdlib>
+#include <optional>
 
-
+#include "game.h"
 #include "file_parser_ast.h"
 #include "istream_tokenizer.h"
 #include "game_token_parsers.h"

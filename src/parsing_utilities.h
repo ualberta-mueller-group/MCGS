@@ -7,6 +7,7 @@
 #include <cstddef>
 #include "fraction.h"
 #include "search_utils.h"
+#include "cgt_basics.h"
 
 struct run_command_t
 {

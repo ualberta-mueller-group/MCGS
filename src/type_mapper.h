@@ -12,6 +12,9 @@
 #include <unordered_map>
 #include <vector>
 #include <iostream>
+#include <cstdint>
+#include <cassert>
+
 #include "serializer.h"
 #include "type_table.h"
 #include "iobuffer.h"

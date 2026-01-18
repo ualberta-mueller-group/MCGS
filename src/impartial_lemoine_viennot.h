@@ -4,7 +4,10 @@
 //---------------------------------------------------------------------------
 #pragma once
 
+#include <vector>
+
 #include "hashing.h"
+#include "game.h"
 #include "throw_assert.h"
 #include "transposition.h"
 #include "impartial_game.h"

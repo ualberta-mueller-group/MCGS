@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <vector>
 #include <cassert>
+#include <string>
 
 #include "utilities.h"
 

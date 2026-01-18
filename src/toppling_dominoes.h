@@ -10,6 +10,7 @@
 #include <string>
 #include <cassert>
 #include <ostream>
+#include <utility>
 
 #include "cgt_basics.h"
 
