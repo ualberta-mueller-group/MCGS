@@ -5,13 +5,14 @@
 #pragma once
 
 #include "hashing.h"
+#include "throw_assert.h"
 #include "transposition.h"
 #include "impartial_game.h"
 #include "timeout_token.h"
 // See development-notes.md, 
 // Impartial Games - the Lemoine - Viennot algorithms
 
-namespace lemoine_viennot{
+namespace lemoine_viennot {
 
 //---------------------------------------------------------------------------
 // Transposition table - boolean for impartial game + nimber
@@ -54,8 +55,7 @@ private:
 
 inline const hash_t& nimber_hashcode::get(int nimber)
 {
-    assert(nimber >= 0);
-    assert(nimber < _codes.size());
+    THROW_ASSERT(nimber >= 0 && nimber < _codes.size());
     return _codes[nimber];
 }
 

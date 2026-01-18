@@ -92,6 +92,7 @@ int search_impartial_sumgame(const sumgame& s)
     src.start_timeout(0);
     int result = search_impartial_sumgame_cancellable(s, timeout_tok);
 
+    assert(!timeout_tok.stop_requested());
     assert(result >= 0);
     return result;
 }
@@ -130,7 +131,7 @@ std::optional<int> search_impartial_sumgame_with_timeout(
 
 void init_impartial_sumgame_ttable(size_t idx_bits)
 {
-    assert(idx_bits > 0);
+    THROW_ASSERT(idx_bits > 0);
 
     if (global::impartial_algorithm_mex.get())
     {
@@ -150,7 +151,7 @@ void init_impartial_sumgame_ttable(size_t idx_bits)
 
 void clear_impartial_sumgame_ttable()
 {
-    assert(global::clear_tt());
+    THROW_ASSERT(global::clear_tt());
 
     assert(                                             //
         logical_iff(global::impartial_algorithm_mex(),  //

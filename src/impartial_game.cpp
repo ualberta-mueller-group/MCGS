@@ -75,7 +75,9 @@ int impartial_game::search_impartial_game(impartial_tt& tt) const
     src.start_timeout(0);
 
     const int result = search_impartial_game_cancellable(tt, timeout_tok);
+    assert(!timeout_tok.stop_requested());
     assert(result >= 0);
+
     return result;
 }
 
@@ -126,10 +128,11 @@ int impartial_game::search_impartial_game_cancellable(
             {
                 // No need for subgame->undo_normalize() -- it will be deleted
                 subgame->normalize();
-                int result = search(subgame, tt, timeout_tok);
 
+                int result = search(subgame, tt, timeout_tok);
                 if (timeout_tok.stop_requested())
                     break;
+
                 assert(result >= 0);
 
                 nimber::add_nimber(move_nimber, result);
