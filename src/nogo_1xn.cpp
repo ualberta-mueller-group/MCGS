@@ -252,6 +252,7 @@ void nogo_1xn::print_move(std::ostream& str, const move& m, ebw to_play) const
     assert(is_black_white(to_play));
     // to
     print_move1_as_points(str, m);
+    str << '_' << color_to_char(to_play);
 }
 
 std::ostream& operator<<(std::ostream& out, const nogo_1xn& g)

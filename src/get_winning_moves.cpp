@@ -32,6 +32,7 @@ optional<bool> is_winning_move(sumgame& sum, const sumgame_move& sm, bw player,
     const uint64_t next_depth = depth + 1;
     optional<bool> is_winning;
 
+    assert(sum.to_play() == player);
     sum.play_sum(sm, player);
 
     if (!use_impartial_search)
@@ -102,6 +103,8 @@ optional<vector<string>> get_winning_moves_impl(
 
     assert_restore_sumgame ars1(sum);
     const bw restore_player = sum.to_play();
+
+    sum.set_to_play(use_player);
 
     bool over_time = false;
 

@@ -1,0 +1,185 @@
+{version 1.4}
+
+/*_
+    Winning moves tests for all game types and their
+    impartial variants
+
+Basic CGT games:
+    cgt_dyadic_rational
+    cgt_integer_game
+    cgt_nimber
+    cgt_switch
+    cgt_up_star
+    kayles
+
+Strips:
+    clobber_1xn (OK)
+    elephants (OK)
+    gen_toads (OK)
+    nogo_1xn (OK)
+    toppling_dominoes:
+        (TODO impartial '#' appears twice, no obvious AND safe fix...)
+
+Grids:
+    amazons
+    clobber
+    domineering
+    fission
+    nogo
+    sheep
+
+        TEMPLATE:
+
+    [game_name]
+{winning moves B,
+winning moves W}
+
+    [game_name]
+{winning moves B,
+winning moves W}
+
+    [impartial game_name]
+{winning moves N,
+winning moves B,
+winning moves W}
+
+    [impartial game_name]
+{winning moves N,
+winning moves B,
+winning moves W}
+
+*/
+
+
+
+/*_ Basic CGT games */
+/*_ Grids */
+
+/*_ Strips */
+
+/*_
+
+        [clobber_1xn]
+    OOOXXOXOXXX
+    {winning moves B 7-6 7-8 9-8,
+    winning moves W 6-5 6-7 8-7}
+
+
+        [clobber_1xn]
+    XXOXOOX
+    XXXOOOXX
+    {winning moves B 0:4-5,
+    winning moves W 0:3-4}
+
+
+        [impartial clobber_1xn]
+    XOOXXOO
+    {winning moves N 6-5,
+    winning moves B 6-5,
+    winning moves W 6-5}
+
+        [impartial clobber_1xn]
+    XOOXOXX
+    XOOXOX
+    {winning moves N 1:1-2 1:4-3 1:5-6,
+    winning moves B 1:1-2 1:4-3 1:5-6,
+    winning moves W 1:1-2 1:4-3 1:5-6}
+
+        [elephants]
+    X..O..X.O..X
+    {winning moves B 1-2 7-8,
+    winning moves W 4-3 9-8}
+
+
+        [elephants]
+    .O...X..O..X.O
+    X.O.X.OX.
+    {winning moves B 0:12-13 0:6-7 1:1-2 1:5-6,
+    winning moves W 0:14-13 0:9-8 1:3-2 1:7-6}
+
+
+        [impartial elephants]
+    X..O.X..X...O
+    {winning moves N 13-12,
+    winning moves B 13-12,
+    winning moves W 13-12}
+
+        [impartial elephants]
+    X..O....X
+    X...X.O....O
+    {winning moves N 0:1-2 0:4-3 1:1-2 1:12-11 1:5-6 1:7-6,
+    winning moves B 0:1-2 0:4-3 1:1-2 1:12-11 1:5-6 1:7-6,
+    winning moves W 0:1-2 0:4-3 1:1-2 1:12-11 1:5-6 1:7-6}
+
+        [gen_toads]
+    2,3,2,0:X...X...O.O
+    {winning moves B 5-7,
+    winning moves W 9-7}
+
+        [gen_toads]
+    1,2,1,1:X.X.O..X.O.O
+    1,2,1,0:X.O..X.X.O
+    {winning moves B 0:1-2 0:3-4 0:8-9 1:1-2 1:6-7 1:8-9,
+    winning moves W None}
+
+        [impartial gen_toads]
+    1,3,1,0:X..X.O...O
+    {winning moves N 10-9 4-5,
+    winning moves B 10-9 4-5,
+    winning moves W 10-9 4-5}
+
+
+        [impartial gen_toads]
+    1,1,0,0:X.O.X..X
+    1,2,0,1:X..O..O
+    {winning moves N 0:1-2 0:3-2 0:5-6 1:1-2 1:4-2 1:7-5,
+    winning moves B 0:1-2 0:3-2 0:5-6 1:1-2 1:4-2 1:7-5,
+    winning moves W 0:1-2 0:3-2 0:5-6 1:1-2 1:4-2 1:7-5}
+
+        [nogo_1xn]
+    ...X...
+    {winning moves B 2_X 6_X,
+    winning moves W None}
+
+        [nogo_1xn]
+    .X..
+    ..O..
+    {winning moves B 0:3_X 0:4_X 1:1_X 1:2_X 1:4_X 1:5_X,
+    winning moves W 0:3_O 1:1_O 1:2_O 1:4_O 1:5_O}
+
+        [impartial nogo_1xn]
+    ..XO...
+    {winning moves N 1_O 1_X 2_X 5_O 6_O 6_X 7_O 7_X,
+    winning moves B 1_O 1_X 2_X 5_O 6_O 6_X 7_O 7_X,
+    winning moves W 1_O 1_X 2_X 5_O 6_O 6_X 7_O 7_X}
+
+        [impartial nogo_1xn]
+    ..X.O...
+    ....
+    {winning moves N 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O 1:4_X,
+    winning moves B 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O 1:4_X,
+    winning moves W 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O 1:4_X}
+
+        [toppling_dominoes]
+    XOO#
+    {winning moves B ASD,
+    winning moves W ASD}
+
+        [toppling_dominoes]
+    X#OOX
+    OXO
+    {winning moves B ASD,
+    winning moves W ASD}
+
+        [impartial toppling_dominoes]
+    XOOX
+    {winning moves N ASD,
+    winning moves B ASD,
+    winning moves W ASD}
+
+        [impartial toppling_dominoes]
+    OXX#
+    {winning moves N ASD,
+    winning moves B ASD,
+    winning moves W ASD}
+*/
