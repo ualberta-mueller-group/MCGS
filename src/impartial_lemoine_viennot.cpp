@@ -117,6 +117,10 @@ inline bool search_game_nimber(game *g, int nimber, lv_bool_tt& tt, const timeou
    Utility for stats reporting. Should only be called when global::count_sums()
    is true, to produce a node_hash value to be passed to
    stats::report_search_node_verbose()
+
+   This function probably doesn't need to be fast? Counting unique node hashes
+   (in solver_stats.h) is already relatively expensive (due to storing hashes
+   in an unordered_map)
 */
 hash_t get_subgames_plus_nimber_hash_for_stats(const split_result& sr, int nim_value)
 {
