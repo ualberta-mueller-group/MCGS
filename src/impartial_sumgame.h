@@ -23,7 +23,7 @@
 int search_impartial_sumgame(const sumgame& s);
 
 std::optional<int> search_impartial_sumgame_with_timeout_token(
-    const sumgame& s, const timeout_token& timeout_tok);
+    const sumgame& s, const timeout_token& timeout_tok, uint64_t depth);
 
 std::optional<int> search_impartial_sumgame_with_timeout(
     const sumgame& s, unsigned long long timeout);

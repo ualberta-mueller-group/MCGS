@@ -106,11 +106,28 @@ bool pre_search_probe(const impartial_game& g, int n, lv_bool_tt& tt)
 }
 
 // Helper function that casts game to impartial, then solves.
-inline bool search_game_nimber(game *g, int nimber, lv_bool_tt& tt, const timeout_token& timeout_tok)
+inline bool search_game_nimber(game *g, int nimber, lv_bool_tt& tt, const timeout_token& timeout_tok, uint64_t depth)
 {
     const impartial_game* gi =
        static_cast<const impartial_game*>(g);
-    return search_g_plus_nimber(*gi, nimber, tt, timeout_tok);
+    return search_g_plus_nimber(*gi, nimber, tt, timeout_tok, depth);
+}
+
+/*
+   Utility for stats reporting. Should only be called when global::count_sums()
+   is true, to produce a node_hash value to be passed to
+   stats::report_search_node_verbose()
+*/
+hash_t get_subgames_plus_nimber_hash_for_stats(const split_result& sr, int nimber)
+{
+    assert(sr);
+    assert(global::count_sums());
+
+    global_hash& hash_helper = stats::get_global_hash_helper();
+
+    const hash_t subgames_hash = hash_helper.get_global_hash_value(sr.value(), EMPTY);
+    const hash_t nimber_hash = nimber_hashcode::get(nimber);
+    return subgames_hash ^ nimber_hash;
 }
 
 } // namespace
@@ -141,7 +158,7 @@ int search_with_tt(const impartial_game& g, int tt_size)
     src.start_timeout(0);
 
     lv_bool_tt tt(tt_size, 0);
-    const int result = search_impartial_game(g, tt, timeout_tok);
+    const int result = search_impartial_game(g, tt, timeout_tok, INITIAL_SEARCH_DEPTH);
 
     assert(!timeout_tok.stop_requested());
     assert(result >= 0);
@@ -149,15 +166,18 @@ int search_with_tt(const impartial_game& g, int tt_size)
 }
 
 // Compute n such that g = *n. "Algorithm 3" in Lemoine and Viennot.
-int search_impartial_game(const impartial_game& g, lv_bool_tt& tt, const timeout_token& timeout_tok)
+int search_impartial_game(const impartial_game& g, lv_bool_tt& tt, const timeout_token& timeout_tok, uint64_t depth)
 {
+    // TODO is this call really a search node?
+    stats::report_search_node(&g, EMPTY, depth);
+
     const int db_result = db_lookup(g);
     if (db_result != NO_DB_RESULT)
         return db_result;
 
     int n = 0;
     for ( ; ; ++n)
-        if (timeout_tok.stop_requested() || ! search_g_plus_nimber(g, n, tt, timeout_tok))
+        if (timeout_tok.stop_requested() || ! search_g_plus_nimber(g, n, tt, timeout_tok, depth))
             break;
     return n;
 }
@@ -165,8 +185,17 @@ int search_impartial_game(const impartial_game& g, lv_bool_tt& tt, const timeout
 
 // Boolean solver for g + *n. "Algorithm 1" in Lemoine and Viennot
 bool search_g_plus_nimber(const impartial_game& g, int n,
-                          lv_bool_tt& tt, const timeout_token& timeout_tok)
+                          lv_bool_tt& tt, const timeout_token& timeout_tok, uint64_t depth)
 {
+    {
+        std::optional<hash_t> node_hash;
+        if (global::count_sums())
+            node_hash = combined_hash(&g, n);
+
+        stats::report_search_node_verbose(node_hash, 2, EMPTY, depth);
+    }
+    const uint64_t next_depth = depth + 1; // for after a move is played
+
     bool result;
     if (tt_lookup(tt, &g, n, result))
         return result;
@@ -177,21 +206,6 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
         return true;
     if (timeout_tok.stop_requested())
         return false; // return value does not matter?
-
-    //stats::inc_node_count();
-    stats::report_search_node(&g, EMPTY, 0);
-    /*
-        TODO: depth?
-
-        TODO: Count node before or after TT/DB lookup? Sumgame solve functions
-              count before
-
-        TODO: the node hash inserted into "solver_stats::search_node_hashes"
-              from this call is wrong. Possible solution: 
-              "report_search_node_verbose()" which forces caller to compute all
-              applicable fields (and only applicable fields i.e. no node hash
-              if the CLI option for it was not enabled)
-    */
 
 
     // Part A: search all position options Gi + *n 
@@ -206,7 +220,7 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
         split_result sr = g_nonconst->split();
         if (sr) // split found a sum
         {
-            const bool move_result = search_sum_plus_nimber(sr, n, tt, timeout_tok);
+            const bool move_result = search_sum_plus_nimber(sr, n, tt, timeout_tok, next_depth);
 
             for (game* subgame : *sr)
                delete subgame;
@@ -230,7 +244,7 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
         {
             g_nonconst->normalize();
             const bool move_result =
-                search_g_plus_nimber(*g_nonconst, n, tt, timeout_tok);
+                search_g_plus_nimber(*g_nonconst, n, tt, timeout_tok, next_depth);
             g_nonconst->undo_normalize();
 
             if (timeout_tok.stop_requested())
@@ -252,7 +266,9 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
     // Part B: search all nimber options G + *i, i<n.
     for(int i = 0; i < n; ++i)
     {
-        const bool move_result = search_g_plus_nimber(g, i, tt, timeout_tok);
+        // Call with depth instead of next_depth; no move was played
+        const bool move_result = search_g_plus_nimber(g, i, tt, timeout_tok, depth);
+
         if (timeout_tok.stop_requested())
             return false;
 
@@ -271,9 +287,19 @@ bool search_g_plus_nimber(const impartial_game& g, int n,
 
 // Boolean solver for sum(g_i) + *n. "Algorithm 2" in Lemoine and Viennot
 bool search_sum_plus_nimber(const split_result& subgames, int n,
-                            lv_bool_tt& tt, const timeout_token& timeout_tok)
+                            lv_bool_tt& tt, const timeout_token& timeout_tok, uint64_t depth)
 {
-    assert(subgames);    
+    assert(subgames);
+
+    {
+        std::optional<hash_t> node_hash;
+        if (global::count_sums())
+            node_hash = get_subgames_plus_nimber_hash_for_stats(subgames, n);
+
+        stats::report_search_node_verbose(node_hash, subgames->size() + 1, EMPTY, depth);
+    }
+    // No "next_depth = depth + 1" -- no move is played here
+
     if (subgames->size() == 0)
     {
         return n != 0;
@@ -281,7 +307,7 @@ bool search_sum_plus_nimber(const split_result& subgames, int n,
     else if (subgames->size() == 1)
     {
         game* subgame = subgames->front();
-        return search_game_nimber(subgame, n, tt, timeout_tok);
+        return search_game_nimber(subgame, n, tt, timeout_tok, depth);
     }
     
     game* hardest = find_hardest(*subgames);
@@ -293,13 +319,13 @@ bool search_sum_plus_nimber(const split_result& subgames, int n,
             const impartial_game* g = 
                static_cast<const impartial_game*>(subgame);
         // TODO? g->normalize();
-            const int subgame_nimber = search_impartial_game(*g, tt, timeout_tok);
+            const int subgame_nimber = search_impartial_game(*g, tt, timeout_tok, depth);
             if (timeout_tok.stop_requested())
                 return false;
             nimber::add_nimber(nim_sum, subgame_nimber);
         }
     }
-    return search_game_nimber(hardest, nim_sum, tt, timeout_tok);
+    return search_game_nimber(hardest, nim_sum, tt, timeout_tok, depth);
 }
 
 } // namespace lemoine_viennot

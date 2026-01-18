@@ -19,11 +19,11 @@
 
 namespace {
 
-inline int search(game* subgame, impartial_tt& tt, const timeout_token& timeout_tok)
+inline int search(game* subgame, impartial_tt& tt, const timeout_token& timeout_tok, uint64_t depth)
 {
     const impartial_game* g = static_cast<const impartial_game*>(subgame);
     assert(g == dynamic_cast<const impartial_game*>(subgame));
-    return g->search_impartial_game_cancellable(tt, timeout_tok);
+    return g->search_impartial_game_cancellable(tt, timeout_tok, depth);
 }
 
 inline void tt_store(impartial_tt& tt, impartial_game* g, int nim_value)
@@ -74,7 +74,7 @@ int impartial_game::search_impartial_game(impartial_tt& tt) const
     timeout_token timeout_tok = src.get_timeout_token();
     src.start_timeout(0);
 
-    const int result = search_impartial_game_cancellable(tt, timeout_tok);
+    const int result = search_impartial_game_cancellable(tt, timeout_tok, INITIAL_SEARCH_DEPTH);
     assert(!timeout_tok.stop_requested());
     assert(result >= 0);
 
@@ -82,17 +82,16 @@ int impartial_game::search_impartial_game(impartial_tt& tt) const
 }
 
 int impartial_game::search_impartial_game_cancellable(
-    impartial_tt& tt, const timeout_token& timeout_tok) const
+    impartial_tt& tt, const timeout_token& timeout_tok, uint64_t depth) const
 {
     if (timeout_tok.stop_requested())
         return -1;
 
-    // TODO increment before or after is_solved()?
-    //stats::inc_node_count();
-    stats::report_search_node(this, EMPTY, 0); // TODO depth?
-
     if (is_solved())
         return nim_value();
+
+    stats::report_search_node(this, EMPTY, depth);
+    const uint64_t next_depth = depth + 1; // for after a move is played
 
     assert_restore_game ar(*this);
     auto g = const_cast<impartial_game*>(this);
@@ -129,7 +128,7 @@ int impartial_game::search_impartial_game_cancellable(
                 // No need for subgame->undo_normalize() -- it will be deleted
                 subgame->normalize();
 
-                int result = search(subgame, tt, timeout_tok);
+                int result = search(subgame, tt, timeout_tok, next_depth);
                 if (timeout_tok.stop_requested())
                     break;
 
@@ -151,7 +150,7 @@ int impartial_game::search_impartial_game_cancellable(
         else // no split, keep searching same subgame
         {
             g->normalize();
-            move_nimber = g->search_impartial_game_cancellable(tt, timeout_tok);
+            move_nimber = g->search_impartial_game_cancellable(tt, timeout_tok, next_depth);
             g->undo_normalize();
 
             if (timeout_tok.stop_requested())

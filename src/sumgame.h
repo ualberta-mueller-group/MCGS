@@ -125,7 +125,7 @@ public:
         unsigned long long timeout) const;
 
     std::optional<solve_result> solve_with_timeout_token(
-        const timeout_token& timeout_tok) const;
+        const timeout_token& timeout_tok, uint64_t depth) const;
 
     bool solve_with_games(std::vector<game*>& gs) const;
     bool solve_with_games(game* g) const;
@@ -173,9 +173,6 @@ private:
         Main search logic. Respects timeout defined by sumgame::_over_time(),
         which uses a (possibly absent) timeout_token. If not present, search
         never times out.
-
-        For root level call, depth should be 0. For recursive calls,
-        pass depth + 1
     */
     std::optional<solve_result> _solve_impl(uint64_t depth);
 

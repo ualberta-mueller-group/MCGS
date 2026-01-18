@@ -16,10 +16,15 @@
 #include "global_options.h"
 #include "hashing.h"
 #include "sumgame.h"
+#include "utilities.h"
+
+constexpr uint64_t INITIAL_SEARCH_DEPTH = 0;
 
 ////////////////////////////////////////////////// struct solver_stats
 struct solver_stats
 {
+    solver_stats() { reset(); }
+
     void reset();
     void print_search_statistics(std::ostream& ostr) const;
 
@@ -40,8 +45,11 @@ struct solver_stats
     uint64_t max_search_depth;
 
     // Subgames
-    size_t initial_subgame_count;
     size_t max_subgame_count;
+
+    // Initial node values
+    bool has_initial_values;
+    std::optional<size_t> initial_subgame_count;
 };
 
 // Global solver_stats object
@@ -68,8 +76,17 @@ void report_search_node(const std::vector<game*>& games, ebw to_play,
                         uint64_t depth);
 void report_search_node(const game* g, ebw to_play, uint64_t depth);
 
-// Report initial
-void report_initial_values(size_t initial_subgame_count);
+/*
+    NOTE: node_hash MUST be present IFF global::count_sums() is true. An
+    exception is thrown when either incorrectly omitted OR included.
+
+    Use the other report_search_node() functions where possible.
+*/
+void report_search_node_verbose(const std::optional<hash_t>& node_hash,
+                                size_t subgame_count, ebw to_play,
+                                uint64_t depth);
+
+global_hash& get_global_hash_helper();
 
 } // namespace stats
 
@@ -88,9 +105,12 @@ inline void __report_search_node_common(size_t subgame_count, uint64_t depth)
         std::max(__global_stats.max_subgame_count, subgame_count);
 }
 
+void __report_search_node_initial(size_t initial_subgame_count);
+
 void __count_search_node_hash(const sumgame& sum, ebw to_play);
 void __count_search_node_hash(const std::vector<game*>& games, ebw to_play);
 void __count_search_node_hash(const game* g, ebw to_play);
+void __count_search_node_hash(hash_t node_hash);
 // NOLINTEND(readability-identifier-naming)
 
 inline const solver_stats& get_global_stats()
@@ -126,10 +146,14 @@ inline void report_db_access(bool hit)
 
 inline void report_search_node(const sumgame& sum, ebw to_play, uint64_t depth)
 {
-    __report_search_node_common(sum.num_active_games(), depth);
+    const int n_active = sum.num_active_games();
+    __report_search_node_common(n_active, depth);
 
     if (global::count_sums())
         __count_search_node_hash(sum, to_play);
+
+    if (!__global_stats.has_initial_values) [[unlikely]]
+        __report_search_node_initial(n_active);
 }
 
 inline void report_search_node(const std::vector<game*>& games, ebw to_play,
@@ -144,6 +168,9 @@ inline void report_search_node(const std::vector<game*>& games, ebw to_play,
 
     if (global::count_sums())
         __count_search_node_hash(games, to_play);
+
+    if (!__global_stats.has_initial_values) [[unlikely]]
+        __report_search_node_initial(n_active);
 }
 
 inline void report_search_node(const game* g, ebw to_play, uint64_t depth)
@@ -155,11 +182,23 @@ inline void report_search_node(const game* g, ebw to_play, uint64_t depth)
     if (global::count_sums())
         __count_search_node_hash(g, to_play);
 
+    if (!__global_stats.has_initial_values) [[unlikely]]
+        __report_search_node_initial(1);
 }
 
-inline void report_initial_values(size_t initial_subgame_count)
+inline void report_search_node_verbose(const std::optional<hash_t>& node_hash,
+                                       size_t subgame_count, ebw to_play,
+                                       uint64_t depth)
 {
-    __global_stats.initial_subgame_count = initial_subgame_count;
+    assert(logical_iff(node_hash.has_value(), global::count_sums()));
+
+    __report_search_node_common(subgame_count, depth);
+
+    if (global::count_sums())
+        __count_search_node_hash(node_hash.value());
+
+    if (!__global_stats.has_initial_values) [[unlikely]]
+        __report_search_node_initial(subgame_count);
 }
 
 } // namespace stats

@@ -217,12 +217,6 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
     const ebw player = _expr.get_player();
     const bw sum_player = is_black_white(player) ? player : BLACK;
 
-    // TODO janky workaround for "initial subgames"
-    size_t initial_subgame_count = 0;
-    for (const game* g : games)
-        if (g->is_active())
-            initial_subgame_count++;
-
     if (global::clear_tt())
     {
         if (is_black_white(player))
@@ -235,32 +229,20 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
 
     // Initialize stopwatch/timeout helpers
     stopwatch sw;
-    timeout_source src;
-    timeout_token tok = src.get_timeout_token();
     
     // Start test
     sw.start();
-    src.start_timeout(timeout);
 
-    sum.add(_games);
+    sum.add(games);
     const optional<vector<string>> computed_moves =
-        get_winning_moves_with_timeout_token(sum, player, tok);
-    sum.pop(_games);
+        get_winning_moves_with_timeout(sum, player, timeout);
+    sum.pop(games);
 
     // End test
     sw.stop();
-    src.cancel_timeout();
 
     // Report results
     assert(_csv_row.has_pre_test_fields());
-
-    /*
-        TODO: janky workaround for "initial subgames"
-
-        This overwritten value should be shown in the CSV, because it gets set
-        along with other post-test fields
-    */
-    stats::report_initial_values(initial_subgame_count);
 
     const optional<string> result_string = winning_moves_string(computed_moves);
     const optional<string>& expected_string = _csv_row.expected_result;

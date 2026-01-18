@@ -264,14 +264,14 @@ optional<solve_result> sumgame::solve_with_timeout(
     timeout_token tok = src.get_timeout_token();
 
     src.start_timeout(timeout);
-    optional<solve_result> result = solve_with_timeout_token(tok);
+    optional<solve_result> result = solve_with_timeout_token(tok, INITIAL_SEARCH_DEPTH);
     src.cancel_timeout();
 
     return result;
 }
 
 optional<solve_result> sumgame::solve_with_timeout_token(
-    const timeout_token& timeout_tok) const
+    const timeout_token& timeout_tok, uint64_t depth) const
 {
     assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
@@ -282,15 +282,11 @@ optional<solve_result> sumgame::solve_with_timeout_token(
 
     sum._pre_solve_pass();
 
-    {
-        const int active = sum.num_active_games();
-        THROW_ASSERT(active >= 0);
-        stats::report_initial_values(active);
-    }
+    assert(sum.num_active_games() >= 0);
 
     _need_cgt_simplify = true;
 
-    optional<solve_result> result = sum._solve_impl(0);
+    optional<solve_result> result = sum._solve_impl(depth);
 
     sum._undo_pre_solve_pass();
 
@@ -350,8 +346,8 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
     if (_over_time())
         return solve_result::invalid();
 
-    depth++;
     stats::report_search_node(*this, to_play(), depth);
+    const uint64_t next_depth = depth + 1; // for after a move is played
 
     if (PRINT_SUBGAMES)
     {
@@ -365,7 +361,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
         std::optional<solve_result> result = simplify_db();
 
         if (result.has_value())
-            return result.value();
+            return result;
     }
 
     simplify_basic();
@@ -400,7 +396,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 
         if (!found)
         {
-            optional<solve_result> child_result = _solve_impl(depth);
+            optional<solve_result> child_result = _solve_impl(next_depth);
 
             if (!child_result.has_value() || _over_time())
                 return solve_result::invalid();

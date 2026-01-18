@@ -33,8 +33,11 @@ void solver_stats::reset()
         search_node_hashes = std::unordered_set<hash_t>();
 
     // Subgames
-    initial_subgame_count = 0;
     max_subgame_count = 0;
+
+    // Initial node values
+    has_initial_values = false;
+    initial_subgame_count.reset();
 }
 
 #ifdef PRINT_FIELD
@@ -68,7 +71,7 @@ void solver_stats::print_search_statistics(std::ostream& ostr) const
     PRINT_FIELD_OPTIONAL(search_node_hashes, search_node_hashes->size());
     PRINT_FIELD(max_search_depth);
 
-    PRINT_FIELD(initial_subgame_count);
+    PRINT_FIELD_OPTIONAL(initial_subgame_count, *initial_subgame_count);
     PRINT_FIELD(max_subgame_count);
 
     ostr << std::endl;
@@ -109,7 +112,6 @@ std::optional<double> solver_stats::get_db_hit_rate() const
 
 ////////////////////////////////////////////////// Stats/reporting functions
 namespace stats {
-
 namespace {
 std::optional<global_hash> hash_helper;
 
@@ -127,31 +129,55 @@ return hash_helper->get_global_hash_value(g, to_play);
 
 } // namespace 
 
+global_hash& get_global_hash_helper()
+{
+    assert(hash_helper.has_value());
+    return hash_helper.value();
+}
+
+void __report_search_node_initial(size_t initial_subgame_count)
+{
+    solver_stats& stats = __global_stats;
+
+    assert(!stats.has_initial_values);
+    stats.has_initial_values = true;
+
+    stats.initial_subgame_count = initial_subgame_count;
+}
+
 void __count_search_node_hash(const sumgame& sum, ebw to_play)
 {
-assert(__global_stats.search_node_hashes.has_value() &&
-       global::count_sums());
+    solver_stats& stats = __global_stats;
+    assert(stats.search_node_hashes.has_value() && global::count_sums());
 
-const hash_t node_hash = get_node_hash(sum.subgames(), to_play);
-__global_stats.search_node_hashes->insert(node_hash);
+    const hash_t node_hash = get_node_hash(sum.subgames(), to_play);
+    stats.search_node_hashes->insert(node_hash);
 }
 
 void __count_search_node_hash(const std::vector<game*>& games, ebw to_play)
 {
-assert(__global_stats.search_node_hashes.has_value() &&
-       global::count_sums());
+    solver_stats& stats = __global_stats;
+    assert(stats.search_node_hashes.has_value() && global::count_sums());
 
-const hash_t node_hash = get_node_hash(games, to_play);
-__global_stats.search_node_hashes->insert(node_hash);
+    const hash_t node_hash = get_node_hash(games, to_play);
+    stats.search_node_hashes->insert(node_hash);
 }
 
 void __count_search_node_hash(const game* g, ebw to_play)
 {
-assert(__global_stats.search_node_hashes.has_value() &&
-       global::count_sums());
+    solver_stats& stats = __global_stats;
+    assert(stats.search_node_hashes.has_value() && global::count_sums());
 
-const hash_t node_hash = get_node_hash(g, to_play);
-__global_stats.search_node_hashes->insert(node_hash);
+    const hash_t node_hash = get_node_hash(g, to_play);
+    stats.search_node_hashes->insert(node_hash);
+}
+
+void __count_search_node_hash(hash_t node_hash)
+{
+    solver_stats& stats = __global_stats;
+    assert(stats.search_node_hashes.has_value() && global::count_sums());
+
+    stats.search_node_hashes->insert(node_hash);
 }
 
 } // namespace stats

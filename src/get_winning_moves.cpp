@@ -13,6 +13,7 @@
 #include "cgt_basics.h"
 #include "game.h"
 #include "impartial_sumgame.h"
+#include "solver_stats.h"
 #include "sumgame.h"
 #include "timeout_token.h"
 #include "throw_assert.h"
@@ -23,11 +24,12 @@ using namespace std;
 namespace {
 optional<bool> is_winning_move(sumgame& sum, const sumgame_move& sm, bw player,
                                bool use_impartial_search,
-                               const timeout_token& timeout_tok)
+                               const timeout_token& timeout_tok, uint64_t depth)
 {
     assert_restore_sumgame ars(sum);
     assert(is_black_white(player));
 
+    const uint64_t next_depth = depth + 1;
     optional<bool> is_winning;
 
     sum.play_sum(sm, player);
@@ -35,7 +37,7 @@ optional<bool> is_winning_move(sumgame& sum, const sumgame_move& sm, bw player,
     if (!use_impartial_search)
     {
         const optional<solve_result> result =
-            sum.solve_with_timeout_token(timeout_tok);
+            sum.solve_with_timeout_token(timeout_tok, next_depth);
 
         if (result.has_value())
             is_winning = !result->win;
@@ -43,7 +45,7 @@ optional<bool> is_winning_move(sumgame& sum, const sumgame_move& sm, bw player,
     else
     {
         const optional<int> nim_value_opt =
-            search_impartial_sumgame_with_timeout_token(sum, timeout_tok);
+            search_impartial_sumgame_with_timeout_token(sum, timeout_tok, next_depth);
 
         if (nim_value_opt.has_value())
         {
@@ -78,7 +80,7 @@ string sum_move_string(const sumgame& sum, const sumgame_move& sm, ebw player,
 }
 
 optional<vector<string>> get_winning_moves_impl(
-    sumgame& sum, ebw player, const timeout_token& timeout_tok)
+    sumgame& sum, ebw player, const timeout_token& timeout_tok, uint64_t depth)
 {
     THROW_ASSERT(                       //
         LOGICAL_IMPLIES(                //
@@ -88,6 +90,10 @@ optional<vector<string>> get_winning_moves_impl(
         "Sum contains partisan games"); //
 
     assert(is_empty_black_white(player));
+
+    stats::report_search_node(sum, player, depth);
+    // No "next_depth = depth + 1" -- no move is played here
+
     optional<vector<string>> winning_moves = vector<string>();
 
     const bool use_impartial = (player == EMPTY);
@@ -111,7 +117,7 @@ optional<vector<string>> get_winning_moves_impl(
 
         sumgame_move sm = gen->gen_sum_move();
         optional<bool> is_winning_opt =
-            is_winning_move(sum, sm, use_player, use_impartial, timeout_tok);
+            is_winning_move(sum, sm, use_player, use_impartial, timeout_tok, depth);
 
         if (!is_winning_opt.has_value())
         {
@@ -162,16 +168,16 @@ optional<vector<string>> get_winning_moves_with_timeout(
 
     src.start_timeout(timeout_ms);
     optional<vector<string>> result =
-        get_winning_moves_with_timeout_token(sum, player, tok);
+        get_winning_moves_with_timeout_token(sum, player, tok, INITIAL_SEARCH_DEPTH);
     src.cancel_timeout();
 
     return result;
 }
 
 optional<vector<string>> get_winning_moves_with_timeout_token(
-    sumgame& sum, ebw player, const timeout_token& timeout_tok)
+    sumgame& sum, ebw player, const timeout_token& timeout_tok, uint64_t depth)
 {
-    return get_winning_moves_impl(sum, player, timeout_tok);
+    return get_winning_moves_impl(sum, player, timeout_tok, depth);
 }
 
 ////////////////////////////////////////////////// winning_moves_diff_t methods

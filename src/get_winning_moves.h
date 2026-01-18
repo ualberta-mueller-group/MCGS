@@ -31,7 +31,7 @@ std::optional<std::vector<std::string>> get_winning_moves_with_timeout(
 
 // Uses timeout_token
 std::optional<std::vector<std::string>> get_winning_moves_with_timeout_token(
-    sumgame& sum, ebw player, const timeout_token& timeout_tok);
+    sumgame& sum, ebw player, const timeout_token& timeout_tok, uint64_t depth);
 
 // "get_winning_moves_XYZ" functions don't use this
 void sort_winning_moves(std::vector<std::string>& winning_moves);

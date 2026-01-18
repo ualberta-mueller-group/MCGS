@@ -46,7 +46,8 @@ public:
         search_impartial_sumgame_with_timeout (impartial_sumgame.cpp)
     */
     int search_impartial_game_cancellable(impartial_tt& tt,
-                                          const timeout_token& timeout_tok) const;
+                                          const timeout_token& timeout_tok,
+                                          uint64_t depth) const;
 
     // Impartial game interface
     virtual void play(const move& m);
