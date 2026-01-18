@@ -3,14 +3,6 @@
 /*_
     Winning moves tests for all game types and their impartial variants
 
-Basic CGT games:
-    cgt_dyadic_rational
-    cgt_integer_game
-    cgt_nimber
-    cgt_switch
-    cgt_up_star
-    kayles
-
 Strips:
     clobber_1xn (OK)
     elephants (OK)
@@ -26,6 +18,15 @@ Grids:
     fission (OK)
     nogo (OK)
     sheep (OK)
+
+Basic CGT games:
+    cgt_dyadic_rational (OK)
+    cgt_integer_game (OK)
+    cgt_nimber (OK)
+    cgt_switch (OK)
+    cgt_up_star:
+        (TODO impartial '*' appears twice...)
+    kayles (OK)
 
         TEMPLATE:
 
@@ -49,13 +50,8 @@ winning moves W}
 
 */
 
-
-
-/*_ Basic CGT games */
-/*_ Grids */
 /*_ Strips */
 
-/*_
     [clobber_1xn]
 OOOXXOXOXXX
 {winning moves B 7-6 7-8 9-8,
@@ -85,13 +81,11 @@ X..O..X.O..X
 {winning moves B 1-2 7-8,
 winning moves W 4-3 9-8}
 
-
     [elephants]
 .O...X..O..X.O
 X.O.X.OX.
 {winning moves B 0:12-13 0:6-7 1:1-2 1:5-6,
 winning moves W 0:14-13 0:9-8 1:3-2 1:7-6}
-
 
     [impartial elephants]
 X..O.X..X...O
@@ -122,7 +116,6 @@ winning moves W None}
 {winning moves N 10-9 4-5,
 winning moves B 10-9 4-5,
 winning moves W 10-9 4-5}
-
 
     [impartial gen_toads]
 1,1,0,0:X.O.X..X
@@ -160,26 +153,28 @@ winning moves W 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O
 
     [toppling_dominoes]
 XOO#
-{winning moves B ASD,
-winning moves W ASD}
+{winning moves B TODO,
+winning moves W TODO}
 
     [toppling_dominoes]
 X#OOX
 OXO
-{winning moves B ASD,
-winning moves W ASD}
+{winning moves B TODO,
+winning moves W TODO}
 
     [impartial toppling_dominoes]
 XOOX
-{winning moves N ASD,
-winning moves B ASD,
-winning moves W ASD}
+{winning moves N TODO,
+winning moves B TODO,
+winning moves W TODO}
 
     [impartial toppling_dominoes]
 OXX#
-{winning moves N ASD,
-winning moves B ASD,
-winning moves W ASD}
+{winning moves N TODO,
+winning moves B TODO,
+winning moves W TODO}
+
+/*_ Grids */
 
     [amazons]
 .X|..
@@ -341,4 +336,150 @@ winning moves B 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
     1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2,
 winning moves W 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
     1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2}
-*/
+
+/*_ Basic CGT games */
+
+    [dyadic_rational]
+5/4
+{winning moves B DEC,
+winning moves W NONE}
+
+    [dyadic_rational]
+20/4
+-24/2
+{winning moves B None,
+winning moves W 1:INC}
+
+    [impartial dyadic_rational]
+21/8
+{winning moves N INC,
+winning moves B INC,
+winning moves W INC}
+
+    [impartial dyadic_rational]
+12/16
+-21/8
+{winning moves N 0:INC 1:DEC,
+winning moves B 0:INC 1:DEC,
+winning moves W 0:INC 1:DEC}
+
+    [integer_game]
+5
+{winning moves B INT,
+winning moves W None}
+
+    [integer_game]
+-3
+{winning moves B None,
+winning moves W INT}
+
+    [impartial integer_game]
+7
+{winning moves N INT,
+winning moves B INT,
+winning moves W INT}
+
+    [impartial integer_game]
+6
+-7
+{winning moves N 0:INT 1:INT,
+winning moves B 0:INT 1:INT,
+winning moves W 0:INT 1:INT}
+
+    [nimber]
+5
+{winning moves N *0,
+winning moves B *0,
+winning moves W *0}
+
+    [nimber]
+3 5
+{winning moves N 1:*3,
+winning moves B 1:*3,
+winning moves W 1:*3}
+
+    [impartial nimber]
+5
+{winning moves N *0,
+winning moves B *0,
+winning moves W *0}
+
+    [impartial nimber]
+3 5
+{winning moves N 1:*3,
+winning moves B 1:*3,
+winning moves W 1:*3}
+
+    [switch_game]
+(3/4, -4)
+{winning moves B SWITCH_L,
+winning moves W SWITCH_R}
+
+    [switch_game]
+(1/2, -1/2)
+(-6, 5)
+{winning moves B 0:SWITCH_L,
+winning moves W 0:SWITCH_R}
+
+    [impartial switch_game]
+(-6, 7)
+{winning moves N SWITCH_L,
+winning moves B SWITCH_L,
+winning moves W SWITCH_L}
+
+    [impartial switch_game]
+(1/2, 4)
+(-2, 3)
+{winning moves N 0:SWITCH_L 1:SWITCH_R,
+winning moves B 0:SWITCH_L 1:SWITCH_R,
+winning moves W 0:SWITCH_L 1:SWITCH_R}
+
+    [up_star]
+(* 3)
+{winning moves B TODO,
+winning moves W TODO}
+
+    [up_star]
+(6 *)
+-3
+{winning moves B TODO,
+winning moves W TODO}
+
+    [impartial up_star]
+(*)
+{winning moves N TODO,
+winning moves B TODO,
+winning moves W TODO}
+
+    [impartial up_star]
+4
+-5
+{winning moves N TODO,
+winning moves B TODO,
+winning moves W TODO}
+
+    [kayles]
+6
+{winning moves N 1-1-4 2-2-2,
+winning moves B 1-1-4 2-2-2,
+winning moves W 1-1-4 2-2-2}
+
+    [kayles]
+3
+7
+{winning moves N 0:1-0-2 1:1-0-6 1:1-2-4,
+winning moves B 0:1-0-2 1:1-0-6 1:1-2-4,
+winning moves W 0:1-0-2 1:1-0-6 1:1-2-4}
+
+    [impartial kayles]
+6
+{winning moves N 1-1-4 2-2-2,
+winning moves B 1-1-4 2-2-2,
+winning moves W 1-1-4 2-2-2}
+
+    [impartial kayles]
+3
+7
+{winning moves N 0:1-0-2 1:1-0-6 1:1-2-4,
+winning moves B 0:1-0-2 1:1-0-6 1:1-2-4,
+winning moves W 0:1-0-2 1:1-0-6 1:1-2-4}
