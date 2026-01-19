@@ -526,6 +526,7 @@ bool get_fp_expr_run_command(const int line_number,
 // actually parses block...
 bool file_parser::_parse_command()
 {
+    THROW_ASSERT(_chunk.has_value());
     vector<string> string_tokens = get_string_tokens(_token, {','});
     const size_t N = string_tokens.size();
 
@@ -625,6 +626,7 @@ bool file_parser::parse_chunk()
         if (_match("[", "]", "section title", false))
         {
             //_section_title = _token;
+            THROW_ASSERT(_chunk.has_value());
             _chunk->add_content_expr(new fp_expr_title(_line_number, _token));
             continue;
         }
@@ -633,6 +635,7 @@ bool file_parser::parse_chunk()
         if (_match("(", ")", "bracket token", false))
         {
             //_parse_game();
+            THROW_ASSERT(_chunk.has_value());
             _chunk->add_content_expr(new fp_expr_game(_line_number, _token, true));
             continue;
         }
@@ -640,6 +643,7 @@ bool file_parser::parse_chunk()
         // Match comment
         if (_match("/*", "*/", "comment", true))
         {
+            THROW_ASSERT(_chunk.has_value());
             _chunk->add_content_expr(new fp_expr_comment(_line_number, _token));
             continue;
         }
@@ -650,6 +654,8 @@ bool file_parser::parse_chunk()
             cout << "Got simple token: " << _token << endl;
         }
         //_parse_game();
+
+        THROW_ASSERT(_chunk.has_value());
         _chunk->add_content_expr(new fp_expr_game(_line_number, _token, false));
     }
 
@@ -679,6 +685,7 @@ command_type_enum file_parser::get_test_case_type(int test_case_idx) const
 
 std::shared_ptr<i_test_case> file_parser::get_test_case(int test_case_idx) const
 {
+    THROW_ASSERT(_chunk.has_value());
     visitor_generate visitor;
     i_test_case* test_case = visitor.get_test_case(_chunk.value(), test_case_idx);
 
@@ -687,6 +694,7 @@ std::shared_ptr<i_test_case> file_parser::get_test_case(int test_case_idx) const
 
 void file_parser::print_ast() const
 {
+    THROW_ASSERT(_chunk.has_value());
     fp_visitor_print visitor;
     visitor.visit_chunk(_chunk.value());
 }

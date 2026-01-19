@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cassert>
 #include <iostream>
+#include <cstdint>
 
 #include "alternating_move_game.h"
 #include "cgt_nimber.h"
@@ -16,6 +17,7 @@
 #include "impartial_game.h"
 #include "impartial_lemoine_viennot.h"
 #include "solver_stats.h"
+#include "throw_assert.h"
 #include "sumgame.h"
 
 namespace {
@@ -29,12 +31,16 @@ int search_impartial(impartial_game* ig, const timeout_token& timeout_tok, uint6
 {
     if (global::impartial_algorithm_mex.get())
     {
+        assert(tt_optional.has_value());
         impartial_tt& tt = tt_optional.value();
+
         return ig->search_impartial_game_cancellable(tt, timeout_tok, depth);
     }
     else
     {
+        assert(lv_tt_optional.has_value());
         lemoine_viennot::lv_bool_tt& lv_tt = lv_tt_optional.value();
+
         const int result =
             lemoine_viennot::search_impartial_game(*ig, lv_tt, timeout_tok, depth);
         // stats::print_global_stats(std::cout);

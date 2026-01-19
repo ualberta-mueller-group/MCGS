@@ -14,7 +14,6 @@
 #include "cgt_integer_game.h"
 #include "cgt_nimber.h"
 #include "cgt_switch.h"
-#include "throw_assert.h"
 #include "cgt_up_star.h"
 #include "alternating_move_game.h"
 #include "timeout_token.h"

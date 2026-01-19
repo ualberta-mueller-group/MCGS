@@ -5,6 +5,7 @@
 #include <iostream>
 #include <optional>
 #include <vector>
+#include <cstddef>
 
 #include "cgt_basics.h"
 #include "global_options.h"

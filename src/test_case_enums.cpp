@@ -1,6 +1,7 @@
 #include "test_case_enums.h"
 
 #include <optional>
+#include <string>
 
 #include "throw_assert.h"
 

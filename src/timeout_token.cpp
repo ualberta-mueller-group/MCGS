@@ -48,6 +48,7 @@ void timeout_source::cancel_timeout()
 
     if (_timeout_thread.has_value())
     {
+        assert(_promise.has_value());
         // The timeout thread is blocking on the corresponding std::future.
         // Here we signal it to wake up
         _promise->set_value();

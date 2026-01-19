@@ -9,6 +9,7 @@
 #include <cassert>
 #include <string>
 #include <set>
+#include <cstdint>
 
 #include "cgt_basics.h"
 #include "game.h"

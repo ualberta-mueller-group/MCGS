@@ -10,6 +10,7 @@
 #include "cgt_basics.h"
 #include "cli_options.h"
 #include "game.h"
+#include "csv_row.h"
 #include "search_utils.h"
 #include "sumgame.h"
 #include "test_case.h"

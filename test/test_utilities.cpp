@@ -396,7 +396,7 @@ void assert_solve_test_file(const std::string& file_name,
 
             const csv_row& row = test_case->get_csv_row();
 
-            assert(!row.player.value().empty());
+            assert(row.player.has_value() && !row.player->empty());
             const char player_char = row.player.value().at(0);
 
             const bw to_play = player_char_to_color(player_char);
@@ -410,7 +410,8 @@ void assert_solve_test_file(const std::string& file_name,
             s.pop(games);
 
             const std::string result_text = result ? "Win" : "Loss";
-            assert(result_text == row.expected_result.value());
+            assert(row.expected_result.has_value() &&
+                   result_text == *row.expected_result);
         }
     }
 

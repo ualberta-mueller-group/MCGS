@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <cassert>
-#include <cstddef>
 
 #include "cgt_basics.h"
 #include "csv_row.h"
@@ -17,7 +16,6 @@
 #include "stopwatch.h"
 #include "test_case_enums.h"
 #include "throw_assert.h"
-#include "timeout_token.h"
 #include "utilities.h"
 
 using namespace std;

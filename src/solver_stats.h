@@ -18,7 +18,6 @@
 #include "global_options.h"
 #include "hashing.h"
 #include "sumgame.h"
-#include "utilities.h"
 #include "cgt_basics.h"
 
 constexpr uint64_t INITIAL_SEARCH_DEPTH = 0;
@@ -197,12 +196,13 @@ inline void report_search_node_verbose(const std::optional<hash_t>& node_hash,
                                        size_t subgame_count, ebw to_play,
                                        uint64_t depth)
 {
-    assert(logical_iff(node_hash.has_value(), global::count_sums()));
-
     __report_search_node_common(subgame_count, depth);
 
     if (global::count_sums())
+    {
+        assert(node_hash.has_value());
         __count_search_node_hash(node_hash.value());
+    }
 
     if (!__global_stats.has_initial_values) [[unlikely]]
         __report_search_node_initial(subgame_count);
