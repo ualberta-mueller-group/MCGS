@@ -10,6 +10,7 @@
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
+#include "print_moves.h"
 #include "test_case.h"
 #include "mcgs_init.h"
 #include "hashing.h"
@@ -54,12 +55,30 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (opts.print_winning_moves && opts.parser)
+    if (opts.parser)
     {
-        print_winning_moves_by_chunk(opts.parser);
-        return 0;
+        switch (opts.print_moves_action)
+        {
+            case PRINT_MOVES_ACTION_NONE:
+                break;
+            case PRINT_MOVES_ACTION_WINNING:
+            {
+                print_winning_moves_by_chunk(opts.parser);
+                return 0;
+            }
+            case PRINT_MOVES_ACTION_SUBGAME:
+            {
+                print_subgame_moves_by_chunk(opts.parser);
+                return 0;
+            }
+            case PRINT_MOVES_ACTION_SUM:
+            {
+                print_sum_moves_by_chunk(opts.parser);
+                return 0;
+            }
+        }
     }
-
+    
     // Don't uncomment?
     //if (opts.run_tests_stdin)
     //{

@@ -11,6 +11,14 @@
 
 #include "init_database.h"
 
+enum print_moves_action_enum
+{
+    PRINT_MOVES_ACTION_NONE = 0,
+    PRINT_MOVES_ACTION_WINNING,
+    PRINT_MOVES_ACTION_SUM,
+    PRINT_MOVES_ACTION_SUBGAME,
+};
+
 /*
     Variables resulting from command line options. "parser" may be nullptr
 */
@@ -30,7 +38,7 @@ struct cli_options
 
     bool use_player;
 
-    bool print_winning_moves;
+    print_moves_action_enum print_moves_action;
 
     std::string test_directory;
     std::string outfile_name;        // CSV output file

@@ -16,6 +16,7 @@
 #include "impartial_sumgame.h"
 #include "solver_stats.h"
 #include "sumgame.h"
+#include "sumgame_print_utils.h"
 #include "timeout_token.h"
 #include "throw_assert.h"
 #include "utilities.h"
@@ -63,23 +64,6 @@ optional<bool> is_winning_move(sumgame& sum, const sumgame_move& sm, bw player,
     return is_winning;
 }
 
-string sum_move_string(const sumgame& sum, const sumgame_move& sm, ebw player,
-                       bool with_subgame_idx)
-{
-    const game* g = sum.subgame_const(sm.subgame_idx);
-
-    stringstream stream;
-
-    if (with_subgame_idx)
-        stream << sm.subgame_idx << ':';
-
-    g->print_move(stream, sm.m, player);
-
-    const string str = stream.str();
-    assert(!string_contains_whitespace(str));
-
-    return str;
-}
 
 optional<vector<string>> get_winning_moves_impl(
     sumgame& sum, ebw player, const timeout_token& timeout_tok, uint64_t depth)
@@ -136,7 +120,7 @@ optional<vector<string>> get_winning_moves_impl(
         {
             assert_restore_sumgame ars3(sum);
             const string winning_move =
-                sum_move_string(sum, sm, use_player, with_subgame_idx);
+                sumgame_move_to_string(sum, sm, use_player, with_subgame_idx);
 
             winning_moves.value().emplace_back(winning_move);
         }

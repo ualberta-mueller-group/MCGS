@@ -255,6 +255,7 @@ move_generator* impartial_game_wrapper::create_move_generator() const
 void impartial_game_wrapper::print_move(std::ostream& str, const move& m,
                                         ebw to_play_ignore) const
 {
+    assert(is_empty_black_white(to_play_ignore));
     print_move(str, m);
 }
 

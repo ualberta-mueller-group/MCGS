@@ -20,28 +20,6 @@
 
 using namespace std;
 
-namespace {
-string get_winning_moves_string(vector<string>& winning_moves)
-{
-    if (winning_moves.empty())
-        return "None";
-
-    sort_winning_moves(winning_moves);
-
-    const string joined = string_join(winning_moves, " ");
-    return joined;
-}
-
-void print_winning_moves_for_player(sumgame& sum, ebw player)
-{
-    assert_restore_sumgame ars(sum);
-    vector<string> moves = get_winning_moves(sum, player);
-
-    cout << player_name_bw_imp(player) << " winning moves:\n";
-    cout << get_winning_moves_string(moves) << endl;
-}
-
-} // namespace
 
 string get_games_string(const vector<game*>& games)
 {
@@ -88,41 +66,4 @@ void run_test_from_main(shared_ptr<i_test_case> test_case,
 }
 
 
-void print_winning_moves_by_chunk(shared_ptr<file_parser> parser)
-{
-    assert(parser.get() != nullptr);
-
-    sumgame sum(BLACK);
-
-    bool first_case = true;
-
-    while (parser->parse_chunk())
-    {
-        if (!first_case)
-            cout << endl;
-
-        first_case = false;
-
-        assert(sum.is_empty());
-        vector<game*> games = parser->get_games();
-        const string games_string = get_games_string(games);
-        sum.add(games);
-
-        cout << games_string << flush;
-
-        if (sum.all_impartial())
-        {
-            print_winning_moves_for_player(sum, EMPTY);
-        }
-        else
-        {
-            print_winning_moves_for_player(sum, BLACK);
-            print_winning_moves_for_player(sum, WHITE);
-        }
-
-        sum.pop(games);
-        for (game* g : games)
-            delete g;
-    }
-}
 
