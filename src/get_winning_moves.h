@@ -28,7 +28,10 @@ std::optional<std::vector<std::string>> get_winning_moves_with_timeout(
 std::optional<std::vector<std::string>> get_winning_moves_with_timeout_token(
     sumgame& sum, ebw player, const timeout_token& timeout_tok, uint64_t depth);
 
-// "get_winning_moves_XYZ" functions don't use this
+/*
+    Sort and deduplicate moves
+    NOTE: "get_winning_moves_XYZ" functions don't call this
+*/
 void sort_winning_moves(std::vector<std::string>& winning_moves);
 
 ////////////////////////////////////////////////// class winning_moves_diff_t
@@ -48,12 +51,6 @@ private:
     std::vector<std::string> _extra_moves;
     std::vector<std::string> _missing_moves;
 };
-
-////////////////////////////////////////////////// misc function implementations
-inline void sort_winning_moves(std::vector<std::string>& winning_moves)
-{
-    std::sort(winning_moves.begin(), winning_moves.end());
-}
 
 ////////////////////////////////////////////////// winning_moves_diff_t methods
 inline const std::vector<std::string>& winning_moves_diff_t::get_extra_moves()

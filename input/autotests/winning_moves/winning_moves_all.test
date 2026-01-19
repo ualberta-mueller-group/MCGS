@@ -8,8 +8,7 @@ Strips:
     elephants (OK)
     gen_toads (OK)
     nogo_1xn (OK)
-    toppling_dominoes:
-        (TODO impartial '#' appears twice, no obvious AND safe fix...)
+    toppling_dominoes (OK)
 
 Grids:
     amazons (OK)
@@ -24,8 +23,7 @@ Basic CGT games:
     cgt_integer_game (OK)
     cgt_nimber (OK)
     cgt_switch (OK)
-    cgt_up_star:
-        (TODO impartial '*' appears twice...)
+    cgt_up_star (OK)
     kayles (OK)
 
         TEMPLATE:
@@ -52,7 +50,6 @@ winning moves W}
 
 /*_ Strips */
 
-/*_
     [clobber_1xn]
 OOOXXOXOXXX
 {winning moves B 7-6 7-8 9-8,
@@ -151,34 +148,33 @@ winning moves B 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O
     1:4_X,
 winning moves W 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O
     1:4_X}
-*/
 
     [toppling_dominoes]
 XOO#
-{winning moves B TODO,
-winning moves W TODO}
+{winning moves B 1R 4L,
+winning moves W 4L}
 
     [toppling_dominoes]
 X#OOX
 OXO
-{winning moves B TODO,
-winning moves W TODO}
+{winning moves B 0:2R,
+winning moves W 0:2L 0:3L}
 
     [impartial toppling_dominoes]
 XOOX
-{winning moves N TODO,
-winning moves B TODO,
-winning moves W TODO}
+{winning moves N 1R 4L,
+winning moves B 1R 4L,
+winning moves W 1R 4L}
 
     [impartial toppling_dominoes]
 OXX#
-{winning moves N TODO,
-winning moves B TODO,
-winning moves W TODO}
+XO#OX
+{winning moves N 1:1L 1:5R,
+winning moves B 1:1L 1:5R,
+winning moves W 1:1L 1:5R}
 
 /*_ Grids */
 
-/*_
     [amazons]
 .X|..
 {winning moves B b1-a1-a2 b1-a1-b1 b1-a1-b2 b1-a2-a1 b1-a2-b1 b1-a2-b2 b1-b2-a1
@@ -339,15 +335,13 @@ winning moves B 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
     1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2,
 winning moves W 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
     1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2}
-*/
 
 /*_ Basic CGT games */
 
-/*_
     [dyadic_rational]
 5/4
 {winning moves B DEC,
-winning moves W NONE}
+winning moves W None}
 
     [dyadic_rational]
 20/4
@@ -438,33 +432,31 @@ winning moves W SWITCH_L}
 {winning moves N 0:SWITCH_L 1:SWITCH_R,
 winning moves B 0:SWITCH_L 1:SWITCH_R,
 winning moves W 0:SWITCH_L 1:SWITCH_R}
-*/
 
     [up_star]
 (* 3)
-{winning moves B TODO,
-winning moves W TODO}
+{winning moves B 0,
+winning moves W None}
 
     [up_star]
 (6 *)
 -3
-{winning moves B TODO,
-winning moves W TODO}
+{winning moves B 1:-2*,
+winning moves W None}
 
     [impartial up_star]
 (*)
-{winning moves N TODO,
-winning moves B TODO,
-winning moves W TODO}
+{winning moves N 0,
+winning moves B 0,
+winning moves W 0}
 
     [impartial up_star]
 4
 -5
-{winning moves N TODO,
-winning moves B TODO,
-winning moves W TODO}
+{winning moves N 0:3* 1:-4*,
+winning moves B 0:3* 1:-4*,
+winning moves W 0:3* 1:-4*}
 
-/*_
     [kayles]
 6
 {winning moves N 1-1-4 2-2-2,
@@ -490,4 +482,3 @@ winning moves W 1-1-4 2-2-2}
 {winning moves N 0:1-0-2 1:1-0-6 1:1-2-4,
 winning moves B 0:1-0-2 1:1-0-6 1:1-2-4,
 winning moves W 0:1-0-2 1:1-0-6 1:1-2-4}
-*/

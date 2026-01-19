@@ -168,6 +168,26 @@ optional<vector<string>> get_winning_moves_with_timeout_token(
     return get_winning_moves_impl(sum, player, timeout_tok, depth);
 }
 
+void sort_winning_moves(vector<string>& winning_moves)
+{
+    std::sort(winning_moves.begin(), winning_moves.end());
+
+    vector<string> unique_winning_moves;
+    unique_winning_moves.reserve(winning_moves.size());
+
+    const size_t n_moves = winning_moves.size();
+    for (size_t i = 0; i < n_moves; i++)
+    {
+        const string& move_i = winning_moves[i];
+
+        if (!(i > 0 && move_i == winning_moves[i - 1]))
+            unique_winning_moves.emplace_back(move_i);
+    }
+
+    winning_moves = std::move(unique_winning_moves);
+    winning_moves.shrink_to_fit();
+}
+
 ////////////////////////////////////////////////// winning_moves_diff_t methods
 winning_moves_diff_t::winning_moves_diff_t(const vector<string>& computed_moves,
                                            const vector<string>& expected_moves)
