@@ -63,17 +63,17 @@ int main(int argc, char** argv)
                 break;
             case PRINT_MOVES_ACTION_WINNING:
             {
-                print_winning_moves_by_chunk(opts.parser);
+                print_winning_moves_by_chunk(cout, opts.parser);
                 return 0;
             }
             case PRINT_MOVES_ACTION_SUBGAME:
             {
-                print_subgame_moves_by_chunk(opts.parser);
+                print_subgame_moves_by_chunk(cout, opts.parser);
                 return 0;
             }
             case PRINT_MOVES_ACTION_SUM:
             {
-                print_sum_moves_by_chunk(opts.parser);
+                print_sum_moves_by_chunk(cout, opts.parser);
                 return 0;
             }
         }

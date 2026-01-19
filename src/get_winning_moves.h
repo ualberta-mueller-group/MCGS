@@ -1,12 +1,8 @@
 /*
     Find all winning moves for a given player. Respects timeouts
 
-    The order of the resulting moves corresponds to the order of the underlying
-    move generators
-
-
-    TODO: Should player only be BLACK/WHITE, or should we allow it to also be
-          EMPTY?
+    The "get_winning_moves" functions return moves in the order they are
+    generated. Use sort_winning_moves() to deduplicate and sort them
 */
 #pragma once
 

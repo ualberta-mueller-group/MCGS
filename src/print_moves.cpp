@@ -8,7 +8,6 @@
 #include "cgt_basics.h"
 #include "get_winning_moves.h"
 #include "search_utils.h"
-#include "sumgame_print_utils.h"
 #include "utils_for_main.h"
 #include "game.h"
 #include "sumgame.h"
@@ -40,6 +39,27 @@ string sum_to_string(const sumgame& sum)
     }
 
     return get_games_string(active_games);
+}
+
+} // namespace
+
+////////////////////////////////////////////////// Main functions
+string sumgame_move_to_string(const sumgame& sum, const sumgame_move& sm, ebw player,
+                       bool with_subgame_idx)
+{
+    const game* g = sum.subgame_const(sm.subgame_idx);
+
+    stringstream stream;
+
+    if (with_subgame_idx)
+        stream << sm.subgame_idx << ':';
+
+    g->print_move(stream, sm.m, player);
+
+    const string str = stream.str();
+    assert(!string_contains_whitespace(str));
+
+    return str;
 }
 
 vector<string> get_sum_moves(const sumgame& sum, bw player)
@@ -84,40 +104,37 @@ vector<string> get_subgame_moves(const game* g, bw player)
     return moves;
 }
 
-void print_winning_moves_for_player(sumgame& sum, ebw player)
+void print_winning_moves_for_player(ostream& os, sumgame& sum, ebw player)
 {
     assert(is_empty_black_white(player));
-    cout << player_name_bw_imp(player) << " winning moves:\n";
+    os << player_name_bw_imp(player) << " winning moves:\n";
 
     assert_restore_sumgame ars(sum);
     vector<string> moves = get_winning_moves(sum, player);
     sort_winning_moves(moves);
 
-    cout << moves_to_string(moves) << endl;
+    os << moves_to_string(moves) << endl;
 }
 
-void print_sum_moves_for_player(const sumgame& sum, bw player)
+void print_sum_moves_for_player(ostream& os, const sumgame& sum, bw player)
 {
     assert(is_empty_black_white(player));
-    cout << player_name_bw_imp(player) << " sum moves:\n";
+    os << player_name_bw_imp(player) << " sum moves:\n";
 
     const vector<string> moves = get_sum_moves(sum, player);
-    cout << moves_to_string(moves) << endl;
+    os << moves_to_string(moves) << endl;
 }
 
-void print_subgame_moves_for_player(const game* g, bw player)
+void print_subgame_moves_for_player(ostream& os, const game* g, bw player)
 {
     assert(is_empty_black_white(player));
-    cout << player_name_bw_imp(player) << " moves:\n";
+    os << player_name_bw_imp(player) << " moves:\n";
 
     const vector<string> moves = get_subgame_moves(g, player);
-    cout << moves_to_string(moves) << endl;
+    os << moves_to_string(moves) << endl;
 }
 
-} // namespace
-
-////////////////////////////////////////////////// Main functions
-void print_winning_moves_by_chunk(shared_ptr<file_parser> parser)
+void print_winning_moves_by_chunk(ostream& os, shared_ptr<file_parser> parser)
 {
     assert(parser.get() != nullptr);
 
@@ -128,7 +145,7 @@ void print_winning_moves_by_chunk(shared_ptr<file_parser> parser)
     while (parser->parse_chunk())
     {
         if (!first_case)
-            cout << endl;
+            os << endl;
         first_case = false;
 
         assert(sum.is_empty());
@@ -136,17 +153,17 @@ void print_winning_moves_by_chunk(shared_ptr<file_parser> parser)
         const string games_string = get_games_string(games);
         sum.add(games);
 
-        cout << "Sum:" << endl;
-        cout << games_string << flush;
+        os << "Sum:" << endl;
+        os << games_string << flush;
 
         if (sum.all_impartial())
         {
-            print_winning_moves_for_player(sum, EMPTY);
+            print_winning_moves_for_player(os, sum, EMPTY);
         }
         else
         {
-            print_winning_moves_for_player(sum, BLACK);
-            print_winning_moves_for_player(sum, WHITE);
+            print_winning_moves_for_player(os, sum, BLACK);
+            print_winning_moves_for_player(os, sum, WHITE);
         }
 
         sum.pop(games);
@@ -155,7 +172,7 @@ void print_winning_moves_by_chunk(shared_ptr<file_parser> parser)
     }
 }
 
-void print_subgame_moves_by_chunk(std::shared_ptr<file_parser> parser)
+void print_subgame_moves_by_chunk(ostream& os, std::shared_ptr<file_parser> parser)
 {
     assert(parser.get() != nullptr);
 
@@ -164,24 +181,24 @@ void print_subgame_moves_by_chunk(std::shared_ptr<file_parser> parser)
     while (parser->parse_chunk())
     {
         if (!first_case)
-            cout << endl;
+            os << endl;
         first_case = false;
 
         vector<game*> games = parser->get_games();
 
-        cout << "Sum:" << endl;
-        cout << get_games_string(games) << flush;
+        os << "Sum:" << endl;
+        os << get_games_string(games) << flush;
 
         const size_t n_games = games.size();
         for (size_t subgame_idx = 0; subgame_idx < n_games; subgame_idx++)
         {
-            cout << endl;
+            os << endl;
 
             const game* g = games[subgame_idx];
-            cout << "Subgame " << subgame_idx << ": " << *g << endl;
+            os << "Subgame " << subgame_idx << ": " << *g << endl;
 
-            print_subgame_moves_for_player(g, BLACK);
-            print_subgame_moves_for_player(g, WHITE);
+            print_subgame_moves_for_player(os, g, BLACK);
+            print_subgame_moves_for_player(os, g, WHITE);
         }
 
         for (game* g : games)
@@ -189,7 +206,7 @@ void print_subgame_moves_by_chunk(std::shared_ptr<file_parser> parser)
     }
 }
 
-void print_sum_moves_by_chunk(std::shared_ptr<file_parser> parser)
+void print_sum_moves_by_chunk(ostream& os, std::shared_ptr<file_parser> parser)
 {
     assert(parser.get() != nullptr);
 
@@ -200,7 +217,7 @@ void print_sum_moves_by_chunk(std::shared_ptr<file_parser> parser)
     while (parser->parse_chunk())
     {
         if (!first_case)
-            cout << endl;
+            os << endl;
         first_case = false;
 
         vector<game*> games = parser->get_games();
@@ -208,11 +225,11 @@ void print_sum_moves_by_chunk(std::shared_ptr<file_parser> parser)
         assert(sum.is_empty());
         sum.add(games);
 
-        cout << "Sum:" << endl;
-        cout << sum_to_string(sum) << endl;
+        os << "Sum:" << endl;
+        os << sum_to_string(sum) << endl;
 
-        print_sum_moves_for_player(sum, BLACK);
-        print_sum_moves_for_player(sum, WHITE);
+        print_sum_moves_for_player(os, sum, BLACK);
+        print_sum_moves_for_player(os, sum, WHITE);
 
         sum.pop(games);
     }

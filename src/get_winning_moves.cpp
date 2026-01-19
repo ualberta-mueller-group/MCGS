@@ -16,10 +16,10 @@
 #include "impartial_sumgame.h"
 #include "solver_stats.h"
 #include "sumgame.h"
-#include "sumgame_print_utils.h"
 #include "timeout_token.h"
 #include "throw_assert.h"
 #include "utilities.h"
+#include "print_moves.h"
 
 using namespace std;
 

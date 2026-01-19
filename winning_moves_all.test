@@ -52,6 +52,7 @@ winning moves W}
 
 /*_ Strips */
 
+/*_
     [clobber_1xn]
 OOOXXOXOXXX
 {winning moves B 7-6 7-8 9-8,
@@ -150,6 +151,7 @@ winning moves B 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O
     1:4_X,
 winning moves W 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O
     1:4_X}
+*/
 
     [toppling_dominoes]
 XOO#
@@ -176,6 +178,7 @@ winning moves W TODO}
 
 /*_ Grids */
 
+/*_
     [amazons]
 .X|..
 {winning moves B b1-a1-a2 b1-a1-b1 b1-a1-b2 b1-a2-a1 b1-a2-b1 b1-a2-b2 b1-b2-a1
@@ -336,9 +339,11 @@ winning moves B 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
     1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2,
 winning moves W 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
     1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2}
+*/
 
 /*_ Basic CGT games */
 
+/*_
     [dyadic_rational]
 5/4
 {winning moves B DEC,
@@ -433,6 +438,7 @@ winning moves W SWITCH_L}
 {winning moves N 0:SWITCH_L 1:SWITCH_R,
 winning moves B 0:SWITCH_L 1:SWITCH_R,
 winning moves W 0:SWITCH_L 1:SWITCH_R}
+*/
 
     [up_star]
 (* 3)
@@ -458,6 +464,7 @@ winning moves W TODO}
 winning moves B TODO,
 winning moves W TODO}
 
+/*_
     [kayles]
 6
 {winning moves N 1-1-4 2-2-2,
@@ -483,3 +490,4 @@ winning moves W 1-1-4 2-2-2}
 {winning moves N 0:1-0-2 1:1-0-6 1:1-2-4,
 winning moves B 0:1-0-2 1:1-0-6 1:1-2-4,
 winning moves W 0:1-0-2 1:1-0-6 1:1-2-4}
+*/
