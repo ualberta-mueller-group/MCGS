@@ -319,9 +319,10 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
         if (arg == "--print-winning-moves")
         {
-            THROW_ASSERT(
-                opts.print_moves_action == PRINT_MOVES_ACTION_NONE,
-                "Error: Another \"--print-moves\"-like option was specified");
+            if (opts.print_moves_action != PRINT_MOVES_ACTION_NONE)
+                throw cli_options_exception(
+                    "Error: Another \"--print-moves\"-like option was "
+                    "specified");
 
             opts.print_moves_action = PRINT_MOVES_ACTION_WINNING;
             continue;
@@ -329,9 +330,10 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
         if (arg == "--print-subgame-moves")
         {
-            THROW_ASSERT(
-                opts.print_moves_action == PRINT_MOVES_ACTION_NONE,
-                "Error: Another \"--print-moves\"-like option was specified");
+            if (opts.print_moves_action != PRINT_MOVES_ACTION_NONE)
+                throw cli_options_exception(
+                    "Error: Another \"--print-moves\"-like option was "
+                    "specified");
 
             opts.print_moves_action = PRINT_MOVES_ACTION_SUBGAME;
             continue;
@@ -339,9 +341,10 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
         if (arg == "--print-sum-moves")
         {
-            THROW_ASSERT(
-                opts.print_moves_action == PRINT_MOVES_ACTION_NONE,
-                "Error: Another \"--print-moves\"-like option was specified");
+            if (opts.print_moves_action != PRINT_MOVES_ACTION_NONE)
+                throw cli_options_exception(
+                    "Error: Another \"--print-moves\"-like option was "
+                    "specified");
 
             opts.print_moves_action = PRINT_MOVES_ACTION_SUM;
             continue;
