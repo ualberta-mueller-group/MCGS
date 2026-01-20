@@ -2,6 +2,7 @@
    General utility functions
 */
 #pragma once
+#include <stdexcept>
 #include <vector>
 #include <iostream>
 #include <climits>
@@ -26,6 +27,34 @@
 #define IS_WINDOWS false
 #endif
 
+
+//////////////////////////////////////// number conversions
+template <                                                       //
+    class Integral_T,                                            //
+    class Integral_Unsigned_T = std::make_unsigned_t<Integral_T> //
+    >                                                            //
+inline Integral_Unsigned_T as_unsigned_unsafe(Integral_T val_at_least_0)
+{
+    static_assert(std::is_integral_v<Integral_T> &&
+                  std::is_signed_v<Integral_T>);
+    assert(val_at_least_0 >= 0);
+
+    return static_cast<Integral_Unsigned_T>(val_at_least_0);
+}
+
+template <                                                       //
+    class Integral_T,                                            //
+    class Integral_Unsigned_T = std::make_unsigned_t<Integral_T> //
+    >                                                            //
+inline Integral_Unsigned_T as_unsigned_checked(Integral_T val_at_least_0)
+{
+    static_assert(std::is_integral_v<Integral_T> &&
+                  std::is_signed_v<Integral_T>);
+    if (!(val_at_least_0 >= 0))
+        throw std::domain_error("as_unsigned_checked argument < 0!");
+
+    return static_cast<Integral_Unsigned_T>(val_at_least_0);
+}
 
 //////////////////////////////////////// general utility functions
 template <class T>
