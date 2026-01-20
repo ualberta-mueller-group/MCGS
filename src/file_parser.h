@@ -24,6 +24,13 @@
 
 ////////////////////////////////////////////////// file_parser
 
+enum file_parser_state_enum
+{
+    FILE_PARSER_STATE_BEGIN = 0,
+    FILE_PARSER_STATE_HAS_CHUNK,
+    FILE_PARSER_STATE_END_OF_FILE,
+};
+
 namespace file_parser_impl {
 
 enum match_state
@@ -150,6 +157,8 @@ private:
     std::string _token;
 
     bool _warned_wrong_version;
+
+    file_parser_state_enum _input_state;
 };
 
 enum parser_exception_code
@@ -163,11 +172,8 @@ enum parser_exception_code
     DUPLICATE_GAME_PARSER,
     FAILED_MATCH,
     FAILED_GAME_TOKEN_PARSE,
-    CASE_LIMIT_EXCEEDED, // shouldn't happen in practice
-    EMPTY_COMMAND,
-    EMPTY_CASE_COMMAND,
     FAILED_CASE_COMMAND,
-    PARSE_CHUNK_CALLER_ERROR,
+    PARSE_CHUNK_CALLER_ERROR, // TODO 
     BAD_COMMENT_FORMAT,
 };
 

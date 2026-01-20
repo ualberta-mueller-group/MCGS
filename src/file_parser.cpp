@@ -138,7 +138,8 @@ file_parser::file_parser(istream* stream, bool delete_stream,
       _section_title(""),
       _line_number(0),
       _token(""),
-      _warned_wrong_version(false)
+      _warned_wrong_version(false),
+      _input_state(FILE_PARSER_STATE_BEGIN)
 {
     if (_game_map.size() == 0)
     {
@@ -589,14 +590,19 @@ file_parser::~file_parser()
 
 bool file_parser::parse_chunk()
 {
+    THROW_ASSERT(_input_state != FILE_PARSER_STATE_END_OF_FILE);
+
     const bool has_more = _parse_chunk_impl();
     assert(_chunk.has_value());
 
     if (!has_more)
     {
         _chunk.reset();
+        _input_state = FILE_PARSER_STATE_END_OF_FILE;
         return false;
     }
+
+    _input_state = FILE_PARSER_STATE_HAS_CHUNK;
 
     // TODO janky ways to validate input
     {
@@ -719,7 +725,8 @@ bool file_parser::_parse_chunk_impl()
 
 std::vector<game*> file_parser::get_games() const
 {
-    assert(_chunk.has_value());
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value());
     visitor_generate visitor;
 
     return visitor.get_games(_chunk.value());
@@ -727,19 +734,24 @@ std::vector<game*> file_parser::get_games() const
 
 int file_parser::n_test_cases() const
 {
-    assert(_chunk.has_value());
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value());
     return _chunk->n_command_exprs();
 }
 
 command_type_enum file_parser::get_test_case_type(int test_case_idx) const
 {
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value() && test_case_idx < n_test_cases());
     assert(_chunk.has_value() && test_case_idx < n_test_cases());
+
     return _chunk.value().get_command_expr(test_case_idx).get_command_type();
 }
 
 std::shared_ptr<i_test_case> file_parser::get_test_case(int test_case_idx) const
 {
-    THROW_ASSERT(_chunk.has_value());
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value());
     visitor_generate visitor;
     i_test_case* test_case = visitor.get_test_case(_chunk.value(), test_case_idx);
 
@@ -748,7 +760,8 @@ std::shared_ptr<i_test_case> file_parser::get_test_case(int test_case_idx) const
 
 void file_parser::print_ast() const
 {
-    THROW_ASSERT(_chunk.has_value());
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value());
     fp_visitor_print visitor;
     visitor.visit_chunk(_chunk.value());
 }

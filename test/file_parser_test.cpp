@@ -508,6 +508,44 @@ void e2e_test29()
                                BAD_COMMENT_FORMAT);
 }
 
+void iteration_tests()
+{
+    auto get_fp = []() -> std::unique_ptr<file_parser>
+    {
+        file_parser* fp =
+            file_parser::from_string("[clobber] XOXO [clobber_1xn] XO {}");
+
+        return std::unique_ptr<file_parser>(fp);
+    };
+
+    // Do stuff before calling parse_chunk(), and after EOF
+    {
+        std::unique_ptr<file_parser> fp_eof(get_fp());
+        std::unique_ptr<file_parser> fp_before_parse(get_fp());
+
+        while (fp_eof->parse_chunk())
+        {}
+
+        ASSERT_DID_THROW(fp_eof->parse_chunk());
+        //ASSERT_DID_THROW(fp_before_parse->parse_chunk());
+
+        ASSERT_DID_THROW(fp_eof->n_test_cases());
+        ASSERT_DID_THROW(fp_before_parse->n_test_cases());
+
+        ASSERT_DID_THROW(fp_eof->get_test_case(0));
+        ASSERT_DID_THROW(fp_before_parse->get_test_case(0));
+
+        ASSERT_DID_THROW(fp_eof->get_test_case_type(0));
+        ASSERT_DID_THROW(fp_before_parse->get_test_case_type(0));
+
+        ASSERT_DID_THROW(fp_eof->get_games());
+        ASSERT_DID_THROW(fp_before_parse->get_games());
+
+        ASSERT_DID_THROW(fp_eof->print_ast());
+        ASSERT_DID_THROW(fp_before_parse->print_ast());
+    }
+}
+
 void end_to_end_tests()
 {
     e2e_test1();
@@ -541,6 +579,8 @@ void end_to_end_tests()
     e2e_test27();
     e2e_test28();
     e2e_test29();
+
+    iteration_tests();
 }
 
 } // namespace
