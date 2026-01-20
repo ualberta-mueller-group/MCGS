@@ -36,7 +36,11 @@ template <                                                       //
 inline Integral_Unsigned_T as_unsigned_unsafe(Integral_T val_at_least_0)
 {
     static_assert(std::is_integral_v<Integral_T> &&
-                  std::is_signed_v<Integral_T>);
+                  std::is_signed_v<Integral_T> &&
+                  std::is_integral_v<Integral_Unsigned_T> &&
+                  std::is_unsigned_v<Integral_Unsigned_T> &&
+                  sizeof(Integral_T) == sizeof(Integral_Unsigned_T));
+
     assert(val_at_least_0 >= 0);
 
     return static_cast<Integral_Unsigned_T>(val_at_least_0);
@@ -48,8 +52,13 @@ template <                                                       //
     >                                                            //
 inline Integral_Unsigned_T as_unsigned_checked(Integral_T val_at_least_0)
 {
+
     static_assert(std::is_integral_v<Integral_T> &&
-                  std::is_signed_v<Integral_T>);
+                  std::is_signed_v<Integral_T> &&
+                  std::is_integral_v<Integral_Unsigned_T> &&
+                  std::is_unsigned_v<Integral_Unsigned_T> &&
+                  sizeof(Integral_T) == sizeof(Integral_Unsigned_T));
+
     if (!(val_at_least_0 >= 0))
         throw std::domain_error("as_unsigned_checked argument < 0!");
 

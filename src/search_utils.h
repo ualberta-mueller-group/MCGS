@@ -1,11 +1,10 @@
+/*
+    Utilities for solving both partisan and impartial sums.
+
+    Deprecated?
+*/
 #pragma once
 #include "test_case_enums.h"
-#warning TODO delete/replace __FILE__ (use test_case.h in most cases)
-
-/*
-    Utilities for solving both partisan and impartial sums. Used by main.cpp
-        and autotests.cpp to run tests.
-*/
 
 #include <string>
 #include <vector>

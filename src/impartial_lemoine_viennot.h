@@ -12,6 +12,7 @@
 #include "transposition.h"
 #include "impartial_game.h"
 #include "timeout_token.h"
+#include "utilities.h"
 // See development-notes.md, 
 // Impartial Games - the Lemoine - Viennot algorithms
 
@@ -58,7 +59,7 @@ private:
 
 inline const hash_t& nimber_hashcode::get(int nimber)
 {
-    THROW_ASSERT(nimber >= 0 && nimber < _codes.size());
+    THROW_ASSERT(nimber >= 0 && as_unsigned_unsafe(nimber) < _codes.size());
     return _codes[nimber];
 }
 
