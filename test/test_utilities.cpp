@@ -399,18 +399,21 @@ void assert_solve_test_file(const std::string& file_name,
             const char player_char = row.player.value().at(0);
 
             const bw to_play = player_char_to_color(player_char);
-            const std::vector<game*>& games = fp->get_games();
+            std::vector<game*> games = fp->get_games();
 
             sumgame s(to_play);
 
-            for (game* g : games)
-                s.add(g);
+            s.add(games);
             bool result = s.solve();
             s.pop(games);
 
             const std::string result_text = result ? "Win" : "Loss";
             assert(row.expected_result.has_value() &&
                    result_text == *row.expected_result);
+
+            for (game* g : games)
+                delete g;
+
         }
     }
 

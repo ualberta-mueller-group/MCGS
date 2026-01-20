@@ -159,18 +159,10 @@ void cli_opts_test8()
             {new nogo_1xn("X..O"), new nogo_1xn("X...O..X")},
             COMMAND_TYPE_SOLVE_BW);
 
-#warning TODO delete commented out code in this file
-    //{
-    //    game_case* gc = new game_case();
-    //    cases.push_back(gc);
-
-    //    gc->to_play = BLACK;
-    //    gc->expected_value.set_win(true);
-    //    gc->games.push_back(new nogo_1xn("X..O"));
-    //    gc->games.push_back(new nogo_1xn("X...O..X"));
-    //}
 
     assert_file_parser_output(opts.parser.get(), rows);
+    for (csv_row* row : rows)
+        delete row;
 }
 
 // --file gives correct file/parser
@@ -188,15 +180,10 @@ void cli_opts_test9()
 
     add_row(rows, BLACK, LOSS_TEXT, {new clobber_1xn("XOOX")}, COMMAND_TYPE_SOLVE_BW);
 
-    //{
-    //    game_case* gc = new game_case();
-    //    cases.push_back(gc);
-    //    gc->to_play = BLACK;
-    //    gc->expected_value.set_win(false);
-    //    gc->games.push_back(new clobber_1xn("XOOX"));
-    //}
-
     assert_file_parser_output(opts.parser.get(), rows);
+
+    for (csv_row* row : rows)
+        delete row;
 }
 
 // --test-timeout
