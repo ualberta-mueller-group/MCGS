@@ -25,8 +25,6 @@ constexpr uint64_t INITIAL_SEARCH_DEPTH = 0;
 ////////////////////////////////////////////////// struct solver_stats
 struct solver_stats
 {
-    solver_stats() { reset(); }
-
     void reset();
     void print_search_statistics(std::ostream& ostr) const;
 

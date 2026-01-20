@@ -7,6 +7,7 @@
 
 #include "cgt_basics.h"
 #include "csv_row.h"
+#include "file_parser.h"
 #include "file_parser_ast.h"
 #include "game.h"
 #include "get_winning_moves.h"
@@ -129,6 +130,13 @@ test_case_solve_n::test_case_solve_n(fp_expr_command_solve_n expr,
     : i_test_case(COMMAND_TYPE_SOLVE_N, games),
       _expr(expr)
 {
+    if (!all_games_impartial(_games))
+    {
+        const string why = file_parser::get_error_start(expr.get_line_no()) +
+                           "solve N command has partisan games";
+        throw parser_exception(why, FAILED_CASE_COMMAND);
+    }
+
     optional<string> expected_result_string;
 
     const optional<int>& expected_nim_value = _expr.get_expected_nim_value();
@@ -178,11 +186,12 @@ test_case_winning_moves::test_case_winning_moves(
     fp_expr_command_winning_moves expr, std::vector<game*> games)
     : i_test_case(COMMAND_TYPE_WINNING_MOVES, games), _expr(expr)
 {
-    THROW_ASSERT(                         //
-        LOGICAL_IMPLIES(                  //
-            _expr.get_player() == EMPTY,  //
-            all_games_impartial(_games)), //
-        "Sum contains partisan games");   //
+    if (_expr.get_player() == EMPTY && !all_games_impartial(_games))
+    {
+        const string why = file_parser::get_error_start(expr.get_line_no()) +
+                           "winning moves N command has partisan games";
+        throw parser_exception(why, FAILED_CASE_COMMAND);
+    }
 
     const optional<string> expected_result_string =
         winning_moves_string(expr.get_expected_winning_moves());

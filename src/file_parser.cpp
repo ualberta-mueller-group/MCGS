@@ -385,8 +385,15 @@ i_fp_expr_command* get_fp_expr_run_command_solve_bw(const int line_number,
         if (outcome_token == "loss")
             expected_outcome = MINIMAX_OUTCOME_LOSS;
 
-        // TODO proper parser exception
-        THROW_ASSERT(expected_outcome != MINIMAX_OUTCOME_NONE);
+        if (expected_outcome == MINIMAX_OUTCOME_NONE)
+        {
+            const string why =
+                file_parser::get_error_start(line_number) +
+                "BW solve command has invalid expected outcome: \"" +
+                outcome_token + "\" (if present, should be \"win\" or \"loss\")";
+
+            throw parser_exception(why, FAILED_CASE_COMMAND);
+        }
     }
 
     return new fp_expr_command_solve_bw(line_number, player, expected_outcome);
@@ -417,7 +424,15 @@ i_fp_expr_command* get_fp_expr_run_command_solve_n(const int line_number,
         expected_nimber = str_to_i_opt(outcome_token);
 
         // TODO proper parser exception
-        THROW_ASSERT(expected_nimber.has_value() && expected_nimber.value() >= 0);
+        if (!(expected_nimber.has_value() && expected_nimber.value() >= 0))
+        {
+            const string why =
+                file_parser::get_error_start(line_number) +
+                "N solve command has invalid expected value: \"" +
+                outcome_token + "\" (if present, should be integer >= 0)";
+
+            throw parser_exception(why, FAILED_CASE_COMMAND);
+        }
     }
 
     return new fp_expr_command_solve_n(line_number, expected_nimber);
@@ -450,7 +465,13 @@ i_fp_expr_command* get_fp_expr_run_command_winning_moves(const int line_number,
         player = EMPTY;
 
     if (!player.has_value())
-        return nullptr;
+    {
+        const string why = file_parser::get_error_start(line_number) +
+                           "winning moves command has invalid player: \"" +
+                           player_token +
+                           "\" (should be one of 'B', 'W', or 'N')";
+        throw parser_exception(why, FAILED_CASE_COMMAND);
+    }
 
     optional<vector<string>> expected_moves = vector<string>();
     assert(expected_moves.has_value());
@@ -554,10 +575,10 @@ bool file_parser::_parse_command()
 // get start of parser error text (including line number)
 string file_parser::_get_error_start()
 {
-    return _get_error_start(_line_number);
+    return get_error_start(_line_number);
 }
 
-string file_parser::_get_error_start(int line_number)
+string file_parser::get_error_start(int line_number)
 {
     return "Parser error on line " + to_string(line_number) + ": ";
 }
@@ -567,6 +588,34 @@ file_parser::~file_parser()
 }
 
 bool file_parser::parse_chunk()
+{
+    const bool has_more = _parse_chunk_impl();
+    assert(_chunk.has_value());
+
+    if (!has_more)
+    {
+        _chunk.reset();
+        return false;
+    }
+
+    // TODO janky ways to validate input
+    {
+        // Construct games
+        std::vector<game*> games = get_games();
+        for (game* g : games)
+            delete g;
+    }
+    {
+        // Construct all tests
+        const int n_tests = n_test_cases();
+        for (int i = 0; i < n_tests; i++)
+            std::shared_ptr<i_test_case> test = get_test_case(i);
+    }
+
+    return true;
+}
+
+bool file_parser::_parse_chunk_impl()
 {
     if (!_chunk.has_value())
         _chunk.emplace();
@@ -594,8 +643,6 @@ bool file_parser::parse_chunk()
                 string why =
                     _get_error_start() + "Failed to match version command";
                 throw parser_exception(why, MISSING_VERSION_COMMAND);
-
-                return false;
             }
 
             _version_check(_token);
@@ -614,7 +661,14 @@ bool file_parser::parse_chunk()
             }
 
             bool ok = _parse_command();
-            THROW_ASSERT(ok);
+
+            if (!ok)
+            {
+                const string why = file_parser::get_error_start(_line_number) +
+                                   "failed to match command";
+
+                throw parser_exception(why, FAILED_CASE_COMMAND);
+            }
 
             // the only command is a "run" command, so just return a case.
             // OK if no games were read yet -- this is a "0" game
@@ -704,7 +758,7 @@ game* file_parser::construct_game(const std::string& title, int line_number,
 {
     if (title.size() == 0)
     {
-        string why = _get_error_start(line_number) +
+        string why = get_error_start(line_number) +
                      "game token found but section title missing";
         throw parser_exception(why, MISSING_SECTION_TITLE);
     }
@@ -714,7 +768,7 @@ game* file_parser::construct_game(const std::string& title, int line_number,
     if (it == _game_map.end())
     {
         string why =
-            _get_error_start(line_number) +
+            get_error_start(line_number) +
             "game token found, but game parser doesn't exist for section \"";
         why += title + "\"";
         throw parser_exception(why, MISSING_SECTION_PARSER);
@@ -730,13 +784,13 @@ game* file_parser::construct_game(const std::string& title, int line_number,
     }
     catch (exception& e)
     {
-        cerr << _get_error_start(line_number) << e.what();
+        cerr << get_error_start(line_number) << e.what();
         throw e;
     }
 
     if (g == nullptr)
     {
-        string why = _get_error_start(line_number) +
+        string why = get_error_start(line_number) +
                      "game parser for section \"" + title;
         why += "\" failed to parse game token: \"" + game_token + "\"";
         throw parser_exception(why, FAILED_GAME_TOKEN_PARSE);

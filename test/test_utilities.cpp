@@ -360,7 +360,6 @@ void add_row(std::vector<csv_row*>& rows, ebw player,
     rows.push_back(row);
 }
 
-
 } // namespace file_parser_test 
 
 

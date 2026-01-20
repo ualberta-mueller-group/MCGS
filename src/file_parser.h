@@ -82,7 +82,9 @@ private:
     bool _parse_command();
 
     std::string _get_error_start();
-    static std::string _get_error_start(int line_number);
+
+public:
+    static std::string get_error_start(int line_number);
 
 public:
     // Prevent accidental memory bugs
@@ -95,6 +97,10 @@ public:
     ~file_parser();
 
     bool parse_chunk();
+private:
+    bool _parse_chunk_impl();
+public:
+
     std::vector<game*> get_games() const;
     int n_test_cases() const;
     command_type_enum get_test_case_type(int test_case_idx) const;

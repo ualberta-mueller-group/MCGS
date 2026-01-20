@@ -8,11 +8,12 @@
 #include <vector>
 #include <cassert>
 #include "cgt_basics.h"
+#include "game.h"
 #include "test_case_enums.h"
 #include "throw_assert.h"
 #include "utilities.h"
 #include "string_to_int.h"
-
+#include "file_parser.h"
 
 
 //////////////////////////////////////////////////
@@ -102,9 +103,14 @@ fp_expr_comment::fp_expr_comment(int line_no,
     // Silent comment?
     if (checked_is_element(_comment, 0, '_'))
     {
-        // TODO proper parser error
-        THROW_ASSERT(
-            LOGICAL_IMPLIES(_comment.size() > 1, std::isspace(_comment[1])));
+        if (!LOGICAL_IMPLIES(_comment.size() > 1, std::isspace(_comment[1])))
+        {
+            const std::string why =
+                file_parser::get_error_start(line_no) +
+                "silent comment (with '_' prefix) has non-whitespace char "
+                "immediately after prefix";
+            throw parser_exception(why, BAD_COMMENT_FORMAT);
+        }
 
         size_t n_skip_chars = 1;
         if (_comment.size() > 1)
@@ -138,10 +144,10 @@ fp_expr_comment::fp_expr_comment(int line_no,
 
     if (!comment_number_int.has_value() || comment_number_int.value() < 0)
     {
-        THROW_ASSERT(false); // TODO make this throw a parser exception
-
-        //throw parser_exception("Comment with '#' missing or bad number",
-        //                       BAD_COMMENT_FORMAT);
+        const std::string why = file_parser::get_error_start(line_no) +
+                                "numbered comment (with '#' prefix) has "
+                                "missing or bad number (should be 0-indexed)";
+        throw parser_exception(why, BAD_COMMENT_FORMAT);
     }
 
     _comment = _comment.substr(n_skip_chars);

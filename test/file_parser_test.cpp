@@ -187,16 +187,16 @@ void e2e_test10()
 void e2e_test11()
 {
     assert_throw_status_file("invalid_command2.test", true,
-                             CASE_LIMIT_EXCEEDED);
+                             FAILED_CASE_COMMAND);
     assert_throw_status_string("invalid_command2.test", true,
-                               CASE_LIMIT_EXCEEDED);
+                               FAILED_CASE_COMMAND);
 }
 
 void e2e_test12()
 {
-    assert_throw_status_file("invalid_command3.test", true, EMPTY_CASE_COMMAND);
+    assert_throw_status_file("invalid_command3.test", true, FAILED_CASE_COMMAND);
     assert_throw_status_string("invalid_command3.test", true,
-                               EMPTY_CASE_COMMAND);
+                               FAILED_CASE_COMMAND);
 }
 
 void more_invalid_commands()
@@ -225,6 +225,12 @@ void more_invalid_commands()
                              FAILED_CASE_COMMAND);
     assert_throw_status_string("invalid_command8.test", true,
                                FAILED_CASE_COMMAND);
+
+    assert_throw_status_file("invalid_command9.test", true,
+                                 FAILED_CASE_COMMAND);
+    assert_throw_status_string("invalid_command9.test", true,
+                               FAILED_CASE_COMMAND);
+
 }
 
 ///// reserved characters outside of comments
@@ -379,83 +385,11 @@ void e2e_test21()
     add_row(rows, WHITE, LOSS_TEXT, {},
                               COMMAND_TYPE_SOLVE_BW);
 
-#warning DELETE COMMENTED OUT OLD CODE IN THIS FILE
-
-    ////////////////////
-
-    //{
-    //    game_case* gc = new game_case();
-    //    cases.push_back(gc);
-
-    //    gc->to_play = BLACK;
-    //    gc->expected_value.set_win(true);
-    //    gc->games.push_back(new nogo_1xn("X..O"));
-    //}
-
-    //{
-    //    game_case* gc = new game_case();
-    //    cases.push_back(gc);
-
-    //    gc->to_play = WHITE;
-    //    gc->expected_value.set_win(true);
-    //    gc->games.push_back(new nogo_1xn("X..O"));
-    //}
-
-    //{
-    //    game_case* gc = new game_case();
-    //    cases.push_back(gc);
-
-    //    gc->to_play = BLACK;
-    //    gc->expected_value.set_win(false);
-    //    gc->games.push_back(new integer_game(4));
-    //    gc->games.push_back(new integer_game(-5));
-    //}
-
-    //{
-    //    game_case* gc = new game_case();
-    //    cases.push_back(gc);
-
-    //    gc->to_play = WHITE;
-    //    gc->expected_value.set_win(true);
-    //    gc->games.push_back(new integer_game(4));
-    //    gc->games.push_back(new integer_game(-5));
-    //}
-
-    //{
-    //    game_case* gc = new game_case();
-    //    cases.push_back(gc);
-
-    //    gc->to_play = BLACK;
-    //    gc->expected_value.set_win(true);
-    //    gc->games.push_back(new clobber_1xn("XOXOXOXO"));
-    //}
-
-    //{
-    //    game_case* gc = new game_case();
-    //    cases.push_back(gc);
-
-    //    gc->to_play = WHITE;
-    //    gc->games.push_back(new clobber_1xn("XOXOXOXO"));
-    //}
-
-  ///{
-  ///      game_case* gc = new game_case();
-  ///      cases.push_back(gc);
-
-  ///      gc->to_play = BLACK;
-  ///      gc->expected_value.set_win(false);
-  ///  }
-
-  ///  {
-  ///      game_case* gc = new game_case();
-  ///      cases.push_back(gc);
-
-  ///      gc->to_play = WHITE;
-  ///      gc->expected_value.set_win(false);
-  ///  }
-
     assert_file_parser_output_file(
         INPUT_ROOT_DIR + "sumgames1.test", rows);
+
+    for (csv_row* row : rows)
+        delete row;
 }
 
 void e2e_test22()
@@ -465,6 +399,9 @@ void e2e_test22()
     vector<csv_row*> rows;
     assert_file_parser_output_file(
         INPUT_ROOT_DIR + "sumgames2.test", rows);
+
+    for (csv_row* row : rows)
+        delete row;
 }
 
 void e2e_test23()
@@ -474,6 +411,9 @@ void e2e_test23()
     vector<csv_row*> rows;
     assert_file_parser_output_file(
         INPUT_ROOT_DIR + "sumgames3.test", rows);
+
+    for (csv_row* row : rows)
+        delete row;
 }
 
 void e2e_test24()
@@ -485,16 +425,9 @@ void e2e_test24()
     add_row(rows, BLACK, LOSS_TEXT, {new clobber_1xn("XOOX")},
             COMMAND_TYPE_SOLVE_BW);
 
-    //{
-    //    game_case* gc = new game_case();
-    //    cases.push_back(gc);
-
-    //    gc->to_play = BLACK;
-    //    gc->expected_value.set_win(false);
-    //    gc->games.push_back(new clobber_1xn("XOOX"));
-    //}
-
     assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames4.test", rows);
+    for (csv_row* row : rows)
+        delete row;
 }
 
 // Comment stuff...

@@ -17,7 +17,6 @@
 #include "file_parser.h"
 #include "game.h"
 #include "csv_row.h"
-#include "throw_assert.h"
 #include "file_parser_ast.h"
 #include "search_utils.h"
 #include "test_case.h"
@@ -25,6 +24,32 @@
 #include "utilities.h"
 
 using namespace std;
+
+namespace {
+string get_error_start(const i_fp_expr& expr)
+{
+    return file_parser::get_error_start(expr.get_line_no());
+}
+
+template <class T>
+class reset_optional_on_return
+{
+public:
+    reset_optional_on_return(std::optional<T>& opt)
+        : _opt(opt)
+    {
+    }
+
+    ~reset_optional_on_return()
+    {
+        _opt.reset();
+    }
+
+private:
+    std::optional<T>& _opt;
+};
+
+} // namespace
 
 
 //////////////////////////////////////////////////
@@ -41,37 +66,62 @@ vector<game*> visitor_generate::get_games(const fp_chunk& chunk)
 {
     vector<game*> games;
     _ctx.emplace(chunk, games);
+    reset_optional_on_return ror(_ctx);
 
-    const int n_content_exprs = chunk.n_content_exprs();
-    for (int i = 0; i < n_content_exprs; i++)
-        chunk.get_content_expr(i).accept(*this);
+    try
+    {
+        const int n_content_exprs = chunk.n_content_exprs();
+        for (int i = 0; i < n_content_exprs; i++)
+            chunk.get_content_expr(i).accept(*this);
 
-    _ctx.reset();
-    return games;
+        return games;
+    }
+    catch (...)
+    {
+        for (game* g : games)
+        {
+            if (g != nullptr)
+                delete g;
+        }
+
+        throw;
+    }
 }
 
 i_test_case* visitor_generate::get_test_case(const fp_chunk& chunk, int test_case_idx)
 {
     vector<game*> games;
     _ctx.emplace(chunk, games);
+    reset_optional_on_return ror(_ctx);
     _ctx->test_case_idx = test_case_idx;
 
-    const int n_content_exprs = chunk.n_content_exprs();
-    for (int i = 0; i < n_content_exprs; i++)
-        chunk.get_content_expr(i).accept(*this);
+    try {
+        const int n_content_exprs = chunk.n_content_exprs();
+        for (int i = 0; i < n_content_exprs; i++)
+            chunk.get_content_expr(i).accept(*this);
 
-    chunk.get_command_expr(test_case_idx).accept(*this);
+        chunk.get_command_expr(test_case_idx).accept(*this);
 
-    assert(_ctx->result_test_case.has_value());
-    i_test_case* result_test_case = _ctx->result_test_case.value();
+        assert(_ctx->result_test_case.has_value());
+        i_test_case* result_test_case = _ctx->result_test_case.value();
 
-    csv_row& row = result_test_case->get_csv_row();
-    row.fill_visitor_fields(_ctx->comments,
-                            result_test_case->get_command_type(),
-                            _ctx->input_hash.get_string());
+        csv_row& row = result_test_case->get_csv_row();
+        row.fill_visitor_fields(_ctx->comments,
+                                result_test_case->get_command_type(),
+                                _ctx->input_hash.get_string());
 
-    _ctx.reset();
-    return result_test_case;
+        return result_test_case;
+    }
+    catch (...)
+    {
+        for (game* g : games)
+        {
+            if (g != nullptr)
+                delete g;
+        }
+
+        throw;
+    }
 }
 
 void visitor_generate::visit(const fp_expr_title& expr)
@@ -84,8 +134,13 @@ void visitor_generate::visit(const fp_expr_game& expr)
 {
     assert(_ctx.has_value());
 
-    // TODO proper parser exception
-    THROW_ASSERT(_ctx->title.has_value());
+    if (!_ctx->title.has_value())
+    {
+        const string why = get_error_start(expr) +
+                           "game token found but section title missing";
+
+        throw parser_exception(why, MISSING_SECTION_TITLE);
+    }
 
     const string& title_token = _ctx->title->get_title();
     const string& game_token = expr.get_game_token();
@@ -113,6 +168,18 @@ void visitor_generate::visit(const fp_expr_comment& expr)
         {
             if (expr.get_number() == test_case_idx)
                 _ctx->comments.emplace_back(expr.get_comment());
+
+            if (expr.get_number() >= _ctx->chunk.n_command_exprs())
+            {
+                const std::string why =
+                    file_parser::get_error_start(expr.get_line_no()) +
+                    "numbered comment (with '#' prefix) invalid (should be "
+                    "0-indexed and refer to a comman within a curly brace "
+                    "block)";
+
+                throw parser_exception(why, BAD_COMMENT_FORMAT);
+            }
+
             break;
         }
 

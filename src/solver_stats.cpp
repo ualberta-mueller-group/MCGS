@@ -188,5 +188,6 @@ void init_solver_stats()
 {
     assert(!stats::hash_helper.has_value());
     stats::hash_helper.emplace();
+    stats::reset_global_stats();
 }
 } // namespace mcgs_init
