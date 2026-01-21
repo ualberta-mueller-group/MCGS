@@ -1,4 +1,4 @@
-{version 1.4}
+{version 1.5}
 
 /*_
     These tests have not been tried, but are larger than 
@@ -25,7 +25,7 @@ XOXOX|OXOXO|XOXOX|OXOXO|XOXOX|OXOXO {N}
 /* 6x6 */
 XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO|OXOXOX {N}
 
--------------------------------------
+/*_ ------------------------------------- */
 /* From clobber_random_filled1_imp_hard.test */
 
 /* 3x8 random */
