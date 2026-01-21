@@ -1658,6 +1658,48 @@ a move generator in a `std::unique_ptr`
     first time on some object
 
 # Release Procedure
+
+## Update MCGS Version Number
+These commands will update the version string in `.test` files, and MCGS.
+
+1. Enable extended globbing in bash. The 2nd command should show "extglob on":
+```
+shopt -s extglob
+```
+```
+shopt | grep "extglob"
+```
+
+2. Check that there are no unintended files in the following output (especially
+   `.git` files). Only `.test` files should appear:
+```
+find !(.) -regex ".*\.test$" | less
+```
+
+3. Edit the versions in the regexes below (these will change `{version 1.4}` to
+`{version 1.5}`). The 1st command does a dry run and prints resulting file
+contents to stdout. The 2nd command modifies the actual files.
+```
+find !(.) -regex ".*\.test$" | xargs -I TARGET_FILE sed 's/{ *version 1\.4 *}/{version 1.5}/g' TARGET_FILE
+```
+```
+find !(.) -regex ".*\.test$" | xargs -I TARGET_FILE sed -i 's/{ *version 1\.4 *}/{version 1.5}/g' TARGET_FILE
+```
+
+4. Update version strings in `src/version_info.h`
+
+5. Do a clean (and default debug level) build of MCGS and MCGS_test. Then run
+the following:
+```
+./MCGS_test
+```
+```
+./MCGS --run-tests --test-dir input --test-timeout 1
+```
+The 2nd command will run all tests with a 1ms timeout. Its successful completion
+indicates that all `.test` files are still valid.
+
+## Code/Documentation/Testing
 1. Resolve relevant TODOs
     ```
     make find_todo
