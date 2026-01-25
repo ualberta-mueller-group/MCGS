@@ -120,9 +120,9 @@ The class hierarchy for test cases is as follows:
     - `test_case_winning_moves` winning moves test for `B`, `W`, or `N`
 
 The `csv_row` represents a single row of output to a `.csv` file. Its contents
-are incrementally filled in (over 4 stages). Each field is a `std::optional`
-of some type. See `csv_row.h` to see which fields are reqired/truly optional,
-and which stage they belong to.
+are incrementally filled in (via helper functions, and over 4 stages). Each
+field is a `std::optional` of some type. See `csv_row.h` to see which fields
+are reqired/truly optional, and which stage they belong to.
 
 The 4 stages are:
 - `visitor`: field should be filled in by `visitor_generate`.
