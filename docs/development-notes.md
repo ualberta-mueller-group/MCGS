@@ -44,7 +44,8 @@ internals. The latter is useful for developers who wish to add new features to
 
 ## `file_parser` basic usage
 The basic usage is as follows:
-1. A `file_parser` is constructed with some input source:
+1. A `file_parser` is constructed with some input source (the caller must use
+   `delete`):
     - `file_parser* from_file(const string& file_name)`
     - `file_parser* from_string(const string& string)`
     - `file_parser* from_stdin()`
@@ -71,7 +72,7 @@ The basic usage is as follows:
 chunk. Visitors `i_fp_visitor` iterate over the contents of the `fp_chunk` to
 construct `game`s and/or test cases (`i_test_case`).
 
-The following 3 subsections expand on this in more detail. And the final
+The following 3 subsections expand on this in more detail. The final
 subsection gives steps to add a new test case/command to `.test` input.
 
 ### AST nodes (`file_parser_ast.h`)
