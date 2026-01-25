@@ -534,6 +534,8 @@ bool get_fp_expr_run_command(const int line_number,
 
     i_fp_expr_command* expr = nullptr;
 
+    // The functions inside of these macros should return nullptr if the
+    // input doesn't match the command
     CALL_PARSE_FN_MACRO(get_fp_expr_run_command_solve_bw);
     CALL_PARSE_FN_MACRO(get_fp_expr_run_command_solve_n);
     CALL_PARSE_FN_MACRO(get_fp_expr_run_command_winning_moves);

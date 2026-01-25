@@ -33,6 +33,172 @@ This document includes more detailed information than `README.md`, including des
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+# File Parser and Test Cases
+Most input parsing is handled by two classes: `cli_options`, and `file_parser`.
+The latter handles `.test` input, and is the focus of this section.
+`file_parser` was refactored in v1.5 to be more extensible, modular, and
+testable, but as a result is more complex. The first subsection describes the
+basic usage of the `file_parser` class, and the second subsection describes the
+internals. The latter is useful for developers who wish to add new features to
+`.test` input.
+
+## `file_parser` basic usage
+The basic usage is as follows:
+1. A `file_parser` is constructed with some input source:
+    - `file_parser* from_file(const string& file_name)`
+    - `file_parser* from_string(const string& string)`
+    - `file_parser* from_stdin()`
+2. The `bool file_parser::parse:chunk()` method reads the input until it has
+   read a "chunk" (or end-of-file). A chunk is defined as a sum of games, and a
+   curly brace "command block" containing 0 or more commands. Returns `true`
+   IFF the `file_parser` has a chunk (`false` denotes end-of-file).
+3. When a chunk is present, it contains 0 or more games, and 0 or more
+   commands/test cases which operate on those games. Use the following
+   `file_parser` methods:
+    - `vector<game*> get_games() const` constructs the games specified
+      by the chunk (the games are owned by the caller).
+    - `int n_test_cases() const` the number of test cases in the chunk.
+    - `command_type_enum get_test_case_type(int test_case_idx) const` the type
+      of the (0-indexed) test case in the chunk.
+    - `shared_ptr<i_test_case> get_test_case(int test_case_idx) const`
+      constructs a (0-indexed) test case (owned by the caller), containing all
+      state necessary for running the test (i.e. games, expected result,
+      `csv_row`, etc).
+
+## `file_parser` Internals: AST nodes, Visitors, Test Cases, and CSV Rows
+`file_parser::parse_chunk()` constructs AST (abstract syntax tree) nodes
+(`i_fp_expr`), and stores them in a container `fp_chunk` representing the
+chunk. Visitors `i_fp_visitor` iterate over the contents of the `fp_chunk` to
+construct `game`s and/or test cases (`i_test_case`).
+
+The following 3 subsections expand on this in more detail. And the final
+subsection gives steps to add a new test case/command to `.test` input.
+
+### AST nodes (`file_parser_ast.h`)
+When `file_parser` parses a chunk from the input string, it constructs an AST
+(abstract syntax tree), whose classes are defined by `file_parser_ast.h`. AST
+nodes are simple, lightweight classes. The class hierarchy of AST nodes is as
+follows (the `i_` prefix denotes an abstract type, and sublists denote
+inheritance):
+- `i_fp_expr` interface for all AST nodes
+    - `i_fp_expr_content` interface for non-command AST nodes
+        - `fp_expr_title` game title i.e. `[clobber]`
+        - `fp_expr_game` game token i.e. `XOXO`
+        - `fp_expr_comment` comment i.e. `/* some comment */`
+    - `i_fp_expr_command` interface for all command AST nodes
+        - `fp_expr_command_solve_bw` i.e. `{B win}`
+        - `fp_expr_command_solve_n` i.e. `{N 4}`
+        - `fp_expr_command_winning_moves` winning moves test for `B`, `W`, or
+          `N`
+
+The AST nodes are stored in a container class `fp_chunk`. For every chunk
+parsed, the same `fp_chunk` object is reused, by clearing it and adding the
+`i_fp_expr`s from the new input chunk. The `fp_chunk` remembers the last game
+title, as a game title may be specified in a previous chunk i.e. `[clobber] {}
+XOXO {B}`.
+
+### Visitors (`file_parser_ast.h`, `visitor_print.h`, `visitor_generate.h`)
+"Visitor" classes (using the visitor design pattern) operate on AST nodes by
+iterating over the contents of an `fp_chunk`. The virtual functions declared by
+the `i_fp_visitor` interface represent callback functions for every AST node
+class. There are currently two visitor classes:
+- `visitor_print` (`visitor_print.h`) prints the contents of an `fp_chunk`,
+  for debugging purposes.
+- `visitor_generate` (`visitor_generate.h`) constructs the games or test cases
+  in an `fp_chunk`.
+
+### Test Cases and CSV Rows (`test_case.h`, `csv_row.h`)
+The `i_test_case` abstract class defines the interface for test cases which are
+specified by `.test` input. It owns a `csv_row` (which may be modified
+externally), and a `vector<game*>`.
+
+The class hierarchy for test cases is as follows:
+- `i_test_case`
+    - `test_case_solve_bw` i.e. `{B win}`
+    - `test_case_solve_n` i.e. `{N 4}`
+    - `test_case_winning_moves` winning moves test for `B`, `W`, or `N`
+
+The `csv_row` represents a single row of output to a `.csv` file. Its contents
+are incrementally filled in (over 4 stages). Each field is a `std::optional`
+of some type. See `csv_row.h` to see which fields are reqired/truly optional,
+and which stage they belong to.
+
+The 4 stages are:
+- `visitor`: field should be filled in by `visitor_generate`.
+- `pre_test`: field should be filled in by the (non-abstract) test case
+  constructor.
+- `post_test`: field should be filled in by the (non-abstract) test case's
+  `_run_impl()` method (after the computation finishes).
+- `autotests`: field should be filled by `autotests.cpp`
+
+For each stage `XYZ` there are helper functions i.e:
+- `bool csv_row::has_XYZ_fields() const`
+- `void csv_row::fill_XYZ_fields(...)`
+
+### Adding A New Test Case Type To `.test` Input
+The following steps assume you have already implemented the computational
+part of the test case, i.e:
+- `sumgame::solve_with_timeout(...)` (`sumgame.h`)
+- `search_impartial_sumgame_with_timeout(...)` (`impartial_sumgame.h`)
+- `get_winning_moves_with_timeout(...)` (`get_winning_moves.h`)
+
+Make the AST node:
+1. In `test_case_enums.h`:
+    - Add to the enum `command_type_enum`: `COMMAND_TYPE_YOUR_COMMAND`.
+    - Add the string conversion to the `command_type_to_string` function.
+        - NOTE: this string appears in the `.csv` output
+2. In `file_parser_ast.h`:
+    - Declare `class fp_expr_command_YOUR_COMMAND: public i_fp_expr_command`
+    - Your constructor should take an `int line_number`
+        - The line number and `command_type_enum` should be passed to the
+          `i_fp_expr_command` constructor
+    - Implement `void accept(i_fp_visitor& visitor) const override;` as:
+    ```
+    void fp_expr_command_YOUR_COMMAND::accept(i_fp_visitor& visitor) const
+    {
+        visitor.visit(*this);
+    }
+    ```
+    - Add any necessary getter functions.
+
+Make the test case class:
+1. In `test_case.h`:
+    - Declare `class test_case_YOUR_COMMAND: public i_test_case`
+    - Your constructor should take an `fp_expr_command_YOUR_COMMAND`, and
+      `std::vector<game*>`.
+      - Pass the `command_type_enum` and `vector<game*>` to the `i_test_case`
+        constructor
+      - Store the `fp_expr_YOUR_COMMAND`
+      - Validate input and throw a `parser_exception` if necessary
+      - Fill in the required CSV row fields: `_csv_row.fill_pre_test_fields(...)`.
+        The expected result string may be absent (if none was specified in the
+        `.test`)
+    - Your `_run_impl()` function must do several steps:
+        - Clear any relevant transposition tables before the test.
+        - Create a `stopwatch`, start its timer, run the computation,
+          and stop the timer.
+        - Report results: `_csv_row.fill_post_test_fields(...)`
+            - The result and expected result strings are allowed to be absent
+              (i.e. if the test times out, or the expected result was
+              unspecified)
+
+Add support to `file_parser` and visitors:
+1. in `file_parser_ast.h`
+    - Near the top of the file, declare a virtual function in `i_fp_visitor`:
+      `virtual void visit(const fp_expr_command_YOUR_COMMAND& expr) = 0;`
+2. In `visitor_print.h`: Implement the new virtual function in the
+   `visitor_print` class.
+3. In `visitor_generate.h`: Implement the new virtual function in the
+   `visitor_generate` class.
+4. In `file_parser.cpp`
+    - See the function `bool get_fp_expr_run_command(...)`. It must call a new
+      function `get_fp_expr_run_command_YOUR_COMMAND(...)` which parses text
+      from the `.test` input.
+      - Return the AST node `new fp_expr_command_YOUR_COMMAND(...)` or `nullptr`
+        if the text doesn't match your command.
+      - Throw a `parser_exception` if the text does match your command, but has
+        some error.
+
 
 # Search and Solving a Game
 - Two classes implement minimax game solving: `alternating_move_game` and `sumgame`
