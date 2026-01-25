@@ -136,6 +136,9 @@ For each stage `XYZ` there are helper functions i.e:
 - `bool csv_row::has_XYZ_fields() const`
 - `void csv_row::fill_XYZ_fields(...)`
 
+These helper functions fill in several values behind the scenes, i.e. those
+from `solver_stats.h`.
+
 ### Adding A New Test Case Type To `.test` Input
 The following steps assume you have already implemented the computational
 part of the test case, i.e:
