@@ -122,7 +122,7 @@ The class hierarchy for test cases is as follows:
 The `csv_row` represents a single row of output to a `.csv` file. Its contents
 are incrementally filled in (via helper functions, and over 4 stages). Each
 field is a `std::optional` of some type. See `csv_row.h` to see which fields
-are reqired/truly optional, and which stage they belong to.
+are required/truly optional, and which stage they belong to.
 
 The 4 stages are:
 - `visitor`: field should be filled in by `visitor_generate`.
