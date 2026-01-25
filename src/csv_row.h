@@ -29,7 +29,7 @@ public:
                              const std::string& input_hash);
 
     void fill_pre_test_fields(
-        const std::vector<game*>& games, std::optional<ebw> player,
+        const std::vector<game*>& games, ebw player,
         const std::optional<std::string>& expected_result);
 
     /*
@@ -65,34 +65,42 @@ public:
 
     static std::string csv_game_string(const std::vector<game*>& games);
 
-    std::optional<std::string> file;             // autotests
-    std::optional<int> case_number;              // autotests
-    std::optional<std::string> games;            // visitor
-    std::optional<std::string> player;           // visitor
-    std::optional<std::string> expected_result;  // pre test
-    std::optional<std::string> result;           // post test
-    std::optional<double> time_ms;               // post test
-    std::optional<test_case_status_enum> status; // post test
-    std::optional<std::string> comments;         // visitor
+    /*
+        CSV row fields follow.
+        Comments indicate who fills each field and whether or not the field
+        is truly optional ('?' means optional, '!' means mandatory)
+    */
 
-    std::optional<command_type_enum> command_type; // visitor
+    std::optional<std::string> file;             // autotests (!)
+    std::optional<int> case_number;              // autotests (!)
+    std::optional<std::string> games;            // pre test (!)
+    std::optional<std::string> player;           // pre test (!)
+    std::optional<std::string> expected_result;  // pre test (?)
+    std::optional<std::string> result;           // post test (?)
+    std::optional<double> time_ms;               // post test (!)
+    std::optional<test_case_status_enum> status; // post test (!)
+    std::optional<std::string> comments;         // visitor (!)
 
-    std::optional<uint64_t> tt_hits;   // post test
-    std::optional<uint64_t> tt_misses; // post test
-    std::optional<double> tt_hit_rate; // post test
+    std::optional<command_type_enum> command_type; // visitor (!)
 
-    std::optional<uint64_t> db_hits;   // post test
-    std::optional<uint64_t> db_misses; // post test
-    std::optional<double> db_hit_rate; // post test
+    std::optional<uint64_t> tt_hits;   // post test (!)
+    std::optional<uint64_t> tt_misses; // post test (!)
+    std::optional<double> tt_hit_rate; // post test (?)
 
-    std::optional<uint64_t> node_count;        // post test
-    std::optional<uint64_t> unique_node_count; // post test
-    std::optional<uint64_t> max_depth;         // post test
+    std::optional<uint64_t> db_hits;   // post test (!)
+    std::optional<uint64_t> db_misses; // post test (!)
+    std::optional<double> db_hit_rate; // post test (?)
 
-    std::optional<size_t> initial_subgame_count; // post test
-    std::optional<size_t> max_subgame_count; // post test
+    std::optional<uint64_t> node_count;        // post test (!)
+    std::optional<uint64_t> unique_node_count; // post test (?)
+    std::optional<uint64_t> max_depth;         // post test (!)
 
-    std::optional<std::string> input_hash; // visitor
+    // initial_subgame_count may be empty with very short timeouts, but it's
+    // unlikely
+    std::optional<size_t> initial_subgame_count; // post test (?)
+    std::optional<size_t> max_subgame_count;     // post test (!)
+
+    std::optional<std::string> input_hash; // visitor (!)
 };
 
 /*

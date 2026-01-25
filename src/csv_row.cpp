@@ -5,7 +5,9 @@
 #include "test_case_enums.h"
 #include "utilities.h"
 #include "game.h"
+#include <algorithm>
 #include <cctype>
+#include <initializer_list>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -48,13 +50,10 @@ string csv_comment_string(const vector<string>& comments)
     return comment_val;
 }
 
-string csv_player_string(const optional<ebw>& player)
+string csv_player_string(ebw player)
 {
-    if (!player.has_value())
-        return "?";
-
-    if (is_black_white(player.value()))
-        return string(1, color_to_player_char(player.value()));
+    if (is_black_white(player))
+        return string(1, color_to_player_char(player));
 
     return "IMP";
 }
@@ -106,41 +105,63 @@ string optional_double_to_string(optional<double> val)
     return to_n_digit_mantissa(val.value(), 2);
 }
 
-
 } // namespace
+
+//////////////////////////////////////// csv_row::has_XYZ_fields() functions
+// clang-format off
+
+/*
+    For maintainability, within each function, keep the fields in the same order
+    they appear in the csv_row class declaration, and comment out the
+    optional fields
+*/
+
 
 bool csv_row::has_visitor_fields() const
 {
-    return                          //
-        comments.has_value() &&     //
-        command_type.has_value() && //
-        input_hash.has_value();     //
+    return
+        command_type.has_value() &&
+        comments.has_value() &&
+        input_hash.has_value();
 }
 
 bool csv_row::has_pre_test_fields() const
 {
-    return                   //
-        games.has_value() && //
-        player.has_value();  //
+    return
+        player.has_value() &&
+        //expected_result.has_value() &&
+        games.has_value();
 
-    // expected_result.has_value();
 }
 
 bool csv_row::has_post_test_fields() const
 {
-    return                      //
-        status.has_value() &&   //
-        time_ms.has_value() &&  //
-        node_count.has_value(); //
-
-    // result.has_value() &&   //
+    return
+        //db_hit_rate.has_value() &&
+        time_ms.has_value() &&
+        //tt_hit_rate.has_value() &&
+        //initial_subgame_count.has_value() &&
+        max_subgame_count.has_value() &&
+        //result.has_value() &&
+        status.has_value() &&
+        db_hits.has_value() &&
+        db_misses.has_value() &&
+        max_depth.has_value() &&
+        node_count.has_value() &&
+        tt_hits.has_value() &&
+        tt_misses.has_value();
+        //unique_node_count.has_value();
 }
 
 bool csv_row::has_autotest_fields() const
 {
-    return file.has_value() && case_number.has_value();
+    return
+        case_number.has_value() &&
+        file.has_value();
 }
 
+// clang-format on
+//////////////////////////////////////// csv_row::fill_XYZ_fields() functions
 void csv_row::fill_visitor_fields(const vector<string>& comments,
                                   command_type_enum command_type,
                                   const string& input_hash)
@@ -155,10 +176,11 @@ void csv_row::fill_visitor_fields(const vector<string>& comments,
 }
 
 void csv_row::fill_pre_test_fields(
-    const std::vector<game*>& games, std::optional<ebw> player,
+    const std::vector<game*>& games, ebw player,
     const std::optional<std::string>& expected_result)
 {
     assert(!has_pre_test_fields());
+    assert(is_empty_black_white(player));
 
     this->games = csv_game_string(games);
     this->player = csv_player_string(player);
@@ -171,17 +193,20 @@ void csv_row::fill_pre_test_fields(
 void csv_row::fill_post_test_fields(const optional<string>& result,
                                     double time_ms)
 {
+    assert(!has_post_test_fields());
+
     const test_case_status_enum status =
         evaluate_test_case_status(result, this->expected_result);
 
     fill_post_test_fields_verbose(result, time_ms, status);
+
+    assert(has_post_test_fields());
 }
 
 void csv_row::fill_post_test_fields_verbose(
     const optional<string>& alt_result, double time_ms,
     test_case_status_enum test_case_status)
 {
-    assert(has_pre_test_fields());
     assert(!has_post_test_fields());
 
     this->result = alt_result;
@@ -212,11 +237,15 @@ void csv_row::fill_post_test_fields_verbose(
 
 void csv_row::fill_autotest_fields(const std::string& file, int case_number)
 {
-    assert(has_pre_test_fields() && !has_autotest_fields());
+    assert(!has_autotest_fields());
+
     this->file = file;
     this->case_number = case_number;
+
+    assert(has_autotest_fields());
 }
 
+//////////////////////////////////////// other csv_row functions
 string csv_row::get_status_string() const
 {
     if (status.has_value())

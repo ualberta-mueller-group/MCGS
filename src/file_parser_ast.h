@@ -24,25 +24,19 @@ class fp_expr_comment; // comment (possibly prefixed by "_", "#0", "#1", or "#2"
 class i_fp_expr_command; // interface for all commands inside of curly braces
 class fp_expr_command_solve_bw; // solve for BLACK or WHITE
 class fp_expr_command_solve_n; // solve nim value
-class fp_expr_command_winning_moves;
+class fp_expr_command_winning_moves; // winning moves for EMPTY/BLACK/WHITE
 
 /*
-    Represents a chunk of input (CLI game string, or .test file, or stdin)
+    Represents a "chunk" of input (within a CLI game string, or .test file, or
+    stdin).
+    Each chunk ends with a single curly brace command block.
 
     Content expressions should be visited first, then command expression(s)
 
-    The "print" visitor may visit all command expressions
-    The "generate" visitor will only visit one command expression
+    visitor_print prints the contents of a chunk, for debugging.
 
-    TODO record the last title expression added, and keep it after
-    the expression vectors are cleared. Chunks can have implicit titles which
-    carry over from a previous chunk. This is easy to handle for the "generate"
-    visitor: if a game is visited before any title, check some persistent
-    fp_chunk variable holding the implicit title.
-
-    For the "print" visitor this is a problem. Titles should be annotated? The
-    output file should be an AST?
-
+    visitor_generate is used to extract stuff from a chunk. i.e. a test_case or
+    vector of games.
 */
 class fp_chunk;
 

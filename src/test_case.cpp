@@ -48,9 +48,9 @@ bool i_test_case::did_run() const
 
 void i_test_case::run(unsigned long long timeout)
 {
-    assert(!_did_run);
+    THROW_ASSERT(!_did_run);
 
-    assert(_csv_row.has_visitor_fields() &&  //
+    THROW_ASSERT(_csv_row.has_visitor_fields() &&  //
            _csv_row.has_pre_test_fields() && //
            !_csv_row.has_post_test_fields()   //
     );
@@ -58,7 +58,7 @@ void i_test_case::run(unsigned long long timeout)
     stats::reset_global_stats();
     _run_impl(timeout);
 
-    assert(_csv_row.has_visitor_fields() &&  //
+    THROW_ASSERT(_csv_row.has_visitor_fields() &&  //
            _csv_row.has_pre_test_fields() && //
            _csv_row.has_post_test_fields()   //
     );

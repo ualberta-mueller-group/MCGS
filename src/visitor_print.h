@@ -1,3 +1,6 @@
+/*
+    Debugging utility. Visitor for printing file_parser AST contents
+*/
 #pragma once
 
 #include "file_parser_ast.h"
