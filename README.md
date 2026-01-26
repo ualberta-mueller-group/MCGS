@@ -28,6 +28,39 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
     - [Hashing-Related Hooks](#hashing-related-hooks)
     - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
+### Version 1.5
+#### New Features
+- Lemoine and Viennot (LV) algorithm replaces previous impartial search algorithm
+    - `--impartial-algorithm-mex`: uses previous (Mex) algorithm (NOTE: LV queries the database, but Mex does not)
+- Added impartial game support to database
+- Added new command type to `.test` files (winning moves test). See `input/info.test`
+- Added features to `.html` output and `create-table.py`:
+    - More output columns
+    - Checkboxes to show/hide columns, several columns are hidden by default
+    - More sorting and filtering options
+    - Dynamic summary of rows currently shown. Includes comparison of new vs old
+- New CLI options
+    - `--print-sum-moves` and `--print-subgame-moves`
+    - `--clear-tt`: clearing ttable is much faster
+    - `--print-winning-moves` and `--play-mcgs`: behavior changed
+- Input language version `1.4` --> `1.5`
+
+#### Major Code Additions
+- Major refactoring
+    - `solver_stats.h` usage simplified
+    - `csv_row` class with helper functions for populating fields, and writing to streams
+    - Standardized measuring time, and polling timeouts
+        - Classes: `stopwatch`, `timeout_source`/`timeout_token`
+    - `file_parser`
+        - More features
+        - Creates an AST as it parses input. Visitor classes operate on the AST
+    - `i_test_case`: abstract test case class for `.test` input. More general than old solution
+- Deprecation (see notes at the top of these `.h` files):
+    - `game_case.h`
+    - `search_utils.h`
+    - `parsing_utilities.h`
+
+
 ### Version 1.4 Additions
 #### Changes Since Version 1.4-Prerelease
 - Fixed compilation error on Mac OS
@@ -122,7 +155,7 @@ For a full description of input syntax, including game-specific input syntax,
 see [input/info.test](input/info.test).
 
 ### Using the Database
-NOTE: Database files from previous versions are not compatible with version 1.4.
+NOTE: Database files from previous versions are not compatible with version 1.5.
 
 The database is loaded from `database.bin` automatically on startup if it
 exists and `--no-use-db` is not specified. `--db-file-load <file name>` is used
@@ -148,13 +181,14 @@ Games currently supported by the database:
     - `nogo_1xn`
     - `elephants`
     - `toppling_dominoes`
-- Grid games
+- Grid games:
     - `amazons`
     - `nogo`
     - `clobber`
     - `domineering`
     - `fission`
     - `sheep`
+- All impartial versions of the above games
 
 The `max_dims` parameter must be specified for all of these games. For strip
 games, it should be specified as a single non-negative integer, and for grid

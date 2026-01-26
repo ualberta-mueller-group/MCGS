@@ -139,7 +139,8 @@ void print_help_message(const string& exec_name)
                "details on config string syntax.");
 
     print_flag(global::impartial_algorithm_mex.flag(),
-               "Use Mex search algorithm for impartial games.");
+               "Use Mex search algorithm for impartial games. NOTE: doesn't "
+               "use the database during search.");
 
     print_flag(global::use_complexity_score.flag(),
                "Use complexity score "
