@@ -35,7 +35,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 - Added impartial game support to database
     - Used by impartial LV search, and partisan `sumgame` search functions
 - Added new command type to `.test` files (winning moves test). See `input/info.test`
-- `print_move` now implemented for all games; output of `--print-winning-moves`-like features should now be sensible
+- `print_move` function now implemented for all game types; output of `--print-winning-moves`-like features should now be sensible for all games
 - Added features to `.html` output and `create-table.py`:
     - More output columns
     - Checkboxes to show/hide columns, several columns are hidden by default
