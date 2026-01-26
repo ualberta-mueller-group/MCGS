@@ -75,7 +75,7 @@ src.cancel_timeout(); // Call regardless of completion/timeout status
 - `void timeout_source::start_timeout(unsigned long long timeout_ms)` starts a
   timeout with the specified duration, in milliseconds.  Subsequent calls to
   `stop_requested()` will return `false`. A duration of `0` means the timeout
-  never ends.
+  never ends. When the timeout ends, `stop_requested()` will return true.
 - `void timeout_source::cancel_timeout()` stops the timeout. `stop_requested()`
     will subsequently return `true`. Called by the destructor if necessary.
 - The `timeout_source` may not be copied or moved.
