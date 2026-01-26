@@ -233,6 +233,7 @@ part of the test case, i.e:
 - `get_winning_moves_with_timeout(...)` (`get_winning_moves.h`)
 
 Make the AST node:
+
 EXAMPLE: `class fp_expr_command_solve_bw` (`file_parser_ast.h` and `.cpp`)
 
 1. In `test_case_enums.h`:
@@ -254,6 +255,7 @@ EXAMPLE: `class fp_expr_command_solve_bw` (`file_parser_ast.h` and `.cpp`)
     - Add any necessary getter functions.
 
 Make the test case class:
+
 EXAMPLE: `class test_case_solve_bw` (`test_case.h` and `.cpp`)
 
 1. In `test_case.h`:
@@ -279,6 +281,7 @@ EXAMPLE: `class test_case_solve_bw` (`test_case.h` and `.cpp`)
               unspecified)
 
 Add support to `file_parser` and visitors:
+
 EXAMPLES:
 - `fp_visitor_print::visit(const fp_expr_command_solve_bw& expr)`
   (`visitor_print.cpp`)
