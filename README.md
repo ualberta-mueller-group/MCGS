@@ -30,7 +30,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 
 ### Version 1.5
 #### New Features
-- Lemoine and Viennot (LV) algorithm replaces previous impartial search algorithm (Mex)
+- Lemoine and Viennot (LV) algorithm is the new default impartial search algorithm
     - `--impartial-algorithm-mex`: uses previous (Mex) algorithm (NOTE: LV queries the database, but Mex does not)
 - Added impartial game support to database
     - Used by impartial LV search, and partisan `sumgame` search functions
