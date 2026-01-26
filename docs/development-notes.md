@@ -22,7 +22,9 @@ This document includes more detailed information than `README.md`, including des
 - [Safe Arithmetic Functions (`safe_arithmetic.h`)](#safe-arithmetic-functions-safe_arithmetich)
 - [RTTI - Run-time type information (`type_table.h`)](#rtti---run-time-type-information-type_tableh)
 - [Sumgame Simplification (cgt_game_simplification.h)](#sumgame-simplification-cgt_game_simplificationh)
+- [Time: Measuring Time, and Respecting Timeouts (`stopwatch.h`, `timeout_token.h`)](#time-measuring-time-and-respecting-timeouts-stopwatchh-timeout_tokenh)
 - [Bounds (`bounds.h`)](#bounds-boundsh)
+- [File Parser and Internals](#file-parser-and-internals)
 - [Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)](#serialization-iobufferh-serializerh-dynamic_serializableh)
 - [Unused `game::_order_impl` Method](#unused-game_order_impl-method)
 - [Outstanding Issues](#outstanding-issues)
@@ -32,280 +34,6 @@ This document includes more detailed information than `README.md`, including des
 - [Versions](#versions)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# Time: Measuring Time, and Respecting Timeouts (`stopwatch.h`, `timeout_token.h`)
-Versions prior to v1.5 were lacking generic timing utilities, and timeouts were
-messy and may have used undefined behavior. MCGS v1.5 provides standardized
-solutions for measuring time, and respecting timeouts.
-
-## Measuring Time
-The `stopwatch` class provides a standardized way to measure time:
-- Use methods `start()` and `stop()` to measure a duration
-- Then use method `get_duration_ms()` to get the duration (in milliseconds)
-- Method `reset()` allows the object to be reused
-- See `stopwatch.h` for preconditions
-
-## Timeouts
-Classes `timeout_source` and `timeout_token` provide a standardized and
-thread-safe way to manage and poll timeouts, (and are the preferred way of
-doing so as of MCGS v1.5). They are similar to C++ 20's `std::stop_source` and
-`std::stop_token`.
-
-Class `timeout_source` owns and manages a shared timeout state, which can
-be polled by a `timeout_token`. Functions respecting timeouts should accept
-a `timeout_token`, and the (root) caller should create a `timeout_source`
-and `timeout_token`.
-
-Example usage (caller):
-```
-timeout_source src;
-timeout_token tok = src.get_timeout_token();
-
-src.start_timeout(timeout_ms); // Time starts running here
-std::optional<int> fib = fibonacci(tok, ...); // May or may not time out
-src.cancel_timeout(); // Call regardless of completion/timeout status
-```
-
-Example usage (callee)
-```
-std::optional<int> fibonacci(const timeout_token& tok, int n)
-{
-    if (n < 2)
-        return n;
-
-    if (tok.stop_requested())
-        return {};
-
-    const std::optional<int> f1 = fibonacci(tok, n - 1);
-    const std::optional<int> f2 = fibonacci(tok, n - 2);
-
-    if (f1.has_value() && f2.has_value())
-        return *f1 + *f2;
-
-    return {};
-}
-```
-
-- `timeout_token timeout_source::get_timeout_token()` creates a `timeout_token`,
-  valid only for the lifetime of the `timeout_source`.
-- Poll the shared timeout state using the method
-  `bool timeout_token::stop_requested() const`.
-  - The `timeout_source` also has this method, but it should not be passed to
-    the called function.
-- `void timeout_source::start_timeout(unsigned long long timeout_ms)` starts a
-  timeout with the specified duration, in milliseconds.  Subsequent calls to
-  `stop_requested()` will return `false`. A duration of `0` means the timeout
-  never ends. When the timeout ends, `stop_requested()` will return true.
-- `void timeout_source::cancel_timeout()` stops the timeout. `stop_requested()`
-    will subsequently return `true`. Called by the destructor if necessary.
-- The `timeout_source` may not be copied or moved.
-- The `timeout_token` may be passed around by the consuming function, either
-  by value or by reference.
-
-Starting a (non-zero) timeout spawns a thread, owned by the `timeout_source`.
-The thread blocks for the specified duration (or until the timeout is
-cancelled). `stop_source::cancel_timeout()` safely destroys the thread.
-Computation happens on the main thread -- the spawned thread only helps manage
-the timeout.
-
-NOTE:
-- This implementation is several orders of magnitude faster than using
-  `std::chrono` to poll the current time, as this would involve system calls.
-- In the WebAssembly build, no thread is spawned, and timeouts never expire.
-
-
-# File Parser and Internals
-Most input parsing is handled by two classes: `cli_options`, and `file_parser`.
-The latter handles `.test` input, and is the focus of this section.
-`file_parser` was refactored in v1.5 to be more extensible, modular, and
-testable, but as a result is more complex. The first subsection describes the
-basic usage of the `file_parser` class, and the second subsection describes the
-internals. The latter is useful for developers who wish to add new features to
-`.test` input.
-
-## `file_parser` basic usage
-The basic usage is as follows:
-1. A `file_parser` is constructed with some input source (the caller must use
-   `delete`):
-    - `file_parser* from_file(const string& file_name)`
-    - `file_parser* from_string(const string& string)`
-    - `file_parser* from_stdin()`
-2. The `bool file_parser::parse:chunk()` method reads the input until it has
-   read a "chunk" (or end-of-file). A chunk is defined as a sum of games, and a
-   curly brace "command block" containing 0 or more commands. Returns `true`
-   IFF the `file_parser` has a chunk (`false` denotes end-of-file).
-3. When a chunk is present, it contains 0 or more games, and 0 or more
-   commands/test cases which operate on those games. Use the following
-   `file_parser` methods:
-    - `vector<game*> get_games() const` constructs the games specified
-      by the chunk (the games are owned by the caller).
-    - `int n_test_cases() const` the number of test cases in the chunk.
-    - `command_type_enum get_test_case_type(int test_case_idx) const` the type
-      of the (0-indexed) test case in the chunk.
-    - `shared_ptr<i_test_case> get_test_case(int test_case_idx) const`
-      constructs a (0-indexed) test case (owned by the caller), containing all
-      state necessary for running the test (i.e. games, expected result,
-      `csv_row`, etc).
-
-## `file_parser` Internals: AST nodes, Visitors, Test Cases, and CSV Rows
-`file_parser::parse_chunk()` constructs AST (abstract syntax tree) nodes
-(`i_fp_expr`), and stores them in a container `fp_chunk` representing the
-chunk. Visitors `i_fp_visitor` iterate over the contents of the `fp_chunk` to
-construct `game`s and/or test cases (`i_test_case`).
-
-The following 3 subsections expand on this in more detail. The final
-subsection gives steps to add a new test case/command to `.test` input.
-
-### AST nodes (`file_parser_ast.h`)
-When `file_parser` parses a chunk from the input string, it constructs an AST
-(abstract syntax tree), whose classes are defined by `file_parser_ast.h`. AST
-nodes are simple, lightweight classes. The class hierarchy of AST nodes is as
-follows (the `i_` prefix denotes an abstract type, and sublists denote
-inheritance):
-- `i_fp_expr` interface for all AST nodes
-    - `i_fp_expr_content` interface for non-command AST nodes
-        - `fp_expr_title` game title i.e. `[clobber]`
-        - `fp_expr_game` game token i.e. `XOXO`
-        - `fp_expr_comment` comment i.e. `/* some comment */`
-    - `i_fp_expr_command` interface for all command AST nodes
-        - `fp_expr_command_solve_bw` i.e. `{B win}`
-        - `fp_expr_command_solve_n` i.e. `{N 4}`
-        - `fp_expr_command_winning_moves` winning moves test for `B`, `W`, or
-          `N`
-
-The AST nodes are stored in a container class `fp_chunk`. For every chunk
-parsed, the same `fp_chunk` object is reused, by clearing it and adding the
-`i_fp_expr`s from the new input chunk. The `fp_chunk` remembers the last game
-title, as a game title may be specified in a previous chunk i.e. `[clobber] {}
-XOXO {B}`.
-
-### Visitors (`file_parser_ast.h`, `visitor_print.h`, `visitor_generate.h`)
-"Visitor" classes (using the visitor design pattern) operate on AST nodes by
-iterating over the contents of an `fp_chunk`. The virtual functions declared by
-the `i_fp_visitor` interface represent callback functions for every AST node
-class. There are currently two visitor classes:
-- `visitor_print` (`visitor_print.h`) prints the contents of an `fp_chunk`,
-  for debugging purposes.
-- `visitor_generate` (`visitor_generate.h`) constructs the games or test cases
-  in an `fp_chunk`.
-
-### Test Cases and CSV Rows (`test_case.h`, `csv_row.h`)
-The `i_test_case` abstract class defines the interface for test cases which are
-specified by `.test` input. It owns a `csv_row` (which may be modified
-externally), and a `vector<game*>`.
-
-The class hierarchy for test cases is as follows:
-- `i_test_case`
-    - `test_case_solve_bw` i.e. `{B win}`
-    - `test_case_solve_n` i.e. `{N 4}`
-    - `test_case_winning_moves` winning moves test for `B`, `W`, or `N`
-
-The `csv_row` represents a single row of output to a `.csv` file. Its contents
-are incrementally filled in (via helper functions, and over 4 stages). Each
-field is a `std::optional` of some type. See `csv_row.h` to see which fields
-are required/truly optional, and which stage they belong to.
-
-The 4 stages are:
-- `visitor`: field should be filled in by `visitor_generate`.
-- `pre_test`: field should be filled in by the (non-abstract) test case
-  constructor.
-- `post_test`: field should be filled in by the (non-abstract) test case's
-  `_run_impl()` method (after the computation finishes).
-- `autotests`: field should be filled by `autotests.cpp`
-
-For each stage `XYZ` there are helper functions i.e:
-- `bool csv_row::has_XYZ_fields() const`
-- `void csv_row::fill_XYZ_fields(...)`
-
-These helper functions fill in several values behind the scenes, i.e. those
-from `solver_stats.h`.
-
-### Adding A New Test Case Type To `.test` Input
-This process involves significant boilerplate code. You may want to first read
-the implementation of an existing test case type while following these steps,
-before implementing your own. For each major step, examples are first
-listed.
-
-The following steps assume you have already implemented the computational
-part of the test case, i.e:
-- `sumgame::solve_with_timeout(...)` (`sumgame.h`)
-- `search_impartial_sumgame_with_timeout(...)` (`impartial_sumgame.h`)
-- `get_winning_moves_with_timeout(...)` (`get_winning_moves.h`)
-
-Make the AST node:
-
-EXAMPLE: `class fp_expr_command_solve_bw` (`file_parser_ast.h` and `.cpp`)
-
-1. In `test_case_enums.h`:
-    - Add to the enum `command_type_enum`: `COMMAND_TYPE_YOUR_COMMAND`.
-    - Add the string conversion to the `command_type_to_string` function.
-        - NOTE: this string appears in the `.csv` output
-2. In `file_parser_ast.h`:
-    - Declare `class fp_expr_command_YOUR_COMMAND: public i_fp_expr_command`
-    - Your constructor should take an `int line_number`
-        - The line number and `command_type_enum` should be passed to the
-          `i_fp_expr_command` constructor
-    - Implement `void accept(i_fp_visitor& visitor) const override;` as:
-    ```
-    void fp_expr_command_YOUR_COMMAND::accept(i_fp_visitor& visitor) const
-    {
-        visitor.visit(*this);
-    }
-    ```
-    - Add any necessary getter functions.
-
-Make the test case class:
-
-EXAMPLE: `class test_case_solve_bw` (`test_case.h` and `.cpp`)
-
-1. In `test_case.h`:
-    - Declare `class test_case_YOUR_COMMAND: public i_test_case`
-    - Your constructor should take an `fp_expr_command_YOUR_COMMAND`, and
-      `std::vector<game*>`.
-      - Pass the `command_type_enum` and `vector<game*>` to the `i_test_case`
-        constructor
-      - Store the `fp_expr_YOUR_COMMAND`
-      - Validate input and throw a `parser_exception` if necessary
-      - Fill in the required CSV row fields: `_csv_row.fill_pre_test_fields(...)`.
-        The expected result string may be absent (if none was specified in the
-        `.test`)
-    - Your `_run_impl()` function must do several steps:
-        - When applicable, clear any transposition tables (and other global
-          state) before running the computation. Note that solver_stats is
-          already cleared by `i_test_case::run`, which calls your `_run_impl`.
-        - Create a `stopwatch`, start its timer, run the computation,
-          and stop the timer.
-        - Report results: `_csv_row.fill_post_test_fields(...)`
-            - The result and expected result strings are allowed to be absent
-              (i.e. if the test times out, or the expected result was
-              unspecified)
-
-Add support to `file_parser` and visitors:
-
-EXAMPLES:
-- `void visitor_print::visit(const fp_expr_command_solve_bw& expr)`
-  (`visitor_print.cpp`)
-- `void visitor_generate::visit(const fp_expr_command_solve_bw& expr)`
-  (`visitor_generate.cpp`)
-- `i_fp_expr_command* get_fp_expr_run_command_solve_bw(...)`
-  (`file_parser.cpp`)
-
-1. in `file_parser_ast.h`
-    - Near the top of the file, declare a virtual function in `i_fp_visitor`:
-      `virtual void visit(const fp_expr_command_YOUR_COMMAND& expr) = 0;`
-2. In `visitor_print.h`: Implement the new virtual function in the
-   `visitor_print` class.
-3. In `visitor_generate.h`: Implement the new virtual function in the
-   `visitor_generate` class.
-4. In `file_parser.cpp`
-    - See the function `bool get_fp_expr_run_command(...)`. It must call a new
-      function `get_fp_expr_run_command_YOUR_COMMAND(...)` which parses text
-      from the `.test` input.
-      - Return the AST node `new fp_expr_command_YOUR_COMMAND(...)` or `nullptr`
-        if the text doesn't match your command.
-      - Throw a `parser_exception` if the text does match your command, but has
-        some error.
-
 
 # Search and Solving a Game
 - Two classes implement minimax game solving: `alternating_move_game` and `sumgame`
@@ -1622,6 +1350,87 @@ For each sum, no useful work was done if the sum is the result of less than 2 ga
 ## `up_star` Simplification
 `up_star`s are summed together similarly to `integer_game`s and `dyadic_rational`s, and the resulting sum replaces the games used to produce it, only when the sum is useful (as explained in the previous subsection).
 
+# Time: Measuring Time, and Respecting Timeouts (`stopwatch.h`, `timeout_token.h`)
+Versions prior to v1.5 were lacking generic timing utilities, and timeouts were
+messy and may have used undefined behavior. MCGS v1.5 provides standardized
+solutions for measuring time, and respecting timeouts.
+
+## Measuring Time
+The `stopwatch` class provides a standardized way to measure time:
+- Use methods `start()` and `stop()` to measure a duration
+- Then use method `get_duration_ms()` to get the duration (in milliseconds)
+- Method `reset()` allows the object to be reused
+- See `stopwatch.h` for preconditions
+
+## Timeouts
+Classes `timeout_source` and `timeout_token` provide a standardized and
+thread-safe way to manage and poll timeouts, (and are the preferred way of
+doing so as of MCGS v1.5). They are similar to C++ 20's `std::stop_source` and
+`std::stop_token`.
+
+Class `timeout_source` owns and manages a shared timeout state, which can
+be polled by a `timeout_token`. Functions respecting timeouts should accept
+a `timeout_token`, and the (root) caller should create a `timeout_source`
+and `timeout_token`.
+
+Example usage (caller):
+```
+timeout_source src;
+timeout_token tok = src.get_timeout_token();
+
+src.start_timeout(timeout_ms); // Time starts running here
+std::optional<int> fib = fibonacci(tok, ...); // May or may not time out
+src.cancel_timeout(); // Call regardless of completion/timeout status
+```
+
+Example usage (callee)
+```
+std::optional<int> fibonacci(const timeout_token& tok, int n)
+{
+    if (n < 2)
+        return n;
+
+    if (tok.stop_requested())
+        return {};
+
+    const std::optional<int> f1 = fibonacci(tok, n - 1);
+    const std::optional<int> f2 = fibonacci(tok, n - 2);
+
+    if (f1.has_value() && f2.has_value())
+        return *f1 + *f2;
+
+    return {};
+}
+```
+
+- `timeout_token timeout_source::get_timeout_token()` creates a `timeout_token`,
+  valid only for the lifetime of the `timeout_source`.
+- Poll the shared timeout state using the method
+  `bool timeout_token::stop_requested() const`.
+  - The `timeout_source` also has this method, but it should not be passed to
+    the called function.
+- `void timeout_source::start_timeout(unsigned long long timeout_ms)` starts a
+  timeout with the specified duration, in milliseconds.  Subsequent calls to
+  `stop_requested()` will return `false`. A duration of `0` means the timeout
+  never ends. When the timeout ends, `stop_requested()` will return true.
+- `void timeout_source::cancel_timeout()` stops the timeout. `stop_requested()`
+    will subsequently return `true`. Called by the destructor if necessary.
+- The `timeout_source` may not be copied or moved.
+- The `timeout_token` may be passed around by the consuming function, either
+  by value or by reference.
+
+Starting a (non-zero) timeout spawns a thread, owned by the `timeout_source`.
+The thread blocks for the specified duration (or until the timeout is
+cancelled). `stop_source::cancel_timeout()` safely destroys the thread.
+Computation happens on the main thread -- the spawned thread only helps manage
+the timeout.
+
+NOTE:
+- This implementation is several orders of magnitude faster than using
+  `std::chrono` to poll the current time, as this would involve system calls.
+- In the WebAssembly build, no thread is spawned, and timeouts never expire.
+
+
 # Bounds (`bounds.h`)
 Defines functions and types used for finding lower and upper bounds of games.
 
@@ -1678,6 +1487,198 @@ Perhaps a more sophisticated version of "search around edges" would perform bett
 Searching for bounds is faster within smaller intervals. When finding bounds for many sumgames, perhaps the caller of `find_bounds()` should dynamically adjust the search interval to be "close" to bounds found for previous games. When the chosen scale and interval don't contain bounds, `find_bounds()` aborts search after a small number of comparisons (~6 `sumgame::solve_with_games()` calls).
 
 Maybe bound generation in the database should be done using a sliding window of statistics for the last `N` games to help size intervals appropriately.
+
+# File Parser and Internals
+Most input parsing is handled by two classes: `cli_options`, and `file_parser`.
+The latter handles `.test` input, and is the focus of this section.
+`file_parser` was refactored in v1.5 to be more extensible, modular, and
+testable, but as a result is more complex. The first subsection describes the
+basic usage of the `file_parser` class, and the second subsection describes the
+internals. The latter is useful for developers who wish to add new features to
+`.test` input.
+
+## `file_parser` basic usage
+The basic usage is as follows:
+1. A `file_parser` is constructed with some input source (the caller must use
+   `delete`):
+    - `file_parser* from_file(const string& file_name)`
+    - `file_parser* from_string(const string& string)`
+    - `file_parser* from_stdin()`
+2. The `bool file_parser::parse:chunk()` method reads the input until it has
+   read a "chunk" (or end-of-file). A chunk is defined as a sum of games, and a
+   curly brace "command block" containing 0 or more commands. Returns `true`
+   IFF the `file_parser` has a chunk (`false` denotes end-of-file).
+3. When a chunk is present, it contains 0 or more games, and 0 or more
+   commands/test cases which operate on those games. Use the following
+   `file_parser` methods:
+    - `vector<game*> get_games() const` constructs the games specified
+      by the chunk (the games are owned by the caller).
+    - `int n_test_cases() const` the number of test cases in the chunk.
+    - `command_type_enum get_test_case_type(int test_case_idx) const` the type
+      of the (0-indexed) test case in the chunk.
+    - `shared_ptr<i_test_case> get_test_case(int test_case_idx) const`
+      constructs a (0-indexed) test case (owned by the caller), containing all
+      state necessary for running the test (i.e. games, expected result,
+      `csv_row`, etc).
+
+## `file_parser` Internals: AST nodes, Visitors, Test Cases, and CSV Rows
+`file_parser::parse_chunk()` constructs AST (abstract syntax tree) nodes
+(`i_fp_expr`), and stores them in a container `fp_chunk` representing the
+chunk. Visitors `i_fp_visitor` iterate over the contents of the `fp_chunk` to
+construct `game`s and/or test cases (`i_test_case`).
+
+The following 3 subsections expand on this in more detail. The final
+subsection gives steps to add a new test case/command to `.test` input.
+
+### AST nodes (`file_parser_ast.h`)
+When `file_parser` parses a chunk from the input string, it constructs an AST
+(abstract syntax tree), whose classes are defined by `file_parser_ast.h`. AST
+nodes are simple, lightweight classes. The class hierarchy of AST nodes is as
+follows (the `i_` prefix denotes an abstract type, and sublists denote
+inheritance):
+- `i_fp_expr` interface for all AST nodes
+    - `i_fp_expr_content` interface for non-command AST nodes
+        - `fp_expr_title` game title i.e. `[clobber]`
+        - `fp_expr_game` game token i.e. `XOXO`
+        - `fp_expr_comment` comment i.e. `/* some comment */`
+    - `i_fp_expr_command` interface for all command AST nodes
+        - `fp_expr_command_solve_bw` i.e. `{B win}`
+        - `fp_expr_command_solve_n` i.e. `{N 4}`
+        - `fp_expr_command_winning_moves` winning moves test for `B`, `W`, or
+          `N`
+
+The AST nodes are stored in a container class `fp_chunk`. For every chunk
+parsed, the same `fp_chunk` object is reused, by clearing it and adding the
+`i_fp_expr`s from the new input chunk. The `fp_chunk` remembers the last game
+title, as a game title may be specified in a previous chunk i.e. `[clobber] {}
+XOXO {B}`.
+
+### Visitors (`file_parser_ast.h`, `visitor_print.h`, `visitor_generate.h`)
+"Visitor" classes (using the visitor design pattern) operate on AST nodes by
+iterating over the contents of an `fp_chunk`. The virtual functions declared by
+the `i_fp_visitor` interface represent callback functions for every AST node
+class. There are currently two visitor classes:
+- `visitor_print` (`visitor_print.h`) prints the contents of an `fp_chunk`,
+  for debugging purposes.
+- `visitor_generate` (`visitor_generate.h`) constructs the games or test cases
+  in an `fp_chunk`.
+
+### Test Cases and CSV Rows (`test_case.h`, `csv_row.h`)
+The `i_test_case` abstract class defines the interface for test cases which are
+specified by `.test` input. It owns a `csv_row` (which may be modified
+externally), and a `vector<game*>`.
+
+The class hierarchy for test cases is as follows:
+- `i_test_case`
+    - `test_case_solve_bw` i.e. `{B win}`
+    - `test_case_solve_n` i.e. `{N 4}`
+    - `test_case_winning_moves` winning moves test for `B`, `W`, or `N`
+
+The `csv_row` represents a single row of output to a `.csv` file. Its contents
+are incrementally filled in (via helper functions, and over 4 stages). Each
+field is a `std::optional` of some type. See `csv_row.h` to see which fields
+are required/truly optional, and which stage they belong to.
+
+The 4 stages are:
+- `visitor`: field should be filled in by `visitor_generate`.
+- `pre_test`: field should be filled in by the (non-abstract) test case
+  constructor.
+- `post_test`: field should be filled in by the (non-abstract) test case's
+  `_run_impl()` method (after the computation finishes).
+- `autotests`: field should be filled by `autotests.cpp`
+
+For each stage `XYZ` there are helper functions i.e:
+- `bool csv_row::has_XYZ_fields() const`
+- `void csv_row::fill_XYZ_fields(...)`
+
+These helper functions fill in several values behind the scenes, i.e. those
+from `solver_stats.h`.
+
+### Adding A New Test Case Type To `.test` Input
+This process involves significant boilerplate code. You may want to first read
+the implementation of an existing test case type while following these steps,
+before implementing your own. For each major step, examples are first
+listed.
+
+The following steps assume you have already implemented the computational
+part of the test case, i.e:
+- `sumgame::solve_with_timeout(...)` (`sumgame.h`)
+- `search_impartial_sumgame_with_timeout(...)` (`impartial_sumgame.h`)
+- `get_winning_moves_with_timeout(...)` (`get_winning_moves.h`)
+
+Make the AST node:
+
+EXAMPLE: `class fp_expr_command_solve_bw` (`file_parser_ast.h` and `.cpp`)
+
+1. In `test_case_enums.h`:
+    - Add to the enum `command_type_enum`: `COMMAND_TYPE_YOUR_COMMAND`.
+    - Add the string conversion to the `command_type_to_string` function.
+        - NOTE: this string appears in the `.csv` output
+2. In `file_parser_ast.h`:
+    - Declare `class fp_expr_command_YOUR_COMMAND: public i_fp_expr_command`
+    - Your constructor should take an `int line_number`
+        - The line number and `command_type_enum` should be passed to the
+          `i_fp_expr_command` constructor
+    - Implement `void accept(i_fp_visitor& visitor) const override;` as:
+    ```
+    void fp_expr_command_YOUR_COMMAND::accept(i_fp_visitor& visitor) const
+    {
+        visitor.visit(*this);
+    }
+    ```
+    - Add any necessary getter functions.
+
+Make the test case class:
+
+EXAMPLE: `class test_case_solve_bw` (`test_case.h` and `.cpp`)
+
+1. In `test_case.h`:
+    - Declare `class test_case_YOUR_COMMAND: public i_test_case`
+    - Your constructor should take an `fp_expr_command_YOUR_COMMAND`, and
+      `std::vector<game*>`.
+      - Pass the `command_type_enum` and `vector<game*>` to the `i_test_case`
+        constructor
+      - Store the `fp_expr_YOUR_COMMAND`
+      - Validate input and throw a `parser_exception` if necessary
+      - Fill in the required CSV row fields: `_csv_row.fill_pre_test_fields(...)`.
+        The expected result string may be absent (if none was specified in the
+        `.test`)
+    - Your `_run_impl()` function must do several steps:
+        - When applicable, clear any transposition tables (and other global
+          state) before running the computation. Note that solver_stats is
+          already cleared by `i_test_case::run`, which calls your `_run_impl`.
+        - Create a `stopwatch`, start its timer, run the computation,
+          and stop the timer.
+        - Report results: `_csv_row.fill_post_test_fields(...)`
+            - The result and expected result strings are allowed to be absent
+              (i.e. if the test times out, or the expected result was
+              unspecified)
+
+Add support to `file_parser` and visitors:
+
+EXAMPLES:
+- `void visitor_print::visit(const fp_expr_command_solve_bw& expr)`
+  (`visitor_print.cpp`)
+- `void visitor_generate::visit(const fp_expr_command_solve_bw& expr)`
+  (`visitor_generate.cpp`)
+- `i_fp_expr_command* get_fp_expr_run_command_solve_bw(...)`
+  (`file_parser.cpp`)
+
+1. in `file_parser_ast.h`
+    - Near the top of the file, declare a virtual function in `i_fp_visitor`:
+      `virtual void visit(const fp_expr_command_YOUR_COMMAND& expr) = 0;`
+2. In `visitor_print.h`: Implement the new virtual function in the
+   `visitor_print` class.
+3. In `visitor_generate.h`: Implement the new virtual function in the
+   `visitor_generate` class.
+4. In `file_parser.cpp`
+    - See the function `bool get_fp_expr_run_command(...)`. It must call a new
+      function `get_fp_expr_run_command_YOUR_COMMAND(...)` which parses text
+      from the `.test` input.
+      - Return the AST node `new fp_expr_command_YOUR_COMMAND(...)` or `nullptr`
+        if the text doesn't match your command.
+      - Throw a `parser_exception` if the text does match your command, but has
+        some error.
 
 # Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)
 The serialization code detailed here is used by the database. This section
