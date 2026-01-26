@@ -283,7 +283,7 @@ EXAMPLE: `class test_case_solve_bw` (`test_case.h` and `.cpp`)
 Add support to `file_parser` and visitors:
 
 EXAMPLES:
-- `fp_visitor_print::visit(const fp_expr_command_solve_bw& expr)`
+- `void fp_visitor_print::visit(const fp_expr_command_solve_bw& expr)`
   (`visitor_print.cpp`)
 - `void visitor_generate::visit(const fp_expr_command_solve_bw& expr)`
   (`visitor_generate.cpp`)
