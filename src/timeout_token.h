@@ -5,34 +5,6 @@
 
     (std::chrono spends too much time in system calls, and our previous
     timeout mechanism was messy and may have had UB)
-
-    class timeout_token is used by functions which should respect timeouts,
-    to poll whether time has run out (i.e. sumgame::solve_with_timeout). 
-
-    class timeout_source manages the timeout, and creates a timeout_token
-    which has access to the shared timeout state. The timeout_token is only
-    valid for the lifetime of the timeout_source which created it.
-
-    Example usage:
-        timeout_source src;
-        timeout_token tok = src.get_timeout_token();
-
-        src.start_timeout(timeout_ms); // Time starts running here
-        std::optional<int> fib = fibonacci(tok, ...); // May or may not time out
-        src.cancel_timeout(); // Call regardless of completion/timeout status
-
-    start_timeout() creates a thread which blocks until the timeout
-    expires or cancel_timeout() is called. cancel_timeout() destroys the thread.
-    The thread will be destroyed by the timeout_source destructor if present,
-    but it's probably best to destroy the thread once it's no longer needed.
-    When a timeout of 0 is used, no thread is created, and the timeout never
-    ends.
-
-    The consuming function may pass around the timeout_token either by value
-    or by reference.
-
-    TODO: Have we avoided all UB? Is std::memory_order_relaxed good enough (
-    so long as a stale value can't be read forever)???
 */
 #pragma once
 
@@ -76,13 +48,13 @@ public:
     // Has time run out?
     bool stop_requested() const;
 
-    // true IFF timeout thread exists
+    // true IFF timeout currently running
     bool timeout_running() const;
 
-    // creates timeout thread. 0 means never time out
+    // Starts timeout (0 means never time out)
     void start_timeout(unsigned long long timeout_ms);
 
-    // destroy timeout thread (after safely stopping it)
+    // Destroy timeout
     // NOTE: call this regardless of whether the task completed or timed out.
     void cancel_timeout();
 
@@ -123,7 +95,7 @@ inline timeout_source::timeout_source()
 
 inline timeout_source::~timeout_source()
 {
-    // Destroy thread if necessary
+    // Destroy timeout if necessary
     if (timeout_running())
         cancel_timeout();
 

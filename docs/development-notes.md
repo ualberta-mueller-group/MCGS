@@ -33,6 +33,61 @@ This document includes more detailed information than `README.md`, including des
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+# Time: Measuring Time, and Respecting Timeouts (`stopwatch.h`, `timeout_token.h`)
+The `stopwatch` class provides a standardized way to measure time:
+- Use methods `start()` and `stop()` to measure a duration
+- Then use method `get_duration_ms()` to get the duration (in milliseconds)
+- Method `reset()` allows the object to be reused
+- See `stopwatch.h` for preconditions
+
+Classes `timeout_source` and `timeout_token` provide a standardized and
+thread-safe way to manage and poll timeouts, (and are the preferred way of
+doing so as of MCGS v1.5). They are similar to C++ 20's `std::stop_source` and
+`std::stop_token`.
+
+Class `timeout_source` owns and manages a shared timeout state, which can
+be polled by a `timeout_token`. Functions respecting timeouts should accept
+a `timeout_token`, and the (root) caller should create a `timeout_source`
+and `timeout_token`.
+
+Example usage:
+```
+timeout_source src;
+timeout_token tok = src.get_timeout_token();
+
+src.start_timeout(timeout_ms); // Time starts running here
+std::optional<int> fib = fibonacci(tok, ...); // May or may not time out
+src.cancel_timeout(); // Call regardless of completion/timeout status
+```
+
+- `timeout_token timeout_source::get_timeout_token()` creates a `timeout_token`,
+  valid only for the lifetime of the `timeout_source`.
+- Poll the shared timeout state using the method
+  `bool timeout_token::stop_requested() const`.
+  - The `timeout_source` also has this method, but it should not be passed to
+    the called function.
+- `void timeout_source::start_timeout(unsigned long long timeout_ms)` starts a
+  timeout with the specified duration, in milliseconds.  Subsequent calls to
+  `stop_requested()` will return `false`. A duration of `0` means the timeout
+  never ends.
+- `void timeout_source::cancel_timeout()` stops the timeout. `stop_requested()`
+    will subsequently return `true`. Called by the destructor if necessary.
+- The `timeout_source` may not be copied or moved.
+- The `timeout_token` may be passed around by the consuming function, either
+  by value or by reference.
+
+Starting a (non-zero) timeout spawns a thread, owned by the `timeout_source`.
+The thread blocks for the specified duration (or until the timeout is
+cancelled). `stop_source::cancel_timeout()` safely destroys the thread.
+Computation happens on the main thread -- the spawned thread only helps manage
+the timeout.
+
+NOTE:
+- This implementation is several orders of magnitude faster than using
+  `std::chrono` to poll the current time, as this would involve system calls.
+- In the WebAssembly build, no thread is spawned, and timeouts never expire.
+
+
 # File Parser and Internals
 Most input parsing is handled by two classes: `cli_options`, and `file_parser`.
 The latter handles `.test` input, and is the focus of this section.

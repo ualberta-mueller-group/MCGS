@@ -28,15 +28,14 @@ void timeout_source::start_timeout(unsigned long long timeout_ms)
 
     _timeout_thread.emplace(std::thread([this, timeout_ms]() -> void
     {
-        std::future_status status = std::future_status::ready;
+        //std::future_status status = std::future_status::ready;
 
         if (timeout_ms == 0)
             _future->wait();
         else
-            status = _future->wait_for(std::chrono::milliseconds(timeout_ms));
+            _future->wait_for(std::chrono::milliseconds(timeout_ms));
 
-        if (status == std::future_status::timeout)
-            _should_stop->store(true, std::memory_order_relaxed);
+        _should_stop->store(true, std::memory_order_relaxed);
     }));
 }
 
@@ -59,7 +58,8 @@ void timeout_source::cancel_timeout()
         _future.reset();
         _promise.reset();
     }
-
+    
+    _should_stop->store(true, std::memory_order_relaxed);
     assert(!timeout_running());
 }
 #else
@@ -75,6 +75,7 @@ void timeout_source::cancel_timeout()
 {
     assert(timeout_running());
     _infinite_time = false;
+    _should_stop->store(true, std::memory_order_relaxed);
     assert(!timeout_running());
 }
 #endif
