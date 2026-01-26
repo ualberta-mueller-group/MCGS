@@ -123,7 +123,6 @@ move_generator* toppling_dominoes::create_move_generator(bw to_play) const
     return new toppling_dominoes_move_generator(*this, to_play);
 }
 
-// TODO refactor colors
 void toppling_dominoes::print(ostream& str) const
 {
     str << "toppling_dominoes:";
