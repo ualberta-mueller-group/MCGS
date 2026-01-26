@@ -764,7 +764,7 @@ void file_parser::print_ast() const
 {
     THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
                  _chunk.has_value());
-    fp_visitor_print visitor;
+    visitor_print visitor;
     visitor.visit_chunk(_chunk.value());
 }
 

@@ -5,11 +5,11 @@
 
 #include "file_parser_ast.h"
 
-//////////////////////////////////////// class fp_visitor_print
-class fp_visitor_print: i_fp_visitor
+//////////////////////////////////////// class visitor_print
+class visitor_print: i_fp_visitor
 {
 public:
-    fp_visitor_print();
+    visitor_print();
 
     void visit_chunk(const fp_chunk& chunk);
 
