@@ -18,7 +18,6 @@
 #include "game.h"
 #include "csv_row.h"
 #include "file_parser_ast.h"
-#include "search_utils.h"
 #include "test_case.h"
 #include "test_case_enums.h"
 #include "utilities.h"

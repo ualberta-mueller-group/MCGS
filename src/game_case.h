@@ -1,7 +1,7 @@
 /*
     Old file_parser helper class
 
-    Deprecated
+    Deprecated: all of this .h and .cpp file
 */
 #pragma once
 
@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include "search_utils.h"
+#include "cgt_basics.h"
 
 /*
     game_case:

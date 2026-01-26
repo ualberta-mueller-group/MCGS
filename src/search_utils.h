@@ -1,8 +1,7 @@
 /*
     Utilities for solving both partisan and impartial sums.
 
-    NOTE: deprecated; the only thing still used from this file is
-    player_name_bw_imp(...)
+    Deprecated: all of this .h and .cpp file
 */
 #pragma once
 #include "test_case_enums.h"
@@ -11,9 +10,6 @@
 #include <vector>
 #include "sumgame.h"
 #include "game.h"
-
-////////////////////////////////////////////////// misc functions
-std::string player_name_bw_imp(ebw to_play);
 
 ////////////////////////////////////////////////// search_value
 enum search_value_type_t

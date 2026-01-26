@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "cgt_basics.h"
-#include "search_utils.h"
 #include "file_parser_ast.h"
 #include "test_case_enums.h"
 

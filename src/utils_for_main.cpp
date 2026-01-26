@@ -11,7 +11,6 @@
 #include "cli_options.h"
 #include "game.h"
 #include "csv_row.h"
-#include "search_utils.h"
 #include "sumgame.h"
 #include "test_case.h"
 #include "get_winning_moves.h"

@@ -40,16 +40,6 @@ test_case_status_enum compare_search_values(const search_value* found_value,
 
 } // namespace
 
-////////////////////////////////////////////////// misc functions
-string player_name_bw_imp(ebw to_play)
-{
-    if (is_black_white(to_play))
-        return string(1, color_to_player_char(to_play));
-
-    assert(to_play == EMPTY);
-    return "IMP"; // impartial
-}
-
 ////////////////////////////////////////////////// search_value
 search_value::search_value()
     : _type(SEARCH_VALUE_TYPE_NONE), _value_win(false), _value_nimber(-1)
