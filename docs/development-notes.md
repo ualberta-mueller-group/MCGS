@@ -34,12 +34,18 @@ This document includes more detailed information than `README.md`, including des
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Time: Measuring Time, and Respecting Timeouts (`stopwatch.h`, `timeout_token.h`)
+Versions prior to v1.5 were lacking generic timing utilities, and timeouts were
+messy and may have used undefined behavior. MCGS v1.5 provides standardized
+solutions for measuring time, and respecting timeouts.
+
+## Measuring Time
 The `stopwatch` class provides a standardized way to measure time:
 - Use methods `start()` and `stop()` to measure a duration
 - Then use method `get_duration_ms()` to get the duration (in milliseconds)
 - Method `reset()` allows the object to be reused
 - See `stopwatch.h` for preconditions
 
+## Timeouts
 Classes `timeout_source` and `timeout_token` provide a standardized and
 thread-safe way to manage and poll timeouts, (and are the preferred way of
 doing so as of MCGS v1.5). They are similar to C++ 20's `std::stop_source` and
