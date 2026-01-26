@@ -35,6 +35,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 - Added impartial game support to database
     - Used by impartial LV search, and partisan `sumgame` search functions
 - Added new command type to `.test` files (winning moves test). See `input/info.test`
+- `print_move` now implemented for all games; output of `--print-winning-moves`-like features should now be sensible
 - Added features to `.html` output and `create-table.py`:
     - More output columns
     - Checkboxes to show/hide columns, several columns are hidden by default
@@ -48,12 +49,12 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 
 #### Major Code Additions
 - Major refactoring
-    - `solver_stats.h` usage simplified
-    - `csv_row` class with helper functions for populating fields, and writing to streams
+    - `solver_stats.h` usage simplified, added more fields
+    - `csv_row` class with helper functions for populating fields and writing to streams
     - Standardized measuring time, and polling timeouts
         - Classes: `stopwatch`, `timeout_source`/`timeout_token`
     - `file_parser`
-        - More features
+        - More features and more granularity
         - Creates an AST as it parses input. Visitor classes operate on the AST
     - `i_test_case`: abstract test case class for `.test` input. More general than old solution
 - Deprecation (see notes at the top of these `.h` files):
