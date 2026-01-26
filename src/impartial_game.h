@@ -7,10 +7,13 @@
 
 #include <set>
 #include <cassert>
+#include <cstdint>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
 #include "transposition.h"
+#include "timeout_token.h"
 
 //---------------------------------------------------------------------------
 // Transposition table for impartial games
@@ -39,13 +42,11 @@ public:
     // Solve *this with a given tt
     int search_impartial_game(impartial_tt& tt) const;
 
-    /*
-        TODO: this method should probably be hidden somehow; it's an
-        implementation detail and is used by
-        search_impartial_sumgame_with_timeout (impartial_sumgame.cpp)
-    */
+    // Returned value is valid IFF timeout_tok.stop_requested() is false
+    // after returning
     int search_impartial_game_cancellable(impartial_tt& tt,
-                                          const bool& over_time) const;
+                                          const timeout_token& timeout_tok,
+                                          uint64_t depth) const;
 
     // Impartial game interface
     virtual void play(const move& m);

@@ -18,6 +18,7 @@
 
 #include "database.h"
 #include "impartial_sumgame.h"
+#include "impartial_game.h"
 #include "sumgame.h"
 #include "iobuffer.h"
 #include "serializer.h"
@@ -178,6 +179,20 @@ void database::clear()
     _tree_partisan.clear();
     _tree_impartial.clear();
     _mapper.clear();
+}
+
+bool database::is_equal(const database& other) const
+{
+    if (_tree_partisan != other._tree_partisan)
+        return false;
+
+    if (_tree_impartial != other._tree_impartial)
+        return false;
+
+    if (_mapper != other._mapper)
+        return false;
+
+    return true;
 }
 
 void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)

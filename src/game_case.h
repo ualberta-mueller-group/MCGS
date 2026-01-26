@@ -1,3 +1,8 @@
+/*
+    Old file_parser helper class
+
+    Deprecated: all of this .h and .cpp file
+*/
 #pragma once
 
 // IWYU pragma: begin_exports
@@ -8,6 +13,7 @@
 #include <vector>
 #include <string>
 #include "search_utils.h"
+#include "cgt_basics.h"
 
 /*
     game_case:

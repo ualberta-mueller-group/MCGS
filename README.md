@@ -1,8 +1,8 @@
-# MCGS V1.4
+# MCGS V1.5
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
-Taylor Folkersen, [Martin Müller](https://webdocs.cs.ualberta.ca/~mmueller/) and Henry Du, 2024-25
+Taylor Folkersen, [Martin Müller](https://webdocs.cs.ualberta.ca/~mmueller/) and Henry Du, 2024-26
 
 MCGS is an efficient minimax search-based solver for sums of combinatorial
 games. Given a sum of games and a first player, MCGS determines the winner. The
@@ -14,7 +14,7 @@ search optimizations.
 Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of results so far are available from the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
 
 ### Sections
-- [Version 1.4 Additions](#version-14-additions)
+- [Version 1.5 Additions](#version-15-additions)
 - [Building MCGS](#building-mcgs)
 - [Using MCGS](#using-mcgs)
 - [Using the Database](#using-the-database)
@@ -28,55 +28,41 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
     - [Hashing-Related Hooks](#hashing-related-hooks)
     - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
-### Version 1.4 Additions
-#### Changes Since Version 1.4-Prerelease
-- Fixed compilation error on Mac OS
-- Very long unit tests made faster
-- Compatibility warnings added to [Using the Database](#using-the-database) section
-    - Added extra checks for loading database files
+### Version 1.5 Additions
 #### New Features
-- New games (see `input/info.test` for syntax)
-    - Amazons
-    - Domineering
-    - Fission
-    - Battle Sheep
-        - Implementation of: https://www.blueorangegames.com/games/battle-sheep
-    - Toppling Dominoes
-    - Generalized Toads and Frogs
-- Split functions for Amazons, Domineering, and Sheep
-- Basic player. Interactively play games against MCGS with the `--play-mcgs`
-  option!
-    - Optionally log games played to a file, i.e. `--play-log log.txt`
-- Configurable database
-    - `--db-file-create <file name> <DB config string>`
-    - See README for details
-- `--print-winning-moves` CLI option prints winning moves for input sums
-    - Has limitations, see `./MCGS -h`
-- [MCGS web page](https://ualberta-mueller-group.github.io/MCGS)
-    - Contains computational results
-    - Links to a user guide, our ACG 2025 paper, and our ACG 2025 presentation
-      slides
-- More data in `input` directory
-- Input language version `1.3` --> `1.4`
+- Lemoine and Viennot (LV) algorithm is the new default impartial search algorithm
+    - `--impartial-algorithm-mex`: uses previous (Mex) algorithm (NOTE: LV queries the database, but Mex does not)
+- Added impartial game support to database
+    - Used by impartial LV search, and partisan `sumgame` search functions
+- Added new command type to `.test` files (winning moves test). See `input/info.test`
+- `print_move` function now implemented for all game types; output of `--print-winning-moves`-like features should now be sensible for all games
+- Added features to `.html` output and `create-table.py`:
+    - More output columns
+    - Checkboxes to show/hide columns, several columns are hidden by default
+    - More sorting and filtering options
+    - Dynamic summary of rows which are not currently filtered out. Includes comparison of new vs old values
+- New CLI options
+    - `--use-complexity-score` enable complexity score heuristic for LV algorithm
+    - `--print-sum-moves` and `--print-subgame-moves`
+    - `--clear-tt`: clearing ttable is much faster
+    - `--print-winning-moves` and `--play-mcgs`: behavior changed
+    - `--db-file-compare` reports whether two database files differ (not considering their metadata strings)
+- Input language version `1.4` --> `1.5`
 
 #### Major Code Additions
-- `game::_order_impl` (lexicographic comparison method) is no longer used
-- Refactored `cgt_move.h` and `cgt_basics.h`
-    - `cgt_basics.h` defines colors, and functions to convert between `int` and
-      `char` representations of colors
-    - `cgt_move.h` defines several multi part move functions
-        - Move layout structs simplify the work of adding new multi part moves
-- Grid generator classes merged into one single `grid_generator` class
-    - See development notes for important usage details
-- `grid_hash` class maps grid games having rotation/transpose symmetry to the
-  same local hashes
-  - Manually added to grid games on a per-game basis. See development notes for
-    instructions.
-  - Significantly speeds up database creation for grid games
-  - Decreases the number of entries in the database
-  - Creates more transposition table hits in some cases
-- Experimental WebAssembly build using Emscripten. `WASM=1` makefile variable
-    - Must first copy contents of `utils/wasm` to project root
+- Major refactoring
+    - `solver_stats.h` usage simplified, added more fields
+    - `csv_row` class with helper functions for populating fields and writing to streams
+    - Standardized measuring time, and polling timeouts
+        - Classes: `stopwatch`, `timeout_source`/`timeout_token`
+    - `file_parser`
+        - More features and more granularity
+        - Creates an AST as it parses input. Visitor classes operate on the AST
+    - `i_test_case`: abstract test case class for `.test` input. More general than old solution
+- Deprecation (see notes at the top of these `.h` files):
+    - `game_case.h`
+    - `search_utils.h`
+    - `parsing_utilities.h`
 
 ### Building MCGS
 First download this repository, and enter its directory.
@@ -122,7 +108,7 @@ For a full description of input syntax, including game-specific input syntax,
 see [input/info.test](input/info.test).
 
 ### Using the Database
-NOTE: Database files from previous versions are not compatible with version 1.4.
+NOTE: Database files from previous versions are not compatible with version 1.5.
 
 The database is loaded from `database.bin` automatically on startup if it
 exists and `--no-use-db` is not specified. `--db-file-load <file name>` is used
@@ -148,13 +134,14 @@ Games currently supported by the database:
     - `nogo_1xn`
     - `elephants`
     - `toppling_dominoes`
-- Grid games
+- Grid games:
     - `amazons`
     - `nogo`
     - `clobber`
     - `domineering`
     - `fission`
     - `sheep`
+- All impartial versions of the above games
 
 The `max_dims` parameter must be specified for all of these games. For strip
 games, it should be specified as a single non-negative integer, and for grid

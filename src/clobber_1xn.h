@@ -34,7 +34,7 @@ public:
     {
         str << "clobber_1xn:" << board_as_string();
     }
-    void print_move(std::ostream& str, const move& m) const override;
+    void print_move(std::ostream& str, const move& m, ebw to_play) const override;
 
     // Standard board with n consecutive "XO" pairs
     static std::string xo(int n);

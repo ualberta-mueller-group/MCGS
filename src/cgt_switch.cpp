@@ -256,4 +256,14 @@ move_generator* switch_game::create_move_generator(bw to_play) const
         return new switch_move_generator(*this, to_play);
 }
 
+void switch_game::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_black_white(to_play));
+
+    if (is_rational())
+        _rational_game->print_move(str, m, to_play);
+    else
+        str << "SWITCH_" << (to_play == BLACK ? 'L' : 'R');
+}
+
 //---------------------------------------------------------------------------

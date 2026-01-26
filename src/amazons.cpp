@@ -239,8 +239,9 @@ move_generator* amazons::create_move_generator(bw to_play) const
     return new amazons_move_generator(*this, to_play);
 }
 
-void amazons::print_move(std::ostream& str, const ::move& m) const
+void amazons::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
+    assert(is_black_white(to_play));
     // (from, to, arrow destination)
     print_move6_as_coords(str, m, shape());
 }

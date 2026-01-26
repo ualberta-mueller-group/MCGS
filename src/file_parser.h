@@ -4,97 +4,36 @@
 
     To register a new game type with the parser, see
     file_parser::_init_game_parsers() in the cpp file
+
+    For extensive documentation, see "File Parser and Internals" in the
+    development notes.
+    This covers: basic usage, AST nodes, visitors, test cases, CSV rows, etc.
 */
 #pragma once
-#include <sstream>
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "game_token_parsers.h"
 #include <memory>
 #include <exception>
 #include <iostream>
-#include <cstddef>
-#include <cstdlib>
+#include <optional>
 
-// IWYU pragma: begin_exports
-#include "game_case.h"
-// IWYU pragma: end_exports
+#include "game.h"
+#include "file_parser_ast.h"
+#include "istream_tokenizer.h"
+#include "game_token_parsers.h"
+#include "test_case.h"
+#include "test_case_enums.h"
 
-
-// How many game_cases can be created by a single "run" command, i.e.
-// "{B win, W loss}"
-#define FILE_PARSER_MAX_CASES 3
-
-//////////////////////////////////////// token_iterator
-
-/*
-   token_iterators generate string tokens from some input stream, and
-    remember line numbers. For use by file_parser
-*/
-class token_iterator
-{
-public:
-    virtual ~token_iterator() {}
-
-    // get next token, writing it into "token". Returns true iff result is valid
-    virtual bool get_token(std::string& token) = 0;
-
-    // line number of previous token returned by get_token()
-    virtual int line_number() const = 0;
-
-    // caller consumes all previously returned tokens
-    virtual void consume() = 0;
-
-    // rewind to first previously unconsumed token
-    virtual void rewind() = 0;
-};
-
-class file_token_iterator : public token_iterator
-{
-public:
-    /*
-        if delete_stream is true, the stream is owned by the
-       file_token_iterator; i.e. stream might be std::cin and delete_stream will
-       be false, or stream might be some std::ifstream and delete_stream will be
-       true
-    */
-    file_token_iterator(std::istream* stream, bool delete_stream);
-    ~file_token_iterator();
-
-    bool get_token(std::string& token) override;
-    int line_number() const override;
-
-    void consume() override;
-    void rewind() override;
-
-private:
-    struct token_info
-    {
-        token_info(const std::string& token_string, int line_number)
-            : token_string(token_string), line_number(line_number)
-        {
-        }
-
-        std::string token_string;
-        int line_number;
-    };
-
-    void _cleanup();
-    bool _get_token_from_stream(std::string& token);
-
-    std::istream* _main_stream_ptr;
-    bool _delete_stream; // do we own this stream?
-
-    std::stringstream _line_stream;
-
-    int _line_number;
-
-    std::vector<token_info> _token_buffer;
-    size_t _token_idx;
-};
 
 ////////////////////////////////////////////////// file_parser
+
+enum file_parser_state_enum
+{
+    FILE_PARSER_STATE_BEGIN = 0,
+    FILE_PARSER_STATE_HAS_CHUNK,
+    FILE_PARSER_STATE_END_OF_FILE,
+};
 
 namespace file_parser_impl {
 
@@ -121,8 +60,6 @@ enum match_state
     file_parser:
         reads input from stdin, string, or file. Use static constructor
    functions to create a file_parser i.e. from_stdin()
-
-        call parse_chunk() to get next game_case
 */
 class file_parser
 {
@@ -152,23 +89,40 @@ private:
                 const std::string& match_name, bool allow_inner);
 
     // functions to handle current token
-    bool _parse_game();
+    //bool _parse_game();
     bool _parse_command();
 
     std::string _get_error_start();
+
+public:
+    static std::string get_error_start(int line_number);
 
 public:
     // Prevent accidental memory bugs
     file_parser() = delete;
     file_parser(const file_parser& other) = delete;
     file_parser& operator=(const file_parser& other) = delete;
+    file_parser(file_parser&&) = delete;
+    file_parser& operator=(file_parser&&) = delete;
 
     ~file_parser();
 
-    /*  Get next game_case. True if valid case, false if no more cases.
-            Caller must first clean up previous game_case
-    */
-    bool parse_chunk(game_case& gc);
+    bool parse_chunk();
+private:
+    bool _parse_chunk_impl();
+public:
+
+    std::vector<game*> get_games() const;
+    int n_test_cases() const;
+    command_type_enum get_test_case_type(int test_case_idx) const;
+    std::shared_ptr<i_test_case> get_test_case(int test_case_idx) const;
+
+    // const std::string& file_name() const;
+
+
+    void print_ast() const;
+    static game* construct_game(const std::string& title, int line_number,
+                                const std::string& game_token);
 
     // static constructor functions
     static file_parser* from_stdin();
@@ -193,8 +147,10 @@ private:
     static std::unordered_map<std::string, std::shared_ptr<game_token_parser>>
         _game_map;
 
+    std::optional<fp_chunk> _chunk;
+
     // input source
-    file_token_iterator _iterator;
+    istream_tokenizer _tokenizer;
 
     // when true, complain if input doesn't specify version
     bool _do_version_check;
@@ -204,17 +160,9 @@ private:
     int _line_number;
     std::string _token;
 
-    /*
-        Because the "run" command comes AFTER the games are specified,
-            and because games are mutable, the parser has to store multiple
-            copies of the game list, i.e. {B, W} requires two separate but
-            equal game lists
-    */
-    game_case _cases[FILE_PARSER_MAX_CASES];
-    int _case_count; // number of cases created by a previous parse_chunk() call
-    int _next_case_idx; // next case to consume from a previous parse
-
     bool _warned_wrong_version;
+
+    file_parser_state_enum _input_state;
 };
 
 enum parser_exception_code
@@ -228,11 +176,8 @@ enum parser_exception_code
     DUPLICATE_GAME_PARSER,
     FAILED_MATCH,
     FAILED_GAME_TOKEN_PARSE,
-    CASE_LIMIT_EXCEEDED, // shouldn't happen in practice
-    EMPTY_COMMAND,
-    EMPTY_CASE_COMMAND,
     FAILED_CASE_COMMAND,
-    PARSE_CHUNK_CALLER_ERROR,
+    PARSE_CHUNK_CALLER_ERROR, // TODO 
     BAD_COMMENT_FORMAT,
 };
 

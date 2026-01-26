@@ -35,6 +35,6 @@ protected:
 public:
     move_generator* create_move_generator(bw to_play) const override;
     void print(std::ostream& str) const override;
-    void print_move(std::ostream& str, const move& m) const override;
+    void print_move(std::ostream& str, const move& m, ebw to_play) const override;
     game* inverse() const override; // caller takes ownership
 };

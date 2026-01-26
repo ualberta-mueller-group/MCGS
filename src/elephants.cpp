@@ -442,8 +442,9 @@ move_generator* elephants::create_move_generator(bw to_play) const
     return new elephants_move_generator(*this, to_play);
 }
 
-void elephants::print_move(std::ostream& str, const move& m) const
+void elephants::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
+    assert(is_black_white(to_play));
     // from, to
     print_move2_as_points(str, m);
 }

@@ -1,0 +1,24 @@
+
+/*_ This is a silent comment on line 3 */
+
+[clobber_1xn]
+XOXOXO {B}
+
+/* This is a shared comment on line 8 */
+XXO {B win, W loss}
+
+[impartial clobber_1xn]
+XOXOXOXOXOXO {B, W, N}
+/*#0 This is a numbered comment on line 13 */
+/*#1 This is a numbered comment on line 14. It extends into line
+15 */
+/*#2 This is a numbered comment on line 16. It
+extends
+into line 18 */
+XXOXXOXXO {B win, W loss, N 5}
+[clobber_1xn]
+XXOXXXO {winning moves B 0:2-3 0:4-3 0:6-7, winning moves W None, winning moves B ?}
+[amazons]
+...|.X.|... {winning moves B ?}
+[amazons]
+.....|.....|..X..|.....|..... {winning moves B ?, winning moves W None, winning moves W ?}

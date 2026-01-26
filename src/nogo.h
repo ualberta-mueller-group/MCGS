@@ -48,7 +48,7 @@ public:
     {
         str << "nogo:" << board_as_string();
     }
-    void print_move(std::ostream& str, const move& m) const override;
+    void print_move(std::ostream& str, const move& m, ebw to_play) const override;
 
 private:
     std::vector<int> _immortal; // BORDER for immortal points (stones),

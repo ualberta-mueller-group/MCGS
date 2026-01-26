@@ -234,13 +234,14 @@ game* domineering::inverse() const
     return new domineering(transpose_board(board_const(), s), transpose_shape);
 }
 
-void domineering::print_move(std::ostream& str, const ::move& m) const
+void domineering::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
     /*
         (coord1, coord2)
 
         coord1 is upper-left-most
     */
+    assert(is_black_white(to_play));
     print_move4_as_coords(str, m, shape());
 }
 

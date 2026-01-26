@@ -14,22 +14,17 @@
 #include "cgt_integer_game.h"
 #include "cgt_nimber.h"
 #include "cgt_switch.h"
-#include "throw_assert.h"
 #include "cgt_up_star.h"
 #include "alternating_move_game.h"
+#include "timeout_token.h"
 
 #include <algorithm>
-#include <chrono>
+#include <numeric>
 #include <utility>
 #include <optional>
 #include <ctime>
 #include <iostream>
 #include <memory>
-
-#ifndef __EMSCRIPTEN__
-#include <thread>
-#include <future>
-#endif
 
 #include <cassert>
 #include <unordered_set>
@@ -261,97 +256,43 @@ bool sumgame::solve() const
     return result.value().win;
 }
 
-/*
-    Spawns a thread that runs _solve_with_timeout(), then blocks until
-        the thread returns, or the timeout has elapsed. It seems using
-        std::chrono or clock() to check timeouts is very slow.
-
-        As of writing this, unit tests take 1s to complete when no
-        timeout is implemented, 1s when timeout is implemented with threads,
-        ~4s with clock(), and ~11s with chrono...
-
-*/
-#ifndef __EMSCRIPTEN__
 optional<solve_result> sumgame::solve_with_timeout(
     unsigned long long timeout) const
 {
-    assert_restore_sumgame ars(*this);
-    sumgame& sum = const_cast<sumgame&>(*this);
+    timeout_source src;
+    timeout_token tok = src.get_timeout_token();
 
-    sum._pre_solve_pass();
-
-    {
-        const int active = sum.num_active_games();
-        THROW_ASSERT(active >= 0);
-        stats::set_n_subgames(static_cast<uint64_t>(active));
-    }
-
-    _should_stop = false;
-    _need_cgt_simplify = true;
-
-    // spawn a thread, then wait with a timeout for it to complete
-    std::promise<optional<solve_result>> promise;
-    std::future<optional<solve_result>> future = promise.get_future();
-
-    std::thread thr([&]() -> void
-    {
-        optional<solve_result> result = sum._solve_with_timeout(0);
-        promise.set_value(result);
-    });
-
-    std::future_status status = std::future_status::ready;
-
-    if (timeout == 0)
-    {
-        future.wait();
-    }
-    else
-    {
-        status = future.wait_for(std::chrono::milliseconds(timeout));
-    }
-
-    if (timeout != 0 && status == std::future_status::timeout)
-    {
-        // Stop the thread
-        _should_stop = true;
-    }
-
-    future.wait();
-    thr.join();
-
-    assert(future.valid());
-
-    sum._undo_pre_solve_pass();
-
-    return future.get();
-}
-#else
-// TODO emscripten pthreads
-optional<solve_result> sumgame::solve_with_timeout(
-    unsigned long long timeout) const
-{
-    assert_restore_sumgame ars(*this);
-    sumgame& sum = const_cast<sumgame&>(*this);
-
-    sum._pre_solve_pass();
-
-    {
-        const int active = sum.num_active_games();
-        THROW_ASSERT(active >= 0);
-        stats::set_n_subgames(static_cast<uint64_t>(active));
-    }
-
-    _should_stop = false;
-    _need_cgt_simplify = true;
-
-
-    optional<solve_result> result = sum._solve_with_timeout(0);
-
-    sum._undo_pre_solve_pass();
+    src.start_timeout(timeout);
+    optional<solve_result> result = solve_with_timeout_token(tok, INITIAL_SEARCH_DEPTH);
+    src.cancel_timeout();
 
     return result;
 }
-#endif
+
+optional<solve_result> sumgame::solve_with_timeout_token(
+    const timeout_token& timeout_tok, uint64_t depth) const
+{
+    assert_restore_sumgame ars(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+    // Set up timeout_token
+    assert(!sum._timeout_tok.has_value());
+    sum._timeout_tok = timeout_tok;
+
+    sum._pre_solve_pass();
+
+    assert(sum.num_active_games() >= 0);
+
+    _need_cgt_simplify = true;
+
+    optional<solve_result> result = sum._solve_impl(depth);
+
+    sum._undo_pre_solve_pass();
+
+    sum._timeout_tok.reset();
+
+    return result;
+}
 
 bool sumgame::solve_with_games(std::vector<game*>& gs) const
 {
@@ -392,7 +333,7 @@ bool sumgame::solve_with_games(game* g) const
     return result;
 }
 
-optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
+optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 {
 #ifdef SUMGAME_DEBUG
     _debug_extra();
@@ -404,11 +345,8 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
     if (_over_time())
         return solve_result::invalid();
 
-    depth++;
-    stats::inc_node_count();
-    stats::update_search_depth(depth);
-    if (global::count_sums())
-        stats::count_sum(*this);
+    stats::report_search_node(*this, to_play(), depth);
+    const uint64_t next_depth = depth + 1; // for after a move is played
 
     if (PRINT_SUBGAMES)
     {
@@ -416,23 +354,17 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
         print(cout);
     }
 
-    //cout << "vvvvvvvvvvvvvvvvvvvv\n";
-    //cout << *this;
-    simplify_impartial();
-    //cout << *this;
-    //cout << "^^^^^^^^^^^^^^^^^^^^\n";
-    //cout << endl;
 
     {
+        simplify_impartial();
         std::optional<solve_result> result = simplify_db();
 
         if (result.has_value())
-
-            if (result.has_value())
-                return result;
+            return result;
     }
 
     simplify_basic();
+
 
     /*      NOTE:
        This is sort of a nested optional. If sumgame's ttable is disabled (i.e.
@@ -464,7 +396,7 @@ optional<solve_result> sumgame::_solve_with_timeout(uint64_t depth)
 
         if (!found)
         {
-            optional<solve_result> child_result = _solve_with_timeout(depth);
+            optional<solve_result> child_result = _solve_impl(next_depth);
 
             if (!child_result.has_value() || _over_time())
                 return solve_result::invalid();
@@ -515,10 +447,8 @@ std::optional<ttable_sumgame::search_result> sumgame::_do_ttable_lookup() const
 
     const hash_t current_hash = get_global_hash();
 
-    std::optional<ttable_sumgame::search_result> sr = _tt->search(current_hash);
-    assert(sr.has_value());
-
-    stats::tt_access((*sr).entry_valid());
+    ttable_sumgame::search_result sr = _tt->search(current_hash);
+    stats::report_tt_access(sr.entry_valid());
 
     return sr;
 }
@@ -543,7 +473,9 @@ void sumgame::_assert_games_unique() const
 
 bool sumgame::_over_time() const
 {
-    return _should_stop;
+    if (_timeout_tok.has_value())
+        return _timeout_tok->stop_requested();
+    return false;
 }
 
 void sumgame::_pre_solve_pass()
@@ -632,6 +564,8 @@ game* sumgame::_pop_game()
 
 void sumgame::play_sum(const sumgame_move& sm, bw to_play)
 {
+    assert(is_black_white(to_play));
+
     _push_undo_code(SUMGAME_UNDO_PLAY);
 
     _play_record_stack.push_back(play_record(sm));
@@ -851,13 +785,15 @@ ebw analyze_outcome_count_vector(const std::vector<unsigned int>& counts,
 void sumgame::simplify_impartial()
 {
     _push_undo_code(SUMGAME_UNDO_SIMPLIFY_IMPARTIAL);
+
     if (!global::use_db())
         return;
 
+    database& db = get_global_database();
+
+    // Push record
     _change_record_stack.emplace_back();
     sumgame_impl::change_record& cr = _change_record_stack.back();
-   
-    database& db = get_global_database();
 
     int n_known_values = 0; // nimbers and impartial_games
     int n_known_non_nimbers = 0; // known values which are not nimbers
@@ -890,6 +826,7 @@ void sumgame::simplify_impartial()
         assert(dynamic_cast<nimber*>(sg) == nullptr);
 
         std::optional<db_entry_impartial> entry = db.get_impartial(*sg);
+        stats::report_db_access(entry.has_value());
 
         if (!entry.has_value())
             continue;
@@ -926,6 +863,7 @@ void sumgame::simplify_impartial()
 void sumgame::undo_simplify_impartial()
 {
     _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_IMPARTIAL);
+
     if (!global::use_db())
         return;
 
@@ -965,29 +903,59 @@ std::optional<solve_result> sumgame::simplify_db()
     std::vector<unsigned int> counts = get_oc_indexable_vector();
 
     // Search all active games
-    const int N = num_total_games();
-    for (int i = 0; i < N; i++)
+    const int N_SUBGAMES = num_total_games();
+    int n_active_games = 0;
+
+    for (int subgame_idx = 0; subgame_idx < N_SUBGAMES; subgame_idx++)
     {
-        game* g = subgame(i);
+        game* g = subgame(subgame_idx);
         if (!g->is_active())
             continue;
 
+        n_active_games++;
+
+        // Get g's outcome class
         outcome_class oc = outcome_class::U;
 
-        std::optional<db_entry_partisan> entry = db.get_partisan(*g);
-        stats::db_access(entry.has_value());
+        if (g->is_impartial())
+        {
+            /*
+               Because simplify_impartial() should be called prior to this
+               function, one of the following must hold:
+                   1. g is a nimber
+                   2. g is not a nimber, AND is not in the database
+            */
+            if (g->game_type() == game_type<nimber>())
+            {
+                assert(dynamic_cast<nimber*>(g) != nullptr);
+                nimber* g_nimber = static_cast<nimber*>(g);
 
-        if (entry.has_value())
-            oc = entry->outcome;
+                const int g_nim_value = g_nimber->value();
+                assert(g_nim_value >= 0);
+
+                oc = (g_nim_value == 0) ? outcome_class::P : outcome_class::N;
+            }
+        }
+        else
+        {
+            std::optional<db_entry_partisan> entry = db.get_partisan(*g);
+            stats::report_db_access(entry.has_value());
+
+            if (entry.has_value())
+                oc = entry->outcome;
+        }
 
         counts[oc]++;
 
         if (oc == outcome_class::P)
         {
             cr.deactivated_games.push_back(g);
+            assert(g->is_active());
             g->set_active(false);
         }
     }
+
+    assert(std::accumulate(counts.begin(), counts.end(), 0) == n_active_games);
 
     const ebw winner = analyze_outcome_count_vector(counts, to_play());
 
@@ -1036,68 +1004,12 @@ void sumgame::print(std::ostream& str) const
 
 hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 {
-    if (invalidate_game_hashes)
-        for (game* g : _subgames)
-            g->invalidate_hash();
-
-    _sumgame_hash.reset();
-    _sumgame_hash.set_to_play(to_play());
-
-    std::vector<game*> active_games;
-
-    {
-        const int N = this->num_total_games();
-
-        for (int i = 0; i < N; i++)
-        {
-            game* g = this->subgame(i);
-
-            if (!g->is_active())
-                continue;
-
-            active_games.push_back(g);
-        }
-    }
-
-    auto compare_fn = [](const game* g1, const game* g2) -> bool
-    {
-        const hash_t hash1 = g1->get_local_hash();
-        const hash_t hash2 = g2->get_local_hash();
-        return hash1 < hash2;
-    };
-
-    /*
-    auto compare_fn = [](const game* g1, const game* g2) -> bool
-    {
-        // Put larger games first
-        return g1->order(g2) == REL_GREATER;
-    };
-    */
-
-    std::sort(active_games.begin(), active_games.end(), compare_fn);
-
-    {
-        const size_t N = active_games.size();
-
-        for (size_t i = 0; i < N; i++)
-        {
-            game* g = active_games[i];
-            assert(g->is_active());
-            _sumgame_hash.add_subgame(i, g);
-        }
-    }
-
-    return _sumgame_hash.get_value();
+    return _sumgame_hash.get_global_hash_value(subgames(), to_play());
 }
 
 bool sumgame::all_impartial() const
 {
-    const int N = num_total_games();
-    for (int i = 0; i < N; i++)
-        if (!subgame(i)->is_impartial())
-            return false;
-
-    return true;
+    return all_games_impartial(_subgames);
 }
 
 std::optional<sumgame_move> sumgame::get_winning_or_random_move(

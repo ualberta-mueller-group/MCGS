@@ -1,26 +1,38 @@
 #include "file_parser.h"
+
 #include <cstdlib>
+#include <exception>
 #include <functional>
 #include <iostream>
 #include <cassert>
+#include <sstream>
 #include <string>
 #include <istream>
 #include <unordered_map>
 #include <memory>
 #include <vector>
 #include <fstream>
+#include <optional>
 #include <utility>
+#include <ios>
+
 #include "cgt_basics.h"
+#include "test_case_enums.h"
 #include "all_game_headers.h"
+#include "file_parser_ast.h"
 #include "fission.h"
-#include "game_case.h"
 #include "game_token_parsers.h"
 #include "parsing_utilities.h"
+#include "string_to_int.h"
 #include "toppling_dominoes.h"
 #include "utilities.h"
+#include "test_case.h"
 #include "version_info.h"
-#include <ios>
-#include <exception>
+
+#include "visitor_generate.h"
+#include "visitor_print.h"
+#include "throw_assert.h"
+
 
 /*
     NOTE: here we should usually throw instead of using assert() for many
@@ -41,145 +53,6 @@ bool file_parser::override_assert_correct_version = false;
 
 unordered_map<string, shared_ptr<game_token_parser>> file_parser::_game_map;
 
-//////////////////////////////////////////////////////////// file_token_iterator
-
-file_token_iterator::file_token_iterator(istream* stream, bool delete_stream)
-    : _main_stream_ptr(stream),
-      _delete_stream(delete_stream),
-      _line_number(-1),
-      _token_buffer(),
-      _token_idx(0)
-{
-    _token_buffer.reserve(8);
-}
-
-file_token_iterator::~file_token_iterator()
-{
-    _cleanup();
-}
-
-int file_token_iterator::line_number() const
-{
-    // Don't call without getting a valid token first
-    assert(_line_number >= 0);
-
-    return _line_number + 1;
-}
-
-bool file_token_iterator::get_token(string& token)
-{
-    token.clear();
-
-    // Check if token buffer has data
-    if (_token_idx < _token_buffer.size())
-    {
-        const token_info& ti = _token_buffer[_token_idx];
-        _token_idx++;
-
-        _line_number = ti.line_number;
-        token = ti.token_string;
-
-        return true;
-    }
-
-    // Check if stream has more tokens
-    if (_get_token_from_stream(token))
-    {
-        _token_buffer.emplace_back(token, _line_number);
-        _token_idx++;
-
-        assert(_token_idx == _token_buffer.size());
-
-        return true;
-    }
-
-    return false;
-}
-
-bool file_token_iterator::_get_token_from_stream(string& token)
-{
-    assert(_main_stream_ptr != nullptr);
-    token.clear();
-
-    istream& main_stream = *_main_stream_ptr;
-
-    // Check if current line has more tokens
-    if (_line_stream && _line_stream >> token)
-    {
-        return true;
-    }
-
-    if (_line_stream.fail() && !_line_stream.eof())
-    {
-        throw ios_base::failure("file_token_iterator operator++ line IO error");
-    }
-
-    // Scroll through the file's lines until we get a token
-    string next_line;
-    while (main_stream && getline(main_stream, next_line) &&
-           !main_stream.fail())
-    {
-        _line_number++;
-        _line_stream = stringstream(next_line);
-
-        if (_line_stream && _line_stream >> token && !_line_stream.fail())
-        {
-            return true;
-        }
-
-        if (_line_stream.fail() && !_line_stream.eof())
-        {
-            throw ios_base::failure(
-                "file_token_iterator operator++ line IO error");
-        }
-    }
-
-    if (main_stream.fail() && !main_stream.eof())
-    {
-        throw ios_base::failure("file_token_iterator operator++ file IO error");
-    }
-
-    // no remaining tokens
-    return false;
-}
-
-void file_token_iterator::consume()
-{
-    vector<token_info> new_buffer;
-    new_buffer.reserve(_token_buffer.size() - _token_idx);
-
-    for (size_t i = _token_idx; i < _token_buffer.size(); i++)
-    {
-        new_buffer.push_back(_token_buffer[i]);
-    }
-
-    _token_buffer.clear();
-    _token_buffer = std::move(new_buffer);
-    _token_idx = 0;
-}
-
-void file_token_iterator::rewind()
-{
-    _token_idx = 0;
-}
-
-void file_token_iterator::_cleanup()
-{
-    if (_delete_stream && _main_stream_ptr != nullptr)
-    {
-        // close if it's a file...
-        ifstream* file = dynamic_cast<ifstream*>(_main_stream_ptr);
-
-        if (file != nullptr && file->is_open())
-        {
-            file->close();
-        }
-
-        delete _main_stream_ptr;
-    }
-
-    _main_stream_ptr = nullptr;
-}
 
 //////////////////////////////////////////////////////////// helper functions
 namespace {
@@ -260,14 +133,13 @@ void strip_enclosing(string& str, const string& open, const string& close)
 // Private constructor -- use static functions instead
 file_parser::file_parser(istream* stream, bool delete_stream,
                          bool do_version_check)
-    : _iterator(stream, delete_stream),
+    : _tokenizer(stream, delete_stream),
       _do_version_check(do_version_check),
       _section_title(""),
       _line_number(0),
       _token(""),
-      _case_count(0),
-      _next_case_idx(0),
-      _warned_wrong_version(false)
+      _warned_wrong_version(false),
+      _input_state(FILE_PARSER_STATE_BEGIN)
 {
     if (_game_map.size() == 0)
     {
@@ -357,7 +229,6 @@ void file_parser::_add_game_parser_impartial(
 match_state file_parser::_get_enclosed(const string& open, const string& close,
                                        bool allow_inner)
 {
-    token_iterator& iterator = _iterator;
     match_state state = MATCH_UNKNOWN;
     const size_t n_enclosing_chars = open.size() + close.size();
 
@@ -408,11 +279,11 @@ match_state file_parser::_get_enclosed(const string& open, const string& close,
     }
 
     string new_token;
-    while (iterator.get_token(new_token))
+    while (_tokenizer.get_token(new_token))
     {
         assert(!match_state_conclusive(state));
 
-        _token += " " + new_token;
+        _token += new_token;
 
         update_match_state();
         if (match_state_conclusive(state))
@@ -460,13 +331,13 @@ bool file_parser::_match(const string& open, const string& close,
         }
         strip_enclosing(_token, open, close);
 
-        _iterator.consume();
+        _tokenizer.consume();
         return true;
     }
 
     if (state == MATCH_NOT_FOUND)
     {
-        _iterator.rewind();
+        _tokenizer.rewind();
         _token = token_copy;
         return false;
     }
@@ -479,169 +350,295 @@ bool file_parser::_match(const string& open, const string& close,
     return false;
 }
 
-// parse the current token using a game_token_parser, add result to game_cases
-bool file_parser::_parse_game()
+namespace {
+i_fp_expr_command* get_fp_expr_run_command_solve_bw(const int line_number,
+                                      const vector<string>& string_tokens,
+                                      size_t& idx)
 {
-    if (_section_title.size() == 0)
+    const size_t N = string_tokens.size();
+
+    if (!(idx < N))
+        return nullptr;
+
+    const string& player_token = string_tokens[idx];
+    idx++;
+
+    ebw player = EMPTY;
+
+    if (player_token == "B")
+        player = BLACK;
+    if (player_token == "W")
+        player = WHITE;
+
+    if (player == EMPTY)
+        return nullptr;
+
+    minimax_outcome_enum expected_outcome = MINIMAX_OUTCOME_NONE;
+
+    if (idx < N && !is_comma(string_tokens[idx]))
     {
-        string why =
-            _get_error_start() + "game token found but section title missing";
-        throw parser_exception(why, MISSING_SECTION_TITLE);
 
-        return false;
-    }
+        const string& outcome_token = string_tokens[idx];
+        idx++;
 
-    auto it = _game_map.find(_section_title);
+        if (outcome_token == "win")
+            expected_outcome = MINIMAX_OUTCOME_WIN;
+        if (outcome_token == "loss")
+            expected_outcome = MINIMAX_OUTCOME_LOSS;
 
-    if (it == _game_map.end())
-    {
-        string why =
-            _get_error_start() +
-            "game token found, but game parser doesn't exist for section \"";
-        why += _section_title + "\"";
-        throw parser_exception(why, MISSING_SECTION_PARSER);
-
-        return false;
-    }
-
-    game_token_parser* gp = (it->second).get();
-
-    for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
-    {
-        game* g = nullptr;
-
-        try
+        if (expected_outcome == MINIMAX_OUTCOME_NONE)
         {
-            g = gp->parse_game(_token);
-        }
-        catch (exception& e)
-        {
-            cerr << _get_error_start() << e.what();
-            throw e;
-        }
+            const string why =
+                file_parser::get_error_start(line_number) +
+                "BW solve command has invalid expected outcome: \"" +
+                outcome_token + "\" (if present, should be \"win\" or \"loss\")";
 
-        if (g == nullptr)
-        {
-
-            // This won't leak memory when caught because the game_cases
-            // will be cleaned up when the file_parser is destructed
-            string why = _get_error_start() + "game parser for section \"" +
-                         _section_title;
-            why += "\" failed to parse game token: \"" + _token + "\"";
-            throw parser_exception(why, FAILED_GAME_TOKEN_PARSE);
-
-            return false;
-        }
-        else
-        {
-            _cases[i].games.push_back(g);
-
-            // Update hash. Should include section title for every token
-            string hashable_chunk = _section_title + _token;
-            _cases[i].hash.update(hashable_chunk);
+            throw parser_exception(why, FAILED_CASE_COMMAND);
         }
     }
 
-    return true;
+    return new fp_expr_command_solve_bw(line_number, player, expected_outcome);
 }
 
-bool file_parser::_parse_command()
+i_fp_expr_command* get_fp_expr_run_command_solve_n(const int line_number,
+                                     const vector<string>& string_tokens,
+                                     size_t& idx)
 {
-    assert(_case_count == 0);
+    const size_t N = string_tokens.size();
 
-    vector<run_command_t> command_list;
-    bool success = get_run_command_list(_token, command_list);
+    if (!(idx < N))
+        return nullptr;
 
-    if (!success)
+    const string& player_token = string_tokens[idx];
+    idx++;
+
+    if (player_token != "N")
+        return nullptr;
+
+    std::optional<int> expected_nimber;
+
+    if (idx < N && !is_comma(string_tokens[idx]))
     {
-        string why = "failed to parse run command: \"" + _token + "\"";
+        const string& outcome_token = string_tokens[idx];
+        idx++;
+
+        expected_nimber = str_to_i_opt(outcome_token);
+
+        // TODO proper parser exception
+        if (!(expected_nimber.has_value() && expected_nimber.value() >= 0))
+        {
+            const string why =
+                file_parser::get_error_start(line_number) +
+                "N solve command has invalid expected value: \"" +
+                outcome_token + "\" (if present, should be integer >= 0)";
+
+            throw parser_exception(why, FAILED_CASE_COMMAND);
+        }
+    }
+
+    return new fp_expr_command_solve_n(line_number, expected_nimber);
+}
+
+i_fp_expr_command* get_fp_expr_run_command_winning_moves(const int line_number,
+                                     const vector<string>& string_tokens,
+                                     size_t& idx)
+{
+    const size_t N = string_tokens.size();
+
+    if (!(idx + 2 < N))
+        return nullptr;
+
+    const string& winning_token = string_tokens[idx];
+    const string& moves_token = string_tokens[idx + 1];
+    const string& player_token = string_tokens[idx + 2];
+    idx += 3;
+
+    if (winning_token != "winning" || moves_token != "moves")
+        return nullptr;
+
+    optional<ebw> player;
+
+    if (player_token == "B")
+        player = BLACK;
+    if (player_token == "W")
+        player = WHITE;
+    if (player_token == "N")
+        player = EMPTY;
+
+    if (!player.has_value())
+    {
+        const string why = file_parser::get_error_start(line_number) +
+                           "winning moves command has invalid player: \"" +
+                           player_token +
+                           "\" (should be one of 'B', 'W', or 'N')";
         throw parser_exception(why, FAILED_CASE_COMMAND);
     }
 
-    if (command_list.empty())
+    optional<vector<string>> expected_moves = vector<string>();
+    assert(expected_moves.has_value());
+
+    for (; idx < N; idx++)
     {
-        string why = "run command with no cases";
-        throw parser_exception(why, EMPTY_CASE_COMMAND);
+        const string& move_string = string_tokens[idx];
+
+        if (is_comma(move_string))
+            break;
+
+        expected_moves->emplace_back(move_string);
     }
 
-    if (command_list.size() > FILE_PARSER_MAX_CASES)
+    const size_t n_move_strings = expected_moves.value().size();
+
+    // Expected result unspecified
+    if (n_move_strings == 0)
+        expected_moves.reset();
+
+    if (n_move_strings == 1)
     {
-        string why =
-            _get_error_start() + "run command has too many cases, maximum is: ";
-        why += to_string(FILE_PARSER_MAX_CASES);
-        throw parser_exception(why, CASE_LIMIT_EXCEEDED);
+        assert(expected_moves.has_value());
+
+        // Careful! This reference is invalidated while still in scope
+        const string& move_string = expected_moves->back();
+
+        if (move_string == "None")
+        {
+            expected_moves->pop_back();
+            assert(expected_moves->empty());
+        }
     }
 
-    const size_t n_commands = command_list.size();
-    for (size_t i = 0; i < n_commands; i++)
+    // Moves are sorted further down the line
+    return new fp_expr_command_winning_moves(line_number, player.value(),
+                                             expected_moves);
+}
+
+#ifdef CALL_PARSE_FN_MACRO
+#error Macro already defined
+#endif
+
+#define CALL_PARSE_FN_MACRO(fn) \
+    expr = fn(line_number, string_tokens, idx); \
+    if (expr != nullptr) \
+    { \
+        chunk.add_command_expr(expr); \
+        return true; \
+    } \
+    idx = idx_start; \
+    static_assert(true)
+
+bool get_fp_expr_run_command(const int line_number,
+                             const vector<string>& string_tokens, size_t& idx,
+                             fp_chunk& chunk)
+{
+    const size_t idx_start = idx;
+
+    i_fp_expr_command* expr = nullptr;
+
+    // The functions inside of these macros should return nullptr if the
+    // input doesn't match the command
+    CALL_PARSE_FN_MACRO(get_fp_expr_run_command_solve_bw);
+    CALL_PARSE_FN_MACRO(get_fp_expr_run_command_solve_n);
+    CALL_PARSE_FN_MACRO(get_fp_expr_run_command_winning_moves);
+
+    return false;
+}
+#undef CALL_PARSE_FN_MACRO
+
+
+} // namespace
+
+// actually parses block...
+bool file_parser::_parse_command()
+{
+    THROW_ASSERT(_chunk.has_value());
+    vector<string> string_tokens = get_string_tokens(_token, {','});
+    const size_t N = string_tokens.size();
+
+    if (N == 0)
+        return true;
+
+    size_t i = 0;
+    while (i < N)
     {
-        run_command_t& rc = command_list[i];
-        game_case& gc = _cases[i];
+        if (!get_fp_expr_run_command(_line_number, string_tokens, i,
+                                     _chunk.value()))
+            return false;
 
-        gc.impartial = rc.player == EMPTY;
-        gc.to_play = rc.player;
-        gc.expected_value = rc.expected_value;
-
-        _case_count++;
+        if (i < N)
+        {
+            bool got_comma = consume_mandatory_comma(string_tokens, i);
+            if (!got_comma || (got_comma && i >= N))
+                return false;
+        }
     }
 
     return true;
 }
 
-// print start of parser error text (including line number)
+// get start of parser error text (including line number)
 string file_parser::_get_error_start()
 {
-    return "Parser error on line " + to_string(_line_number) + ": ";
+    return get_error_start(_line_number);
+}
+
+string file_parser::get_error_start(int line_number)
+{
+    return "Parser error on line " + to_string(line_number) + ": ";
 }
 
 file_parser::~file_parser()
 {
-    for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
-    {
-        // calling cleanup() is okay because caller-consumed games were
-        // std::moved
-        _cases[i].cleanup_games();
-    }
 }
 
-/*
-    Parses next part of the file until a case is found. Returns true and
-        std::moves case to "gc" if case is
-        valid, otherwise returns false indicating no more cases
-*/
-bool file_parser::parse_chunk(game_case& gc)
+bool file_parser::parse_chunk()
 {
-    if (gc.games.size() != 0)
+    THROW_ASSERT(_input_state != FILE_PARSER_STATE_END_OF_FILE);
+
+    const bool has_more = _parse_chunk_impl();
+    assert(_chunk.has_value());
+
+    if (!has_more)
     {
-        throw parser_exception("Parser error: caller's game_case not empty at "
-                               "start of file_parser::parse_chunk()",
-                               PARSE_CHUNK_CALLER_ERROR);
+        _chunk.reset();
+        _input_state = FILE_PARSER_STATE_END_OF_FILE;
+        return false;
     }
 
-    // Check if there's already a case from the previous parse
-    if (_next_case_idx < _case_count)
+    _input_state = FILE_PARSER_STATE_HAS_CHUNK;
+
+    // TODO janky ways to validate input
     {
-        gc = std::move(_cases[_next_case_idx]);
-        _next_case_idx++;
-        return true;
+        // Construct games
+        std::vector<game*> games = get_games();
+        for (game* g : games)
+            delete g;
+    }
+    {
+        // Construct all tests
+        const int n_tests = n_test_cases();
+        for (int i = 0; i < n_tests; i++)
+            std::shared_ptr<i_test_case> test = get_test_case(i);
     }
 
-    // No remaining cases
-    _next_case_idx = 0;
-    _case_count = 0;
-    for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
-    {
-        // calling cleanup() is okay because caller-consumed cases were
-        // std::moved
-        _cases[i].cleanup_games();
-    }
+    return true;
+}
 
-    token_iterator& iterator = _iterator;
+bool file_parser::_parse_chunk_impl()
+{
+    if (!_chunk.has_value())
+        _chunk.emplace();
+    assert(_chunk.has_value());
 
-    while (iterator.get_token(_token))
+    _chunk->clear_content_exprs();
+    _chunk->clear_command_exprs();
+
+    while (_tokenizer.get_token(_token))
     {
-        _line_number = iterator.line_number();
-        iterator.consume();
+        _line_number = _tokenizer.line_start();
+        _tokenizer.consume();
+
+        if (_tokenizer.is_whitespace())
+            continue;
 
         // Check version (for file)
         if (_do_version_check)
@@ -654,8 +651,6 @@ bool file_parser::parse_chunk(game_case& gc)
                 string why =
                     _get_error_start() + "Failed to match version command";
                 throw parser_exception(why, MISSING_VERSION_COMMAND);
-
-                return false;
             }
 
             _version_check(_token);
@@ -673,16 +668,18 @@ bool file_parser::parse_chunk(game_case& gc)
                 continue;
             }
 
-            _parse_command();
+            bool ok = _parse_command();
+
+            if (!ok)
+            {
+                const string why = file_parser::get_error_start(_line_number) +
+                                   "failed to match command";
+
+                throw parser_exception(why, FAILED_CASE_COMMAND);
+            }
 
             // the only command is a "run" command, so just return a case.
             // OK if no games were read yet -- this is a "0" game
-
-            assert(_next_case_idx == 0);
-            assert(_case_count > 0);
-
-            gc = std::move(_cases[_next_case_idx]);
-            _next_case_idx++;
 
             return true;
         }
@@ -690,61 +687,26 @@ bool file_parser::parse_chunk(game_case& gc)
         // Match title
         if (_match("[", "]", "section title", false))
         {
-            _section_title = _token;
+            //_section_title = _token;
+            THROW_ASSERT(_chunk.has_value());
+            _chunk->add_content_expr(new fp_expr_title(_line_number, _token));
             continue;
         }
 
         // Match brackets
         if (_match("(", ")", "bracket token", false))
         {
-            _parse_game();
+            //_parse_game();
+            THROW_ASSERT(_chunk.has_value());
+            _chunk->add_content_expr(new fp_expr_game(_line_number, _token, true));
             continue;
         }
 
         // Match comment
         if (_match("/*", "*/", "comment", true))
         {
-            // next lines assume the case number is 1 digit
-            static_assert(FILE_PARSER_MAX_CASES < 10);
-
-            // ignore comments starting with "_"
-            if (_token.size() > 0 && _token[0] != '_')
-            {
-                // i.e. "#0", "#1" to only include a comment in a specific case
-                if (_token[0] == '#')
-                {
-                    // Get case number...
-                    int case_idx = -1;
-
-                    if (_token.size() >= 2)
-                    {
-                        case_idx = (int) (_token[1] - '0');
-                    }
-
-                    if (                                            //
-                        !(case_idx >= 0 && case_idx <= 9)           //
-                        || case_idx >= FILE_PARSER_MAX_CASES        //
-                        || (_token.size() >= 3 && _token[2] != ' ') //
-                        )                                           //
-                    {
-                        string why = "Comment with '#' missing or bad number";
-                        throw parser_exception(why, BAD_COMMENT_FORMAT);
-                    }
-
-                    string remaining =
-                        _token.size() > 2 ? _token.substr(2) : "";
-                    _cases[case_idx].comments += remaining;
-                }
-                else
-                {
-
-                    for (int i = 0; i < FILE_PARSER_MAX_CASES; i++)
-                    {
-                        _cases[i].comments += _token;
-                    }
-                }
-            }
-
+            THROW_ASSERT(_chunk.has_value());
+            _chunk->add_content_expr(new fp_expr_comment(_line_number, _token));
             continue;
         }
 
@@ -753,11 +715,105 @@ bool file_parser::parse_chunk(game_case& gc)
         {
             cout << "Got simple token: " << _token << endl;
         }
-        _parse_game();
+        //_parse_game();
+
+        THROW_ASSERT(_chunk.has_value());
+        _chunk->add_content_expr(new fp_expr_game(_line_number, _token, false));
     }
 
     // no more cases
     return false;
+}
+
+std::vector<game*> file_parser::get_games() const
+{
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value());
+    visitor_generate visitor;
+
+    return visitor.get_games(_chunk.value());
+}
+
+int file_parser::n_test_cases() const
+{
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value());
+    return _chunk->n_command_exprs();
+}
+
+command_type_enum file_parser::get_test_case_type(int test_case_idx) const
+{
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value() && test_case_idx < n_test_cases());
+    assert(_chunk.has_value() && test_case_idx < n_test_cases());
+
+    return _chunk.value().get_command_expr(test_case_idx).get_command_type();
+}
+
+std::shared_ptr<i_test_case> file_parser::get_test_case(int test_case_idx) const
+{
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value());
+    visitor_generate visitor;
+    i_test_case* test_case = visitor.get_test_case(_chunk.value(), test_case_idx);
+
+    return shared_ptr<i_test_case>(test_case);
+}
+
+void file_parser::print_ast() const
+{
+    THROW_ASSERT(_input_state == FILE_PARSER_STATE_HAS_CHUNK &&
+                 _chunk.has_value());
+    visitor_print visitor;
+    visitor.visit_chunk(_chunk.value());
+}
+
+game* file_parser::construct_game(const std::string& title, int line_number,
+                                   const std::string& game_token)
+{
+    if (title.size() == 0)
+    {
+        string why = get_error_start(line_number) +
+                     "game token found but section title missing";
+        throw parser_exception(why, MISSING_SECTION_TITLE);
+    }
+
+    auto it = _game_map.find(title);
+
+    if (it == _game_map.end())
+    {
+        string why =
+            get_error_start(line_number) +
+            "game token found, but game parser doesn't exist for section \"";
+        why += title + "\"";
+        throw parser_exception(why, MISSING_SECTION_PARSER);
+    }
+
+    game_token_parser* gp = (it->second).get();
+
+    game* g = nullptr;
+
+    try
+    {
+        g = gp->parse_game(game_token);
+    }
+    catch (exception& e)
+    {
+        cerr << get_error_start(line_number) << e.what();
+        throw e;
+    }
+
+    if (g == nullptr)
+    {
+        string why = get_error_start(line_number) +
+                     "game parser for section \"" + title;
+        why += "\" failed to parse game token: \"" + game_token + "\"";
+        throw parser_exception(why, FAILED_GAME_TOKEN_PARSE);
+    }
+    else
+    {
+        return g;
+    }
 }
 
 file_parser* file_parser::from_stdin()
@@ -779,9 +835,9 @@ file_parser* file_parser::from_file(const string& file_name)
     return new file_parser(stream, true, true);
 }
 
-file_parser* file_parser::from_string(const string& string)
+file_parser* file_parser::from_string(const string& str)
 {
-    return new file_parser(new stringstream(string), true, false);
+    return new file_parser(new stringstream(str), true, false);
 }
 
 bool file_parser::warned_wrong_version()
