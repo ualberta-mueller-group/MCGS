@@ -40,7 +40,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
     - More output columns
     - Checkboxes to show/hide columns, several columns are hidden by default
     - More sorting and filtering options
-    - Dynamic summary of rows currently shown. Includes comparison of new vs old
+    - Dynamic summary of rows which are not currently filtered out. Includes comparison of new vs old values
 - New CLI options
     - `--print-sum-moves` and `--print-subgame-moves`
     - `--clear-tt`: clearing ttable is much faster
