@@ -1,3 +1,8 @@
+/*
+    Old file_parser helper class
+
+    Deprecated
+*/
 #pragma once
 
 // IWYU pragma: begin_exports

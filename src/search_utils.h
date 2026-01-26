@@ -1,7 +1,8 @@
 /*
     Utilities for solving both partisan and impartial sums.
 
-    Deprecated?
+    NOTE: deprecated; the only thing still used from this file is
+    player_name_bw_imp(...)
 */
 #pragma once
 #include "test_case_enums.h"
