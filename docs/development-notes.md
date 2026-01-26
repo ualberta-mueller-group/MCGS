@@ -56,7 +56,7 @@ be polled by a `timeout_token`. Functions respecting timeouts should accept
 a `timeout_token`, and the (root) caller should create a `timeout_source`
 and `timeout_token`.
 
-Example usage:
+Example usage (caller):
 ```
 timeout_source src;
 timeout_token tok = src.get_timeout_token();
@@ -64,6 +64,26 @@ timeout_token tok = src.get_timeout_token();
 src.start_timeout(timeout_ms); // Time starts running here
 std::optional<int> fib = fibonacci(tok, ...); // May or may not time out
 src.cancel_timeout(); // Call regardless of completion/timeout status
+```
+
+Example usage (callee)
+```
+std::optional<int> fibonacci(const timeout_token& tok, int n)
+{
+    if (n < 2)
+        return n;
+
+    if (tok.stop_requested())
+        return {};
+
+    const std::optional<int> f1 = fibonacci(tok, n - 1);
+    const std::optional<int> f2 = fibonacci(tok, n - 2);
+
+    if (f1.has_value() && f2.has_value())
+        return *f1 + *f2;
+
+    return {};
+}
 ```
 
 - `timeout_token timeout_source::get_timeout_token()` creates a `timeout_token`,
