@@ -221,6 +221,11 @@ These helper functions fill in several values behind the scenes, i.e. those
 from `solver_stats.h`.
 
 ### Adding A New Test Case Type To `.test` Input
+This process involves significant boilerplate code. You may want to first read
+the implementation of an existing test case type while following these steps,
+before implementing your own. For each major step, examples are first
+listed.
+
 The following steps assume you have already implemented the computational
 part of the test case, i.e:
 - `sumgame::solve_with_timeout(...)` (`sumgame.h`)
@@ -228,6 +233,8 @@ part of the test case, i.e:
 - `get_winning_moves_with_timeout(...)` (`get_winning_moves.h`)
 
 Make the AST node:
+EXAMPLE: `class fp_expr_command_solve_bw` (`file_parser_ast.h` and `.cpp`)
+
 1. In `test_case_enums.h`:
     - Add to the enum `command_type_enum`: `COMMAND_TYPE_YOUR_COMMAND`.
     - Add the string conversion to the `command_type_to_string` function.
@@ -247,6 +254,8 @@ Make the AST node:
     - Add any necessary getter functions.
 
 Make the test case class:
+EXAMPLE: `class test_case_solve_bw` (`test_case.h` and `.cpp`)
+
 1. In `test_case.h`:
     - Declare `class test_case_YOUR_COMMAND: public i_test_case`
     - Your constructor should take an `fp_expr_command_YOUR_COMMAND`, and
@@ -270,6 +279,14 @@ Make the test case class:
               unspecified)
 
 Add support to `file_parser` and visitors:
+EXAMPLES:
+- `fp_visitor_print::visit(const fp_expr_command_solve_bw& expr)`
+  (`visitor_print.cpp`)
+- `void visitor_generate::visit(const fp_expr_command_solve_bw& expr)`
+  (`visitor_generate.cpp`)
+- `i_fp_expr_command* get_fp_expr_run_command_solve_bw(...)`
+  (`file_parser.cpp`)
+
 1. in `file_parser_ast.h`
     - Near the top of the file, declare a virtual function in `i_fp_visitor`:
       `virtual void visit(const fp_expr_command_YOUR_COMMAND& expr) = 0;`
