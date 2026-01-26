@@ -33,6 +33,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 - Lemoine and Viennot (LV) algorithm replaces previous impartial search algorithm (Mex)
     - `--impartial-algorithm-mex`: uses previous (Mex) algorithm (NOTE: LV queries the database, but Mex does not)
 - Added impartial game support to database
+    - Used by impartial LV search, and partisan `sumgame` search functions
 - Added new command type to `.test` files (winning moves test). See `input/info.test`
 - Added features to `.html` output and `create-table.py`:
     - More output columns
