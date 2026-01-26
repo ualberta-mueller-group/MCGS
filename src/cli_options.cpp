@@ -138,6 +138,14 @@ void print_help_message(const string& exec_name)
                "Create and populate a new database file. See README for "
                "details on config string syntax.");
 
+    print_flag(global::impartial_algorithm_mex.flag(),
+               "Use Mex search algorithm for impartial games.");
+
+    print_flag(global::use_complexity_score.flag(),
+               "Use complexity score "
+               "heuristic for impartial game search (when " +
+                   global::impartial_algorithm_mex.flag() + " is not used).");
+
     // print_flag(global::play_split.no_flag(), "Don't split games after "
     //                                          "playing a move.");
 
@@ -148,32 +156,36 @@ void print_help_message(const string& exec_name)
                                                  "for duplicate subgames.");
 
     cout << "Misc options flags:" << endl;
-    print_flag(global::random_seed.flag(),
+    print_flag(global::random_seed.flag() + " <seed>",
                "Set seed for main random generator. "
                "0 means seed with current time "
                "since epoch. Default: " +
                    global::random_seed.get_default_str() + ".");
 
-    print_flag(global::experiment_seed.flag(),
+    print_flag("--gen-experiments", "Generate .test file for ICGA paper. See "
+                                    "gen_experiments.cpp");
+
+    print_flag(global::experiment_seed.flag() + " <seed>",
                "Set seed for experiment data "
                "generation. 0 means seed with current time. Default: " +
                    global::experiment_seed.get_default_str());
 
-    print_flag(global::impartial_algorithm_mex.flag(),
-               "Use Mex search algorithm for impartial games.");
+    
+    print_flag(global::clear_tt.flag(),
+               "Clear ttable between test runs. Default: " +
+                   global::clear_tt.get_default_str() + ".");
 
-    print_flag(global::use_complexity_score.flag(), "Use complexity score "
-               "heuristic for impartial game search (when "
-               + global::impartial_algorithm_mex.flag() + " is not used).");
+    print_flag(global::count_sums.flag(),
+               "Count unique sums found during "
+               "search. Will slow down search somewhat. In an unmodified "
+               "copy of MCGS, this is only useful in combination with "
+               "--run-tests");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
     cout << "\tThese flags only have an effect when using \"--run-tests\"."
          << endl;
     cout << endl;
-
-    print_flag("--gen-experiments", "Generate .test file for ICGA paper. See "
-                                    "gen_experiments.cpp");
 
     print_flag("--run-tests",
                "Run all autotests. By default, reads tests from \"" +
@@ -196,14 +208,6 @@ void print_help_message(const string& exec_name)
                "Set timeout duration for tests, in \
 milliseconds. Timeout of 0 means tests never time out. Default is " +
                    to_string(cli_options::DEFAULT_TEST_TIMEOUT) + ".");
-
-    print_flag(global::clear_tt.flag(),
-               "Clear ttable between test runs. Default: " +
-                   global::clear_tt.get_default_str() + ".");
-
-    print_flag(global::count_sums.flag(), "Count unique sums found during "
-               "search. Only applies to partisan solve commands i.e. {B} or "
-               "{W}, but not {N}. Will slow down search somewhat.");
 
     // Remove these? Keep them in this separate section instead?
     cout << "Debugging flags:" << endl;
@@ -232,7 +236,10 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
                "loaded database file");
 
     print_flag("--db-file-compare <file name 1> <file name 2>",
-               "Compare contents of two database files");
+               "Compare contents of two database files. Two files are the same "
+               "IFF they contain the same games and type mappings. NOTE: this "
+               "means files are considered different even if a type "
+               "mapping difference involves games not found in either file.");
 }
 
 } // namespace
