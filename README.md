@@ -14,7 +14,7 @@ search optimizations.
 Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of results so far are available from the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
 
 ### Sections
-- [Version 1.4 Additions](#version-14-additions)
+- [Version 1.5 Additions](#version-15-additions)
 - [Building MCGS](#building-mcgs)
 - [Using MCGS](#using-mcgs)
 - [Using the Database](#using-the-database)
