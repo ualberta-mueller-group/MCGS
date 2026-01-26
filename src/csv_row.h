@@ -1,3 +1,9 @@
+/*
+   Represents a single row of output to a .csv file.
+
+   Fields should be filled in by the helper functions "fill_XYZ_fields(...)",
+   where "XYZ" denotes where in MCGS the fields must be filled in.
+*/
 #pragma once
 
 #include <optional>
@@ -11,10 +17,6 @@
 #include "game.h"
 
 #define CSV_MISSING_TEXT "N/A"
-
-/*
-   Comments indicate where each field might be filled in
-*/
 
 class csv_row
 {

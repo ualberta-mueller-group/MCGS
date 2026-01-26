@@ -1,5 +1,7 @@
 /*
-   TODO make a better name for this?
+    Visitor which generates test cases or games from an fp_chunk
+
+    See development notes (File Parser and Internals) for more details.
 */
 #pragma once
 

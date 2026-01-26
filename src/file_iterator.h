@@ -1,5 +1,7 @@
 /*
-    Recursive file iterator. Generates file paths which are not directories.
+    Recursive file iterator. Returns file paths which are not directories
+    (but which may belong to subdirectories).
+
     Used by autotests, to ensure .test file order is well-defined.
     Interface is similar to move_generator interface.
 

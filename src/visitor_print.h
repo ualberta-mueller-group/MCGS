@@ -1,5 +1,5 @@
 /*
-    Debugging utility. Visitor for printing file_parser AST contents
+    Debugging utility. Visitor for printing contents of an fp_chunk
 */
 #pragma once
 

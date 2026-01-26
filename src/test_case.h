@@ -1,3 +1,12 @@
+/*
+    Abstract class for test cases (i_test_case) and non-abstract
+    implementations:
+        test_case_solve_bw
+        test_case_solve_n
+        test_case_winning_moves
+
+    See development notes (File Parser and Internals) for more information
+*/
 #pragma once
 
 #include <vector>

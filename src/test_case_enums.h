@@ -1,3 +1,9 @@
+/*
+   Enums and string conversions for use by file_parser and internals
+
+   command_type_enum and test_case_status_enum strings may appear in .csv
+   output.
+*/
 #pragma once
 
 #include <string>

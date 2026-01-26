@@ -1,5 +1,8 @@
 /*
-    AST nodes used by file_parser
+    AST nodes used by file_parser. Also declares visitor interface
+
+    More detail given in "File Parser and Internals" section of development
+    notes.
 */
 #pragma once
 

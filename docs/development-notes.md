@@ -33,7 +33,7 @@ This document includes more detailed information than `README.md`, including des
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# File Parser and Test Cases
+# File Parser and Internals
 Most input parsing is handled by two classes: `cli_options`, and `file_parser`.
 The latter handles `.test` input, and is the focus of this section.
 `file_parser` was refactored in v1.5 to be more extensible, modular, and
@@ -178,7 +178,9 @@ Make the test case class:
         The expected result string may be absent (if none was specified in the
         `.test`)
     - Your `_run_impl()` function must do several steps:
-        - Clear any relevant transposition tables before the test.
+        - When applicable, clear any transposition tables (and other global
+          state) before running the computation. Note that solver_stats is
+          already cleared by `i_test_case::run`, which calls your `_run_impl`.
         - Create a `stopwatch`, start its timer, run the computation,
           and stop the timer.
         - Report results: `_csv_row.fill_post_test_fields(...)`

@@ -1,3 +1,7 @@
+/*
+   Utility for measuring the duration of some computation. Used by
+   test cases (derived from i_test_case) to report search time in milliseconds.
+*/
 #pragma once
 
 #include <chrono>
@@ -7,10 +11,12 @@
 class stopwatch
 {
 public:
-    void reset();
-    void start();
-    void stop();
+    void reset(); // reset to default state
 
+    void start(); // precondition: start() has not been called
+    void stop(); // precondition: start() was called, and stop() was not called
+
+    // precondition: start() and stop() were called
     double get_duration_ms() const;
 
 private:

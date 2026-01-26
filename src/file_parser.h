@@ -4,6 +4,10 @@
 
     To register a new game type with the parser, see
     file_parser::_init_game_parsers() in the cpp file
+
+    For extensive documentation, see "File Parser and Internals" in the
+    development notes.
+    This covers: basic usage, AST nodes, visitors, test cases, CSV rows, etc.
 */
 #pragma once
 #include <string>

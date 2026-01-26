@@ -1,5 +1,7 @@
 /*
-    Utilities for managing timeouts
+    Utilities for managing timeouts.
+
+    See development notes for more details.
 
     (std::chrono spends too much time in system calls, and our previous
     timeout mechanism was messy and may have had UB)

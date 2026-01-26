@@ -1,3 +1,9 @@
+/*
+   Helper class used by file_parser. Breaks input string into tokens.
+   Each token either contains no whitespace, or contains only whitespace.
+
+   consume() and rewind() functions allow for speculative logic in parsing:
+*/
 #pragma once
 
 #include <iostream>
