@@ -79,9 +79,13 @@ There are 5 types of 'things' that appear in input:
                 result of no winning moves), or a space-separated list of moves
                 whose representation is game-specific. A 0-indexed subgame
                 index must prefix each move IFF the preceding sum has at least
-                two subgames (i.e, '0:MOVE_TEXT_HERE', '3:MOVE_TEXT_HERE`, etc).
+                two subgames (i.e, '0:MOVE_TEXT_HERE', '3:MOVE_TEXT_HERE', etc).
                 Moves may be given in any order, and either with or without
                 duplicate moves.
+                NOTE: when <Expected moves> is present, the displayed result
+                is a diff between the generated and expected moves. This may
+                read 'OK', or label unexpected but generated moves as 'Extra',
+                and expected but not generated moves as 'Missing'.
 
             Examples follow:
 
@@ -108,17 +112,18 @@ There are 5 types of 'things' that appear in input:
                 {B win, N 2, W win}
 
             Find winning moves for black, with no expected result:
-                {winning move B}
+                {winning moves B}
 
             Find winning moves for white, expecting white to have no winning
             moves:
                 {winning moves W None}
 
             Find winning moves for black, expecting only the moves '1-2' and
-            '2-3',on a sum having only 1 subgame:
+            '2-3', on a sum having only 1 subgame:
                 {winning moves B 1-2 2-3}
 
-            Equivalent to previous example (different order + duplicate):
+            Equivalent to previous example (different order + duplicate are
+            both ok):
                 {winning moves B 2-3 1-2 1-2}
 
             Find winning moves for black, expecting only the specified moves,

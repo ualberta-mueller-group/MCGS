@@ -84,7 +84,11 @@ void print_help_message(const string& exec_name)
     cout << endl;
     cout << "\tThese actions ignore the CONTENTS of curly brace command blocks."
          << endl;
-    cout << "\tCurly braces still denote the end of a sum, as usual." << endl;
+    cout << "\tCurly braces still denote the end of a sum, as usual.";
+    cout << endl;
+    cout << "\ti.e. '[clobber] XO' will have no effect but "
+        "'[clobber] XO {}' will.";
+    cout << endl;
     cout << endl;
 
     print_flag("--play-mcgs",

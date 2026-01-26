@@ -48,15 +48,15 @@ This document includes more detailed information than `README.md`, including des
         - Normalizes subgames
         - Simplifies "basic" CGT games
         - Uses a transposition table
-        - Uses a database of subgame outcomes
-    - `sumgame::_solve_with_timeout`
+        - Uses a database of subgame outcomes (for partisan games) and nim
+          values (for impartial games)
+    - `sumgame::_solve_impl`
         - `private` method implements most of the search algorithm
         - Runs until it either completes, or times out
         - A timeout of 0 means infinite time
         - All public `solve` methods within `sumgame` (see below) are implemented in terms of this method
     - `sumgame::solve_with_timeout`
-        - Currently spawns a thread which calls `_solve_with_timeout`, and the main thread blocks until completion or timeout.
-        - This may interfere with some performance profiling tools, but other implementations based on checking a clock seem to be costly.
+        - Calls `_solve_impl` with a timeout
         - Calls `sumgame::_pre_solve_pass()` before search, which calls `game::split()` on
         each active subgame, and calls `game::normalize()` on all active subgames
         (whether or not they are the result of a split)
@@ -86,11 +86,18 @@ it must be restored before the end of `solve` in any case, including timeout or 
         - Ensures global_hash, number of subgames (active or inactive), and undo_code/play_record/change_record stack sizes are all restored
 
 ## Sumgame's Usage Of the Database
-The database stores outcome classes for single subgames. `sumgame` uses this
-data, from the global database object (`get_global_database()` in
-`global_database.h`), during solving, to terminate search early in some cases.
+The database stores information for single subgames. Partisan games in the
+database have outcome classes, and impartial games have nim values. `sumgame`
+uses this data, from the global database object (`get_global_database()` in
+`global_database.h`), during solving, to simplify search and even terminate
+search early in some cases.
 
-- `sumgame::simplify_db()` is called at the start of `sumgame::_solve_with_timeout()`
+- `sumgame::simplify_impartial()` is called at the start of
+  `sumgame::_solve_impl()`
+    - Looks up every impartial subgame's nim value in the database, then
+      combines all nimbers using nim addition
+
+- `sumgame::simplify_db()` is called next
     - This method looks up every active subgame's outcome class in the database
     - P positions are deactivated, and all other outcome classes are counted
     - The winner of the current game is known without further search when all
@@ -104,7 +111,7 @@ data, from the global database object (`get_global_database()` in
             - For `WHITE` to play, this means there are no `L` outcome classes
 
 ## Solver Stats
-During search, `sumgame::_solve_with_timeout()` records events using the global
+During search, `sumgame::_solve_impl()` records events using the global
 instance of the `solver_stats` class (defined in `solver_stats.h`).
 
 # More On Data Types
@@ -150,7 +157,7 @@ since the program's start
 
 ## `sumgame::undo_stack_unwinder` class (`sumgame_undo_stack_unwinder.h`)
 - Private inner class of `sumgame`
-- Created as local variable at the start of `sumgame::_solve_with_timeout()`
+- Created as local variable at the start of `sumgame::_solve_impl()`
     - Constructor pushes a marker onto `sumgame`'s undo stack
     - Destructor iteratively pops undo stack, calling undo functions until it sees the marker i.e:
     - `sumgame::undo_move()`
@@ -434,8 +441,10 @@ Things initialized by `mcgs_init_2` functions:
     - This is currently implemented but unused
 - `random.h`'s random seed and global `random_generator`
 - Global `random_table`s
+- `solver_stats.h` data
 - `sumgame`'s transposition table
 - `impartial_sumgame.h`'s transposition table
+- Lemoine Viennot hash table
 - The global `database` is initialized, by loading `database.bin` or a specified
   database file (if exists)
 - In the future, may assign `game_type_t`s to specific games, so that their
@@ -561,8 +570,9 @@ Methods:
 Manages the `hash_t` of a `sumgame`.
 
 ### Global Hash Value Definition
-`sumgame::get_global_hash()` computes the hash of a `sumgame`. The definition
-of this value is described below.
+`global_hash::get_global_hash_value()` computes the hash of a `sumgame`.
+`sumgame::get_global_hash()` calls this function.
+The definition of this value is described below.
 
 To compute the `global_hash` value for a `sumgame` `S`:
 1. Normalize each `game` of `S` by calling `game::normalize()`
@@ -574,7 +584,7 @@ To compute the `global_hash` value for a `sumgame` `S`:
 5. Given the player to play `p`, compute `P := RANDOM_TABLE_PLAYER[0, p]`
 6. The `global_hash` value is the XOR of all `H_i`, and `P`
 
-TODO: Currently `sumgame::get_global_hash()` sorts all of the `sumgame`'s games
+TODO: Currently `global_hash::get_global_hash_value()` sorts all of the `sumgame`'s games
 every time it's called. `sumgame` could maintain an ordering of its games to
 prevent this.
 - NOTE: Something like this was tried, but didn't seem beneficial
@@ -587,13 +597,15 @@ Methods:
 - `remove_subgame(size_t subgame_idx, game* g)`
     - Given `g_i`, XOR the previously stored `H_i` out of the current global
         hash value
-- `set_to_play(bw to_play)`
+- `set_to_play(ebw to_play)`
     - Given `p`, compute `P` and XOR it into the global hash value
     - If `p` was previously set, first XORs the previous `P` out of the global hash value
 - `reset()`
     - Reset the global hash value to 0, and clear all stored `H_i` and `p`
 - `get_value()`
     - Get the current `hash_t` value. Must first set `p`
+- 2 variants of `get_global_hash_value(...)`: implements computation of sumgame's
+  global hash (this was previously done in `sumgame.cpp`)
 
 # Adding Hashing To Games
 Important:
@@ -949,6 +961,8 @@ A `ttable<Entry>` is constructed with two arguments:
         - Store the given entry using the hash
     - `std::optional<Entry> get(hash_t hash) const`
         - Query with hash. If not found, the returned value is absent
+- `void clear()` quickly clears the table by invalidating all entries. Note that
+  this doesn't call the destructor of `Entry`; they are simply marked invalid
 
 `ttable<Entry>::search_result` methods:
 - Methods which are always valid:
@@ -1142,10 +1156,12 @@ class's runtime type info struct (`type_table_t`).
    - Implementing methods `game::_normalize_impl` and
      `game::_undo_normalize_impl` for your game may reduce the size of the
      database, and the time required to generate it
-   - You can add impartial games to the database, but currently they will be
-     treated like partisan games. Their entries will only be used by the
-     minimax search of `sumgame`, and will contain outcome classes and not nim
-     values
+   - Impartial games can be added to the database, and database generation
+     will compute their nim values.
+      - When a partisan game's generator function is registered, its impartial
+        wrapper variant is also automatically registered.
+      - If your game class is already impartial, indicate so in the arguments
+        passed to `register_create_game_gen_fn`
 
 Recompile, then re-run MCGS with `--db-file-create` (see the README for
 examples). Now `sumgame`'s "solve" methods will use the database entries of
@@ -1307,7 +1323,7 @@ Restrictions on RTTI methods/functions:
 
 Steps producing no useful simplification will not modify the `sumgame`. i.e. if the `sumgame` has only one non-zero `up_star` game, the game will be left alone, rather than duplicated with one inactive copy.
 
-These steps are run at the start of `sumgame::_solve_with_timeout()`, when:
+These steps are run at the start of `sumgame::_solve_impl)`, when:
 - At the root of minimax search
 - A "basic" CGT game has been added
 - After undoing a simplification
@@ -1421,7 +1437,7 @@ std::optional<int> fibonacci(const timeout_token& tok, int n)
 
 Starting a (non-zero) timeout spawns a thread, owned by the `timeout_source`.
 The thread blocks for the specified duration (or until the timeout is
-cancelled). `stop_source::cancel_timeout()` safely destroys the thread.
+cancelled). `timeout_source::cancel_timeout()` safely destroys the thread.
 Computation happens on the main thread -- the spawned thread only helps manage
 the timeout.
 
@@ -1494,8 +1510,7 @@ The latter handles `.test` input, and is the focus of this section.
 `file_parser` was refactored in v1.5 to be more extensible, modular, and
 testable, but as a result is more complex. The first subsection describes the
 basic usage of the `file_parser` class, and the second subsection describes the
-internals. The latter is useful for developers who wish to add new features to
-`.test` input.
+internals, and ends with a guide for implementing new commands in `.test` input.
 
 ## `file_parser` basic usage
 The basic usage is as follows:
@@ -1511,8 +1526,6 @@ The basic usage is as follows:
 3. When a chunk is present, it contains 0 or more games, and 0 or more
    commands/test cases which operate on those games. Use the following
    `file_parser` methods:
-    - `vector<game*> get_games() const` constructs the games specified
-      by the chunk (the games are owned by the caller).
     - `int n_test_cases() const` the number of test cases in the chunk.
     - `command_type_enum get_test_case_type(int test_case_idx) const` the type
       of the (0-indexed) test case in the chunk.
@@ -1520,6 +1533,8 @@ The basic usage is as follows:
       constructs a (0-indexed) test case (owned by the caller), containing all
       state necessary for running the test (i.e. games, expected result,
       `csv_row`, etc).
+    - `vector<game*> get_games() const` constructs the games specified
+      by the chunk (the games are owned by the caller).
 
 ## `file_parser` Internals: AST nodes, Visitors, Test Cases, and CSV Rows
 `file_parser::parse_chunk()` constructs AST (abstract syntax tree) nodes
@@ -1645,7 +1660,7 @@ EXAMPLE: `class test_case_solve_bw` (`test_case.h` and `.cpp`)
         `.test`)
     - Your `_run_impl()` function must do several steps:
         - When applicable, clear any transposition tables (and other global
-          state) before running the computation. Note that solver_stats is
+          state) before running the computation. Note that `solver_stats` is
           already cleared by `i_test_case::run`, which calls your `_run_impl`.
         - Create a `stopwatch`, start its timer, run the computation,
           and stop the timer.
@@ -2217,6 +2232,49 @@ indicates that all `.test` files are still valid.
   - Creates more transposition table hits in some cases
 - Experimental WebAssembly build using Emscripten. `WASM=1` makefile variable
     - Must first copy contents of `utils/wasm` to project root
+
+## Version 1.4.1 Fixes
+- Fixed compilation error on Mac OS
+- Very long unit tests made faster
+- Compatibility warnings added to [Using the Database](#using-the-database) section
+    - Added extra checks for loading database files
+- Increase default transposition table size to match previous versions
+
+## Version 1.5 Additions
+### New Features
+- Lemoine and Viennot (LV) algorithm is the new default impartial search algorithm
+    - `--impartial-algorithm-mex`: uses previous (Mex) algorithm (NOTE: LV queries the database, but Mex does not)
+- Added impartial game support to database
+    - Used by impartial LV search, and partisan `sumgame` search functions
+- Added new command type to `.test` files (winning moves test). See `input/info.test`
+- `print_move` function now implemented for all game types; output of `--print-winning-moves`-like features should now be sensible for all games
+- Added features to `.html` output and `create-table.py`:
+    - More output columns
+    - Checkboxes to show/hide columns, several columns are hidden by default
+    - More sorting and filtering options
+    - Dynamic summary of rows which are not currently filtered out. Includes comparison of new vs old values
+- New CLI options
+    - `--use-complexity-score` enable complexity score heuristic for LV algorithm
+    - `--print-sum-moves` and `--print-subgame-moves`
+    - `--clear-tt`: clearing ttable is much faster (`ttable` class now has a `clear()` method)
+    - `--print-winning-moves` and `--play-mcgs`: behavior changed
+    - `--db-file-compare` reports whether two database files differ (not considering their metadata strings)
+- Input language version `1.4` --> `1.5`
+
+### Major Code Additions
+- Major refactoring
+    - `solver_stats.h` usage simplified, added more fields
+    - `csv_row` class with helper functions for populating fields and writing to streams
+    - Standardized measuring time, and polling timeouts
+        - Classes: `stopwatch`, `timeout_source`/`timeout_token`
+    - `file_parser`
+        - More features and more granularity
+        - Creates an AST as it parses input. Visitor classes operate on the AST
+    - `i_test_case`: abstract test case class for `.test` input. More general than old solution
+- Deprecation (see notes at the top of these `.h` files):
+    - `game_case.h`
+    - `search_utils.h`
+    - `parsing_utilities.h`
 
 
 ## After Version 1.4 (Future)

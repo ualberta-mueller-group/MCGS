@@ -344,6 +344,17 @@ void register_games(database& db)
     DATABASE_REGISTER_TYPE(db, toppling_dominoes);
     DATABASE_REGISTER_TYPE(db, sheep);
 
+    /*
+        NOTE: 2nd argument to register_create_game_gen_fn(...) indicates
+        whether or not the game is impartial.
+
+        If your game is partisan: this argument should be false. The impartial
+        wrapper variant will automatically be registered i.e. both
+        "your_game_name" and "impartial your_game_name"
+
+        If your game is impartial: this argument should be true
+    */
+
     // clobber_1xn
     register_create_game_gen_fn(
         "clobber_1xn", false,

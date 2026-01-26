@@ -44,7 +44,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 - New CLI options
     - `--use-complexity-score` enable complexity score heuristic for LV algorithm
     - `--print-sum-moves` and `--print-subgame-moves`
-    - `--clear-tt`: clearing ttable is much faster
+    - `--clear-tt`: clearing ttable is much faster (`ttable` class now has a `clear()` method)
     - `--print-winning-moves` and `--play-mcgs`: behavior changed
     - `--db-file-compare` reports whether two database files differ (not considering their metadata strings)
 - Input language version `1.4` --> `1.5`
