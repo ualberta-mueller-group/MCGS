@@ -266,7 +266,7 @@ function setAggregationText(tableRows) {
     // Total time
     lines.push([
         "⏳",
-        `Total time: ${fmtMs(time_total)} ＝ ${fmt0(time_total)} ms`
+        `Total time: ${fmt0(time_total)} ms ＝ ${fmtMs(time_total)}`
     ]);
 
     // Total nodes
@@ -294,9 +294,8 @@ function setAggregationText(tableRows) {
         const percent = multiplierString(time_total, old_time_total);
 
         const clause1 = `${percent} ${asFastPhrase}`;
-        const clause2 = `${fasterPhrase}: ${fmtMs(timeDiff)} ＝ ${fmt0(timeDiff)} ms`;
-        //const clause3 = `${fmt0(old_time_total)} ms → ${fmt0(time_total)} ms`;
-        const clause3 = `${fmt0(time_total)} ms ← ${fmt0(old_time_total)} ms`;
+        const clause2 = `${fasterPhrase}: ${fmt0(timeDiff)} ms ＝ ${fmtMs(timeDiff)}`;
+        const clause3 = `New: ${fmt0(time_total)} ms ← Old: ${fmt0(old_time_total)} ms`;
 
         lines.push([
             "🔎⏳",
@@ -317,8 +316,7 @@ function setAggregationText(tableRows) {
 
         const clause1 = `${percent} ${asFewPhrase}`;
         const clause2 = `${fasterPhrase}: ${fmt0(nodeDiff)} nodes`;
-        //const clause3 = `${fmt0(old_node_count_total)} nodes → ${fmt0(node_count_total)} nodes`;
-        const clause3 = `${fmt0(node_count_total)} nodes ← ${fmt0(old_node_count_total)} nodes`;
+        const clause3 = `New: ${fmt0(node_count_total)} nodes ← Old: ${fmt0(old_node_count_total)} nodes`;
 
 
         lines.push([
@@ -344,8 +342,7 @@ function setAggregationText(tableRows) {
 
         const clause1 = `${percent} ${asFastPhrase}`;
         const clause2 = `${fasterPhrase}: ${fmt0(rateDiff)} n/s`;
-        //const clause3 = `${fmt0(old_rate)} n/s → ${fmt0(new_rate)} n/s`;
-        const clause3 = `${fmt0(new_rate)} n/s ← ${fmt0(old_rate)} n/s`;
+        const clause3 = `New: ${fmt0(new_rate)} n/s ← Old: ${fmt0(old_rate)} n/s`;
 
         lines.push([
             "🔎🚀",
