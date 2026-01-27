@@ -2,14 +2,20 @@
 
 #include <cassert>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
+#include <ostream>
+#include <cstddef>
 
 #include "cgt_basics.h"
 #include "get_winning_moves.h"
+#include "utilities.h"
 #include "utils_for_main.h"
 #include "game.h"
 #include "sumgame.h"
+#include "file_parser.h"
+
 
 using namespace std;
 

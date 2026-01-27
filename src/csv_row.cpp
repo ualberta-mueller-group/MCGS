@@ -5,9 +5,7 @@
 #include "test_case_enums.h"
 #include "utilities.h"
 #include "game.h"
-#include <algorithm>
 #include <cctype>
-#include <initializer_list>
 #include <sstream>
 #include <string>
 #include <vector>

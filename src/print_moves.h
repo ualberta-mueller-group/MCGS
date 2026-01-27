@@ -12,10 +12,13 @@
 
 #include <memory>
 #include <string>
+#include <ostream>
+#include <vector>
 
 #include "file_parser.h"
 #include "sumgame.h"
 #include "cgt_basics.h"
+#include "game.h"
 
 std::string sumgame_move_to_string(const sumgame& sum, const sumgame_move& sm,
                                    ebw player, bool with_subgame_idx);

@@ -2,13 +2,13 @@
 
 #include <algorithm>
 #include <iterator>
-#include <sstream>
 #include <vector>
 #include <memory>
-#include <iostream>
 #include <cassert>
 #include <string>
 #include <set>
+#include <cstddef>
+#include <utility>
 #include <cstdint>
 
 #include "cgt_basics.h"

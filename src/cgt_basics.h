@@ -9,6 +9,7 @@
 #include <cassert>
 #include <climits>
 #include <limits>
+#include <string>
 #include "throw_assert.h"
 
 

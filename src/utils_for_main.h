@@ -7,7 +7,6 @@
 #include "cli_options.h"
 #include "game.h"
 #include "test_case.h"
-#include "file_parser.h"
 
 std::string get_games_string(const std::vector<game*>& games);
 

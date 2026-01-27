@@ -7,14 +7,10 @@
 #include <iostream>
 #include <cassert>
 
-#include "cgt_basics.h"
 #include "cli_options.h"
 #include "game.h"
 #include "csv_row.h"
-#include "sumgame.h"
 #include "test_case.h"
-#include "get_winning_moves.h"
-#include "file_parser.h"
 #include "utilities.h"
 
 using namespace std;

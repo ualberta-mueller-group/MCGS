@@ -1,6 +1,7 @@
 #include "cgt_basics.h"
 #include <cassert>
 #include <limits>
+#include <string>
 
 #include "utilities.h"
 
