@@ -1,0 +1,242 @@
+/*
+    AST nodes used by file_parser. Also declares visitor interface
+
+    More detail given in "File Parser and Internals" section of development
+    notes.
+*/
+#pragma once
+
+#include "cgt_basics.h"
+#include <string>
+#include <vector>
+#include <memory>
+#include <cassert>
+#include <optional>
+#include "test_case_enums.h"
+
+////////////////////////////////////////////////// forward declarations
+class i_fp_visitor; // interface for visitors to fp_chunk (a chunk of input)
+
+class i_fp_expr; // interface for all input expressions
+
+class i_fp_expr_content; // interface for all non-command expressions
+class fp_expr_title; // game title i.e. "[clobber]"
+class fp_expr_game; // game token, i.e. "XXO" or "(1, 2)"
+class fp_expr_comment; // comment (possibly prefixed by "_", "#0", "#1", or "#2")
+
+class i_fp_expr_command; // interface for all commands inside of curly braces
+class fp_expr_command_solve_bw; // solve for BLACK or WHITE
+class fp_expr_command_solve_n; // solve nim value
+class fp_expr_command_winning_moves; // winning moves for EMPTY/BLACK/WHITE
+
+/*
+    Represents a "chunk" of input (within a CLI game string, or .test file, or
+    stdin).
+    Each chunk ends with a single curly brace command block.
+
+    Content expressions should be visited first, then command expression(s)
+
+    visitor_print prints the contents of a chunk, for debugging.
+
+    visitor_generate is used to extract stuff from a chunk. i.e. a test_case or
+    vector of games.
+*/
+class fp_chunk;
+
+////////////////////////////////////////////////// interfaces
+//////////////////////////////////////// interface i_fp_visitor
+class i_fp_visitor
+{
+public:
+    virtual ~i_fp_visitor() {}
+
+    virtual void visit(const fp_expr_title& expr) = 0;
+    virtual void visit(const fp_expr_game& expr) = 0;
+    virtual void visit(const fp_expr_comment& expr) = 0;
+    virtual void visit(const fp_expr_command_solve_bw& expr) = 0;
+    virtual void visit(const fp_expr_command_solve_n& expr) = 0;
+    virtual void visit(const fp_expr_command_winning_moves& expr) = 0;
+
+private:
+};
+
+//////////////////////////////////////// interface i_fp_expr
+class i_fp_expr
+{
+public:
+    i_fp_expr(int line_no);
+    virtual ~i_fp_expr() {}
+
+    virtual void accept(i_fp_visitor& visitor) const = 0;
+
+    int get_line_no() const;
+
+private:
+    const int _line_no;
+};
+
+//////////////////////////////////////// interface i_fp_expr_content
+class i_fp_expr_content: public i_fp_expr
+{
+public:
+    i_fp_expr_content(int line_no);
+
+private:
+};
+
+//////////////////////////////////////// interface i_fp_expr_command
+class i_fp_expr_command: public i_fp_expr
+{
+public:
+    i_fp_expr_command(int line_no, command_type_enum command_type);
+
+    command_type_enum get_command_type() const;
+
+private:
+    const command_type_enum _command_type;
+};
+
+////////////////////////////////////////////////// classes
+//////////////////////////////////////// class fp_expr_title
+class fp_expr_title: public i_fp_expr_content
+{
+public:
+    fp_expr_title(int line_no, const std::string& title);
+    void accept(i_fp_visitor& visitor) const override;
+
+    const std::string& get_title() const;
+
+private:
+    const std::string _title;
+};
+
+//////////////////////////////////////// class fp_expr_game
+class fp_expr_game: public i_fp_expr_content
+{
+public:
+    fp_expr_game(int line_no, const std::string& game_token, bool is_bracketed);
+    void accept(i_fp_visitor& visitor) const override;
+
+    const std::string& get_game_token() const;
+    bool is_bracketed() const;
+
+private:
+    const std::string _game_token;
+    const bool _is_bracketed;
+};
+
+
+//////////////////////////////////////// class fp_expr_comment
+enum fp_expr_comment_type
+{
+    FP_EXPR_COMMENT_TYPE_SHARED = 0,
+    FP_EXPR_COMMENT_TYPE_NUMBERED,
+    FP_EXPR_COMMENT_TYPE_SILENT,
+};
+
+class fp_expr_comment: public i_fp_expr_content
+{
+public:
+    fp_expr_comment(int line_no, const std::string& comment_string);
+    void accept(i_fp_visitor& visitor) const override;
+
+    const std::string& get_comment() const;
+    fp_expr_comment_type get_comment_type() const;
+    int get_number() const;
+
+private:
+    std::string _comment;
+    fp_expr_comment_type _comment_type;
+    int _number;
+};
+
+//////////////////////////////////////// class fp_expr_command_solve_bw
+
+class fp_expr_command_solve_bw: public i_fp_expr_command
+{
+public:
+    fp_expr_command_solve_bw(int line_no, bw player,
+                             minimax_outcome_enum expected_outcome);
+
+    void accept(i_fp_visitor& visitor) const override;
+
+    bw get_player() const;
+    minimax_outcome_enum get_expected_outcome() const;
+
+private:
+    const bw _player;
+    const minimax_outcome_enum _expected_outcome;
+};
+
+
+//////////////////////////////////////// class fp_expr_command_solve_n
+class fp_expr_command_solve_n: public i_fp_expr_command
+{
+public:
+    fp_expr_command_solve_n(int line_no, const std::optional<int>& expected_nim_value);
+
+    void accept(i_fp_visitor& visitor) const override;
+
+    const std::optional<int>& get_expected_nim_value() const;
+
+private:
+    const std::optional<int> _expected_nim_value;
+};
+
+//////////////////////////////////////////////////
+// class fp_expr_command_winning_moves
+
+class fp_expr_command_winning_moves: public i_fp_expr_command
+{
+public:
+    fp_expr_command_winning_moves(
+        int line_no, ebw player,
+        std::optional<std::vector<std::string>> expected_winning_moves);
+
+    void accept(i_fp_visitor& visitor) const override;
+
+    ebw get_player() const;
+    const std::optional<std::vector<std::string>>& get_expected_winning_moves()
+        const;
+
+private:
+    const ebw _player;
+    const std::optional<std::vector<std::string>> _expected_winning_moves;
+};
+
+//////////////////////////////////////// class fp_chunk
+class fp_chunk
+{
+public:
+    fp_chunk();
+
+    // content exprs
+    int n_content_exprs() const;
+    void add_content_expr(i_fp_expr_content* expr);
+    const i_fp_expr_content& get_content_expr(int idx) const;
+    void clear_content_exprs();
+
+    // command exprs
+    int n_command_exprs() const;
+    void add_command_expr(i_fp_expr_command* expr);
+    const i_fp_expr_command& get_command_expr(int idx) const;
+    void clear_command_exprs();
+
+    // version string
+    void set_version_string(const std::string& version_string);
+    void clear_version_string();
+    bool has_version_string() const;
+    const std::optional<std::string>& get_version_string() const;
+
+    const std::optional<fp_expr_title>& get_implicit_title() const;
+
+private:
+    std::vector<std::unique_ptr<i_fp_expr_content>> _content_exprs;
+    std::vector<std::unique_ptr<i_fp_expr_command>> _command_exprs;
+
+    std::optional<std::string> _version_string;
+
+    std::optional<fp_expr_title> _implicit_title;
+    std::optional<fp_expr_title> _last_title;
+};
+

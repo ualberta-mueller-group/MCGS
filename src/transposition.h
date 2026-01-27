@@ -1,16 +1,22 @@
 /*
     Transposition table template ttable<T>
+
+    TODO: Currently each entry's valid bit is inside of the packed bools
+          array. This means ttable::clear() will take longer if the table is
+          constructed with packed bools. These two types of bools should
+          be separated in the future
 */
 #pragma once
 #include "utilities.h"
 
 #include "hashing.h"
+#include <algorithm>
 #include <cstddef>
 #include <cassert>
+#include <cstring>
 #include <type_traits>
 #include <optional>
 #include <iostream>
-#include "random.h"
 #include "throw_assert.h"
 #include "global_options.h"
 
@@ -63,6 +69,8 @@ public:
     void store(hash_t hash, const Entry& entry);
     std::optional<Entry> get(hash_t hash) const;
 
+    void clear();
+
     size_t n_index_bits() const;
     size_t n_entry_bools() const;
 
@@ -79,6 +87,9 @@ private:
 
     hash_t _get_tag(hash_t entry_idx) const;
     void _set_tag(hash_t entry_idx, hash_t tag);
+
+    void _clear_tags_and_bools();
+    void _clear_bools();
 
     inline Entry* _get_entry_ptr(hash_t entry_idx);
 
@@ -109,7 +120,7 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     : _n_index_bits(index_bits),
       _n_tag_bits(size_in_bits<hash_t>() - index_bits),
       _n_entries(size_t(1) << index_bits),
-      _bools_per_entry(n_packed_bools)
+      _bools_per_entry(1 + n_packed_bools) // +1 for valid bit
 {
     assert(index_bits > 0);
     // avoid shifting entire width of hash_t or size_t
@@ -177,31 +188,9 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
        This is probably unimportant
     */
 
-    /*
-       NOTE:
-       The tags array can't be filled with 0s, as entries have no "valid bit".
-       A ttable query is considered a hit if the queried hash's index and tag
-       both match the entry. A user of ttable could reasonably query the table
-       with a small integer, and this would result in incorrect table hits.
-    */
-
-    // First get random bits to fill tag bytes with
-    constexpr size_t N_RANDOM_BYTES = 32;
-    static_assert(is_power_of_2(N_RANDOM_BYTES)); // allow fast modulo below
-    random_generator& global_rng = get_global_rng();
-    uint8_t random_bytes[N_RANDOM_BYTES];
-    for (size_t i = 0; i < N_RANDOM_BYTES; i++)
-        random_bytes[i] = global_rng.get_u8();
-
-    // Now fill the tags array with random-ish bits
     _tags_arr = new uint8_t[_tags_arr_size];
-    for (size_t i = 0; i < _tags_arr_size; i++)
-        // i % N_RANDOM_BYTES (because latter number power of 2)
-        _tags_arr[i] = random_bytes[i & (N_RANDOM_BYTES - 1)];
-
     _bools_arr = new unsigned int[_bools_arr_size];
-    for (size_t i = 0; i < _bools_arr_size; i++)
-        _bools_arr[i] = 0;
+    _clear_tags_and_bools();
 }
 
 template <class Entry>
@@ -227,8 +216,15 @@ typename ttable<Entry>::search_result ttable<Entry>::search(hash_t hash)
 template <class Entry>
 void ttable<Entry>::store(hash_t hash, const Entry& entry)
 {
-    // avoid potentially resetting bools
-    THROW_ASSERT_DEBUG(_bools_per_entry == 0);
+    /*
+        When using this function, the ttable must be constructed with
+        n_packed_bools = 0, to avoid accidentally resetting bools
+
+        NOTE: _bools_per_entry is always 1 more than the n_packed_bools passed
+        to the ttable constructor, as it's used internally
+    */
+    THROW_ASSERT_DEBUG(_bools_per_entry == 1);
+
     ttable<Entry>::search_result tt_result = search(hash);
     tt_result.set_entry(entry);
 }
@@ -246,6 +242,13 @@ std::optional<Entry> ttable<Entry>::get(hash_t hash) const
 }
 
 template <class Entry>
+void ttable<Entry>::clear()
+{
+    //_clear_tags_and_bools();
+    _clear_bools();
+}
+
+template <class Entry>
 inline size_t ttable<Entry>::n_index_bits() const
 {
     return _n_index_bits;
@@ -254,7 +257,8 @@ inline size_t ttable<Entry>::n_index_bits() const
 template <class Entry>
 inline size_t ttable<Entry>::n_entry_bools() const
 {
-    return _bools_per_entry;
+    assert(_bools_per_entry > 0);
+    return _bools_per_entry - 1; // -1 due to valid bit
 }
 
 template <class Entry>
@@ -363,6 +367,22 @@ void ttable<Entry>::_set_tag(hash_t entry_idx, hash_t tag)
 }
 
 template <class Entry>
+inline void ttable<Entry>::_clear_tags_and_bools()
+{
+    assert(_tags_arr != nullptr);
+    std::fill_n(_tags_arr, _tags_arr_size, 0);
+
+    _clear_bools();
+}
+
+template <class Entry>
+inline void ttable<Entry>::_clear_bools()
+{
+    assert(_bools_arr != nullptr);
+    std::fill_n(_bools_arr, _bools_arr_size, 0);
+}
+
+template <class Entry>
 inline Entry* ttable<Entry>::_get_entry_ptr(hash_t entry_idx)
 {
     assert(entry_idx < _n_entries);
@@ -380,7 +400,8 @@ void ttable<Entry>::_init_entry(hash_t index, hash_t tag, const Entry& entry)
 
     _set_tag(index, tag);
 
-    for (size_t i = 0; i < _bools_per_entry; i++)
+    _set_bool(index, 0, true); // valid bit
+    for (size_t i = 1; i < _bools_per_entry; i++)
         _set_bool(index, i, false);
 
     Entry* entry_ptr = _get_entry_ptr(index);
@@ -392,7 +413,8 @@ void ttable<Entry>::_init_entry(hash_t index, hash_t tag, const Entry& entry)
 template <class Entry>
 bool ttable<Entry>::search_result::entry_valid() const
 {
-    return _table._get_tag(_entry_idx) == _entry_tag;
+    return _table._get_bool(_entry_idx, 0) &&
+           (_table._get_tag(_entry_idx) == _entry_tag);
 }
 
 template <class Entry>
@@ -440,14 +462,18 @@ template <class Entry>
 bool ttable<Entry>::search_result::get_bool(size_t bool_idx) const
 {
     THROW_ASSERT_DEBUG(entry_valid());
-    return _table._get_bool(_entry_idx, bool_idx);
+
+    // +1 because index 0 is valid bit
+    return _table._get_bool(_entry_idx, bool_idx + 1);
 }
 
 template <class Entry>
 void ttable<Entry>::search_result::set_bool(size_t bool_idx, bool new_val)
 {
     THROW_ASSERT_DEBUG(entry_valid());
-    _table._set_bool(_entry_idx, bool_idx, new_val);
+
+    // +1 because index 0 is valid bit
+    _table._set_bool(_entry_idx, bool_idx + 1, new_val);
 }
 
 template <class Entry>

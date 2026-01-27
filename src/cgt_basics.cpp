@@ -1,6 +1,7 @@
 #include "cgt_basics.h"
 #include <cassert>
 #include <limits>
+#include <string>
 
 #include "utilities.h"
 
@@ -75,4 +76,15 @@ void init_color_tables()
 }
 
 } // namespace mcgs_init
+
+//---------------------------------------------------------------------------
+
+std::string player_name_bw_imp(ebw to_play)
+{
+    if (is_black_white(to_play))
+        return std::string(1, color_to_player_char(to_play));
+
+    assert(to_play == EMPTY);
+    return "IMP"; // impartial
+}
 

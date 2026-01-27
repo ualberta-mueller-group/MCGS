@@ -3,14 +3,17 @@
 //---------------------------------------------------------------------------
 #include "test_utilities.h"
 #include "cgt_basics.h"
+#include "csv_row.h"
 #include "file_parser.h"
 #include <string>
 #include <vector>
 #include <sstream>
+#include <optional>
 #include "game.h"
-#include "search_utils.h"
 #include "sumgame.h"
 #include "alternating_move_game.h"
+#include "test_case.h"
+#include "test_case_enums.h"
 #include <cassert>
 #include <cstddef>
 #include <unordered_set>
@@ -246,57 +249,72 @@ void assert_inverse_sum_zero(game* g)
     delete g;
 }
 
+namespace file_parser_test {
+
 void assert_file_parser_output(file_parser* parser,
-                               vector<game_case*>& expected_cases)
+    const std::vector<csv_row*>& expected_output)
 {
-    game_case gc;
-    size_t case_idx = 0;
+    const size_t n_expected_cases = expected_output.size();
+    size_t n_cases = 0;
 
-    while (parser->parse_chunk(gc))
+    while (parser->parse_chunk())
     {
-        assert(case_idx < expected_cases.size());
-
-        game_case& expected = *expected_cases[case_idx];
-        case_idx++;
-
-        assert(gc.to_play == expected.to_play);
-        assert(gc.expected_value == expected.expected_value);
-        assert(gc.games.size() == expected.games.size());
-
-        for (size_t i = 0; i < gc.games.size(); i++)
+        const int n_tests_in_chunk = parser->n_test_cases();
+        for (int chunk_test_idx = 0; chunk_test_idx < n_tests_in_chunk; chunk_test_idx++)
         {
-            string str_got;
-            string str_expected;
+            assert(n_cases < n_expected_cases);
 
-            {
-                stringstream stream;
-                gc.games[i]->print(stream);
-                str_got = stream.str();
-            }
+            std::shared_ptr<i_test_case> test_case =
+                parser->get_test_case(chunk_test_idx);
 
-            {
-                stringstream stream;
-                expected.games[i]->print(stream);
-                str_expected = stream.str();
-            }
+            const csv_row& row_got = test_case->get_csv_row();
+            const csv_row& row_expected = *expected_output[n_cases];
+            n_cases++;
 
-            assert(str_got == str_expected);
+            assert(row_got.player == row_expected.player);
+            assert(row_got.expected_result == row_expected.expected_result);
+            assert(row_got.games == row_expected.games);
+            assert(row_got.command_type == row_expected.command_type);
         }
-
-        gc.cleanup_games();
     }
 
-    assert(case_idx == expected_cases.size());
+    assert(n_cases == n_expected_cases);
 }
 
-void assert_file_parser_output_file(const string& file_name,
-                                    vector<game_case*>& expected_cases)
+
+void assert_file_parser_output_file(const std::string& file_name,
+                                    const std::vector<csv_row*>& expected_output)
 {
     file_parser* parser = file_parser::from_file(file_name);
-    assert_file_parser_output(parser, expected_cases);
+    assert_file_parser_output(parser, expected_output);
     delete parser;
 }
 
+void add_row(std::vector<csv_row*>& rows, ebw player,
+             std::optional<std::string>&& exp_result,
+             std::vector<game*>&& games, command_type_enum type)
+{
+    csv_row* row = new csv_row();
+
+    row->fill_pre_test_fields(games, player, exp_result);
+    row->fill_visitor_fields({}, type, "");
+
+    for (game* g : games)
+        delete g;
+    games.clear();
+
+    rows.push_back(row);
+}
+
+} // namespace file_parser_test 
+
+
+/*
+   TODO this function was weird before the January 2026 file_parser refactor,
+   and now it's even weirder...
+
+   Do something about it?
+*/
 void assert_solve_test_file(const std::string& file_name,
                             int expected_case_count)
 {
@@ -305,28 +323,45 @@ void assert_solve_test_file(const std::string& file_name,
     std::unique_ptr<file_parser> fp =
         std::unique_ptr<file_parser>(file_parser::from_file(file_name));
 
-    int case_count = 0;
-    game_case gc;
+    int actual_case_count = 0;
 
-    while (fp->parse_chunk(gc))
+    while (fp->parse_chunk())
     {
-        case_count += 1;
+        const int n_test_cases = fp->n_test_cases();
 
-        // Should probably define a meaningful expected result for unit tests...
-        assert(gc.expected_value.type() == SEARCH_VALUE_TYPE_WINLOSS);
-
-        sumgame s(gc.to_play);
-
-        for (game* g : gc.games)
+        for (int test_idx = 0; test_idx < n_test_cases; test_idx++)
         {
-            s.add(g);
+            actual_case_count++;
+
+            // Should probably define a meaningful expected result for unit tests...
+            //assert(gc.expected_value.type() == SEARCH_VALUE_TYPE_WINLOSS);
+
+            std::shared_ptr<i_test_case> test_case = fp->get_test_case(test_idx);
+            assert(dynamic_cast<test_case_solve_bw*>(test_case.get()) != nullptr);
+
+            const csv_row& row = test_case->get_csv_row();
+
+            assert(row.player.has_value() && !row.player->empty());
+            const char player_char = row.player.value().at(0);
+
+            const bw to_play = player_char_to_color(player_char);
+            std::vector<game*> games = fp->get_games();
+
+            sumgame s(to_play);
+
+            s.add(games);
+            bool result = s.solve();
+            s.pop(games);
+
+            const std::string result_text = result ? "Win" : "Loss";
+            assert(row.expected_result.has_value() &&
+                   result_text == *row.expected_result);
+
+            for (game* g : games)
+                delete g;
+
         }
-
-        bool result = s.solve();
-        assert(result == gc.expected_value.win());
-
-        gc.cleanup_games();
     }
 
-    assert(case_count == expected_case_count);
+    assert(actual_case_count == expected_case_count);
 }

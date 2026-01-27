@@ -133,6 +133,7 @@ size_t count_subgames_for(const game& g)
 
 inline bw get_random_bw()
 {
+    THROW_ASSERT(rng.has_value());
     return (rng->get_u8() % 2) == 0 ? BLACK : WHITE;
 }
 
@@ -159,6 +160,8 @@ unordered_map<game_type_t, string> init_game_names()
 */
 void write_game(const generated_game& gg, int diagram_id)
 {
+    THROW_ASSERT(outfile.has_value());
+
     const string& game_name = get_game_name(gg.type);
     const char player_char = color_to_player_char(gg.player);
 
@@ -204,6 +207,7 @@ void init()
 
 generated_game gen_large_clobber_1xn()
 {
+    THROW_ASSERT(rng.has_value());
     // move count: 0-14
     generated_game gen_game;
 
@@ -256,6 +260,7 @@ generated_game gen_large_clobber_1xn()
 
 optional<generated_game> gen_large_nogo_1xn_impl()
 {
+    THROW_ASSERT(rng.has_value());
     // MOVES: 0-14
     generated_game gen_game;
 
@@ -331,6 +336,7 @@ generated_game gen_large_nogo_1xn()
 
 optional<generated_game> gen_large_elephants_impl()
 {
+    THROW_ASSERT(rng.has_value());
     generated_game gen_game;
 
     const uint16_t n_black_stones = rng->get_u16(0, 10);
@@ -392,6 +398,7 @@ generated_game gen_large_elephants()
 
 generated_game gen_large_clobber()
 {
+    THROW_ASSERT(rng.has_value());
     generated_game gen_game;
 
     const uint16_t rows = rng->get_u16(2, 2);
@@ -449,6 +456,8 @@ generated_game gen_large_clobber()
 
 generated_game gen_large_clobber_1xn_subgames()
 {
+    THROW_ASSERT(rng.has_value());
+
     generated_game gen_game;
 
     // const uint16_t size = rng->get_u16(16, 35);
@@ -493,6 +502,8 @@ generated_game gen_large_clobber_1xn_subgames()
 void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
               int diagram_id, size_t min_x, size_t max_x)
 {
+    THROW_ASSERT(histogram_file.has_value());
+
     // Variables
     histogram hist(max_x);
     unordered_set<hash_t> seen_hashes;
@@ -535,6 +546,7 @@ void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
     // Now use remaining "small" games
 
     cout << hist << endl;
+
     *histogram_file << hist << '\n' << endl;
 }
 

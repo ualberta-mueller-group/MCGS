@@ -2,6 +2,7 @@
    General utility functions
 */
 #pragma once
+#include <stdexcept>
 #include <vector>
 #include <iostream>
 #include <climits>
@@ -12,6 +13,9 @@
 #include <cstddef>
 #include <ostream>
 #include <utility>
+#include <optional>
+#include <set>
+#include <unordered_set>
 
 #include "cgt_basics.h"
 
@@ -22,6 +26,33 @@
 #else
 #define IS_WINDOWS false
 #endif
+
+
+//////////////////////////////////////// number conversions
+// Cast integral value to its unsigned version. No safety in release builds
+template <class Integral_T>
+inline constexpr std::make_unsigned_t<Integral_T> as_unsigned_unsafe(
+    Integral_T val_at_least_0)
+{
+    static_assert(std::is_integral_v<Integral_T> &&
+                  std::is_signed_v<Integral_T>);
+    assert(val_at_least_0 >= 0);
+    return static_cast<std::make_unsigned_t<Integral_T>>(val_at_least_0);
+}
+
+// Cast integral value to its unsigned version. Throws in release builds
+template <class Integral_T>
+inline constexpr std::make_unsigned_t<Integral_T> as_unsigned_checked(
+    Integral_T val_at_least_0)
+{
+    static_assert(std::is_integral_v<Integral_T> &&
+                  std::is_signed_v<Integral_T>);
+
+    if (!(val_at_least_0 >= 0))
+        throw std::domain_error("as_unsigned_checked argument < 0!");
+
+    return static_cast<std::make_unsigned_t<Integral_T>>(val_at_least_0);
+}
 
 //////////////////////////////////////// general utility functions
 template <class T>
@@ -66,10 +97,48 @@ inline bool logical_iff(bool p, bool q)
 
 #define LOGICAL_IMPLIES(p, q) (!(p) || (q))
 
+// TODO unit test
+// TODO naming?
+template <class Element_T, class Idx_T>
+bool checked_is_element(const std::vector<Element_T>& vec, Idx_T idx,
+                        const Element_T& element)
+{
+    static_assert(std::is_integral_v<Idx_T>);
+    assert(idx >= 0);
+
+    using idx_unsigned_t = std::make_unsigned_t<Idx_T>;
+    const idx_unsigned_t idx_uns = static_cast<idx_unsigned_t>(idx);
+
+    if (!(idx_uns < vec.size()))
+        return false;
+
+    return vec[idx] == element;
+}
+
+template <class Idx_T>
+bool checked_is_element(const std::string& str, Idx_T idx,
+                        char element)
+{
+    static_assert(std::is_integral_v<Idx_T>);
+    assert(idx >= 0);
+
+    using idx_unsigned_t = std::make_unsigned_t<Idx_T>;
+    const idx_unsigned_t idx_uns = static_cast<idx_unsigned_t>(idx);
+
+    if (!(idx_uns < str.size()))
+        return false;
+
+    return str[idx] == element;
+}
+
 //////////////////////////////////////// string utilities
 
 // like Python's string split()
 std::vector<std::string> split_string(const std::string& str);
+
+// like Python's string join()
+std::string string_join(const std::vector<std::string>& strings,
+                        const std::string& delimiter = " ");
 
 bool is_int(const std::string& str);
 // TODO doesn't recognize -0
@@ -82,6 +151,29 @@ bool string_contains_whitespace(const std::string& str);
 
 // concat n copies of str
 std::string repeat_string(const std::string& str, int n);
+
+inline bool is_newline(char c)
+{
+    return c == '\n' || c == '\v' || c == '\f' || c == '\r';
+}
+
+template <class T>
+std::string to_n_digit_mantissa(double val, T n_mantissa_digits)
+{
+    static_assert(std::is_integral_v<T>);
+    assert(n_mantissa_digits >= 0);
+
+    constexpr char const* FORMAT = "%.*f";
+
+    const int size = snprintf(nullptr, 0, FORMAT, n_mantissa_digits, val) + 1;
+    // variable length arrays are not part of the C++ standard; use vector
+    std::vector<char> buffer(size);
+
+    int got_size = snprintf(buffer.data(), size, FORMAT, n_mantissa_digits, val);
+    assert(size == got_size + 1);
+
+    return std::string(buffer.data());
+}
 
 //////////////////////////////////////// arithmetic operations
 
@@ -317,4 +409,85 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
     return os;
 }
 
+// set printing
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::set<T>& std_set)
+{
+    os << '{';
+
+    auto it = std_set.begin();
+    const auto end = std_set.end();
+
+    while (it != end)
+    {
+        os << *it;
+
+        ++it;
+
+        if (it != end)
+            os << ", ";
+    }
+
+    os << '}';
+    return os;
+}
+
+// unordered_set printing
+template <class T>
+std::ostream& operator<<(std::ostream& os,
+                         const std::unordered_set<T>& std_oset)
+{
+    os << '{';
+
+    auto it = std_oset.begin();
+    const auto end = std_oset.end();
+
+    while (it != end)
+    {
+        os << *it;
+
+        ++it;
+
+        if (it != end)
+            os << ", ";
+    }
+
+    os << '}';
+    return os;
+}
+
 outcome_class bools_to_outcome_class(bool black_wins, bool white_wins);
+
+// optional printing
+template <class T>
+class print_optional
+{
+public:
+    print_optional(const std::optional<T>& opt,
+                   const std::string& default_text = "<NULL>")
+        : _opt(opt), _default_text(default_text)
+    {
+    }
+
+private:
+    const std::optional<T>& _opt;
+    const std::string& _default_text;
+
+    template <class T2>
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const print_optional<T2>& print_opt);
+};
+
+template <class T>
+std::ostream& operator<<(std::ostream& os, const print_optional<T>& print_opt)
+{
+    const std::optional<T>& opt = print_opt._opt;
+
+    if (opt.has_value())
+        os << opt.value();
+    else
+        os << print_opt._default_text;
+
+    return os;
+}
+

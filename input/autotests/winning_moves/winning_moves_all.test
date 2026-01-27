@@ -1,0 +1,484 @@
+{version 1.5}
+
+/*_
+    Winning moves tests for all game types and their impartial variants
+
+Strips:
+    clobber_1xn (OK)
+    elephants (OK)
+    gen_toads (OK)
+    nogo_1xn (OK)
+    toppling_dominoes (OK)
+
+Grids:
+    amazons (OK)
+    clobber (OK)
+    domineering (OK)
+    fission (OK)
+    nogo (OK)
+    sheep (OK)
+
+Basic CGT games:
+    cgt_dyadic_rational (OK)
+    cgt_integer_game (OK)
+    cgt_nimber (OK)
+    cgt_switch (OK)
+    cgt_up_star (OK)
+    kayles (OK)
+
+        TEMPLATE:
+
+    [game_name]
+{winning moves B,
+winning moves W}
+
+    [game_name]
+{winning moves B,
+winning moves W}
+
+    [impartial game_name]
+{winning moves N,
+winning moves B,
+winning moves W}
+
+    [impartial game_name]
+{winning moves N,
+winning moves B,
+winning moves W}
+
+*/
+
+/*_ Strips */
+
+    [clobber_1xn]
+OOOXXOXOXXX
+{winning moves B 7-6 7-8 9-8,
+winning moves W 6-5 6-7 8-7}
+
+    [clobber_1xn]
+XXOXOOX
+XXXOOOXX
+{winning moves B 0:4-5,
+winning moves W 0:3-4}
+
+    [impartial clobber_1xn]
+XOOXXOO
+{winning moves N 6-5,
+winning moves B 6-5,
+winning moves W 6-5}
+
+    [impartial clobber_1xn]
+XOOXOXX
+XOOXOX
+{winning moves N 1:1-2 1:4-3 1:5-6,
+winning moves B 1:1-2 1:4-3 1:5-6,
+winning moves W 1:1-2 1:4-3 1:5-6}
+
+    [elephants]
+X..O..X.O..X
+{winning moves B 1-2 7-8,
+winning moves W 4-3 9-8}
+
+    [elephants]
+.O...X..O..X.O
+X.O.X.OX.
+{winning moves B 0:12-13 0:6-7 1:1-2 1:5-6,
+winning moves W 0:14-13 0:9-8 1:3-2 1:7-6}
+
+    [impartial elephants]
+X..O.X..X...O
+{winning moves N 13-12,
+winning moves B 13-12,
+winning moves W 13-12}
+
+    [impartial elephants]
+X..O....X
+X...X.O....O
+{winning moves N 0:1-2 0:4-3 1:1-2 1:12-11 1:5-6 1:7-6,
+winning moves B 0:1-2 0:4-3 1:1-2 1:12-11 1:5-6 1:7-6,
+winning moves W 0:1-2 0:4-3 1:1-2 1:12-11 1:5-6 1:7-6}
+
+    [gen_toads]
+2,3,2,0:X...X...O.O
+{winning moves B 5-7,
+winning moves W 9-7}
+
+    [gen_toads]
+1,2,1,1:X.X.O..X.O.O
+1,2,1,0:X.O..X.X.O
+{winning moves B 0:1-2 0:3-4 0:8-9 1:1-2 1:6-7 1:8-9,
+winning moves W None}
+
+    [impartial gen_toads]
+1,3,1,0:X..X.O...O
+{winning moves N 10-9 4-5,
+winning moves B 10-9 4-5,
+winning moves W 10-9 4-5}
+
+    [impartial gen_toads]
+1,1,0,0:X.O.X..X
+1,2,0,1:X..O..O
+{winning moves N 0:1-2 0:3-2 0:5-6 1:1-2 1:4-2 1:7-5,
+winning moves B 0:1-2 0:3-2 0:5-6 1:1-2 1:4-2 1:7-5,
+winning moves W 0:1-2 0:3-2 0:5-6 1:1-2 1:4-2 1:7-5}
+
+    [nogo_1xn]
+...X...
+{winning moves B 2_X 6_X,
+winning moves W None}
+
+    [nogo_1xn]
+.X..
+..O..
+{winning moves B 0:3_X 0:4_X 1:1_X 1:2_X 1:4_X 1:5_X,
+winning moves W 0:3_O 1:1_O 1:2_O 1:4_O 1:5_O}
+
+    [impartial nogo_1xn]
+..XO...
+{winning moves N 1_O 1_X 2_X 5_O 6_O 6_X 7_O 7_X,
+winning moves B 1_O 1_X 2_X 5_O 6_O 6_X 7_O 7_X,
+winning moves W 1_O 1_X 2_X 5_O 6_O 6_X 7_O 7_X}
+
+    [impartial nogo_1xn]
+..X.O...
+....
+{winning moves N 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O
+    1:4_X,
+winning moves B 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O
+    1:4_X,
+winning moves W 0:1_X 0:2_X 0:4_O 0:4_X 0:6_O 0:7_O 0:8_O 1:1_O 1:1_X 1:4_O
+    1:4_X}
+
+    [toppling_dominoes]
+XOO#
+{winning moves B 1R 4L,
+winning moves W 4L}
+
+    [toppling_dominoes]
+X#OOX
+OXO
+{winning moves B 0:2R,
+winning moves W 0:2L 0:3L}
+
+    [impartial toppling_dominoes]
+XOOX
+{winning moves N 1R 4L,
+winning moves B 1R 4L,
+winning moves W 1R 4L}
+
+    [impartial toppling_dominoes]
+OXX#
+XO#OX
+{winning moves N 1:1L 1:5R,
+winning moves B 1:1L 1:5R,
+winning moves W 1:1L 1:5R}
+
+/*_ Grids */
+
+    [amazons]
+.X|..
+{winning moves B b1-a1-a2 b1-a1-b1 b1-a1-b2 b1-a2-a1 b1-a2-b1 b1-a2-b2 b1-b2-a1
+    b1-b2-a2 b1-b2-b1,
+winning moves W None}
+
+    [amazons]
+XO|.#
+.X|.O
+{winning moves B 0:a1-a2-a1 1:b1-a1-a2 1:b1-a1-b1 1:b1-a2-a1 1:b1-a2-b1,
+winning moves W 0:b1-a2-b1 1:b2-a1-a2 1:b2-a1-b2 1:b2-a2-a1 1:b2-a2-b2}
+
+    [impartial amazons]
+..|.X
+{winning moves N b2-a1-a2 b2-a1-b1 b2-a1-b2 b2-a2-a1 b2-a2-b1 b2-a2-b2 b2-b1-a1
+    b2-b1-a2 b2-b1-b2,
+winning moves B b2-a1-a2 b2-a1-b1 b2-a1-b2 b2-a2-a1 b2-a2-b1 b2-a2-b2 b2-b1-a1
+    b2-b1-a2 b2-b1-b2,
+winning moves W b2-a1-a2 b2-a1-b1 b2-a1-b2 b2-a2-a1 b2-a2-b1 b2-a2-b2 b2-b1-a1
+    b2-b1-a2 b2-b1-b2}
+
+    [impartial amazons]
+.X..
+.X.|.O.
+{winning moves N 0:b1-a1-b1 0:b1-d1-c1,
+winning moves B 0:b1-a1-b1 0:b1-d1-c1,
+winning moves W 0:b1-a1-b1 0:b1-d1-c1}
+
+    [clobber]
+XO|OX
+{winning moves B a1-a2 a1-b1 b2-a2 b2-b1,
+winning moves W a2-a1 a2-b2 b1-a1 b1-b2}
+
+    [clobber]
+XOX
+OXO|XOX
+{winning moves B 0:a1-b1 0:c1-b1 1:a2-a1 1:a2-b2 1:b1-a1 1:b1-b2 1:b1-c1
+    1:c2-b2 1:c2-c1,
+winning moves W 0:b1-a1 0:b1-c1 1:a1-a2 1:a1-b1 1:b2-a2 1:b2-b1 1:b2-c2 1:c1-b1
+    1:c1-c2}
+
+    [impartial clobber]
+XO|OO
+{winning moves N a2-a1 b1-a1,
+winning moves B a2-a1 b1-a1,
+winning moves W a2-a1 b1-a1}
+
+    [impartial clobber]
+OXO
+XOXO|OXOX
+{winning moves N 0:a1-b1 0:b1-a1 0:b1-c1 0:c1-b1,
+winning moves B 0:a1-b1 0:b1-a1 0:b1-c1 0:c1-b1,
+winning moves W 0:a1-b1 0:b1-a1 0:b1-c1 0:c1-b1}
+
+    [domineering]
+..|..
+{winning moves B a1-a2 b1-b2,
+winning moves W a1-b1 a2-b2}
+
+    [domineering]
+..
+..|..
+{winning moves B 1:a1-a2 1:b1-b2,
+winning moves W 1:a1-b1 1:a2-b2}
+
+    [impartial domineering]
+...
+{winning moves N a1-b1 b1-c1,
+winning moves B a1-b1 b1-c1,
+winning moves W a1-b1 b1-c1}
+
+    [impartial domineering]
+..##...
+..|..|#.|..
+{winning moves N 0:a1-b1 0:e1-f1 0:f1-g1 1:a1-a2 1:a1-b1 1:a2-b2 1:a4-b4
+    1:b1-b2 1:b2-b3 1:b3-b4,
+winning moves B 0:a1-b1 0:e1-f1 0:f1-g1 1:a1-a2 1:a1-b1 1:a2-b2 1:a4-b4 1:b1-b2
+    1:b2-b3 1:b3-b4,
+winning moves W 0:a1-b1 0:e1-f1 0:f1-g1 1:a1-a2 1:a1-b1 1:a2-b2 1:a4-b4 1:b1-b2
+    1:b2-b3 1:b3-b4}
+
+    [fission]
+.X.|.X.|.#.
+{winning moves B None,
+winning moves W b1_H}
+
+    [fission]
+...|..X|...
+...|.X.|...
+{winning moves B 0:c2_V,
+winning moves W None}
+
+    [impartial fission]
+...|.X.|...
+{winning moves N b2_H b2_V,
+winning moves B b2_H b2_V,
+winning moves W b2_H b2_V}
+
+    [impartial fission]
+...|X..|...
+...X..
+{winning moves N 0:a2_V,
+winning moves B 0:a2_V,
+winning moves W 0:a2_V}
+
+    [nogo]
+..|#.
+{winning moves B b1_X,
+winning moves W b1_O}
+
+    [nogo]
+...|X.O|...
+.#.|#.#|.#.
+{winning moves B 0:b1_X 0:b2_X 0:b3_X 0:c1_X 0:c3_X,
+winning moves W 0:a1_O 0:a3_O 0:b1_O 0:b2_O 0:b3_O}
+
+    [impartial nogo]
+....
+{winning moves N a1_O a1_X d1_O d1_X,
+winning moves B a1_O a1_X d1_O d1_X,
+winning moves W a1_O a1_X d1_O d1_X}
+
+    [impartial nogo]
+....
+..|#.
+{winning moves N 0:a1_O 0:a1_X 0:d1_O 0:d1_X 1:a1_O 1:a1_X 1:b1_O 1:b1_X 1:b2_O
+    1:b2_X,
+winning moves B 0:a1_O 0:a1_X 0:d1_O 0:d1_X 1:a1_O 1:a1_X 1:b1_O 1:b1_X 1:b2_O
+    1:b2_X,
+winning moves W 0:a1_O 0:a1_X 0:d1_O 0:d1_X 1:a1_O 1:a1_X 1:b1_O 1:b1_X 1:b2_O
+    1:b2_X}
+
+    [sheep]
+(0 0 0 | 0 3 0 | 0 0 0)
+{winning moves B b2-a2-1 b2-a2-2 b2-a3-1 b2-a3-2 b2-b1-1 b2-b1-2 b2-b3-1
+    b2-b3-2 b2-c1-1 b2-c1-2 b2-c2-1 b2-c2-2,
+winning moves W None}
+
+    [sheep]
+(0 0 0 | 2 0 -2 | 0 0 0)
+(0 0 2 0 0 | 0 0 0 0 0 | 0 0 0 0 0 | 0 0 0 0 0 | 0 0 0 -3 0)
+{winning moves B None,
+winning moves W 0:c2-b2-1 0:c2-b3-1 0:c2-c1-1 0:c2-c3-1 1:d5-a5-1 1:d5-a5-2
+    1:d5-d1-1 1:d5-d1-2 1:d5-e4-1 1:d5-e4-2 1:d5-e5-1 1:d5-e5-2}
+
+    [impartial sheep]
+(0 0 0 | 0 2 0 | 0 0 0)
+{winning moves N b2-a2-1 b2-a3-1 b2-b1-1 b2-b3-1 b2-c1-1 b2-c2-1,
+winning moves B b2-a2-1 b2-a3-1 b2-b1-1 b2-b3-1 b2-c1-1 b2-c2-1,
+winning moves W b2-a2-1 b2-a3-1 b2-b1-1 b2-b3-1 b2-c1-1 b2-c2-1}
+
+    [impartial sheep]
+(2 0 | 0 0)
+(0 0 0 | 0 0 0 | 0 -3 0)
+{winning moves N 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
+    1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2,
+winning moves B 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
+    1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2,
+winning moves W 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
+    1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2}
+
+/*_ Basic CGT games */
+
+    [dyadic_rational]
+5/4
+{winning moves B DEC,
+winning moves W None}
+
+    [dyadic_rational]
+20/4
+-24/2
+{winning moves B None,
+winning moves W 1:INC}
+
+    [impartial dyadic_rational]
+21/8
+{winning moves N INC,
+winning moves B INC,
+winning moves W INC}
+
+    [impartial dyadic_rational]
+12/16
+-21/8
+{winning moves N 0:INC 1:DEC,
+winning moves B 0:INC 1:DEC,
+winning moves W 0:INC 1:DEC}
+
+    [integer_game]
+5
+{winning moves B INT,
+winning moves W None}
+
+    [integer_game]
+-3
+{winning moves B None,
+winning moves W INT}
+
+    [impartial integer_game]
+7
+{winning moves N INT,
+winning moves B INT,
+winning moves W INT}
+
+    [impartial integer_game]
+6
+-7
+{winning moves N 0:INT 1:INT,
+winning moves B 0:INT 1:INT,
+winning moves W 0:INT 1:INT}
+
+    [nimber]
+5
+{winning moves N *0,
+winning moves B *0,
+winning moves W *0}
+
+    [nimber]
+3 5
+{winning moves N 1:*3,
+winning moves B 1:*3,
+winning moves W 1:*3}
+
+    [impartial nimber]
+5
+{winning moves N *0,
+winning moves B *0,
+winning moves W *0}
+
+    [impartial nimber]
+3 5
+{winning moves N 1:*3,
+winning moves B 1:*3,
+winning moves W 1:*3}
+
+    [switch_game]
+(3/4, -4)
+{winning moves B SWITCH_L,
+winning moves W SWITCH_R}
+
+    [switch_game]
+(1/2, -1/2)
+(-6, 5)
+{winning moves B 0:SWITCH_L,
+winning moves W 0:SWITCH_R}
+
+    [impartial switch_game]
+(-6, 7)
+{winning moves N SWITCH_L,
+winning moves B SWITCH_L,
+winning moves W SWITCH_L}
+
+    [impartial switch_game]
+(1/2, 4)
+(-2, 3)
+{winning moves N 0:SWITCH_L 1:SWITCH_R,
+winning moves B 0:SWITCH_L 1:SWITCH_R,
+winning moves W 0:SWITCH_L 1:SWITCH_R}
+
+    [up_star]
+(* 3)
+{winning moves B 0,
+winning moves W None}
+
+    [up_star]
+(6 *)
+-3
+{winning moves B 1:-2*,
+winning moves W None}
+
+    [impartial up_star]
+(*)
+{winning moves N 0,
+winning moves B 0,
+winning moves W 0}
+
+    [impartial up_star]
+4
+-5
+{winning moves N 0:3* 1:-4*,
+winning moves B 0:3* 1:-4*,
+winning moves W 0:3* 1:-4*}
+
+    [kayles]
+6
+{winning moves N 1-1-4 2-2-2,
+winning moves B 1-1-4 2-2-2,
+winning moves W 1-1-4 2-2-2}
+
+    [kayles]
+3
+7
+{winning moves N 0:1-0-2 1:1-0-6 1:1-2-4,
+winning moves B 0:1-0-2 1:1-0-6 1:1-2-4,
+winning moves W 0:1-0-2 1:1-0-6 1:1-2-4}
+
+    [impartial kayles]
+6
+{winning moves N 1-1-4 2-2-2,
+winning moves B 1-1-4 2-2-2,
+winning moves W 1-1-4 2-2-2}
+
+    [impartial kayles]
+3
+7
+{winning moves N 0:1-0-2 1:1-0-6 1:1-2-4,
+winning moves B 0:1-0-2 1:1-0-6 1:1-2-4,
+winning moves W 0:1-0-2 1:1-0-6 1:1-2-4}

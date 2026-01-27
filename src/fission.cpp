@@ -239,10 +239,12 @@ move_generator* fission::create_move_generator(bw to_play) const
     return new fission_move_generator(*this, to_play);
 }
 
-void fission::print_move(std::ostream& str, const ::move& m) const
+void fission::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
+    assert(is_black_white(to_play));
     // (stone coord)
     print_move2_as_coords(str, m, shape());
+    str << '_' << (to_play == BLACK ? 'V' : 'H');
 }
 
 game* fission::inverse() const

@@ -4,24 +4,27 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 
-#include "basic_player.h"
+//#include "basic_player.h"
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
+#include "print_moves.h"
+#include "test_case.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
-#include "search_utils.h"
 #include "clobber.h"
 
-#include "sumgame.h"
-#include "throw_assert.h"
 #include "gen_experiments.h"
-#include "winning_moves.h"
+//#include "winning_moves.h"
+#include "basic_player.h"
+#include "utils_for_main.h"
 
-using std::cout, std::endl, std::string;
+using std::cout, std::endl, std::flush, std::string;
 
+////////////////////////////////////////////////// main function
 int main(int argc, char** argv)
 {
     mcgs_init_1();
@@ -36,10 +39,11 @@ int main(int argc, char** argv)
 
     if (opts.use_player)
     {
-        file_parser* parser = opts.parser.get();
-        THROW_ASSERT(parser != nullptr, "No games specified for player");
+        std::shared_ptr<file_parser> parser = opts.parser;
 
-        play_games(*parser, opts.play_log_name);
+        if (parser.get() != nullptr)
+            play_games(*parser, opts.play_log_name);
+
         return 0;
     }
 
@@ -51,13 +55,31 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (opts.print_winning_moves)
+    if (opts.parser)
     {
-        //print_winning_moves_impl(opts.parser);
-        print_winning_moves_new(opts.parser);
-        return 0;
+        switch (opts.print_moves_action)
+        {
+            case PRINT_MOVES_ACTION_NONE:
+                break;
+            case PRINT_MOVES_ACTION_WINNING:
+            {
+                print_winning_moves_by_chunk(cout, opts.parser);
+                return 0;
+            }
+            case PRINT_MOVES_ACTION_SUBGAME:
+            {
+                print_subgame_moves_by_chunk(cout, opts.parser);
+                return 0;
+            }
+            case PRINT_MOVES_ACTION_SUM:
+            {
+                print_sum_moves_by_chunk(cout, opts.parser);
+                return 0;
+            }
+        }
     }
-
+    
+    // Don't uncomment?
     //if (opts.run_tests_stdin)
     //{
     //    run_autotests_stdin(opts.outfile_name, opts.test_timeout);
@@ -73,41 +95,25 @@ int main(int argc, char** argv)
     // Run sums from input
     if (opts.parser)
     {
-        game_case gc;
         bool first_case = true;
+        std::shared_ptr<file_parser> parser = opts.parser;
 
-        while (opts.parser->parse_chunk(gc))
+        while (parser->parse_chunk())
         {
-            if (!first_case)
-                cout << endl;
+            const int n_test_cases = parser->n_test_cases();
 
-            for (game* g : gc.games)
-                cout << "\t" << *g << endl;
-
-            if (gc.games.size() == 0)
-                cout << "\t" << "<no games specified>" << endl;
-
-            cout << "Player: " << player_name_bw_imp(gc.to_play) << endl;
-            cout << "Expected: " << gc.expected_value.str() << endl;
-
-            if (opts.dry_run)
-                cout << "Not running search..." << endl;
-            else
+            for (int test_number = 0; test_number < n_test_cases; test_number++)
             {
-                if (global::clear_tt() && !first_case)
-                    sumgame::reset_ttable();
+                std::shared_ptr<i_test_case> test_case =
+                    parser->get_test_case(test_number);
 
-                search_result sr = gc.run(0);
-                cout << "Got: " << sr.value_str() << endl;
-                cout << "Time (ms): " << sr.duration_str() << endl;
-                cout << "Status: " << sr.status_str() << endl;
+                if (!first_case)
+                    cout << endl;
+
+                run_test_from_main(test_case, opts);
+
+                first_case = false;
             }
-
-            if (gc.comments.size() > 0)
-                cout << "\"" << gc.comments << "\"" << endl;
-
-            gc.cleanup_games();
-            first_case = false;
         }
     }
 

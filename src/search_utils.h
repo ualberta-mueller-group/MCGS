@@ -1,16 +1,15 @@
-#pragma once
 /*
-    Utilities for solving both partizan and impartial sums. Used by main.cpp
-        and autotests.cpp to run tests.
+    Utilities for solving both partisan and impartial sums.
+
+    Deprecated: all of this .h and .cpp file
 */
+#pragma once
+#include "test_case_enums.h"
 
 #include <string>
 #include <vector>
 #include "sumgame.h"
 #include "game.h"
-
-////////////////////////////////////////////////// misc functions
-std::string player_name_bw_imp(ebw to_play);
 
 ////////////////////////////////////////////////// search_value
 enum search_value_type_t
@@ -48,16 +47,6 @@ private:
     int _value_nimber;
 };
 
-////////////////////////////////////////////////// test_status_t
-enum test_status_t
-{
-    TEST_STATUS_TIMEOUT = 0,
-    TEST_STATUS_PASS,
-    TEST_STATUS_FAIL,
-    TEST_STATUS_COMPLETED,
-};
-
-std::string test_status_to_string(test_status_t status);
 
 ////////////////////////////////////////////////// search_result
 struct search_result
@@ -69,16 +58,16 @@ struct search_result
 
     ebw player;
     search_value value;
-    test_status_t status;
+    test_case_status_enum status;
     double duration;
 };
 
 ////////////////////////////////////////////////// search functions
-search_result search_partizan(const sumgame& sum,
+search_result search_partisan(const sumgame& sum,
                               const search_value* expected_value = nullptr,
                               unsigned long long timeout = 0);
 
-search_result search_partizan(const std::vector<game*>& games, bw to_play,
+search_result search_partisan(const std::vector<game*>& games, bw to_play,
                               const search_value* expected_value = nullptr,
                               unsigned long long timeout = 0);
 

@@ -3,8 +3,9 @@
 #include "all_game_headers.h"
 #include "cli_options.h"
 #include "clobber_1xn.h"
-#include "file_parser.h"
 #include "test/test_utilities.h"
+#include "csv_row.h"
+#include "test_case_enums.h"
 #include <cassert>
 #include <vector>
 #include <string>
@@ -144,59 +145,45 @@ void cli_opts_test7()
 // args give correct games/parser
 void cli_opts_test8()
 {
+    using namespace file_parser_test;
+
     cli_options opts =
         call_parse({EXEC_NAME, "[nogo_1xn] X..O X...O..X {B win}"});
     assert(opts.parser.get() != nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == false);
 
-    vector<game_case*> cases;
+    vector<csv_row*> rows;
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
+    add_row(rows, BLACK, WIN_TEXT,
+            {new nogo_1xn("X..O"), new nogo_1xn("X...O..X")},
+            COMMAND_TYPE_SOLVE_BW);
 
-        gc->to_play = BLACK;
-        gc->expected_value.set_win(true);
-        gc->games.push_back(new nogo_1xn("X..O"));
-        gc->games.push_back(new nogo_1xn("X...O..X"));
-    }
 
-    assert_file_parser_output(opts.parser.get(), cases);
-
-    for (game_case* gc : cases)
-    {
-        gc->cleanup_games();
-        delete gc;
-    }
+    assert_file_parser_output(opts.parser.get(), rows);
+    for (csv_row* row : rows)
+        delete row;
 }
 
 // --file gives correct file/parser
 void cli_opts_test9()
 {
+    using namespace file_parser_test;
+
     cli_options opts = call_parse(
         {EXEC_NAME, "--file", "test/input/file_parser/sumgames4.test"});
     assert(opts.parser.get() != nullptr);
     assert(opts.dry_run == false);
     assert(opts.should_exit == false);
 
-    vector<game_case*> cases;
+    vector<csv_row*> rows;
 
-    {
-        game_case* gc = new game_case();
-        cases.push_back(gc);
-        gc->to_play = BLACK;
-        gc->expected_value.set_win(false);
-        gc->games.push_back(new clobber_1xn("XOOX"));
-    }
+    add_row(rows, BLACK, LOSS_TEXT, {new clobber_1xn("XOOX")}, COMMAND_TYPE_SOLVE_BW);
 
-    assert_file_parser_output(opts.parser.get(), cases);
+    assert_file_parser_output(opts.parser.get(), rows);
 
-    for (game_case* gc : cases)
-    {
-        gc->cleanup_games();
-        delete gc;
-    }
+    for (csv_row* row : rows)
+        delete row;
 }
 
 // --test-timeout

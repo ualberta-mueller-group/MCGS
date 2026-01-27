@@ -7,8 +7,17 @@
 #include <memory>
 #include <string>
 #include <exception>
+#include <optional>
 
 #include "init_database.h"
+
+enum print_moves_action_enum
+{
+    PRINT_MOVES_ACTION_NONE = 0,
+    PRINT_MOVES_ACTION_WINNING,
+    PRINT_MOVES_ACTION_SUM,
+    PRINT_MOVES_ACTION_SUBGAME,
+};
 
 /*
     Variables resulting from command line options. "parser" may be nullptr
@@ -29,7 +38,7 @@ struct cli_options
 
     bool use_player;
 
-    bool print_winning_moves;
+    print_moves_action_enum print_moves_action;
 
     std::string test_directory;
     std::string outfile_name;        // CSV output file
@@ -41,6 +50,8 @@ struct cli_options
     init_database_enum init_database_type;
     std::string db_config_string;
 
+    std::optional<std::string> db_file_name_compare_1;
+    std::optional<std::string> db_file_name_compare_2;
 
     static constexpr const char* DEFAULT_RELATIVE_DB_FILE = "database.bin";
     static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";

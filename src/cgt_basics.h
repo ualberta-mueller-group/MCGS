@@ -9,6 +9,7 @@
 #include <cassert>
 #include <climits>
 #include <limits>
+#include <string>
 #include "throw_assert.h"
 
 
@@ -297,5 +298,9 @@ inline void assert_equal(int a, int b)
 {
     assert(a == b);
 }
+
+//---------------------------------------------------------------------------
+
+std::string player_name_bw_imp(ebw to_play);
 
 //---------------------------------------------------------------------------

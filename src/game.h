@@ -107,6 +107,9 @@ protected:
     void _mark_hash_updated() const;
 
 public:
+    /* A measure of how complicated this (sub-)game is */
+    virtual int complexity_score() const;
+    
     virtual move_generator* create_move_generator(bw to_play) const = 0;
 
     /*
@@ -119,7 +122,7 @@ public:
         Print a move in game-specific formatting.
         The default implementation prints the raw move = int.
     */
-    virtual void print_move(std::ostream& str, const move& m) const;
+    virtual void print_move(std::ostream& str, const move& m, ebw to_play) const;
 
     /*
         Return a new game representing the inverse of this game.
@@ -283,9 +286,12 @@ inline void game::_mark_hash_updated() const
     _hash_state = HASH_STATE_UP_TO_DATE;
 }
 
-inline void game::print_move(std::ostream& str, const move& m) const
+inline void game::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
-    str << m;
+    assert(is_empty_black_white(to_play));
+
+    const char c = is_black_white(to_play) ? color_to_player_char(to_play) : 'E';
+    str << m << '_' << c;
 }
 
 inline std::ostream& operator<<(std::ostream& out, const game& g)
@@ -350,6 +356,15 @@ public:
 std::ostream& operator<<(std::ostream& os, const split_result& split);
 
 void print_options(std::ostream& os, game* g, bool endline = true);
+
+template <class T>
+inline bool all_games_impartial(const T& container)
+{
+    for (const game* g : container)
+        if (!g->is_impartial())
+            return false;
+    return true;
+}
 
 //---------------------------------------------------------------------------
 

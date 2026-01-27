@@ -26,6 +26,7 @@ public:
 
     int size() const;
     int at(int p) const;
+    int complexity_score() const override;
 
     // is p on board, and of given color?
     bool checked_is_color(int p, int color) const;
@@ -87,6 +88,11 @@ inline int strip::at(int p) const
 {
     assert_range(p, 0, size());
     return _board[p];
+}
+
+inline int strip::complexity_score() const
+{
+    return size();
 }
 
 inline bool strip::checked_is_color(int p, int color) const

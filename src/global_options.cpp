@@ -124,7 +124,8 @@ INIT_GLOBAL_WITH_SUMMARY(use_db, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(clear_tt, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(count_sums, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(experiment_seed, uint64_t, 0);
-//INIT_GLOBAL_WITH_SUMMARY(alt_imp_search, bool, false);
+INIT_GLOBAL_WITH_SUMMARY(impartial_algorithm_mex, bool, false);
+INIT_GLOBAL_WITH_SUMMARY(use_complexity_score, bool, false);
 
 INIT_GLOBAL_WITH_SUMMARY(play_normalize, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(dedupe_movegen, bool, true);

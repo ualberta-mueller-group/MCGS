@@ -1,13 +1,16 @@
 /*
     Helper types/functions for parsing.
+
+Deprecated: struct run_command_t, function get_run_command(...),
+            function get_run_command_list(...)
 */
 #pragma once
 #include <string>
 #include <vector>
 #include <cstddef>
 #include "fraction.h"
-#include "game_case.h"
 #include "search_utils.h"
+#include "cgt_basics.h"
 
 struct run_command_t
 {

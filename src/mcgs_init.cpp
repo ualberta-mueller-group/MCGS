@@ -1,17 +1,20 @@
 #include "mcgs_init.h"
-#include "global_options.h"
-#include "init_grid_hash_mask.h"
-#include "throw_assert.h"
-#include <cassert>
-#include "cli_options.h"
 
-#include "init_serialization.h"
-#include "init_random.h"
-#include "init_hashing.h"
-#include "init_sumgame.h"
-#include "init_impartial_sumgame.h"
-#include "init_database.h"
+#include <cassert>
 #include "cgt_basics.h"
+#include "cli_options.h"
+#include "compare_databases.h"
+#include "global_options.h"
+#include "init_database.h"
+#include "init_grid_hash_mask.h"
+#include "init_hashing.h"
+#include "init_impartial_sumgame.h"
+#include "solver_stats.h"
+#include "init_lemoine_viennot.h"
+#include "init_random.h"
+#include "init_serialization.h"
+#include "init_sumgame.h"
+#include "throw_assert.h"
 #include "type_table.h"
 
 namespace {
@@ -42,8 +45,20 @@ void mcgs_init_2(const cli_options& opts)
     mcgs_init::init_serialization();
     mcgs_init::init_random();
     mcgs_init::init_hashing();
+    mcgs_init::init_solver_stats();
     mcgs_init::init_sumgame(global::tt_sumgame_idx_bits());
     mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits());
+    mcgs_init::init_lemoine_viennot_hashtable();
+
+    // Handle --db-file-compare
+    if (opts.db_file_name_compare_1.has_value() || opts.db_file_name_compare_2.has_value())
+    {
+        THROW_ASSERT(opts.db_file_name_compare_1.has_value() &&
+                     opts.db_file_name_compare_2.has_value());
+
+        compare_databases(opts.db_file_name_compare_1.value(),
+                          opts.db_file_name_compare_2.value());
+    }
 
     const init_database_enum init_type =
         global::use_db.get() ? opts.init_database_type : INIT_DATABASE_NONE;

@@ -1,4 +1,4 @@
-{version 1.4}
+{version 1.5}
 [switch_game]
     /*  These are proper switches  */
     (5 -6) /* -1,2 + (11,2 -11,2) ...  */

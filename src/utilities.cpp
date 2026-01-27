@@ -29,6 +29,24 @@ vector<string> split_string(const string& str)
     return strs;
 }
 
+string string_join(const vector<string>& strings, const string& delimiter)
+{
+    string result_string;
+
+    const size_t n_strings = strings.size();
+    for (size_t i = 0; i < n_strings; i++)
+    {
+        const string& element = strings[i];
+
+        result_string += element;
+
+        if (i + 1 < n_strings)
+            result_string += delimiter;
+    }
+
+    return result_string;
+}
+
 bool is_int(const string& str)
 {
     const size_t N = str.size();

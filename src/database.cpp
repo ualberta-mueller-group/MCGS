@@ -17,6 +17,8 @@
 #include <iostream>
 
 #include "database.h"
+#include "impartial_sumgame.h"
+#include "impartial_game.h"
 #include "sumgame.h"
 #include "iobuffer.h"
 #include "serializer.h"
@@ -26,6 +28,7 @@
 #include "clobber_1xn.h"
 #include "utilities.h"
 #include "version_info.h"
+#include "impartial_game_wrapper.h"
 
 using namespace std;
 
@@ -82,13 +85,13 @@ void database::update_metadata_string(const string& config_string)
     _metadata_string += "DB config string: \"" + config_string + "\"";
 }
 
-void database::set_partizan(const game& g, const db_entry_partizan& entry)
+void database::set_partisan(const game& g, const db_entry_partisan& entry)
 {
     const game_type_t gt = _mapper.translate_type(g.game_type());
     THROW_ASSERT(gt > 0);
 
     const hash_t hash = g.get_local_hash();
-    auto it = _tree_partizan[gt].emplace(hash, entry);
+    auto it = _tree_partisan[gt].emplace(hash, entry);
 
     THROW_ASSERT(it.second); // not already found
 }
@@ -104,17 +107,17 @@ void database::set_impartial(const game& g, const db_entry_impartial& entry)
     THROW_ASSERT(it.second); // not already found
 }
 
-std::optional<db_entry_partizan> database::get_partizan(const game& g) const
+std::optional<db_entry_partisan> database::get_partisan(const game& g) const
 {
     const game_type_t gt = _mapper.translate_type(g.game_type());
     if (gt == 0)
         return {};
 
-    auto it1 = _tree_partizan.find(gt);
-    if (it1 == _tree_partizan.end())
+    auto it1 = _tree_partisan.find(gt);
+    if (it1 == _tree_partisan.end())
         return {};
 
-    const terminal_layer_partizan_t& layer = it1->second;
+    const terminal_layer_partisan_t& layer = it1->second;
     const hash_t hash = g.get_local_hash();
     auto it2 = layer.find(hash);
 
@@ -149,7 +152,7 @@ void database::save(const std::string& filename) const
     obuffer os(filename);
 
     serializer<string>::save(os, _metadata_string);
-    serializer<tree_partizan_t>::save(os, _tree_partizan);
+    serializer<tree_partisan_t>::save(os, _tree_partisan);
     serializer<tree_impartial_t>::save(os, _tree_impartial);
     serializer<type_mapper>::save(os, _mapper);
 
@@ -158,13 +161,13 @@ void database::save(const std::string& filename) const
 
 void database::load(const std::string& filename)
 {
-    assert(_tree_partizan.empty());
+    assert(_tree_partisan.empty());
     assert(_tree_impartial.empty());
 
     ibuffer is(filename);
 
     _metadata_string = serializer<string>::load(is);
-    _tree_partizan = serializer<tree_partizan_t>::load(is);
+    _tree_partisan = serializer<tree_partisan_t>::load(is);
     _tree_impartial = serializer<tree_impartial_t>::load(is);
     _mapper = serializer<type_mapper>::load(is);
 
@@ -173,12 +176,26 @@ void database::load(const std::string& filename)
 
 void database::clear()
 {
-    _tree_partizan.clear();
+    _tree_partisan.clear();
     _tree_impartial.clear();
     _mapper.clear();
 }
 
-void database::generate_entries(i_db_game_generator& gen, bool silent)
+bool database::is_equal(const database& other) const
+{
+    if (_tree_partisan != other._tree_partisan)
+        return false;
+
+    if (_tree_impartial != other._tree_impartial)
+        return false;
+
+    if (_mapper != other._mapper)
+        return false;
+
+    return true;
+}
+
+void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
 {
     while (gen)
     {
@@ -192,7 +209,7 @@ void database::generate_entries(i_db_game_generator& gen, bool silent)
             for (game* sg : *sr)
             {
                 sg->normalize();
-                _generate_entry_single(sg, silent);
+                _generate_entry_single_partisan(sg, silent);
                 delete sg;
             }
 
@@ -201,13 +218,65 @@ void database::generate_entries(i_db_game_generator& gen, bool silent)
 
         // Normalize, handle g
         g->normalize();
-        _generate_entry_single(g.get(), silent);
+        _generate_entry_single_partisan(g.get(), silent);
     }
 }
 
-void database::_generate_entry_single(game* g, bool silent)
+void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
 {
-    if (get_partizan(*g).has_value())
+    while (gen)
+    {
+        /*
+           g can be partisan OR impartial. If partisan, we must wrap it
+           in an impartial_game_wrapper
+        */
+        std::unique_ptr<game> g(gen.gen_game());
+        ++gen;
+
+        assert(logical_iff(                                   //
+            g->is_impartial(),                                //
+            dynamic_cast<impartial_game*>(g.get()) != nullptr //
+            ));                                               //
+
+        if (!g->is_impartial())
+        {
+            game* g_temp = g.release();
+            g.reset(new impartial_game_wrapper(g_temp, true));
+            // g now holds the wrapper, which now owns the game originally in g
+        }
+
+        assert(dynamic_cast<impartial_game*>(g.get()) != nullptr);
+        impartial_game* ig = static_cast<impartial_game*>(g.get());
+
+        // If game splits, handle subgames
+        split_result sr = ig->split();
+        if (sr.has_value())
+        {
+            for (game* sg : *sr)
+            {
+                assert(sg->is_impartial() &&                        //
+                       dynamic_cast<impartial_game*>(sg) != nullptr //
+                );
+
+                impartial_game* sg_impartial = static_cast<impartial_game*>(sg);
+                sg_impartial->normalize();
+
+                _generate_entry_single_impartial(sg_impartial, silent);
+                delete sg;
+            }
+
+            continue;
+        }
+
+        // Normalize, handle ig
+        ig->normalize();
+        _generate_entry_single_impartial(ig, silent);
+    }
+}
+
+void database::_generate_entry_single_partisan(game* g, bool silent)
+{
+    if (get_partisan(*g).has_value())
         return;
 
     // bool print_game = true;
@@ -232,15 +301,49 @@ void database::_generate_entry_single(game* g, bool silent)
 
     outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
 
-    db_entry_partizan entry;
+    db_entry_partisan entry;
     entry.outcome = oc;
 
-    set_partizan(*g, entry);
+    set_partisan(*g, entry);
     assert(s.num_total_games() == 0);
 
     if (print_game)
         cout << " DONE" << endl;
 }
+
+void database::_generate_entry_single_impartial(impartial_game* ig, bool silent)
+{
+    if (get_impartial(*ig).has_value())
+        return;
+
+    // bool print_game = true;
+    bool print_game = !silent && ((_game_count % 128) == 0);
+
+    if (print_game)
+        cout << "Game # " << _game_count << ": " << *ig << std::flush;
+    _game_count++;
+
+    sumgame& s = _get_sumgame();
+    assert(s.num_total_games() == 0);
+
+    s.add(ig);
+
+    int nim_value = search_impartial_sumgame(s);
+    assert(nim_value >= 0);
+
+    s.pop(ig);
+
+    db_entry_impartial entry;
+    entry.nim_value = nim_value;
+
+    set_impartial(*ig, entry);
+    assert(s.num_total_games() == 0);
+
+    if (print_game)
+        cout << " DONE" << endl;
+}
+
+
 
 //////////////////////////////////////////////////
 std::ostream& operator<<(std::ostream& os, const database& db)
@@ -248,13 +351,14 @@ std::ostream& operator<<(std::ostream& os, const database& db)
     const unordered_map<game_type_t, string>& disk_type_to_name_map =
         db._mapper.get_disk_type_to_name_map();
 
-    os << "# of Partizan game types: " << db._tree_partizan.size() << '\n';
+    os << "# of Partisan game types: " << db._tree_partisan.size() << '\n';
+    os << "# of Impartial game types: " << db._tree_impartial.size() << '\n';
 
-    for (const pair<const game_type_t, database::terminal_layer_partizan_t>& p :
-         db._tree_partizan)
+    for (const pair<const game_type_t, database::terminal_layer_partisan_t>& p :
+         db._tree_partisan)
     {
         const game_type_t disk_type = p.first;
-        const database::terminal_layer_partizan_t& layer = p.second;
+        const database::terminal_layer_partisan_t& layer = p.second;
 
         auto it = disk_type_to_name_map.find(disk_type);
         THROW_ASSERT(it != disk_type_to_name_map.end());
@@ -264,6 +368,23 @@ std::ostream& operator<<(std::ostream& os, const database& db)
         os << "\tGame type: \"" << game_name << "\" ";
         os << "Count: " << layer.size() << '\n';
     }
+
+    for (const pair<const game_type_t, database::terminal_layer_impartial_t>& p :
+         db._tree_impartial)
+    {
+        const game_type_t disk_type = p.first;
+        const database::terminal_layer_impartial_t& layer = p.second;
+
+        auto it = disk_type_to_name_map.find(disk_type);
+        THROW_ASSERT(it != disk_type_to_name_map.end());
+
+        const string& game_name = it->second;
+
+        os << "\tGame type: \"" << game_name << "\" ";
+        os << "Count: " << layer.size() << '\n';
+    }
+
+
 
     os << "=== Database metadata string begin ===" << "\n";
     os << db._metadata_string << "\n";

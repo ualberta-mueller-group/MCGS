@@ -2,6 +2,7 @@
 <html>
     <head>
         <title>MCGS Test Output</title>
+        <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,8 +23,9 @@
 
             table {
                 table-layout: auto;
-                border-collapse: collapse;
                 width: 100vw;
+                border-spacing: 0;
+                border-collapse: collapse;
             }
 
             tr {
@@ -83,7 +85,6 @@
                 padding-bottom: 20px;
             }
 
-
             td.break-anywhere div {
                 overflow-wrap: anywhere;
             }
@@ -124,6 +125,11 @@
                 background-color: #afafaf;
             }
 
+            #outcome-filter-dropdown {
+                margin-top: 1.2em;
+                margin-bottom: 1.2em;
+            }
+
             div.sep {
                 background-color: red;
                 width: 15px;
@@ -157,6 +163,114 @@
                 visibility: hidden;
             }
 
+            #top-grid {
+                display: grid;
+                grid-template-columns: 3fr 1fr;
+                grid-auto-rows: auto;
+                padding-bottom: 10px;
+                width: 100vw;
+            }
+
+            .grid-left-top {
+                grid-column: 1;
+                grid-row: 1;
+            }
+
+            .grid-left-bottom {
+                grid-column: 1;
+                grid-row: 2;
+            }
+
+            .grid-right {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+            }
+
+            #vis-checkbox-div {
+                display: inline-block;
+            }
+
+            #vis-checkbox-list {
+                list-style: none;
+                display: inline-block;
+                overflow-y: scroll;
+                overflow-x: auto;
+                overscroll-behavior: contain;
+                max-height: 16em;
+                border-spacing: 3px 1px;
+            }
+
+            #vis-checkbox-list li {
+                display: table-row;
+            }
+
+            #vis-checkbox-list li * {
+                display: table-cell;
+            }
+
+            .hide-column {
+                display: none;
+            }
+
+            .games-cell {
+                min-width: 12em;
+            }
+
+            .input-div {
+                display: inline-block;
+            }
+
+            #sort-radio-div {
+                vertical-align: top;
+                display: inline-block;
+                margin-left: 3px;
+            }
+
+            #sort-radio-list {
+                list-style: none;
+                display: inline-block;
+                overflow-y: scroll;
+                overflow-x: auto;
+                overscroll-behavior: contain;
+                max-height: 16em;
+                border-spacing: 3px 1px;
+            }
+
+            #sort-radio-list li {
+                display: table-row;
+            }
+
+            #sort-radio-list li * {
+                display: table-cell;
+            }
+
+            .hide-radio {
+                display: none !important;
+            }
+
+            #aggregation-div {
+                padding-left: 1em;
+                list-style-type: disc;
+                margin: 0px 3px 5px 3px;
+            }
+
+            #aggregation-list li {
+                margin-bottom: 5px;
+                margin-left: 0.5em;
+                font-size: 110%;
+            }
+
+            .emoji-shadow {
+                text-shadow: 2px 2px 2px black;
+            }
+
+            .widget {
+                border-radius: 8px;
+                box-shadow: 1px 1px 3px black;
+                background-color: #cfcfcf;
+                border: 1px solid #8f8f8f;
+            }
+
         </style>
 
         <script>
@@ -167,54 +281,133 @@
 
     <body>
 
-        <!-- REPLACE WITH METADATA -->
+    <div id="top-grid">
+        <div class="grid-left-top">
+            <!-- REPLACE WITH METADATA -->
 
-    <p id="problem-summary"></p>
-    <!-- REPLACE WITH PYTHON WARNINGS -->
+            <p id="problem-summary"></p>
+            <!-- REPLACE WITH PYTHON WARNINGS -->
+        </div> <!-- .grid-left-top -->
 
-    <div class="select-div">
-        <label for="outcome-filter-dropdown">Show rows: </label>
-        <select name="outcome-filter" id="outcome-filter-dropdown">
-            <option value="all">All</option>
-            <option value="problem">Problems</option>
-            <option value="fail">Fails</option>
-            <option value="diverging-result">Diverging results</option>
-            <option value="timeout">Timeouts</option>
-            <option value="hash">Bad hashes</option>
-            <option value="duplicate">Duplicate Tests</option>
-            <option value="no-problem">No problems</option>
-        </select>
-    </div>
 
-    <div class="filter-text-div">
+        <div class="grid-left-bottom">
 
-        <label for="filter-text-input">Search: </label>
-        <textarea type="text" id="filter-text-input"></textarea>
+            <div class="input-div">
+                <label for="outcome-filter-dropdown">Show rows: </label>
+                <select name="outcome-filter" id="outcome-filter-dropdown">
+                    <option value="all">All</option>
+                    <option value="problem">Problems</option>
+                    <option value="fail">Fails</option>
+                    <option value="diverging-result">Diverging results</option>
+                    <option value="timeout">Timeouts</option>
+                    <option value="hash">Bad hashes</option>
+                    <option value="duplicate">Duplicate Tests</option>
+                    <option value="no-problem">No problems</option>
+                </select>
+            </div>
 
-        <div class="sep"></div>
+            <br>
 
-        <label for="filter-text-exclude">Exclude</label>
-        <input type="checkbox" id="filter-text-exclude">
+            <div class="input-div">
+                <label for="filter-text-input">Search: </label>
+                <textarea type="text" id="filter-text-input"></textarea>
+            </div>
 
-        <div class="sep"></div>
+            <div class="sep"></div>
 
-        <label for="filter-text-regex">Regex</label>
-        <input type="checkbox" id="filter-text-regex">
+            <div class="input-div">
+                <label for="filter-text-exclude">Exclude</label>
+                <input type="checkbox" id="filter-text-exclude">
+            </div>
 
-        <div class="sep"></div>
+            <div class="sep"></div>
 
-        <label for="filter-text-column-select">Search column: </label>
-        <select id="filter-text-column-select">
-            <!-- REPLACE WITH COLUMN OPTIONS -->
-        </select>
+            <div class="input-div">
+                <label for="filter-text-regex">Regex</label>
+                <input type="checkbox" id="filter-text-regex">
+            </div>
 
-        <div class="sep"></div>
+            <div class="sep"></div>
 
-        <label for="sort-by-time-checkbox">Sort by time</label>
-        <input type="checkbox" id="sort-by-time-checkbox">
+            <div class="input-div">
+                <label for="filter-text-column-select">Search column: </label>
+                <select id="filter-text-column-select">
+                    <!-- REPLACE WITH COLUMN OPTIONS -->
+                </select>
+            </div>
 
-    </div>
+            <div class="sep"></div>
 
+            <div class="input-div hide-radio" id="regressions-first-div">
+                <label for="regressions-first-checkbox">Regressions first: </label>
+                <input type="checkbox" id="regressions-first-checkbox">
+            </div>
+
+        </div> <!-- .grid-left-bottom -->
+
+        <div class="grid-right">
+            <div id="vis-checkbox-div" class="widget">
+                <p>Column visibility:</p>
+                <ul id="vis-checkbox-list">
+                    <!-- REPLACE WITH VIS CHECKBOXES -->
+                </ul>
+            </div> <!-- #vis-checkbox-div -->
+
+            <div id="sort-radio-div" class="widget">
+                <p>Sort by:</p>
+                <ul id="sort-radio-list">
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="none" id="sort-radio-none" checked>
+                    </input>
+                    <label for="sort-radio-none">None</label>
+                    </li>
+
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="time" id="sort-radio-time">
+                    </input>
+                    <label for="sort-radio-time">Time (ms)</label>
+                    </li>
+
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="node-count" id="sort-radio-node-count">
+                    </input>
+                    <label for="sort-radio-node-count">Node Count</label>
+                    </li>
+
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="time-speedup" id="sort-radio-time-speedup">
+                    </input>
+                    <label for="sort-radio-time-speedup">Time speedup</label>
+                    </li>
+
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="time-slowdown" id="sort-radio-time-slowdown">
+                    </input>
+                    <label for="sort-radio-time-slowdown">Time slowdown</label>
+                    </li>
+
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="node-count-speedup" id="sort-radio-node-count-speedup">
+                    </input>
+                    <label for="sort-radio-node-count-speedup">Node count reduction</label>
+                    </li>
+
+                    <li class="hide-radio">
+                    <input type="radio" name="sort-radio-value" value="node-count-slowdown" id="sort-radio-node-count-slowdown">
+                    </input>
+                    <label for="sort-radio-node-count-slowdown">Node count increase</label>
+                    </li>
+
+                </ul>
+            </div> <!-- #sort-radio-div -->
+
+        </div> <!-- .grid-right -->
+
+    </div> <!-- #top-grid -->
+    <div id="aggregation-div" class="widget">
+        <ul id="aggregation-list">
+        </ul>
+    </div> <!-- aggregation-div -->
         <!-- REPLACE WITH TABLE -->
 
     </body>

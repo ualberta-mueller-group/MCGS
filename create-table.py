@@ -256,7 +256,33 @@ The output_row passed to the first function in the pipeline only contains
 
 # Default values for a cell contained by a row
 def new_default_cell(text):
-    return {"css_classes": ["cell"], "text": text}
+    return {"css_classes": ["cell"], "text": text, "data": {}}
+
+
+def add_data_to_cell(cell, data_key, data_val):
+    assert type(cell) is dict
+    assert type(data_key) is str
+
+    cell_data = cell["data"]
+    assert data_key not in cell_data
+    cell_data[data_key] = data_val
+
+
+def annotate_output_row_data(output_row):
+    output_row["games"]["css_classes"].append("games-cell")
+
+    add_data_to_cell(output_row["time"], "num", output_row["time"]["text"])
+
+    add_data_to_cell(output_row["node_count"], "num",
+                     output_row["node_count"]["text"])
+
+    if "old_time" in output_row:
+        add_data_to_cell(output_row["old_time"],
+                         "num", output_row["old_time"]["text"])
+
+    if "old_node_count" in output_row:
+        add_data_to_cell(output_row["old_node_count"],
+                         "num", output_row["old_node_count"]["text"])
 
 
 # Populate output row when comparison_file is absent
@@ -266,6 +292,8 @@ def row_populate_single_mode(input_rows, output_row):
     # Just copy the fields (assumes aliases are the same for input and output)
     for alias in output_field_dict:
         output_row[alias] = new_default_cell(input_row[alias])
+
+    annotate_output_row_data(output_row)
 
 
 # Add some CSS classes
@@ -293,10 +321,33 @@ def row_populate_double_mode(input_rows, output_row):
     comparison_row = input_rows[1] if len(input_rows) >= 2 else None
 
     # Populate simple fields
-    simple_fields = ["file", "case", "games", "player", "expected_result", "result", "time", "status", "comments", "node_count", "unique_sum_count", "hash"]
+    simple_fields = [
+        "file",
+        "case",
+        "games",
+        "player",
+        "expected_result",
+        "result",
+        "time",
+        "status",
+        "comments",
+        "command_type",
+        "node_count",
+        "unique_node_count",
+        "hash",
+        "tt_hits",
+        "tt_misses",
+        "tt_hit_rate",
+        "db_hits",
+        "db_misses",
+        "db_hit_rate",
+        "max_depth",
+        "initial_subgames",
+        "max_subgames",
+    ]
+
     for alias in simple_fields:
         output_row[alias] = new_default_cell(input_row[alias])
-
 
     # Populate and style comparison fields
 
@@ -323,23 +374,44 @@ def row_populate_double_mode(input_rows, output_row):
     old_node_count_text = comparison_row["node_count"] if (comparison_row is not None) else "N/A"
     output_row["old_node_count"] = new_default_cell(old_node_count_text)
 
-    # old_unique_sum_count
-    old_unique_sum_count_text = comparison_row["unique_sum_count"] if (comparison_row is not None) else "N/A"
-    output_row["old_unique_sum_count"] = new_default_cell(old_unique_sum_count_text )
+    # old_unique_node_count
+    old_unique_node_count_text = comparison_row["unique_node_count"] if (comparison_row is not None) else "N/A"
+    output_row["old_unique_node_count"] = new_default_cell(old_unique_node_count_text )
 
     # faster
     faster_by_string = "N/A"
     faster_css = None
+    faster_frac = "NaN"
     if comparison_row is not None:
-        if input_row["status"] == "TIMEOUT" or comparison_row["status"] == "TIMEOUT":
-            faster_by_string = "???"
-        else:
-            num1 = float(input_row["time"])
-            num2 = float(comparison_row["time"])
-            faster_by_string, faster_css = get_faster(num1, num2)
+        num1 = float(input_row["time"])
+        num2 = float(comparison_row["time"])
+        faster_by_string, faster_css, faster_frac = get_faster(num1, num2, False)
+
+        #if input_row["status"] == "TIMEOUT" or comparison_row["status"] == "TIMEOUT":
+        #    faster_by_string = "???"
+        #    faster_css = None
     output_row["faster"] = new_default_cell(faster_by_string)
     if faster_css is not None:
         output_row["faster"]["css_classes"].append(faster_css)
+    add_data_to_cell(output_row["faster"], "num", faster_frac)
+
+    # node_faster
+    node_faster_string = "N/A"
+    node_faster_css = None
+    node_faster_frac = "NaN"
+    if comparison_row is not None:
+        num1 = float(input_row["node_count"])
+        num2 = float(comparison_row["node_count"])
+        node_faster_string, node_faster_css, node_faster_frac = get_faster(
+            num1, num2, True)
+
+        #if input_row["status"] == "TIMEOUT" or comparison_row["status"] == "TIMEOUT":
+        #    node_faster_string = "???"
+        #    node_faster_css = None
+    output_row["node_faster"] = new_default_cell(node_faster_string)
+    if node_faster_css is not None:
+        output_row["node_faster"]["css_classes"].append(node_faster_css)
+    add_data_to_cell(output_row["node_faster"], "num", node_faster_frac)
 
     # regression
     regression = "N/A"
@@ -351,12 +423,16 @@ def row_populate_double_mode(input_rows, output_row):
     if regression_css is not None:
         output_row["regression"]["css_classes"].append(regression_css)
     if regression_css_row is not None:
-        output_row["css_classes"].append(regression_css_row)
+        output_row["css_classes"] = regression_css_row
+
+    annotate_output_row_data(output_row)
 
 
-def get_faster(new_time, old_time):
-    new_time = max(0.0001, new_time)
-    old_time = max(0.0001, old_time)
+# epsilon either 0.0001 or 1
+def get_faster(new_time, old_time, as_node_count):
+    epsilon_time = 1 if as_node_count else 0.0001
+    new_time = max(epsilon_time, new_time)
+    old_time = max(epsilon_time, old_time)
 
     time_max = max(new_time, old_time)
     time_min = min(new_time, old_time)
@@ -365,7 +441,11 @@ def get_faster(new_time, old_time):
     assert frac >= 1.0
 
     text = "{:.2f}x ".format(frac)
-    text += "AS FAST" if new_time < old_time else "AS SLOW"
+    better = new_time < old_time
+    if as_node_count:
+        text += "AS FEW" if better else "AS MANY"
+    else:
+        text += "AS FAST" if better else "AS SLOW"
 
     css = None
 
@@ -373,7 +453,7 @@ def get_faster(new_time, old_time):
     if frac >= (1.0 + time_threshold_frac) and abs(diff) >= time_threshold_abs:
         css = "cell-slower" if diff > 0 else "cell-faster"
 
-    return text, css
+    return text, css, str(frac if better else -frac)
 
 
 def get_regression(input_row, comparison_row):
@@ -479,8 +559,24 @@ add_input_col("result", "Result")
 add_input_col("time", "Time (ms)")
 add_input_col("status", "Status")
 add_input_col("comments", "Comments")
+
+add_input_col("command_type", "Type")
+
+add_input_col("tt_hits", "TT Hits")
+add_input_col("tt_misses", "TT Misses")
+add_input_col("tt_hit_rate", "TT Hit Rate")
+
+add_input_col("db_hits", "DB Hits")
+add_input_col("db_misses", "DB Misses")
+add_input_col("db_hit_rate", "DB Hit Rate")
+
 add_input_col("node_count", "Node Count")
-add_input_col("unique_sum_count", "Unique Sum Count")
+add_input_col("unique_node_count", "Unique Node Count")
+add_input_col("max_depth", "Max Depth")
+
+add_input_col("initial_subgames", "Initial Subgames")
+add_input_col("max_subgames", "Max Subgames")
+
 add_input_col("hash", "Input hash")
 
 # The order of these output columns defines the output order
@@ -488,12 +584,27 @@ if comparison_file_name is None:
     add_output_col("file", "File")
     add_output_col("case", "Case")
     add_output_col("games", "Games")
+    add_output_col("command_type", "Type")
     add_output_col("player", "Player")
     add_output_col("expected_result", "Expected Result")
     add_output_col("result", "Result")
     add_output_col("time", "Time (ms)")
+
+    add_output_col("tt_hits", "TT Hits")
+    add_output_col("tt_misses", "TT Misses")
+    add_output_col("tt_hit_rate", "TT Hit Rate")
+
+    add_output_col("db_hits", "DB Hits")
+    add_output_col("db_misses", "DB Misses")
+    add_output_col("db_hit_rate", "DB Hit Rate")
+
     add_output_col("node_count", "Node Count")
-    add_output_col("unique_sum_count", "Unique Sum Count")
+    add_output_col("unique_node_count", "Unique Node Count")
+    add_output_col("max_depth", "Max Depth")
+
+    add_output_col("initial_subgames", "Initial Subgames")
+    add_output_col("max_subgames", "Max Subgames")
+
     add_output_col("status", "Status")
     add_output_col("comments", "Comments")
 
@@ -505,20 +616,41 @@ else:
     add_output_col("file", "File")
     add_output_col("case", "Case")
     add_output_col("games", "Games")
+    add_output_col("command_type", "Type")
     add_output_col("player", "Player")
     add_output_col("expected_result", "Expected Result")
+
     add_output_col("result", "Result")
-    add_output_col("time", "Time (ms)")
-    add_output_col("node_count", "Node Count")
-    add_output_col("unique_sum_count", "Unique Sum Count")
-    add_output_col("faster", "Time Improvement") #
-    add_output_col("old_time", "Old Time (ms)")
-    add_output_col("old_node_count", "Old Node Count")
-    add_output_col("old_unique_sum_count", "Old Unique Sum Count")
-    add_output_col("status", "Status")
-    add_output_col("regression", "Regression") #
-    add_output_col("old_status", "Old Status")
     add_output_col("old_result", "Old Result")
+
+    add_output_col("time", "Time (ms)")
+    add_output_col("old_time", "Old Time (ms)")
+    add_output_col("faster", "Time Improvement") #
+
+    add_output_col("tt_hits", "TT Hits")
+    add_output_col("tt_misses", "TT Misses")
+    add_output_col("tt_hit_rate", "TT Hit Rate")
+
+    add_output_col("db_hits", "DB Hits")
+    add_output_col("db_misses", "DB Misses")
+    add_output_col("db_hit_rate", "DB Hit Rate")
+
+    add_output_col("node_count", "Node Count")
+    add_output_col("old_node_count", "Old Node Count")
+    add_output_col("node_faster", "Node Count Improvement") #
+
+    add_output_col("unique_node_count", "Unique Node Count")
+    add_output_col("old_unique_node_count", "Old Unique Node Count")
+
+    add_output_col("max_depth", "Max Depth")
+
+    add_output_col("initial_subgames", "Initial Subgames")
+    add_output_col("max_subgames", "Max Subgames")
+
+    add_output_col("status", "Status")
+    add_output_col("old_status", "Old Status")
+
+    add_output_col("regression", "Regression") #
     add_output_col("comments", "Comments")
     add_output_col("hash", "Input hash")
 
@@ -526,14 +658,11 @@ else:
     add_row_function(row_style)
 
 
-time_column_index = -1
 
+column_indices = {}
 for i, alias in enumerate(output_field_dict):
-    if alias == "time":
-        time_column_index = i
-        break
+    column_indices[alias] = i
 
-assert time_column_index != -1
 
 
 ######################################## process rows
@@ -625,27 +754,32 @@ infile.seek(0)
 reader = csv.DictReader(infile)
 assert_correct_reader_fields(reader)
 
+table_lines = []
 
 # Start HTML table string
-table_string = "<table id=\"data-table\">\n"
+table_lines.append("<table id=\"data-table\">\n")
 
 # Column names header
-table_string += "<tr class=\"row-header\">\n"
+table_lines.append("<tr class=\"row-header\">\n")
 for field in output_field_list:
-    table_string += f"<th>{field}</th>\n"
-table_string += "</tr>\n"
+    games_cell = field == "Games"
+    games_cell = " class=\"games-cell\" " if games_cell else ""
+    table_lines.append(f"<th{games_cell}>{field}</th>\n")
+table_lines.append("</tr>\n")
 
 # Column index row (hidden by default)
-table_string += "<tr class=\"row-header\" id=\"col-indices\">\n"
+table_lines.append("<tr class=\"row-header\" id=\"col-indices\">\n")
 for i in range(len(output_field_list)):
-    table_string += f"<th class=\"th-index\">(COL{i})</th>\n"
-table_string += "</tr>\n"
+    table_lines.append(f"<th class=\"th-index\">(COL{i})</th>\n")
+table_lines.append("</tr>\n")
 
 
 # Read each input row, making an output row
 total_test_count = 0
 input_file_key_sequence = []
 
+
+row_strings = []
 for reader_row in reader:
     input_row = reader_row_to_input_row(reader_row)
     total_test_count += 1
@@ -686,15 +820,30 @@ for reader_row in reader:
             continue
         cell = output_row[alias]
         cell_class_string = " ".join(cell["css_classes"])
+
+        cell_data = cell["data"]
+        cell_data_list = []
+        for k, v in cell_data.items():
+            assert type(k) is str
+            v = str(v)
+            cell_data_list.append(f"data-{k}=\"{v}\"")
+
+        cell_data_string = ""
+        if len(cell_data_list) > 0:
+            cell_data_string = " " + " ".join(cell_data_list) + " "
+
         col_title = output_field_dict[alias]
-        row_text += f"<td title=\"{col_title}\" class=\"{cell_class_string}\"><div>"
+        row_text += f"<td title=\"{col_title}\" class=\"{cell_class_string}\""
+        row_text += cell_data_string
+        row_text += "><div>"
         row_text += cell["text"]
         row_text += "</div></td>\n"
     row_text += "</tr>\n"
 
-    table_string += row_text
+    table_lines.append(row_text)
 
-table_string += "</table>\n"
+table_lines.append("</table>\n")
+table_string = "".join(table_lines)
 infile.close()
 
 # Check for diverging tests or test order
@@ -778,16 +927,83 @@ html_template_file.close()
 
 script_file = open(src_dir + "/table-template.js", "r")
 script_string = ""
-script_string += f"const pyvar_timeColumnIndex = {time_column_index};"
+
+script_string += "const pyvar_columnIndices = {\n"
+for k in column_indices:
+    script_string += f"\t{k}: {column_indices[k]},\n"
+script_string += "};\n\n"
+
+
 script_string += script_file.read()
 script_file.close()
+
+# Visibility checkboxes
+vis_checkbox_default_disabled = set()
+
+
+def vis_default_hide(cols1, cols2):
+    assert type(cols1) is list
+    assert type(cols2) is list
+
+    for field in cols1:
+        if field not in output_field_dict:
+            return
+
+    for field in cols2:
+        vis_checkbox_default_disabled.add(field)
+
+
+vis_checkbox_default_disabled.add("file")
+vis_checkbox_default_disabled.add("case")
+vis_checkbox_default_disabled.add("expected_result")
+vis_checkbox_default_disabled.add("unique_node_count")
+vis_checkbox_default_disabled.add("old_status")
+vis_checkbox_default_disabled.add("old_result")
+vis_checkbox_default_disabled.add("old_unique_node_count")
+vis_checkbox_default_disabled.add("hash")
+
+vis_checkbox_default_disabled.add("tt_hits")
+vis_checkbox_default_disabled.add("tt_misses")
+vis_checkbox_default_disabled.add("tt_hit_rate")
+vis_checkbox_default_disabled.add("db_hits")
+vis_checkbox_default_disabled.add("db_misses")
+vis_checkbox_default_disabled.add("db_hit_rate")
+vis_checkbox_default_disabled.add("max_depth")
+vis_checkbox_default_disabled.add("initial_subgames")
+vis_checkbox_default_disabled.add("max_subgames")
+
+
+vis_default_hide(["regression"], ["status"])
+
+vis_checkbox_list = []
+for i, k in enumerate(output_field_dict):
+    output_field = output_field_dict[k]
+    vis_checkbox_list.append("<li>\n")
+
+    checked = k not in vis_checkbox_default_disabled
+    checked = "checked" if checked else ""
+
+    input_element = f"<input type=\"checkbox\" id=\"vis{i}-checkbox\" "
+    input_element += f"name=\"vis{i}-value\" data-col={i} {checked} "
+    input_element += "class=\"vis-checkbox\"/>\n"
+
+    vis_checkbox_list.append(input_element)
+
+    label_element = f"<label for=\"vis{i}-checkbox\">"
+    label_element += output_field + "</label>"
+    vis_checkbox_list.append(label_element)
+
+    vis_checkbox_list.append("</li>\n")
+vis_checkbox_list = "".join(vis_checkbox_list)
 
 # Replace the smaller things first (order of these affects performance)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH PYTHON WARNINGS -->", warning_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH METADATA -->", metadata_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH COLUMN OPTIONS -->", column_options_string)
+html_template_string = html_template_string.replace("<!-- REPLACE WITH VIS CHECKBOXES -->", vis_checkbox_list)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH SCRIPT -->", script_string)
 html_template_string = html_template_string.replace("<!-- REPLACE WITH TABLE -->", table_string)
+
 
 outfile = open(outfile_name, "w")
 outfile.write(html_template_string)

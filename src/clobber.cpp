@@ -418,8 +418,9 @@ void clobber::print(ostream& str) const
     str << "clobber:" << board_as_string();
 }
 
-void clobber::print_move(std::ostream& str, const ::move& m) const
+void clobber::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
+    assert(is_black_white(to_play));
     // (from, to)
     print_move4_as_coords(str, m, shape());
 }

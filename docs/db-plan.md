@@ -32,7 +32,7 @@ Things to prioritize in the design of our databases.
         - `game_type_t` mapping, seeds, etc
     - Some way to validate DB data after generation
 5. DB entry flexibility
-    - Partizan games will have outcome classes, but impartial games will have
+    - Partisan games will have outcome classes, but impartial games will have
         nim values
     - Some games may use different hashing schemes
 6. Modularity
@@ -278,7 +278,7 @@ shared_ptr<i_serializer> get_serializer<T>();
 
 - TODO: handling impartial wrapper games is a bit janky and unclear...
     - What should the template parameters for these functions/types be?
-    - `<Some_Game_Class, partizan_or_impartial_enum = GAME_PARTIZAN>` (??)
+    - `<Some_Game_Class, partisan_or_impartial_enum = GAME_PARTISAN>` (??)
 
 ### DB data serialization
 TODO: expand this after enumerating data structures, or write this in data

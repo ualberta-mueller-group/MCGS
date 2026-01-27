@@ -189,3 +189,14 @@ move_generator* kayles::create_move_generator() const
 {
     return new kayles_move_generator(*this);
 }
+
+void kayles::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_empty_black_white(to_play));
+
+    int take, smaller, larger;
+    _decode(m, take, smaller, larger);
+
+    str << take << '-' << smaller << '-' << larger;
+}
+

@@ -1,4 +1,4 @@
-{version 1.4}
+{version 1.5}
 /* This is a comment */
 
 /*_ This file is valid input to MCGS, and describes the input syntax. You can
@@ -22,37 +22,6 @@ There are 5 types of 'things' that appear in input:
         Creating an impartial version of an already impartial game has no
         effect. i.e.
         '[impartial kayles]' is effectively the same as '[kayles]'
- 
-    Commands
-        Enclosed by '{' and '}', commands are used to solve sums of games for 
-        one or more players, optionally defining an expected result
-        (win/loss/nim value). Commands are also used to specify what version of
-        the input language is used by a file. The version command must be
-        present in files, but can be omitted from input read from stdin or
-        passed as a command line argument to MCGS. The current version is 1.3.
-            i.e.
-            Version command:
-                {version 1.4}
-
-            Solve the current game sum for black, without expecting a particular
-            result:
-                {B}
-            Solve the current game sum for black, and then white, expecting
-            white to win.
-                {B, W win}
-            Solve the current game sum for white, then black, expecting
-            white to lose and black to win.
-                {W loss, B win}
-            Solve the current game, getting its nim value. Only legal if sum
-            contains no partizan games.
-                {N}
-            Same as above, but expect nim value of 5.
-                {N 5}
-            You can mix N with B and W, so long as N is legal:
-            {B win, N 2, W win}
-
-            'Solve' commands can solve a game sum up to 3 times, i.e.
-            {B, W, B, N} is illegal
 
     Bracketed games
         Enclosed by '(' and ')', text inside a bracketed game defines a single
@@ -66,7 +35,7 @@ There are 5 types of 'things' that appear in input:
             (1 2)
 
     Unbracketed games
-        Whitespace-separated text not matched by the aforementioned cases
+        Whitespace-separated text not matched by any other cases
         defines a single game within the current section. The type of game
         depends on the section.
 
@@ -75,6 +44,104 @@ There are 5 types of 'things' that appear in input:
             XO.X XO
         define one game, '5':
             5
+ 
+    Commands
+        A command block is enclosed by '{' and '}', and may contain 0 or more
+        comma-separated commands. Commands operate on the sum of games
+        preceding the command block. There are currently 4 types of commands:
+
+            Version command:
+                {version 1.5}
+            A special command which must be present at the very start of a file,
+            but may be omited from input read from stdin or passed as a
+            command line argument to MCGS. The current version is 1.5.
+
+            Partisan solve command:
+                {<Player> <Expected result>}
+            <Player> is either 'B' or 'W' (BLACK/WHITE).
+            <Expected result> is either 'win' or 'loss', or is omitted.
+            Solves the sum of preceding games using partisan search algorithms.
+
+            Impartial solve command:
+                {N <Expected nim value>}
+            <Expected nim value> is a non-negative integer, or is omitted.
+            Finds the nim value of the sum of preceding games (which must
+            contain only impartial games), using impartial search algorithms.
+
+            Winning moves command:
+                {winning moves <Player> <Expected moves>}
+            <Player> is one of 'B', 'W', or 'N' (BLACK/WHITE/IMPARTIAL).
+                In the case of 'B' or 'W', partisan search algorithms are used,
+                but in the case of 'N', impartial search algorithms are used
+                (and the sum of preceding games must contain only impartial
+                games).
+            <Expected moves> may be omitted, 'None' (indicating an expected
+                result of no winning moves), or a space-separated list of moves
+                whose representation is game-specific. A 0-indexed subgame
+                index must prefix each move IFF the preceding sum has at least
+                two subgames (i.e, '0:MOVE_TEXT_HERE', '3:MOVE_TEXT_HERE', etc).
+                Moves may be given in any order, and either with or without
+                duplicate moves.
+                NOTE: when <Expected moves> is present, the displayed result
+                is a diff between the generated and expected moves. This may
+                read 'OK', or label unexpected but generated moves as 'Extra',
+                and expected but not generated moves as 'Missing'.
+
+            Examples follow:
+
+            Solve the current game sum for black, without expecting a particular
+            result:
+                {B}
+
+            Solve the current game sum for black, and then white, expecting
+            white to win.
+                {B, W win}
+
+            Solve the current game sum for white, then black, expecting
+            white to lose and black to win.
+                {W loss, B win}
+
+            Solve the current game, getting its nim value. Only legal if sum
+            contains no partisan games.
+                {N}
+
+            Same as above, but expect nim value of 5.
+                {N 5}
+
+            Multiple commands:
+                {B win, N 2, W win}
+
+            Find winning moves for black, with no expected result:
+                {winning moves B}
+
+            Find winning moves for white, expecting white to have no winning
+            moves:
+                {winning moves W None}
+
+            Find winning moves for black, expecting only the moves '1-2' and
+            '2-3', on a sum having only 1 subgame:
+                {winning moves B 1-2 2-3}
+
+            Equivalent to previous example (different order + duplicate are
+            both ok):
+                {winning moves B 2-3 1-2 1-2}
+
+            Find winning moves for black, expecting only the specified moves,
+            on a sum having 2 or more subgames:
+                {winning moves B 0:1-2 0:2-3 1:4-5}
+
+            For a sum of only 1 impartial subgame, find winning moves for black
+            (expecting only '1-2'), then do the same with no player color
+            (IMPARTIAL):
+                {winning moves B 1-2, winning moves N 1-2}
+            Note: the 1st command uses partisan search, and the 2nd command
+            uses impartial search.
+
+
+            As of MCGS v1.5, a command block may have 0 or more commands (with
+            no practical upper limit, except for those imposed by C++ integer
+            sizes and your hardware).
+
 
 
     The following example solves a sum of
@@ -209,22 +276,21 @@ XOXOO...XO
 
         [impartial <GAME_NAME>]
             An impartial version of a game with name <GAME_NAME>. Accepts same
-            input as partizan version.
+            input as partisan version.
 */
 
 /*_
         More on syntax:
 
-    Comments by default belong to all '(sum, player)' pairs solved by the next
-    'solve' command. These will be included in output from
-    MCGS's testing framework.
+    Comments by default belong to all commands in the next command block. These
+    will be included in output from MCGS's testing framework.
 
     If a comment starts with '_', it will not be included in output.
 
-    If a comment starts with '#0', '#1', or '#2', it will only be included in 
-    output for the 1st, 2nd, or 3rd '(sum, player)' pair corresponding to the
-    next 'solve' command.
-
+    If a comment starts with '#0', '#1', '#2', etc, it will only be included in 
+    output for the corresponding 0-indexed command in the next command block.
+    If the number does not correspond to any such command, an exception is
+    thrown.
 
     Enclosing symbols i.e. '[', ']', '(', ')', etc must have at least one
     whitespace character before (or after) them. The following is illegal:

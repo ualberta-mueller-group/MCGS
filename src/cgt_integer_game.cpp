@@ -2,6 +2,7 @@
 // Simple combinatorial games - integers
 //---------------------------------------------------------------------------
 #include "cgt_integer_game.h"
+#include "cgt_basics.h"
 #include "cgt_move.h"
 #include <cassert>
 #include <ostream>
@@ -120,3 +121,10 @@ move_generator* integer_game::create_move_generator(bw to_play) const
 {
     return new integer_move_generator(*this, to_play);
 }
+
+void integer_game::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_black_white(to_play));
+    str << "INT";
+}
+

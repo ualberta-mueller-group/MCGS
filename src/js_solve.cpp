@@ -1,11 +1,16 @@
 #include "js_solve.h"
 
+#include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
+#include "csv_row.h"
 #include "emscripten.h" // IWYU pragma: keep
 #include "file_parser.h"
-#include "search_utils.h"
+#include "test_case.h"
+#include "game.h"
+#include "utilities.h"
 
 using namespace std;
 
@@ -13,35 +18,43 @@ using namespace std;
 js_struct js_solve(const std::string& game_string)
 {
     file_parser* fp = file_parser::from_string(game_string);
-    game_case gc;
 
     stringstream stream;
 
     bool first = true;
+    int global_test_case_count = 0;
 
-    int n_cases = 0;
-
-    while (fp->parse_chunk(gc))
+    while (fp->parse_chunk())
     {
-        n_cases++;
-        if (!first)
-            stream << '\n';
+        const int n_test_cases = fp->n_test_cases();
 
-        for (game* g : gc.games)
-            stream << *g << '\n';
+        for (int test_case_idx = 0; test_case_idx < n_test_cases; test_case_idx++)
+        {
+            global_test_case_count++;
+            if (!first)
+                stream << '\n';
 
-        search_result result = gc.run();
+            std::shared_ptr<i_test_case> test_case = fp->get_test_case(test_case_idx);
+            const std::vector<game*>& games = test_case->get_games();
 
-        stream << "Player: " << result.player_str() << '\n';
-        stream << "Result: " << result.value_str() << '\n';
+            for (game* g : games)
+                stream << *g << '\n';
 
-        first = false;
-        gc.cleanup_games();
+            test_case->run(0);
+            //search_result result = gc.run();
+
+            const csv_row& row = test_case->get_csv_row();
+
+            stream << "Player: " << print_optional(row.player, CSV_MISSING_TEXT) << '\n';
+            stream << "Result: " << print_optional(row.result, CSV_MISSING_TEXT) << '\n';
+
+            first = false;
+        }
     }
 
     delete fp;
 
-    return {stream.str(), n_cases};
+    return {stream.str(), global_test_case_count};
 
     //return stream.str();
 }
