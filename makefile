@@ -157,9 +157,6 @@ LIB_SRC := $(wildcard $(addsuffix *.cpp,$(LIB_PATHS)) $(addsuffix *.c,$(LIB_PATH
 LIB_SRC := $(filter-out %main.cpp,$(LIB_SRC))
 LIB_SRC_H := $(wildcard $(addsuffix *.h,$(LIB_PATHS)))
 
-echo_stuff:
-	@echo $(LIB_SRC) | sed 's/ /\n/g'
-
 ##### Target: MCGS
 MCGS_SRC = $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/main/*.cpp) $(LIB_SRC)
 MCGS_SRC_H = $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/main/*.h) $(LIB_SRC_H)
