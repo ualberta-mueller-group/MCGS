@@ -2,6 +2,14 @@ CC = c++
 LAB_COMPAT ?= 0
 
 
+# Library paths
+LIB_DIR_BASE := libs/cgt_lib
+LIB_NAMES := cgt cgtbounds coupon sg therm
+LIB_PATHS := $(addprefix $(LIB_DIR_BASE)/,$(LIB_NAMES))
+LIB_PATHS := $(addsuffix /,$(LIB_PATHS))
+
+LIB_INC := $(addprefix -I,$(LIB_PATHS))
+
 
 EMCC_COMPILE_FLAGS :=
 EMCC_LINK_FLAGS :=
@@ -126,7 +134,7 @@ TEST_BUILD_DIR = build/test
 # using -j <N_JOBS> with --output-sync makes programs think they're not outputting
 # to a terminal, so they don't print color...
 COLOR_FLAGS := -fdiagnostics-color=always
-INC = -I. -I$(SRC_DIR)
+INC = -I. -I$(SRC_DIR) $(LIB_INC)
 
 NORMAL_FLAGS := $(NORMAL_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
 TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
@@ -143,15 +151,25 @@ $(addsuffix $(3), \
 FN_USE_ALL_DEBUG_FLAGS = $(filter-out $(DEBUG_FLAGS_ALL),$(1)) $(DEBUG_FLAGS_ALL)
 FN_TIDY_DEBUG_FLAGS = $(filter-out -D_GLIBCXX_DEBUG,$(call FN_USE_ALL_DEBUG_FLAGS,$(1)))
 
+
+##### Libraries
+LIB_SRC := $(wildcard $(addsuffix *.cpp,$(LIB_PATHS)) $(addsuffix *.c,$(LIB_PATHS)))
+LIB_SRC := $(filter-out %main.cpp,$(LIB_SRC))
+LIB_SRC_H := $(wildcard $(addsuffix *.h,$(LIB_PATHS)))
+
+echo_stuff:
+	@echo $(LIB_SRC) | sed 's/ /\n/g'
+
 ##### Target: MCGS
-MCGS_SRC = $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/main/*.cpp)
-MCGS_SRC_H = $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/main/*.h)
+MCGS_SRC = $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/main/*.cpp) $(LIB_SRC)
+MCGS_SRC_H = $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/main/*.h) $(LIB_SRC_H)
 MCGS_OBJS := $(call FN_OUTPATH,$(MCGS_SRC),$(RELEASE_BUILD_DIR),.o)
 MCGS_DEPS := $(call FN_OUTPATH,$(MCGS_SRC),$(RELEASE_BUILD_DIR),.d)
 
+
 ##### Target: MCGS_test
-MCGS_TEST_SRC = $(wildcard $(SRC_DIR)/*.cpp $(TEST_DIR)/*.cpp)
-MCGS_TEST_SRC_H = $(wildcard $(SRC_DIR)/*.h $(TEST_DIR)/*.h)
+MCGS_TEST_SRC = $(wildcard $(SRC_DIR)/*.cpp $(TEST_DIR)/*.cpp) $(LIB_SRC)
+MCGS_TEST_SRC_H = $(wildcard $(SRC_DIR)/*.h $(TEST_DIR)/*.h) $(LIB_SRC_H)
 MCGS_TEST_OBJS := $(call FN_OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.o)
 MCGS_TEST_DEPS := $(call FN_OUTPATH,$(MCGS_TEST_SRC),$(TEST_BUILD_DIR),.d)
 
@@ -269,6 +287,11 @@ test_extra: MCGS_test
 $(BUILD_DIR)/%.o: %.cpp
 	-mkdir -p $(dir $@)
 	$(CC) $(USE_FLAGS) -x c++ -MMD -MP -c $< -o $@ $(EMCC_COMPILE_FLAGS)
+
+$(BUILD_DIR)/%.o: %.c
+	-mkdir -p $(dir $@)
+	$(CC) $(USE_FLAGS) -x c++ -MMD -MP -c $< -o $@ $(EMCC_COMPILE_FLAGS)
+
 
 
 -include $(DEPS)
