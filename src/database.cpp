@@ -23,6 +23,7 @@
 #include "cgt_basics.h"
 #include "db_make_thermograph.h"
 #include "game.h"
+#include "hashing.h"
 #include "impartial_sumgame.h"
 #include "impartial_game.h"
 #include "sumgame.h"
@@ -96,7 +97,22 @@ void database::set_partisan(const game& g, const db_entry_partisan& entry)
     const game_type_t gt = _mapper.translate_type(g.game_type());
     THROW_ASSERT(gt > 0);
 
-    const hash_t hash = g.get_local_hash();
+    const hash_t hash = _get_db_hash(g);
+    auto it = _tree_partisan[gt].emplace(hash, entry);
+
+    THROW_ASSERT(it.second); // not already found
+}
+
+void database::set_partisan(const sumgame& sum, const db_entry_partisan& entry)
+{
+    const optional<game_type_t> sum_type_opt = _get_sum_game_type(sum);
+    THROW_ASSERT(sum_type_opt.has_value()); // no storing empty sums
+    game_type_t sum_type = *sum_type_opt;
+
+    const game_type_t gt = _mapper.translate_type(sum_type);
+    THROW_ASSERT(gt > 0);
+
+    const hash_t hash = _get_db_hash(sum);
     auto it = _tree_partisan[gt].emplace(hash, entry);
 
     THROW_ASSERT(it.second); // not already found
@@ -124,7 +140,32 @@ std::optional<db_entry_partisan> database::get_partisan(const game& g) const
         return {};
 
     const terminal_layer_partisan_t& layer = it1->second;
-    const hash_t hash = g.get_local_hash();
+    const hash_t hash = _get_db_hash(g);
+    auto it2 = layer.find(hash);
+
+    if (it2 == layer.end())
+        return {};
+
+    return it2->second;
+}
+
+std::optional<db_entry_partisan> database::get_partisan(const sumgame& sum) const
+{
+    const optional<game_type_t> sum_type_opt = _get_sum_game_type(sum);
+    if (!sum_type_opt.has_value())
+        return {};
+    const game_type_t sum_type = *sum_type_opt;
+
+    const game_type_t gt = _mapper.translate_type(sum_type);
+    if (gt == 0)
+        return {};
+
+    auto it1 = _tree_partisan.find(gt);
+    if (it1 == _tree_partisan.end())
+        return {};
+
+    const terminal_layer_partisan_t& layer = it1->second;
+    const hash_t hash = _get_db_hash(sum);
     auto it2 = layer.find(hash);
 
     if (it2 == layer.end())
@@ -203,8 +244,12 @@ bool database::is_equal(const database& other) const
 
 void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
 {
+    sumgame& sum = _get_sumgame();
+    assert(sum.num_total_games() == 0);
+
     while (gen)
     {
+        assert(sum.num_total_games() == 0);
         std::unique_ptr<game> g(gen.gen_game());
         ++gen;
 
@@ -214,17 +259,31 @@ void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
         {
             for (game* sg : *sr)
             {
+                assert(sum.num_total_games() == 0);
                 sg->normalize();
-                _generate_entry_single_partisan(sg, silent);
-                delete sg;
+
+                sum.add(sg);
+                _generate_entry_single_partisan(sum, silent);
+                sum.pop(sg);
             }
+
+            assert(sum.num_total_games() == 0);
+            sum.add(*sr);
+            _generate_entry_single_partisan(sum, silent);
+            sum.pop(*sr);
+
+            for (game* sg : *sr)
+                delete sg;
 
             continue;
         }
 
         // Normalize, handle g
+        assert(sum.num_total_games() == 0);
         g->normalize();
-        _generate_entry_single_partisan(g.get(), silent);
+        sum.add(g.get());
+        _generate_entry_single_partisan(sum, silent);
+        sum.pop(g.get());
     }
 }
 
@@ -280,35 +339,34 @@ void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
     }
 }
 
-void database::_generate_entry_single_partisan(game* g, bool silent)
+void database::_generate_entry_single_partisan(sumgame& sum, bool silent)
 {
-    if (get_partisan(*g).has_value())
+    if (get_partisan(sum).has_value())
         return;
 
     // bool print_game = true;
     bool print_game = !silent && ((_game_count % 128) == 0);
 
     if (print_game)
-        cout << "Game # " << _game_count << ": " << *g << std::flush;
+    {
+        //cout << "Game # " << _game_count << ": " << *g << std::flush;
+
+        cout << "Game # " << _game_count << ": ";
+        _db_print_sum(cout, sum);
+        cout << std::flush;
+    }
     _game_count++;
 
-    sumgame& s = _get_sumgame();
-    assert(s.num_total_games() == 0);
+    sum.set_to_play(BLACK);
+    bool black_wins = sum.solve();
 
-    s.add(g);
-
-    s.set_to_play(BLACK);
-    bool black_wins = s.solve();
-
-    s.set_to_play(WHITE);
-    bool white_wins = s.solve();
+    sum.set_to_play(WHITE);
+    bool white_wins = sum.solve();
 
     outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
 #ifdef MCGS_USE_THERM
     unique_ptr<ThGraph> thermograph(db_make_thermograph(*this, s));
 #endif
-
-    s.pop(g);
 
     db_entry_partisan entry;
     entry.outcome = oc;
@@ -316,8 +374,7 @@ void database::_generate_entry_single_partisan(game* g, bool silent)
     entry.thermograph = *thermograph;
 #endif
 
-    set_partisan(*g, entry);
-    assert(s.num_total_games() == 0);
+    set_partisan(sum, entry);
 
     if (print_game)
         cout << " DONE" << endl;
@@ -355,6 +412,60 @@ void database::_generate_entry_single_impartial(impartial_game* ig, bool silent)
     if (print_game)
         cout << " DONE" << endl;
 }
+
+hash_t database::_get_db_hash(const game& g) const
+{
+    global_hash& gh = _get_global_hash();
+    return gh.get_global_hash_value(&g, EMPTY);
+}
+
+hash_t database::_get_db_hash(const sumgame& sum) const
+{
+    return sum.get_global_hash_for_player(EMPTY);
+}
+
+std::optional<game_type_t> database::_get_sum_game_type(const sumgame& sum)
+{
+    std::optional<game_type_t> sum_type;
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        const game* sg = sum.subgame_const(i);
+        if (!sg->is_active())
+            continue;
+
+        const game_type_t sg_type = sg->game_type();
+
+        // No mixed type sums for now...
+        THROW_ASSERT(
+            LOGICAL_IMPLIES(sum_type.has_value(), *sum_type == sg_type));
+
+        sum_type = sg_type;
+    }
+
+    return sum_type;
+}
+
+void database::_db_print_sum(std::ostream& os, const sumgame& sum)
+{
+    bool not_first_game = false;
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        const game* sg = sum.subgame_const(i);
+        if (!sg->is_active())
+            continue;
+
+        if (not_first_game)
+            os << " + ";
+        not_first_game = true;
+
+        os << *sg;
+    }
+}
+
 
 //////////////////////////////////////////////////
 std::ostream& operator<<(std::ostream& os, const database& db)

@@ -144,6 +144,7 @@ public:
     void print(std::ostream& str) const;
 
     hash_t get_global_hash(bool invalidate_game_hashes = false) const;
+    hash_t get_global_hash_for_player(ebw for_player, bool invalidate_game_hashes = false) const;
 
     // TODO this function is strange, as alternating_move_game could have a
     // game...

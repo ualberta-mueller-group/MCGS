@@ -13,6 +13,7 @@
 #include <optional>
 
 #include "cgt_basics.h"
+#include "hashing.h"
 #include "type_table.h"
 #include "game.h"
 #include "serializer.h"
@@ -127,9 +128,13 @@ public:
     void update_metadata_string(const std::string& config_string);
 
     void set_partisan(const game& g, const db_entry_partisan& entry);
+    void set_partisan(const sumgame& sum, const db_entry_partisan& entry);
+
     void set_impartial(const game& g, const db_entry_impartial& entry);
 
     std::optional<db_entry_partisan> get_partisan(const game& g) const;
+    std::optional<db_entry_partisan> get_partisan(const sumgame& sum) const;
+
     std::optional<db_entry_impartial> get_impartial(const game& g) const;
 
     void register_type(const std::string& type_name, game_type_t runtime_type);
@@ -158,11 +163,20 @@ private:
     typedef DB_MAP_T<game_type_t, terminal_layer_impartial_t> tree_impartial_t;
 
     std::unique_ptr<sumgame> _sum; // sumgame for solving games
+    mutable std::unique_ptr<global_hash> _global_hash;
     uint64_t _game_count;          // count incremented by generate_entries()
 
     sumgame& _get_sumgame();
-    void _generate_entry_single_partisan(game* g, bool silent);
+    global_hash& _get_global_hash() const;
+
+    void _generate_entry_single_partisan(sumgame& sum, bool silent);
     void _generate_entry_single_impartial(impartial_game* ig, bool silent);
+
+    hash_t _get_db_hash(const game& g) const;
+    hash_t _get_db_hash(const sumgame& sum) const;
+
+    static std::optional<game_type_t> _get_sum_game_type(const sumgame& sum);
+    static void _db_print_sum(std::ostream& os, const sumgame& sum);
 
     std::string _metadata_string;
     tree_partisan_t _tree_partisan;
@@ -190,3 +204,12 @@ inline sumgame& database::_get_sumgame()
 
     return *_sum;
 }
+
+inline global_hash& database::_get_global_hash() const
+{
+    if (_global_hash.get() == nullptr)
+        _global_hash.reset(new global_hash());
+
+    return *_global_hash;
+}
+
