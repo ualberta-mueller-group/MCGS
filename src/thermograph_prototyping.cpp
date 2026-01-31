@@ -52,6 +52,11 @@ ThGraph* make_graph(game& g)
 
     ThGraph* graph = ThGraph::MakeGraphFromOptions(graphs);
 
+    for (ThGraph* subgraph : graphs_b)
+        delete subgraph;
+    for (ThGraph* subgraph : graphs_w)
+        delete subgraph;
+
     graph->Check();
     return graph;
 }
