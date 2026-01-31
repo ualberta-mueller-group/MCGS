@@ -4,6 +4,7 @@
 #include "ThGraph.h"
 #include "ThScaffold.h"
 #include "cgt_basics.h"
+#include "cgt_switch.h"
 #include "domineering.h"
 
 #include <iostream>
@@ -59,6 +60,9 @@ void print_thermograph(ThGraph* th)
 {
     assert(th != nullptr);
 
+    cout << "MEAN: " << th->MastValue() << " ";
+    cout << "TEMP: " << th->Temperature() << " ";
+
     const ThScaffold* sc_b = th->Sc(SG_BLACK);
     const ThScaffold* sc_w = th->Sc(SG_WHITE);
     assert(sc_b != nullptr);
@@ -98,7 +102,8 @@ void print_thermograph(ThGraph* th)
 //////////////////////////////////////////////////
 void thermograph_prototyping()
 {
-    domineering g("...|...");
+    switch_game g(2, fraction(-1, 2));
+    assert_restore_game arg(g);
 
     ThGraph* graph = make_graph(g);
     print_thermograph(graph);
