@@ -29,19 +29,13 @@ inline ttable_therm& get_tt()
     if (tt_opt.has_value()) [[likely]]
         return *tt_opt;
 
-    tt_opt.emplace(15, 0);
+    tt_opt.emplace(2, 0);
     return *tt_opt;
 }
 
-hash_t get_sum_hash(sumgame& sum)
+inline hash_t get_sum_hash(const sumgame& sum)
 {
-    const bw restore_player = sum.to_play();
-
-    sum.set_to_play(BLACK);
-    const hash_t hash = sum.get_global_hash();
-    sum.set_to_play(restore_player);
-
-    return hash;
+    return sum.get_global_hash_for_player(EMPTY);
 }
 
 optional<ThGraph*> load_from_local_cache(sumgame& sum)
@@ -72,40 +66,9 @@ void store_to_local_cache(sumgame& sum, const ThGraph* graph)
     entry.thermograph = *graph;
 }
 
-optional<game*> get_only_active_subgame(const sumgame& sum)
-{
-    game* single_game = nullptr;
-
-    const int n_games = sum.num_total_games();
-    for (int i = 0; i < n_games; i++)
-    {
-        game* g = sum.subgame(i);
-        if (!g->is_active())
-            continue;
-
-        if (single_game != nullptr)
-            return {};
-
-        single_game = g;
-    }
-
-    if (single_game == nullptr)
-        return {};
-
-    return single_game;
-}
-
 optional<ThGraph*> load_from_db(database& db, const sumgame& sum)
 {
-    const optional<game*> g_opt = get_only_active_subgame(sum);
-
-    if (!g_opt.has_value())
-        return {};
-
-    const game* g_ptr = g_opt.value();
-    assert(g_ptr != nullptr);
-
-    optional<db_entry_partisan> entry = db.get_partisan(*g_ptr);
+    optional<db_entry_partisan> entry = db.get_partisan(sum);
 
     if (entry.has_value())
         return new ThGraph(entry->thermograph);

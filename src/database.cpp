@@ -365,7 +365,7 @@ void database::_generate_entry_single_partisan(sumgame& sum, bool silent)
 
     outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
 #ifdef MCGS_USE_THERM
-    unique_ptr<ThGraph> thermograph(db_make_thermograph(*this, s));
+    unique_ptr<ThGraph> thermograph(db_make_thermograph(*this, sum));
 #endif
 
     db_entry_partisan entry;
