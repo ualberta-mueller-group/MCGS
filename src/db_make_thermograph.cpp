@@ -1,3 +1,38 @@
+/*
+    TODO: remove local cache, add some assert to check for DB lookups which
+    should succeed
+
+Pseudo code for DB gen:
+    max_depth = 0
+
+    function generate_main(GGEN):
+        for G in GGEN:
+            generate_single(g, 0)
+
+    function generate_single(G, depth):
+        SR = G.split()
+
+        if (SR):
+            for SG in SR:
+                SG.normalize()
+                make_entry(SG, depth)
+
+            SUM = sum(SG)
+            make_entry(SUM, depth)
+        else:
+            G.normalize()
+            make_entry(G, depth)
+
+    function make_entry(G, depth):
+        max_depth = max(max_depth, depth)
+
+        // First check prerequisites
+        for C in G.children_black_or_white():
+            if !has_entry(C):
+                generate_single(C, depth + 1)
+
+        <COMPUTE DATA>
+*/
 #include "db_make_thermograph.h"
 #include "SgBlackWhite.h"
 #include "ThGraph.h"
