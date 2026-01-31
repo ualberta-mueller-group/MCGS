@@ -77,7 +77,7 @@ void thermograph_prototyping()
     if (!global::use_db())
         return;
 
-#ifdef DO_THERMOGRAPH_CHECK
+#if defined(DO_THERMOGRAPH_CHECK) && defined(MCGS_USE_THERM)
     database& db = get_global_database();
 
     grid_generator gg({1, 6}, {EMPTY, BLACK, WHITE}, true);
@@ -86,6 +86,24 @@ void thermograph_prototyping()
     {
         clobber_1xn g(gg.gen_board());
         ++gg;
+
+        split_result sr = g.split();
+        if (sr.has_value())
+        {
+            for (game* sg : *sr)
+                delete sg;
+
+            continue;
+        }
+
+        {
+            const hash_t pre_hash = g.get_local_hash();
+            g.normalize();
+            const hash_t post_hash = g.get_local_hash();
+            if (pre_hash != post_hash)
+                continue;
+        }
+
 
         cout << g << " ... " << flush;
 
@@ -110,7 +128,7 @@ void thermograph_prototyping()
     }
 #else
     cout << "Not checking DB entry thermographs: "
-            "DO_THERMOGRAPH_CHECK not defined..."
+            "DO_THERMOGRAPH_CHECK or MCGS_USE_THERM not defined..."
          << endl;
 
 #endif

@@ -136,8 +136,14 @@ TEST_BUILD_DIR = build/test
 COLOR_FLAGS := -fdiagnostics-color=always
 INC = -I. -I$(SRC_DIR) $(LIB_INC)
 
+
 NORMAL_FLAGS := $(NORMAL_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
 TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
+
+ifneq (,$(filter $(USE_THERM),1 true))
+	NORMAL_FLAGS := $(NORMAL_FLAGS) -DMCGS_USE_THERM
+	TEST_FLAGS := $(TEST_FLAGS) -DMCGS_USE_THERM
+endif
 
 # args: files, directory prefix, file extension
 FN_OUTPATH = \

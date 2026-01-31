@@ -36,13 +36,18 @@ struct db_entry_partisan
     bool operator!=(const db_entry_partisan& other) const;
 
     outcome_class outcome;
-    //ThGraph thermograph;
+#ifdef MCGS_USE_THERM
+    ThGraph thermograph;
+#endif
 };
 
 inline bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 {
-    //return (outcome == other.outcome) && (thermograph == other.thermograph);
+#ifdef MCGS_USE_THERM
+    return (outcome == other.outcome) && (thermograph == other.thermograph);
+#else
     return (outcome == other.outcome);
+#endif
 }
 
 inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
@@ -57,14 +62,18 @@ struct serializer<db_entry_partisan>
     inline static void save(obuffer& os, const db_entry_partisan& entry)
     {
         os.write_u8(entry.outcome);
-        //serializer<ThGraph>::save(os, entry.thermograph);
+#ifdef MCGS_USE_THERM
+        serializer<ThGraph>::save(os, entry.thermograph);
+#endif
     }
 
     inline static db_entry_partisan load(ibuffer& is)
     {
         db_entry_partisan entry;
         entry.outcome = static_cast<outcome_class>(is.read_u8());
-        //entry.thermograph = serializer<ThGraph>::load(is);
+#ifdef MCGS_USE_THERM
+        entry.thermograph = serializer<ThGraph>::load(is);
+#endif
         return entry;
     }
 };

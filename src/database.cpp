@@ -21,6 +21,7 @@
 #include "SgBlackWhite.h"
 #include "ThGraph.h"
 #include "cgt_basics.h"
+#include "db_make_thermograph.h"
 #include "game.h"
 #include "impartial_sumgame.h"
 #include "impartial_game.h"
@@ -302,12 +303,18 @@ void database::_generate_entry_single_partisan(game* g, bool silent)
     s.set_to_play(WHITE);
     bool white_wins = s.solve();
 
-    s.pop(g);
-
     outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
+#ifdef MCGS_USE_THERM
+    unique_ptr<ThGraph> thermograph(db_make_thermograph(*this, s));
+#endif
+
+    s.pop(g);
 
     db_entry_partisan entry;
     entry.outcome = oc;
+#ifdef MCGS_USE_THERM
+    entry.thermograph = *thermograph;
+#endif
 
     set_partisan(*g, entry);
     assert(s.num_total_games() == 0);
@@ -340,6 +347,7 @@ void database::_generate_entry_single_impartial(impartial_game* ig, bool silent)
 
     db_entry_impartial entry;
     entry.nim_value = nim_value;
+
 
     set_impartial(*ig, entry);
     assert(s.num_total_games() == 0);
