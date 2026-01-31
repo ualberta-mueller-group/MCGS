@@ -20,6 +20,7 @@
 #include "gen_experiments.h"
 //#include "winning_moves.h"
 #include "basic_player.h"
+#include "thermograph_prototyping.h"
 #include "utils_for_main.h"
 
 using std::cout, std::endl, std::flush, std::string;
@@ -36,6 +37,8 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
+
+    thermograph_prototyping();
 
     if (opts.use_player)
     {

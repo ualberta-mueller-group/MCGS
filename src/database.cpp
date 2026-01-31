@@ -6,6 +6,7 @@
     probably just the generic integer serializer template? It is very easy
     to write unsafe code with this...
 */
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <ctime>
@@ -17,6 +18,10 @@
 #include <iostream>
 
 #include "database.h"
+#include "SgBlackWhite.h"
+#include "ThGraph.h"
+#include "cgt_basics.h"
+#include "game.h"
 #include "impartial_sumgame.h"
 #include "impartial_game.h"
 #include "sumgame.h"
@@ -342,8 +347,6 @@ void database::_generate_entry_single_impartial(impartial_game* ig, bool silent)
     if (print_game)
         cout << " DONE" << endl;
 }
-
-
 
 //////////////////////////////////////////////////
 std::ostream& operator<<(std::ostream& os, const database& db)

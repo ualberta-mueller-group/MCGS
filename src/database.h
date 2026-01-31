@@ -22,6 +22,9 @@
 #include "type_mapper.h"
 #include "impartial_game.h"
 
+#include "ThGraph.h"
+#include "serializer_lib_therm.h"
+
 #define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
     db.register_type(#game_class_name, game_type<game_class_name>())
 
@@ -33,11 +36,13 @@ struct db_entry_partisan
     bool operator!=(const db_entry_partisan& other) const;
 
     outcome_class outcome;
+    //ThGraph thermograph;
 };
 
 inline bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 {
-    return outcome == other.outcome;
+    //return (outcome == other.outcome) && (thermograph == other.thermograph);
+    return (outcome == other.outcome);
 }
 
 inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
@@ -52,12 +57,14 @@ struct serializer<db_entry_partisan>
     inline static void save(obuffer& os, const db_entry_partisan& entry)
     {
         os.write_u8(entry.outcome);
+        //serializer<ThGraph>::save(os, entry.thermograph);
     }
 
     inline static db_entry_partisan load(ibuffer& is)
     {
         db_entry_partisan entry;
         entry.outcome = static_cast<outcome_class>(is.read_u8());
+        //entry.thermograph = serializer<ThGraph>::load(is);
         return entry;
     }
 };
