@@ -145,7 +145,10 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
     }
 
     if (!dry_run)
+    {
+        cout << "Max generation depth: " << db.get_max_generation_depth() << endl;
         db.update_metadata_string(db_config_string);
+    }
 }
 
 init_database_enum resolve_auto_init_type(const string& filename)

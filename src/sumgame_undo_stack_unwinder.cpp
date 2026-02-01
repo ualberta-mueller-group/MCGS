@@ -49,6 +49,13 @@ sumgame::undo_stack_unwinder::~undo_stack_unwinder()
                 continue;
             }
 
+            case SUMGAME_UNDO_SPLIT_AND_NORMALIZE:
+            {
+                assert(false); // Should only be used by DB?
+                _sum.undo_split_and_normalize();
+                continue;
+            }
+
             case SUMGAME_UNDO_PRE_SOLVE_PASS:
             {
                 assert(false);

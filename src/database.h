@@ -145,10 +145,30 @@ public:
     void clear();
     bool empty() const;
 
+    unsigned int get_max_generation_depth() const;
+
     bool is_equal(const database& other) const;
 
     // silent=true silences printing to stdout
-    void generate_entries_partisan(i_db_game_generator& gen, bool silent = false);
+
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+public:
+    void generate_entries_partisan(i_db_game_generator& gen,
+                                   bool silent = false);
+private:
+    void _generate_entry_single_partisan(sumgame& sum, unsigned int depth,
+                                         bool silent);
+
+    void _generate_entry_single_partisan_impl(sumgame& sum, unsigned int depth,
+                                              bool silent);
+
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+
+public:
     void generate_entries_impartial(i_db_game_generator& gen, bool silent = false);
 
 private:
@@ -169,7 +189,6 @@ private:
     sumgame& _get_sumgame();
     global_hash& _get_global_hash() const;
 
-    void _generate_entry_single_partisan(sumgame& sum, bool silent);
     void _generate_entry_single_impartial(impartial_game* ig, bool silent);
 
     hash_t _get_db_hash(const game& g) const;
@@ -181,6 +200,8 @@ private:
     std::string _metadata_string;
     tree_partisan_t _tree_partisan;
     tree_impartial_t _tree_impartial;
+
+    unsigned int _max_generation_depth;
 
     type_mapper _mapper;
 };
@@ -196,6 +217,13 @@ inline bool database::empty() const
 {
     return _tree_partisan.empty() && _tree_impartial.empty();
 }
+
+
+inline unsigned int database::get_max_generation_depth() const
+{
+    return _max_generation_depth;
+}
+
 
 inline sumgame& database::_get_sumgame()
 {

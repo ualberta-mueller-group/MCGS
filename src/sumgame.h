@@ -45,6 +45,7 @@ enum sumgame_undo_code
     SUMGAME_UNDO_SIMPLIFY_DB,
     SUMGAME_UNDO_SIMPLIFY_IMPARTIAL,
     SUMGAME_UNDO_PRE_SOLVE_PASS,
+    SUMGAME_UNDO_SPLIT_AND_NORMALIZE,
 };
 
 //////////////////////////////////////// sumgame_move
@@ -160,6 +161,9 @@ public:
 
     // Called by derived classes of i_test_case, in their _run_impl() methods
     static void clear_ttable();
+
+    void split_and_normalize(); // for DB
+    void undo_split_and_normalize(); // for DB
 
 private:
     class undo_stack_unwinder;

@@ -1082,6 +1082,67 @@ void sumgame::init_sumgame(size_t index_bits)
     _tt.reset(new ttable_sumgame(index_bits, 1));
 }
 
+void sumgame::split_and_normalize()
+{
+    _push_undo_code(SUMGAME_UNDO_SPLIT_AND_NORMALIZE);
+    _change_record_stack.emplace_back();
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    const int n_games = num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        game* g = subgame(i);
+        if (!g->is_active())
+            continue;
+
+        split_result sr = g->split();
+
+        if (sr)
+        {
+            g->set_active(false);
+            cr.deactivated_games.push_back(g);
+
+            for (game* sg : *sr)
+            {
+                sg->normalize();
+                cr.added_games.push_back(sg);
+            }
+        }
+        else
+            g->normalize();
+    }
+
+    add(cr.added_games);
+}
+
+void sumgame::undo_split_and_normalize()
+{
+    _pop_undo_code(SUMGAME_UNDO_SPLIT_AND_NORMALIZE);
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    pop(cr.added_games);
+    for (game* sg : cr.added_games)
+        delete sg;
+    cr.added_games.clear();
+
+    const int n_games = num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        game* g = subgame(i);
+        if (g->is_active())
+            g->undo_normalize();
+    }
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+    cr.deactivated_games.clear();
+
+    _change_record_stack.pop_back();
+}
+
 sumgame_move_generator* sumgame::create_sum_move_generator(bw to_play) const
 {
     return new sumgame_move_generator(*this, to_play);

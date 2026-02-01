@@ -69,7 +69,7 @@ string get_time_string()
 } // namespace
 
 ////////////////////////////////////////////////// database methods
-database::database() : _sum(nullptr), _game_count(0)
+database::database() : _sum(nullptr), _game_count(0), _max_generation_depth(0)
 {
 }
 
@@ -242,50 +242,178 @@ bool database::is_equal(const database& other) const
     return true;
 }
 
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
 void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
 {
-    sumgame& sum = _get_sumgame();
-    assert(sum.num_total_games() == 0);
+    sumgame sum(BLACK);
 
     while (gen)
     {
-        assert(sum.num_total_games() == 0);
-        std::unique_ptr<game> g(gen.gen_game());
+        unique_ptr<game> g(gen.gen_game());
         ++gen;
 
-        // If game splits, handle subgames
-        split_result sr = g->split();
-        if (sr.has_value())
+        assert(sum.is_empty());
+        sum.add(g.get());
+
         {
-            for (game* sg : *sr)
-            {
-                assert(sum.num_total_games() == 0);
-                sg->normalize();
-
-                sum.add(sg);
-                _generate_entry_single_partisan(sum, silent);
-                sum.pop(sg);
-            }
-
-            assert(sum.num_total_games() == 0);
-            sum.add(*sr);
-            _generate_entry_single_partisan(sum, silent);
-            sum.pop(*sr);
-
-            for (game* sg : *sr)
-                delete sg;
-
-            continue;
+            assert_restore_sumgame ars(sum);
+            _generate_entry_single_partisan(sum, 0, silent);
         }
 
-        // Normalize, handle g
-        assert(sum.num_total_games() == 0);
-        g->normalize();
-        sum.add(g.get());
-        _generate_entry_single_partisan(sum, silent);
         sum.pop(g.get());
     }
 }
+
+void database::_generate_entry_single_partisan(sumgame& sum, unsigned int depth,
+                                               bool silent)
+{
+    assert_restore_sumgame ars(sum);
+
+    /*
+        TODO granularity of this could be improved?
+    */
+    const hash_t hash_pre_sn = sum.get_global_hash_for_player(EMPTY);
+    sum.split_and_normalize();
+    const hash_t hash_post_sn = sum.get_global_hash_for_player(EMPTY);
+
+    if (hash_pre_sn != hash_post_sn || sum.num_active_games() > 1)
+    {
+        sumgame sum2(BLACK); // for single subgames
+
+        // Handle subgames
+        const int n_games = sum.num_total_games();
+        for (int i = 0; i < n_games; i++)
+        {
+            game* sg = sum.subgame(i);
+            if (!sg->is_active())
+                continue;
+
+            assert(sum2.is_empty());
+            sum2.add(sg);
+            _generate_entry_single_partisan_impl(sum2, depth, silent);
+            sum2.pop(sg);
+        }
+    }
+
+    _generate_entry_single_partisan_impl(sum, depth, silent);
+
+    sum.undo_split_and_normalize();
+}
+
+void database::_generate_entry_single_partisan_impl(sumgame& sum,
+                                                    unsigned int depth,
+                                                    bool silent)
+{
+    _max_generation_depth = max(_max_generation_depth, depth);
+
+    if (sum.is_empty() || get_partisan(sum).has_value())
+        return;
+
+    const bw restore_player = sum.to_play();
+
+    auto visit_children_for_player = [this, &sum, &depth, &silent](bw player) -> void
+    {
+        const bw restore_player = sum.to_play();
+
+        assert(is_black_white(player));
+        sum.set_to_play(player);
+        unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(player));
+
+        while (*gen)
+        {
+            const sumgame_move sm = gen->gen_sum_move();
+            ++(*gen);
+
+            assert(sum.to_play() == player);
+            sum.play_sum(sm, player);
+
+            _generate_entry_single_partisan(sum, depth + 1, silent);
+
+            sum.undo_move();
+            assert(sum.to_play() == player);
+        }
+
+        sum.set_to_play(restore_player);
+    };
+
+    visit_children_for_player(BLACK);
+    visit_children_for_player(WHITE);
+
+    bool print_game = !silent && ((_game_count % 128) == 0);
+
+    if (print_game)
+    {
+        cout << "Game # " << _game_count << ": ";
+        _db_print_sum(cout, sum);
+        cout << std::flush;
+    }
+    _game_count++;
+
+    sum.set_to_play(BLACK);
+    bool black_wins = sum.solve();
+
+    sum.set_to_play(WHITE);
+    bool white_wins = sum.solve();
+
+    outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
+
+    db_entry_partisan entry;
+    entry.outcome = oc;
+
+    set_partisan(sum, entry);
+
+    sum.set_to_play(restore_player);
+
+    if (print_game)
+        cout << " DONE" << endl;
+}
+
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+
+//    if (get_partisan(sum).has_value())
+//        return;
+//
+//    // bool print_game = true;
+//    bool print_game = !silent && ((_game_count % 128) == 0);
+//
+//    if (print_game)
+//    {
+//        //cout << "Game # " << _game_count << ": " << *g << std::flush;
+//
+//        cout << "Game # " << _game_count << ": ";
+//        _db_print_sum(cout, sum);
+//        cout << std::flush;
+//    }
+//    _game_count++;
+//
+//    sum.set_to_play(BLACK);
+//    bool black_wins = sum.solve();
+//
+//    sum.set_to_play(WHITE);
+//    bool white_wins = sum.solve();
+//
+//    outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
+//#ifdef MCGS_USE_THERM
+//    unique_ptr<ThGraph> thermograph(db_make_thermograph(*this, sum));
+//#endif
+//
+//    db_entry_partisan entry;
+//    entry.outcome = oc;
+//#ifdef MCGS_USE_THERM
+//    entry.thermograph = *thermograph;
+//#endif
+//
+//    set_partisan(sum, entry);
+//
+//    if (print_game)
+//        cout << " DONE" << endl;
+
+
+
 
 void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
 {
@@ -339,46 +467,6 @@ void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
     }
 }
 
-void database::_generate_entry_single_partisan(sumgame& sum, bool silent)
-{
-    if (get_partisan(sum).has_value())
-        return;
-
-    // bool print_game = true;
-    bool print_game = !silent && ((_game_count % 128) == 0);
-
-    if (print_game)
-    {
-        //cout << "Game # " << _game_count << ": " << *g << std::flush;
-
-        cout << "Game # " << _game_count << ": ";
-        _db_print_sum(cout, sum);
-        cout << std::flush;
-    }
-    _game_count++;
-
-    sum.set_to_play(BLACK);
-    bool black_wins = sum.solve();
-
-    sum.set_to_play(WHITE);
-    bool white_wins = sum.solve();
-
-    outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
-#ifdef MCGS_USE_THERM
-    unique_ptr<ThGraph> thermograph(db_make_thermograph(*this, sum));
-#endif
-
-    db_entry_partisan entry;
-    entry.outcome = oc;
-#ifdef MCGS_USE_THERM
-    entry.thermograph = *thermograph;
-#endif
-
-    set_partisan(sum, entry);
-
-    if (print_game)
-        cout << " DONE" << endl;
-}
 
 void database::_generate_entry_single_impartial(impartial_game* ig, bool silent)
 {
