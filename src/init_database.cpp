@@ -16,6 +16,7 @@
 #include "config_map.h"
 #include "database.h"
 #include "db_game_generator.h"
+#include "db_make_thermograph.h"
 #include "global_database.h"
 #include "global_options.h"
 
@@ -146,7 +147,8 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
 
     if (!dry_run)
     {
-        cout << "Max generation depth: " << db.get_max_generation_depth() << endl;
+        cout << "Max partisan DB generation depth: " << db.get_max_generation_depth() << endl;
+        cout << "Max thermograph generation depth: " << max_thermograph_generation_depth << endl;
         db.update_metadata_string(db_config_string);
     }
 }

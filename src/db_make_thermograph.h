@@ -4,4 +4,6 @@
 #include "sumgame.h"
 #include "database.h"
 
-ThGraph* db_make_thermograph(database& db, sumgame& sum);
+
+extern unsigned int max_thermograph_generation_depth;
+ThGraph* db_make_thermograph(database& db, sumgame& sum, unsigned int depth);

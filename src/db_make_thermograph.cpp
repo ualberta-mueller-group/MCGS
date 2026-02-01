@@ -1,38 +1,3 @@
-/*
-    TODO: remove local cache, add some assert to check for DB lookups which
-    should succeed
-
-Pseudo code for DB gen:
-    max_depth = 0
-
-    function generate_main(GGEN):
-        for G in GGEN:
-            generate_single(g, 0)
-
-    function generate_single(G, depth):
-        SR = G.split()
-
-        if (SR):
-            for SG in SR:
-                SG.normalize()
-                make_entry(SG, depth)
-
-            SUM = sum(SG)
-            make_entry(SUM, depth)
-        else:
-            G.normalize()
-            make_entry(G, depth)
-
-    function make_entry(G, depth):
-        max_depth = max(max_depth, depth)
-
-        // First check prerequisites
-        for C in G.children_black_or_white():
-            if !has_entry(C):
-                generate_single(C, depth + 1)
-
-        <COMPUTE DATA>
-*/
 #include "db_make_thermograph.h"
 #include "SgBlackWhite.h"
 #include "ThGraph.h"
@@ -47,60 +12,11 @@ Pseudo code for DB gen:
 
 using namespace std;
 
-struct ttable_therm_entry
-{
-    ThGraph thermograph;
-};
-
-typedef ttable<ttable_therm_entry> ttable_therm;
+unsigned int max_thermograph_generation_depth = 0;
 
 ////////////////////////////////////////////////// helpers
 
 namespace {
-optional<ttable_therm> tt_opt;
-
-inline ttable_therm& get_tt()
-{
-    if (tt_opt.has_value()) [[likely]]
-        return *tt_opt;
-
-    tt_opt.emplace(2, 0);
-    return *tt_opt;
-}
-
-inline hash_t get_sum_hash(const sumgame& sum)
-{
-    return sum.get_global_hash_for_player(EMPTY);
-}
-
-optional<ThGraph*> load_from_local_cache(sumgame& sum)
-{
-    const hash_t hash = get_sum_hash(sum);
-
-    ttable_therm& tt = get_tt();
-    ttable_therm::search_result result = tt.search(hash);
-
-    if (!result.entry_valid())
-        return {};
-
-    const ttable_therm_entry& entry = result.get_entry();
-    return new ThGraph(entry.thermograph);
-}
-
-void store_to_local_cache(sumgame& sum, const ThGraph* graph)
-{
-    const hash_t hash = get_sum_hash(sum);
-
-    ttable_therm& tt = get_tt();
-    ttable_therm::search_result result = tt.search(hash);
-
-    assert(!result.entry_valid());
-    result.init_entry();
-
-    ttable_therm_entry& entry = result.get_entry();
-    entry.thermograph = *graph;
-}
-
 optional<ThGraph*> load_from_db(database& db, const sumgame& sum)
 {
     optional<db_entry_partisan> entry = db.get_partisan(sum);
@@ -111,7 +27,7 @@ optional<ThGraph*> load_from_db(database& db, const sumgame& sum)
     return {};
 }
 
-vector<ThGraph*> get_option_graphs_for(database& db, sumgame& sum, bw player)
+vector<ThGraph*> get_option_graphs_for(database& db, sumgame& sum, bw player, unsigned int depth)
 {
     assert(is_black_white(player));
 
@@ -128,8 +44,9 @@ vector<ThGraph*> get_option_graphs_for(database& db, sumgame& sum, bw player)
         const sumgame_move sm = gen->gen_sum_move();
         ++(*gen);
 
+        assert(sum.to_play() == player);
         sum.play_sum(sm, player);
-        ThGraph* option_graph = db_make_thermograph(db, sum);
+        ThGraph* option_graph = db_make_thermograph(db, sum, depth + 1);
         sum.undo_move();
 
         option_graph->Check();
@@ -144,18 +61,13 @@ vector<ThGraph*> get_option_graphs_for(database& db, sumgame& sum, bw player)
 } // namespace
 
 //////////////////////////////////////////////////
-ThGraph* db_make_thermograph(database& db, sumgame& sum)
+ThGraph* db_make_thermograph(database& db, sumgame& sum, unsigned int depth)
 {
+    max_thermograph_generation_depth = max(max_thermograph_generation_depth, depth);
+
     // Check database
     {
         optional<ThGraph*> graph_opt = load_from_db(db, sum);
-        if (graph_opt.has_value())
-            return *graph_opt;
-    }
-
-    // Check local cache
-    {
-        optional<ThGraph*> graph_opt = load_from_local_cache(sum);
         if (graph_opt.has_value())
             return *graph_opt;
     }
@@ -165,13 +77,11 @@ ThGraph* db_make_thermograph(database& db, sumgame& sum)
     vector<ThGraph*>& option_graphs_b = option_graphs[SG_BLACK];
     vector<ThGraph*>& option_graphs_w = option_graphs[SG_WHITE];
 
-    option_graphs_b = get_option_graphs_for(db, sum, BLACK);
-    option_graphs_w = get_option_graphs_for(db, sum, WHITE);
+    option_graphs_b = get_option_graphs_for(db, sum, BLACK, depth);
+    option_graphs_w = get_option_graphs_for(db, sum, WHITE, depth);
 
     ThGraph* graph = ThGraph::MakeGraphFromOptions(option_graphs);
     graph->Check();
-
-    store_to_local_cache(sum, graph);
 
     for (ThGraph* option : option_graphs_b)
         delete option;
