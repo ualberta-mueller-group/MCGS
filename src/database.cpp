@@ -245,6 +245,37 @@ bool database::is_equal(const database& other) const
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
+
+/*
+    function gen_main(GEN):
+        for G in GEN:
+            SUM = sum([G])
+            make_entry(SUM)
+
+    function make_entry(S):
+        split_and_normalize(S)
+
+        if has_entry(S):
+            continue
+
+        optional<sum> SUM2
+        for SG of S:
+            if !has_entry(SG): // check with _get_db_hash to avoid constructing a sum
+                make_entry(SG) // using SUM2
+
+        TG <- make_therm(S) // calls make_entry for children which don't have entries
+        oc <- find_outcome_class(S)
+        ...
+
+    - `make_therm`-like function MUST always be called first (regardless of any
+      CLI options which may disable DB fields in the future). All children must
+      be checked i.e. because of thermographs, finding dominated moves, and due
+      to how nogo has positions which only show up as a result of splitting (the
+      game generator doesn't generate positions with safe stones)
+
+    - TODO: why is DB search depth > 1 for some non-nogo games? (amazons,
+      domineering?)
+*/
 void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
 {
     sumgame sum(BLACK);
