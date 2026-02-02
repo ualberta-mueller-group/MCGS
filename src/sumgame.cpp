@@ -59,7 +59,11 @@ inline bool game_is_number(const game* g)
 
 } // namespace
 
-//---------------------------------------------------------------------------
+
+////////////////////////////////////////////////// Move generators
+
+//////////////////////////////////////// sumgame_move_generator (i.e. v1.5)
+#ifndef SUMGAME_MOVE_GENERATOR_1_6
 
 sumgame_move_generator::sumgame_move_generator(const sumgame& game, bw to_play)
     : move_generator(to_play),
@@ -181,7 +185,117 @@ sumgame_move sumgame_move_generator::gen_sum_move() const
         return sumgame_move(_subgame_idx, _subgame_generator->gen_move());
 }
 
-//---------------------------------------------------------------------------
+
+//////////////////////////////////////// sumgame_move_generator (v1.6 changes)
+#else
+
+sumgame_move_generator::sumgame_move_generator(const sumgame& sum, bw to_play)
+    : move_generator(to_play),
+      _subgame_idx_local(0),
+      _sum(sum)
+{
+    std::vector<std::pair<int, const game*>> numbers;
+
+    // TODO pruning duplicate games?
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        game* g = sum.subgame(i);
+        if (!g->is_active())
+            continue;
+
+        if (game_is_number(g))
+            numbers.emplace_back(i, g);
+        else
+            _subgames.emplace_back(i, g);
+    }
+
+    for (const std::pair<int, const game*>& sg : numbers)
+        _subgames.push_back(sg);
+
+    _increment(true);
+}
+
+sumgame_move_generator::~sumgame_move_generator()
+{
+}
+
+void sumgame_move_generator::operator++()
+{
+    assert(*this);
+    _increment(false);
+}
+
+sumgame_move_generator::operator bool() const
+{
+    return (_mg && *_mg);
+}
+
+sumgame_move sumgame_move_generator::gen_sum_move() const
+{
+    assert(*this && _mg && *_mg);
+    const std::pair<int, const game*>& sg = _subgames[_subgame_idx_local];
+    return sumgame_move(sg.first, _mg->gen_move());
+}
+
+void sumgame_move_generator::_increment(bool init)
+{
+    assert(init || *this);
+
+    if (init)
+    {
+        assert(_subgame_idx_local == 0 && _seen_games.empty());
+
+        if (_subgames.empty())
+            return;
+
+
+        const game* sg_first = _subgames.front().second;
+
+        if (global::dedupe_movegen())
+        {
+            const hash_t hash = sg_first->get_local_hash();
+            _seen_games.insert(hash);
+        }
+
+        _mg.reset(sg_first->create_move_generator(to_play()));
+    }
+    else
+    {
+        assert(_mg && *_mg);
+        ++(*_mg);
+    }
+
+    const size_t n_subgames = _subgames.size();
+
+    while (true)
+    {
+        if (_mg && *_mg)
+            return;
+
+        _mg.reset();
+        _subgame_idx_local++;
+
+        if (!(_subgame_idx_local < n_subgames))
+            return;
+
+        const game* sg = _subgames[_subgame_idx_local].second;
+
+        if (global::dedupe_movegen())
+        {
+            const hash_t hash = sg->get_local_hash();
+
+            auto inserted = _seen_games.insert(hash);
+            if (!inserted.second)
+                continue;
+        }
+        _mg.reset(sg->create_move_generator(to_play()));
+    }
+}
+
+#endif
+//////////////////////////////////////////////////
 // Helpers
 
 namespace {

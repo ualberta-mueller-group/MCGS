@@ -203,11 +203,17 @@ private:
     friend class assert_restore_sumgame;
 };
 
-//////////////////////////////////////// sumgame_move_generator
+
 /*
-    TODO: Should this be semi-hidden in a namespace? Or leave it public?
-    Users of sumgame can't use the normal move_generator interface...
+    TODO: Should sumgame_move_generator be semi-hidden in a namespace? Or leave
+    it public? Users of sumgame can't use the normal move_generator interface...
 */
+
+////////////////////////////////////////////////// Move generators
+#define SUMGAME_MOVE_GENERATOR_1_6
+
+//////////////////////////////////////// sumgame_move_generator (i.e. v1.5)
+#ifndef SUMGAME_MOVE_GENERATOR_1_6
 
 class sumgame_move_generator : public move_generator
 {
@@ -252,6 +258,38 @@ inline std::pair<int, const game*> sumgame_move_generator::_current() const
     else
         return {_subgame_idx, _game.subgame(_subgame_idx)};
 }
+
+//////////////////////////////////////// sumgame_move_generator (v1.6 changes)
+#else
+class sumgame_move_generator : public move_generator
+{
+public:
+    sumgame_move_generator(const sumgame& sum, bw to_play);
+    ~sumgame_move_generator();
+
+    void operator++() override;
+    operator bool() const override;
+
+    sumgame_move gen_sum_move() const;
+
+    move gen_move() const override { assert(false); }
+
+private:
+    void _increment(bool init);
+
+    // Index into _subgames, not subgame index in _sum
+    size_t _subgame_idx_local;
+    std::vector<std::pair<int, const game*>> _subgames;
+
+    std::unique_ptr<move_generator> _mg;
+    std::set<hash_t> _seen_games;
+
+    const sumgame& _sum;
+};
+
+
+#endif
+//////////////////////////////////////////////////
 
 //---------------------------------------------------------------------------
 

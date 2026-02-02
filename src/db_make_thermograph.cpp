@@ -8,11 +8,13 @@
 #include "transposition.h"
 #include <optional>
 
+
+unsigned int max_thermograph_generation_depth = 0;
+
 #ifdef MCGS_USE_THERM
 
 using namespace std;
 
-unsigned int max_thermograph_generation_depth = 0;
 
 ////////////////////////////////////////////////// helpers
 
