@@ -5,17 +5,19 @@
     2. The number of games generated as a result of using shapes is huge for
     grid games
 
-    For linear Clobber, all possible sums at or below the maximum rank should be
-    generated naturally by the grid_generator. This is not the case for
-    2D clobber:
-
-    i.e. the largest rank for 4x4 is 16, but this sum won't appear:
+    Should sums like these be generated?
 
   (rank 7)     (rank 7)
     .X..         ..X.
     XXXX    +    ..X.
     .X..         ..X.
     .X..         XXXX
+
+    Possible improvements:
+    - prune single subgames which equal 0
+    - represent every single subgame as its simplest equal single subgame
+
+    Then try some generation scheme like this?
 
 
 */
