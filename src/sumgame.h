@@ -13,6 +13,7 @@
 #include <ostream>
 #include <cassert>
 
+#include "ThValue.h"
 #include "alternating_move_game.h"
 #include "cgt_move.h"
 #include "game.h"
@@ -21,6 +22,7 @@
 #include "transposition.h"
 #include "timeout_token.h"
 
+typedef std::optional<std::vector<std::optional<ThValue>>> temp_vec_opt_t;
 
 struct ttable_sumgame_entry
 {
@@ -75,6 +77,7 @@ struct play_record
     bool deactivated_g;
 };
 
+
 //////////////////////////////////////// solve_result
 struct solve_result
 {
@@ -107,7 +110,8 @@ public:
     void simplify_impartial();
     void undo_simplify_impartial();
 
-    std::optional<solve_result> simplify_db();
+    std::optional<solve_result> simplify_db(
+        temp_vec_opt_t& temperatures);
     void undo_simplify_db();
 
     void add(game* g);
@@ -142,6 +146,11 @@ public:
     const std::vector<game*>& subgames() const { return _subgames; }
 
     sumgame_move_generator* create_sum_move_generator(bw to_play) const;
+
+    // Resizes temperature vector
+    sumgame_move_generator* create_sum_move_generator(
+        bw to_play, temp_vec_opt_t& temperatures) const;
+
     void print(std::ostream& str) const;
 
     hash_t get_global_hash(bool invalidate_game_hashes = false) const;
@@ -264,7 +273,9 @@ inline std::pair<int, const game*> sumgame_move_generator::_current() const
 class sumgame_move_generator : public move_generator
 {
 public:
-    sumgame_move_generator(const sumgame& sum, bw to_play);
+    sumgame_move_generator(const sumgame& sum, bw to_play,
+                           const temp_vec_opt_t& temperatures = {});
+
     ~sumgame_move_generator();
 
     void operator++() override;

@@ -36,6 +36,7 @@
 #include "sumgame_change_record.h"
 #include "sumgame_undo_stack_unwinder.h"
 #include "impartial_game_wrapper.h"
+#include "utilities.h"
 
 using std::cout;
 using std::endl;
@@ -189,11 +190,16 @@ sumgame_move sumgame_move_generator::gen_sum_move() const
 //////////////////////////////////////// sumgame_move_generator (v1.6 changes)
 #else
 
-sumgame_move_generator::sumgame_move_generator(const sumgame& sum, bw to_play)
-    : move_generator(to_play),
-      _subgame_idx_local(0),
-      _sum(sum)
+sumgame_move_generator::sumgame_move_generator(
+    const sumgame& sum, bw to_play,
+    const temp_vec_opt_t& temperatures)
+    : move_generator(to_play), _subgame_idx_local(0), _sum(sum)
 {
+    assert(LOGICAL_IMPLIES(                                               //
+        temperatures.has_value(),                                         //
+        temperatures->size() >= as_unsigned_unsafe(sum.num_total_games()) //
+        ));                                                               //
+
     std::vector<std::pair<int, const game*>> numbers;
 
     // TODO pruning duplicate games?
@@ -210,6 +216,32 @@ sumgame_move_generator::sumgame_move_generator(const sumgame& sum, bw to_play)
         else
             _subgames.emplace_back(i, g);
     }
+
+#ifdef MCGS_USE_THERM
+    auto sort_fn = [&](const std::pair<int, const game*>& sg1,
+                       const std::pair<int, const game*>& sg2) -> bool
+    {
+        assert(temperatures.has_value());
+
+        const std::optional<ThValue>& temp1 = (*temperatures)[sg1.first];
+        const std::optional<ThValue>& temp2 = (*temperatures)[sg2.first];
+
+        if (temp1.has_value())
+        {
+            if (!temp2.has_value())
+                return true;
+                //return false;
+
+            return *temp1 > *temp2;
+        }
+
+        return false;
+        //return temp2.has_value();
+    };
+
+    if (temperatures.has_value())
+        std::sort(_subgames.begin(), _subgames.end(), sort_fn);
+#endif
 
     for (const std::pair<int, const game*>& sg : numbers)
         _subgames.push_back(sg);
@@ -469,9 +501,11 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
     }
 
 
+    temp_vec_opt_t temperatures;
+
     {
         simplify_impartial();
-        std::optional<solve_result> result = simplify_db();
+        std::optional<solve_result> result = simplify_db(temperatures);
 
         if (result.has_value())
             return result;
@@ -495,7 +529,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
     const bw toplay = to_play();
 
     std::unique_ptr<sumgame_move_generator> mgp(
-        create_sum_move_generator(toplay));
+        create_sum_move_generator(toplay, temperatures));
 
     sumgame_move_generator& mg = *mgp;
 
@@ -1002,8 +1036,10 @@ void sumgame::undo_simplify_impartial()
     _change_record_stack.pop_back();
 }
 
-std::optional<solve_result> sumgame::simplify_db()
+optional<solve_result> sumgame::simplify_db(
+    temp_vec_opt_t& temperatures)
 {
+    assert(!temperatures.has_value());
     _push_undo_code(SUMGAME_UNDO_SIMPLIFY_DB);
 
     if (!global::use_db())
@@ -1013,6 +1049,12 @@ std::optional<solve_result> sumgame::simplify_db()
     sumgame_impl::change_record& cr = _change_record_stack.back();
 
     database& db = get_global_database();
+
+#ifdef MCGS_USE_THERM
+    bool at_least_one_temp = false;
+    temperatures.emplace();
+    temperatures->resize(num_total_games());
+#endif
 
     std::vector<unsigned int> counts = get_oc_indexable_vector();
 
@@ -1056,7 +1098,16 @@ std::optional<solve_result> sumgame::simplify_db()
             stats::report_db_access(entry.has_value());
 
             if (entry.has_value())
+            {
                 oc = entry->outcome;
+
+#ifdef MCGS_USE_THERM
+                assert(temperatures.has_value());
+                optional<ThValue>& temp = (*temperatures)[subgame_idx];
+                temp = entry->thermograph.Temperature();
+                at_least_one_temp = true;
+#endif
+            }
         }
 
         counts[oc]++;
@@ -1068,6 +1119,11 @@ std::optional<solve_result> sumgame::simplify_db()
             g->set_active(false);
         }
     }
+
+#ifdef MCGS_USE_THERM
+    if (!at_least_one_temp)
+        temperatures.reset();
+#endif
 
     assert(std::accumulate(counts.begin(), counts.end(), 0) == n_active_games);
 
@@ -1260,6 +1316,21 @@ void sumgame::undo_split_and_normalize()
 sumgame_move_generator* sumgame::create_sum_move_generator(bw to_play) const
 {
     return new sumgame_move_generator(*this, to_play);
+}
+
+sumgame_move_generator* sumgame::create_sum_move_generator(
+    bw to_play, temp_vec_opt_t& temperatures) const
+{
+#ifdef SUMGAME_MOVE_GENERATOR_1_6
+    const unsigned int n_games = as_unsigned_unsafe(num_total_games());
+
+    if (temperatures.has_value() && (n_games > temperatures->size()))
+        temperatures->resize(n_games);
+
+    return new sumgame_move_generator(*this, to_play, temperatures);
+#else
+    return new sumgame_move_generator(*this, to_play);
+#endif
 }
 
 std::ostream& operator<<(std::ostream& out, const sumgame& s)
