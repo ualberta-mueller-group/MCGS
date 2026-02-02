@@ -38,14 +38,23 @@ struct db_entry_partisan
 
     outcome_class outcome;
 #ifdef MCGS_USE_THERM
-    ThGraph thermograph;
+    std::shared_ptr<ThGraph> thermograph;
 #endif
 };
 
 inline bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 {
 #ifdef MCGS_USE_THERM
-    return (outcome == other.outcome) && (thermograph == other.thermograph);
+    if (outcome != other.outcome)
+        return false;
+
+    if (thermograph && other.thermograph)
+        return *thermograph == *other.thermograph;
+
+    if (!thermograph && !other.thermograph)
+        return true;
+
+    return false;
 #else
     return (outcome == other.outcome);
 #endif
@@ -64,7 +73,7 @@ struct serializer<db_entry_partisan>
     {
         os.write_u8(entry.outcome);
 #ifdef MCGS_USE_THERM
-        serializer<ThGraph>::save(os, entry.thermograph);
+        serializer<std::shared_ptr<ThGraph>>::save(os, entry.thermograph);
 #endif
     }
 
@@ -73,7 +82,7 @@ struct serializer<db_entry_partisan>
         db_entry_partisan entry;
         entry.outcome = static_cast<outcome_class>(is.read_u8());
 #ifdef MCGS_USE_THERM
-        entry.thermograph = serializer<ThGraph>::load(is);
+        entry.thermograph = serializer<std::shared_ptr<ThGraph>>::load(is);
 #endif
         return entry;
     }

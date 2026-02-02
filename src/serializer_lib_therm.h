@@ -89,24 +89,25 @@ struct serializer<ThScaffold>
 };
 
 template <>
-struct serializer<ThGraph>
+struct serializer<ThGraph*>
 {
-    inline static void save(obuffer& os, const ThGraph& graph)
+    inline static void save(obuffer& os, const ThGraph* graph)
     {
-        const ThScaffold* sc_black = graph.Sc(SG_BLACK);
-        const ThScaffold* sc_white = graph.Sc(SG_WHITE);
+        assert(graph != nullptr);
+        const ThScaffold* sc_black = graph->Sc(SG_BLACK);
+        const ThScaffold* sc_white = graph->Sc(SG_WHITE);
         assert(sc_black != nullptr && sc_white != nullptr);
 
         serializer<ThScaffold>::save(os, *sc_black);
         serializer<ThScaffold>::save(os, *sc_white);
     }
 
-    inline static ThGraph load(ibuffer& is)
+    inline static ThGraph* load(ibuffer& is)
     {
         const ThScaffold sc_black = serializer<ThScaffold>::load(is);
         const ThScaffold sc_white = serializer<ThScaffold>::load(is);
 
-        return ThGraph(sc_black, sc_white);
+        return new ThGraph(sc_black, sc_white);
     }
 };
 

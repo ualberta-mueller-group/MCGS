@@ -1104,7 +1104,7 @@ optional<solve_result> sumgame::simplify_db(
 #ifdef MCGS_USE_THERM
                 assert(temperatures.has_value());
                 optional<ThValue>& temp = (*temperatures)[subgame_idx];
-                temp = entry->thermograph.Temperature();
+                temp = entry->thermograph->Temperature();
                 at_least_one_temp = true;
 #endif
             }
