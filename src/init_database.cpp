@@ -33,6 +33,7 @@
 #include "domineering.h"
 #include "amazons.h"
 #include "fission.h"
+#include "rank_games.h"
 #include "sheep_grid_generator.h"
 #include "throw_assert.h"
 #include "toppling_dominoes.h"
@@ -138,7 +139,8 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
                 if (is_impartial)
                     db.generate_entries_impartial(*gen);
                 else
-                    db.generate_entries_partisan(*gen);
+                    rank_games(*gen);
+                    //db.generate_entries_partisan(*gen);
             }
 
             delete gen;
