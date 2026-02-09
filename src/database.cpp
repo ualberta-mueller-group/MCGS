@@ -20,7 +20,9 @@
 #include "database.h"
 #include "SgBlackWhite.h"
 #include "ThGraph.h"
+#include "bounds.h"
 #include "cgt_basics.h"
+#include "db_make_bounds.h"
 #include "db_make_thermograph.h"
 #include "game.h"
 #include "hashing.h"
@@ -36,6 +38,12 @@
 #include "utilities.h"
 #include "version_info.h"
 #include "impartial_game_wrapper.h"
+
+
+uint64_t n_db_games = 0;
+uint64_t n_db_games_with_bounds = 0;
+uint64_t n_db_bounds_infinitesimal = 0;
+uint64_t n_db_bounds_rational = 0;
 
 using namespace std;
 
@@ -393,6 +401,26 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
 
 #ifdef MCGS_USE_THERM
     entry.thermograph = db_make_thermograph(*this, sum, 0);
+#endif
+
+#ifdef MCGS_USE_BOUNDS
+        entry.bounds_data = db_make_bounds(*this, sum);
+
+        n_db_games++;
+        if (entry.bounds_data.has_value())
+        {
+            n_db_games_with_bounds++;
+
+            const bound_scale scale = std::get<0>(*entry.bounds_data);
+
+            if (scale == BOUND_SCALE_DYADIC_RATIONAL)
+                n_db_bounds_rational++;
+            else if (scale == BOUND_SCALE_UP)
+                n_db_bounds_infinitesimal++;
+        }
+
+
+
 #endif
 
     outcome_class oc = bools_to_outcome_class(black_wins, white_wins);

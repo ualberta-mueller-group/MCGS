@@ -145,6 +145,11 @@ TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
 	TEST_FLAGS := $(TEST_FLAGS) -DMCGS_USE_THERM
 #endif
 
+#ifneq (,$(filter $(USE_BOUNDS),1 true))
+	NORMAL_FLAGS := $(NORMAL_FLAGS) -DMCGS_USE_BOUNDS
+	TEST_FLAGS := $(TEST_FLAGS) -DMCGS_USE_BOUNDS
+#endif
+
 # args: files, directory prefix, file extension
 FN_OUTPATH = \
 $(addsuffix $(3), \

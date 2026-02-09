@@ -53,13 +53,30 @@
         serializer<clobber*>::load(some_ibuffer);
 
     NOTE: Polymorphic types must use pointers as in these examples
+
+    Currently implemented "standard" types:
+        - integral values
+        - bool
+        - enum values
+        - std::tuple<Ts...>
+        - std::optional<T>
+        - std::string
+        - std::vector<T>
+        - std::shared_ptr<T>
+        - std::unique_ptr<T>
+        - std::pair<T1, T2>
+        - std::unordered_map<T1, T2>
+        - std::map<T1, T2>
 */
 #pragma once
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
+#include <map>
 #include <vector>
 #include <string>
 #include <cstddef>
+#include <optional>
 #include <cstdint>
 #include <utility>
 #include <memory>
@@ -108,7 +125,7 @@ struct serializer
 template <class T>
 struct serializer<T,
     std::enable_if_t<
-        std::is_integral_v<T>,
+        std::is_integral_v<T> && !std::is_same_v<T, bool>,
         void
     >
 >
@@ -124,7 +141,150 @@ struct serializer<T,
     }
 };
 
+
+//////////////////////////////////////// bool
+template <>
+struct serializer<bool>
+{
+    inline static void save(obuffer& os, const bool& val)
+    {
+        os.write_bool(val);
+    }
+
+    inline static bool load(ibuffer& is)
+    {
+        return is.read_bool();
+    }
+};
+
+//////////////////////////////////////// enum types
+template <class Enum_T>
+struct serializer<Enum_T,
+    std::enable_if_t<
+        std::is_enum_v<Enum_T>,
+        void
+    >
+>
+{
+    inline static void save(obuffer& os, const Enum_T& val)
+    {
+        os.write_enum<Enum_T>(val);
+    }
+
+    inline static Enum_T load(ibuffer& is)
+    {
+        return is.read_enum<Enum_T>();
+    }
+};
+
 // clang-format on
+
+//////////////////////////////////////// std::tuple (empty version)
+template <>
+struct serializer<std::tuple<>>
+{
+    inline static void save(obuffer& os, const std::tuple<>& tup)
+    {
+        os.write_u8(0);
+    }
+
+    inline static std::tuple<> load(ibuffer& os)
+    {
+        os.read_u8();
+        return {};
+    }
+};
+
+//////////////////////////////////////// std::tuple (non-empty version)
+
+// TODO this is kind of messy and maybe slow?
+template <class... Ts>
+struct serializer<std::tuple<Ts...>>
+{
+    inline static void save(obuffer& os, const std::tuple<Ts...>& tup)
+    {
+        save_impl impl(os);
+        std::apply(impl, tup);
+    }
+
+    inline static std::tuple<Ts...> load(ibuffer& is)
+    {
+        std::tuple<Ts...> tup;
+
+        load_impl impl(is);
+        std::apply(impl, tup);
+
+        return tup;
+    }
+
+private:
+    struct save_impl
+    {
+        inline save_impl(obuffer& os) : os(os) {}
+
+        template <class T_First>
+        inline void operator()(const T_First& first)
+        {
+            serializer<T_First>::save(os, first);
+        }
+
+        template <class T_First, class... T_Rest>
+        inline void operator()(const T_First& first, const T_Rest&... rest)
+        {
+            serializer<T_First>::save(os, first);
+            (*this)(rest...);
+        }
+
+        obuffer& os;
+    };
+
+    struct load_impl
+    {
+        inline load_impl(ibuffer& is): is(is) {}
+
+        template <class T_First>
+        inline void operator()(T_First& first)
+        {
+            first = serializer<T_First>::load(is);
+        }
+
+        template <class T_First, class... T_Rest>
+        inline void operator()(T_First& first, T_Rest&... rest)
+        {
+            first = serializer<T_First>::load(is);
+            (*this)(rest...);
+        }
+
+        ibuffer& is;
+    };
+
+};
+
+//////////////////////////////////////// std::optional
+template <class T>
+struct serializer<std::optional<T>>
+{
+    inline static void save(obuffer& os, const std::optional<T>& opt)
+    {
+        const bool has_value = opt.has_value();
+
+        os.write_bool(has_value);
+
+        if (has_value)
+            serializer<T>::save(os, *opt);
+    }
+
+    inline static std::optional<T> load(ibuffer& is)
+    {
+        const bool has_value = is.read_bool();
+
+        if (has_value)
+            return serializer<T>::load(is);
+
+        return {};
+    }
+};
+
 //////////////////////////////////////// std::string
 
 /*
@@ -191,12 +351,26 @@ struct serializer<std::shared_ptr<T>>
     static inline void save(obuffer& os, const std::shared_ptr<T>& smart_ptr)
     {
         const T* ptr = smart_ptr.get();
+
+        if (ptr == nullptr)
+        {
+            os.write_bool(false);
+            return;
+        }
+
+        os.write_bool(true);
         serializer<T*>::save(os, ptr);
     }
 
     static inline std::shared_ptr<T> load(ibuffer& is)
     {
-        T* ptr = serializer<T*>::load(is);
+        const bool has_value = is.read_bool();
+
+        T* ptr = nullptr;
+
+        if (has_value)
+            ptr = serializer<T*>::load(is);
+
         return std::shared_ptr<T>(ptr);
     }
 };
@@ -208,12 +382,26 @@ struct serializer<std::unique_ptr<T>>
     static inline void save(obuffer& os, const std::unique_ptr<T>& smart_ptr)
     {
         const T* ptr = smart_ptr.get();
+
+        if (ptr == nullptr)
+        {
+            os.write_bool(false);
+            return;
+        }
+
+        os.write_bool(true);
         serializer<T*>::save(os, ptr);
     }
 
     static inline std::unique_ptr<T> load(ibuffer& is)
     {
-        T* ptr = serializer<T*>::load(is);
+        const bool has_value = is.read_bool();
+
+        T* ptr = nullptr;
+
+        if (has_value)
+            ptr = serializer<T*>::load(is);
+
         return std::unique_ptr<T>(ptr);
     }
 };
@@ -259,6 +447,36 @@ struct serializer<std::unordered_map<T1, T2>>
     inline static std::unordered_map<T1, T2> load(ibuffer& is)
     {
         std::unordered_map<T1, T2> m;
+
+        const uint64_t size = is.read_u64();
+        m.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+            m.emplace(serializer<std::pair<T1, T2>>::load(is));
+
+        return m;
+    }
+};
+
+////////////////////////////////////////////////// std::map<T1, T2>
+/*
+    TODO: similar problem as unordered_map?
+*/
+template <class T1, class T2>
+struct serializer<std::map<T1, T2>>
+{
+    inline static void save(obuffer& os, const std::map<T1, T2>& m)
+    {
+        const size_t size = m.size();
+        os.write_u64(size);
+
+        for (auto it = m.begin(); it != m.end(); it++)
+            serializer<std::pair<T1, T2>>::save(os, *it);
+    }
+
+    inline static std::map<T1, T2> load(ibuffer& is)
+    {
+        std::map<T1, T2> m;
 
         const uint64_t size = is.read_u64();
         m.reserve(size);

@@ -13,6 +13,7 @@
 */
 #pragma once
 #include <climits>
+#include <limits>
 #include <string>
 #include <type_traits>
 #include <cassert>
@@ -105,6 +106,11 @@ public:
     int32_t read_i32();
     int64_t read_i64();
 
+    bool read_bool();
+
+    template <class Enum_T>
+    Enum_T read_enum();
+
     template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
     T __read()
     {
@@ -118,13 +124,27 @@ private:
 };
 
 ////////////////////////////////////////////////// ibuffer methods
-
 inline void ibuffer::close()
 {
     assert(_fs.is_open());
     _fs.close();
     assert(!_fs.is_open());
 }
+
+inline bool ibuffer::read_bool()
+{
+    const uint8_t val = read_u8();
+    return static_cast<bool>(val);
+}
+
+template <class Enum_T>
+inline Enum_T ibuffer::read_enum()
+{
+    static_assert(std::is_enum_v<Enum_T>);
+    const uint8_t value = read_u8();
+    return static_cast<Enum_T>(value);
+}
+
 
 ////////////////////////////////////////////////// class obuffer
 class obuffer
@@ -143,6 +163,11 @@ public:
     void write_i16(const int16_t& val);
     void write_i32(const int32_t& val);
     void write_i64(const int64_t& val);
+
+    void write_bool(const bool& val);
+
+    template <class Enum_T>
+    void write_enum(const Enum_T& val);
 
     template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
     void __write(const T& val)
@@ -171,3 +196,24 @@ inline void obuffer::close()
     _fs.close();
     assert(!_fs.is_open());
 }
+
+inline void obuffer::write_bool(const bool& val)
+{
+    const uint8_t val_casted = static_cast<bool>(val);
+    write_u8(val_casted);
+}
+
+template <class Enum_T>
+void obuffer::write_enum(const Enum_T& val)
+{
+    static_assert(std::is_enum_v<Enum_T>);
+
+    THROW_ASSERT(std::numeric_limits<uint8_t>::min() <= val && //
+                 val <= std::numeric_limits<uint8_t>::max()    //
+    );
+
+    const uint8_t val_casted = static_cast<uint8_t>(val);
+    write_u8(val_casted);
+}
+
+

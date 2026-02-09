@@ -139,8 +139,8 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
                 if (is_impartial)
                     db.generate_entries_impartial(*gen);
                 else
-                    rank_games(*gen);
-                    //db.generate_entries_partisan(*gen);
+                    //rank_games(*gen);
+                    db.generate_entries_partisan(*gen);
             }
 
             delete gen;
@@ -151,6 +151,12 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
     {
         cout << "Max partisan DB generation depth: " << db.get_max_generation_depth() << endl;
         cout << "Max thermograph generation depth: " << max_thermograph_generation_depth << endl;
+        cout << "Total games: " << n_db_games << endl;
+        cout << "Total games with bounds data: " << n_db_games_with_bounds << endl;
+        cout << "Total games without bounds data: " << n_db_games - n_db_games_with_bounds << endl;
+        cout << "Number of infinitesimal bounds: " << n_db_bounds_infinitesimal << endl;
+        cout << "Number of rational bounds: " << n_db_bounds_rational << endl;
+
         db.update_metadata_string(db_config_string);
     }
 }

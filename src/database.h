@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <optional>
 
+#include "bounds.h"
 #include "cgt_basics.h"
 #include "hashing.h"
 #include "type_table.h"
@@ -25,6 +26,12 @@
 
 #include "ThGraph.h"
 #include "serializer_lib_therm.h"
+
+
+extern uint64_t n_db_games;
+extern uint64_t n_db_games_with_bounds;
+extern uint64_t n_db_bounds_infinitesimal;
+extern uint64_t n_db_bounds_rational;
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
     db.register_type(#game_class_name, game_type<game_class_name>())
@@ -40,24 +47,49 @@ struct db_entry_partisan
 #ifdef MCGS_USE_THERM
     std::shared_ptr<ThGraph> thermograph;
 #endif
+
+#ifdef MCGS_USE_BOUNDS
+    std::optional<std::tuple<bound_scale, game_bounds_ptr>> bounds_data;
+#endif
 };
 
 inline bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 {
-#ifdef MCGS_USE_THERM
     if (outcome != other.outcome)
         return false;
 
-    if (thermograph && other.thermograph)
-        return *thermograph == *other.thermograph;
+#ifdef MCGS_USE_THERM
+    if ((thermograph.get() == nullptr) != (other.thermograph.get() == nullptr))
+        return false;
 
-    if (!thermograph && !other.thermograph)
-        return true;
-
-    return false;
-#else
-    return (outcome == other.outcome);
+    if (thermograph)
+        if (!(*thermograph == *other.thermograph))
+            return false;
 #endif
+
+#ifdef MCGS_USE_BOUNDS
+    if (bounds_data.has_value() != other.bounds_data.has_value())
+        return false;
+
+    if (bounds_data.has_value())
+    {
+        const bound_scale& scale1 = std::get<0>(*bounds_data);
+        const bound_scale& scale2 = std::get<0>(*other.bounds_data);
+        if (scale1 != scale2)
+            return false;
+
+        const game_bounds_ptr& ptr1 = std::get<1>(*bounds_data);
+        const game_bounds_ptr& ptr2 = std::get<1>(*other.bounds_data);
+
+        if ((ptr1.get() == nullptr) != (ptr2.get() == nullptr))
+            return false;
+
+        if (ptr1 && *ptr1 != *ptr2)
+            return false;
+    }
+#endif
+
+    return true;
 }
 
 inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
@@ -71,18 +103,29 @@ struct serializer<db_entry_partisan>
 {
     inline static void save(obuffer& os, const db_entry_partisan& entry)
     {
-        os.write_u8(entry.outcome);
+        os.write_enum<outcome_class>(entry.outcome);
+
 #ifdef MCGS_USE_THERM
         serializer<std::shared_ptr<ThGraph>>::save(os, entry.thermograph);
+#endif
+
+#ifdef MCGS_USE_BOUNDS
+        serializer<decltype(entry.bounds_data)>::save(os, entry.bounds_data);
 #endif
     }
 
     inline static db_entry_partisan load(ibuffer& is)
     {
         db_entry_partisan entry;
-        entry.outcome = static_cast<outcome_class>(is.read_u8());
+
+        entry.outcome = is.read_enum<outcome_class>();
+
 #ifdef MCGS_USE_THERM
         entry.thermograph = serializer<std::shared_ptr<ThGraph>>::load(is);
+#endif
+
+#ifdef MCGS_USE_BOUNDS
+        entry.bounds_data = serializer<decltype(entry.bounds_data)>::load(is);
 #endif
         return entry;
     }
