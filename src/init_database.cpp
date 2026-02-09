@@ -156,6 +156,7 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
         cout << "Total games without bounds data: " << n_db_games - n_db_games_with_bounds << endl;
         cout << "Number of infinitesimal bounds: " << n_db_bounds_infinitesimal << endl;
         cout << "Number of rational bounds: " << n_db_bounds_rational << endl;
+        cout << "Number of games equal to their bounds: " << n_db_bounds_equal << endl;
 
         db.update_metadata_string(db_config_string);
     }

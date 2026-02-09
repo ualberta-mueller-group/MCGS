@@ -32,6 +32,8 @@ extern uint64_t n_db_games;
 extern uint64_t n_db_games_with_bounds;
 extern uint64_t n_db_bounds_infinitesimal;
 extern uint64_t n_db_bounds_rational;
+extern uint64_t n_db_bounds_equal;
+
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
     db.register_type(#game_class_name, game_type<game_class_name>())

@@ -44,6 +44,7 @@ uint64_t n_db_games = 0;
 uint64_t n_db_games_with_bounds = 0;
 uint64_t n_db_bounds_infinitesimal = 0;
 uint64_t n_db_bounds_rational = 0;
+uint64_t n_db_bounds_equal = 0;
 
 using namespace std;
 
@@ -412,11 +413,15 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
             n_db_games_with_bounds++;
 
             const bound_scale scale = std::get<0>(*entry.bounds_data);
+            const game_bounds_ptr ptr = std::get<1>(*entry.bounds_data);
 
             if (scale == BOUND_SCALE_DYADIC_RATIONAL)
                 n_db_bounds_rational++;
             else if (scale == BOUND_SCALE_UP)
                 n_db_bounds_infinitesimal++;
+
+            if (ptr->both_valid() && ptr->get_lower_relation() == REL_EQUAL)
+                n_db_bounds_equal++;
         }
 
 
