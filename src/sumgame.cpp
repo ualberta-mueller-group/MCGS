@@ -1221,17 +1221,17 @@ void sumgame::db_replacement_pass()
         {
 #ifdef MCGS_USE_BOUNDS
             // sg is partisan
-            std::optional<db_entry_partisan> entry = db.get_partisan(*sg);
-            stats::report_db_access(entry.has_value());
+            const db_entry_partisan* entry = db.get_partisan_ptr(*sg);
+            stats::report_db_access(entry != nullptr);
 
-            if (!entry.has_value())
+            if (entry == nullptr)
                 continue;
 
             if (!entry->bounds_data.has_value())
                 continue;
 
             const bound_scale scale = std::get<0>(*entry->bounds_data);
-            const game_bounds_ptr bounds = std::get<1>(*entry->bounds_data);
+            const game_bounds_ptr& bounds = std::get<1>(*entry->bounds_data);
 
             if (!bounds->is_equal())
                 continue;

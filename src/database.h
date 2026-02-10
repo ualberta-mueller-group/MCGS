@@ -189,6 +189,9 @@ public:
     std::optional<db_entry_partisan> get_partisan(const game& g) const;
     std::optional<db_entry_partisan> get_partisan(const sumgame& sum) const;
 
+    // TODO pointer is invalidated by modifying DB...
+    const db_entry_partisan* get_partisan_ptr(const game& g) const;
+
     std::optional<db_entry_impartial> get_impartial(const game& g) const;
 
     void register_type(const std::string& type_name, game_type_t runtime_type);

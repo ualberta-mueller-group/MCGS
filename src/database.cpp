@@ -183,6 +183,26 @@ std::optional<db_entry_partisan> database::get_partisan(const sumgame& sum) cons
     return it2->second;
 }
 
+const db_entry_partisan* database::get_partisan_ptr(const game& g) const
+{
+    const game_type_t gt = _mapper.translate_type(g.game_type());
+    if (gt == 0)
+        return nullptr;
+
+    auto it1 = _tree_partisan.find(gt);
+    if (it1 == _tree_partisan.end())
+        return nullptr;
+
+    const terminal_layer_partisan_t& layer = it1->second;
+    const hash_t hash = _get_db_hash(g);
+    auto it2 = layer.find(hash);
+
+    if (it2 == layer.end())
+        return nullptr;
+
+    return &(it2->second);
+}
+
 std::optional<db_entry_impartial> database::get_impartial(const game& g) const
 {
     const game_type_t gt = _mapper.translate_type(g.game_type());

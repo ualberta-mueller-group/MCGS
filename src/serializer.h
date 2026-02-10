@@ -479,7 +479,7 @@ struct serializer<std::map<T1, T2>>
         std::map<T1, T2> m;
 
         const uint64_t size = is.read_u64();
-        m.reserve(size);
+        //m.reserve(size);
 
         for (size_t i = 0; i < size; i++)
             m.emplace(serializer<std::pair<T1, T2>>::load(is));
