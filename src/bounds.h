@@ -66,6 +66,11 @@ public:
         return _upper_relation;
     }
 
+    inline bool is_equal() const
+    {
+        return both_valid() && (get_lower_relation() == REL_EQUAL);
+    }
+
     inline bool operator==(const game_bounds& rhs) const
     {
         return                                          //

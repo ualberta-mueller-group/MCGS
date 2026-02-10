@@ -2,6 +2,7 @@
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
 #include "sumgame.h"
+#include "bounds.h"
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "database.h"
@@ -504,14 +505,17 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
     temp_vec_opt_t temperatures;
 
     {
-        simplify_impartial();
+        //simplify_impartial();
+
+        db_replacement_pass();
+        simplify_basic();
+
         std::optional<solve_result> result = simplify_db(temperatures);
 
         if (result.has_value())
             return result;
     }
 
-    simplify_basic();
 
 
     /*      NOTE:
@@ -1153,6 +1157,150 @@ void sumgame::undo_simplify_db()
 
     cr.deactivated_games.clear();
     _change_record_stack.pop_back();
+}
+
+void sumgame::db_replacement_pass()
+{
+    _push_undo_code(SUMGAME_UNDO_DB_REPLACEMENT_PASS);
+
+    if (!global::use_db())
+        return;
+
+    database& db = get_global_database();
+
+    // Push record
+    _change_record_stack.emplace_back();
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    int n_known_imp = 0; // nimbers and impartial_games
+    int n_known_imp_non_nimber = 0; // known values which are not nimbers
+    int final_nim_sum = 0;
+    vector<game*> deactivated_impartial_games; // deactivation is deferred
+
+    const int N_SUBGAMES = num_total_games();
+    for (int i = 0; i < N_SUBGAMES; i++)
+    {
+        game* sg = subgame(i);
+        if (!sg->is_active())
+            continue;
+
+        if (sg->is_impartial())
+        {
+            assert(dynamic_cast<impartial_game*>(sg) != nullptr);
+
+            // Don't need to look up nimber
+            if (sg->game_type() == game_type<nimber>())
+            {
+                assert(dynamic_cast<nimber*>(sg) != nullptr);
+                nimber* sg_nimber = static_cast<nimber*>(sg);
+
+                n_known_imp++;
+                nimber::add_nimber(final_nim_sum, sg_nimber->value());
+
+                // Actually deactivate later
+                deactivated_impartial_games.push_back(sg_nimber);
+                continue;
+            }
+
+            assert(dynamic_cast<nimber*>(sg) == nullptr);
+
+            std::optional<db_entry_impartial> entry = db.get_impartial(*sg);
+            stats::report_db_access(entry.has_value());
+
+            if (!entry.has_value())
+                continue;
+
+            n_known_imp++;
+            n_known_imp_non_nimber++;
+
+            // Actually deactivate later
+            deactivated_impartial_games.push_back(sg);
+            nimber::add_nimber(final_nim_sum, entry.value().nim_value);
+        }
+        else
+        {
+#ifdef MCGS_USE_BOUNDS
+            // sg is partisan
+            std::optional<db_entry_partisan> entry = db.get_partisan(*sg);
+            stats::report_db_access(entry.has_value());
+
+            if (!entry.has_value())
+                continue;
+
+            if (!entry->bounds_data.has_value())
+                continue;
+
+            const bound_scale scale = std::get<0>(*entry->bounds_data);
+            const game_bounds_ptr bounds = std::get<1>(*entry->bounds_data);
+
+            if (!bounds->is_equal())
+                continue;
+
+            game* sg_replacement = get_scale_game(bounds->get_lower(), scale);
+            add(sg_replacement);
+            cr.added_games.push_back(sg_replacement);
+
+            sg->set_active(false);
+            cr.deactivated_games.push_back(sg);
+#endif
+        }
+    }
+
+    if (n_known_imp >= 2 || n_known_imp_non_nimber > 0)
+    {
+        for (game* sg : deactivated_impartial_games)
+        {
+            assert(sg->is_active());
+            sg->set_active(false);
+            cr.deactivated_games.push_back(sg);
+        }
+
+        if (final_nim_sum != 0)
+        {
+            nimber* nim_sum_as_nimber = new nimber(final_nim_sum);
+
+            add(nim_sum_as_nimber);
+            cr.added_games.push_back(nim_sum_as_nimber);
+        }
+    }
+}
+
+void sumgame::undo_db_replacement_pass()
+{
+    _pop_undo_code(SUMGAME_UNDO_DB_REPLACEMENT_PASS);
+
+    if (!global::use_db())
+        return;
+
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    for (game* g : cr.added_games)
+        assert(g->is_active());
+
+    pop(cr.added_games);
+    for (game* g : cr.added_games)
+        delete g;
+
+    cr.added_games.clear();
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+    cr.deactivated_games.clear();
+
+    _change_record_stack.pop_back();
+}
+
+std::optional<solve_result> sumgame::db_analyze_pass()
+{
+
+}
+
+void sumgame::undo_db_analyze_pass()
+{
+
 }
 
 void sumgame::print(std::ostream& str) const
