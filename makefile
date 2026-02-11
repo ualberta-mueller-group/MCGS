@@ -140,15 +140,27 @@ INC = -I. -I$(SRC_DIR) $(LIB_INC)
 NORMAL_FLAGS := $(NORMAL_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
 TEST_FLAGS := $(TEST_FLAGS_BASE) $(INC) $(COLOR_FLAGS)
 
-#ifneq (,$(filter $(USE_THERM),1 true))
+
+USE_THERM := 1
+USE_BOUNDS := 1
+USE_BOUNDS_WIN := 1
+
+ifneq (,$(filter $(USE_THERM),1 true))
 	NORMAL_FLAGS := $(NORMAL_FLAGS) -DMCGS_USE_THERM
 	TEST_FLAGS := $(TEST_FLAGS) -DMCGS_USE_THERM
-#endif
+endif
 
 ifneq (,$(filter $(USE_BOUNDS),1 true))
 	NORMAL_FLAGS := $(NORMAL_FLAGS) -DMCGS_USE_BOUNDS
 	TEST_FLAGS := $(TEST_FLAGS) -DMCGS_USE_BOUNDS
 endif
+
+ifneq (,$(filter $(USE_BOUNDS_WIN),1 true))
+	NORMAL_FLAGS := $(NORMAL_FLAGS) -DMCGS_USE_BOUNDS_WIN
+	TEST_FLAGS := $(TEST_FLAGS) -DMCGS_USE_BOUNDS_WIN
+endif
+
+
 
 
 # args: files, directory prefix, file extension

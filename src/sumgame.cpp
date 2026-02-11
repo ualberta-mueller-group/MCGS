@@ -931,6 +931,30 @@ ebw analyze_outcome_count_vector(const std::vector<unsigned int>& counts,
     return EMPTY;
 }
 
+ebw analyze_bounds(bound_t lower_rational, bound_t upper_rational,
+                   bound_t lower_ups, bound_t upper_ups)
+{
+    assert(lower_rational <= upper_rational && //
+           lower_ups <= upper_ups              //
+    );
+
+    if (lower_rational > 0)
+        return BLACK;
+    if (upper_rational < 0)
+        return WHITE;
+
+
+    if (lower_rational == 0 && upper_rational == 0)
+    {
+        if (lower_ups > 0)
+            return BLACK;
+        if (upper_ups < 0)
+            return WHITE;
+    }
+
+    return EMPTY;
+}
+
 } // namespace
 
 
@@ -1060,6 +1084,18 @@ optional<solve_result> sumgame::simplify_db(
     temperatures->resize(num_total_games());
 #endif
 
+#ifdef MCGS_USE_BOUNDS_WIN
+    bound_t lower_bound_ups = 0;
+    bound_t upper_bound_ups = 0;
+
+    bound_t lower_bound_rationals = 0;
+    bound_t upper_bound_rationals = 0;
+
+    bool bounds_valid = true;
+    bool at_least_one_impartial = false;
+#endif
+
+
     std::vector<unsigned int> counts = get_oc_indexable_vector();
 
     // Search all active games
@@ -1079,6 +1115,9 @@ optional<solve_result> sumgame::simplify_db(
 
         if (g->is_impartial())
         {
+#ifdef MCGS_USE_BOUNDS_WIN
+            at_least_one_impartial = true;
+#endif
             /*
                Because simplify_impartial() should be called prior to this
                function, one of the following must hold:
@@ -1098,10 +1137,18 @@ optional<solve_result> sumgame::simplify_db(
         }
         else
         {
-            std::optional<db_entry_partisan> entry = db.get_partisan(*g);
-            stats::report_db_access(entry.has_value());
+            const db_entry_partisan* entry = db.get_partisan_ptr(*g);
+            const bool has_value = entry != nullptr;
+            stats::report_db_access(has_value);
 
-            if (entry.has_value())
+            if (!has_value)
+            {
+
+#ifdef MCGS_USE_BOUNDS_WIN
+                bounds_valid = false;
+#endif
+            }
+            else
             {
                 oc = entry->outcome;
 
@@ -1110,6 +1157,48 @@ optional<solve_result> sumgame::simplify_db(
                 optional<ThValue>& temp = (*temperatures)[subgame_idx];
                 temp = entry->thermograph->Temperature();
                 at_least_one_temp = true;
+#endif
+
+#ifdef MCGS_USE_BOUNDS_WIN
+                if (!(bounds_valid && entry->bounds_data.has_value()))
+                    bounds_valid = false;
+                else
+                {
+                    const bound_scale scale = std::get<0>(*entry->bounds_data);
+                    const game_bounds_ptr& bounds = std::get<1>(*entry->bounds_data);
+
+                    if (!bounds->both_valid())
+                        bounds_valid = false;
+                    else
+                    {
+                        assert(bounds->get_lower_relation() == REL_LESS &&
+                                bounds->get_upper_relation() == REL_GREATER);
+
+                        switch (scale)
+                        {
+                            case BOUND_SCALE_UP:
+                            {
+                                lower_bound_ups += bounds->get_lower();
+                                upper_bound_ups += bounds->get_upper();
+                                break;
+                            }
+
+                            case BOUND_SCALE_DYADIC_RATIONAL:
+                            {
+                                lower_bound_rationals += bounds->get_lower();
+                                upper_bound_rationals += bounds->get_upper();
+                                break;
+                            }
+
+                            default:
+                            {
+                                bounds_valid = false;
+                                break;
+                            }
+
+                        }
+                    }
+                }
 #endif
             }
         }
@@ -1124,19 +1213,38 @@ optional<solve_result> sumgame::simplify_db(
         }
     }
 
+    assert(std::accumulate(counts.begin(), counts.end(), 0) == n_active_games);
+
 #ifdef MCGS_USE_THERM
     if (!at_least_one_temp)
         temperatures.reset();
 #endif
 
-    assert(std::accumulate(counts.begin(), counts.end(), 0) == n_active_games);
+#ifdef MCGS_USE_BOUNDS_WIN
+    if (bounds_valid)
+    {
+        if (at_least_one_impartial)
+        {
+            lower_bound_ups = 0;
+            upper_bound_ups = 0;
+        }
 
-    const ebw winner = analyze_outcome_count_vector(counts, to_play());
+        const ebw bounds_winner =
+            analyze_bounds(lower_bound_rationals, upper_bound_rationals,
+                           lower_bound_ups, upper_bound_ups);
 
-    if (winner == EMPTY)
-        return {};
+        if (bounds_winner != EMPTY)
+            return solve_result(bounds_winner == to_play());
+    }
+#endif
 
-    return solve_result(winner == to_play());
+    const ebw outcome_winner = analyze_outcome_count_vector(counts, to_play());
+
+    if (outcome_winner != EMPTY)
+        return solve_result(outcome_winner == to_play());
+
+    return {};
+
 }
 
 void sumgame::undo_simplify_db()
@@ -1291,16 +1399,6 @@ void sumgame::undo_db_replacement_pass()
     cr.deactivated_games.clear();
 
     _change_record_stack.pop_back();
-}
-
-std::optional<solve_result> sumgame::db_analyze_pass()
-{
-
-}
-
-void sumgame::undo_db_analyze_pass()
-{
-
 }
 
 void sumgame::print(std::ostream& str) const

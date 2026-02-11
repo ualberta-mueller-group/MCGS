@@ -49,7 +49,6 @@ enum sumgame_undo_code
     SUMGAME_UNDO_PRE_SOLVE_PASS,
     SUMGAME_UNDO_SPLIT_AND_NORMALIZE,
     SUMGAME_UNDO_DB_REPLACEMENT_PASS,
-    SUMGAME_UNDO_DB_ANALYZE_PASS,
 
 };
 
@@ -118,13 +117,8 @@ public:
     void undo_simplify_db();
 
     //////////////////////////////////////////////////
-    //////////////////////////////////////////////////
     void db_replacement_pass();
     void undo_db_replacement_pass();
-
-    std::optional<solve_result> db_analyze_pass();
-    void undo_db_analyze_pass();
-    //////////////////////////////////////////////////
     //////////////////////////////////////////////////
 
     void add(game* g);
