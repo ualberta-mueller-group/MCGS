@@ -18,6 +18,11 @@ game* impartial_game_wrapper::inverse() const
     return new impartial_game_wrapper(_game->inverse(), true);
 }
 
+game* impartial_game_wrapper::clone() const
+{
+    return new impartial_game_wrapper(_game->clone());
+}
+
 void impartial_game_wrapper::print(std::ostream& str) const
 {
     str << "[impartial_game_wrapper of " << *_game << ']';

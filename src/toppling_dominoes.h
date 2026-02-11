@@ -30,6 +30,8 @@ public:
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
 
     game* inverse() const override;
+    game* clone() const override;
+
 
     int n_dominoes() const;
     int get_domino_at(int idx_virtual) const;

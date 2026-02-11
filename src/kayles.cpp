@@ -73,6 +73,11 @@ game* kayles::inverse() const
     return new kayles(_value);
 }
 
+game* kayles::clone() const
+{
+    return new kayles(*this);
+}
+
 relation kayles::_order_impl(const game* rhs) const
 {
     // implementation modified from integer_game

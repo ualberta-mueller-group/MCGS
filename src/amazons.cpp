@@ -251,6 +251,11 @@ game* amazons::inverse() const
     return new amazons(inverse_board(), shape());
 }
 
+game* amazons::clone() const
+{
+    return new amazons(*this);
+}
+
 ////////////////////////////////////////////////// split
 #ifdef AMAZONS_SPLIT
 

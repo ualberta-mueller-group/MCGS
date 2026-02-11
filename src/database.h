@@ -23,6 +23,7 @@
 #include "db_game_generator.h"
 #include "type_mapper.h"
 #include "impartial_game.h"
+#include "db_make_dominated_moves.h"
 
 #include "ThGraph.h"
 #include "serializer_lib_therm.h"
@@ -52,6 +53,10 @@ struct db_entry_partisan
 
 #ifdef MCGS_USE_BOUNDS
     std::optional<std::tuple<bound_scale, game_bounds_ptr>> bounds_data;
+#endif
+
+#ifdef MCGS_USE_DOMINANCE
+    std::optional<dominated_moves_t> dominated_moves;
 #endif
 };
 
@@ -91,6 +96,14 @@ inline bool db_entry_partisan::operator==(const db_entry_partisan& other) const
     }
 #endif
 
+#ifdef MCGS_USE_DOMINANCE
+    if (dominated_moves.has_value() != other.dominated_moves.has_value())
+        return false;
+
+    if (dominated_moves && (*dominated_moves != *other.dominated_moves))
+        return false;
+#endif
+
     return true;
 }
 
@@ -105,30 +118,40 @@ struct serializer<db_entry_partisan>
 {
     inline static void save(obuffer& os, const db_entry_partisan& entry)
     {
-        os.write_enum<outcome_class>(entry.outcome);
+        serializer_save(os, entry.outcome);
 
 #ifdef MCGS_USE_THERM
-        serializer<std::shared_ptr<ThGraph>>::save(os, entry.thermograph);
+        serializer_save(os, entry.thermograph);
 #endif
 
 #ifdef MCGS_USE_BOUNDS
-        serializer<decltype(entry.bounds_data)>::save(os, entry.bounds_data);
+        serializer_save(os, entry.bounds_data);
 #endif
+
+#ifdef MCGS_USE_DOMINANCE
+        serializer_save(os, entry.dominated_moves);
+#endif
+
     }
 
     inline static db_entry_partisan load(ibuffer& is)
     {
         db_entry_partisan entry;
 
-        entry.outcome = is.read_enum<outcome_class>();
+        serializer_load(is, entry.outcome);
 
 #ifdef MCGS_USE_THERM
-        entry.thermograph = serializer<std::shared_ptr<ThGraph>>::load(is);
+        serializer_load(is, entry.thermograph);
 #endif
 
 #ifdef MCGS_USE_BOUNDS
-        entry.bounds_data = serializer<decltype(entry.bounds_data)>::load(is);
+        serializer_load(is, entry.bounds_data);
 #endif
+
+#ifdef MCGS_USE_DOMINANCE
+        serializer_load(is, entry.dominated_moves);
+#endif
+
         return entry;
     }
 };

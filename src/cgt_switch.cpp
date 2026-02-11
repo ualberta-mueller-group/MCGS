@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <cassert>
+#include <stdexcept>
 
 using std::cout;
 using std::endl;
@@ -139,6 +140,12 @@ game* switch_game::inverse() const
         inv->_rational_game.reset(
             new dyadic_rational(-_rational_game->get_fraction()));
     return inv;
+}
+
+game* switch_game::clone() const
+{
+    assert(false);
+    throw std::logic_error("Clone not implemented!");
 }
 
 void switch_game::print(std::ostream& str) const

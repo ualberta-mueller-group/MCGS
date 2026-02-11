@@ -48,6 +48,8 @@ public:
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
 
     game* inverse() const override; // caller takes ownership
+    game* clone() const override;
+
 };
 
 //////////////////////////////////////// elephants_move_generator

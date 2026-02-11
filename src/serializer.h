@@ -67,12 +67,16 @@
         - std::pair<T1, T2>
         - std::unordered_map<T1, T2>
         - std::map<T1, T2>
+        - std::set<T>
+        - std::unordered_set<T>
 */
 #pragma once
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <map>
+#include <set>
+#include <unordered_set>
 #include <vector>
 #include <string>
 #include <cstddef>
@@ -100,7 +104,7 @@
         time?
 */
 
-////////////////////////////////////////////////// serialize<T>
+////////////////////////////////////////////////// serializer<T>
 // clang-format off
 template <class T, class Enable = void>
 struct serializer
@@ -120,6 +124,19 @@ struct serializer
         so it's probably better to have clearer compilation errors.
     */
 };
+
+////////////////////////////////////////////////// save/load helpers
+template <class T>
+inline void serializer_load(ibuffer& is, T& val)
+{
+    val = serializer<T>::load(is);
+}
+
+template <class T>
+inline void serializer_save(obuffer& os, const T& val)
+{
+    serializer<T>::save(os, val);
+}
 
 //////////////////////////////////////// integral types
 template <class T>
@@ -487,3 +504,54 @@ struct serializer<std::map<T1, T2>>
         return m;
     }
 };
+
+////////////////////////////////////////////////// std::set<T>
+template <class T>
+struct serializer<std::set<T>>
+{
+    inline static void save(obuffer& os, const std::set<T> s)
+    {
+        const uint64_t size = s.size();
+        os.write_u64(size);
+
+        for (const T& val : s)
+            serializer<T>::save(os, val);
+    }
+
+    inline static std::set<T> load(ibuffer& is)
+    {
+        std::set<T> s;
+
+        const uint64_t size = is.read_u64();
+        for (uint64_t i = 0; i < size; i++)
+            s.emplace(serializer<T>::load(is));
+
+        return s;
+    }
+};
+
+////////////////////////////////////////////////// std::unordered_set<T>
+template <class T>
+struct serializer<std::unordered_set<T>>
+{
+    inline static void save(obuffer& os, const std::unordered_set<T>& s)
+    {
+        const uint64_t size = s.size();
+        os.write_u64(size);
+
+        for (const T& val : s)
+            serializer<T>::save(os, val);
+    }
+
+    inline static std::unordered_set<T> load(ibuffer& is)
+    {
+        std::unordered_set<T> s;
+
+        const uint64_t size = is.read_u64();
+        for (uint64_t i = 0; i < size; i++)
+            s.emplace(serializer<T>::load(is));
+
+        return s;
+    }
+};
+

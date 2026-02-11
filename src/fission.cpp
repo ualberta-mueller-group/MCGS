@@ -259,6 +259,11 @@ game* fission::inverse() const
                        transpose_shape);
 }
 
+game* fission::clone() const
+{
+    return new fission(*this);
+}
+
 #ifdef USE_GRID_HASH
 void fission::_init_hash(local_hash& hash) const
 {

@@ -49,6 +49,11 @@ game* integer_game::inverse() const
     return new integer_game(-_value);
 }
 
+game* integer_game::clone() const
+{
+    return new integer_game(*this);
+}
+
 void integer_game::print(std::ostream& str) const
 {
     str << "integer:" << _value;

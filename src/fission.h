@@ -28,6 +28,8 @@ public:
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
 
     game* inverse() const override;
+    game* clone() const override;
+
 
 protected:
 #ifdef USE_GRID_HASH

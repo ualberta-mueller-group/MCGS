@@ -430,6 +430,11 @@ game* clobber::inverse() const
     return new clobber(inverse_board(), shape());
 }
 
+game* clobber::clone() const
+{
+    return new clobber(*this);
+}
+
 ////////////////////////////////////////////////// move generator implementation
 clobber_move_generator::clobber_move_generator(const clobber& game, bw to_play)
     : move_generator(to_play),

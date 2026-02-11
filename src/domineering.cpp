@@ -234,6 +234,11 @@ game* domineering::inverse() const
     return new domineering(transpose_board(board_const(), s), transpose_shape);
 }
 
+game* domineering::clone() const
+{
+    return new domineering(*this);
+}
+
 void domineering::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
     /*

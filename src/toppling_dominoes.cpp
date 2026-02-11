@@ -169,6 +169,11 @@ game* toppling_dominoes::inverse() const
     return new toppling_dominoes(inv_board);
 }
 
+game* toppling_dominoes::clone() const
+{
+    return new toppling_dominoes(*this);
+}
+
 const vector<int> toppling_dominoes::current_dominoes() const
 {
     vector<int> dominoes;

@@ -129,6 +129,7 @@ public:
             i.e. for the game "4", this should return the game "-4"
     */
     virtual game* inverse() const = 0; // caller takes ownership
+    virtual game* clone() const = 0; // caller takes ownership
 
 private:
     enum hash_state_enum

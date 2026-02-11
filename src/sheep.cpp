@@ -246,6 +246,11 @@ game* sheep::inverse() const
     return new sheep(inverse_number_board(), shape());
 }
 
+game* sheep::clone() const
+{
+    return new sheep(*this);
+}
+
 ////////////////////////////////////////////////// sheep_move_generator methods
 sheep_move_generator::sheep_move_generator(const sheep& g, bw to_play)
     : move_generator(to_play),

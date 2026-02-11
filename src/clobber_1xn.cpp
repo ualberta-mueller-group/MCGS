@@ -265,6 +265,11 @@ game* clobber_1xn::inverse() const
     return new clobber_1xn(inverse_board());
 }
 
+game* clobber_1xn::clone() const
+{
+    return new clobber_1xn(*this);
+}
+
 void clobber_1xn::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
     assert(is_black_white(to_play));

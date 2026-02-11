@@ -28,6 +28,8 @@ public:
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
     void print(std::ostream& str) const override;
     game* inverse() const override;
+    game* clone() const override;
+
 
     int value() const { return _value; }
 

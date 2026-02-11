@@ -113,6 +113,11 @@ game* dyadic_rational::inverse() const
     return new dyadic_rational(-_p, _q);
 }
 
+game* dyadic_rational::clone() const
+{
+    return new dyadic_rational(*this);
+}
+
 void dyadic_rational::print(std::ostream& str) const
 {
     str << "dyadic_rational:" << _p << '/' << _q;

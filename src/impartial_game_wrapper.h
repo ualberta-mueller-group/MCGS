@@ -46,6 +46,8 @@ public:
     game* wrapped_game() const { return _game; }
 
     game* inverse() const override; // caller takes ownership
+    game* clone() const override;
+
 
 protected:
     split_result _split_impl() const override; // See note in .cpp file

@@ -145,7 +145,6 @@ inline Enum_T ibuffer::read_enum()
     return static_cast<Enum_T>(value);
 }
 
-
 ////////////////////////////////////////////////// class obuffer
 class obuffer
 {

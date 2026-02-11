@@ -212,6 +212,11 @@ game* gen_toads::inverse() const
         inverse_mirror_board());
 }
 
+game* gen_toads::clone() const
+{
+    return new gen_toads(*this);
+}
+
 //split_result gen_toads::_split_impl() const
 //{
 //    assert(false);

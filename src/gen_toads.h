@@ -43,6 +43,8 @@ public:
     void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
     game* inverse() const override;
+    game* clone() const override;
+
 
     int get_min_slide() const;
     int get_max_slide() const;

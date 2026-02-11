@@ -23,6 +23,7 @@
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "db_make_bounds.h"
+#include "db_make_dominated_moves.h"
 #include "db_make_thermograph.h"
 #include "game.h"
 #include "hashing.h"
@@ -424,9 +425,12 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
     entry.thermograph = db_make_thermograph(*this, sum, 0);
 #endif
 
+    entry.outcome = bools_to_outcome_class(black_wins, white_wins);
+
 #ifdef MCGS_USE_BOUNDS
         entry.bounds_data = db_make_bounds(*this, sum);
 
+        // Debug info
         n_db_games++;
         if (entry.bounds_data.has_value())
         {
@@ -443,13 +447,11 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
             if (ptr->both_valid() && ptr->get_lower_relation() == REL_EQUAL)
                 n_db_bounds_equal++;
         }
-
-
-
 #endif
 
-    outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
-    entry.outcome = oc;
+#ifdef MCGS_USE_DOMINANCE
+        entry.dominated_moves = db_make_dominated_moves(sum);
+#endif
 
     set_partisan(sum, entry);
 

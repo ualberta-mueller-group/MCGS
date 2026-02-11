@@ -33,6 +33,8 @@ public:
     void undo_move() override;
 
     game* inverse() const override;
+    game* clone() const override;
+
     void print(std::ostream& str) const override;
     static int nim_sum(const std::vector<int>& values);     // uses Nim formula
     static int nim_sum(const std::vector<nimber*>& values); // uses Nim formula
@@ -58,6 +60,11 @@ inline nimber::nimber(int value) : impartial_game(), _value(value)
 inline game* nimber::inverse() const
 {
     return new nimber(_value);
+}
+
+inline game* nimber::clone() const
+{
+    return new nimber(*this);
 }
 
 inline void nimber::play(const move& m)

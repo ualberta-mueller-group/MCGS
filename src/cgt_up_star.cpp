@@ -75,6 +75,11 @@ game* up_star::inverse() const
     return new up_star(-num_ups(), has_star());
 }
 
+game* up_star::clone() const
+{
+    return new up_star(*this);
+}
+
 void up_star::print(std::ostream& str) const
 {
     str << "up_star:" << _value;
