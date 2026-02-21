@@ -8,6 +8,7 @@
 #include "database.h"
 #include "global_database.h"
 #include "random.h"
+#include "search_graph_debug.h"
 #include "type_table.h"
 #include "game.h"
 
@@ -58,6 +59,7 @@ inline bool game_is_number(const game* g)
         (g_type == game_type<integer_game>()) ||  //
         (g_type == game_type<dyadic_rational>()); //
 }
+
 
 } // namespace
 
@@ -192,14 +194,24 @@ sumgame_move sumgame_move_generator::gen_sum_move() const
 #else
 
 sumgame_move_generator::sumgame_move_generator(
-    const sumgame& sum, bw to_play,
-    const temp_vec_opt_t& temperatures)
-    : move_generator(to_play), _subgame_idx_local(0), _sum(sum)
+    const sumgame& sum, bw to_play, const temp_vec_opt_t& temperatures,
+    bool prune_dominated)
+    : move_generator(to_play),
+      _subgame_idx_local(0),
+      _prune_dominated(prune_dominated),
+      _sum(sum)
 {
     assert(LOGICAL_IMPLIES(                                               //
         temperatures.has_value(),                                         //
         temperatures->size() >= as_unsigned_unsafe(sum.num_total_games()) //
         ));                                                               //
+
+#ifndef MCGS_USE_DOMINANCE
+    _prune_dominated = false;
+#else
+    if (!global::use_db())
+        _prune_dominated = false;
+#endif
 
     std::vector<std::pair<int, const game*>> numbers;
 
@@ -272,60 +284,216 @@ sumgame_move sumgame_move_generator::gen_sum_move() const
     return sumgame_move(sg.first, _mg->gen_move());
 }
 
+//void sumgame_move_generator::_increment(bool init)
+//{
+//    assert(init || *this);
+//
+//    if (init)
+//    {
+//        assert(_subgame_idx_local == 0 && _seen_games.empty());
+//
+//        if (_subgames.empty())
+//            return;
+//
+//
+//        const game* sg_first = _subgames.front().second;
+//
+//        if (global::dedupe_movegen())
+//        {
+//            const hash_t hash = sg_first->get_local_hash();
+//            _seen_games.insert(hash);
+//        }
+//
+//        _mg.reset(sg_first->create_move_generator(to_play()));
+//    }
+//    else
+//    {
+//        assert(_mg && *_mg);
+//        ++(*_mg);
+//    }
+//
+//    const size_t n_subgames = _subgames.size();
+//
+//    while (true)
+//    {
+//        if (_mg && *_mg)
+//            return;
+//
+//        _mg.reset();
+//        _dom.reset();
+//
+//        _subgame_idx_local++;
+//
+//        if (!(_subgame_idx_local < n_subgames))
+//            return;
+//
+//        const game* sg = _subgames[_subgame_idx_local].second;
+//
+//        if (global::dedupe_movegen())
+//        {
+//            const hash_t hash = sg->get_local_hash();
+//
+//            auto inserted = _seen_games.insert(hash);
+//            if (!inserted.second)
+//                continue;
+//        }
+//        _mg.reset(sg->create_move_generator(to_play()));
+//    }
+//}
+
 void sumgame_move_generator::_increment(bool init)
 {
     assert(init || *this);
 
-    if (init)
-    {
-        assert(_subgame_idx_local == 0 && _seen_games.empty());
-
-        if (_subgames.empty())
-            return;
-
-
-        const game* sg_first = _subgames.front().second;
-
-        if (global::dedupe_movegen())
-        {
-            const hash_t hash = sg_first->get_local_hash();
-            _seen_games.insert(hash);
-        }
-
-        _mg.reset(sg_first->create_move_generator(to_play()));
-    }
-    else
-    {
-        assert(_mg && *_mg);
-        ++(*_mg);
-    }
-
-    const size_t n_subgames = _subgames.size();
+    bool has_generator = !init;
+    bool has_move = !init;
 
     while (true)
     {
-        if (_mg && *_mg)
+        // Try to increment move
+        if (has_generator && _increment_move(!has_move))
+        {
+            has_move = true;
+            assert(*this);
             return;
+        }
 
-        _mg.reset();
+        has_move = false;
+
+        // Try to increment generator
+        if (_increment_generator(!has_generator))
+        {
+            has_generator = true;
+            continue;
+        }
+
+        has_generator = false;
+        assert(!*this);
+        return;
+    }
+}
+
+bool sumgame_move_generator::_increment_generator(bool init)
+{
+    if (init)
+        assert(_subgame_idx_local == 0);
+    else
         _subgame_idx_local++;
 
-        if (!(_subgame_idx_local < n_subgames))
-            return;
+    while (_subgame_idx_local < _subgames.size())
+    {
+        _mg.reset();
 
-        const game* sg = _subgames[_subgame_idx_local].second;
+#ifdef MCGS_USE_DOMINANCE
+        _dom.reset();
+#endif
+
+        _current_local_hash.reset();
+
+
+        const std::pair<int, const game*>& subgame_pair = _subgames[_subgame_idx_local];
+        const game* sg = subgame_pair.second;
+
+        if (global::dedupe_movegen() || _prune_dominated)
+            _current_local_hash = sg->get_local_hash();
 
         if (global::dedupe_movegen())
         {
-            const hash_t hash = sg->get_local_hash();
+            assert(_current_local_hash.has_value());
+            auto inserted = _seen_games.insert(*_current_local_hash);
 
-            auto inserted = _seen_games.insert(hash);
             if (!inserted.second)
+            {
+                _subgame_idx_local++;
                 continue;
+            }
         }
+
+#ifdef MCGS_USE_DOMINANCE
+        if (_prune_dominated && !sg->is_impartial())
+        {
+            assert(global::use_db());
+            database& db = get_global_database();
+
+            assert(sg->get_local_hash() == *_current_local_hash);
+            db_entry_partisan* entry = db.get_partisan_ptr(*sg);
+            const bool has_value = (entry != nullptr);
+            stats::report_db_access(has_value);
+
+            if (has_value && entry->dominated_moves.has_value())
+                _dom = entry->dominated_moves.value();
+
+        }
+#endif
+
         _mg.reset(sg->create_move_generator(to_play()));
+        return true;
+    }
+
+    _mg.reset();
+#ifdef MCGS_USE_DOMINANCE
+    _dom.reset();
+#endif
+    _current_local_hash.reset();
+
+    return false;
+}
+
+bool sumgame_move_generator::_increment_move(bool init)
+{
+    assert(_mg.get() != nullptr);
+    assert(init || *_mg);
+
+    if (!init)
+        ++(*_mg);
+
+    while (true)
+    {
+        if (!(*_mg))
+        {
+            _mg.reset();
+            return false;
+        }
+
+#ifdef MCGS_USE_DOMINANCE
+        if (_prune_dominated && _dom)
+        {
+            assert(_current_local_hash.has_value());
+            assert(*_current_local_hash == _subgames[_subgame_idx_local].second->get_local_hash());
+
+            const move m = _mg->gen_move();
+
+            if (_dom->move_is_dominated(*_current_local_hash, m, to_play()))
+            {
+                if (sgraph::is_recording())
+                {
+                    sumgame& sum_nonconst = const_cast<sumgame&>(_sum);
+
+                    sumgame_move sm;
+                    sm.m = m;
+                    sm.subgame_idx = _subgames[_subgame_idx_local].first;
+
+                    sum_nonconst.play_sum(sm, to_play());
+
+                    sgraph::push(sum_nonconst);
+                    sgraph::pop(SEARCH_NODE_TYPE_PRUNED);
+
+                    sum_nonconst.undo_move();
+                }
+
+                ++(*_mg);
+                continue;
+            }
+
+        }
+#endif
+
+        return true;
     }
 }
+
+
+
 
 #endif
 //////////////////////////////////////////////////
@@ -488,9 +656,11 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 #endif
 
     undo_stack_unwinder stack_unwinder(*this);
+    sgraph::push(*this);
 
     if (_over_time())
         return solve_result::invalid();
+
 
     stats::report_search_node(*this, to_play(), depth);
     const uint64_t next_depth = depth + 1; // for after a move is played
@@ -513,7 +683,10 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
         std::optional<solve_result> result = simplify_db(temperatures);
 
         if (result.has_value())
+        {
+            sgraph::pop_winloss(result->win);
             return result;
+        }
     }
 
 
@@ -528,7 +701,11 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
         _do_ttable_lookup();
 
     if (tt_result.has_value() && tt_result->entry_valid())
-        return tt_result->get_bool(0);
+    {
+        const bool win = tt_result->get_bool(0);
+        sgraph::pop_winloss(win);
+        return win;
+    }
 
     const bw toplay = to_play();
 
@@ -565,6 +742,8 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
                 tt_result->init_entry();
                 tt_result->set_bool(0, result.win);
             }
+
+            sgraph::pop_winloss(result.win);
             return result;
         }
     }
@@ -575,6 +754,8 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
         tt_result->set_bool(0, false);
     }
 
+
+    sgraph::pop_winloss(false);
     return solve_result(false);
 }
 
@@ -1237,7 +1418,6 @@ optional<solve_result> sumgame::simplify_db(
             return solve_result(bounds_winner == to_play());
     }
 #endif
-
     const ebw outcome_winner = analyze_outcome_count_vector(counts, to_play());
 
     if (outcome_winner != EMPTY)
@@ -1418,6 +1598,24 @@ void sumgame::print(std::ostream& str) const
     str << std::endl;
 }
 
+void sumgame::print_simple(std::ostream& os) const
+{
+    os << color_to_player_char(to_play());
+
+    const int n_games = num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        const game* sg = subgame_const(i);
+        if (!sg->is_active())
+            continue;
+
+        os << " " << *sg;
+    }
+
+    os << std::flush;
+}
+
+
 hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 {
     return _sumgame_hash.get_global_hash_value(subgames(), to_play());
@@ -1432,6 +1630,11 @@ hash_t sumgame::get_global_hash_for_player(ebw for_player, bool invalidate_game_
 bool sumgame::all_impartial() const
 {
     return all_games_impartial(_subgames);
+}
+
+bool sumgame::all_partisan() const
+{
+    return all_games_partisan(_subgames);
 }
 
 std::optional<sumgame_move> sumgame::get_winning_or_random_move(
@@ -1573,7 +1776,7 @@ sumgame_move_generator* sumgame::create_sum_move_generator(
     if (temperatures.has_value() && (n_games > temperatures->size()))
         temperatures->resize(n_games);
 
-    return new sumgame_move_generator(*this, to_play, temperatures);
+    return new sumgame_move_generator(*this, to_play, temperatures, true);
 #else
     return new sumgame_move_generator(*this, to_play);
 #endif

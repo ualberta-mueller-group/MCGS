@@ -13,6 +13,7 @@
 #include "get_winning_moves.h"
 #include "global_options.h"
 #include "impartial_sumgame.h"
+#include "search_graph_debug.h"
 #include "solver_stats.h"
 #include "stopwatch.h"
 #include "test_case_enums.h"
@@ -111,11 +112,15 @@ void test_case_solve_bw::_run_impl(unsigned long long timeout)
 
     sumgame s(_expr.get_player());
 
+    sgraph::start();
+
     sw.start();
     s.add(_games);
     optional<solve_result> result = s.solve_with_timeout(timeout);
     s.pop(_games);
     sw.stop();
+
+    sgraph::end(result.has_value());
 
     optional<string> result_string;
     if (result.has_value())

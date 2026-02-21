@@ -56,7 +56,7 @@ struct db_entry_partisan
 #endif
 
 #ifdef MCGS_USE_DOMINANCE
-    std::optional<dominated_moves_t> dominated_moves;
+    std::optional<std::shared_ptr<dominated_moves_t>> dominated_moves;
 #endif
 };
 
@@ -212,8 +212,13 @@ public:
     std::optional<db_entry_partisan> get_partisan(const game& g) const;
     std::optional<db_entry_partisan> get_partisan(const sumgame& sum) const;
 
-    // TODO pointer is invalidated by modifying DB...
-    const db_entry_partisan* get_partisan_ptr(const game& g) const;
+    /*
+        TODO pointer is invalidated by modifying DB
+        Also these should be const, but sumgame_move_generator needs to
+        create a shared_ptr/weak_ptr to something in the entry...
+    */
+    db_entry_partisan* get_partisan_ptr(const game& g);
+    db_entry_partisan* get_partisan_ptr(const sumgame& sum);
 
     std::optional<db_entry_impartial> get_impartial(const game& g) const;
 

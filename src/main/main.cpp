@@ -8,19 +8,22 @@
 
 //#include "basic_player.h"
 #include "cli_options.h"
+#include "database.h"
 #include "file_parser.h"
 #include "autotests.h"
+#include "global_database.h"
 #include "print_moves.h"
+#include "search_graph_debug.h"
 #include "test_case.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
 #include "clobber.h"
+#include "clobber_1xn.h"
 
 #include "gen_experiments.h"
 //#include "winning_moves.h"
 #include "basic_player.h"
-#include "thermograph_prototyping.h"
 #include "utils_for_main.h"
 
 using std::cout, std::endl, std::flush, std::string;
@@ -37,8 +40,6 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
-
-    thermograph_prototyping();
 
     if (opts.use_player)
     {
@@ -107,6 +108,7 @@ int main(int argc, char** argv)
 
             for (int test_number = 0; test_number < n_test_cases; test_number++)
             {
+
                 std::shared_ptr<i_test_case> test_case =
                     parser->get_test_case(test_number);
 
@@ -119,6 +121,9 @@ int main(int argc, char** argv)
             }
         }
     }
+
+    if (opts.search_graph_verify_dir.has_value())
+        sgraph::annotate_graphs(*opts.search_graph_verify_dir);
 
     if (random_table::did_resize_warning())
         random_table::print_resize_warning();

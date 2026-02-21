@@ -367,6 +367,16 @@ inline bool all_games_impartial(const T& container)
     return true;
 }
 
+template <class T>
+inline bool all_games_partisan(const T& container)
+{
+    for (const game* g : container)
+        if (g->is_impartial())
+            return false;
+    return true;
+}
+
+
 //---------------------------------------------------------------------------
 
 template <class T> // NOLINTNEXTLINE(readability-identifier-naming)

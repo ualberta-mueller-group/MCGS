@@ -12,6 +12,7 @@
 #include "file_parser.h"
 #include "global_options.h"
 #include "init_database.h"
+#include "search_graph_debug.h"
 #include "string_to_int.h"
 #include "utilities.h"
 #include <cassert>
@@ -245,6 +246,12 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
                "IFF they contain the same games and type mappings. NOTE: this "
                "means files are considered different even if a type "
                "mapping difference involves games not found in either file.");
+
+    print_flag("--search-graph-print <directory name>",
+               "Print BW solve command search graphs to directory.");
+
+    print_flag("--search-graph-verify <directory name>",
+               "Verify and annotate search graphs from given directory.");
 }
 
 } // namespace
@@ -457,6 +464,32 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
             opts.db_file_name_compare_1 = arg_next;
             opts.db_file_name_compare_2 = args[arg_idx_file_2];
+
+            continue;
+        }
+
+        if (arg == "--search-graph-print")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: --search-graph-print given but directory missing!");
+
+            sgraph::set_dir(arg_next);
+
+            continue;
+        }
+
+        if (arg == "--search-graph-verify")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: --search-graph-verify given but directory missing!");
+
+            opts.search_graph_verify_dir = arg_next;
 
             continue;
         }

@@ -1,0 +1,5 @@
+{version 1.5}
+
+[domineering]
+/*.#..|#...|..#.|...# {B loss, W loss}*/
+.#..|#...|..#.|...# {B loss}

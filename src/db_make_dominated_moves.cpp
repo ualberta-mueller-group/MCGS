@@ -3,6 +3,7 @@
 #include "cgt_basics.h"
 #include "sumgame.h"
 #include <memory>
+#include <sstream>
 
 using namespace std;
 
@@ -67,6 +68,17 @@ relation bools_to_relation(bool black_wins, bool white_wins, bw player)
     assert(false);
 }
 
+void assert_cloned_properly(const game* g1, const game* g2)
+{
+    std::stringstream str1;
+    std::stringstream str2;
+
+    str1 << *g1;
+    str2 << *g2;
+
+    assert(str1.str() == str2.str());
+}
+
 void clone_sumgame(const sumgame& from, sumgame& to)
 {
     assert(to.num_total_games() == 0);
@@ -80,6 +92,7 @@ void clone_sumgame(const sumgame& from, sumgame& to)
             continue;
 
         game* sg_copy = sg->clone();
+        assert_cloned_properly(sg, sg_copy);
         to.add(sg_copy);
     }
 
@@ -172,6 +185,7 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
     assert(is_black_white(player));
     vector<generalized_sum_move> moves;
 
+    assert(sum.to_play() == player);
     unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(player));
 
     while (*gen)
@@ -234,11 +248,11 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
 
             const generalized_sum_move& move2 = sum_moves[idx2];
 
-            if (move1 == move2)
-            {
-                mark_dominated(idx2);
-                continue;
-            }
+            //if (move1 == move2)
+            //{
+            //    mark_dominated(idx2);
+            //    continue;
+            //}
 
             play_generalized_sum_move(sum2, move2, player);
 
@@ -249,12 +263,21 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
             const relation rel = compare_sums(sum1, sum2, player);
 
             if (rel == REL_LESS)
+            {
                 mark_dominated(idx1);
-            else if (rel == REL_EQUAL || rel == REL_GREATER)
+            }
+            else if (rel == REL_EQUAL)
+            {
                 mark_dominated(idx2);
+                assert(!(is_dominated(idx1) && is_dominated(idx2)));
+            }
+            else if (rel == REL_GREATER)
+            {
+                mark_dominated(idx2);
+            }
             else if (rel != REL_FUZZY)
             {
-                THROW_ASSERT(false);
+                assert(false);
             }
 
             sum2.undo_move();
@@ -279,9 +302,9 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
 
 //////////////////////////////////////////////////
 
-dominated_moves_t db_make_dominated_moves(const sumgame& sum)
+shared_ptr<dominated_moves_t> db_make_dominated_moves(const sumgame& sum)
 {
-    dominated_moves_t dom;
+    shared_ptr<dominated_moves_t> dom(new dominated_moves_t());
 
     sumgame clone1(BLACK);
     sumgame clone2(BLACK);
@@ -291,8 +314,8 @@ dominated_moves_t db_make_dominated_moves(const sumgame& sum)
     {
         assert_restore_sumgame ars1(clone1);
         assert_restore_sumgame ars2(clone2);
-        make_dominated_moves_for(clone1, clone2, BLACK, dom);
-        make_dominated_moves_for(clone1, clone2, WHITE, dom);
+        make_dominated_moves_for(clone1, clone2, BLACK, *dom);
+        make_dominated_moves_for(clone1, clone2, WHITE, *dom);
     }
 
     cleanup_sumgame(clone1);

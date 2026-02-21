@@ -19,6 +19,7 @@
 #include "game.h"
 #include "global_options.h"
 #include "sumgame_change_record.h"
+#include "dominated_moves.h"
 #include "transposition.h"
 #include "timeout_token.h"
 
@@ -49,7 +50,6 @@ enum sumgame_undo_code
     SUMGAME_UNDO_PRE_SOLVE_PASS,
     SUMGAME_UNDO_SPLIT_AND_NORMALIZE,
     SUMGAME_UNDO_DB_REPLACEMENT_PASS,
-
 };
 
 //////////////////////////////////////// sumgame_move
@@ -184,6 +184,7 @@ public:
         bw to_play, temp_vec_opt_t& temperatures) const;
 
     void print(std::ostream& str) const;
+    void print_simple(std::ostream& str) const;
 
     hash_t get_global_hash(bool invalidate_game_hashes = false) const;
     hash_t get_global_hash_for_player(ebw for_player, bool invalidate_game_hashes = false) const;
@@ -193,6 +194,7 @@ public:
     hash_t game_hash() const override;
 
     bool all_impartial() const; // considers inactive games
+    bool all_partisan() const; // considers inactive games
 
     // Used by player
     std::optional<sumgame_move> get_winning_or_random_move(bw for_player) const;
@@ -306,7 +308,8 @@ class sumgame_move_generator : public move_generator
 {
 public:
     sumgame_move_generator(const sumgame& sum, bw to_play,
-                           const temp_vec_opt_t& temperatures = {});
+                           const temp_vec_opt_t& temperatures = {},
+                           bool prune_dominated = false);
 
     ~sumgame_move_generator();
 
@@ -319,6 +322,8 @@ public:
 
 private:
     void _increment(bool init);
+    bool _increment_generator(bool init);
+    bool _increment_move(bool init);
 
     // Index into _subgames, not subgame index in _sum
     size_t _subgame_idx_local;
@@ -326,6 +331,12 @@ private:
 
     std::unique_ptr<move_generator> _mg;
     std::set<hash_t> _seen_games;
+
+    bool _prune_dominated;
+#ifdef MCGS_USE_DOMINANCE
+    std::shared_ptr<dominated_moves_t> _dom;
+#endif
+    std::optional<hash_t> _current_local_hash;
 
     const sumgame& _sum;
 };
