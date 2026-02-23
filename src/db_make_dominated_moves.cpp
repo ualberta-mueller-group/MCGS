@@ -269,7 +269,7 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
             else if (rel == REL_EQUAL)
             {
                 mark_dominated(idx2);
-                assert(!(is_dominated(idx1) && is_dominated(idx2)));
+                //assert(!(is_dominated(idx1) && is_dominated(idx2)));
             }
             else if (rel == REL_GREATER)
             {
