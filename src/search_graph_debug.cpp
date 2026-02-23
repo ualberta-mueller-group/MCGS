@@ -463,7 +463,7 @@ inline search_node_type_t get_new_node_type(search_node_type_t old_type,
 
         case SEARCH_NODE_TYPE_PRUNED:
             return (win ? SEARCH_NODE_TYPE_ANNOTATED_PRUNED_WIN
-                        : SEARCH_NODE_TYPE_ANNOTATED_LOSS);
+                        : SEARCH_NODE_TYPE_ANNOTATED_PRUNED_LOSS);
 
         case SEARCH_NODE_TYPE_SIMPLIFICATION:
         case SEARCH_NODE_TYPE_ANNOTATED_LOSS:
