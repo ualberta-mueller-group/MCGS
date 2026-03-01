@@ -6,7 +6,6 @@
 #include <string>
 #include <memory>
 
-//#include "basic_player.h"
 #include "cli_options.h"
 #include "file_parser.h"
 #include "autotests.h"
@@ -18,11 +17,11 @@
 #include "clobber.h"
 
 #include "gen_experiments.h"
-//#include "winning_moves.h"
 #include "basic_player.h"
 #include "utils_for_main.h"
 
 using std::cout, std::endl, std::flush, std::string;
+
 
 ////////////////////////////////////////////////// main function
 int main(int argc, char** argv)

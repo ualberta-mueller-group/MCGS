@@ -5,6 +5,7 @@
 
 #include "global_options.h"
 #include "test/amazons_test.h"
+#include "test/cannibal_clobber_test.h"
 #include "test/domineering_test.h"
 #include "test/fission_test.h"
 #include "test/gen_toads_test.h"
@@ -176,6 +177,7 @@ int main(int argc, const char** argv)
     //{
     clobber_1xn_test_all();
     clobber_test_all();
+    cannibal_clobber_test_all();
     nogo_1xn_test_all();
     nogo_test_all();
     elephants_test_all(); // takes several seconds

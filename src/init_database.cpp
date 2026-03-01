@@ -28,6 +28,7 @@
 #include "elephants.h"
 
 #include "clobber.h"
+#include "cannibal_clobber.h"
 #include "nogo.h"
 #include "domineering.h"
 #include "amazons.h"
@@ -344,6 +345,8 @@ void register_games(database& db)
     DATABASE_REGISTER_TYPE(db, toppling_dominoes);
     DATABASE_REGISTER_TYPE(db, sheep);
 
+    DATABASE_REGISTER_TYPE(db, cannibal_clobber);
+
     /*
         NOTE: 2nd argument to register_create_game_gen_fn(...) indicates
         whether or not the game is impartial.
@@ -407,6 +410,12 @@ void register_games(database& db)
 
     // sheep
     register_create_game_gen_fn("sheep", false, create_sheep_gen);
+
+    // cannibal_clobber
+    register_create_game_gen_fn(
+        "cannibal_clobber", false,
+        get_gridlike_create_game_gen_fn<cannibal_clobber, GRIDLIKE_TYPE_GRID>(
+            {BLACK, WHITE}, true, EMPTY));
 }
 
 } // namespace
