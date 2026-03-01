@@ -247,7 +247,7 @@ XOXOO...XO
             Example:
                 '2,3,2,0:X..XO.O'
 
-        [nogo], and [clobber]
+        [nogo], [clobber], and [cannibal_clobber]
             A grid of '.', 'X', and 'O'.
 
         [amazons]
