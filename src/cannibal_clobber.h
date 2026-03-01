@@ -37,4 +37,8 @@ public:
     void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
     game* inverse() const override; // caller takes ownership
+    game* clone() const override;
+
+    move encode_grid_move_to_db(const move& m) const override;
+    move decode_grid_move_from_db(const move& m) const override;
 };

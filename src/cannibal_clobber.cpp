@@ -424,6 +424,44 @@ game* cannibal_clobber::inverse() const
     return new cannibal_clobber(inverse_board(), shape());
 }
 
+game* cannibal_clobber::clone() const
+{
+    return new cannibal_clobber(*this);
+}
+
+::move cannibal_clobber::encode_grid_move_to_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2;
+    bw target_color;
+    cannibal_clobber_move::unpack_coords(m, coord1, coord2, target_color);
+    assert(is_black_white(target_color));
+
+    coord1 = grid_hash::get_transformed_coords(grid_shape, coord1, ori);
+    coord2 = grid_hash::get_transformed_coords(grid_shape, coord2, ori);
+
+    return cannibal_clobber_move::create_from_coords(coord1, coord2,
+                                                     target_color);
+}
+
+::move cannibal_clobber::decode_grid_move_from_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2;
+    bw target_color;
+    cannibal_clobber_move::unpack_coords(m, coord1, coord2, target_color);
+    assert(is_black_white(target_color));
+
+    coord1 = grid_hash::get_inverse_transformed_coords(grid_shape, coord1, ori);
+    coord2 = grid_hash::get_inverse_transformed_coords(grid_shape, coord2, ori);
+
+    return cannibal_clobber_move::create_from_coords(coord1, coord2, target_color);
+}
+
 ////////////////////////////////////////////////// move generator implementation
 cannibal_clobber_move_generator::cannibal_clobber_move_generator(const cannibal_clobber& game, bw to_play)
     : move_generator(to_play),

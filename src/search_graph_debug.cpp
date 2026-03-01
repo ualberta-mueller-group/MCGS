@@ -352,6 +352,7 @@ game* make_game(const game_token_t& token)
         make_game_fn_map["amazons"] = make_game_no_params<amazons>;
         make_game_fn_map["nogo"] = make_game_no_params<nogo>;
         make_game_fn_map["clobber"] = make_game_no_params<clobber>;
+        make_game_fn_map["cannibal_clobber"] = make_game_no_params<cannibal_clobber>;
         make_game_fn_map["domineering"] = make_game_no_params<domineering>;
         make_game_fn_map["fission"] = make_game_no_params<fission>;
         make_game_fn_map["sheep"] = make_game_no_params<sheep>;
