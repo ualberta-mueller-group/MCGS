@@ -11,6 +11,7 @@
 #include "split_test_nimber.h"
 #include "split_test_up_star.h"
 #include "test/split_test_amazons.h"
+#include "test/split_test_cannibal_clobber.h"
 #include "test/split_test_domineering.h"
 #include "test/split_test_fission.h"
 #include "test/split_test_toppling_dominoes.h"
@@ -21,6 +22,7 @@ void split_test_all()
     split_test_elephants_all();
     split_test_clobber_1xn_all();
     split_test_clobber_all();
+    split_test_cannibal_clobber_all();
     split_test_dyadic_rational_all();
     split_test_integer_game_all();
     split_test_switch_game_all();

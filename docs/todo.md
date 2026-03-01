@@ -1,19 +1,6 @@
 # BUGS
 - none known
 
-### Remaining Issues from merging impartial-games branch into v1.2-develop
-- Needs review: in impartial games, there are still too many "two version" 
-  methods and move generators,
-  both with and without a color argument.
-- Needs review: `impartial_game` stores a `_nim_value` after it is solved.
-  Do we need it, or should we make the game object smaller and 
-  just use the hash table to store the value?
-  It is a bit confusing since a `impartial_game` is an
-  object with changable state (can play/undo moves), and
-  the `_nim_value_` is only valid for the root state (0 moves played).
-  This is checked by assertions, but still questionable design?
-- The new `performance_test_...` functions are not called.
-    Should we have an interface to call them?
 
 
 # Limitations and Annoyances
@@ -39,7 +26,13 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 # Current tasks
 
-## Issues for V1.5
+# Remaining Issues from previous versions
+
+## Issue management
+- There are five  issues on github in https://github.com/ualberta-mueller-group/MCGS/issues - started June 2025, never updated. Close those?
+- How should we manage issues? In this document?
+
+## Remaining Issues from V1.5
 - try to alternate black/white moves in impartial generator
 - try storing both nimbers and boolean values in tt
 - get rid of `_nim_value` in impartial game object, just use tt?
@@ -61,8 +54,22 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - SBHSolver needs some slight modification
     - use CGSuite for impartial 2D nogo
 
+## Remaining Issues from merging impartial-games branch into v1.2-develop
+- Needs review: in impartial games, there are still too many "two version" 
+  methods and move generators,
+  both with and without a color argument.
+- Needs review: `impartial_game` stores a `_nim_value` after it is solved.
+  Do we need it, or should we make the game object smaller and 
+  just use the hash table to store the value?
+  It is a bit confusing since a `impartial_game` is an
+  object with changable state (can play/undo moves), and
+  the `_nim_value_` is only valid for the root state (0 moves played).
+  This is checked by assertions, but still questionable design?
+- The new `performance_test_...` functions are not called.
+    Should we have an interface to call them?
+
 # Future tasks
-### Next few versions
+## Next few versions
 - Version 1.6: focus on more information in DB
     - simplest equal game
     - prepare for thermograph DB
@@ -75,6 +82,16 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - No big new features
     - Focus on performance testing, tuning, code review and cleanup
     
+## Documentation and Publication
+- Slides for CGT Japan
+- More complete results page
+
+## User interface and API
+- Python interface to MCGS?
+- Develop interface to Kyle's Javascript UI?
+- Interface for new databases? I.e. view confusion interval, thermograph
+
+## More tasks, unsorted
 
 ### Implement more games
 - Col, Snort
@@ -242,10 +259,11 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - E.g. clobber: multiples of up, up-star
     - Binary search to find confusion interval
 
-# Small todo's
-    - Remove duplication between performance and unit tests
-    - Add one-line documentation for these options in global_options.h
-    - domineering/cram, fill in single squares after move even if no split happens
-    - Should DB hits also be stored in the TT? Do some tests.
-    - rename the current use_complexity_score flag to make it clear that it is only for the LV algorithm
+# Small todo items
+- Remove duplication between performance and unit tests
+- Add one-line documentation for these options in `global_options.h`
+- domineering/cram, fill in single squares after move even if no split happens
+- Should DB hits also be stored in the TT? Do some tests.
+- rename the current `use_complexity_score` flag to make it clear that it is only for the LV algorithm
+- https://github.com/ualberta-mueller-group/MCGS/issues - use issues tracker, or delete/resolve
 

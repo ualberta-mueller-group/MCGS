@@ -7,6 +7,7 @@
 #include "cgt_basics.h"
 #include "int_pair.h"
 #include "n_bit_int.h"
+#include "cannibal_clobber_move.h"
 
 using namespace std;
 
@@ -383,6 +384,41 @@ void test_move6(bool test_full_interval)
     }}}}}}))))));
 }
 
+void test_cannibal_clobber_move(bool test_full_interval)
+{
+    // Parts/coordinates, extracted from a move with "unpack" functions
+    int_pair c1_unpack, c2_unpack;
+    int target_color_unpack;
+
+    TEST_LOOP(p1, cannibal_clobber_move::custom_layout, 1, test_full_interval, {
+    TEST_LOOP(p2, cannibal_clobber_move::custom_layout, 2, test_full_interval, {
+    TEST_LOOP(p3, cannibal_clobber_move::custom_layout, 3, test_full_interval, {
+    TEST_LOOP(p4, cannibal_clobber_move::custom_layout, 4, test_full_interval, {
+    for (int p5 = 0; p5 <= 1; p5++) {
+
+        // Test different ways of creating the move
+        const int_pair c1(p1, p2);
+        const int_pair c2(p3, p4);
+        const int t1((p5 == 0) ? BLACK : WHITE);
+
+        const ::move m_create_coords =
+            cannibal_clobber_move::create_from_coords(c1, c2, t1);
+
+        assert(0 == (m_create_coords & (1 << N_BIT_INT_MAX_BITS)));
+
+        // Test the different ways of getting move parts
+        cannibal_clobber_move::unpack_coords(m_create_coords, c1_unpack,
+                                             c2_unpack, target_color_unpack);
+
+        assert(p1 == c1_unpack.first);
+        assert(p2 == c1_unpack.second);
+        assert(p3 == c2_unpack.first);
+        assert(p4 == c2_unpack.second);
+        assert(t1 == target_color_unpack);
+
+    }}}}}))));
+}
+
 
 } // namespace
 
@@ -397,4 +433,5 @@ void cgt_move_test_all(bool extra_tests)
     test_move3(extra_tests);
     test_move4(extra_tests);
     test_move6(extra_tests);
+    test_cannibal_clobber_move(extra_tests);
 }

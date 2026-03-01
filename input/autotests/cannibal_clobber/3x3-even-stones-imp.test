@@ -1,0 +1,28 @@
+{version 1.5}
+
+/*_
+    Results from: CGSuite 2.2-beta2
+*/
+
+[impartial cannibal_clobber]
+
+XOX|O.X|OXO {N 0}
+.XX|XOO|OXO {N 0}
+X.O|XXX|OOO {N 1}
+X.X|OOO|OXX {N 1}
+XXX|OOO|.OX {N 0}
+XOX|OOX|OX. {N 0}
+OXO|XXX|OO. {N 0}
+.XX|XOX|OOO {N 0}
+XXX|OXO|.OO {N 0}
+XOO|O.X|OXX {N 0}
+XOX|XO.|OXO {N 1}
+XOX|X.O|XOO {N 0}
+OOX|OXX|XO. {N 0}
+OXO|OOX|X.X {N 1}
+.OO|XXO|XOX {N 0}
+OXO|OX.|XOX {N 1}
+.OX|OOX|OXX {N 0}
+O.O|XXO|XOX {N 1}
+OXX|.OO|XOX {N 1}
+.XX|OOX|OOX {N 0}

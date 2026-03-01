@@ -13,6 +13,7 @@ Strips:
 Grids:
     amazons (OK)
     clobber (OK)
+    cannibal_clobber (OK)
     domineering (OK)
     fission (OK)
     nogo (OK)
@@ -228,6 +229,30 @@ XOXO|OXOX
 {winning moves N 0:a1-b1 0:b1-a1 0:b1-c1 0:c1-b1,
 winning moves B 0:a1-b1 0:b1-a1 0:b1-c1 0:c1-b1,
 winning moves W 0:a1-b1 0:b1-a1 0:b1-c1 0:c1-b1}
+
+    [cannibal_clobber]
+XO|OX
+{winning moves B a1-a2 a1-b1 b2-a2 b2-b1,
+winning moves W a2-a1 a2-b2 b1-a1 b1-b2}
+
+    [cannibal_clobber]
+XOX
+OXO|XOX
+{winning moves B 0:a1-b1 0:c1-b1 1:a2-a1 1:a2-b2 1:b1-a1 1:b1-b2 1:b1-c1 1:c2-b2 1:c2-c1,
+winning moves W 0:b1-a1 0:b1-c1 1:a1-a2 1:a1-b1 1:b2-a2 1:b2-c2 1:c1-b1 1:c1-c2}
+
+    [impartial cannibal_clobber]
+XO|OX
+{winning moves B None,
+winning moves W None,
+winning moves N None}
+
+    [impartial cannibal_clobber]
+XOX
+OXO|XOX
+{winning moves B 0:b1-a1 0:b1-c1,
+winning moves W 0:b1-a1 0:b1-c1,
+winning moves N 0:b1-a1 0:b1-c1}
 
     [domineering]
 ..|..

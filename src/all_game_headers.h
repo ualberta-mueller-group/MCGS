@@ -20,6 +20,7 @@
 #include "amazons.h"
 #include "nogo.h"
 #include "clobber.h"
+#include "cannibal_clobber.h"
 #include "domineering.h"
 #include "fission.h"
 #include "sheep.h"

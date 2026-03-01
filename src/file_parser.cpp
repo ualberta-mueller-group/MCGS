@@ -879,6 +879,7 @@ void file_parser::_init_game_parsers()
 
     _add_game_parser("nogo", new basic_parser_with_check<nogo>());
     _add_game_parser("clobber", new basic_parser<clobber>());
+    _add_game_parser("cannibal_clobber", new basic_parser<cannibal_clobber>());
     _add_game_parser("domineering", new basic_parser<domineering>());
     _add_game_parser("amazons", new basic_parser<amazons>());
     _add_game_parser("fission", new basic_parser<fission>());

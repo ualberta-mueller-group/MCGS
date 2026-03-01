@@ -1,0 +1,28 @@
+{version 1.5}
+
+/*_
+    Results from: CGSuite 2.2-beta2
+*/
+
+[cannibal_clobber]
+
+OOX.|XOXO|XOXO|X.OO {B loss, W win}
+OXXX|OXOO|OOX.|X.XO {B win, W win}
+OXO.|.OOX|X..X|XOXO {B win, W win}
+O.XX|XXOX|.OOO|OXOX {B win, W win}
+OOOX|.XXX|.OOO|OXX. {B loss, W win}
+XOXO|X.XO|OX.O|.OXX {B win, W loss}
+.O.X|OOXO|XO.X|.XOX {B win, W win}
+OOX.|XOXX|OO.O|XXOO {B loss, W win}
+XOXO|XXXO|OOXO|XOOX {B win, W win}
+.OXX|XO.O|OXXX|OOXO {B win, W loss}
+OXXX|OOO.|OXOX|OOXX {B loss, W win}
+O.XO|XXXO|O..O|XXOO {B loss, W win}
+XOO.|.XOX|OOXO|XOXO {B loss, W win}
+OXX.|XOXO|XOXO|OXOO {B loss, W win}
+XXOO|O.XO|XXXO|OXOO {B win, W win}
+OO.X|OOOX|XXXX|XOXO {B win, W win}
+OXXX|OX.X|OXXO|OOO. {B win, W win}
+OOXX|OOXO|OXXX|OXXO {B win, W win}
+OXXX|OXXO|OOXX|OXOO {B loss, W loss}
+O.O.|X.OO|XXXO|XO.X {B win, W win}
