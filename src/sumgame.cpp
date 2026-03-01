@@ -462,8 +462,11 @@ bool sumgame_move_generator::_increment_move(bool init)
             assert(*_current_local_hash == _subgames[_subgame_idx_local].second->get_local_hash());
 
             const move m = _mg->gen_move();
+            const game* sg = _subgames[_subgame_idx_local].second;
+            const move m_rotated = sg->encode_grid_move_to_db(m);
+            assert(sg->decode_grid_move_from_db(m_rotated) == m);
 
-            if (_dom->move_is_dominated(*_current_local_hash, m, to_play()))
+            if (_dom->move_is_dominated(*_current_local_hash, m_rotated, to_play()))
             {
                 if (sgraph::is_recording())
                 {

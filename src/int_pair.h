@@ -18,3 +18,8 @@ public:
         return p.first ^ p.second;
     }
 };
+
+inline int_pair transpose_int_pair(const int_pair& p)
+{
+    return {p.second, p.first};
+}

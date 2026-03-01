@@ -367,6 +367,32 @@ game* nogo::clone() const
     return new nogo(*this);
 }
 
+move nogo::encode_grid_move_to_db(const move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1;
+    cgt_move::move2_unpack_coords(m, coord1);
+
+    coord1 = grid_hash::get_transformed_coords(grid_shape, coord1, ori);
+
+    return cgt_move::move2_create_from_coords(coord1);
+}
+
+move nogo::decode_grid_move_from_db(const move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1;
+    cgt_move::move2_unpack_coords(m, coord1);
+
+    coord1 = grid_hash::get_inverse_transformed_coords(grid_shape, coord1, ori);
+
+    return cgt_move::move2_create_from_coords(coord1);
+}
+
 void nogo::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
     assert(is_black_white(to_play));

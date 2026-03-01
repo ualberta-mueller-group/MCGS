@@ -49,45 +49,15 @@
 
 #include "grid.h"
 #include "game.h"
+#include "grid_hash_orientation.h"
 #include "grid_location.h"
+#include "int_pair.h"
 #include "type_table.h"
 #include "utilities.h"
 
 // If defined: supported grid games use grid_hash class
 #define USE_GRID_HASH
 
-////////////////////////////////////////////////// grid_hash_orientation
-
-/*
-    Enum of the 8 rotation/transpose orientations for grids
-
-    Numeric suffix is the clockwise rotation (in degrees). "T" indicates
-    transpose, computed AFTER the rotation.
-*/
-enum grid_hash_orientation
-{
-    GRID_HASH_ORIENTATION_0 = 0,
-    GRID_HASH_ORIENTATION_0T,
-    GRID_HASH_ORIENTATION_90,
-    GRID_HASH_ORIENTATION_90T,
-    GRID_HASH_ORIENTATION_180,
-    GRID_HASH_ORIENTATION_180T,
-    GRID_HASH_ORIENTATION_270,
-    GRID_HASH_ORIENTATION_270T,
-};
-
-// Array of the 8 grid_hash_orientations
-static constexpr std::array<grid_hash_orientation, 8> GRID_HASH_ORIENTATIONS
-{
-    GRID_HASH_ORIENTATION_0,
-    GRID_HASH_ORIENTATION_0T,
-    GRID_HASH_ORIENTATION_90,
-    GRID_HASH_ORIENTATION_90T,
-    GRID_HASH_ORIENTATION_180,
-    GRID_HASH_ORIENTATION_180T,
-    GRID_HASH_ORIENTATION_270,
-    GRID_HASH_ORIENTATION_270T,
-};
 
 //////////////////////////////////////// Common active orientation bit masks
 // TODO static_assert that these are 8 and 4 bits, and within the lower 8 bits
@@ -192,7 +162,7 @@ enum orientation_op
 };
 
 /*
-    Bit masks of orientation_ops for each 90 degree rotation (excluding
+    Bit masks of `orientation_op`s for each 90 degree rotation (excluding
     transposes)
 */
 static constexpr std::array<unsigned int, 4> ORIENTATION_OPS_NO_T {
@@ -202,14 +172,33 @@ static constexpr std::array<unsigned int, 4> ORIENTATION_OPS_NO_T {
     ORIENTATION_OP_COL_INV | ORIENTATION_OP_SWAP, // 270
 };
 
-inline unsigned int get_op_mask(grid_hash_orientation ori)
+// Ignores "T" in grid_hash_orientation
+inline unsigned int get_op_mask_no_t(grid_hash_orientation ori)
 {
-    assert(!bit_is_1(ori, 0) &&                // Odd numbers only
-           0 <= ori &&                         //
-           ((std::make_unsigned_t<grid_hash_orientation>) ori) < GRID_HASH_ORIENTATIONS.size() //
+    assert(0 <= ori && //
+           ((std::make_unsigned_t<grid_hash_orientation>) ori) <
+               GRID_HASH_ORIENTATIONS.size() //
     );
 
     return ORIENTATION_OPS_NO_T[ori / 2];
+}
+
+static constexpr std::array<grid_hash_orientation, 4>
+    INVERSE_GRID_HASH_ORIENTATIONS_NO_T 
+{
+    GRID_HASH_ORIENTATION_0, // 0 -> 0
+    GRID_HASH_ORIENTATION_270, // 90 -> 270
+    GRID_HASH_ORIENTATION_180, // 180 -> 180
+    GRID_HASH_ORIENTATION_90, // 270 -> 90
+};
+
+inline grid_hash_orientation get_inverse_orientation_no_t(grid_hash_orientation ori)
+{
+    //assert(!bit_is_1(ori, 0)); // Shouldn't have T suffix
+    const unsigned int idx = ori / 2;
+
+    assert(0 <= idx && idx < INVERSE_GRID_HASH_ORIENTATIONS_NO_T.size());
+    return INVERSE_GRID_HASH_ORIENTATIONS_NO_T[idx];
 }
 
 } // namespace __grid_hash_impl
@@ -223,6 +212,7 @@ public:
     void reset(const int_pair& grid_shape);
 
     hash_t get_value() const;
+    grid_hash_orientation get_orientation() const;
 
     template <class T>
     void toggle_value(int r, int c, const T& color);
@@ -238,15 +228,36 @@ public:
     void init_from_board_and_type(const std::vector<T>& board,
                                   const int_pair& shape, game_type_t type);
 
-private:
-    int_pair _get_transformed_coords(int r, int c,
-                                     grid_hash_orientation ori) const;
+    // All 4 of these properly handle "T" suffix for orientation
+    static int_pair get_transformed_coords(const int_pair& shape,
+                                           const int_pair& coords,
+                                           grid_hash_orientation ori);
 
-    int_pair _get_transformed_shape(grid_hash_orientation ori) const;
+    static int_pair get_transformed_shape(const int_pair& shape,
+                                          grid_hash_orientation ori);
+
+    static int_pair get_inverse_transformed_coords(int_pair shape,
+                                                   int_pair coords,
+                                                   grid_hash_orientation ori);
+
+    static int_pair get_inverse_transformed_shape(int_pair shape,
+                                                  grid_hash_orientation ori);
+
+private:
+    void _compute_value() const;
+
+    // Both of these ignore "T" suffix
+    int_pair _get_transformed_coords_no_t(int r, int c,
+                                          grid_hash_orientation ori) const;
+
+    int_pair _get_transformed_shape_no_t(grid_hash_orientation ori) const;
 
     static constexpr unsigned int _N_HASHES = GRID_HASH_ORIENTATIONS.size();
 
     const unsigned int _grid_hash_mask;
+
+    mutable bool _is_dirty;
+    mutable grid_hash_orientation _selected_orientation;
 
     int_pair _grid_shape;
     std::array<local_hash, _N_HASHES> _hashes;
@@ -255,7 +266,7 @@ private:
 
 ////////////////////////////////////////////////// grid_hash methods
 inline grid_hash::grid_hash(unsigned int grid_hash_mask)
-    : _grid_hash_mask(grid_hash_mask)
+    : _grid_hash_mask(grid_hash_mask), _is_dirty(true)
 {
     assert(bit_is_1(_grid_hash_mask, GRID_HASH_ORIENTATION_0) && //
            0 == (_grid_hash_mask &
@@ -265,26 +276,27 @@ inline grid_hash::grid_hash(unsigned int grid_hash_mask)
 
 inline hash_t grid_hash::get_value() const
 {
-    hash_t min_val = std::numeric_limits<hash_t>::max();
+    if (_is_dirty)
+        _compute_value();
 
-    for (unsigned int i = 0; i < _N_HASHES; i++)
-    {
-        if (bit_is_1(_grid_hash_mask, i))
-        {
-            const hash_t h = _hashes[i].get_value();
+    assert(!_is_dirty);
+    return _hashes[_selected_orientation].get_value();
+}
 
-            if (h < min_val)
-                min_val = h;
-        }
-    }
+inline grid_hash_orientation grid_hash::get_orientation() const
+{
+    if (_is_dirty)
+        _compute_value();
 
-    return min_val;
+    assert(!_is_dirty);
+    return _selected_orientation;
 }
 
 template <class T>
 void grid_hash::toggle_value(int r, int c, const T& color)
 {
     static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
+    _is_dirty = true;
 
     for (unsigned int idx_no_t = 0; idx_no_t < GRID_HASH_ORIENTATIONS.size();
          idx_no_t += 2)
@@ -303,8 +315,8 @@ void grid_hash::toggle_value(int r, int c, const T& color)
 
         const grid_hash_orientation ori = GRID_HASH_ORIENTATIONS[idx1];
 
-        const int_pair coords = _get_transformed_coords(r, c, ori);
-        const int_pair shape = _get_transformed_shape(ori);
+        const int_pair coords = _get_transformed_coords_no_t(r, c, ori);
+        const int_pair shape = _get_transformed_shape_no_t(ori);
 
         const int_pair coords_transpose(coords.second, coords.first);
         const int_pair shape_transpose(shape.second, shape.first);
@@ -329,11 +341,13 @@ void grid_hash::toggle_value(int r, int c, const T& color)
 template <class T>
 inline void grid_hash::toggle_value(const int_pair& coord, const T& color)
 {
+    _is_dirty = true;
     toggle_value<T>(coord.first, coord.second, color);
 }
 
 inline void grid_hash::toggle_type(game_type_t type)
 {
+    _is_dirty = true;
     for (local_hash& hash : _hashes)
         hash.toggle_type(type);
 }
@@ -343,6 +357,7 @@ void grid_hash::init_from_board_and_type(const std::vector<T>& board,
                                          const int_pair& shape,
                                          game_type_t type)
 {
+    _is_dirty = true;
     reset(shape);
     toggle_type(type);
 
@@ -356,36 +371,142 @@ void grid_hash::init_from_board_and_type(const std::vector<T>& board,
     }
 }
 
-inline int_pair grid_hash::_get_transformed_coords(
-    int r, int c, grid_hash_orientation ori) const
+inline int_pair grid_hash::get_transformed_coords(const int_pair& shape,
+                                                  const int_pair& coords,
+                                                 grid_hash_orientation ori)
 {
-    const unsigned int bits = __grid_hash_impl::get_op_mask(ori);
+    int r = coords.first;
+    int c = coords.second;
 
-    if (bits & __grid_hash_impl::ORIENTATION_OP_ROW_INV)
-        r = (_grid_shape.first - 1) - r;
+    // op mask (not considering "T" suffix)
+    const unsigned int op_mask_no_t = __grid_hash_impl::get_op_mask_no_t(ori);
 
-    if (bits & __grid_hash_impl::ORIENTATION_OP_COL_INV)
-        c = (_grid_shape.second - 1) - c;
+    // op mask indicates swap? 
+    bool do_swap = (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_SWAP);
+    do_swap ^= (bit_is_1(ori, 0)); // consider "T" suffix
 
-    if (bits & __grid_hash_impl::ORIENTATION_OP_SWAP)
-        return {c, r};
+    if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_ROW_INV)
+        r = (shape.first - 1) - r;
 
-    return {r, c};
+    if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_COL_INV)
+        c = (shape.second - 1) - c;
+
+    int_pair result(r, c);
+    if (do_swap)
+        result = transpose_int_pair(result);
+
+    return result;
 }
 
-inline int_pair grid_hash::_get_transformed_shape(
+inline int_pair grid_hash::get_transformed_shape(const int_pair& shape,
+                                                 grid_hash_orientation ori)
+{
+    // op mask (not considering "T" suffix)
+    const unsigned int op_mask_no_t = __grid_hash_impl::get_op_mask_no_t(ori);
+
+    // op mask indicates swap? 
+    bool do_swap = ((op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_SWAP) != 0);
+    do_swap ^= (bit_is_1(ori, 0)); // consider "T" suffix
+
+    if (do_swap)
+        return transpose_int_pair(shape);
+
+    return shape;
+}
+
+inline int_pair grid_hash::get_inverse_transformed_coords(
+    int_pair shape, int_pair coords, grid_hash_orientation ori)
+{
+    // op mask (not considering "T" suffix)
+    const unsigned int op_mask_no_t = __grid_hash_impl::get_op_mask_no_t(ori);
+
+    // op mask indicates swap? 
+    bool do_swap = (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_SWAP);
+    do_swap ^= (bit_is_1(ori, 0)); // consider "T" suffix
+
+    if (do_swap)
+        coords = transpose_int_pair(coords);
+
+    int r = coords.first;
+    int c = coords.second;
+
+    if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_ROW_INV)
+        r = (shape.first - 1) - r;
+
+    if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_COL_INV)
+        c = (shape.second - 1) - c;
+
+    int_pair result(r, c);
+
+    return result;
+}
+
+
+//inline int_pair grid_hash::get_inverse_transformed_coords(
+//    int_pair shape, int_pair coords, grid_hash_orientation ori)
+//{
+//    // op mask (not considering "T" suffix)
+//    const unsigned int op_mask_no_t = __grid_hash_impl::get_op_mask_no_t(ori);
+//
+//    // op mask indicates swap? 
+//    bool do_swap = (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_SWAP);
+//    do_swap ^= (bit_is_1(ori, 0)); // consider "T" suffix
+//
+//    if (do_swap)
+//        coords = transpose_int_pair(coords);
+//
+//    int r = coords.first;
+//    int c = coords.second;
+//
+//    if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_ROW_INV)
+//        r = (shape.first - 1) - r;
+//
+//    if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_COL_INV)
+//        c = (shape.second - 1) - c;
+//
+//    int_pair result(r, c);
+//
+//    return result;
+//}
+
+inline int_pair grid_hash::get_inverse_transformed_shape(
+    int_pair shape, grid_hash_orientation ori)
+{
+    // First handle T suffix
+    if (bit_is_1(ori, 0))
+    {
+        shape = transpose_int_pair(shape);
+        // Remove suffix
+        ori = static_cast<grid_hash_orientation>(ori - 1);
+    }
+
+    const grid_hash_orientation ori_inverse =
+        __grid_hash_impl::get_inverse_orientation_no_t(ori);
+
+    return get_transformed_shape(shape, ori_inverse);
+}
+
+inline int_pair grid_hash::_get_transformed_coords_no_t(
+    int r, int c, grid_hash_orientation ori) const
+{
+    // Must be even number (no T suffix)
+    assert(!bit_is_1(ori, 0));
+
+    return get_transformed_coords(_grid_shape, {r, c}, ori);
+}
+
+inline int_pair grid_hash::_get_transformed_shape_no_t(
     grid_hash_orientation ori) const
 {
-    const unsigned int bits = __grid_hash_impl::get_op_mask(ori);
+    // Must be even number (no T suffix)
+    assert(!bit_is_1(ori, 0));
 
-    if (bits & __grid_hash_impl::ORIENTATION_OP_SWAP)
-        return {_grid_shape.second, _grid_shape.first};
-
-    return _grid_shape;
+    return get_transformed_shape(_grid_shape, ori);
 }
 
 inline void grid_hash::init_from_grid(const grid& g)
 {
+    _is_dirty = true;
     const int_pair& shape = g.shape();
     const game_type_t type = g.game_type();
 

@@ -4,6 +4,13 @@
 
 #pragma once
 
+#include <ostream>
+#include <vector>
+#include <optional>
+#include <string>
+#include <cassert>
+#include <type_traits>
+
 // IWYU pragma: begin_exports
 #include "cgt_basics.h"
 #include "cgt_move.h"
@@ -12,12 +19,8 @@
 #include "type_table.h"
 // IWYU pragma: end_exports
 
-#include <ostream>
-#include <vector>
-#include <optional>
-#include <string>
-#include <cassert>
-#include <type_traits>
+#include "grid_hash_orientation.h"
+
 
 
 //---------------------------------------------------------------------------
@@ -62,6 +65,34 @@ public:
     inline game_type_t game_type() const;
 
     std::string to_string() const;
+
+    /*
+       TODO move to dev notes?
+
+        Game types using `grid_hash` must implement these functions. Such game
+        types may have games which share a database entry, but which differ
+        by rotation/transpose orientation, making their `move`s incompatible
+        with each other.
+
+        - The encode function converts a `move` TO the database format by
+            transforming it to the equivalent move on the grid specified by the
+            `grid_hash`'s selected orientation. Implement using
+            `grid_hash::get_transformed_coords(...)`.
+
+        - The decode function converts a `move` FROM the database format to one
+            compatible with the game in memory, by applying the inverse
+            transformation from the grid specified by the `grid_hash`'s
+            selected orientation. Implement using
+            `grid_hash::get_inverse_transformed_coords(...)`.
+
+        See `domineering.cpp` for examples. Note that it is sometimes insufficient
+        to simply transform coordinates; the `move`s returned must be valid
+        `move`s on the corresponding grid game. The points in a domineering
+        move are ordered top-left to bottom-right, so after transforming the
+        points, they sometimes must be swapped.
+    */
+    virtual move encode_grid_move_to_db(const move& m) const;
+    virtual move decode_grid_move_from_db(const move& m) const;
 
 protected:
     /*

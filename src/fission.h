@@ -30,6 +30,8 @@ public:
     game* inverse() const override;
     game* clone() const override;
 
+    move encode_grid_move_to_db(const move& m) const override;
+    move decode_grid_move_from_db(const move& m) const override;
 
 protected:
 #ifdef USE_GRID_HASH

@@ -13,6 +13,7 @@ using namespace std;
 ////////////////////////////////////////////////// grid_hash methods
 void grid_hash::reset(const int_pair& grid_shape)
 {
+    _is_dirty = true;
     assert(grid_shape.first >= 0 && grid_shape.second >= 0);
 
     _grid_shape = grid_shape;
@@ -32,7 +33,7 @@ void grid_hash::reset(const int_pair& grid_shape)
         const bool active2 = bit_is_1(_grid_hash_mask, idx2);
 
         const grid_hash_orientation ori = GRID_HASH_ORIENTATIONS[idx1];
-        const int_pair shape = _get_transformed_shape(ori);
+        const int_pair shape = _get_transformed_shape_no_t(ori);
 
         if (active1)
         {
@@ -52,4 +53,30 @@ void grid_hash::reset(const int_pair& grid_shape)
     }
 }
 
+void grid_hash::_compute_value() const
+{
+    assert(_is_dirty);
+
+    hash_t min_val = std::numeric_limits<hash_t>::max();
+    unsigned int min_idx = std::numeric_limits<unsigned int>::max();
+
+    for (unsigned int i = 0; i < _N_HASHES; i++)
+    {
+        if (bit_is_1(_grid_hash_mask, i))
+        {
+            const hash_t h = _hashes[i].get_value();
+
+            if (h < min_val)
+            {
+                min_val = h;
+                min_idx = i;
+            }
+        }
+    }
+
+    assert(min_idx != std::numeric_limits<unsigned int>::max());
+
+    _is_dirty = false;
+    _selected_orientation = static_cast<grid_hash_orientation>(min_idx);
+}
 

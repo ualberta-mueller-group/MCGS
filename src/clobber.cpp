@@ -435,6 +435,36 @@ game* clobber::clone() const
     return new clobber(*this);
 }
 
+::move clobber::encode_grid_move_to_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2;
+    cgt_move::move4_unpack_coords(m, coord1, coord2);
+
+    coord1 = grid_hash::get_transformed_coords(grid_shape, coord1, ori);
+    coord2 = grid_hash::get_transformed_coords(grid_shape, coord2, ori);
+
+    return cgt_move::move4_create_from_coords(coord1, coord2);
+}
+
+::move clobber::decode_grid_move_from_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2;
+    cgt_move::move4_unpack_coords(m, coord1, coord2);
+
+    coord1 = grid_hash::get_inverse_transformed_coords(grid_shape, coord1, ori);
+    coord2 = grid_hash::get_inverse_transformed_coords(grid_shape, coord2, ori);
+
+    return cgt_move::move4_create_from_coords(coord1, coord2);
+
+}
+
+
 ////////////////////////////////////////////////// move generator implementation
 clobber_move_generator::clobber_move_generator(const clobber& game, bw to_play)
     : move_generator(to_play),

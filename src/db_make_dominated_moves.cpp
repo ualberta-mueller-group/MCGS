@@ -11,8 +11,9 @@ namespace {
 
 struct generalized_sum_move
 {
-    inline generalized_sum_move(const sumgame_move& sm, hash_t subgame_hash)
-        : sm(sm), subgame_hash(subgame_hash)
+    inline generalized_sum_move(hash_t subgame_hash, ::move move_db_encoded,
+                                const sumgame_move& sm)
+        : subgame_hash(subgame_hash), move_db_encoded(move_db_encoded), sm(sm)
     {
     }
 
@@ -20,18 +21,24 @@ struct generalized_sum_move
     bool operator==(const generalized_sum_move& rhs) const;
     bool operator!=(const generalized_sum_move& rhs) const;
 
-    sumgame_move sm;
     hash_t subgame_hash;
+    ::move move_db_encoded;
+
+    sumgame_move sm;
 };
 
-inline bool generalized_sum_move::operator<(const generalized_sum_move& rhs) const
+inline bool generalized_sum_move::operator<(
+    const generalized_sum_move& rhs) const
 {
-    return sm < rhs.sm;
+    return (subgame_hash < rhs.subgame_hash) &&
+           (move_db_encoded < rhs.move_db_encoded);
 }
 
-inline bool generalized_sum_move::operator==(const generalized_sum_move& rhs) const
+inline bool generalized_sum_move::operator==(
+    const generalized_sum_move& rhs) const
 {
-    return sm == rhs.sm;
+    return (sm == rhs.sm) && (subgame_hash == rhs.subgame_hash) &&
+           (move_db_encoded == rhs.move_db_encoded);
 }
 
 inline bool generalized_sum_move::operator!=(const generalized_sum_move& rhs) const
@@ -46,9 +53,10 @@ inline void play_generalized_sum_move(sumgame& sum, const generalized_sum_move& 
 }
 
 inline void add_generalized_sum_move_to_dominated_moves_t(
-    dominated_moves_t& dom, const generalized_sum_move& gsm, bw player)
+    dominated_moves_t& dom, const generalized_sum_move& gsm,
+    bw player)
 {
-    dom.add_move(gsm.subgame_hash, gsm.sm.m, player);
+    dom.add_move(gsm.subgame_hash, gsm.move_db_encoded, player);
 }
 
 // relation is relative to player
@@ -186,9 +194,11 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
     vector<generalized_sum_move> moves;
 
     assert(sum.to_play() == player);
-    unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(player));
 
-    while (*gen)
+    std::set<std::pair<hash_t, ::move>> move_set;
+
+    unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(player));
+    for (; *gen; ++(*gen))
     {
         const sumgame_move sm = gen->gen_sum_move();
 
@@ -196,9 +206,14 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
         assert(sg->is_active());
 
         const hash_t subgame_hash = sg->get_local_hash();
+        const ::move move_db_encoded = sg->encode_grid_move_to_db(sm.m);
 
-        moves.emplace_back(sm, subgame_hash);
-        ++(*gen);
+        auto inserted = move_set.emplace(subgame_hash, move_db_encoded);
+
+        if (!inserted.second)
+            continue;
+
+        moves.emplace_back(subgame_hash, move_db_encoded, sm);
     }
 
     std::sort(moves.begin(), moves.end());
@@ -235,6 +250,10 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
     {
         dominance_mask[move_idx] = true;
     };
+
+    /*
+       (hash_t, move)
+    */
 
     for (size_t idx1 = 0; idx1 < N_MOVES; idx1++)
     {

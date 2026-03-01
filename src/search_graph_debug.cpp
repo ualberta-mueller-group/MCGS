@@ -416,7 +416,7 @@ void make_sum_from_node_input(sumgame& sum, const node_input_t& node_input)
 optional<node_input_t> parse_node_input(const string& line)
 {
     static regex node_input_pattern(
-            R"END(^([0-9]+) *\[label="([^"]+)", *fillcolor="([^"]+)"\];.*$)END", 
+            R"END(^([0-9]+) *\[label="([^"]+)", *fillcolor="([^"]+)", *color="[^"]+"\];.*$)END", 
             regex::ECMAScript);
 
     smatch match;
@@ -486,6 +486,7 @@ void handle_node_input(ofstream& outfile, sumgame& sum, node_input_t& node_input
     outfile << node_input.node_id;
     outfile << " [label=\"" << node_input.label << "\"";
     outfile << ", fillcolor=\"" << color << "\"";
+    outfile << ", color=\"" << color << "\"";
     outfile << "];" << endl;
 
     cleanup_sum(sum);
@@ -613,7 +614,7 @@ void search_graph_printer::_start_graph()
 {
     THROW_ASSERT(_outfile.is_open());
     _outfile << "digraph G {" << endl;
-    _outfile << "node [style=filled];" << endl;
+    //_outfile << "node [style=filled];" << endl;
 }
 
 void search_graph_printer::_end_graph()
@@ -630,6 +631,7 @@ void search_graph_printer::_print_node(const search_node& node,
     _outfile << node.node_id;
     _outfile << " [label=\"" << node.node_string << "\"";
     _outfile << ", fillcolor=\"" << node_type_to_color(node_type) << "\"";
+    _outfile << ", color=\"" << node_type_to_color(node_type) << "\"";
     _outfile << "];" << endl;
 }
 

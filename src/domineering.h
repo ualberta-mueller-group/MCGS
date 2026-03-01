@@ -31,6 +31,8 @@ public:
     game* inverse() const override; // caller takes ownership
     game* clone() const override;
 
+    move encode_grid_move_to_db(const move& m) const override;
+    move decode_grid_move_from_db(const move& m) const override;
 
 protected:
 

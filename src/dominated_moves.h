@@ -56,6 +56,8 @@ std::ostream& operator<<(std::ostream& os, const std::map<T1, T2>& m)
 class dominated_moves_t
 {
 public:
+    typedef std::map<hash_t, std::set<move>> move_map_t;
+
     bool move_is_dominated(hash_t local_hash, move m, bw player) const
     {
         assert(is_black_white(player));
@@ -81,6 +83,16 @@ public:
     bool operator==(const dominated_moves_t& rhs) const;
     bool operator!=(const dominated_moves_t& rhs) const;
 
+    const move_map_t& get_black_move_map() const
+    {
+        return _black_moves;
+    }
+
+    const move_map_t& get_white_move_map() const
+    {
+        return _white_moves;
+    }
+
 private:
     const std::set<move>* _get_set(bw player, hash_t subgame_hash) const
     {
@@ -104,7 +116,6 @@ private:
         return &move_map[subgame_hash];
     }
 
-    typedef std::map<hash_t, std::set<move>> move_map_t;
 
     friend std::ostream& operator<<(std::ostream& os, const dominated_moves_t& dom);
     friend struct serializer<dominated_moves_t*>;

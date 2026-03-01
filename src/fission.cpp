@@ -264,6 +264,32 @@ game* fission::clone() const
     return new fission(*this);
 }
 
+::move fission::encode_grid_move_to_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1;
+    cgt_move::move2_unpack_coords(m, coord1);
+
+    coord1 = grid_hash::get_transformed_coords(grid_shape, coord1, ori);
+
+    return cgt_move::move2_create_from_coords(coord1);
+}
+
+::move fission::decode_grid_move_from_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1;
+    cgt_move::move2_unpack_coords(m, coord1);
+
+    coord1 = grid_hash::get_inverse_transformed_coords(grid_shape, coord1, ori);
+
+    return cgt_move::move2_create_from_coords(coord1);
+}
+
 #ifdef USE_GRID_HASH
 void fission::_init_hash(local_hash& hash) const
 {

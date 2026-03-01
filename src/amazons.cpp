@@ -256,6 +256,38 @@ game* amazons::clone() const
     return new amazons(*this);
 }
 
+::move amazons::encode_grid_move_to_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    assert(grid_shape.first > 0 && grid_shape.second > 0);
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2, coord3;
+    cgt_move::move6_unpack_coords(m, coord1, coord2, coord3);
+
+    coord1 = grid_hash::get_transformed_coords(grid_shape, coord1, ori);
+    coord2 = grid_hash::get_transformed_coords(grid_shape, coord2, ori);
+    coord3 = grid_hash::get_transformed_coords(grid_shape, coord3, ori);
+
+    return cgt_move::move6_create_from_coords(coord1, coord2, coord3);
+}
+
+::move amazons::decode_grid_move_from_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    assert(grid_shape.first > 0 && grid_shape.second > 0);
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2, coord3;
+    cgt_move::move6_unpack_coords(m, coord1, coord2, coord3);
+
+    coord1 = grid_hash::get_inverse_transformed_coords(grid_shape, coord1, ori);
+    coord2 = grid_hash::get_inverse_transformed_coords(grid_shape, coord2, ori);
+    coord3 = grid_hash::get_inverse_transformed_coords(grid_shape, coord3, ori);
+
+    return cgt_move::move6_create_from_coords(coord1, coord2, coord3);
+}
+
 ////////////////////////////////////////////////// split
 #ifdef AMAZONS_SPLIT
 

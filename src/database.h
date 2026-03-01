@@ -58,7 +58,13 @@ struct db_entry_partisan
 #ifdef MCGS_USE_DOMINANCE
     std::optional<std::shared_ptr<dominated_moves_t>> dominated_moves;
 #endif
+
+#ifdef MCGS_USE_DB_MOVES_TEST
+    std::map<hash_t, std::set<move>> all_black_moves;
+    std::map<hash_t, std::set<move>> all_white_moves;
+#endif
 };
+
 
 inline bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 {
@@ -132,6 +138,10 @@ struct serializer<db_entry_partisan>
         serializer_save(os, entry.dominated_moves);
 #endif
 
+#ifdef MCGS_USE_DB_MOVES_TEST
+        serializer_save(os, entry.all_black_moves);
+        serializer_save(os, entry.all_white_moves);
+#endif
     }
 
     inline static db_entry_partisan load(ibuffer& is)
@@ -152,6 +162,10 @@ struct serializer<db_entry_partisan>
         serializer_load(is, entry.dominated_moves);
 #endif
 
+#ifdef MCGS_USE_DB_MOVES_TEST
+        serializer_load(is, entry.all_black_moves);
+        serializer_load(is, entry.all_white_moves);
+#endif
         return entry;
     }
 };

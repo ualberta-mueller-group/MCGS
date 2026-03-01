@@ -239,6 +239,44 @@ game* domineering::clone() const
     return new domineering(*this);
 }
 
+::move domineering::encode_grid_move_to_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2;
+    cgt_move::move4_unpack_coords(m, coord1, coord2);
+
+    coord1 = grid_hash::get_transformed_coords(grid_shape, coord1, ori);
+    coord2 = grid_hash::get_transformed_coords(grid_shape, coord2, ori);
+
+    if (coord1.first > coord2.first)
+        std::swap(coord1, coord2);
+    if (coord1.second > coord2.second)
+        std::swap(coord1, coord2);
+
+    return cgt_move::move4_create_from_coords(coord1, coord2);
+}
+
+::move domineering::decode_grid_move_from_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2;
+    cgt_move::move4_unpack_coords(m, coord1, coord2);
+
+    coord1 = grid_hash::get_inverse_transformed_coords(grid_shape, coord1, ori);
+    coord2 = grid_hash::get_inverse_transformed_coords(grid_shape, coord2, ori);
+
+    if (coord1.first > coord2.first)
+        std::swap(coord1, coord2);
+    if (coord1.second > coord2.second)
+        std::swap(coord1, coord2);
+
+    return cgt_move::move4_create_from_coords(coord1, coord2);
+}
+
 void domineering::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
     /*

@@ -36,6 +36,7 @@ public:
     game_type_t& game_type_ref();
 
     // grid_hash symmetry mask
+    bool has_grid_hash_mask() const;
     unsigned int grid_hash_mask() const;
     void set_grid_hash_mask(unsigned int mask);
 
@@ -108,17 +109,22 @@ inline game_type_t& type_table_t::game_type_ref()
     return _game_type;
 }
 
+inline bool type_table_t::has_grid_hash_mask() const
+{
+    return _grid_hash_mask != 0;
+}
+
 inline unsigned int type_table_t::grid_hash_mask() const
 {
     // Must initialize in some mcgs_init function before using
-    assert(_initialized && _grid_hash_mask != 0);
+    assert(_initialized && has_grid_hash_mask());
     return _grid_hash_mask;
 }
 
 inline void type_table_t::set_grid_hash_mask(unsigned int mask)
 {
     // Field is only modifiable during mcgs_init, and not after.
-    assert(!_initialized && _grid_hash_mask == 0);
+    assert(!_initialized && !has_grid_hash_mask());
     _grid_hash_mask = mask;
 }
 

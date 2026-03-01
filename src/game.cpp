@@ -11,6 +11,7 @@
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "grid_hash.h"
 #include "warn_default.h"
 #include "type_table.h"
 
@@ -23,6 +24,18 @@ std::string game::to_string() const
     std::stringstream str;
     str << *this;
     return str.str();
+}
+
+move game::encode_grid_move_to_db(const move& m) const
+{
+    assert(!type_table()->has_grid_hash_mask());
+    return m;
+}
+
+move game::decode_grid_move_from_db(const move& m) const
+{
+    assert(!type_table()->has_grid_hash_mask());
+    return m;
 }
 
 std::ostream& operator<<(std::ostream& os, const split_result& split)
