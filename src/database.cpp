@@ -365,6 +365,55 @@ bool database::is_equal(const database& other) const
     - TODO: why is DB search depth > 1 for some non-nogo games? (amazons,
       domineering?)
 */
+
+/*
+    New (better) algorithm:
+
+    function gen_main(GEN):
+        for G in GEN:
+            SUM1 = sum([G])
+            SUM1.split_and_normalize()
+
+            if (SUM1.num_total_games() > 0):
+                for Gi in SUM1:
+                    SUM2 = sum([Gi])
+                    gen_single(SUM2)
+
+            # NOTE: The loop should count active games and this should be
+            # skipped where appropriate
+            gen_single(SUM1)
+
+    function gen_single(SUM):
+        if have_entry(SUM):
+            return
+
+        therm = make_thermograph(SUM)
+        ...
+
+
+    function make_thermograph(SUM):
+        black_options = make_option_graphs(SUM, BLACK)
+        white_options = make_option_graphs(SUM, WHITE)
+        ...
+
+    function make_option_graphs(SUM, PLAYER):
+        MG = SUM.make_generator(PLAYER)
+
+        N_ACTIVE_BEFORE = SUM.num_active_games()
+
+        for M in MG:
+            SUM.play(M)
+
+            if N_ACTIVE_BEFORE == 1 and SUM.num_active_games() >= 2:
+                for Gi in SUM:
+                    gen_single(Gi)
+
+            # Either returns the graph or calls gen_single(...)
+            option = get_option_graph(SUM)
+
+            SUM.undo(M)
+
+*/
 void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
 {
     sumgame sum(BLACK);
