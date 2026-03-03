@@ -90,6 +90,8 @@ unit tests, the text "SUCCESS" should appear. Running all tests can take
 several seconds, depending on your hardware. The `test_extra` makefile target
 runs some unit tests on larger ranges of values, which takes much longer.
 
+For other build options, including DEBUG level, AddressSanitizer options, and creating the WebAssembly version, see `docs/development-notes.md`.
+
 ### Using MCGS
 `MCGS` can read input from a file, or as a quoted command line argument, or
 interactively from the command line via stdin. The example below solves a

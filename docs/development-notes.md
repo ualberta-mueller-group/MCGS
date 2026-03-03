@@ -35,6 +35,20 @@ This document includes more detailed information than `README.md`, including des
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+# Build Options
+
+MCGS has separate build directories for the `MCGS` and `MCGS_test` executables, but changing compilation options requires a clean build at the moment.
+
+Some different builds supported in MCGS:
+- `make MCGS`: has asserts, and assert_restore_game etc
+- `make MCGS DEBUG=1`: adds additional expensive/annoying checks i.e. standard library debugging, printing a list of games which called default implementations of some base class functions when the program exits, and others
+- `make MCGS DEBUG=0`: disables asserts and `assert_restore_games`, and some exceptions which should only result from programming errors and not bad user input. The documentation warns that this is still experimental (lots of compiler warnings i.e. unused variables)
+- `make MCGS ASAN=address`: runtime checking for memory leaks, use after free, double free, and global variables whose initialization order causes undefined behavior, (and probably more?)
+- `make MCGS ASAN=leak`: uses AddressSanitizer to check (only?) for leaks. Rarely used.
+- `make MCGS WASM=1`: compiles the WebAssembly version of MCGS instead of the native version. You probably need to move some files into the root directory first, which should be documented somewhere.
+
+It makes sense to mix some of these options too, i.e. `WASM=1 DEBUG=0`
+
 # Search and Solving a Game
 - Two classes implement minimax game solving: `alternating_move_game` and `sumgame`
 - `alternating_move_game` is used for solving a single game, without splitting it into a sum of subgames
@@ -1121,6 +1135,12 @@ don't split, as `nogo`'s split method generates subgames which are not created
 by the `grid_generator`s. The `nogo::_immortal` vector is not considered by the
 current `grid_generator`s, so boards with meaningful immortal markers are
 found by calling `split()`
+
+## New database in Version 1.6
+- Bounds computation: 
+    - no specific/fixed scale type for each game type
+    - first checks how it compares to some small rationals i.e. -1/1024 and 1/1024
+    - then chooses whether to search for the game's bounds on an infinitesimal scale type, or rational scale type accordingly
 
 # Adding A Game To the Database
 If your game is a grid game, first set its grid hash mask in
