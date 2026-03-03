@@ -1,105 +1,131 @@
-/*
-    TODO scale indices should be clearer, and there should be a better way
-    to get i.e. integers
-
-    TODO make a `cast_int<Int_From, Int_To>(Int_From)` function
-*/
 #include "db_make_bounds.h"
 
-#include <algorithm>
-#include <limits>
-#include <tuple>
+#include <memory>
 
 #include "bounds.h"
+#include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
-#include "database.h"
 #include "fraction.h"
 #include "sumgame.h"
-#include "utilities.h"
+
+#define RATIONAL_EPSILON_DENOMINATOR 1024
+
+#ifdef MCGS_USE_THERM
 
 using namespace std;
 
-
+////////////////////////////////////////////////// helpers
 namespace {
-
-
-inline pair<bound_scale, bound_t> get_bound_idx_int(int32_t val)
+inline unique_ptr<dyadic_rational> get_epsilon(bool positive)
 {
-    return {BOUND_SCALE_DYADIC_RATIONAL, val * 8};
+    const int p = positive ? 1 : -1;
+    return make_unique<dyadic_rational>(p, RATIONAL_EPSILON_DENOMINATOR);
 }
 
-bool check_if_small(sumgame& sum)
+bool sum_is_positive(sumgame& sum)
 {
     assert_restore_sumgame ars(sum);
-
     const bw restore_player = sum.to_play();
-    bool in_range = true;
 
-    /*
-        -epsilon < sum
-        0 < sum + epsilon
-        sum + epsilon > 0
-    */
+    bool is_maybe_positive = true;
+
     {
-        unique_ptr<dyadic_rational> epsilon_unique(new dyadic_rational(1, 1024));
-        dyadic_rational* epsilon = epsilon_unique.get();
-
-        sum.add(epsilon);
-
         sum.set_to_play(BLACK);
         const bool black_wins = sum.solve();
-        in_range = black_wins;
+        is_maybe_positive = black_wins;
+    }
 
-        if (in_range)
-        {
-            sum.set_to_play(WHITE);
-            const bool white_wins = sum.solve();
-            in_range = !white_wins;
-        }
+    if (is_maybe_positive)
+    {
+        sum.set_to_play(WHITE);
+        const bool white_wins = sum.solve();
+        is_maybe_positive = !white_wins;
+    }
+
+    sum.set_to_play(restore_player);
+    return is_maybe_positive;
+}
+
+bool sum_is_negative(sumgame& sum)
+{
+    assert_restore_sumgame ars(sum);
+    const bw restore_player = sum.to_play();
+
+    bool is_maybe_negative = true;
+
+    {
+        sum.set_to_play(WHITE);
+        const bool white_wins = sum.solve();
+        is_maybe_negative = white_wins;
+    }
+
+    if (is_maybe_negative)
+    {
+        sum.set_to_play(BLACK);
+        const bool black_wins = sum.solve();
+        is_maybe_negative = !black_wins;
+    }
+
+    sum.set_to_play(restore_player);
+    return is_maybe_negative;
+}
+
+/*
+    True IFF for epsilon := 1 / RATIONAL_EPSILON_DENOMINATOR,
+        -epsilon < sum < epsilon
+*/
+bool sum_is_small(sumgame& sum)
+{
+    assert_restore_sumgame ars(sum);
+    const bw restore_player = sum.to_play();
+
+    bool is_maybe_small = true;
+
+    /*
+        Check: -epsilon < sum
+            IFF: 0 < sum + epsilon
+            IFF: sum + epsilon > 0
+    */
+    {
+        unique_ptr<dyadic_rational> epsilon_unique = get_epsilon(true);
+        dyadic_rational* epsilon = epsilon_unique.get();
+        sum.add(epsilon);
+
+        is_maybe_small = sum_is_positive(sum);
 
         sum.pop(epsilon);
     }
 
     /*
-       sum < epsilon
-       sum - epsilon < 0
+        Check: sum < epsilon
+            IFF: sum - epsilon < 0
     */
-    if (in_range)
+    if (is_maybe_small)
     {
-        unique_ptr<dyadic_rational> epsilon_unique(new dyadic_rational(-1, 1024));
+        unique_ptr<dyadic_rational> epsilon_unique = get_epsilon(false);
         dyadic_rational* epsilon = epsilon_unique.get();
-
         sum.add(epsilon);
 
-        sum.set_to_play(BLACK);
-        const bool black_wins = sum.solve();
-        in_range = !black_wins;
-
-        if (in_range)
-        {
-            sum.set_to_play(WHITE);
-            const bool white_wins = sum.solve();
-            in_range = white_wins;
-        }
+        is_maybe_small = sum_is_negative(sum);
 
         sum.pop(epsilon);
     }
 
     sum.set_to_play(restore_player);
-    return in_range;
+    return is_maybe_small;
 }
 
 } // namespace
 
 //////////////////////////////////////////////////
-optional<tuple<bound_scale, game_bounds_ptr>> db_make_bounds(database& db, sumgame& sum)
+std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum)
 {
     assert_restore_sumgame ars(sum);
 
     vector<bounds_options> options_vec;
     vector<game_bounds_ptr> bounds_vec;
 
-    const bool is_small = check_if_small(sum);
+    const bool is_small = sum_is_small(sum);
 
     if (is_small)
     {
@@ -110,7 +136,7 @@ optional<tuple<bound_scale, game_bounds_ptr>> db_make_bounds(database& db, sumga
         game_bounds_ptr bounds = bounds_vec.back();
 
         if (bounds->both_valid())
-            return tuple<bound_scale, game_bounds_ptr>(BOUND_SCALE_UP, bounds);
+            return bounds;
     }
 
     options_vec.clear();
@@ -121,8 +147,14 @@ optional<tuple<bound_scale, game_bounds_ptr>> db_make_bounds(database& db, sumga
     game_bounds_ptr bounds = bounds_vec.back();
 
     if (bounds->both_valid())
-        return tuple<bound_scale, game_bounds_ptr>(BOUND_SCALE_DYADIC_RATIONAL,
-                                                   bounds);
+        return bounds;
 
-    return {};
+    THROW_ASSERT(false, "Bounds not found for game");
+    return nullptr;
 }
+#else
+std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum)
+{
+    assert(false);
+}
+#endif

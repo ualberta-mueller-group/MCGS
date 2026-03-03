@@ -4,7 +4,8 @@ LAB_COMPAT ?= 0
 
 # Library paths
 LIB_DIR_BASE := libs/cgt_lib
-LIB_NAMES := cgt cgtbounds coupon sg therm
+#LIB_NAMES := cgt cgtbounds coupon sg therm
+LIB_NAMES := therm sg
 LIB_PATHS := $(addprefix $(LIB_DIR_BASE)/,$(LIB_NAMES))
 LIB_PATHS := $(addsuffix /,$(LIB_PATHS))
 

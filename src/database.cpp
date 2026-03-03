@@ -18,7 +18,6 @@
 #include <iostream>
 
 #include "database.h"
-#include "SgBlackWhite.h"
 #include "ThGraph.h"
 #include "bounds.h"
 #include "cgt_basics.h"
@@ -77,6 +76,41 @@ string get_time_string()
 }
 
 } // namespace
+
+////////////////////////////////////////////////// db_entry_partisan methods
+bool db_entry_partisan::operator==(const db_entry_partisan& other) const
+{
+    // Note confusing use of `shared_ptr::operator bool()` in this function
+
+    if (outcome != other.outcome)
+        return false;
+
+#ifdef MCGS_USE_THERM
+    if (thermograph != other.thermograph)
+        return false;
+
+    if (thermograph && !(*thermograph == *other.thermograph))
+            return false;
+#endif
+
+#ifdef MCGS_USE_BOUNDS
+    if (bounds_data != other.bounds_data)
+        return false;
+
+    if (bounds_data && (*bounds_data != *other.bounds_data))
+        return false;
+#endif
+
+#ifdef MCGS_USE_DOMINANCE
+    if (dominated_moves != other.dominated_moves)
+        return false;
+
+    if (dominated_moves && (*dominated_moves != *other.dominated_moves))
+        return false;
+#endif
+
+    return true;
+}
 
 ////////////////////////////////////////////////// database methods
 database::database() : _sum(nullptr), _game_count(0), _max_generation_depth(0)
@@ -297,10 +331,6 @@ bool database::is_equal(const database& other) const
     return true;
 }
 
-//////////////////////////////////////////////////
-//////////////////////////////////////////////////
-//////////////////////////////////////////////////
-
 /*
     function gen_main(GEN):
         for G in GEN:
@@ -394,7 +424,7 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
 {
     _max_generation_depth = max(_max_generation_depth, depth);
 
-    if (sum.is_empty() || get_partisan(sum).has_value())
+    if (sum.is_empty() || get_partisan_ptr(sum) != nullptr)
         return;
 
     const bw restore_player = sum.to_play();
@@ -443,33 +473,32 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
     sum.set_to_play(WHITE);
     bool white_wins = sum.solve();
 
-
     db_entry_partisan entry;
 
 #ifdef MCGS_USE_THERM
-    entry.thermograph = db_make_thermograph(*this, sum, 0);
+    entry.thermograph = db_make_thermograph(*this, sum);
 #endif
 
     entry.outcome = bools_to_outcome_class(black_wins, white_wins);
 
 #ifdef MCGS_USE_BOUNDS
-        entry.bounds_data = db_make_bounds(*this, sum);
+        entry.bounds_data = db_make_bounds(sum);
 
         // Debug info
         n_db_games++;
-        if (entry.bounds_data.has_value())
         {
+            assert(entry.bounds_data);
             n_db_games_with_bounds++;
 
-            const bound_scale scale = std::get<0>(*entry.bounds_data);
-            const game_bounds_ptr ptr = std::get<1>(*entry.bounds_data);
+            const game_bounds& bounds = *entry.bounds_data;
+            const bound_scale scale = bounds.get_scale();
 
             if (scale == BOUND_SCALE_DYADIC_RATIONAL)
                 n_db_bounds_rational++;
             else if (scale == BOUND_SCALE_UP)
                 n_db_bounds_infinitesimal++;
 
-            if (ptr->both_valid() && ptr->get_lower_relation() == REL_EQUAL)
+            if (bounds.both_valid() && bounds.get_lower_relation() == REL_EQUAL)
                 n_db_bounds_equal++;
         }
 #endif
@@ -485,51 +514,6 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
     if (print_game)
         cout << " DONE" << endl;
 }
-
-//////////////////////////////////////////////////
-//////////////////////////////////////////////////
-//////////////////////////////////////////////////
-
-//    if (get_partisan(sum).has_value())
-//        return;
-//
-//    // bool print_game = true;
-//    bool print_game = !silent && ((_game_count % 128) == 0);
-//
-//    if (print_game)
-//    {
-//        //cout << "Game # " << _game_count << ": " << *g << std::flush;
-//
-//        cout << "Game # " << _game_count << ": ";
-//        _db_print_sum(cout, sum);
-//        cout << std::flush;
-//    }
-//    _game_count++;
-//
-//    sum.set_to_play(BLACK);
-//    bool black_wins = sum.solve();
-//
-//    sum.set_to_play(WHITE);
-//    bool white_wins = sum.solve();
-//
-//    outcome_class oc = bools_to_outcome_class(black_wins, white_wins);
-//#ifdef MCGS_USE_THERM
-//    unique_ptr<ThGraph> thermograph(db_make_thermograph(*this, sum));
-//#endif
-//
-//    db_entry_partisan entry;
-//    entry.outcome = oc;
-//#ifdef MCGS_USE_THERM
-//    entry.thermograph = *thermograph;
-//#endif
-//
-//    set_partisan(sum, entry);
-//
-//    if (print_game)
-//        cout << " DONE" << endl;
-
-
-
 
 void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
 {

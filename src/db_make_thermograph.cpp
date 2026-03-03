@@ -1,46 +1,49 @@
 #include "db_make_thermograph.h"
+
+#include <memory>
+
 #include "SgBlackWhite.h"
 #include "ThGraph.h"
+
 #include "cgt_basics.h"
 #include "database.h"
-#include "throw_assert.h"
 #include "sumgame.h"
-#include "transposition.h"
-#include <optional>
-#include <memory> 
 
+// Should be 0 or 1
 unsigned int max_thermograph_generation_depth = 0;
 
 using namespace std;
 
 #ifdef MCGS_USE_THERM
 
-
-
 ////////////////////////////////////////////////// helpers
-
 namespace {
-shared_ptr<ThGraph> load_from_db(database& db, const sumgame& sum)
+//////////////////////////////////////// forward declarations
+shared_ptr<ThGraph> db_make_thermograph_impl(database& db, sumgame& sum,
+                                             unsigned int depth);
+
+//////////////////////////////////////// implementations
+inline shared_ptr<ThGraph> get_thermograph_from_db(database& db, const sumgame& sum)
 {
-    optional<db_entry_partisan> entry = db.get_partisan(sum);
-
-    if (entry.has_value())
-        return entry->thermograph;
-
-    return {};
+    const db_entry_partisan* entry = db.get_partisan_ptr(sum);
+    THROW_ASSERT(entry != nullptr);
+    THROW_ASSERT(entry->thermograph);
+    return entry->thermograph;
 }
 
-vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum, bw player, unsigned int depth)
+vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum,
+                                                  bw player, unsigned int depth)
 {
+    assert_restore_sumgame ars(sum);
     assert(is_black_white(player));
+
+    const bw restore_player = sum.to_play();
 
     vector<shared_ptr<ThGraph>> option_graphs;
 
-    assert_restore_sumgame ars1(sum);
-    const bw restore_player = sum.to_play();
-
     sum.set_to_play(player);
-    unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(player));
+    unique_ptr<sumgame_move_generator> gen(
+        sum.create_sum_move_generator(player));
 
     while (*gen)
     {
@@ -49,7 +52,10 @@ vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum, bw
 
         assert(sum.to_play() == player);
         sum.play_sum(sm, player);
-        shared_ptr<ThGraph> option_graph = db_make_thermograph(db, sum, depth + 1);
+
+        shared_ptr<ThGraph> option_graph =
+            db_make_thermograph_impl(db, sum, depth + 1);
+
         sum.undo_move();
 
         option_graph->Check();
@@ -60,19 +66,18 @@ vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum, bw
     return option_graphs;
 }
 
-
-} // namespace
-
-//////////////////////////////////////////////////
-shared_ptr<ThGraph> db_make_thermograph(database& db, sumgame& sum, unsigned int depth)
+shared_ptr<ThGraph> db_make_thermograph_impl(database& db, sumgame& sum,
+                                             unsigned int depth)
 {
-    max_thermograph_generation_depth = max(max_thermograph_generation_depth, depth);
+    max_thermograph_generation_depth =
+        max(max_thermograph_generation_depth, depth);
 
     // Check database
+    if (depth > 0)
     {
-        shared_ptr<ThGraph> graph_opt = load_from_db(db, sum);
-        if (graph_opt)
-            return graph_opt;
+        shared_ptr<ThGraph> thermograph = get_thermograph_from_db(db, sum);
+        THROW_ASSERT(thermograph);
+        return thermograph;
     }
 
     // Generate options
@@ -80,11 +85,10 @@ shared_ptr<ThGraph> db_make_thermograph(database& db, sumgame& sum, unsigned int
     vector<ThGraph*>& option_graphs_raw_b = option_graphs_raw[SG_BLACK];
     vector<ThGraph*>& option_graphs_raw_w = option_graphs_raw[SG_WHITE];
 
-    vector<shared_ptr<ThGraph>> option_graphs_b;
-    vector<shared_ptr<ThGraph>> option_graphs_w;
-
-    option_graphs_b = get_option_graphs_for(db, sum, BLACK, depth);
-    option_graphs_w = get_option_graphs_for(db, sum, WHITE, depth);
+    vector<shared_ptr<ThGraph>> option_graphs_b =
+        get_option_graphs_for(db, sum, BLACK, depth);
+    vector<shared_ptr<ThGraph>> option_graphs_w =
+        get_option_graphs_for(db, sum, WHITE, depth);
 
     for (const shared_ptr<ThGraph>& option_shared : option_graphs_b)
     {
@@ -105,9 +109,16 @@ shared_ptr<ThGraph> db_make_thermograph(database& db, sumgame& sum, unsigned int
 
     return graph;
 }
-#else
-shared_ptr<ThGraph> db_make_thermograph(database& db, sumgame& sum, unsigned int depth)
-{
-    THROW_ASSERT(false);
-}
 #endif
+
+} // namespace
+
+//////////////////////////////////////////////////
+std::shared_ptr<ThGraph> db_make_thermograph(database& db, sumgame& sum)
+{
+#ifdef MCGS_USE_THERM
+    return db_make_thermograph_impl(db, sum, 0);
+#else
+    assert(false);
+#endif
+}

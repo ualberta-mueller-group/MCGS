@@ -1,16 +1,43 @@
+/*
+    TODO: are there insufficiencies with the sumgame interface? This file is
+    full of hacks...
+
+    TODO this code could be optimized to reduce copying:
+
+    GSM = "generalized_sum_move"
+
+    The initial function call should modify the sumgame passed to it to remove
+    all inactive games (the GSMs produced must be compatible
+    with both sums which is why the sumgame argument is cloned twice
+    instead of once).
+
+    Then clone the games once to make the 2nd sum, and generate all the
+    inverse games once.
+
+    Instead of playing the GSMs on the individual sums, maintain a single
+    difference sum and manually deactivate/reactivate its games,
+    computing the move update using a 4th "helper" sum and adding the games
+    to the difference sum which result from playing GSMs
+*/
 #include "db_make_dominated_moves.h"
 
-#include "cgt_basics.h"
-#include "sumgame.h"
 #include <memory>
 #include <sstream>
 
+#include "cgt_basics.h"
+#include "sumgame.h"
+
+#ifdef MCGS_USE_DOMINANCE
+
 using namespace std;
 
+////////////////////////////////////////////////// helpers
 namespace {
 
-struct generalized_sum_move
+//////////////////////////////////////// class generalized_sum_move
+class generalized_sum_move
 {
+public:
     inline generalized_sum_move(hash_t subgame_hash, ::move move_db_encoded,
                                 const sumgame_move& sm)
         : subgame_hash(subgame_hash), move_db_encoded(move_db_encoded), sm(sm)
@@ -27,18 +54,20 @@ struct generalized_sum_move
     sumgame_move sm;
 };
 
+//////////////////////////////////////// generalized_sum_move methods
 inline bool generalized_sum_move::operator<(
     const generalized_sum_move& rhs) const
 {
-    return (subgame_hash < rhs.subgame_hash) &&
-           (move_db_encoded < rhs.move_db_encoded);
+    return (subgame_hash < rhs.subgame_hash) &&     //
+           (move_db_encoded < rhs.move_db_encoded); //
 }
 
 inline bool generalized_sum_move::operator==(
     const generalized_sum_move& rhs) const
 {
-    return (sm == rhs.sm) && (subgame_hash == rhs.subgame_hash) &&
-           (move_db_encoded == rhs.move_db_encoded);
+    return (subgame_hash == rhs.subgame_hash) &&       //
+           (move_db_encoded == rhs.move_db_encoded) && //
+           (sm == rhs.sm);                             //
 }
 
 inline bool generalized_sum_move::operator!=(const generalized_sum_move& rhs) const
@@ -46,6 +75,7 @@ inline bool generalized_sum_move::operator!=(const generalized_sum_move& rhs) co
     return !(*this == rhs);
 }
 
+////////////////////////////////////////
 inline void play_generalized_sum_move(sumgame& sum, const generalized_sum_move& gsm, bw player)
 {
     assert(sum.to_play() == player);
@@ -59,7 +89,7 @@ inline void add_generalized_sum_move_to_dominated_moves_t(
     dom.add_move(gsm.subgame_hash, gsm.move_db_encoded, player);
 }
 
-// relation is relative to player
+// relation is relative to player to play
 relation bools_to_relation(bool black_wins, bool white_wins, bw player)
 {
     assert(is_black_white(player));
@@ -76,15 +106,15 @@ relation bools_to_relation(bool black_wins, bool white_wins, bw player)
     assert(false);
 }
 
-void assert_cloned_properly(const game* g1, const game* g2)
+bool sum_cloned_properly(const sumgame& sum1, const sumgame& sum2)
 {
     std::stringstream str1;
     std::stringstream str2;
 
-    str1 << *g1;
-    str2 << *g2;
+    sum1.print_simple(str1);
+    sum2.print_simple(str2);
 
-    assert(str1.str() == str2.str());
+    return str1.str() == str2.str();
 }
 
 void clone_sumgame(const sumgame& from, sumgame& to)
@@ -100,13 +130,15 @@ void clone_sumgame(const sumgame& from, sumgame& to)
             continue;
 
         game* sg_copy = sg->clone();
-        assert_cloned_properly(sg, sg_copy);
+
         to.add(sg_copy);
     }
 
     to.set_to_play(from.to_play());
+    assert(sum_cloned_properly(from, to));
 }
 
+// Data to undo the appending of sum2 into sum1
 struct subgame_append_info_t
 {
     subgame_append_info_t() : sum1_n_total(0), sum2_n_active(0) {}
@@ -136,7 +168,7 @@ subgame_append_info_t append_inverse(sumgame& sum1, const sumgame& sum2)
     return append_info;
 }
 
-void pop_inverse(sumgame& sum1, subgame_append_info_t append_info)
+void pop_inverse(sumgame& sum1, const subgame_append_info_t& append_info)
 {
     assert(sum1.num_total_games() ==
            append_info.sum1_n_total + append_info.sum2_n_active);
@@ -195,6 +227,10 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
 
     assert(sum.to_play() == player);
 
+    /*
+        IMPORTANT: Moves must be deduplicated, to avoid duplicates pruning
+        themselves
+    */
     std::set<std::pair<hash_t, ::move>> move_set;
 
     unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(player));
@@ -208,7 +244,7 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
         const hash_t subgame_hash = sg->get_local_hash();
         const ::move move_db_encoded = sg->encode_grid_move_to_db(sm.m);
 
-        auto inserted = move_set.emplace(subgame_hash, move_db_encoded);
+        const auto inserted = move_set.emplace(subgame_hash, move_db_encoded);
 
         if (!inserted.second)
             continue;
@@ -235,11 +271,11 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
     sum2.set_to_play(player);
 
     vector<generalized_sum_move> sum_moves = make_generalized_sum_moves(sum1, player);
-    vector<bool> dominance_mask(sum_moves.size(), false);
+    const size_t N_MOVES = sum_moves.size();
+
+    vector<bool> dominance_mask(N_MOVES, false);
 
     assert(sum_moves == make_generalized_sum_moves(sum2, player));
-
-    const size_t N_MOVES = sum_moves.size();
 
     auto is_dominated = [&dominance_mask](size_t move_idx) -> bool
     {
@@ -251,53 +287,35 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
         dominance_mask[move_idx] = true;
     };
 
-    /*
-       (hash_t, move)
-    */
-
     for (size_t idx1 = 0; idx1 < N_MOVES; idx1++)
     {
-        const generalized_sum_move& move1 = sum_moves[idx1];
-        play_generalized_sum_move(sum1, move1, player);
+        const generalized_sum_move& gsm1 = sum_moves[idx1];
+        play_generalized_sum_move(sum1, gsm1, player);
 
         for (size_t idx2 = idx1 + 1; idx2 < N_MOVES; idx2++)
         {
             if (is_dominated(idx1) && is_dominated(idx2))
                 continue;
 
-            const generalized_sum_move& move2 = sum_moves[idx2];
-
-            //if (move1 == move2)
-            //{
-            //    mark_dominated(idx2);
-            //    continue;
-            //}
-
-            play_generalized_sum_move(sum2, move2, player);
+            const generalized_sum_move& gsm2 = sum_moves[idx2];
+            play_generalized_sum_move(sum2, gsm2, player);
 
             /*
-                `rel` is relative to the current player. GREATER means move1 is
-                better for the current player
+                `rel` is relative to the current player, and compares gsm1
+                to gsm2. `GREATER` means gsm1 > gsm2 (from the perspective
+                of `player`
             */
             const relation rel = compare_sums(sum1, sum2, player);
 
             if (rel == REL_LESS)
-            {
                 mark_dominated(idx1);
-            }
             else if (rel == REL_EQUAL)
-            {
+                // IMPORTANT: prune gsm2 so that both moves aren't pruned
                 mark_dominated(idx2);
-                //assert(!(is_dominated(idx1) && is_dominated(idx2)));
-            }
             else if (rel == REL_GREATER)
-            {
                 mark_dominated(idx2);
-            }
-            else if (rel != REL_FUZZY)
-            {
-                assert(false);
-            }
+            else
+                assert(rel == REL_FUZZY);
 
             sum2.undo_move();
         }
@@ -313,14 +331,14 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
         if (!is_dominated(i))
             continue;
 
-        add_generalized_sum_move_to_dominated_moves_t(dom, sum_moves[i], player);
+        add_generalized_sum_move_to_dominated_moves_t(dom, sum_moves[i],
+                                                      player);
     }
 }
 
 } // namespace
 
 //////////////////////////////////////////////////
-
 shared_ptr<dominated_moves_t> db_make_dominated_moves(const sumgame& sum)
 {
     shared_ptr<dominated_moves_t> dom(new dominated_moves_t());
@@ -342,3 +360,9 @@ shared_ptr<dominated_moves_t> db_make_dominated_moves(const sumgame& sum)
 
     return dom;
 }
+#else
+shared_ptr<dominated_moves_t> db_make_dominated_moves(const sumgame& sum)
+{
+    assert(false);
+}
+#endif

@@ -23,7 +23,6 @@
 #include "db_game_generator.h"
 #include "type_mapper.h"
 #include "impartial_game.h"
-#include "db_make_dominated_moves.h"
 
 #include "ThGraph.h"
 #include "serializer_lib_therm.h"
@@ -52,61 +51,13 @@ struct db_entry_partisan
 #endif
 
 #ifdef MCGS_USE_BOUNDS
-    std::optional<std::tuple<bound_scale, game_bounds_ptr>> bounds_data;
+    std::shared_ptr<game_bounds> bounds_data;
 #endif
 
 #ifdef MCGS_USE_DOMINANCE
-    std::optional<std::shared_ptr<dominated_moves_t>> dominated_moves;
+    std::shared_ptr<dominated_moves_t> dominated_moves;
 #endif
 };
-
-
-inline bool db_entry_partisan::operator==(const db_entry_partisan& other) const
-{
-    if (outcome != other.outcome)
-        return false;
-
-#ifdef MCGS_USE_THERM
-    if ((thermograph.get() == nullptr) != (other.thermograph.get() == nullptr))
-        return false;
-
-    if (thermograph)
-        if (!(*thermograph == *other.thermograph))
-            return false;
-#endif
-
-#ifdef MCGS_USE_BOUNDS
-    if (bounds_data.has_value() != other.bounds_data.has_value())
-        return false;
-
-    if (bounds_data.has_value())
-    {
-        const bound_scale& scale1 = std::get<0>(*bounds_data);
-        const bound_scale& scale2 = std::get<0>(*other.bounds_data);
-        if (scale1 != scale2)
-            return false;
-
-        const game_bounds_ptr& ptr1 = std::get<1>(*bounds_data);
-        const game_bounds_ptr& ptr2 = std::get<1>(*other.bounds_data);
-
-        if ((ptr1.get() == nullptr) != (ptr2.get() == nullptr))
-            return false;
-
-        if (ptr1 && *ptr1 != *ptr2)
-            return false;
-    }
-#endif
-
-#ifdef MCGS_USE_DOMINANCE
-    if (dominated_moves.has_value() != other.dominated_moves.has_value())
-        return false;
-
-    if (dominated_moves && (*dominated_moves != *other.dominated_moves))
-        return false;
-#endif
-
-    return true;
-}
 
 inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
 {

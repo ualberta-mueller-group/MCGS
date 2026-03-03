@@ -420,8 +420,8 @@ bool sumgame_move_generator::_increment_generator(bool init)
             const bool has_value = (entry != nullptr);
             stats::report_db_access(has_value);
 
-            if (has_value && entry->dominated_moves.has_value())
-                _dom = entry->dominated_moves.value();
+            if (has_value && entry->dominated_moves)
+                _dom = entry->dominated_moves;
 
         }
 #endif
@@ -1344,33 +1344,33 @@ optional<solve_result> sumgame::simplify_db(
 #endif
 
 #ifdef MCGS_USE_BOUNDS_WIN
-                if (!(bounds_valid && entry->bounds_data.has_value()))
+                if (!(bounds_valid && entry->bounds_data))
                     bounds_valid = false;
                 else
                 {
-                    const bound_scale scale = std::get<0>(*entry->bounds_data);
-                    const game_bounds_ptr& bounds = std::get<1>(*entry->bounds_data);
+                    const game_bounds& bounds = *entry->bounds_data;
+                    const bound_scale scale = bounds.get_scale();
 
-                    if (!bounds->both_valid())
+                    if (!bounds.both_valid())
                         bounds_valid = false;
                     else
                     {
-                        assert(bounds->get_lower_relation() == REL_LESS &&
-                                bounds->get_upper_relation() == REL_GREATER);
+                        assert(bounds.get_lower_relation() == REL_LESS &&
+                                bounds.get_upper_relation() == REL_GREATER);
 
                         switch (scale)
                         {
                             case BOUND_SCALE_UP:
                             {
-                                lower_bound_ups += bounds->get_lower();
-                                upper_bound_ups += bounds->get_upper();
+                                lower_bound_ups += bounds.get_lower();
+                                upper_bound_ups += bounds.get_upper();
                                 break;
                             }
 
                             case BOUND_SCALE_DYADIC_RATIONAL:
                             {
-                                lower_bound_rationals += bounds->get_lower();
-                                upper_bound_rationals += bounds->get_upper();
+                                lower_bound_rationals += bounds.get_lower();
+                                upper_bound_rationals += bounds.get_upper();
                                 break;
                             }
 
@@ -1518,16 +1518,15 @@ void sumgame::db_replacement_pass()
             if (entry == nullptr)
                 continue;
 
-            if (!entry->bounds_data.has_value())
+            if (!entry->bounds_data)
                 continue;
 
-            const bound_scale scale = std::get<0>(*entry->bounds_data);
-            const game_bounds_ptr& bounds = std::get<1>(*entry->bounds_data);
+            const game_bounds& bounds = *entry->bounds_data;
 
-            if (!bounds->is_equal())
+            if (!bounds.is_equal())
                 continue;
 
-            game* sg_replacement = get_scale_game(bounds->get_lower(), scale);
+            game* sg_replacement = get_scale_game(bounds.get_lower(), bounds.get_scale());
             add(sg_replacement);
             cr.added_games.push_back(sg_replacement);
 

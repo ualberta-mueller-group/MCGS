@@ -68,6 +68,8 @@ string node_type_to_color(search_node_type_t node_type)
             return "tomato";
         case SEARCH_NODE_TYPE_ANNOTATED_PRUNED_WIN:
             return "olivedrab";
+        default:
+            THROW_ASSERT(false); // Not implemented!
     }
 }
 
@@ -466,12 +468,13 @@ inline search_node_type_t get_new_node_type(search_node_type_t old_type,
             return (win ? SEARCH_NODE_TYPE_ANNOTATED_PRUNED_WIN
                         : SEARCH_NODE_TYPE_ANNOTATED_PRUNED_LOSS);
 
-        case SEARCH_NODE_TYPE_SIMPLIFICATION:
-        case SEARCH_NODE_TYPE_ANNOTATED_LOSS:
-        case SEARCH_NODE_TYPE_ANNOTATED_WIN:
-        case SEARCH_NODE_TYPE_ANNOTATED_PRUNED_LOSS:
-        case SEARCH_NODE_TYPE_ANNOTATED_PRUNED_WIN:
-            THROW_ASSERT(false, "Case unimplemented!");
+        //case SEARCH_NODE_TYPE_SIMPLIFICATION:
+        //case SEARCH_NODE_TYPE_ANNOTATED_LOSS:
+        //case SEARCH_NODE_TYPE_ANNOTATED_WIN:
+        //case SEARCH_NODE_TYPE_ANNOTATED_PRUNED_LOSS:
+        //case SEARCH_NODE_TYPE_ANNOTATED_PRUNED_WIN:
+        default:
+            THROW_ASSERT(false); // Not implemented!
     }
 }
 

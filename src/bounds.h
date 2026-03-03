@@ -18,13 +18,19 @@ enum bound_scale
     BOUND_SCALE_DYADIC_RATIONAL,
 };
 
+std::string bound_scale_to_string(bound_scale scale);
+
 game* get_scale_game(bound_t scale_idx, bound_scale scale);
 game* get_inverse_scale_game(bound_t scale_idx, bound_scale scale);
 
 class game_bounds
 {
 public:
-    game_bounds();
+    game_bounds(bound_scale scale);
+
+    bound_scale get_scale() const { return _scale; }
+
+    void set_scale(bound_scale scale) { _scale = scale; }
 
     void set_lower(bound_t lower, relation lower_relation);
     void set_upper(bound_t upper, relation upper_relation);
@@ -74,6 +80,7 @@ public:
     inline bool operator==(const game_bounds& rhs) const
     {
         return                                          //
+            (_scale == rhs._scale) &&                   //
             (_lower == rhs._lower) &&                   //
             (_lower_valid == rhs._lower_valid) &&       //
             (_lower_relation == rhs._lower_relation) && //
@@ -92,6 +99,8 @@ private:
     void _set_upper(bound_t upper, relation upper_relation);
 
     // TODO make these nicer for serialization?
+    bound_scale _scale;
+
     bound_t _lower;
     bool _lower_valid;
     relation _lower_relation;
@@ -110,6 +119,8 @@ struct serializer<game_bounds*>
 
     inline static void save(obuffer& os, const game_bounds* bounds)
     {
+        os.write_enum<bound_scale>(bounds->_scale);
+
         os.write_i32(bounds->_lower);
         os.write_bool(bounds->_lower_valid);
         os.write_enum<relation>(bounds->_lower_relation);
@@ -121,7 +132,9 @@ struct serializer<game_bounds*>
 
     inline static game_bounds* load(ibuffer& is)
     {
-        game_bounds* bounds = new game_bounds();
+        const bound_scale scale = is.read_enum<bound_scale>();
+
+        game_bounds* bounds = new game_bounds(scale);
 
         bounds->_lower = is.read_i32();
         bounds->_lower_valid = is.read_bool();

@@ -16,6 +16,22 @@
 
 using namespace std;
 
+//////////////////////////////////////////////////
+std::string bound_scale_to_string(bound_scale scale)
+{
+    switch (scale)
+    {
+        case BOUND_SCALE_UP_STAR:
+            return "up_star";
+        case BOUND_SCALE_UP:
+            return "up";
+        case BOUND_SCALE_DYADIC_RATIONAL:
+            return "dyadic_rational";
+    }
+
+    assert(false);
+}
+
 //////////////////////////////////////// Type declarations
 class search_region
 {
@@ -139,8 +155,9 @@ game* get_inverse_scale_game(bound_t scale_idx, bound_scale scale)
 }
 
 //////////////////////////////////////// game_bounds
-game_bounds::game_bounds()
-    : _lower(numeric_limits<bound_t>::max()),
+game_bounds::game_bounds(bound_scale scale)
+    : _scale(scale),
+      _lower(numeric_limits<bound_t>::max()),
       _lower_valid(false),
       _lower_relation(REL_FUZZY),
       _upper(numeric_limits<bound_t>::min()),
@@ -246,6 +263,8 @@ void game_bounds::_set_upper(bound_t upper, relation upper_relation)
 
 ostream& operator<<(ostream& os, const game_bounds& gb)
 {
+    os << bound_scale_to_string(gb.get_scale()) << ": ";
+
     // opening brace, lower bound
     if (gb.lower_valid())
     {
@@ -405,7 +424,7 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum,
     _regions_next.clear();
     _regions.push_back({opt.min, opt.max});
 
-    game_bounds* bounds = new game_bounds();
+    game_bounds* bounds = new game_bounds(opt.scale);
     bool validated_interval =
         false; // true when we've checked that Gmin <= S <= Gmax
 

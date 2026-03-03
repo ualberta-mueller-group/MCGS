@@ -7,7 +7,7 @@ namespace {
 
 void test_constructor()
 {
-    game_bounds gb;
+    game_bounds gb(BOUND_SCALE_UP);
 
     assert(!gb.lower_valid());
     assert(!gb.upper_valid());
@@ -16,7 +16,7 @@ void test_constructor()
 
 void test_setters_and_getters()
 {
-    game_bounds gb;
+    game_bounds gb(BOUND_SCALE_UP);
 
     assert(!gb.lower_valid());
     assert(!gb.upper_valid());
@@ -43,7 +43,7 @@ void test_setters_and_getters()
 
 void test_midpoint()
 {
-    game_bounds gb;
+    game_bounds gb(BOUND_SCALE_UP);
     gb.set_lower(-3, REL_LESS);
     gb.set_upper(7, REL_GREATER_OR_EQUAL);
 
@@ -52,7 +52,7 @@ void test_midpoint()
 
 void test_invalidate()
 {
-    game_bounds gb;
+    game_bounds gb(BOUND_SCALE_UP);
     gb.set_lower(-6, REL_LESS);
     gb.set_upper(-4, REL_GREATER_OR_EQUAL);
 

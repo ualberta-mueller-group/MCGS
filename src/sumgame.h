@@ -60,7 +60,6 @@ struct sumgame_move
 
     bool operator==(const sumgame_move& rhs) const;
     bool operator!=(const sumgame_move& rhs) const;
-    bool operator<(const sumgame_move& rhs) const;
 
     int subgame_idx;
     move m;
@@ -74,17 +73,6 @@ inline bool sumgame_move::operator==(const sumgame_move& rhs) const
 inline bool sumgame_move::operator!=(const sumgame_move& rhs) const
 {
     return !(*this == rhs);
-}
-
-inline bool sumgame_move::operator<(const sumgame_move& rhs) const
-{
-    if (subgame_idx != rhs.subgame_idx)
-        return subgame_idx < rhs.subgame_idx;
-
-    if (m != rhs.m)
-        return m < rhs.m;
-
-    return false;
 }
 
 //////////////////////////////////////// play_record
