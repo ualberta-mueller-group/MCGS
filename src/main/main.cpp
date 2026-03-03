@@ -8,7 +8,6 @@
 
 #include "cli_options.h"
 #include "database.h"
-#include "db_make_all_moves.h"
 #include "file_parser.h"
 #include "autotests.h"
 #include "global_database.h"
@@ -40,9 +39,6 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
-
-    //test_db_all_moves();
-    //return 0;
 
     if (opts.use_player)
     {

@@ -22,7 +22,6 @@
 #include "ThGraph.h"
 #include "bounds.h"
 #include "cgt_basics.h"
-#include "db_make_all_moves.h"
 #include "db_make_bounds.h"
 #include "db_make_dominated_moves.h"
 #include "db_make_thermograph.h"
@@ -477,14 +476,6 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
 
 #ifdef MCGS_USE_DOMINANCE
         entry.dominated_moves = db_make_dominated_moves(sum);
-#endif
-
-#ifdef MCGS_USE_DB_MOVES_TEST
-        entry.all_black_moves = db_make_all_moves(sum, BLACK);
-        db_enc_or_dec_moves(sum, entry.all_black_moves, DB_MOVE_ACTION_ENCODE);
-
-        entry.all_white_moves = db_make_all_moves(sum, WHITE);
-        db_enc_or_dec_moves(sum, entry.all_white_moves, DB_MOVE_ACTION_ENCODE);
 #endif
 
     set_partisan(sum, entry);
