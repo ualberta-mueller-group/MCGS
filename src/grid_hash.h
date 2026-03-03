@@ -43,7 +43,6 @@
 
 #include <array>
 #include <cassert>
-#include <limits>
 #include <type_traits>
 #include <vector>
 
@@ -181,24 +180,6 @@ inline unsigned int get_op_mask_no_t(grid_hash_orientation ori)
     );
 
     return ORIENTATION_OPS_NO_T[ori / 2];
-}
-
-static constexpr std::array<grid_hash_orientation, 4>
-    INVERSE_GRID_HASH_ORIENTATIONS_NO_T 
-{
-    GRID_HASH_ORIENTATION_0, // 0 -> 0
-    GRID_HASH_ORIENTATION_270, // 90 -> 270
-    GRID_HASH_ORIENTATION_180, // 180 -> 180
-    GRID_HASH_ORIENTATION_90, // 270 -> 90
-};
-
-inline grid_hash_orientation get_inverse_orientation_no_t(grid_hash_orientation ori)
-{
-    //assert(!bit_is_1(ori, 0)); // Shouldn't have T suffix
-    const unsigned int idx = ori / 2;
-
-    assert(0 <= idx && idx < INVERSE_GRID_HASH_ORIENTATIONS_NO_T.size());
-    return INVERSE_GRID_HASH_ORIENTATIONS_NO_T[idx];
 }
 
 } // namespace __grid_hash_impl
@@ -441,49 +422,10 @@ inline int_pair grid_hash::get_inverse_transformed_coords(
     return result;
 }
 
-
-//inline int_pair grid_hash::get_inverse_transformed_coords(
-//    int_pair shape, int_pair coords, grid_hash_orientation ori)
-//{
-//    // op mask (not considering "T" suffix)
-//    const unsigned int op_mask_no_t = __grid_hash_impl::get_op_mask_no_t(ori);
-//
-//    // op mask indicates swap? 
-//    bool do_swap = (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_SWAP);
-//    do_swap ^= (bit_is_1(ori, 0)); // consider "T" suffix
-//
-//    if (do_swap)
-//        coords = transpose_int_pair(coords);
-//
-//    int r = coords.first;
-//    int c = coords.second;
-//
-//    if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_ROW_INV)
-//        r = (shape.first - 1) - r;
-//
-//    if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_COL_INV)
-//        c = (shape.second - 1) - c;
-//
-//    int_pair result(r, c);
-//
-//    return result;
-//}
-
 inline int_pair grid_hash::get_inverse_transformed_shape(
     int_pair shape, grid_hash_orientation ori)
 {
-    // First handle T suffix
-    if (bit_is_1(ori, 0))
-    {
-        shape = transpose_int_pair(shape);
-        // Remove suffix
-        ori = static_cast<grid_hash_orientation>(ori - 1);
-    }
-
-    const grid_hash_orientation ori_inverse =
-        __grid_hash_impl::get_inverse_orientation_no_t(ori);
-
-    return get_transformed_shape(shape, ori_inverse);
+    return get_transformed_shape(shape, ori);
 }
 
 inline int_pair grid_hash::_get_transformed_coords_no_t(
