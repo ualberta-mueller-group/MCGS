@@ -13,12 +13,12 @@ void test_game(game* g, bound_scale scale, bound_t low, relation rel_low,
                bound_t high, relation rel_high, bound_t radius = 8)
 {
     vector<bounds_options> opts_list;
-    opts_list.push_back(bounds_options());
-    bounds_options& opt = opts_list.back();
+    opts_list.push_back(bounds_options(scale, -radius, radius));
 
-    opt.scale = scale;
-    opt.min = -radius;
-    opt.max = radius;
+    //bounds_options& opt = opts_list.back();
+    //opt.scale = scale;
+    //opt.min = -radius;
+    //opt.max = radius;
 
     vector<game_bounds_ptr> bounds_list = find_bounds(g, opts_list);
 
@@ -39,12 +39,12 @@ void test_game(game* g, bound_scale scale, bound_t low, relation rel_low,
 void test_game_invalid(game* g, bound_scale scale, bound_t radius = 8)
 {
     vector<bounds_options> opts_list;
-    opts_list.push_back(bounds_options());
-    bounds_options& opt = opts_list.back();
+    opts_list.push_back(bounds_options(scale, -radius, radius));
 
-    opt.scale = scale;
-    opt.min = -radius;
-    opt.max = radius;
+    //bounds_options& opt = opts_list.back();
+    //opt.scale = scale;
+    //opt.min = -radius;
+    //opt.max = radius;
 
     vector<game_bounds_ptr> bounds_list = find_bounds(g, opts_list);
 

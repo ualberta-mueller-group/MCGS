@@ -13,6 +13,18 @@ namespace {
 ////////////////////////////////////////////////// Main tests
 //////////////////////////////////////// Test limits
 
+// u1 limits
+static_assert((n_bit_int::min_val<1, INT_UNSIGNED>()) == 0);
+static_assert((n_bit_int::max_val<1, INT_UNSIGNED>()) == 1);
+
+// i1 limits
+static_assert((n_bit_int::min_val<1, INT_SIGNED>()) == -1);
+static_assert((n_bit_int::max_val<1, INT_SIGNED>()) == 0);
+static_assert((n_bit_int::sign_bit_idx<1>()) == 0);
+static_assert((n_bit_int::sign_bit_mask<1>()) == 0b1);
+static_assert((n_bit_int::value_mask<1>()) == 0b1);
+
+
 // u2 limits
 static_assert((n_bit_int::min_val<2, INT_UNSIGNED>()) == 0);
 static_assert((n_bit_int::max_val<2, INT_UNSIGNED>()) == 3);
@@ -90,6 +102,9 @@ void test_conversions()
 
 void n_bit_int_test_all()
 {
+    test_conversions<1, INT_UNSIGNED>();
+    test_conversions<1, INT_SIGNED>();
+
     test_conversions<2, INT_UNSIGNED>();
     test_conversions<2, INT_SIGNED>();
 

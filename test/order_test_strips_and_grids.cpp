@@ -47,6 +47,7 @@ public:
     void print(std::ostream& str) const override { str << "dummy_game"; }
 
     game* inverse() const override { assert(false); }
+    game* clone() const override { assert(false); }
 };
 
 ////////////////////////////////////////////////// generator functions
