@@ -259,7 +259,7 @@ game* amazons::clone() const
 ::move amazons::encode_grid_move_to_db(const ::move& m) const
 {
     const int_pair& grid_shape = shape();
-    assert(grid_shape.first > 0 && grid_shape.second > 0);
+    assert(!grid_location::shape_is_empty(grid_shape));
     const grid_hash_orientation ori = _gh.get_orientation();
 
     int_pair coord1, coord2, coord3;
@@ -275,7 +275,7 @@ game* amazons::clone() const
 ::move amazons::decode_grid_move_from_db(const ::move& m) const
 {
     const int_pair& grid_shape = shape();
-    assert(grid_shape.first > 0 && grid_shape.second > 0);
+    assert(!grid_location::shape_is_empty(grid_shape));
     const grid_hash_orientation ori = _gh.get_orientation();
 
     int_pair coord1, coord2, coord3;

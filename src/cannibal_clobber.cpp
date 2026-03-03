@@ -432,6 +432,7 @@ game* cannibal_clobber::clone() const
 ::move cannibal_clobber::encode_grid_move_to_db(const ::move& m) const
 {
     const int_pair& grid_shape = shape();
+    assert(!grid_location::shape_is_empty(grid_shape));
     const grid_hash_orientation ori = _gh.get_orientation();
 
     int_pair coord1, coord2;
@@ -449,6 +450,7 @@ game* cannibal_clobber::clone() const
 ::move cannibal_clobber::decode_grid_move_from_db(const ::move& m) const
 {
     const int_pair& grid_shape = shape();
+    assert(!grid_location::shape_is_empty(grid_shape));
     const grid_hash_orientation ori = _gh.get_orientation();
 
     int_pair coord1, coord2;
