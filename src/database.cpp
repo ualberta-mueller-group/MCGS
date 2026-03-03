@@ -466,18 +466,18 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
         cout << std::flush;
     }
     _game_count++;
+    
+    db_entry_partisan entry;
+
+#ifdef MCGS_USE_THERM
+    entry.thermograph = db_make_thermograph(*this, sum);
+#endif
 
     sum.set_to_play(BLACK);
     bool black_wins = sum.solve();
 
     sum.set_to_play(WHITE);
     bool white_wins = sum.solve();
-
-    db_entry_partisan entry;
-
-#ifdef MCGS_USE_THERM
-    entry.thermograph = db_make_thermograph(*this, sum);
-#endif
 
     entry.outcome = bools_to_outcome_class(black_wins, white_wins);
 
