@@ -368,6 +368,8 @@ bool database::is_equal(const database& other) const
 
 /*
     New (better) algorithm:
+    NOTE: This only seems to be slightly better, but also produces a different
+        DB according to `compare_databases.h` (???)
 
     function gen_main(GEN):
         for G in GEN:
