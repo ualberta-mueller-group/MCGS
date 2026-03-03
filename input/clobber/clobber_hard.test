@@ -1,0 +1,11 @@
+{version 1.5}
+[clobber]
+
+/* 3x9 (228s, MCGS, 4x4 db, 2026-02-27) */
+XOXOXOXOX|OXOXOXOXO|XOXOXOXOX
+	 {B win}
+
+/* 4x7 (2142s, MCGS, 4x4 db, 2026-02-27) */
+XOXOXOX|OXOXOXO|XOXOXOX|OXOXOXO
+	 {B win}
+

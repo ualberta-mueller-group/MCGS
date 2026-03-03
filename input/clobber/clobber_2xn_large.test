@@ -1,0 +1,30 @@
+{version 1.5}
+[clobber]
+
+/* 2x9 */
+XOXOXOXOX|OXOXOXOXO
+	 {B loss}
+
+/* 2x10 */
+XOXOXOXOXO|OXOXOXOXOX
+	 {B win}
+
+/* 2x11 */
+XOXOXOXOXOX|OXOXOXOXOXO
+	 {B win}
+
+/* 2x12 (8s, MCGS, 4x4 db, 2026-02-27) */
+XOXOXOXOXOXO|OXOXOXOXOXOX
+	 {B loss}
+
+/* 2x13 (22s, MCGS, 4x4 db, 2026-02-27) */
+XOXOXOXOXOXOX|OXOXOXOXOXOXO
+	 {B win}
+
+/* 2x14 (138s, MCGS, 4x4 db, 2026-02-27) */
+XOXOXOXOXOXOXO|OXOXOXOXOXOXOX
+	 {B win}
+
+/* 2x15 (1372s, MCGS, 4x4 db, 2026-02-27) */
+XOXOXOXOXOXOXOX|OXOXOXOXOXOXOXO
+	 {B loss}
