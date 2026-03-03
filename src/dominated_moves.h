@@ -1,128 +1,89 @@
+/*
+    Class dominated_moves_t represents dominated moves for a sum. It's used
+    as a field in the db_entry_partisan struct.
+
+    Query/add moves with:
+        - Subgame hash
+        - (DB encoded) move
+        - Player to play
+
+    TODO: review inlining
+*/
 #pragma once
 
 #include <set>
 #include <map>
-#include <memory>
-#include <iostream>
 
 #include "cgt_basics.h"
 #include "hashing.h"
 #include "game.h"
 #include "serializer.h"
 
-
-template <class T1, class T2>
-std::ostream& operator<<(std::ostream& os, const std::set<T1, T2>& s) 
-{
-    os << "{";
-
-    bool not_first = false;
-
-    for (const T1& val : s)
-    {
-        if (not_first)
-            os << ", ";
-        not_first = true;
-
-        os << val;
-    }
-
-    os << "}";
-    return os;
-}
-
-template <class T1, class T2>
-std::ostream& operator<<(std::ostream& os, const std::map<T1, T2>& m) 
-{
-    os << "@_";
-
-    bool not_first = false;
-
-    for (const std::pair<const T1, T2>& p : m)
-    {
-        if (not_first)
-            os << ", ";
-        not_first = true;
-
-        os << p.first << " -> " << p.second;
-    }
-
-    os << "_@";
-    return os;
-}
-
-
 ////////////////////////////////////////////////// class dominated_moves_t
 class dominated_moves_t
 {
 public:
+    // Map subgame hash to a set of its (DB encoded) dominated moves
     typedef std::map<hash_t, std::set<move>> move_map_t;
 
-    bool move_is_dominated(hash_t local_hash, move m, bw player) const
-    {
-        assert(is_black_white(player));
+    bool move_is_dominated(hash_t subgame_hash, move move_db_encoded,
+                           bw player) const;
 
-        const std::set<move>* move_set = _get_set(player, local_hash);
+    void add_move(hash_t subgame_hash, move move_db_encoded, bw player);
 
-        if (move_set == nullptr)
-            return false;
-
-        return move_set->find(m) != move_set->end();
-    }
-
-    void add_move(hash_t local_hash, move m, bw player)
-    {
-        assert(is_black_white(player));
-
-        std::set<move>* move_set = _get_or_create_set(player, local_hash);
-        assert(move_set != nullptr);
-
-        move_set->insert(m);
-    }
+    // Used in testing. Unlikely to be useful elsewhere
+    const move_map_t& get_black_move_map() const;
+    const move_map_t& get_white_move_map() const;
 
     bool operator==(const dominated_moves_t& rhs) const;
     bool operator!=(const dominated_moves_t& rhs) const;
 
-    const move_map_t& get_black_move_map() const
-    {
-        return _black_moves;
-    }
-
-    const move_map_t& get_white_move_map() const
-    {
-        return _white_moves;
-    }
-
 private:
-    const std::set<move>* _get_set(bw player, hash_t subgame_hash) const
-    {
-        assert(is_black_white(player));
+    // May be nullptr
+    const std::set<move>* _get_set_if_exists(hash_t subgame_hash,
+                                             bw player) const;
+    std::set<move>& _get_or_create_set(hash_t subgame_hash, bw player);
 
-        const move_map_t& move_map = (player == BLACK) ? _black_moves : _white_moves;
-
-        auto result = move_map.find(subgame_hash);
-
-        if (result == move_map.end())
-            return nullptr;
-
-        return &result->second;
-    }
-
-    std::set<move>* _get_or_create_set(bw player, hash_t subgame_hash)
-    {
-        assert(is_black_white(player));
-
-        move_map_t& move_map = (player == BLACK) ? _black_moves : _white_moves;
-        return &move_map[subgame_hash];
-    }
-
-
-    friend std::ostream& operator<<(std::ostream& os, const dominated_moves_t& dom);
     friend struct serializer<dominated_moves_t*>;
 
     move_map_t _black_moves;
     move_map_t _white_moves;
 };
+
+////////////////////////////////////////////////// dominated_moves_t methods
+inline bool dominated_moves_t::move_is_dominated(hash_t subgame_hash,
+                                                 move move_db_encoded,
+                                                 bw player) const
+{
+    assert(is_black_white(player));
+
+    const std::set<move>* move_set = _get_set_if_exists(subgame_hash, player);
+
+    if (move_set == nullptr)
+        return false;
+
+    return move_set->find(move_db_encoded) != move_set->end();
+}
+
+inline void dominated_moves_t::add_move(hash_t subgame_hash,
+                                        move move_db_encoded, bw player)
+{
+    assert(is_black_white(player));
+    std::set<move>& move_set = _get_or_create_set(subgame_hash, player);
+    move_set.insert(move_db_encoded);
+}
+
+inline const dominated_moves_t::move_map_t& dominated_moves_t::
+    get_black_move_map() const
+{
+    return _black_moves;
+}
+
+inline const dominated_moves_t::move_map_t& dominated_moves_t::
+    get_white_move_map() const
+{
+    return _white_moves;
+}
 
 inline bool dominated_moves_t::operator==(const dominated_moves_t& rhs) const
 {
@@ -135,19 +96,36 @@ inline bool dominated_moves_t::operator!=(const dominated_moves_t& rhs) const
     return !(*this == rhs);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const dominated_moves_t& dom)
+inline const std::set<move>* dominated_moves_t::_get_set_if_exists(
+    hash_t subgame_hash, bw player) const
 {
-    os << "BLACK DOM: " << dom._black_moves << std::endl;
-    os << "WHITE DOM: " << dom._white_moves << std::endl;
-    return os;
+    assert(is_black_white(player));
+
+    const move_map_t& move_map =
+        (player == BLACK) ? _black_moves : _white_moves;
+
+    auto result = move_map.find(subgame_hash);
+
+    if (result == move_map.end())
+        return nullptr;
+
+    return &result->second;
 }
 
+inline std::set<move>& dominated_moves_t::_get_or_create_set(
+    hash_t subgame_hash, bw player)
+{
+    assert(is_black_white(player));
+    move_map_t& move_map = (player == BLACK) ? _black_moves : _white_moves;
+    return move_map[subgame_hash];
+}
 
 ////////////////////////////////////////////////// serializer<dominated_moves_t>
-template<>
+template <>
 struct serializer<dominated_moves_t*>
 {
 #warning TODO: dominated_moves_t serializer not portable due to `move`
+
     /*
         iobuffer.h should implement:
             write_integral_as<Int1, Int2>(...)
@@ -174,4 +152,3 @@ struct serializer<dominated_moves_t*>
         return dm;
     }
 };
-
