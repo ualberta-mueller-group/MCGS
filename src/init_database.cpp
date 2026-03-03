@@ -34,7 +34,7 @@
 #include "domineering.h"
 #include "amazons.h"
 #include "fission.h"
-#include "rank_games.h"
+#include "cgt_integer_game.h"
 #include "sheep_grid_generator.h"
 #include "throw_assert.h"
 #include "toppling_dominoes.h"
@@ -360,6 +360,7 @@ void register_games(database& db)
     DATABASE_REGISTER_TYPE(db, sheep);
 
     DATABASE_REGISTER_TYPE(db, cannibal_clobber);
+    db.__register_built_in_types();
 
     /*
         NOTE: 2nd argument to register_create_game_gen_fn(...) indicates

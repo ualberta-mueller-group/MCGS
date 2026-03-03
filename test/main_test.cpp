@@ -17,7 +17,7 @@
 #include "test/toppling_dominoes_test.h"
 #include "test/sheep_test.h"
 #include "test/winning_moves_test.h"
-const bool RUN_OVERRIDE_TESTS = false;
+const bool RUN_OVERRIDE_TESTS = true;
 
 #include <cassert>
 #include <string>
@@ -73,6 +73,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
+    database_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)

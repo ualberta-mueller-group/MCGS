@@ -159,6 +159,15 @@ public:
 
     void set_impartial(const game& g, const db_entry_impartial& entry);
 
+    /*
+        TODO this should go away by the end of 1.6, because the idea of
+        a sum having a `game_type_t` causes more problems than it solves.
+
+        This function allows for storing the empty sum in a hacky way by
+        defining its `game_type_t` to be that of `integer_game`
+    */
+    void __register_built_in_types(); // NOLINT(readability-identifier-naming)
+
     std::optional<db_entry_partisan> get_partisan(const game& g) const;
     std::optional<db_entry_partisan> get_partisan(const sumgame& sum) const;
 
@@ -229,7 +238,7 @@ private:
     hash_t _get_db_hash(const game& g) const;
     hash_t _get_db_hash(const sumgame& sum) const;
 
-    static std::optional<game_type_t> _get_sum_game_type(const sumgame& sum);
+    static game_type_t _get_sum_game_type(const sumgame& sum);
     static void _db_print_sum(std::ostream& os, const sumgame& sum);
 
     std::string _metadata_string;

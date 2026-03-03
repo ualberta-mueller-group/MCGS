@@ -21,6 +21,7 @@
 #include "ThGraph.h"
 #include "bounds.h"
 #include "cgt_basics.h"
+#include "cgt_integer_game.h"
 #include "db_make_bounds.h"
 #include "db_make_dominated_moves.h"
 #include "db_make_thermograph.h"
@@ -149,9 +150,7 @@ void database::set_partisan(const game& g, const db_entry_partisan& entry)
 
 void database::set_partisan(const sumgame& sum, const db_entry_partisan& entry)
 {
-    const optional<game_type_t> sum_type_opt = _get_sum_game_type(sum);
-    THROW_ASSERT(sum_type_opt.has_value()); // no storing empty sums
-    game_type_t sum_type = *sum_type_opt;
+    const game_type_t sum_type = _get_sum_game_type(sum);
 
     const game_type_t gt = _mapper.translate_type(sum_type);
     THROW_ASSERT(gt > 0);
@@ -171,6 +170,11 @@ void database::set_impartial(const game& g, const db_entry_impartial& entry)
     auto it = _tree_impartial[gt].emplace(hash, entry);
 
     THROW_ASSERT(it.second); // not already found
+}
+
+void database::__register_built_in_types()
+{
+    DATABASE_REGISTER_TYPE((*this), integer_game);
 }
 
 std::optional<db_entry_partisan> database::get_partisan(const game& g) const
@@ -424,7 +428,8 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
 {
     _max_generation_depth = max(_max_generation_depth, depth);
 
-    if (sum.is_empty() || get_partisan_ptr(sum) != nullptr)
+    //if (sum.is_empty() || get_partisan_ptr(sum) != nullptr)
+    if (get_partisan_ptr(sum) != nullptr)
         return;
 
     const bw restore_player = sum.to_play();
@@ -612,7 +617,7 @@ hash_t database::_get_db_hash(const sumgame& sum) const
     return sum.get_global_hash_for_player(EMPTY);
 }
 
-std::optional<game_type_t> database::_get_sum_game_type(const sumgame& sum)
+game_type_t database::_get_sum_game_type(const sumgame& sum)
 {
     std::optional<game_type_t> sum_type;
 
@@ -632,7 +637,9 @@ std::optional<game_type_t> database::_get_sum_game_type(const sumgame& sum)
         sum_type = sg_type;
     }
 
-    return sum_type;
+    if (sum_type.has_value())
+        return *sum_type;
+    return game_type<integer_game>(); // hack to allow empty sums
 }
 
 void database::_db_print_sum(std::ostream& os, const sumgame& sum)

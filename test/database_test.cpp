@@ -35,6 +35,7 @@ void test_basic()
     database db;
     DATABASE_REGISTER_TYPE(db, clobber_1xn);
     DATABASE_REGISTER_TYPE(db, nogo_1xn);
+    db.__register_built_in_types();
 
     // Should be empty
     assert(db.empty());
@@ -130,6 +131,7 @@ void test_generate()
 {
     database db;
     DATABASE_REGISTER_TYPE(db, clobber_1xn);
+    db.__register_built_in_types();
 
     assert(db.empty());
 
