@@ -1,10 +1,18 @@
 {version 1.5}
 [clobber]
 
+/* 2x18 (not tried yet) */
+XOXOXOXOXOXOXOXOXO|OXOXOXOXOXOXOXOXOX
+	 {B }
+
+/* 3x11 (not tried yet) */
+XOXOXOXOXOX|OXOXOXOXOXO|XOXOXOXOXOX
+	 {B }
+
 /* 4x8 (timeout 100000s, 4x4db, 30 bit tt, 2026-03-02) */
 XOXOXOXO|OXOXOXOX|XOXOXOXO|OXOXOXOX
 	 {B }
 
 /* 6x6 (timeout 100000s, 4x4db, 30 bit tt, 2026-03-03) */
 XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO|OXOXOX
-    {B}
+    {B }

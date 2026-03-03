@@ -30,6 +30,18 @@ XOXOXOX|OXOXOXO
 XOXOXOXO|OXOXOXOX
 	 {B win}
 
+/* 2x9 */
+XOXOXOXOX|OXOXOXOXO
+	 {B loss}
+
+/* 2x10 */
+XOXOXOXOXO|OXOXOXOXOX
+	 {B win}
+
+/* 2x11 */
+XOXOXOXOXOX|OXOXOXOXOXO
+	 {B win}
+
 /* 3x3  */
 XOX|OXO|XOX
     {B win, W win}
@@ -40,7 +52,7 @@ XOXO|OXOX|XOXO
 
 /* 3x5  */
 XOXOX|OXOXO|XOXOX
-	 {B win}
+	 {B win, W win}
 
 /* 3x6  */
 XOXOXO|OXOXOX|XOXOXO
@@ -48,11 +60,7 @@ XOXOXO|OXOXOX|XOXOXO
 
 /* 3x7 */
 XOXOXOX|OXOXOXO|XOXOXOX
-	 {B win}
-
-/* 3x8 */
-XOXOXOXO|OXOXOXOX|XOXOXOXO
-	 {B loss}
+	 {B win, W win}
 
 /* 4x4  */
 XOXO|OXOX|XOXO|OXOX
@@ -61,15 +69,3 @@ XOXO|OXOX|XOXO|OXOX
 /* 4x5  */
 XOXOX|OXOXO|XOXOX|OXOXO
 	 {B win}
-
-/* 4x6 */
-XOXOXO|OXOXOX|XOXOXO|OXOXOX
-	 {B loss}
-
-/* 5x5 */
-XOXOX|OXOXO|XOXOX|OXOXO|XOXOX
-    {B loss, W loss}
-
-
-
-
