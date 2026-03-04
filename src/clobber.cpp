@@ -20,8 +20,6 @@ using namespace std;
 ////////////////////////////////////////////////// helpers
 namespace {
 
-// TODO number of bits is decreasing...
-
 bool only_legal_colors(const std::vector<int>& board)
 {
     for (const int& x : board)
@@ -114,6 +112,7 @@ void clobber::play(const ::move& m, bw to_play)
 
         hash.__set_value(_gh.get_value());
 #else
+        // TODO hard coded "2" should go away...
         hash.toggle_value(2 + from_point, to_play);
         hash.toggle_value(2 + to_point, opp);
 
@@ -148,7 +147,6 @@ void clobber::undo_move()
 
     if (_hash_updatable())
     {
-        // TODO hard coded "2" should go away...
         local_hash& hash = _get_hash_ref();
 
 #ifdef USE_GRID_HASH
@@ -160,6 +158,7 @@ void clobber::undo_move()
 
         hash.__set_value(_gh.get_value());
 #else
+        // TODO hard coded "2" should go away...
         hash.toggle_value(2 + from_point, EMPTY);
         hash.toggle_value(2 + to_point, to_play);
 

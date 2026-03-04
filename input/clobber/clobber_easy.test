@@ -1,0 +1,71 @@
+{version 1.5}
+
+[clobber]
+
+/* 2x2  */
+XO|OX
+    {B win}
+
+/* 2x3  */
+XOX|OXO
+	 {B loss}
+
+/* 2x4  */
+XOXO|OXOX
+	 {B win}
+
+/* 2x5  */
+XOXOX|OXOXO
+	 {B win}
+
+/* 2x6  */
+XOXOXO|OXOXOX
+	 {B loss}
+
+/* 2x7 */
+XOXOXOX|OXOXOXO
+	 {B win}
+
+/* 2x8 */
+XOXOXOXO|OXOXOXOX
+	 {B win}
+
+/* 2x9 */
+XOXOXOXOX|OXOXOXOXO
+	 {B loss}
+
+/* 2x10 */
+XOXOXOXOXO|OXOXOXOXOX
+	 {B win}
+
+/* 2x11 */
+XOXOXOXOXOX|OXOXOXOXOXO
+	 {B win}
+
+/* 3x3  */
+XOX|OXO|XOX
+    {B win, W win}
+
+/* 3x4  */
+XOXO|OXOX|XOXO
+	 {B loss}
+
+/* 3x5  */
+XOXOX|OXOXO|XOXOX
+	 {B win, W win}
+
+/* 3x6  */
+XOXOXO|OXOXOX|XOXOXO
+	 {B loss}
+
+/* 3x7 */
+XOXOXOX|OXOXOXO|XOXOXOX
+	 {B win, W win}
+
+/* 4x4  */
+XOXO|OXOX|XOXO|OXOX
+    {B win}
+
+/* 4x5  */
+XOXOX|OXOXO|XOXOX|OXOXO
+	 {B win}

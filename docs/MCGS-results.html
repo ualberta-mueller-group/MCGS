@@ -21,15 +21,176 @@
 </ul>
 
 <h2><a name="partisan"></a>Partisan Games</h2>
+<h3><a name="clobber-1xn"></a>1xn Clobber, Linear Clobber</h3>
+<p>
+Conjectures from [Albert et al 2005]:
+</p>
+<p>
+Conjecture 1. Boards of the form (XO)^n are first player wins for all n != 3.
+</p>
+<p>
+Conjecture 2. (XXO)^n = floor((n + 1)/2)·up.
+</p>
+
+<p>Conjecture 1 was proven by [Chen et al 2025].
+Computationally, [Folkersen et al 2025] verify Conjecture 1 for all n up to 50, and Conjecture 2 for all n up to 28.
+</p>
+<p>References:
+<ol>
+<li>Albert, M., Grossman, J., Nowakowski, R., Wolfe, D.: An introduction to Clobber.
+Integers 5(2), 12 pp. (2005), article A01, MR2192079
+
+<li>T. Folkersen, Z. Bashir, F. Tavakoli and M. Müller. 
+<a href="https://webdocs.cs.ualberta.ca/~mmueller/ps/2025/Clobber_Solver_ACG_2025.pdf">
+SEGClobber - A Linear Clobber Solver</a>.
+Advances in Computer Games, 2025.
+<br>Code: github repository for 
+<a href="https://github.com/tfolkersen/SEGClobber">SEGClobber</a>.
+
+<li>X. Chen, T. Folkersen, K. Hasham, R. Hayward, D. Lee, O. Randall, L. Schultz and E. Vandermeer,
+A Proof of the 2004 Albert-Grossman-Nowakowski-Wolfe Conjecture on Alternating Linear Clobber, <a href="https://arxiv.org/abs/2509.08985">arXiv 2509.08985</a>, 2025.
+
+</ol>
+</p>
+
+<h3><a name="clobber"></a>Clobber</h3>
+Rectangular nxm grid, n >= m, alternating pattern, starting with Black (X).
+N = first player win, P = second player win.
+
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
+
+<table><thead>
+  <tr>
+    <th>n\m</th>
+    <th>2</th>
+    <th>3</th>
+    <th>4</th>
+    <th>5</th>
+    <th>6</th>
+    <th>7</th>
+    <th>8</th>
+    <th>9</th>
+    <th>10</th>
+    <th>11</th>
+    <th>12</th>
+    <th>13</th>
+    <th>14</th>
+    <th>15</th>
+    <th>16</th>
+    <th>17</th>
+  </tr></thead>
+<tbody>
+  <tr>
+    <th>2</th>
+    <td>N</td>
+    <td>P</td>
+    <td>N</td>
+    <td>N</td>
+    <td>P</td>
+    <td><b>N</b></td>
+    <td><b>N</b></td>
+    <td><b>P</b></td>
+    <td><b>N</b></td>
+    <td><b>N</b></td>
+    <td><b>P</b></td>
+    <td><b>N</b></td>
+    <td><b>N</b></td>
+    <td><b>P</b></td>
+    <td><b>N</b></td>
+    <td><b>N</b></td>
+  </tr>
+  <tr>
+    <th>3</th>
+    <td></td>
+    <td>N</td>
+    <td>P</td>
+    <td>N</td>
+    <td>P</td>
+    <td><b>N</b></td>
+    <td><b>P</b></td>
+    <td><b>N</b></td>
+    <td><b>P</b></td>
+  </tr>
+  <tr>
+    <th>4</th>
+    <td></td>
+    <td></td>
+    <td>N</td>
+    <td>N</td>
+    <td>P</td>
+    <td><b>N</b></td>
+  </tr>
+  <tr>
+    <th>5</th>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td>P</td>
+    <td>P</td>
+  </tr>
+<!-- 
+  <tr>
+    <th>6</th>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+ -->
+</tbody>
+</table>
+
+<p>
+Results from [Grossman 2004]:
+2xn, 3xn, 4xn, 5xn up to n=6.
+<br>
+Other results (new?) in bold from MCGS 2026-02-26 and 2026-03-03.
+</p>
+
+<p>If at least one of n and m is even, then by symmetry, G = -G and only classes N and P are possible. If both n and m are odd, outcomes L or R are possible in principle, but have not been observed for alternating (checkerboard) rectangular boards.
+3x3, 3x5, 3x7 and 3x9 are all in N, and 5x5 is in P. 
+</p>
+
+
+<p>Conjecture: 2xn Clobber is in P if n = 0 (mod 3), and in N otherwise.
+Verified up to n=17.
+</p>
+
+<p>Conjecture: 3xn Clobber is in P if n = 0 (mod 2), and in N otherwise.
+Verified up to n=10.
+</p>
+
+<p>Conjecture: 6xn Clobber is in P.
+Verified up to n=5.
+</p>
+
+<p>
+Reference:
+J.P. Grossman. Appendix A: Report on the First International
+Clobber Tournament. Theoretical Computer Science 313, 533–537 (2004).
+<br>
+Original announcement: J.P. Grossman, March 21, 2002, 
+<q>This week I wrote 
+a clobber program to find all winning moves for small positions (up to 5x6).
+After thinking for ~43 hours, it determined that there are no winning moves from the 5x6 checkerboard position, so 5x6 clobber is a second player win.</q>
+</p>
 
 <h2><a name="impartial"></a>Impartial Games</h2>
 <h3><a name="impartial-clobber"></a>Impartial Clobber</h3>
 <h4><a name="impartial-clobber-1xn"></a>Impartial Linear Clobber</h4>
 <p>Repeating impartial clobber patterns are "easy", in the sense
-that the number of possible/relevant subgames is limited. 
+that the number of possible/relevant new subgames is limited, when computing these positions for increasing size n. 
 After most moves, the board divides into two subgames of "known" 
 nim values. "Known" means they are already stored in the 
-transposition table, from solving boards with smaller n). 
+transposition table, from solving boards with smaller n. 
 For each new n, only a few new larger subgames need to be computed 
 and added to the table. In contrast, random starting positions allow less re-use.
 </p>

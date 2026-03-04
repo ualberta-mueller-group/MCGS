@@ -1,0 +1,19 @@
+{version 1.5}
+[clobber]
+
+/* 2x16 (2109s, MCGS, 4x4 db, 2026-03-01) */
+XOXOXOXOXOXOXOXO|OXOXOXOXOXOXOXOX
+	 {B win}
+
+/* 2x17 (17987s, about 5h, MCGS, 4x4 db, 2026-03-01) */
+XOXOXOXOXOXOXOXOX|OXOXOXOXOXOXOXOXO
+	 {B win}
+
+/* 3x10 (14149s, about 4h, MCGS, 4x4 db, 2026-03-02) */
+XOXOXOXOXO|OXOXOXOXOX|XOXOXOXOXO
+	 {B loss}
+
+/* 5x6 (43797s, about 12h, MCGS, 4x4 db, 2026-03-02) */
+XOXOXO|OXOXOX|XOXOXO|OXOXOX|XOXOXO
+	 {B loss}
+
