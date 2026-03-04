@@ -1,0 +1,3 @@
+[submodule "libs/cgt_lib"]
+	path = libs/cgt_lib
+	url = git@github.com:ualberta-mueller-group/cgt_lib.git
