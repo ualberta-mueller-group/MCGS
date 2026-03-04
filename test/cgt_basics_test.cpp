@@ -264,6 +264,23 @@ void test_is_empty_or_stone_char()
     assert(!is_empty_or_stone_char('A'));
 }
 
+void test_enum_to_string_functions()
+{
+    assert(outcome_class_to_string(P) == "outcome_P");
+    assert(outcome_class_to_string(N) == "outcome_N");
+    assert(outcome_class_to_string(L) == "outcome_L");
+    assert(outcome_class_to_string(R) == "outcome_R");
+    assert(outcome_class_to_string(U) == "outcome_U");
+
+    assert(relation_to_string(REL_EQUAL) == "relation_equal");
+    assert(relation_to_string(REL_FUZZY) == "relation_fuzzy");
+    assert(relation_to_string(REL_LESS_OR_EQUAL) == "relation_less_or_equal");
+    assert(relation_to_string(REL_LESS) == "relation_less");
+    assert(relation_to_string(REL_GREATER_OR_EQUAL) == "relation_greater_or_equal");
+    assert(relation_to_string(REL_GREATER) == "relation_greater");
+    assert(relation_to_string(REL_UNKNOWN) == "relation_unknown");
+}
+
 } // namespace cgt_basics_test
 } // namespace
 
@@ -289,4 +306,6 @@ void cgt_basics_test_all()
     cgt_basics_test::test_is_empty_or_stone_color();
     cgt_basics_test::test_is_stone_char();
     cgt_basics_test::test_is_empty_or_stone_char();
+
+    cgt_basics_test::test_enum_to_string_functions();
 }

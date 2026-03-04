@@ -1617,6 +1617,36 @@ void sumgame::print_simple(std::ostream& os) const
     os << std::flush;
 }
 
+void sumgame::print_sorted(std::ostream& str) const
+{
+    vector<const game*> active_games;
+
+    const int n_games = num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        const game* g = subgame(i);
+        if (!g->is_active())
+            continue;
+
+        active_games.push_back(g);
+    }
+
+    auto sort_fn = [](const game* g1, const game* g2) -> bool
+    {
+        return g1->get_local_hash() < g2->get_local_hash();
+    };
+
+    std::sort(active_games.begin(), active_games.end(), sort_fn);
+
+    const size_t n_active = active_games.size();
+    for (size_t i = 0; i < n_active; i++)
+    {
+        const game* g = active_games[i];
+        str << *g << " ";
+    }
+
+    str << std::flush;
+}
 
 hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 {

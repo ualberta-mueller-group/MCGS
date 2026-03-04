@@ -40,6 +40,15 @@ int main(int argc, char** argv)
 
     mcgs_init_2(opts);
 
+    if (opts.db_dump_file_name.has_value())
+    {
+        THROW_ASSERT(global::use_db(),
+                     "Error: --dump-db specified, but not using DB.");
+
+        database& db = get_global_database();
+        db.dump_to_file(opts.db_dump_file_name.value());
+    }
+
     if (opts.use_player)
     {
         std::shared_ptr<file_parser> parser = opts.parser;

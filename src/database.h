@@ -15,6 +15,7 @@
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "hashing.h"
+#include "print_lib_therm.h"
 #include "type_table.h"
 #include "game.h"
 #include "serializer.h"
@@ -46,6 +47,10 @@ struct db_entry_partisan
     bool operator!=(const db_entry_partisan& other) const;
 
     outcome_class outcome;
+
+    // TODO remove
+    std::string game_string;
+
 #ifdef MCGS_USE_THERM
     std::shared_ptr<ThGraph> thermograph;
 #endif
@@ -64,12 +69,53 @@ inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
     return !(*this == other);
 }
 
+
+//////////////////////////////////////// db_entry_partisan print function
+inline std::ostream& operator<<(std::ostream& os, const db_entry_partisan& entry)
+{
+    os << "Games: `" << entry.game_string << "`";
+    os << " " << outcome_class_to_string(entry.outcome);
+
+#ifdef MCGS_USE_THERM
+    os << " Thermograph: `";
+    if (entry.thermograph.get() == nullptr)
+        os << "nullptr";
+    else
+        print_thermograph(os, *entry.thermograph);
+    os << "`";
+#endif
+
+#ifdef MCGS_USE_BOUNDS
+    os << " Bounds: `";
+    if (entry.bounds_data.get() == nullptr)
+        os << "nullptr";
+    else
+        os << *entry.bounds_data;
+    os << "`";
+#endif
+
+#ifdef MCGS_USE_DOMINANCE
+    os << " Dominated moves: `";
+    if (entry.dominated_moves.get() == nullptr)
+        os << "nullptr";
+    else
+        os << *entry.dominated_moves;
+    os << "`";
+#endif
+
+    return os;
+}
+
+
 //////////////////////////////////////// serializer<db_entry_partisan>
 template <>
 struct serializer<db_entry_partisan>
 {
     inline static void save(obuffer& os, const db_entry_partisan& entry)
     {
+        // TODO remove
+        serializer_save(os, entry.game_string);
+
         serializer_save(os, entry.outcome);
 
 #ifdef MCGS_USE_THERM
@@ -88,6 +134,9 @@ struct serializer<db_entry_partisan>
     inline static db_entry_partisan load(ibuffer& is)
     {
         db_entry_partisan entry;
+
+        // TODO remove
+        serializer_load(is, entry.game_string);
 
         serializer_load(is, entry.outcome);
 
@@ -125,6 +174,12 @@ inline bool db_entry_impartial::operator==(
 inline bool db_entry_impartial::operator!=(const db_entry_impartial& other) const
 {
     return !(*this == other);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const db_entry_impartial& entry)
+{
+    os << entry.nim_value;
+    return os;
 }
 
 //////////////////////////////////////// serializer<db_entry_impartial>
@@ -194,6 +249,10 @@ public:
     bool is_equal(const database& other) const;
 
     // silent=true silences printing to stdout
+
+    // Human readable, one entry per line
+    void dump_to_stream(std::ostream& os) const;
+    void dump_to_file(const std::string& out_filename) const;
 
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////

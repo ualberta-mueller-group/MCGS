@@ -10,7 +10,9 @@
 #include <cassert>
 #include <chrono>
 #include <ctime>
+#include <fstream>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -335,6 +337,44 @@ bool database::is_equal(const database& other) const
     return true;
 }
 
+void database::dump_to_stream(std::ostream& os) const
+{
+    os << _mapper << '\n';
+
+    for (const std::pair<const game_type_t, terminal_layer_partisan_t>&
+             terminal_layer : _tree_partisan)
+    {
+        for (const std::pair<const hash_t, db_entry_partisan>& entry_pair :
+             terminal_layer.second)
+        {
+            os << entry_pair << '\n';
+        }
+    }
+
+    for (const std::pair<const game_type_t, terminal_layer_impartial_t>&
+             terminal_layer : _tree_impartial)
+    {
+        for (const std::pair<const hash_t, db_entry_impartial>& entry_pair :
+             terminal_layer.second)
+        {
+            os << entry_pair << '\n';
+        }
+    }
+
+    os << std::flush;
+
+}
+
+void database::dump_to_file(const std::string& out_filename) const
+{
+    std::ofstream of(out_filename);
+    THROW_ASSERT(of.is_open());
+
+    dump_to_stream(of);
+
+    of.close();
+}
+
 /*
     function gen_main(GEN):
         for G in GEN:
@@ -522,8 +562,14 @@ void database::_generate_entry_single_partisan_impl(sumgame& sum,
         cout << std::flush;
     }
     _game_count++;
-    
+
     db_entry_partisan entry;
+
+    {
+        std::stringstream str;
+        sum.print_sorted(str);
+        entry.game_string = str.str();
+    }
 
 #ifdef MCGS_USE_THERM
     entry.thermograph = db_make_thermograph(*this, sum);

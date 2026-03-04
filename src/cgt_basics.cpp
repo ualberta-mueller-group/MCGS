@@ -79,6 +79,49 @@ void init_color_tables()
 
 //---------------------------------------------------------------------------
 
+std::string outcome_class_to_string(outcome_class oc)
+{
+    switch (oc)
+    {
+        case P:
+            return "outcome_P";
+        case N:
+            return "outcome_N";
+        case L:
+            return "outcome_L";
+        case R:
+            return "outcome_R";
+        case U:
+            return "outcome_U";
+    }
+
+    assert(false);
+}
+
+
+std::string relation_to_string(relation rel)
+{
+    switch (rel)
+    {
+        case REL_EQUAL:
+            return "relation_equal";
+        case REL_FUZZY:
+            return "relation_fuzzy";
+        case REL_LESS_OR_EQUAL:
+            return "relation_less_or_equal";
+        case REL_LESS:
+            return "relation_less";
+        case REL_GREATER_OR_EQUAL:
+            return "relation_greater_or_equal";
+        case REL_GREATER:
+            return "relation_greater";
+        case REL_UNKNOWN:
+            return "relation_unknown";
+    }
+
+    assert(false);
+}
+
 std::string player_name_bw_imp(ebw to_play)
 {
     if (is_black_white(to_play))

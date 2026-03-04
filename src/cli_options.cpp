@@ -252,6 +252,10 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag("--search-graph-verify <directory name>",
                "Verify and annotate search graphs from given directory.");
+
+    print_flag("--dump-db <output file>",
+               "Dump DB to specified file, in readable format, with one entry "
+               "per line.");
 }
 
 } // namespace
@@ -494,6 +498,19 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == "--dump-db")
+        {
+            arg_idx++; // consume the file name
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception(
+                    "Error: got --dump-db but no file path");
+            }
+
+            opts.db_dump_file_name = arg_next;
+            continue;
+        }
 
         if (arg == "--gen-experiments")
         {

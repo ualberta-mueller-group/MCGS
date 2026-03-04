@@ -74,6 +74,8 @@ enum outcome_class
     U
 };
 
+std::string outcome_class_to_string(outcome_class oc);
+
 enum relation
 {
     REL_EQUAL = 0,
@@ -84,6 +86,8 @@ enum relation
     REL_GREATER,
     REL_UNKNOWN,
 };
+
+std::string relation_to_string(relation rel);
 
 // A move encoding any move in some simple CGT games.
 enum simple_cgt_move_code

@@ -55,6 +55,8 @@ struct cli_options
 
     std::optional<std::string> search_graph_verify_dir;
 
+    std::optional<std::string> db_dump_file_name;
+
     static constexpr const char* DEFAULT_RELATIVE_DB_FILE = "database.bin";
     static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";
     static constexpr const char* DEFAULT_TEST_OUTFILE = "out.csv";

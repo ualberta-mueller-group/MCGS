@@ -171,8 +171,15 @@ public:
     sumgame_move_generator* create_sum_move_generator(
         bw to_play, temp_vec_opt_t& temperatures) const;
 
+    // gives number of active/inactive games
     void print(std::ostream& str) const;
+
+    // prints to_play and active games in order of their subgame indices
     void print_simple(std::ostream& str) const;
+
+    // prints active games after sorting them by hash. More expensive, and
+    // used for debugging
+    void print_sorted(std::ostream& str) const;
 
     hash_t get_global_hash(bool invalidate_game_hashes = false) const;
     hash_t get_global_hash_for_player(ebw for_player, bool invalidate_game_hashes = false) const;

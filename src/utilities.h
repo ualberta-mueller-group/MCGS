@@ -11,10 +11,11 @@
 #include <string>
 #include <cstdint>
 #include <cstddef>
-#include <ostream>
 #include <utility>
 #include <optional>
 #include <set>
+#include <map>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "cgt_basics.h"
@@ -379,6 +380,34 @@ std::vector<T> vector_reversed(const std::vector<T>& vec)
     return rev;
 }
 
+////////////////////////////////////////////////// printing for STL types
+//////////////////////////////////////// forward declarations
+// pair printing
+template <class T1, class T2>
+std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& p);
+
+// vector printing
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec);
+
+// set printing
+template <class T>
+std::ostream& operator<<(std::ostream& os, const std::set<T>& std_set);
+
+// unordered_set printing
+template <class T>
+std::ostream& operator<<(std::ostream& os,
+                         const std::unordered_set<T>& std_oset);
+
+// map printing
+template <class T1, class T2>
+std::ostream& operator<<(std::ostream& os, const std::map<T1, T2>& m);
+
+// unordered_map printing
+template <class T1, class T2>
+std::ostream& operator<<(std::ostream& os, const std::unordered_map<T1, T2>& m);
+
+//////////////////////////////////////// implementations
 // pair printing
 template <class T1, class T2>
 std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& p)
@@ -456,6 +485,51 @@ std::ostream& operator<<(std::ostream& os,
     return os;
 }
 
+// map printing
+template <class T1, class T2>
+std::ostream& operator<<(std::ostream& os, const std::map<T1, T2>& m)
+{
+    os << "#_";
+
+    const size_t size = m.size();
+    size_t count = 0;
+
+    for (const std::pair<const T1, T2>& p : m)
+    {
+        os << p;
+        count++;
+
+        if (count < size)
+            os << ", ";
+    }
+
+    os << "_#";
+    return os;
+}
+
+// unordered_map printing
+template <class T1, class T2>
+std::ostream& operator<<(std::ostream& os, const std::unordered_map<T1, T2>& m)
+{
+    os << "@_";
+
+    const size_t size = m.size();
+    size_t count = 0;
+
+    for (const std::pair<const T1, T2>& p : m)
+    {
+        os << p;
+        count++;
+
+        if (count < size)
+            os << ", ";
+    }
+
+    os << "_@";
+    return os;
+}
+
+////////////////////////////////////////////////// other stuff
 outcome_class bools_to_outcome_class(bool black_wins, bool white_wins);
 
 // optional printing

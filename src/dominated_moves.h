@@ -18,6 +18,7 @@
 #include "hashing.h"
 #include "game.h"
 #include "serializer.h"
+#include "utilities.h"
 
 ////////////////////////////////////////////////// class dominated_moves_t
 class dominated_moves_t
@@ -45,6 +46,8 @@ private:
     std::set<move>& _get_or_create_set(hash_t subgame_hash, bw player);
 
     friend struct serializer<dominated_moves_t*>;
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const dominated_moves_t& dom);
 
     move_map_t _black_moves;
     move_map_t _white_moves;
@@ -152,3 +155,16 @@ struct serializer<dominated_moves_t*>
         return dm;
     }
 };
+
+////////////////////////////////////////////////// dominated_moves_t print
+inline std::ostream& operator<<(std::ostream& os, const dominated_moves_t& dom)
+{
+    os << "dom_B: ";
+    os << dom._black_moves;
+
+    os << " dom_W: ";
+    os << dom._white_moves;
+
+    return os;
+}
+
