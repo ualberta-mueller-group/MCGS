@@ -50,9 +50,6 @@ private:
 ////////////////////////////////////////////////// helper functions
 
 namespace {
-// TODO clean up grid colors, make these functions use proper grid color
-// functions/definitions from headers
-
 bool move_has_legal_orientation(int point1, int point2, bw player,
                                 const int_pair& grid_shape)
 {

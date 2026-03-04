@@ -127,7 +127,7 @@ function timeMsToTimeObj(timeMs) {
     // To hours?
     if (timeObj.m < 60)
         return timeObj;
-    [timeObj.h, timeObj.m] = divMod(timeObj.h, 60.0);
+    [timeObj.h, timeObj.m] = divMod(timeObj.m, 60.0);
 
     // To days?
     if (timeObj.h < 24)
