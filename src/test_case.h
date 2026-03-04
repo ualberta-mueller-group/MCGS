@@ -44,7 +44,7 @@ private:
     bool _did_run;
 };
 
-////////////////////////////////////////////////// class test_case_bw_solve
+////////////////////////////////////////////////// class test_case_solve_bw
 class test_case_solve_bw: public i_test_case
 {
 public:
@@ -56,7 +56,7 @@ protected:
     const fp_expr_command_solve_bw _expr;
 };
 
-////////////////////////////////////////////////// class test_case_n_solve
+////////////////////////////////////////////////// class test_case_solve_n
 class test_case_solve_n: public i_test_case
 {
 public:
