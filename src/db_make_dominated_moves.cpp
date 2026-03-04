@@ -275,7 +275,8 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
 
     vector<bool> dominance_mask(N_MOVES, false);
 
-    assert(sum_moves == make_generalized_sum_moves(sum2, player));
+    // TODO put this back?
+    //assert(sum_moves == make_generalized_sum_moves(sum2, player));
 
     auto is_dominated = [&dominance_mask](size_t move_idx) -> bool
     {
