@@ -158,11 +158,6 @@ void nogo::play(const move& m, bw to_play)
         local_hash& hash = _get_hash_ref();
         //const int N = size();
 
-        //hash.toggle_value(2 + to_point, EMPTY); // update board
-        //hash.toggle_value(2 + to_point, to_play);
-        //hash.toggle_value(2 + N + to_point, _immortal_copy[to_point]); // update immortal
-        //hash.toggle_value(2 + N + to_point, _immortal[to_point]);
-
         // Old board and immortal values
         const int val1 =
             combine_board_and_immortal_val(EMPTY, _immortal_copy[to_point]);
@@ -203,11 +198,6 @@ void nogo::undo_move()
     if (_hash_updatable())
     {
         local_hash& hash = _get_hash_ref();
-
-        //hash.toggle_value(2 + to_point, player); // update board
-        //hash.toggle_value(2 + to_point, EMPTY);
-        //hash.toggle_value(2 + N + to_point, _immortal[to_point]); // update immortal
-        //hash.toggle_value(2 + N + to_point, _immortal_copy[to_point]);
 
         // Old board and immortal values
         const int val1 =
@@ -691,16 +681,6 @@ void nogo_move_generator::operator++()
 
 inline void nogo_move_generator::_find_next_move()
 {
-    /*
-    _current++;
-
-    int num = (int) _game.size();
-    while (_current < num && !_is_legal())
-    {
-        _current++;
-    }
-    */
-
     assert(_current.valid());
     
     _current.increment_position();
@@ -716,14 +696,12 @@ inline bool nogo_move_generator::_is_legal()
 
 nogo_move_generator::operator bool() const
 {
-    //return _current < _game.size();
     return _current.valid();
 }
 
 move nogo_move_generator::gen_move() const
 {
     assert(operator bool());
-    //return cgt_move::move1_create(_current);
     return cgt_move::move2_create_from_coords(_current.get_coord());
 }
 

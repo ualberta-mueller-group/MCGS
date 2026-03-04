@@ -319,27 +319,6 @@ toppling_dominoes_move_generator::operator bool() const
 {
     assert(*this);
 
-    ///const int real_idx = _g._idx_virtual_to_real(_domino_idx);
-    ///const bool real_right =
-    ///    _g._domino_flip_orientation ? !_topple_right : _topple_right;
-
-    ///const int real_start = _g._domino_start;
-    ///const int real_end = _g._domino_end;
-
-    ////*
-    ///   Currently board is: [real_start, real_end)
-
-    ///   If topple left: [real_idx + 1, real_end)
-    ///   If topple right: [real_start, real_idx)
-    ///*/
-
-    ///if (!real_right)
-    ///    return cgt_move::move2_create(real_idx + 1, real_end); // LEFT
-
-    ///else
-    ///    return cgt_move::move2_create(real_start, real_idx); // RIGHT
-
-
     // Virtual idx
     return cgt_move::move2_create(_domino_idx, _topple_right);
 }
