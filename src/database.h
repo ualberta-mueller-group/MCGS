@@ -260,12 +260,12 @@ public:
 public:
     void generate_entries_partisan(i_db_game_generator& gen,
                                    bool silent = false);
-private:
-    void _generate_entry_single_partisan(sumgame& sum, unsigned int depth,
+    void generate_entry_single_partisan(sumgame& sum, unsigned int depth,
                                          bool silent);
 
-    void _generate_entry_single_partisan_impl(sumgame& sum, unsigned int depth,
+    void generate_entry_single_partisan_impl(sumgame& sum, unsigned int depth,
                                               bool silent);
+private:
 
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
