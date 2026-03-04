@@ -8,11 +8,12 @@
 #include "fraction.h"
 #include "sumgame.h"
 
-#define RATIONAL_EPSILON_DENOMINATOR 1024
+
+using namespace std;
 
 #ifdef MCGS_USE_THERM
 
-using namespace std;
+#define RATIONAL_EPSILON_DENOMINATOR 1
 
 ////////////////////////////////////////////////// helpers
 namespace {
@@ -129,7 +130,7 @@ std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum)
 
     if (is_small)
     {
-        options_vec.emplace_back(BOUND_SCALE_UP, -64, 64);
+        options_vec.emplace_back(BOUND_SCALE_UP, -512, 512);
         bounds_vec = find_bounds(sum, options_vec);
         assert(options_vec.size() == 1 && bounds_vec.size() == 1);
 
@@ -140,7 +141,7 @@ std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum)
     }
 
     options_vec.clear();
-    options_vec.emplace_back(BOUND_SCALE_DYADIC_RATIONAL, -64, 64);
+    options_vec.emplace_back(BOUND_SCALE_DYADIC_RATIONAL, -512, 512);
     bounds_vec = find_bounds(sum, options_vec);
     assert(options_vec.size() == 1 && bounds_vec.size() == 1);
 

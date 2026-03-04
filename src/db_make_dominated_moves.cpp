@@ -27,9 +27,9 @@
 #include "cgt_basics.h"
 #include "sumgame.h"
 
-#ifdef MCGS_USE_DOMINANCE
-
 using namespace std;
+
+#ifdef MCGS_USE_DOMINANCE
 
 ////////////////////////////////////////////////// helpers
 namespace {
