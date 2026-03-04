@@ -21,8 +21,6 @@ using namespace std;
 ////////////////////////////////////////////////// helpers
 namespace {
 
-// TODO number of bits is decreasing...
-
 bool only_legal_colors(const std::vector<int>& board)
 {
     for (const int& x : board)
@@ -152,7 +150,6 @@ void cannibal_clobber::undo_move()
 
     if (_hash_updatable())
     {
-        // TODO hard coded "2" should go away...
         local_hash& hash = _get_hash_ref();
 
 #ifdef USE_GRID_HASH
