@@ -5,6 +5,7 @@ This document includes more detailed information than `README.md`, including des
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 # Table of Contents
 
+- [Build Options](#build-options)
 - [Search and Solving a Game](#search-and-solving-a-game)
 - [More On Data Types](#more-on-data-types)
 - [More On Extending the `game` Class](#more-on-extending-the-game-class)
