@@ -1,0 +1,19 @@
+{version 1.5}
+[cannibal_clobber]
+
+/* 2x11 */
+XOXOXOXOXOX|OXOXOXOXOXO
+	 {B win}
+
+/* 3x6  */
+XOXOXO|OXOXOX|XOXOXO
+	 {B win}
+
+/* 3x7 */
+XOXOXOX|OXOXOXO|XOXOXOX
+	 {B win, W win}
+
+/* 4x5  */
+XOXOX|OXOXO|XOXOX|OXOXO
+	 {B win}
+
