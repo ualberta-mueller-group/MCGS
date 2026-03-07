@@ -1,0 +1,62 @@
+{version 1.5}
+[clobber]
+
+/* game 2, after move 19: B d4d5 */
+X.O.OO|......|O.X.O.|..X..X|.XXXO.|O.XO.X
+ {W win}
+
+/* game 2, after move 18: W b3a3 */
+X.O.OO|......|O.X.O.|..XX.X|.XXOO.|O.XO.X
+ {B loss}
+
+/* game 2, after move 17: B a2a3 */
+X.O.OO|......|XOX.O.|..XX.X|.XXOO.|O.XO.X
+ {W win}
+
+/* game 2, after move 16: W e2e3 */
+X.O.OO|X.....|OOX.O.|..XX.X|.XXOO.|O.XO.X
+ {B loss}
+
+/* game 2, after move 15: B f3f4 */
+X.O.OO|X...O.|OOX.X.|..XX.X|.XXOO.|O.XO.X
+ {W win}
+
+/* game 2, after move 14: W e4f4 */
+X.O.OO|X...O.|OOX.XX|..XX.O|.XXOO.|O.XO.X
+ {B loss}
+
+/* game 2, after LOSING move 13: B d3c3 */
+X.O.OO|X...O.|OOX.XX|..XXOX|.XXOO.|O.XO.X
+ {W win}
+
+/* game 2, after move 12: W b1c1 */
+X.O.OO|X...O.|OOOXXX|..XXOX|.XXOO.|O.XO.X
+ {B win}
+
+/* game 2, after move 11: B f2f3 */
+XOX.OO|X...O.|OOOXXX|..XXOX|.XXOO.|O.XO.X
+ {W loss}
+
+/* game 2, after move 10: W d1e1 */
+XOX.OO|X...OX|OOOXXO|..XXOX|.XXOO.|O.XO.X
+ {B win}
+
+/* game 2, after move 9: B b2a2 */
+XOXOXO|X...OX|OOOXXO|..XXOX|.XXOO.|O.XO.X
+ {W loss}
+
+/* game 2, after move 8: W c2c3 */
+XOXOXO|OX..OX|OOOXXO|..XXOX|.XXOO.|O.XO.X
+ {B win}
+
+/* game 2, after move 7: B d2d3 */
+XOXOXO|OXO.OX|OOXXXO|..XXOX|.XXOO.|O.XO.X
+ {W loss}
+
+/* game 2, after LOSING move 6: W a4a3 */
+XOXOXO|OXOXOX|OOXOXO|..XXOX|.XXOO.|O.XO.X
+ {B win}
+
+/* game 2, after move 5: B b4c4 */
+XOXOXO|OXOXOX|XOXOXO|O.XXOX|.XXOO.|O.XO.X
+ {W win}
