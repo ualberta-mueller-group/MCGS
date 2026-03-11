@@ -58,8 +58,8 @@ ifneq (,$(filter $(ASAN),leak address)) # ASAN=leak or ASAN=address
 	ASAN_FLAGS := -g -fno-omit-frame-pointer -fsanitize=$(ASAN)
 endif
 
-NORMAL_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS) $(MACHINE_FLAGS)
-TEST_FLAGS_BASE := -Wall --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST) $(MACHINE_FLAGS)
+NORMAL_FLAGS_BASE := -Wall -Wconversion --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS) $(MACHINE_FLAGS)
+TEST_FLAGS_BASE := -Wall -Wconversion --std=c++17 -O3 -pthread $(ASAN_FLAGS) $(DEBUG_FLAGS_MCGS_TEST) $(MACHINE_FLAGS)
 
 ifneq (,$(filter $(WASM),1 true))
 	NORMAL_FLAGS_BASE := $(filter-out -pthread,$(NORMAL_FLAGS_BASE))
