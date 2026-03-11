@@ -100,7 +100,7 @@ struct move6_layout
 
 /*
    Move parts must have bit fields whose sizes are in the interval
-   [2, N_BIT_INT_MAX_BITS] and whose sum is also in the interval.
+   [1, N_BIT_INT_MAX_BITS] and whose sum is also in the interval.
 */
 template <class Move_Layout_T>
 constexpr bool move_layout_is_legal()

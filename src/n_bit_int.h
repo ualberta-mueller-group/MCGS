@@ -10,7 +10,7 @@
 #include "throw_assert.h"
 #include <climits>
 
-// N bit ints must have widths in the interval [2, N_BIT_INT_MAX_BITS]
+// N bit ints must have widths in the interval [1, N_BIT_INT_MAX_BITS]
 #define N_BIT_INT_MAX_BITS 31
 
 static_assert(N_BIT_INT_MAX_BITS < sizeof(int) * CHAR_BIT);
@@ -29,7 +29,7 @@ namespace n_bit_int {
 template <int n_bits>
 inline constexpr int sign_bit_idx()
 {
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
+    static_assert(1 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
     return n_bits - 1;
 }
 
@@ -37,7 +37,7 @@ inline constexpr int sign_bit_idx()
 template <int n_bits>
 inline constexpr int sign_bit_mask()
 {
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
+    static_assert(1 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
     return 1 << sign_bit_idx<n_bits>();
 }
 
@@ -45,7 +45,7 @@ inline constexpr int sign_bit_mask()
 template <int n_bits>
 inline constexpr int value_mask()
 {
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
+    static_assert(1 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
     return ~((unsigned int)(-1) << n_bits);
 }
 
@@ -53,7 +53,7 @@ inline constexpr int value_mask()
 template <int n_bits, signed_type_enum signed_type>
 inline constexpr int max_val()
 {
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
+    static_assert(1 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
 
     switch (signed_type)
     {
@@ -68,7 +68,7 @@ inline constexpr int max_val()
 template <int n_bits, signed_type_enum signed_type>
 inline constexpr int min_val()
 {
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
+    static_assert(1 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
 
     switch (signed_type)
     {
@@ -83,7 +83,7 @@ inline constexpr int min_val()
 template <int n_bits, signed_type_enum signed_type>
 inline constexpr int shrink_int_to_n_bits(int val)
 {
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
+    static_assert(1 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
 
     THROW_ASSERT(                                  //
         (min_val<n_bits, signed_type>()) <= val && //
@@ -97,7 +97,7 @@ inline constexpr int shrink_int_to_n_bits(int val)
 template <int n_bits, signed_type_enum signed_type>
 inline constexpr int expand_int_from_n_bits(int n_bit_val)
 {
-    static_assert(2 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
+    static_assert(1 <= n_bits && n_bits <= N_BIT_INT_MAX_BITS);
 
     THROW_ASSERT(n_bit_val == (n_bit_val & value_mask<n_bits>()));
 
