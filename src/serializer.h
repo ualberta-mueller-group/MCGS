@@ -157,17 +157,21 @@ struct serializer<std::string>
     }
 };
 
+
 //////////////////////////////////////// std::vector<T>
 template <class T>
 struct serializer<std::vector<T>>
 {
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_NoCV = std::remove_cv_t<T>;
+
     inline static void save(obuffer& os, const std::vector<T>& val)
     {
         const size_t size = val.size();
         os.write_u64(size);
 
         for (size_t i = 0; i < size; i++)
-            serializer<T>::save(os, val[i]);
+            serializer<T_NoCV>::save(os, val[i]);
     }
 
     inline static std::vector<T> load(ibuffer& is)
@@ -178,7 +182,7 @@ struct serializer<std::vector<T>>
         vec.reserve(size);
 
         for (uint64_t i = 0; i < size; i++)
-            vec.emplace_back(serializer<T>::load(is));
+            vec.emplace_back(serializer<T_NoCV>::load(is));
 
         return vec;
     }
@@ -188,15 +192,18 @@ struct serializer<std::vector<T>>
 template <class T>
 struct serializer<std::shared_ptr<T>>
 {
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_NoCV = std::remove_cv_t<T>;
+
     static inline void save(obuffer& os, const std::shared_ptr<T>& smart_ptr)
     {
         const T* ptr = smart_ptr.get();
-        serializer<T*>::save(os, ptr);
+        serializer<T_NoCV*>::save(os, ptr);
     }
 
     static inline std::shared_ptr<T> load(ibuffer& is)
     {
-        T* ptr = serializer<T*>::load(is);
+        T* ptr = serializer<T_NoCV*>::load(is);
         return std::shared_ptr<T>(ptr);
     }
 };
@@ -205,15 +212,18 @@ struct serializer<std::shared_ptr<T>>
 template <class T>
 struct serializer<std::unique_ptr<T>>
 {
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_NoCV = std::remove_cv_t<T>;
+
     static inline void save(obuffer& os, const std::unique_ptr<T>& smart_ptr)
     {
         const T* ptr = smart_ptr.get();
-        serializer<T*>::save(os, ptr);
+        serializer<T_NoCV*>::save(os, ptr);
     }
 
     static inline std::unique_ptr<T> load(ibuffer& is)
     {
-        T* ptr = serializer<T*>::load(is);
+        T* ptr = serializer<T_NoCV*>::load(is);
         return std::unique_ptr<T>(ptr);
     }
 };
@@ -222,20 +232,23 @@ struct serializer<std::unique_ptr<T>>
 template <class T1, class T2>
 struct serializer<std::pair<T1, T2>>
 {
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T1_NoCV = std::remove_cv_t<T1>;
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T2_NoCV = std::remove_cv_t<T2>;
+
     inline static void save(obuffer& os, const std::pair<T1, T2>& p)
     {
-        serializer<T1>::save(os, p.first);
-        serializer<T2>::save(os, p.second);
+        serializer<T1_NoCV>::save(os, p.first);
+        serializer<T2_NoCV>::save(os, p.second);
     }
 
-    // TODO make this more efficient
     inline static std::pair<T1, T2> load(ibuffer& is)
     {
-        // Put these on different lines so they aren't called in the wrong
-        // order...
-        T1 first = serializer<T1>::load(is);
-        T2 second = serializer<T2>::load(is);
-        return std::pair<T1, T2>(first, second);
+        T1_NoCV val1 = serializer<T1_NoCV>::load(is);
+        T2_NoCV val2 = serializer<T2_NoCV>::load(is);
+
+        return {std::move(val1), std::move(val2)};
     }
 };
 
@@ -252,8 +265,8 @@ struct serializer<std::unordered_map<T1, T2>>
         const size_t size = m.size();
         os.write_u64(size);
 
-        for (auto it = m.begin(); it != m.end(); it++)
-            serializer<std::pair<T1, T2>>::save(os, *it);
+        for (const std::pair<const T1, T2>& map_pair : m)
+            serializer<std::pair<const T1, T2>>::save(os, map_pair);
     }
 
     inline static std::unordered_map<T1, T2> load(ibuffer& is)
@@ -264,7 +277,7 @@ struct serializer<std::unordered_map<T1, T2>>
         m.reserve(size);
 
         for (size_t i = 0; i < size; i++)
-            m.emplace(serializer<std::pair<T1, T2>>::load(is));
+            m.emplace(serializer<std::pair<const T1, T2>>::load(is));
 
         return m;
     }
