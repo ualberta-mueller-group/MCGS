@@ -2,8 +2,8 @@
     Tools for encoding and decoding moves. Defines various N part moves.
 
     The bit fields of an N part move are specified by a "layout struct". For
-    example, move2_layout specifies a move type containing a 16 bit signed
-    value, and a 15 bit unsigned value.
+    example, move2_layout specifies a move type containing a 32 bit signed
+    value, and a 31 bit unsigned value.
 
     NOTE: Many values in this file should be constexprs, don't change them to
           const! This file doesn't seem to increase compile time measurably,
@@ -16,24 +16,26 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <cstdint>
 
 #include "n_bit_int.h"
 #include "cgt_basics.h"
 #include "int_pair.h"
 
-typedef int move;
+typedef int64_t move;
+typedef int64_t move_part;
 
 namespace cgt_move {
 
-constexpr int COLOR_BIT_IDX = 31;
-constexpr int COLOR_BIT_MASK = (1) << COLOR_BIT_IDX;
+constexpr int COLOR_BIT_IDX = 63;
+constexpr int64_t COLOR_BIT_MASK = int64_t(1) << COLOR_BIT_IDX;
 
 static_assert(BLACK == 0 && WHITE == 1);
 [[nodiscard]] inline move set_color(const move& m, bw color)
 {
     assert(is_black_white(color) && 0 == (m & COLOR_BIT_MASK));
-    using bw_unsigned_t = std::make_unsigned_t<bw>;
-    return m | (static_cast<bw_unsigned_t>(color) << COLOR_BIT_IDX);
+    using move_unsigned_t = std::make_unsigned_t<move>;
+    return m | (static_cast<move_unsigned_t>(color) << COLOR_BIT_IDX);
 }
 
 [[nodiscard]] inline move remove_color(const move& m)
@@ -41,6 +43,7 @@ static_assert(BLACK == 0 && WHITE == 1);
     return m & ~(COLOR_BIT_MASK);
 }
 
+static_assert(BLACK == 0 && WHITE == 1);
 [[nodiscard]] inline bw get_color(const move& m)
 {
     return (m & COLOR_BIT_MASK) != 0;
@@ -51,7 +54,7 @@ struct move1_layout
 {
     static constexpr std::array<std::pair<int, signed_type_enum>, 1> LAYOUT =
     {{
-        {31, INT_SIGNED},
+        {63, INT_SIGNED},
     }};
 };
 
@@ -59,8 +62,8 @@ struct move2_layout
 {
     static constexpr std::array<std::pair<int, signed_type_enum>, 2> LAYOUT =
     {{
-        {16, INT_SIGNED},
-        {15, INT_UNSIGNED},
+        {32, INT_SIGNED},
+        {31, INT_UNSIGNED},
     }};
 };
 
@@ -68,9 +71,9 @@ struct move3_layout
 {
     static constexpr std::array<std::pair<int, signed_type_enum>, 3> LAYOUT =
     {{
-        {11, INT_SIGNED},
-        {10, INT_UNSIGNED},
-        {10, INT_UNSIGNED},
+        {22, INT_SIGNED},
+        {21, INT_SIGNED},
+        {20, INT_UNSIGNED},
     }};
 };
 
@@ -78,10 +81,10 @@ struct move4_layout
 {
     static constexpr std::array<std::pair<int, signed_type_enum>, 4> LAYOUT =
     {{
-        {8, INT_SIGNED},
-        {8, INT_SIGNED},
-        {8, INT_SIGNED},
-        {7, INT_UNSIGNED},
+        {16, INT_SIGNED},
+        {16, INT_SIGNED},
+        {16, INT_SIGNED},
+        {15, INT_UNSIGNED},
     }};
 };
 
@@ -89,12 +92,12 @@ struct move6_layout
 {
     static constexpr std::array<std::pair<int, signed_type_enum>, 6> LAYOUT =
     {{
-        {6, INT_SIGNED},
-        {5, INT_UNSIGNED},
-        {5, INT_UNSIGNED},
-        {5, INT_UNSIGNED},
-        {5, INT_UNSIGNED},
-        {5, INT_UNSIGNED},
+        {11, INT_SIGNED},
+        {11, INT_SIGNED},
+        {11, INT_SIGNED},
+        {10, INT_UNSIGNED},
+        {10, INT_UNSIGNED},
+        {10, INT_UNSIGNED},
     }};
 };
 
@@ -109,15 +112,36 @@ constexpr bool move_layout_is_legal()
 
     for (const std::pair<int, signed_type_enum>& p : Move_Layout_T::LAYOUT)
     {
-        if (!(2 <= p.first && p.first <= N_BIT_INT_MAX_BITS))
+        if (!(1 <= p.first && p.first <= N_BIT_INT_MAX_BITS))
             return false;
 
         total_bits += p.first;
     }
 
-    return (2 <= total_bits && total_bits <= N_BIT_INT_MAX_BITS);
+    return (1 <= total_bits && total_bits <= N_BIT_INT_MAX_BITS);
 }
 
+template <class Move_Layout_T>
+constexpr bool move_parts_trivially_castable_to_int()
+{
+    static_assert(move_layout_is_legal<Move_Layout_T>());
+
+    constexpr int INT_BITS = sizeof(int) * CHAR_BIT;
+
+    for (const std::pair<int, signed_type_enum>& p : Move_Layout_T::LAYOUT)
+    {
+        const int part_bits = p.first;
+        const signed_type_enum signed_type = p.second;
+
+        if (part_bits > INT_BITS)
+            return false;
+
+        if (part_bits == INT_BITS && signed_type != INT_SIGNED)
+            return false;
+    }
+
+    return true;
+}
 
 ////////////////////////////////////////////////// implementation details
 
@@ -158,7 +182,7 @@ get_move_part_width_shift_and_sign_type()
    This function converts the given value to an N bit int.
 */
 template <class Move_Layout_T, unsigned int move_part_number>
-inline void move_n_set_part(move& m, int value)
+inline void move_n_set_part(move& m, move_part value)
 {
     static_assert(move_layout_is_legal<Move_Layout_T>());
     static_assert(1 <= move_part_number &&
@@ -173,7 +197,7 @@ inline void move_n_set_part(move& m, int value)
     constexpr signed_type_enum SIGN_TYPE =
         std::get<2>(WIDTH_SHIFT_AND_SIGN_TYPE);
 
-    static_assert(2 <= WIDTH &&                       //
+    static_assert(1 <= WIDTH &&                       //
                   SHIFT >= 0 &&                       //
                   WIDTH <= N_BIT_INT_MAX_BITS &&      //
                   WIDTH + SHIFT <= N_BIT_INT_MAX_BITS //
@@ -192,10 +216,10 @@ inline void move_n_set_part(move& m, int value)
    struct and (1-indexed) move part number.
 
    This function converts the N bit int stored in the move back to a regular
-   C++ int.
+   C++ int64_t.
 */
 template <class Move_Layout_T, unsigned int move_part_number>
-inline int move_n_get_part(const move& m)
+inline move_part move_n_get_part(const move& m)
 {
     static_assert(move_layout_is_legal<Move_Layout_T>());
     static_assert(1 <= move_part_number &&
@@ -210,7 +234,7 @@ inline int move_n_get_part(const move& m)
     constexpr signed_type_enum SIGN_TYPE =
         std::get<2>(WIDTH_SHIFT_AND_SIGN_TYPE);
 
-    static_assert(2 <= WIDTH &&                       //
+    static_assert(1 <= WIDTH &&                       //
                   SHIFT >= 0 &&                       //
                   WIDTH <= N_BIT_INT_MAX_BITS &&      //
                   WIDTH + SHIFT <= N_BIT_INT_MAX_BITS //
@@ -222,7 +246,7 @@ inline int move_n_get_part(const move& m)
         reinterpret_cast<const move_unsigned_t&>(m);
 
     // Extract the N bit int from the move
-    const int n_bit_value =
+    const int64_t n_bit_value =
         (m_unsigned >> SHIFT) & n_bit_int::value_mask<WIDTH>();
 
     // Convert it to a regular int and return it
@@ -238,40 +262,40 @@ inline int move_n_get_part(const move& m)
 */
 
 
-////////////////////////////////////////////////// move1 (i31)
+////////////////////////////////////////////////// move1 (i63)
 //////////////////////////////////////// move1 setters
-inline void move1_set_part_1(move& m, int part1)
+inline void move1_set_part_1(move& m, move_part part1)
 {
     move_n_set_part<move1_layout, 1>(m, part1);
 }
 
 //////////////////////////////////////// move1 getters
-inline int move1_get_part_1(const move& m)
+inline move_part move1_get_part_1(const move& m)
 {
     return move_n_get_part<move1_layout, 1>(m);
 }
 
 //////////////////////////////////////// move1 helpers
-inline move move1_create(int part1)
+inline move move1_create(move_part part1)
 {
     move m = 0;
     move1_set_part_1(m, part1);
     return m;
 }
 
-inline void move1_unpack(const move& m, int& part1)
+inline void move1_unpack(const move& m, move_part& part1)
 {
     part1 = move1_get_part_1(m);
 }
 
-////////////////////////////////////////////////// move2 (i16, u15)
+////////////////////////////////////////////////// move2 (i32, u31)
 //////////////////////////////////////// move2 setters
-inline void move2_set_part_1(move& m, int part1)
+inline void move2_set_part_1(move& m, move_part part1)
 {
     move_n_set_part<move2_layout, 1>(m, part1);
 }
 
-inline void move2_set_part_2(move& m, int part2)
+inline void move2_set_part_2(move& m, move_part part2)
 {
     move_n_set_part<move2_layout, 2>(m, part2);
 }
@@ -283,33 +307,35 @@ inline void move2_set_coord_1(move& m, const int_pair& coord)
 }
 
 //////////////////////////////////////// move2 getters
-inline int move2_get_part_1(const move& m)
+inline move_part move2_get_part_1(const move& m)
 {
     return move_n_get_part<move2_layout, 1>(m);
 }
 
-inline int move2_get_part_2(const move& m)
+inline move_part move2_get_part_2(const move& m)
 {
     return move_n_get_part<move2_layout, 2>(m);
 }
 
-inline int move2_get_from(const move& m)
+inline move_part move2_get_from(const move& m)
 {
     return move_n_get_part<move2_layout, 1>(m);
 }
 
-inline int move2_get_to(const move& m)
+inline move_part move2_get_to(const move& m)
 {
     return move_n_get_part<move2_layout, 2>(m);
 }
 
 inline int_pair move2_get_coord_1(const move& m)
 {
-    return int_pair(move2_get_part_1(m), move2_get_part_2(m));
+    static_assert(move_parts_trivially_castable_to_int<move2_layout>());
+    return int_pair(static_cast<int>(move2_get_part_1(m)),
+                    static_cast<int>(move2_get_part_2(m)));
 }
 
 //////////////////////////////////////// move2 helpers
-inline move move2_create(int part1, int part2)
+inline move move2_create(move_part part1, move_part part2)
 {
     move m = 0;
     move2_set_part_1(m, part1);
@@ -324,10 +350,17 @@ inline move move2_create_from_coords(const int_pair& coord1)
     return m;
 }
 
-inline void move2_unpack(const move& m, int& part1, int& part2)
+inline void move2_unpack(const move& m, move_part& part1, move_part& part2)
 {
     part1 = move2_get_part_1(m);
     part2 = move2_get_part_2(m);
+}
+
+inline void move2_unpack(const move& m, int& part1, int& part2)
+{
+    static_assert(move_parts_trivially_castable_to_int<move2_layout>());
+    part1 = static_cast<int>(move2_get_part_1(m));
+    part2 = static_cast<int>(move2_get_part_2(m));
 }
 
 inline void move2_unpack_coords(const move& m, int_pair& coord1)
@@ -335,41 +368,41 @@ inline void move2_unpack_coords(const move& m, int_pair& coord1)
     coord1 = move2_get_coord_1(m);
 }
 
-////////////////////////////////////////////////// move3 (i11, u10, u10)
+////////////////////////////////////////////////// move3 (i22, i21, u20)
 //////////////////////////////////////// move3 setters
-inline void move3_set_part_1(move& m, int part1)
+inline void move3_set_part_1(move& m, move_part part1)
 {
     move_n_set_part<move3_layout, 1>(m, part1);
 }
 
-inline void move3_set_part_2(move& m, int part2)
+inline void move3_set_part_2(move& m, move_part part2)
 {
     move_n_set_part<move3_layout, 2>(m, part2);
 }
 
-inline void move3_set_part_3(move& m, int part3)
+inline void move3_set_part_3(move& m, move_part part3)
 {
     move_n_set_part<move3_layout, 3>(m, part3);
 }
 
 //////////////////////////////////////// move3 getters
-inline int move3_get_part_1(const move& m)
+inline move_part move3_get_part_1(const move& m)
 {
     return move_n_get_part<move3_layout, 1>(m);
 }
 
-inline int move3_get_part_2(const move& m)
+inline move_part move3_get_part_2(const move& m)
 {
     return move_n_get_part<move3_layout, 2>(m);
 }
 
-inline int move3_get_part_3(const move& m)
+inline move_part move3_get_part_3(const move& m)
 {
     return move_n_get_part<move3_layout, 3>(m);
 }
 
 //////////////////////////////////////// move3 helpers
-inline move move3_create(int part1, int part2, int part3)
+inline move move3_create(move_part part1, move_part part2, move_part part3)
 {
     move m = 0;
     move3_set_part_1(m, part1);
@@ -378,31 +411,39 @@ inline move move3_create(int part1, int part2, int part3)
     return m;
 }
 
-inline void move3_unpack(const move& m, int& part1, int& part2, int& part3)
+inline void move3_unpack(const move& m, move_part& part1, move_part& part2, move_part& part3)
 {
     part1 = move3_get_part_1(m);
     part2 = move3_get_part_2(m);
     part3 = move3_get_part_3(m);
 }
 
-////////////////////////////////////////////////// move4 (i8, i8, i8, u7)
+inline void move3_unpack(const move& m, int& part1, int& part2, int& part3)
+{
+    static_assert(move_parts_trivially_castable_to_int<move3_layout>());
+    part1 = static_cast<int>(move3_get_part_1(m));
+    part2 = static_cast<int>(move3_get_part_2(m));
+    part3 = static_cast<int>(move3_get_part_3(m));
+}
+
+////////////////////////////////////////////////// move4 (i16 x3, u15)
 //////////////////////////////////////// move4 setters
-inline void move4_set_part_1(move& m, int part1)
+inline void move4_set_part_1(move& m, move_part part1)
 {
     move_n_set_part<move4_layout, 1>(m, part1);
 }
 
-inline void move4_set_part_2(move& m, int part2)
+inline void move4_set_part_2(move& m, move_part part2)
 {
     move_n_set_part<move4_layout, 2>(m, part2);
 }
 
-inline void move4_set_part_3(move& m, int part3)
+inline void move4_set_part_3(move& m, move_part part3)
 {
     move_n_set_part<move4_layout, 3>(m, part3);
 }
 
-inline void move4_set_part_4(move& m, int part4)
+inline void move4_set_part_4(move& m, move_part part4)
 {
     move_n_set_part<move4_layout, 4>(m, part4);
 }
@@ -420,38 +461,42 @@ inline void move4_set_coord_2(move& m, const int_pair& coord)
 }
 
 //////////////////////////////////////// move4 getters
-inline int move4_get_part_1(const move& m)
+inline move_part move4_get_part_1(const move& m)
 {
     return move_n_get_part<move4_layout, 1>(m);
 }
 
-inline int move4_get_part_2(const move& m)
+inline move_part move4_get_part_2(const move& m)
 {
     return move_n_get_part<move4_layout, 2>(m);
 }
 
-inline int move4_get_part_3(const move& m)
+inline move_part move4_get_part_3(const move& m)
 {
     return move_n_get_part<move4_layout, 3>(m);
 }
 
-inline int move4_get_part_4(const move& m)
+inline move_part move4_get_part_4(const move& m)
 {
     return move_n_get_part<move4_layout, 4>(m);
 }
 
 inline int_pair move4_get_coord_1(const move& m)
 {
-    return int_pair(move4_get_part_1(m), move4_get_part_2(m));
+    static_assert(move_parts_trivially_castable_to_int<move4_layout>());
+    return int_pair(static_cast<int>(move4_get_part_1(m)),
+                    static_cast<int>(move4_get_part_2(m)));
 }
 
 inline int_pair move4_get_coord_2(const move& m)
 {
-    return int_pair(move4_get_part_3(m), move4_get_part_4(m));
+    static_assert(move_parts_trivially_castable_to_int<move4_layout>());
+    return int_pair(static_cast<int>(move4_get_part_3(m)),
+                    static_cast<int>(move4_get_part_4(m)));
 }
 
 //////////////////////////////////////// move4 helpers
-inline move move4_create(int part1, int part2, int part3, int part4)
+inline move move4_create(move_part part1, move_part part2, move_part part3, move_part part4)
 {
     move m = 0;
     move4_set_part_1(m, part1);
@@ -469,13 +514,23 @@ inline move move4_create_from_coords(const int_pair& coord1, const int_pair& coo
     return m;
 }
 
-inline void move4_unpack(const move& m, int& part1, int& part2, int& part3,
-                         int& part4)
+inline void move4_unpack(const move& m, move_part& part1, move_part& part2, move_part& part3,
+                         move_part& part4)
 {
     part1 = move4_get_part_1(m);
     part2 = move4_get_part_2(m);
     part3 = move4_get_part_3(m);
     part4 = move4_get_part_4(m);
+}
+
+inline void move4_unpack(const move& m, int& part1, int& part2, int& part3,
+                         int& part4)
+{
+    static_assert(move_parts_trivially_castable_to_int<move4_layout>());
+    part1 = static_cast<int>(move4_get_part_1(m));
+    part2 = static_cast<int>(move4_get_part_2(m));
+    part3 = static_cast<int>(move4_get_part_3(m));
+    part4 = static_cast<int>(move4_get_part_4(m));
 }
 
 inline void move4_unpack_coords(const move& m, int_pair& coord1, int_pair& coord2)
@@ -484,34 +539,34 @@ inline void move4_unpack_coords(const move& m, int_pair& coord1, int_pair& coord
     coord2 = move4_get_coord_2(m);
 }
 
-////////////////////////////////////////////////// move6 (i6, u5, ..., u5)
+////////////////////////////////////////////////// move6 (i11 x3, u10 x3)
 //////////////////////////////////////// move6 setters
-inline void move6_set_part_1(move& m, int part1)
+inline void move6_set_part_1(move& m, move_part part1)
 {
     move_n_set_part<move6_layout, 1>(m, part1);
 }
 
-inline void move6_set_part_2(move& m, int part2)
+inline void move6_set_part_2(move& m, move_part part2)
 {
     move_n_set_part<move6_layout, 2>(m, part2);
 }
 
-inline void move6_set_part_3(move& m, int part3)
+inline void move6_set_part_3(move& m, move_part part3)
 {
     move_n_set_part<move6_layout, 3>(m, part3);
 }
 
-inline void move6_set_part_4(move& m, int part4)
+inline void move6_set_part_4(move& m, move_part part4)
 {
     move_n_set_part<move6_layout, 4>(m, part4);
 }
 
-inline void move6_set_part_5(move& m, int part5)
+inline void move6_set_part_5(move& m, move_part part5)
 {
     move_n_set_part<move6_layout, 5>(m, part5);
 }
 
-inline void move6_set_part_6(move& m, int part6)
+inline void move6_set_part_6(move& m, move_part part6)
 {
     move_n_set_part<move6_layout, 6>(m, part6);
 }
@@ -535,54 +590,60 @@ inline void move6_set_coord_3(move& m, const int_pair& coord)
 }
 
 //////////////////////////////////////// move6 getters
-inline int move6_get_part_1(const move& m)
+inline move_part move6_get_part_1(const move& m)
 {
     return move_n_get_part<move6_layout, 1>(m);
 }
 
-inline int move6_get_part_2(const move& m)
+inline move_part move6_get_part_2(const move& m)
 {
     return move_n_get_part<move6_layout, 2>(m);
 }
 
-inline int move6_get_part_3(const move& m)
+inline move_part move6_get_part_3(const move& m)
 {
     return move_n_get_part<move6_layout, 3>(m);
 }
 
-inline int move6_get_part_4(const move& m)
+inline move_part move6_get_part_4(const move& m)
 {
     return move_n_get_part<move6_layout, 4>(m);
 }
 
-inline int move6_get_part_5(const move& m)
+inline move_part move6_get_part_5(const move& m)
 {
     return move_n_get_part<move6_layout, 5>(m);
 }
 
-inline int move6_get_part_6(const move& m)
+inline move_part move6_get_part_6(const move& m)
 {
     return move_n_get_part<move6_layout, 6>(m);
 }
 
 inline int_pair move6_get_coord_1(const move& m)
 {
-    return int_pair(move6_get_part_1(m), move6_get_part_2(m));
+    static_assert(move_parts_trivially_castable_to_int<move6_layout>());
+    return int_pair(static_cast<int>(move6_get_part_1(m)),
+                    static_cast<int>(move6_get_part_2(m)));
 }
 
 inline int_pair move6_get_coord_2(const move& m)
 {
-    return int_pair(move6_get_part_3(m), move6_get_part_4(m));
+    static_assert(move_parts_trivially_castable_to_int<move6_layout>());
+    return int_pair(static_cast<int>(move6_get_part_3(m)),
+                    static_cast<int>(move6_get_part_4(m)));
 }
 
 inline int_pair move6_get_coord_3(const move& m)
 {
-    return int_pair(move6_get_part_5(m), move6_get_part_6(m));
+    static_assert(move_parts_trivially_castable_to_int<move6_layout>());
+    return int_pair(static_cast<int>(move6_get_part_5(m)),
+                    static_cast<int>(move6_get_part_6(m)));
 }
 
 //////////////////////////////////////// move6 helpers
-inline move move6_create(int part1, int part2, int part3, int part4, int part5,
-                         int part6)
+inline move move6_create(move_part part1, move_part part2, move_part part3, move_part part4, move_part part5,
+                         move_part part6)
 {
     move m = 0;
     move6_set_part_1(m, part1);
@@ -605,8 +666,8 @@ inline move move6_create_from_coords(const int_pair& coord1,
     return m;
 }
 
-inline void move6_unpack(const move& m, int& part1, int& part2, int& part3,
-                         int& part4, int& part5, int& part6)
+inline void move6_unpack(const move& m, move_part& part1, move_part& part2, move_part& part3,
+                         move_part& part4, move_part& part5, move_part& part6)
 {
     part1 = move6_get_part_1(m);
     part2 = move6_get_part_2(m);
@@ -614,6 +675,18 @@ inline void move6_unpack(const move& m, int& part1, int& part2, int& part3,
     part4 = move6_get_part_4(m);
     part5 = move6_get_part_5(m);
     part6 = move6_get_part_6(m);
+}
+
+inline void move6_unpack(const move& m, int& part1, int& part2, int& part3,
+                         int& part4, int& part5, int& part6)
+{
+    static_assert(move_parts_trivially_castable_to_int<move6_layout>());
+    part1 = static_cast<int>(move6_get_part_1(m));
+    part2 = static_cast<int>(move6_get_part_2(m));
+    part3 = static_cast<int>(move6_get_part_3(m));
+    part4 = static_cast<int>(move6_get_part_4(m));
+    part5 = static_cast<int>(move6_get_part_5(m));
+    part6 = static_cast<int>(move6_get_part_6(m));
 }
 
 inline void move6_unpack_coords(const move& m, int_pair& coord1,
