@@ -32,6 +32,7 @@ public:
 
     const std::vector<game*>& get_games() const;
     csv_row& get_csv_row();
+    const csv_row& get_csv_row() const;
 
 protected:
     virtual void _run_impl(unsigned long long timeout) = 0;
@@ -49,6 +50,8 @@ class test_case_solve_bw: public i_test_case
 {
 public:
     test_case_solve_bw(fp_expr_command_solve_bw expr, std::vector<game*> games);
+
+    const fp_expr_command_solve_bw& get_fp_expr() const;
 
 protected:
     void _run_impl(unsigned long long timeout) override;

@@ -192,6 +192,11 @@ void print_help_message(const string& exec_name)
                "copy of MCGS, this is only useful in combination with "
                "--run-tests");
 
+    print_flag("--convert-to-segclobber <output directory>",
+               "Convert input test cases to SEGClobber input. Skips test cases "
+               "which are not \"solve_BW\" tests, or which contain games other "
+               "than clobber_1xn. Prints warnings in the latter case.");
+
     cout << "Testing framework flags:" << endl;
     cout << endl;
     cout << "\tThese flags only have an effect when using \"--run-tests\"."
@@ -561,6 +566,21 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::count_sums.flag())
         {
             global::count_sums.set(true);
+            continue;
+        }
+
+        if (arg == "--convert-to-segclobber")
+        {
+            arg_idx++;
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception(
+                    "Error: got --convert-to-segclobber but no output "
+                    "directory");
+            }
+
+            opts.segclobber_file_output_dir = arg_next;
             continue;
         }
 

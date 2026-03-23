@@ -54,6 +54,8 @@ struct cli_options
     std::optional<std::string> db_file_name_compare_1;
     std::optional<std::string> db_file_name_compare_2;
 
+    std::optional<std::string> segclobber_file_output_dir;
+
     static constexpr const char* DEFAULT_RELATIVE_DB_FILE = "database.bin";
     static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";
     static constexpr const char* DEFAULT_TEST_OUTFILE = "out.csv";

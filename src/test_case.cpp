@@ -76,6 +76,11 @@ csv_row& i_test_case::get_csv_row()
     return _csv_row;
 }
 
+const csv_row& i_test_case::get_csv_row() const
+{
+    return _csv_row;
+}
+
 ////////////////////////////////////////////////// test_case_solve_bw methods
 test_case_solve_bw::test_case_solve_bw(fp_expr_command_solve_bw expr,
                                        std::vector<game*> games)
@@ -100,6 +105,11 @@ test_case_solve_bw::test_case_solve_bw(fp_expr_command_solve_bw expr,
     }
 
     _csv_row.fill_pre_test_fields(_games, _expr.get_player(), expected_result_string);
+}
+
+const fp_expr_command_solve_bw& test_case_solve_bw::get_fp_expr() const
+{
+    return _expr;
 }
 
 void test_case_solve_bw::_run_impl(unsigned long long timeout)

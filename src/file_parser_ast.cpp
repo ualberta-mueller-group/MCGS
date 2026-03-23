@@ -305,7 +305,7 @@ void fp_chunk::add_command_expr(i_fp_expr_command* expr)
 
 const i_fp_expr_command& fp_chunk::get_command_expr(int idx) const
 {
-    assert(idx < n_command_exprs());
+    assert(0 <= idx && idx < n_command_exprs());
     return *(_command_exprs[idx]);
 }
 

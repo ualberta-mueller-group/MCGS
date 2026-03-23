@@ -60,5 +60,26 @@ void run_test_from_main(shared_ptr<i_test_case> test_case,
         cout << "\"" << row.comments.value() << "\"" << endl;
 }
 
+void run_tests_from_main(std::shared_ptr<file_parser> parser,
+                         const cli_options& opts)
+{
+    bool first_case = true;
 
+    while (parser->parse_chunk())
+    {
+        const int n_test_cases = parser->n_test_cases();
 
+        for (int test_number = 0; test_number < n_test_cases; test_number++)
+        {
+            std::shared_ptr<i_test_case> test_case =
+                parser->get_test_case(test_number);
+
+            if (!first_case)
+                cout << endl;
+
+            run_test_from_main(test_case, opts);
+
+            first_case = false;
+        }
+    }
+}

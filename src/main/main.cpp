@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "cli_options.h"
+#include "convert_to_segclobber.h"
 #include "file_parser.h"
 #include "autotests.h"
 #include "print_moves.h"
@@ -46,11 +47,19 @@ int main(int argc, char** argv)
         return 0;
     }
 
-
     if (opts.run_tests)
     {
-        run_autotests(opts.test_directory, opts.outfile_name,
-                      opts.test_timeout);
+        if (opts.segclobber_file_output_dir.has_value())
+        {
+            convert_tests_to_segclobber(opts.test_directory,
+                                        *opts.segclobber_file_output_dir);
+        }
+        else
+        {
+            run_autotests(opts.test_directory, opts.outfile_name,
+                          opts.test_timeout);
+        }
+
         return 0;
     }
 
@@ -95,26 +104,11 @@ int main(int argc, char** argv)
     // Run sums from input
     if (opts.parser)
     {
-        bool first_case = true;
-        std::shared_ptr<file_parser> parser = opts.parser;
-
-        while (parser->parse_chunk())
-        {
-            const int n_test_cases = parser->n_test_cases();
-
-            for (int test_number = 0; test_number < n_test_cases; test_number++)
-            {
-                std::shared_ptr<i_test_case> test_case =
-                    parser->get_test_case(test_number);
-
-                if (!first_case)
-                    cout << endl;
-
-                run_test_from_main(test_case, opts);
-
-                first_case = false;
-            }
-        }
+        if (opts.segclobber_file_output_dir.has_value())
+            convert_tests_to_segclobber(opts.parser,
+                                        *opts.segclobber_file_output_dir);
+        else
+            run_tests_from_main(opts.parser, opts);
     }
 
     if (random_table::did_resize_warning())
