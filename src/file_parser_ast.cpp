@@ -38,7 +38,7 @@ i_fp_expr_content::i_fp_expr_content(int line_no)
 //////////////////////////////////////// i_fp_expr_command methods
 i_fp_expr_command::i_fp_expr_command(int line_no, command_type_enum command_type)
     : i_fp_expr(line_no),
-      _command_type()
+      _command_type(command_type)
 {
 }
 

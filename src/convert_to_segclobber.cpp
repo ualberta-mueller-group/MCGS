@@ -140,36 +140,6 @@ pair<string, string> extract_player_and_expected_winner(
     return player_and_winner_pair;
 }
 
-/*
-    Creates directory if it doesn't exist.
-
-    Throws if the given path already exists and is not an empty directory.
-*/
-void make_output_dir(const string& output_dir_name)
-{
-    THROW_ASSERT(!output_dir_name.empty());
-
-    const std::filesystem::path output_dir_path(output_dir_name);
-
-    if (std::filesystem::exists(output_dir_path))
-    {
-        THROW_ASSERT(std::filesystem::is_directory(output_dir_path),
-                     "Output path \"" + output_dir_path.string() +
-                         "\" already exists and is not a directory!");
-
-        THROW_ASSERT(std::filesystem::is_empty(output_dir_path),
-                     "Output directory \"" + output_dir_path.string() +
-                         "\" exists and is not empty!");
-
-        return;
-    }
-
-    std::filesystem::create_directory(output_dir_path);
-
-    THROW_ASSERT(std::filesystem::is_directory(output_dir_path) &&
-                 std::filesystem::is_empty(output_dir_path));
-}
-
 // Open a file for writing in the given directory
 ofstream open_output_file(const string& output_dir_name,
                           const string& output_file_name)
@@ -180,13 +150,16 @@ ofstream open_output_file(const string& output_dir_name,
     const std::filesystem::path output_file_path(output_dir_path /
                                                  output_file_name);
 
-    THROW_ASSERT(std::filesystem::exists(output_dir_path) &&
-                     std::filesystem::is_directory(output_dir_path),
-                 "Output path is not a directory!");
+    // Make directories if they don't exist
+    if (!std::filesystem::exists(output_dir_path))
+        std::filesystem::create_directories(output_dir_path);
 
-    THROW_ASSERT(!std::filesystem::exists(output_file_path),
-                 "Output file \"" + output_file_path.string() +
-                     "\" already exists!");
+    const std::filesystem::path output_file_path_parent = output_file_path.parent_path();
+    if (!std::filesystem::exists(output_file_path_parent))
+        std::filesystem::create_directories(output_file_path_parent);
+
+    THROW_ASSERT(std::filesystem::exists(output_dir_path) &&
+                 std::filesystem::is_directory(output_dir_path));
 
     ofstream of(output_file_path);
     THROW_ASSERT(of.is_open());
@@ -232,9 +205,6 @@ optional<string> convert_test_single(const test_case_solve_bw* test_case)
 void convert_tests_to_segclobber(shared_ptr<file_parser> fp,
                                  const string& output_dir_name)
 {
-    // Make output dir, open output file
-    make_output_dir(output_dir_name);
-
     ofstream output_file =
         open_output_file(output_dir_name, "segclobber-tests.txt");
     assert(output_file.is_open());
@@ -283,8 +253,6 @@ void convert_tests_to_segclobber(const string& test_directory,
     THROW_ASSERT(!test_directory.empty() && !output_dir_name.empty());
     THROW_ASSERT(std::filesystem::is_directory(test_directory));
 
-    make_output_dir(output_dir_name);
-
     uint64_t n_skipped_tests = 0;
 
     for (test_file_iterator iter(test_directory); iter; ++iter)
@@ -314,9 +282,6 @@ void convert_tests_to_segclobber(const string& test_directory,
 
                 shared_ptr<i_test_case> test_case = fp->get_test_case(i);
 
-                cout << "Reported test case is " << fp->get_test_case_type(i) << endl;
-                cout << "Type is " << test_case->get_command_type() << endl;
-
                 const test_case_solve_bw* test_case_casted =
                     dynamic_cast<const test_case_solve_bw*>(test_case.get());
                 assert(test_case_casted != nullptr);
@@ -331,7 +296,7 @@ void convert_tests_to_segclobber(const string& test_directory,
                 }
 
                 if (!output_file.has_value())
-                    output_file = open_output_file(test_directory, relative_file_path);
+                    output_file = open_output_file(output_dir_name, relative_file_path);
 
                 assert(output_file->is_open());
                 *output_file << *test_line << flush;
