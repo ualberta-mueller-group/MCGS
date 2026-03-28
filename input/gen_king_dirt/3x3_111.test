@@ -1,0 +1,48 @@
+{version 1.5}
+
+/*_
+    Results from: CGSuite 2.2-beta2
+*/
+
+[gen_king_dirt]
+
+1,1,1:.X.|.O.|OX. {B win, W win}
+1,1,1:...|.O.|.O. {B loss, W win}
+1,1,1:X.O|.#.|..# {B win, W win}
+1,1,1:.#X|..O|.#O {B loss, W loss}
+1,1,1:#..|#..|... {B loss, W loss}
+1,1,1:XO.|.O.|..X {B win, W win}
+1,1,1:.O.|O..|... {B loss, W win}
+1,1,1:..#|XX.|... {B win, W loss}
+1,1,1:.XO|...|... {B win, W win}
+1,1,1:X..|...|... {B win, W loss}
+1,1,1:...|...|.#. {B loss, W loss}
+1,1,1:...|O..|#.. {B loss, W win}
+1,1,1:...|...|.O. {B loss, W win}
+1,1,1:#XO|..#|..O {B loss, W loss}
+1,1,1:OX#|OX.|..# {B win, W win}
+1,1,1:.XO|.#.|... {B win, W loss}
+1,1,1:...|...|OX. {B win, W win}
+1,1,1:...|..O|.#. {B loss, W win}
+1,1,1:...|...|O.# {B loss, W win}
+1,1,1:..#|...|... {B loss, W loss}
+1,1,1:...|.X.|... {B win, W loss}
+1,1,1:.X.|..#|.X. {B win, W loss}
+1,1,1:...|..X|.#X {B win, W loss}
+1,1,1:X..|O#.|#.. {B win, W win}
+1,1,1:.O.|...|X.. {B win, W win}
+1,1,1:OO.|...|.X. {B win, W loss}
+1,1,1:.X.|...|O.. {B win, W win}
+1,1,1:...|...|... {B win, W win}
+1,1,1:.#.|.OO|#.. {B loss, W win}
+1,1,1:...|...|#.. {B loss, W loss}
+1,1,1:...|.XO|.#O {B win, W win}
+1,1,1:.XO|XO.|... {B win, W win}
+1,1,1:...|O..|.O. {B loss, W win}
+1,1,1:OO.|...|..# {B loss, W win}
+1,1,1:..X|.#.|O#X {B win, W loss}
+1,1,1:X.O|...|..# {B loss, W loss}
+1,1,1:O#.|O..|... {B loss, W win}
+1,1,1:#..|OX.|#.. {B win, W win}
+1,1,1:..X|.#.|X.. {B win, W loss}
+1,1,1:XO.|.X.|O.. {B win, W win}

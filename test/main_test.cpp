@@ -8,6 +8,7 @@
 #include "test/cannibal_clobber_test.h"
 #include "test/domineering_test.h"
 #include "test/fission_test.h"
+#include "test/gen_king_dirt_test.h"
 #include "test/gen_toads_test.h"
 #include "test/grid_game_hashes_test.h"
 #include "test/grid_hash_test.h"
@@ -73,6 +74,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
+    gen_king_dirt_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -189,6 +191,7 @@ int main(int argc, const char** argv)
     toppling_dominoes_test_all();
     gen_toads_test_all();
     sheep_test_all();
+    gen_king_dirt_test_all();
     //}
 
     normalize_test_all();

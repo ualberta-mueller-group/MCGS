@@ -10,9 +10,14 @@
 #include "n_bit_int.h"
 #include "int_pair.h"
 
-namespace cannibal_clobber_move {
+namespace gen_king_dirt_move {
 struct custom_layout
 {
+    /*
+        From (int_pair)
+        To (int_pair)
+        Place stone (bool)
+    */
     static constexpr std::array<std::pair<int, signed_type_enum>, 5> LAYOUT =
     {{
         {16, INT_UNSIGNED},
@@ -24,23 +29,25 @@ struct custom_layout
 };
 
 inline move create_from_coords(const int_pair& coord1, const int_pair& coord2,
-                               bw target_color)
+                               bool place_stone)
 {
     move m = 0;
     cgt_move::move_n_set_part<custom_layout, 1>(m, coord1.first);
     cgt_move::move_n_set_part<custom_layout, 2>(m, coord1.second);
     cgt_move::move_n_set_part<custom_layout, 3>(m, coord2.first);
     cgt_move::move_n_set_part<custom_layout, 4>(m, coord2.second);
+    cgt_move::move_n_set_part<custom_layout, 5>(m, place_stone);
 
-    assert(is_black_white(target_color));
-    const move_part color_enc = (target_color == BLACK) ? 0 : 1;
-    cgt_move::move_n_set_part<custom_layout, 5>(m, color_enc);
+    assert(                                                                 //
+        (place_stone ==                                                     //
+         static_cast<bool>(cgt_move::move_n_get_part<custom_layout, 5>(m))) //
+    );                                                                      //
 
     return m;
 }
 
 inline void unpack_coords(const move& m, int_pair& coord1, int_pair& coord2,
-                          bw& target_color)
+                          bool& place_stone)
 {
     static_assert(
         cgt_move::move_parts_trivially_castable_to_int<custom_layout>());
@@ -53,13 +60,11 @@ inline void unpack_coords(const move& m, int_pair& coord1, int_pair& coord2,
         static_cast<int>(cgt_move::move_n_get_part<custom_layout, 3>(m));
     coord2.second =
         static_cast<int>(cgt_move::move_n_get_part<custom_layout, 4>(m));
-
-    const move_part color_enc = cgt_move::move_n_get_part<custom_layout, 5>(m);
-    assert(0 <= color_enc && color_enc <= 1);
-    target_color = (color_enc == 0) ? BLACK : WHITE;
+    place_stone =
+        static_cast<bool>(cgt_move::move_n_get_part<custom_layout, 5>(m));
 }
 
-void print_as_coords(std::ostream& str, const move& m, const int_pair& shape);
+void print_as_coords(std::ostream& str, const move& m, const int_pair& shape,
+                     ebw to_play);
 
-} // namespace cannibal_clobber_move
-
+} // namespace gen_king_dirt_move

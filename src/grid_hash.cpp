@@ -13,9 +13,7 @@ using namespace std;
 ////////////////////////////////////////////////// grid_hash methods
 void grid_hash::reset(const int_pair& grid_shape)
 {
-    assert(grid_shape.first >= 0 && grid_shape.second >= 0);
-
-    _grid_shape = grid_shape;
+    _init_grid_shape(grid_shape);
 
     static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
 

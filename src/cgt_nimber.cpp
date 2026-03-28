@@ -1,18 +1,20 @@
 //---------------------------------------------------------------------------
 // Simple combinatorial games - nimbers
 //---------------------------------------------------------------------------
-#include "cgt_nimber.h"
-#include "cgt_basics.h"
-#include "cgt_move.h"
 #include <cassert>
 #include <ostream>
 #include <vector>
+
+#include "cgt_nimber.h"
+#include "cgt_basics.h"
+#include "cgt_move.h"
+#include "integral_conversion.h"
 
 void nimber::play(const move& m, bw to_play)
 {
     impartial_game::play(m, to_play);
 
-    const int number = cgt_move::move1_get_part_1(m);
+    const int number = integral_cast_checked<int>(cgt_move::move1_get_part_1(m));
     assert(number > 0);
     assert(number <= _value);
     _value -= number;
@@ -23,7 +25,7 @@ void nimber::undo_move()
     const move m = last_move();
     game::undo_move();
 
-    const int number = cgt_move::move1_get_part_1(m);
+    const int number = integral_cast_checked<int>(cgt_move::move1_get_part_1(m));
     assert(number > 0);
     _value += number;
 }
@@ -105,7 +107,7 @@ void nimber::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
     assert(is_empty_black_white(to_play));
 
-    const int number = cgt_move::move1_get_part_1(m);
+    const int number = integral_cast_checked<int>(cgt_move::move1_get_part_1(m));
     assert(number > 0 && number <= _value);
 
     str << '*' << (_value - number);

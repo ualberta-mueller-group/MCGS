@@ -12,7 +12,7 @@
 #include "transposition.h"
 #include "impartial_game.h"
 #include "timeout_token.h"
-#include "utilities.h"
+#include "integral_conversion.h"
 // See development-notes.md, 
 // Impartial Games - the Lemoine - Viennot algorithms
 
