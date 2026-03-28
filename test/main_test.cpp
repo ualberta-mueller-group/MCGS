@@ -8,17 +8,16 @@
 #include "test/cannibal_clobber_test.h"
 #include "test/domineering_test.h"
 #include "test/fission_test.h"
+#include "test/gen_king_dirt_test.h"
 #include "test/gen_toads_test.h"
 #include "test/grid_game_hashes_test.h"
 #include "test/grid_hash_test.h"
 #include "test/grid_mask_test.h"
-#include "test/int_generator.h"
 #include "test/n_bit_int_test.h"
 #include "test/sheep_grid_generator_test.h"
 #include "test/toppling_dominoes_test.h"
 #include "test/sheep_test.h"
 #include "test/winning_moves_test.h"
-#include <limits>
 const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
@@ -75,6 +74,7 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
+    gen_king_dirt_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -191,6 +191,7 @@ int main(int argc, const char** argv)
     toppling_dominoes_test_all();
     gen_toads_test_all();
     sheep_test_all();
+    gen_king_dirt_test_all();
     //}
 
     normalize_test_all();

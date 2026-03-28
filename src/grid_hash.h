@@ -230,6 +230,10 @@ public:
     template <class T>
     void toggle_value(const int_pair& coord, const T& color);
 
+    // For parameterized games
+    template <class T>
+    void toggle_parameter(size_t parameter_idx, const T& param);
+
     void toggle_type(game_type_t type);
 
     void init_from_grid(const grid& g);
@@ -238,17 +242,25 @@ public:
     void init_from_board_and_type(const std::vector<T>& board,
                                   const int_pair& shape, game_type_t type);
 
+    template <class Board_Element_T, class Param_Element_T>
+    void init_from_board_and_type_with_params(
+        const std::vector<Board_Element_T>& board, const int_pair& shape,
+        game_type_t type, const std::vector<Param_Element_T>& params);
+
 private:
     int_pair _get_transformed_coords(int r, int c,
                                      grid_hash_orientation ori) const;
 
     int_pair _get_transformed_shape(grid_hash_orientation ori) const;
 
+    void _init_grid_shape(const int_pair& shape);
+
     static constexpr unsigned int _N_HASHES = GRID_HASH_ORIENTATIONS.size();
 
     const unsigned int _grid_hash_mask;
 
     int_pair _grid_shape;
+    int _param_idx_start;
     std::array<local_hash, _N_HASHES> _hashes;
 };
 
@@ -332,6 +344,41 @@ inline void grid_hash::toggle_value(const int_pair& coord, const T& color)
     toggle_value<T>(coord.first, coord.second, color);
 }
 
+template <class T>
+inline void grid_hash::toggle_parameter(size_t parameter_idx, const T& param)
+{
+    static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
+
+    for (unsigned int idx_no_t = 0; idx_no_t < GRID_HASH_ORIENTATIONS.size();
+         idx_no_t += 2)
+    {
+        // Orientation/_hashes index for N degree rotation, N degree + transpose
+        const unsigned int idx1 = idx_no_t;
+        const unsigned int idx2 = idx1 + 1;
+
+        assert(!bit_is_1(idx1, 0));
+
+        const bool active1 = bit_is_1(_grid_hash_mask, idx1);
+        const bool active2 = bit_is_1(_grid_hash_mask, idx2);
+
+        if (!(active1 || active2))
+            continue;
+
+        if (active1)
+        {
+            local_hash& hash1 = _hashes[idx1];
+            hash1.toggle_value<T>(_param_idx_start + parameter_idx, param);
+        }
+
+        if (active2)
+        {
+            local_hash& hash2 = _hashes[idx2];
+            hash2.toggle_value<T>(_param_idx_start + parameter_idx, param);
+        }
+    }
+
+}
+
 inline void grid_hash::toggle_type(game_type_t type)
 {
     for (local_hash& hash : _hashes)
@@ -354,6 +401,28 @@ void grid_hash::init_from_board_and_type(const std::vector<T>& board,
 
         pos += shape.second;
     }
+}
+
+template <class Board_Element_T, class Param_Element_T>
+void grid_hash::init_from_board_and_type_with_params(
+    const std::vector<Board_Element_T>& board, const int_pair& shape,
+    game_type_t type, const std::vector<Param_Element_T>& params)
+{
+    reset(shape);
+    toggle_type(type);
+
+    int pos = 0;
+    for (int r = 0; r < shape.first; r++)
+    {
+        for (int c = 0; c < shape.second; c++)
+            toggle_value<Board_Element_T>(r, c, board[pos + c]);
+
+        pos += shape.second;
+    }
+
+    const size_t params_size = params.size();
+    for (size_t i = 0; i < params_size; i++)
+        toggle_parameter<Param_Element_T>(i, params[i]);
 }
 
 inline int_pair grid_hash::_get_transformed_coords(
@@ -382,6 +451,24 @@ inline int_pair grid_hash::_get_transformed_shape(
         return {_grid_shape.second, _grid_shape.first};
 
     return _grid_shape;
+}
+
+inline void grid_hash::_init_grid_shape(const int_pair& shape)
+{
+    assert(shape.first >= 0 && shape.second >= 0);
+
+    _grid_shape = shape;
+
+    /*
+        Compute index into a `local_hash` where a parameterized game's parameter
+        list should be accounted for (i.e. gen_king_dirt).
+
+        - First 2 positions are for grid shape
+        - Then comes grid contents
+        - Then comes parameter list
+    */
+    const int grid_area = shape.first * shape.second;
+    _param_idx_start = 2 + grid_area;
 }
 
 inline void grid_hash::init_from_grid(const grid& g)

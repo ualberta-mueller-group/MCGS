@@ -17,6 +17,7 @@
 #include <ios>
 
 #include "cgt_basics.h"
+#include "gen_king_dirt.h"
 #include "test_case_enums.h"
 #include "all_game_headers.h"
 #include "file_parser_ast.h"
@@ -886,6 +887,9 @@ void file_parser::_init_game_parsers()
     _add_game_parser("toppling_dominoes", new basic_parser<toppling_dominoes>());
     _add_game_parser("gen_toads", new basic_parameterized_game_parser<gen_toads>);
     _add_game_parser("sheep", new basic_parser<sheep>());
+
+    _add_game_parser("gen_king_dirt",
+                     new basic_parameterized_game_parser<gen_king_dirt>);
 
     _add_game_parser("kayles", new int_parser<kayles>());
 }
