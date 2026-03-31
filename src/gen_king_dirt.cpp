@@ -1,5 +1,6 @@
 #include "gen_king_dirt.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <vector>
 
@@ -345,14 +346,409 @@ void gen_king_dirt::_undo_move_slide_stone(const int_pair& from_coords,
     replace(to_point, EMPTY);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//-------------------- Split function ------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+// TODO extract some of this functionality from games which reimplement it
+
+namespace {
+struct bounding_box
+{
+    bounding_box(int row_shift, int col_shift, int_pair shape);
+
+    int row_shift;
+    int col_shift;
+    int_pair shape;
+};
+
+bounding_box::bounding_box(int row_shift, int col_shift, int_pair shape)
+    : row_shift(row_shift),
+      col_shift(col_shift),
+      shape(shape)
+{
+}
+
+vector<int> trim_to_bounding_box(const vector<int>& src_board,
+                                 const int_pair& src_shape,
+                                 const bounding_box& dst_box)
+{
+    vector<int> dst_board;
+
+    const int row_shift = dst_box.row_shift;
+    const int col_shift = dst_box.col_shift;
+    const int_pair dst_shape = dst_box.shape;
+
+    assert(!grid_location::shape_is_empty(dst_shape));
+
+    const int dst_size = dst_shape.first * dst_shape.second;
+    dst_board.reserve(dst_size);
+
+    int src_point = col_shift + (row_shift * src_shape.second);
+
+    for (int r = 0; r < dst_shape.first; r++)
+    {
+        for (int c = 0; c < dst_shape.second; c++)
+        {
+            const int src_val = src_board[src_point + c];
+            dst_board.push_back(src_val);
+        }
+
+        src_point += src_shape.second;
+    }
+
+    return dst_board;
+}
+
+} // namespace
+
+split_result gen_king_dirt::_split_impl() const
+{
+    if (get_black_unplaced() > 0 || get_white_unplaced() > 0)
+        return _split_with_unplaced_stones();
+    else
+        return _split_without_unplaced_stones();
+}
+
 /*
-    If either player has unplaced stones, the game can't split
+    Converts stones to BORDER if they can't reach EMPTY
 */
-//split_result gen_king_dirt::_split_impl() const
-//{
-//    // TODO
-//    assert(false);
-//}
+split_result gen_king_dirt::_split_with_unplaced_stones() const
+{
+    assert(get_black_unplaced() > 0 || get_white_unplaced() > 0);
+
+    split_result result;
+
+    if (size() == 0)
+    {
+        assert(!result.has_value());
+        return result;
+    }
+
+    // Constants
+    const int grid_size = size();
+    const int_pair grid_shape = shape();
+    // Sentinel values for invalid row/col coordinates
+    const int MIN_INVALID = max(grid_shape.first, grid_shape.second) + 1;
+    const int MAX_INVALID = -1;
+
+    // Search state
+    vector<bool> closed_set(grid_size, false);
+    vector<grid_location> open_stack;
+
+    // Current component state
+    vector<int> component(grid_size, BORDER);
+    int src_border_count = 0;
+    int dst_non_border_count = 0;
+
+    /*
+        NOTE: these can still be invalid after search completes. Check
+        that `dst_non_border_count > 0` before using
+    */
+    int min_row = MIN_INVALID;
+    int max_row = MAX_INVALID;
+    int min_col = MIN_INVALID;
+    int max_col = MAX_INVALID;
+
+    auto copy_tile = [&](int point, const int_pair& coord, int value) -> void
+    {
+        assert(is_empty_black_white(value));
+
+        component[point] = value;
+
+        min_row = min(min_row, coord.first);
+        max_row = max(max_row, coord.first);
+        min_col = min(min_col, coord.second);
+        max_col = max(max_col, coord.second);
+
+        dst_non_border_count++;
+    };
+
+    // Main search loop
+    for (grid_location loc(grid_shape); loc.valid(); loc.increment_position())
+    {
+        const int point_start = loc.get_point();
+
+        if (closed_set[point_start])
+            continue;
+
+        const int tile_start = at(point_start);
+
+        if (tile_start == BORDER)
+        {
+            src_border_count++;
+            closed_set[point_start] = true;
+            continue;
+        }
+
+        if (tile_start != EMPTY)
+            continue;
+
+        assert(open_stack.empty());
+        open_stack.emplace_back(loc);
+        closed_set[point_start] = true;
+
+        while (!open_stack.empty())
+        {
+            const grid_location loc1 = open_stack.back();
+            open_stack.pop_back();
+
+            const int point1 = loc1.get_point();
+
+            // Already closed, and not copied to component
+            assert(closed_set[point1]);
+            assert(component[point1] == BORDER);
+
+            const int tile1 = at(point1);
+            assert(is_empty_black_white(tile1));
+
+            copy_tile(point1, loc1.get_coord(), tile1);
+
+            grid_location loc2(grid_shape);
+            for (grid_dir dir : GRID_DIRS_ALL)
+            {
+                loc2.set_coord(loc1.get_coord());
+
+                if (!loc2.move(dir))
+                    continue;
+
+                const int point2 = loc2.get_point();
+
+                if (closed_set[point2])
+                    continue;
+
+                closed_set[point2] = true;
+
+                const int tile2 = at(point2);
+
+                if (tile2 == BORDER)
+                {
+                   src_border_count++;
+                   continue;
+                }
+
+                assert(is_empty_black_white(tile2));
+                open_stack.emplace_back(loc2);
+            }
+        }
+    }
+
+    assert(!result.has_value());
+    if (dst_non_border_count == 0)
+    {
+        result.emplace();
+        return result;
+    }
+
+    const int dst_border_count = grid_size - dst_non_border_count;
+
+    assert((min_row <= max_row) && //
+           (min_col <= max_col)    //
+    );
+    bounding_box box(min_row, min_col,
+                     int_pair(max_row - min_row + 1, max_col - min_col + 1));
+
+    if (box.shape == shape() &&              //
+        src_border_count == dst_border_count //
+    )
+        return result;
+
+    result.emplace();
+    assert(result.has_value());
+
+    if (box.shape != shape())
+        component = trim_to_bounding_box(component, shape(), box);
+
+    result->push_back(new gen_king_dirt(_params, component, box.shape));
+
+    return result;
+}
+
+/*
+    Similar to Amazons split
+*/
+split_result gen_king_dirt::_split_without_unplaced_stones() const
+{
+    assert(get_black_unplaced() == 0 && get_white_unplaced() == 0);
+
+    split_result result;
+
+    if (size() == 0)
+    {
+        assert(!result.has_value());
+        return result;
+    }
+
+    // Constants
+    const int grid_size = size();
+    const int_pair grid_shape = shape();
+    // Sentinel values for invalid row/col coordinates
+    const int MIN_INVALID = max(grid_shape.first, grid_shape.second) + 1;
+    const int MAX_INVALID = -1;
+
+    // Search state
+    vector<bool> closed_set(grid_size, false);
+    vector<grid_location> open_stack;
+
+    // Current component state
+    vector<int> component;
+    int component_empties;
+    int component_coloreds;
+
+    int min_row;
+    int max_row;
+    int min_col;
+    int max_col;
+
+    // Components
+    vector<vector<int>> component_vec;
+    vector<bounding_box> bounding_boxes;
+
+    // Helpers
+    auto reset_component = [&]() -> void
+    {
+        if (component.empty())
+            component.resize(grid_size, BORDER);
+        else
+            std::fill(component.begin(), component.end(), BORDER);
+
+        component_empties = 0;
+        component_coloreds = 0;
+
+        min_row = MIN_INVALID;
+        max_row = MAX_INVALID;
+        min_col = MIN_INVALID;
+        max_col = MAX_INVALID;
+    };
+
+    auto copy_tile = [&](int point, const int_pair& coord, int value) -> void
+    {
+        assert(is_empty_black_white(value));
+
+        component[point] = value;
+
+        min_row = min(min_row, coord.first);
+        max_row = max(max_row, coord.first);
+        min_col = min(min_col, coord.second);
+        max_col = max(max_col, coord.second);
+
+        if (value == EMPTY)
+            component_empties++;
+        else
+            component_coloreds++;
+    };
+
+    // Main search loop
+    for (grid_location loc(grid_shape); loc.valid(); loc.increment_position())
+    {
+        const int point_start = loc.get_point();
+
+        if (closed_set[point_start] || at(point_start) == BORDER)
+            continue;
+
+        reset_component();
+        assert(open_stack.empty());
+
+        open_stack.emplace_back(loc);
+        closed_set[point_start] = true;
+
+        while (!open_stack.empty())
+        {
+            const grid_location loc1 = open_stack.back();
+            open_stack.pop_back();
+
+            const int point1 = loc1.get_point();
+
+            // Already closed, and not copied to component
+            assert(closed_set[point1]);
+            assert(component[point1] == BORDER);
+
+            const int tile1 = at(point1);
+            copy_tile(point1, loc1.get_coord(), tile1);
+
+            grid_location loc2(grid_shape);
+            for (grid_dir dir : GRID_DIRS_ALL)
+            {
+                loc2.set_coord(loc1.get_coord());
+
+                if (!loc2.move(dir))
+                    continue;
+
+                const int point2 = loc2.get_point();
+
+                if (closed_set[point2])
+                    continue;
+
+                const int tile2 = at(point2);
+
+                if (tile2 == BORDER)
+                    continue;
+
+                assert(is_empty_black_white(tile2));
+                closed_set[point2] = true;
+                open_stack.emplace_back(loc2);
+            }
+        }
+
+        // Meaningful component? Save it
+        if (component_coloreds > 0 && component_empties > 0)
+        {
+            component_vec.emplace_back(std::move(component));
+
+            assert(
+                    (min_row <= max_row) && //
+                    (min_col <= max_col)    //
+                    );
+
+            const int row_shift = min_row;
+            const int col_shift = min_col;
+
+            const int row_dim = max_row - min_row + 1;
+            const int col_dim = max_col - min_col + 1;
+
+            bounding_boxes.emplace_back(row_shift, col_shift,
+                                        int_pair(row_dim, col_dim));
+        }
+    }
+
+    assert(component_vec.size() == bounding_boxes.size());
+    assert(!result.has_value());
+
+    if (component_vec.size() == 1 &&              //
+        bounding_boxes.back().shape == shape() && //
+        component_vec.back() == board_const()     //
+    )
+    {
+        assert(!result.has_value());
+        return result;
+    }
+
+    result.emplace();
+    assert(result.has_value());
+
+    const vector<int> new_params(PARAM_COUNT, 0);
+
+    const size_t n_components = component_vec.size();
+    for (size_t i = 0; i < n_components; i++)
+    {
+        const vector<int>& comp_board = component_vec[i];
+        const bounding_box& box = bounding_boxes[i];
+
+        gen_king_dirt* g = new gen_king_dirt(
+            new_params,                                        //
+            trim_to_bounding_box(comp_board, grid_shape, box), //
+            box.shape                                          //
+        );
+
+        result->push_back(g);
+    }
+
+    return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
 void gen_king_dirt::_init_hash(local_hash& hash) const
 {

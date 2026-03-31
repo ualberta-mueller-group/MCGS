@@ -46,7 +46,10 @@ protected:
     void _undo_move_slide_stone(const int_pair& from_coords,
                                const int_pair& to_coords, bw to_play);
 
-    //split_result _split_impl() const override;
+    split_result _split_impl() const override;
+    split_result _split_with_unplaced_stones() const;
+    split_result _split_without_unplaced_stones() const;
+
 
     void _init_hash(local_hash& hash) const override;
 
@@ -64,7 +67,6 @@ protected:
 
 public:
     static constexpr size_t PARAM_COUNT = 3;
-protected:
     static constexpr size_t PIDX_BLACK_UNPLACED = 0;
     static constexpr size_t PIDX_WHITE_UNPLACED = 1;
     static constexpr size_t PIDX_MUST_PLACE = 2;

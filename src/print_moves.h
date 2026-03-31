@@ -26,13 +26,15 @@ std::string sumgame_move_to_string(const sumgame& sum, const sumgame_move& sm,
 ////////////////////////////////////////////////// Get moves
 std::vector<std::string> get_sum_moves(const sumgame& sum, bw player);
 std::vector<std::string> get_subgame_moves(const game* g, bw player);
+std::vector<std::string> get_subgame_options(const game* g, bw player);
 
 ////////////////////////////////////////////////// Print moves
 void print_winning_moves_for_player(std::ostream& os, sumgame& sum, ebw player);
 void print_sum_moves_for_player(std::ostream& os, const sumgame& sum,
                                 bw player);
 
-void print_subgame_moves_for_player(std::ostream& os, const game* g, bw player);
+void print_subgame_moves_for_player(std::ostream& os, const game* g, bw player,
+                                    bool as_options);
 
 ////////////////////////////////////////////////// Print moves by input chunk
 void print_winning_moves_by_chunk(std::ostream& os,
@@ -42,4 +44,5 @@ void print_sum_moves_by_chunk(std::ostream& os,
                               std::shared_ptr<file_parser> parser);
 
 void print_subgame_moves_by_chunk(std::ostream& os,
-                                  std::shared_ptr<file_parser> parser);
+                                  std::shared_ptr<file_parser> parser,
+                                  bool as_options);

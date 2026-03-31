@@ -67,7 +67,8 @@ int main(int argc, char** argv)
             }
             case PRINT_MOVES_ACTION_SUBGAME:
             {
-                print_subgame_moves_by_chunk(cout, opts.parser);
+                print_subgame_moves_by_chunk(cout, opts.parser,
+                                             opts.format_moves_as_options);
                 return 0;
             }
             case PRINT_MOVES_ACTION_SUM:
@@ -77,9 +78,9 @@ int main(int argc, char** argv)
             }
         }
     }
-    
+
     // Don't uncomment?
-    //if (opts.run_tests_stdin)
+    // if (opts.run_tests_stdin)
     //{
     //    run_autotests_stdin(opts.outfile_name, opts.test_timeout);
     //    return 0;
