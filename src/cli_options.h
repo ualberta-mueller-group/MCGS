@@ -39,6 +39,7 @@ struct cli_options
     bool use_player;
 
     print_moves_action_enum print_moves_action;
+    bool format_moves_as_options;
 
     std::string test_directory;
     std::string outfile_name;        // CSV output file

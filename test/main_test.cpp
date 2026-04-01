@@ -15,6 +15,7 @@
 #include "test/grid_mask_test.h"
 #include "test/n_bit_int_test.h"
 #include "test/sheep_grid_generator_test.h"
+#include "test/split_test_gen_king_dirt.h"
 #include "test/toppling_dominoes_test.h"
 #include "test/sheep_test.h"
 #include "test/winning_moves_test.h"
@@ -74,7 +75,6 @@ using std::cout, std::endl, std::string;
 namespace {
 void override_tests()
 {
-    gen_king_dirt_test_all();
 }
 
 void print_flag(const string& flag_string, const string& flag_description)

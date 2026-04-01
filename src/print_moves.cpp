@@ -30,6 +30,18 @@ string moves_to_string(const vector<string>& moves)
     return joined;
 }
 
+string options_to_string(const vector<string>& options)
+{
+    if (options.empty())
+        return "\t<None>\n";
+
+    string result;
+    for (const string& opt : options)
+        result += '\t' + opt + '\n';
+
+    return result;
+}
+
 string sum_to_string(const sumgame& sum)
 {
     const int n_games = sum.num_total_games();
@@ -109,6 +121,37 @@ vector<string> get_subgame_moves(const game* g, bw player)
     return moves;
 }
 
+vector<string> get_subgame_options(const game* g, bw player)
+{
+    assert(is_black_white(player));
+    assert_restore_game arg1(*g);
+
+    game* g_nonconst = const_cast<game*>(g);
+
+    vector<string> options;
+
+    unique_ptr<move_generator> mg(g->create_move_generator(player));
+
+    while (*mg)
+    {
+        assert_restore_game arg2(*g_nonconst);
+
+        const ::move m = mg->gen_move();
+        ++(*mg);
+
+        g_nonconst->play(m, player);
+
+        stringstream str;
+        str << *g;
+
+        g_nonconst->undo_move();
+
+        options.emplace_back(str.str());
+    }
+
+    return options;
+}
+
 void print_winning_moves_for_player(ostream& os, sumgame& sum, ebw player)
 {
     assert(is_empty_black_white(player));
@@ -123,20 +166,29 @@ void print_winning_moves_for_player(ostream& os, sumgame& sum, ebw player)
 
 void print_sum_moves_for_player(ostream& os, const sumgame& sum, bw player)
 {
-    assert(is_empty_black_white(player));
+    assert(is_black_white(player));
     os << player_name_bw_imp(player) << " sum moves:\n";
 
     const vector<string> moves = get_sum_moves(sum, player);
     os << moves_to_string(moves) << endl;
 }
 
-void print_subgame_moves_for_player(ostream& os, const game* g, bw player)
+void print_subgame_moves_for_player(ostream& os, const game* g, bw player,
+                                    bool as_options)
 {
-    assert(is_empty_black_white(player));
-    os << player_name_bw_imp(player) << " moves:\n";
+    assert(is_black_white(player));
+    os << player_name_bw_imp(player) << ' ';
 
-    const vector<string> moves = get_subgame_moves(g, player);
-    os << moves_to_string(moves) << endl;
+    if (as_options)
+    {
+        os << "options:\n";
+        os << options_to_string(get_subgame_options(g, player)) << flush;
+    }
+    else
+    {
+        os << "moves:\n";
+        os << moves_to_string(get_subgame_moves(g, player)) << endl;
+    }
 }
 
 void print_winning_moves_by_chunk(ostream& os, shared_ptr<file_parser> parser)
@@ -177,7 +229,9 @@ void print_winning_moves_by_chunk(ostream& os, shared_ptr<file_parser> parser)
     }
 }
 
-void print_subgame_moves_by_chunk(ostream& os, std::shared_ptr<file_parser> parser)
+void print_subgame_moves_by_chunk(ostream& os,
+                                  std::shared_ptr<file_parser> parser,
+                                  bool as_options)
 {
     assert(parser.get() != nullptr);
 
@@ -202,8 +256,8 @@ void print_subgame_moves_by_chunk(ostream& os, std::shared_ptr<file_parser> pars
             const game* g = games[subgame_idx];
             os << "Subgame " << subgame_idx << ": " << *g << endl;
 
-            print_subgame_moves_for_player(os, g, BLACK);
-            print_subgame_moves_for_player(os, g, WHITE);
+            print_subgame_moves_for_player(os, g, BLACK, as_options);
+            print_subgame_moves_for_player(os, g, WHITE, as_options);
         }
 
         for (game* g : games)

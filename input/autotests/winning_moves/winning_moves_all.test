@@ -18,6 +18,7 @@ Grids:
     fission (OK)
     nogo (OK)
     sheep (OK)
+    gen_king_dirt (OK)
 
 Basic CGT games:
     cgt_dyadic_rational (OK)
@@ -360,6 +361,47 @@ winning moves B 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
     1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2,
 winning moves W 0:a1-a2-1 0:a1-b1-1 1:b3-a3-1 1:b3-a3-2 1:b3-b1-1 1:b3-b1-2
     1:b3-c2-1 1:b3-c2-2 1:b3-c3-1 1:b3-c3-2}
+
+    [gen_king_dirt]
+1,1,0:.X.|...|.O.
+{winning moves B a2_X b1-a1 b1-a2 b1-b2 b1-c1 b1-c2 b2_X c2_X,
+    winning moves W a2_O b2_O b3-a2 b3-a3 b3-b2 b3-c2 b3-c3 c2_O}
+
+    [gen_king_dirt]
+1,1,0:.X.|...|.O.
+1,1,0:..|..
+{winning moves B 0:a2_X 0:b1-a1 0:b1-a2 0:b1-b2 0:b1-c1 0:b1-c2 0:b2_X 0:c2_X
+    1:a1_X 1:a2_X 1:b1_X 1:b2_X,
+winning moves W 0:a2_O 0:b2_O 0:b3-a2 0:b3-a3 0:b3-b2 0:b3-c2 0:b3-c3 0:c2_O
+    1:a1_O 1:a2_O 1:b1_O 1:b2_O}
+
+    [impartial gen_king_dirt]
+1,1,0:.X.|...|.O.
+{winning moves N a1_O a1_X a3_O a3_X b1-a1 b1-a2 b1-b2 b1-c1 b1-c2 b2_O b2_X
+    b3-a2 b3-a3 b3-b2 b3-c2 b3-c3 c1_O c1_X c3_O c3_X,
+winning moves B a1_O a1_X a3_O a3_X b1-a1 b1-a2 b1-b2 b1-c1 b1-c2 b2_O b2_X
+    b3-a2 b3-a3 b3-b2 b3-c2 b3-c3 c1_O c1_X c3_O c3_X,
+winning moves W a1_O a1_X a3_O a3_X b1-a1 b1-a2 b1-b2 b1-c1 b1-c2 b2_O b2_X
+    b3-a2 b3-a3 b3-b2 b3-c2 b3-c3 c1_O c1_X c3_O c3_X}
+
+
+    [impartial gen_king_dirt]
+1,1,0:.X.|...|.O.
+1,1,0:..|..
+
+{winning moves N 0:a1_O 0:a1_X 0:a3_O 0:a3_X 0:b1-a1 0:b1-a2 0:b1-b2 0:b1-c1
+    0:b1-c2 0:b2_O 0:b2_X 0:b3-a2 0:b3-a3 0:b3-b2 0:b3-c2 0:b3-c3 0:c1_O
+    0:c1_X 0:c3_O 0:c3_X 1:a1_O 1:a1_X 1:a2_O 1:a2_X 1:b1_O 1:b1_X 1:b2_O
+    1:b2_X,
+winning moves B 0:a1_O 0:a1_X 0:a3_O 0:a3_X 0:b1-a1 0:b1-a2 0:b1-b2 0:b1-c1
+    0:b1-c2 0:b2_O 0:b2_X 0:b3-a2 0:b3-a3 0:b3-b2 0:b3-c2 0:b3-c3 0:c1_O
+    0:c1_X 0:c3_O 0:c3_X 1:a1_O 1:a1_X 1:a2_O 1:a2_X 1:b1_O 1:b1_X 1:b2_O
+    1:b2_X,
+winning moves W 0:a1_O 0:a1_X 0:a3_O 0:a3_X 0:b1-a1 0:b1-a2 0:b1-b2 0:b1-c1
+    0:b1-c2 0:b2_O 0:b2_X 0:b3-a2 0:b3-a3 0:b3-b2 0:b3-c2 0:b3-c3 0:c1_O
+    0:c1_X 0:c3_O 0:c3_X 1:a1_O 1:a1_X 1:a2_O 1:a2_X 1:b1_O 1:b1_X 1:b2_O
+    1:b2_X}
+
 
 /*_ Basic CGT games */
 
