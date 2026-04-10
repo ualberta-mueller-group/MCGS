@@ -13,6 +13,7 @@
 #include "global_options.h"
 #include "init_database.h"
 #include "string_to_int.h"
+#include "test_filter.h"
 #include "utilities.h"
 #include <cassert>
 
@@ -35,7 +36,8 @@ cli_options::cli_options(const string& test_directory)
       play_log_name(),
       db_file_name(cli_options::DEFAULT_RELATIVE_DB_FILE),
       init_database_type(INIT_DATABASE_AUTO),
-      db_config_string()
+      db_config_string(),
+      test_filter_type(TEST_FILTER_MCGS)
 {
 }
 
@@ -192,10 +194,17 @@ void print_help_message(const string& exec_name)
                "copy of MCGS, this is only useful in combination with "
                "--run-tests");
 
-    print_flag("--convert-to-segclobber <output directory>",
-               "Convert input test cases to SEGClobber input. Skips test cases "
-               "which are not \"solve_BW\" tests, or which contain games other "
-               "than clobber_1xn. Prints warnings in the latter case.");
+    print_flag(
+        "--test-filter <filter type>",
+        "Skip test cases which aren't compatible with an external solver, as "
+        "determined by the specified filter. <filter type> is one of "
+        "[segclobber].");
+
+    print_flag("--convert-to-ctl <output directory>",
+               "Convert test case input to a portable format to be read by "
+               "external programs which use the CGT Testing Library. Combine "
+               "with --test-filter to export only test cases which are "
+               "compatible with a given external project.");
 
     cout << "Testing framework flags:" << endl;
     cout << endl;
@@ -569,18 +578,32 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg == "--convert-to-segclobber")
+        if (arg == "--test-filter")
+        {
+            arg_idx++;
+
+            if (arg_next == "segclobber")
+            {
+                opts.test_filter_type = TEST_FILTER_SEGCLOBBER;
+                continue;
+            }
+
+            throw cli_options_exception(
+                "Error: got --test-filter, but no valid filter was specified");
+        }
+
+        if (arg == "--convert-to-ctl")
         {
             arg_idx++;
 
             if (arg_next.size() == 0)
             {
                 throw cli_options_exception(
-                    "Error: got --convert-to-segclobber but no output "
+                    "Error: got --convert-to-ctl but no output "
                     "directory");
             }
 
-            opts.segclobber_file_output_dir = arg_next;
+            opts.lib_ctl_output_dir = arg_next;
             continue;
         }
 

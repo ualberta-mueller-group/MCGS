@@ -10,6 +10,7 @@
 #include <optional>
 
 #include "init_database.h"
+#include "test_filter.h"
 
 enum print_moves_action_enum
 {
@@ -54,7 +55,8 @@ struct cli_options
     std::optional<std::string> db_file_name_compare_1;
     std::optional<std::string> db_file_name_compare_2;
 
-    std::optional<std::string> segclobber_file_output_dir;
+    std::optional<std::string> lib_ctl_output_dir;
+    test_filter_enum test_filter_type;
 
     static constexpr const char* DEFAULT_RELATIVE_DB_FILE = "database.bin";
     static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";

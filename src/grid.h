@@ -43,6 +43,8 @@ public:
     const int_pair& shape() const;
     int complexity_score() const override;
 
+    grid_type_enum get_grid_type() const;
+
     // is p on board, and of given color?
     bool checked_is_color(int p, int color) const;
     void play_stone(int p, int color);
@@ -107,14 +109,19 @@ inline int grid::at(int p) const
     return _board[p];
 }
 
+inline const int_pair& grid::shape() const
+{
+    return _shape;
+}
+
 inline int grid::complexity_score() const
 {
     return size();
 }
 
-inline const int_pair& grid::shape() const
+inline grid_type_enum grid::get_grid_type() const
 {
-    return _shape;
+    return _grid_type;
 }
 
 inline bool grid::checked_is_color(int p, int color) const

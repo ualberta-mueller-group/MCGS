@@ -11,6 +11,7 @@
 #include "game.h"
 #include "csv_row.h"
 #include "test_case.h"
+#include "test_filter.h"
 #include "utilities.h"
 
 using namespace std;
@@ -61,9 +62,11 @@ void run_test_from_main(shared_ptr<i_test_case> test_case,
 }
 
 void run_tests_from_main(std::shared_ptr<file_parser> parser,
-                         const cli_options& opts)
+                         const cli_options& opts, test_filter_enum filter_type)
 {
     bool first_case = true;
+
+    uint64_t n_tests_filtered = 0;
 
     while (parser->parse_chunk())
     {
@@ -74,6 +77,12 @@ void run_tests_from_main(std::shared_ptr<file_parser> parser,
             std::shared_ptr<i_test_case> test_case =
                 parser->get_test_case(test_number);
 
+            if (!test_filter_permits_test_case(filter_type, *test_case))
+            {
+                n_tests_filtered++;
+                continue;
+            }
+
             if (!first_case)
                 cout << endl;
 
@@ -82,4 +91,7 @@ void run_tests_from_main(std::shared_ptr<file_parser> parser,
             first_case = false;
         }
     }
+
+    if (n_tests_filtered > 0)
+        cout << n_tests_filtered << " skipped by the test filter" << endl;
 }

@@ -23,11 +23,14 @@ using namespace std;
 
 ////////////////////////////////////////////////// i_test_case methods
 i_test_case::i_test_case(command_type_enum command_type,
-                         std::vector<game*> games)
+                         std::vector<game*> games,
+                         std::vector<std::string> game_types)
     : _games(games),
+      _game_types(game_types),
       _command_type(command_type),
       _did_run(false)
 {
+    assert(_games.size() == _game_types.size());
 }
 
 i_test_case::~i_test_case()
@@ -71,6 +74,11 @@ const std::vector<game*>& i_test_case::get_games() const
     return _games;
 }
 
+const std::vector<std::string>& i_test_case::get_game_types() const
+{
+    return _game_types;
+}
+
 csv_row& i_test_case::get_csv_row()
 {
     return _csv_row;
@@ -83,9 +91,9 @@ const csv_row& i_test_case::get_csv_row() const
 
 ////////////////////////////////////////////////// test_case_solve_bw methods
 test_case_solve_bw::test_case_solve_bw(fp_expr_command_solve_bw expr,
-                                       std::vector<game*> games)
-    : i_test_case(COMMAND_TYPE_SOLVE_BW, games),
-    _expr(expr)
+                                       std::vector<game*> games,
+                                       std::vector<std::string> game_types)
+    : i_test_case(COMMAND_TYPE_SOLVE_BW, games, game_types), _expr(expr)
 {
     optional<string> expected_result_string;
     switch (_expr.get_expected_outcome())
@@ -136,9 +144,9 @@ void test_case_solve_bw::_run_impl(unsigned long long timeout)
 
 ////////////////////////////////////////////////// test_case_solve_n methods
 test_case_solve_n::test_case_solve_n(fp_expr_command_solve_n expr,
-                                     std::vector<game*> games)
-    : i_test_case(COMMAND_TYPE_SOLVE_N, games),
-      _expr(expr)
+                                     std::vector<game*> games,
+                                     std::vector<std::string> game_types)
+    : i_test_case(COMMAND_TYPE_SOLVE_N, games, game_types), _expr(expr)
 {
     if (!all_games_impartial(_games))
     {
@@ -193,8 +201,9 @@ namespace {
 } // namespace
 
 test_case_winning_moves::test_case_winning_moves(
-    fp_expr_command_winning_moves expr, std::vector<game*> games)
-    : i_test_case(COMMAND_TYPE_WINNING_MOVES, games), _expr(expr)
+    fp_expr_command_winning_moves expr, std::vector<game*> games,
+    std::vector<std::string> game_types)
+    : i_test_case(COMMAND_TYPE_WINNING_MOVES, games, game_types), _expr(expr)
 {
     if (_expr.get_player() == EMPTY && !all_games_impartial(_games))
     {

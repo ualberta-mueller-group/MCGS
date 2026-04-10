@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "cli_options.h"
-#include "convert_to_segclobber.h"
+#include "convert_to_ctl.h"
 #include "file_parser.h"
 #include "autotests.h"
 #include "print_moves.h"
@@ -19,6 +19,7 @@
 
 #include "gen_experiments.h"
 #include "basic_player.h"
+#include "test_filter.h"
 #include "utils_for_main.h"
 
 using std::cout, std::endl, std::flush, std::string;
@@ -41,6 +42,7 @@ int main(int argc, char** argv)
     {
         std::shared_ptr<file_parser> parser = opts.parser;
 
+        // TODO should this use the test filter too?
         if (parser.get() != nullptr)
             play_games(*parser, opts.play_log_name);
 
@@ -49,15 +51,16 @@ int main(int argc, char** argv)
 
     if (opts.run_tests)
     {
-        if (opts.segclobber_file_output_dir.has_value())
+        if (opts.lib_ctl_output_dir.has_value())
         {
-            convert_tests_to_segclobber(opts.test_directory,
-                                        *opts.segclobber_file_output_dir);
+            convert_tests_to_ctl_format(opts.test_directory,
+                                        *opts.lib_ctl_output_dir,
+                                        opts.test_filter_type);
         }
         else
         {
             run_autotests(opts.test_directory, opts.outfile_name,
-                          opts.test_timeout);
+                          opts.test_timeout, opts.test_filter_type);
         }
 
         return 0;
@@ -104,11 +107,11 @@ int main(int argc, char** argv)
     // Run sums from input
     if (opts.parser)
     {
-        if (opts.segclobber_file_output_dir.has_value())
-            convert_tests_to_segclobber(opts.parser,
-                                        *opts.segclobber_file_output_dir);
+        if (opts.lib_ctl_output_dir.has_value())
+            convert_tests_to_ctl_format(opts.parser, *opts.lib_ctl_output_dir,
+                                        opts.test_filter_type);
         else
-            run_tests_from_main(opts.parser, opts);
+            run_tests_from_main(opts.parser, opts, opts.test_filter_type);
     }
 
     if (random_table::did_resize_warning())

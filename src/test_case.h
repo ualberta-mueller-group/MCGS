@@ -22,7 +22,9 @@
 class i_test_case
 {
 public:
-    i_test_case(command_type_enum command_type, std::vector<game*> games);
+    i_test_case(command_type_enum command_type, std::vector<game*> games,
+                std::vector<std::string> game_types);
+
     virtual ~i_test_case();
 
     command_type_enum get_command_type() const;
@@ -31,6 +33,7 @@ public:
     void run(unsigned long long timeout);
 
     const std::vector<game*>& get_games() const;
+    const std::vector<std::string>& get_game_types() const;
     csv_row& get_csv_row();
     const csv_row& get_csv_row() const;
 
@@ -38,6 +41,7 @@ protected:
     virtual void _run_impl(unsigned long long timeout) = 0;
 
     std::vector<game*> _games;
+    std::vector<std::string> _game_types;
     csv_row _csv_row;
 
 private:
@@ -49,7 +53,8 @@ private:
 class test_case_solve_bw: public i_test_case
 {
 public:
-    test_case_solve_bw(fp_expr_command_solve_bw expr, std::vector<game*> games);
+    test_case_solve_bw(fp_expr_command_solve_bw expr, std::vector<game*> games,
+                       std::vector<std::string> game_types);
 
     const fp_expr_command_solve_bw& get_fp_expr() const;
 
@@ -63,7 +68,8 @@ protected:
 class test_case_solve_n: public i_test_case
 {
 public:
-    test_case_solve_n(fp_expr_command_solve_n expr, std::vector<game*> games);
+    test_case_solve_n(fp_expr_command_solve_n expr, std::vector<game*> games,
+                      std::vector<std::string> game_types);
 
 protected:
     void _run_impl(unsigned long long timeout) override;
@@ -76,7 +82,8 @@ class test_case_winning_moves: public i_test_case
 {
 public:
     test_case_winning_moves(fp_expr_command_winning_moves expr,
-                            std::vector<game*> games);
+                            std::vector<game*> games,
+                            std::vector<std::string> game_types);
 
     static std::optional<std::string> winning_moves_string(
         const std::optional<std::vector<std::string>>& winning_moves);
