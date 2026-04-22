@@ -1,8 +1,0 @@
-{version 1.5}
-[clobber]
-
-/* games in  /Users/mmueller/Projects/ualberta-mueller-group/MCGS/input/game-sources/6x6games.txt  */
-
-/* game 8, after move 2: W f5f4 */
-XOXOXO|OXOXOX|XOXOXO|OXOXOO|XOXOX.|O.XXOX
-    {B }
