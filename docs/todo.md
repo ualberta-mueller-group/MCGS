@@ -300,6 +300,13 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Also worth doing in special circumstances, e.g. if all but one subgames are in db?
         - Compare SEGClobber
 
+### Persistent TT for large-scale searches
+- If a large search (e.g. for 6x6 Clobber) times out, then store the
+most important solved positions (closest to the root, most work) in a persistent database. Then re-load that database into the tt before continuing the search. This should give most of the benefits of checkpointing. This way we do not lose all of the incomplete computation
+    - Question: store the whole TT? Or which fraction?
+    - Just store based on hash codes? Are they persistent between runs?
+    - Sanity checks, e.g. does the size of table need to match before/after?
+
 ## Search Algorithms for Specialised Tasks
 - Search to identify zero subgames
     just do one or two searches to see if both lose.
