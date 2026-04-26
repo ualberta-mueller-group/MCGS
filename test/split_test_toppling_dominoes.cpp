@@ -8,7 +8,7 @@
 #include <string>
 
 #include "split_test_utils.h"
-#include "test/test_utilities.h"
+#include "test_utilities.h"
 #include "toppling_dominoes.h"
 
 using namespace std;

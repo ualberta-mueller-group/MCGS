@@ -1,7 +1,7 @@
 #include "cannibal_clobber_test.h"
 #include "cannibal_clobber.h"
 
-#include "test/test_utilities.h"
+#include "test_utilities.h"
 #include <iostream>
 #include <string>
 #include <vector>

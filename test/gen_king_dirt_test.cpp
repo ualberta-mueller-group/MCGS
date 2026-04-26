@@ -1,7 +1,7 @@
 #include "gen_king_dirt_test.h"
 #include "gen_king_dirt.h"
 #include "print_moves.h"
-#include "test/test_utilities.h"
+#include "test_utilities.h"
 
 #include <sstream>
 #include <vector>

@@ -3,7 +3,7 @@
 #include "all_game_headers.h"
 #include "cli_options.h"
 #include "clobber_1xn.h"
-#include "test/test_utilities.h"
+#include "test_utilities.h"
 #include "csv_row.h"
 #include "test_case_enums.h"
 #include <cassert>

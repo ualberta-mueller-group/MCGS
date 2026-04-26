@@ -3,12 +3,13 @@ import subprocess
 import sys
 from pathlib import Path
 import os
+from project_paths import get_project_root
 
-summary_path = Path("format_result.txt")
+project_root = get_project_root()
+
+summary_path = project_root / "format_result.txt"
+config_name = str(project_root / ".clang-format")
 transform_suffix = "___transformed"
-config_name = ".clang-format"
-
-
 
 args = sys.argv[1 : ]
 

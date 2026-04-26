@@ -14,7 +14,7 @@
 #include "fission.h"
 #include "grid.h"
 #include "grid_location.h"
-#include "test/test_utilities.h"
+#include "test_utilities.h"
 
 using namespace std;
 

@@ -53,3 +53,5 @@ out.*
 db.bin
 database.bin
 test.bin
+
+__pycache__

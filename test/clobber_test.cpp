@@ -1,7 +1,7 @@
 #include "clobber_test.h"
 #include "clobber.h"
 
-#include "test/test_utilities.h"
+#include "test_utilities.h"
 #include <iostream>
 #include <string>
 #include <vector>

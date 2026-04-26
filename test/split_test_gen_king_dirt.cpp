@@ -1,7 +1,7 @@
 #include "split_test_gen_king_dirt.h"
 
 #include "gen_king_dirt.h"
-#include "test/split_test_utils.h"
+#include "split_test_utils.h"
 
 #include <iostream>
 #include <vector>
