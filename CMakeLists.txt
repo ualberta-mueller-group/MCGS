@@ -51,6 +51,20 @@ set(SCRIPTS_DIR "./utils" CACHE STRING
 )
 cmake_path(RELATIVE_PATH SCRIPTS_DIR BASE_DIRECTORY CMAKE_CURRENT_SOURCE_DIR)
 
+set(EMIT_DUMMY OFF CACHE BOOL
+"If ON, emits an executable comprised of all source files, after overriding \
+several other debug level-related options. The executable can't be linked, \
+and is only intended to produce a compile_commands.json at configure time for \
+use by clangd or another language server."
+)
+
+############################## Override options if EMIT_DUMMY enabled
+if (EMIT_DUMMY)
+    set(DEBUG "2")
+    set(DEBUG_MESSAGES "1")
+    set(ONLY_EMIT "glob_all")
+endif()
+
 ############################## Validate options
 if (NOT
     (
@@ -83,7 +97,8 @@ if (NOT
     (
         (ONLY_EMIT STREQUAL "") OR
         (ONLY_EMIT STREQUAL "MCGS") OR
-        (ONLY_EMIT STREQUAL "MCGS_test")
+        (ONLY_EMIT STREQUAL "MCGS_test") OR
+        (ONLY_EMIT STREQUAL "glob_all")
     )
 )
     message(FATAL_ERROR "Bad value for ONLY_EMIT: \"${ONLY_EMIT}\"")
@@ -332,6 +347,13 @@ if ((NOT DEFINED ONLY_EMIT) OR ("${ONLY_EMIT}" STREQUAL "MCGS_test"))
         VERBATIM
         USES_TERMINAL
     )
+endif()
+
+#################### Dummy "glob_all" executable
+if ("${ONLY_EMIT}" STREQUAL "glob_all")
+    file(GLOB_RECURSE glob_all_SRC src/*.cpp test/*.cpp)
+    add_executable(glob_all ${glob_all_SRC})
+    target_link_libraries(glob_all PRIVATE mcgs_test_flags)
 endif()
 
 #################### Format targets
