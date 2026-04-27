@@ -1,4 +1,3 @@
-# TODO emscripten flags
 # TODO use clang instead of ld for linking (???)
 
 cmake_minimum_required(VERSION 4.2)
@@ -10,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 # Put executables in the root of the "build" directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+# Detect WebAssembly build
 if (EMSCRIPTEN)
     set(WASM 1)
 else()
@@ -89,18 +89,28 @@ if (NOT
     message(FATAL_ERROR "Bad value for ONLY_EMIT: \"${ONLY_EMIT}\"")
 endif()
 
+# If DEBUG >= 2, WASM build must allow exception catching, i.e. due to
+# NOGO_DEBUG being enabled
+if (DEBUG GREATER_EQUAL 2)
+    set(WASM_FORCE_ENABLE_EXCEPTIONS 1)
+else()
+    set(WASM_FORCE_ENABLE_EXCEPTIONS 0)
+endif()
+
 # Unset ONLY_EMIT if it's empty
 if ("${ONLY_EMIT}" STREQUAL "")
     unset(CACHE{ONLY_EMIT})
 endif()
 
 ############################## Threading library
+# WASM build doesn't use threads (as they silently cause the program to hang)
 if (NOT WASM)
     set(THREADS_PREFER_PTHREAD_FLAG TRUE)
     find_package(Threads REQUIRED)
 endif()
 
 ############################## Python interpreter
+# For script targets
 find_package(Python3 OPTIONAL COMPONENTS Interpreter)
 
 ############################## Common flags
@@ -215,27 +225,38 @@ endif()
 #################### Common WASM flags
 add_library(wasm_flags_common INTERFACE)
 
+target_compile_options(wasm_flags_common INTERFACE
+    $<${WASM_FORCE_ENABLE_EXCEPTIONS}:-sNO_DISABLE_EXCEPTION_CATCHING>
+)
+
 target_link_options(wasm_flags_common INTERFACE
     -lembind
     -sALLOW_MEMORY_GROWTH
     -sMAXIMUM_MEMORY=4GB
     -sEXPORTED_RUNTIME_METHODS=FS
+    $<${WASM_FORCE_ENABLE_EXCEPTIONS}:-sNO_DISABLE_EXCEPTION_CATCHING>
 )
 
 #################### WASM MCGS executable flags
 add_library(wasm_flags_mcgs INTERFACE)
 target_link_libraries(wasm_flags_mcgs INTERFACE wasm_flags_common)
 
+# "SHELL:" needed due to space within an option
+# '@' denotes destination path in WASM virtual filesystem
 target_link_options(wasm_flags_mcgs INTERFACE
-    "--preload-file input"
+    "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/input@/input"
 )
 
 #################### WASM MCGS_test executable flags
 add_library(wasm_flags_mcgs_test INTERFACE)
 target_link_libraries(wasm_flags_mcgs_test INTERFACE wasm_flags_common)
 
+target_compile_options(wasm_flags_mcgs_test INTERFACE
+    -sNO_DISABLE_EXCEPTION_CATCHING
+)
+
 target_link_options(wasm_flags_mcgs_test INTERFACE
-    "--preload-file test/input"
+    "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/test/input@/test/input"
     -sNO_DISABLE_EXCEPTION_CATCHING
 )
 
@@ -271,6 +292,7 @@ target_link_libraries(mcgs_test_flags INTERFACE
 
     $<$<STREQUAL:${DEBUG_MESSAGES},1>:mcgs_flags_debug_messages>
 
+    # Always build as if DEBUG=2
     $<$<STREQUAL:${DEBUG},0>:mcgs_flags_extra>
     $<$<STREQUAL:${DEBUG},1>:mcgs_flags_extra>
     $<$<STREQUAL:${DEBUG},2>:mcgs_flags_extra>
@@ -337,7 +359,7 @@ won't be available...")
 endif()
 
 ############################## Grep targets
-file(GLOB_RECURSE grep_files *)
+file(GLOB_RECURSE grep_files ${CMAKE_CURRENT_SOURCE_DIR}/*)
 list(FILTER grep_files EXCLUDE REGEX "\.git")
 list(FILTER grep_files EXCLUDE REGEX "\.cache")
 list(FILTER grep_files EXCLUDE REGEX "__pycache__")
