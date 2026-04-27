@@ -108,9 +108,14 @@ void init_paths(const char* exec_path)
 {
     assert(!is_initialized);
 
+#ifndef __EMSCRIPTEN__
     exec_abs_path = filesystem::canonical(exec_path);
     THROW_ASSERT(filesystem::exists(exec_abs_path));
     THROW_ASSERT(filesystem::is_regular_file(exec_abs_path));
+#else
+    // Relax constraint that the file must exist
+    exec_abs_path = filesystem::weakly_canonical(exec_path);
+#endif
 
     is_initialized = true;
 }

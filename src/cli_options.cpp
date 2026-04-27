@@ -279,10 +279,6 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
     const path default_test_path = get_default_input_path();
 
-#ifdef __EMSCRIPTEN__
-#warning TODO fix WASM paths
-#endif
-
     cli_options opts;
 
     if (argc == 1)

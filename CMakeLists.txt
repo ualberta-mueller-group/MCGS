@@ -10,6 +10,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 # Put executables in the root of the "build" directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+if (EMSCRIPTEN)
+    set(WASM 1)
+else()
+    set(WASM 0)
+endif()
+
 ############################## Configurable options
 set(DEBUG "1" CACHE STRING
 "Debug level (0/[1]/2). 0 disables asserts and removes debug info from \
@@ -89,8 +95,10 @@ if ("${ONLY_EMIT}" STREQUAL "")
 endif()
 
 ############################## Threading library
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
+if (NOT WASM)
+    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+    find_package(Threads REQUIRED)
+endif()
 
 ############################## Python interpreter
 find_package(Python3 OPTIONAL COMPONENTS Interpreter)
@@ -118,8 +126,8 @@ else()
     target_compile_options(mcgs_flags_common INTERFACE
         -Wall
         -O3
-        -march=native
-        -mtune=native
+        $<$<NOT:${WASM}>:-march=native>
+        $<$<NOT:${WASM}>:-mtune=native>
     )
 
 endif()
@@ -203,12 +211,40 @@ else()
 
 endif()
 
+############################## WASM flags
+#################### Common WASM flags
+add_library(wasm_flags_common INTERFACE)
+
+target_link_options(wasm_flags_common INTERFACE
+    -lembind
+    -sALLOW_MEMORY_GROWTH
+    -sMAXIMUM_MEMORY=4GB
+    -sEXPORTED_RUNTIME_METHODS=FS
+)
+
+#################### WASM MCGS executable flags
+add_library(wasm_flags_mcgs INTERFACE)
+target_link_libraries(wasm_flags_mcgs INTERFACE wasm_flags_common)
+
+target_link_options(wasm_flags_mcgs INTERFACE
+    "--preload-file input"
+)
+
+#################### WASM MCGS_test executable flags
+add_library(wasm_flags_mcgs_test INTERFACE)
+target_link_libraries(wasm_flags_mcgs_test INTERFACE wasm_flags_common)
+
+target_link_options(wasm_flags_mcgs_test INTERFACE
+    "--preload-file test/input"
+    -sNO_DISABLE_EXCEPTION_CATCHING
+)
+
 ############################## Compute flags for MCGS and MCGS_test executables
 #################### MCGS executable flags
 add_library(mcgs_flags INTERFACE)
 target_link_libraries(mcgs_flags INTERFACE
     mcgs_flags_common
-    Threads::Threads
+    $<$<NOT:${WASM}>:Threads::Threads>
 
     $<$<STREQUAL:${ASAN},1>:asan_flags>
 
@@ -217,6 +253,8 @@ target_link_libraries(mcgs_flags INTERFACE
     $<$<STREQUAL:${DEBUG},0>:mcgs_flags_none>
     $<$<STREQUAL:${DEBUG},1>:mcgs_flags_basic>
     $<$<STREQUAL:${DEBUG},2>:mcgs_flags_extra>
+
+    $<${WASM}:wasm_flags_mcgs>
 )
 
 target_include_directories(mcgs_flags INTERFACE
@@ -227,7 +265,7 @@ target_include_directories(mcgs_flags INTERFACE
 add_library(mcgs_test_flags INTERFACE)
 target_link_libraries(mcgs_test_flags INTERFACE
     mcgs_flags_common
-    Threads::Threads
+    $<$<NOT:${WASM}>:Threads::Threads>
 
     $<$<STREQUAL:${ASAN},1>:asan_flags>
 
@@ -236,6 +274,8 @@ target_link_libraries(mcgs_test_flags INTERFACE
     $<$<STREQUAL:${DEBUG},0>:mcgs_flags_extra>
     $<$<STREQUAL:${DEBUG},1>:mcgs_flags_extra>
     $<$<STREQUAL:${DEBUG},2>:mcgs_flags_extra>
+
+    $<${WASM}:wasm_flags_mcgs_test>
 )
 
 target_include_directories(mcgs_test_flags INTERFACE
