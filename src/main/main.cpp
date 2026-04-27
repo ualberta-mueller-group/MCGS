@@ -28,7 +28,8 @@ using std::cout, std::endl, std::flush, std::string;
 ////////////////////////////////////////////////// main function
 int main(int argc, char** argv)
 {
-    mcgs_init_1();
+    THROW_ASSERT(argc >= 1);
+    mcgs_init_1(argv[0]);
 
     cli_options opts = parse_args(argc, (const char**) argv, false);
 

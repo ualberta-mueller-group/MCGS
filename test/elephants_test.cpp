@@ -6,6 +6,7 @@
 #include "elephants.h"
 
 #include <iostream>
+#include "paths.h"
 #include "test_utilities.h"
 #include <memory>
 #include <vector>
@@ -169,7 +170,7 @@ void manual1()
 
 void file()
 {
-    assert_solve_test_file(UNIT_TEST_INPUT_DIR + "elephants.test", 6);
+    assert_solve_test_file(get_game_unit_test_input_path() / "elephants.test", 6);
 }
 
 void undo1()

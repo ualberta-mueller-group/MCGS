@@ -102,8 +102,6 @@ void assert_sum_outcomes(bool black_outcome, bool white_outcome,
 
 void assert_inverse_sum_zero(game* g);
 
-const std::string UNIT_TEST_INPUT_DIR = "test/input/unit_tests/";
-
 /*
    TODO what fields?
 */

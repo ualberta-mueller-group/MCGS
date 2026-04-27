@@ -1,10 +1,12 @@
 #include "file_parser_test.h"
 #include "csv_row.h"
+#include "paths.h"
 #include "test_case.h"
 #include "test_case_enums.h"
 #include "test_utilities.h"
 #include "all_game_headers.h"
 #include "file_parser.h"
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <sstream>
@@ -18,7 +20,10 @@ using std::cout, std::endl, std::string, std::ifstream, std::stringstream;
 using std::vector;
 
 namespace {
-const string INPUT_ROOT_DIR = "test/input/file_parser/";
+inline std::filesystem::path get_input_dir()
+{
+    return get_test_exec_input_path() / "file_parser";
+}
 
 ////////////////////////////////////////////////// end to end tests
 
@@ -65,7 +70,7 @@ void assert_throw_status_file(const string& file_name, bool should_throw,
                               parser_exception_code code,
                               version_warn vw = MAYBE_WARN)
 {
-    file_parser* parser = file_parser::from_file(INPUT_ROOT_DIR + file_name);
+    file_parser* parser = file_parser::from_file(get_input_dir() / file_name);
     assert_throw_status(parser, should_throw, code, vw);
     delete parser;
 }
@@ -75,7 +80,7 @@ void assert_throw_status_string(const string& file_name, bool should_throw,
                                 version_warn vw = MAYBE_WARN)
 {
     string file_content = "";
-    ifstream input_file(INPUT_ROOT_DIR + file_name);
+    ifstream input_file(get_input_dir() / file_name);
 
     assert(input_file.is_open());
 
@@ -100,7 +105,7 @@ void e2e_test1()
 
     try
     {
-        parser = file_parser::from_file(INPUT_ROOT_DIR +
+        parser = file_parser::from_file(get_input_dir() /
                                         "some_nonexistent_file.test");
     }
     catch (std::ios_base::failure& e)
@@ -296,7 +301,7 @@ void e2e_test20()
     // First figure out how many cases are in the file
     int actual_cases = 0;
 
-    string file_name = INPUT_ROOT_DIR + "partial_read.test";
+    string file_name = get_input_dir() / "partial_read.test";
 
     {
         file_parser* parser = file_parser::from_file(file_name);
@@ -386,7 +391,7 @@ void e2e_test21()
                               COMMAND_TYPE_SOLVE_BW);
 
     assert_file_parser_output_file(
-        INPUT_ROOT_DIR + "sumgames1.test", rows);
+        get_input_dir() / "sumgames1.test", rows);
 
     for (csv_row* row : rows)
         delete row;
@@ -398,7 +403,7 @@ void e2e_test22()
 
     vector<csv_row*> rows;
     assert_file_parser_output_file(
-        INPUT_ROOT_DIR + "sumgames2.test", rows);
+        get_input_dir() / "sumgames2.test", rows);
 
     for (csv_row* row : rows)
         delete row;
@@ -410,7 +415,7 @@ void e2e_test23()
 
     vector<csv_row*> rows;
     assert_file_parser_output_file(
-        INPUT_ROOT_DIR + "sumgames3.test", rows);
+        get_input_dir() / "sumgames3.test", rows);
 
     for (csv_row* row : rows)
         delete row;
@@ -425,7 +430,7 @@ void e2e_test24()
     add_row(rows, BLACK, LOSS_TEXT, {new clobber_1xn("XOOX")},
             COMMAND_TYPE_SOLVE_BW);
 
-    assert_file_parser_output_file(INPUT_ROOT_DIR + "sumgames4.test", rows);
+    assert_file_parser_output_file(get_input_dir() / "sumgames4.test", rows);
     for (csv_row* row : rows)
         delete row;
 }
@@ -457,7 +462,7 @@ void e2e_test25()
     };
 
     std::vector<std::string> comments =
-        get_all_test_comments(INPUT_ROOT_DIR + "comments.test");
+        get_all_test_comments(get_input_dir() / "comments.test");
 
     assert(comments.size() == 2);
 

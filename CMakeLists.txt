@@ -103,6 +103,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_library(mcgs_flags_common INTERFACE)
 
+target_compile_definitions(mcgs_flags_common INTERFACE
+    -DMCGS_CMAKE_BUILD
+)
+
 if (MSVC)
     target_compile_options(mcgs_flags_common INTERFACE
         /Wall
@@ -291,3 +295,17 @@ else()
     message(WARNING "Couldn't find Python3 interpreter. `format`-like targets \
 won't be available...")
 endif()
+
+############################## Grep targets
+file(GLOB_RECURSE grep_files *)
+list(FILTER grep_files EXCLUDE REGEX "\.git")
+list(FILTER grep_files EXCLUDE REGEX "\.cache")
+list(FILTER grep_files EXCLUDE REGEX "__pycache__")
+list(FILTER grep_files EXCLUDE REGEX "\/CMakeFiles")
+list(FILTER grep_files EXCLUDE REGEX "\/build")
+list(FILTER grep_files EXCLUDE REGEX "\/libs")
+
+add_custom_target(find_todo
+    COMMAND grep -r -i -n "TODO" ${grep_files}
+    USES_TERMINAL
+)

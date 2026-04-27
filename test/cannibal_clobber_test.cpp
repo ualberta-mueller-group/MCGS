@@ -1,6 +1,7 @@
 #include "cannibal_clobber_test.h"
 #include "cannibal_clobber.h"
 
+#include "paths.h"
 #include "test_utilities.h"
 #include <iostream>
 #include <string>
@@ -222,7 +223,7 @@ void test_moves()
 // check result from file
 void test_from_file()
 {
-    assert_solve_test_file(UNIT_TEST_INPUT_DIR + "/cannibal_clobber.test", 12);
+    assert_solve_test_file(get_game_unit_test_input_path() / "cannibal_clobber.test", 12);
 }
 
 void test_inverse()

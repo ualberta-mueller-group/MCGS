@@ -25,7 +25,7 @@ enum print_moves_action_enum
 */
 struct cli_options
 {
-    cli_options(const std::string& test_directory);
+    cli_options();
     ~cli_options();
 
     std::shared_ptr<file_parser> parser;
@@ -58,9 +58,6 @@ struct cli_options
     std::optional<std::string> lib_ctl_output_dir;
     test_filter_enum test_filter_type;
 
-    static constexpr const char* DEFAULT_RELATIVE_DB_FILE = "database.bin";
-    static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";
-    static constexpr const char* DEFAULT_TEST_OUTFILE = "out.csv";
     static constexpr const unsigned long long DEFAULT_TEST_TIMEOUT = 500;
 };
 

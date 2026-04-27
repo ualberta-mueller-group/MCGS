@@ -16,6 +16,7 @@
 #include "n_bit_int_test.h"
 #include "sheep_grid_generator_test.h"
 #include "split_test_gen_king_dirt.h"
+#include "throw_assert.h"
 #include "toppling_dominoes_test.h"
 #include "sheep_test.h"
 #include "winning_moves_test.h"
@@ -100,7 +101,9 @@ void print_usage(const char* exec_name)
 
 int main(int argc, const char** argv)
 {
-    mcgs_init_1();
+    THROW_ASSERT(argc >= 1);
+    mcgs_init_1(argv[0]);
+
     global::silence_warnings.set(true);
     global::use_db.set(false);
     mcgs_init_2();
@@ -206,7 +209,9 @@ int main(int argc, const char** argv)
     // Other MCGS features
     simple_text_hash_test_all();
     file_parser_test_all();
-    cli_options_test_all();
+
+    THROW_ASSERT(argc >= 1);
+    cli_options_test_all(argv[0]);
     
     scale_test_all();
     game_bounds_test_all();
