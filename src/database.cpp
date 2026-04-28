@@ -26,6 +26,7 @@
 #include "cgt_integer_game.h"
 #include "db_make_bounds.h"
 #include "db_make_dominated_moves.h"
+#include "db_make_outcome_class.h"
 #include "db_make_thermograph.h"
 #include "game.h"
 #include "hashing.h"
@@ -531,13 +532,6 @@ void database::generate_entry_single_partisan(sumgame& sum, unsigned int depth,
     entry.thermograph = db_make_thermograph(*this, sum, depth, silent);
 #endif
 
-    sum.set_to_play(BLACK);
-    bool black_wins = sum.solve();
-
-    sum.set_to_play(WHITE);
-    bool white_wins = sum.solve();
-
-    entry.outcome = bools_to_outcome_class(black_wins, white_wins);
 
 #ifdef MCGS_USE_BOUNDS
         entry.bounds_data = db_make_bounds(sum);
@@ -564,6 +558,9 @@ void database::generate_entry_single_partisan(sumgame& sum, unsigned int depth,
 #ifdef MCGS_USE_DOMINANCE
         entry.dominated_moves = db_make_dominated_moves(sum);
 #endif
+
+    //////////////////// Find outcome
+    entry.outcome = db_make_outcome_class(sum, entry);
 
     set_partisan(sum, entry);
 
