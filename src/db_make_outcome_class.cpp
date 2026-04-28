@@ -22,6 +22,7 @@ inline outcome_class make_outcome_from_search(sumgame& sum)
     return bools_to_outcome_class(black_wins, white_wins);
 }
 
+#ifdef MCGS_USE_THERM
 inline outcome_class make_outcome_from_thermograph(
     const db_entry_partisan& entry)
 {
@@ -54,6 +55,7 @@ inline outcome_class make_outcome_from_thermograph(
 
     assert(false);
 }
+#endif
 
 } // namespace
 
