@@ -8,3 +8,5 @@ inline void print_thermograph(std::ostream& os, const ThGraph& graph)
     os << "Left Scaffold: " << *graph.Sc(SG_BLACK);
     os << " Right Scaffold: " << *graph.Sc(SG_WHITE);
 }
+
+bool thermograph_bends_out_below_zero(const ThGraph& graph, bool left);

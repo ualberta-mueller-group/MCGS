@@ -15,7 +15,7 @@
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "hashing.h"
-#include "print_lib_therm.h"
+#include "thermograph_helpers.h"
 #include "type_table.h"
 #include "game.h"
 #include "serializer.h"

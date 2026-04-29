@@ -4,6 +4,7 @@
 #include "database.h"
 #include "solver_stats.h"
 #include "sumgame.h"
+#include "thermograph_helpers.h"
 
 namespace {
 
@@ -37,20 +38,19 @@ inline outcome_class make_outcome_from_thermograph(
     if (left_stop.IsNegative())
         return outcome_class::R;
 
-    const bool left_bends = (th.GraphValueAt(ThValue(-1), true) != left_stop);
-    const bool right_bends =
-        (th.GraphValueAt(ThValue(-1), false) != right_stop);
+    const bool left_bends = thermograph_bends_out_below_zero(th, true);
+    const bool right_bends = thermograph_bends_out_below_zero(th, false);
 
     const bool zero_touches_left = (left_stop.IsZero() && !left_bends);
     const bool zero_touches_right = (right_stop.IsZero() && !right_bends);
 
     if (zero_touches_left && zero_touches_right) // 11
         return outcome_class::P;
-    else if (!zero_touches_left && zero_touches_right) // 01
+    if (!zero_touches_left && zero_touches_right) // 01
         return outcome_class::L;
-    else if (zero_touches_left && !zero_touches_right) // 10
+    if (zero_touches_left && !zero_touches_right) // 10
         return outcome_class::R;
-    else if (!zero_touches_left && !zero_touches_right) // 00
+    if (!zero_touches_left && !zero_touches_right) // 00
         return outcome_class::N;
 
     assert(false);
@@ -63,6 +63,10 @@ inline outcome_class make_outcome_from_thermograph(
 outcome_class db_make_outcome_class(sumgame& sum,
                                     const db_entry_partisan& entry)
 {
-    return make_outcome_from_search(sum);
-    //return make_outcome_from_thermograph(entry);
+    //const outcome_class oc_search = make_outcome_from_search(sum);
+    const outcome_class oc_therm = make_outcome_from_thermograph(entry);
+
+    //assert(oc_search == oc_therm);
+
+    return oc_therm;
 }

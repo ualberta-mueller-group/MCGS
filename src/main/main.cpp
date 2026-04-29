@@ -6,13 +6,20 @@
 #include <string>
 #include <memory>
 
+#include "ThGraph.h"
+#include "amazons.h"
+#include "cgt_basics.h"
 #include "cli_options.h"
 #include "database.h"
+#include "domineering.h"
 #include "file_parser.h"
 #include "autotests.h"
 #include "global_database.h"
+#include "make_thermograph_slow.h"
+#include "thermograph_helpers.h"
 #include "print_moves.h"
 #include "search_graph_debug.h"
+#include "sumgame.h"
 #include "test_case.h"
 #include "mcgs_init.h"
 #include "hashing.h"
@@ -25,6 +32,69 @@
 #include "utils_for_main.h"
 
 using std::cout, std::endl, std::flush, std::string;
+using namespace std;
+
+namespace {
+
+void print_thermograph_for_sum(sumgame& sum)
+{
+    assert_restore_sumgame ars(sum);
+
+    shared_ptr<ThGraph> graph = make_thermograph_slow(sum);
+
+    cout << "==============================" << endl;
+
+    cout << "Game: ";
+    sum.print_simple(cout);
+    cout << endl;
+
+    cout << "Thermograph: ";
+    print_thermograph(cout, *graph);
+    cout << endl;
+}
+
+void print_option_thermographs_for_player(sumgame& sum, bw player)
+{
+    assert_restore_sumgame ars1(sum);
+    assert(is_black_white(player));
+
+    const bw restore_player = sum.to_play();
+    sum.set_to_play(player);
+
+    unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(player));
+
+    while (*gen)
+    {
+        assert_restore_sumgame ars2(sum);
+
+        const sumgame_move sm = gen->gen_sum_move();
+        ++(*gen);
+
+        assert(sum.to_play() == player);
+        sum.play_sum(sm, player);
+
+        print_thermograph_for_sum(sum);
+
+        sum.undo_move();
+    }
+
+    sum.set_to_play(restore_player);
+}
+
+void do_thermograph_stuff()
+{
+    sumgame sum(BLACK);
+    amazons g(".#.|#XO");
+    sum.add(&g);
+
+    print_thermograph_for_sum(sum);
+
+    print_option_thermographs_for_player(sum, BLACK);
+    print_option_thermographs_for_player(sum, WHITE);
+
+    sum.pop(&g);
+}
+} // namespace
 
 
 ////////////////////////////////////////////////// main function
@@ -39,6 +109,9 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
+
+    //do_thermograph_stuff();
+    //return 0;
 
     if (opts.db_dump_file_name.has_value())
     {

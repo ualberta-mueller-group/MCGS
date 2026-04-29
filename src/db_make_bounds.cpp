@@ -2,10 +2,15 @@
 
 #include <memory>
 
+#include "SgBlackWhite.h"
+#include "ThGraph.h"
+#include "ThScaffold.h"
+#include "ThValue.h"
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
 #include "fraction.h"
+#include "thermograph_helpers.h"
 #include "sumgame.h"
 
 
@@ -116,17 +121,42 @@ bool sum_is_small(sumgame& sum)
     return is_maybe_small;
 }
 
+
+bool sum_is_small_from_thermograph(sumgame& sum, const db_entry_partisan& entry)
+{
+    assert(entry.thermograph);
+    const ThGraph& th = *entry.thermograph;
+
+    const ThValue& left_stop = th.LeftStop();
+    const ThValue& right_stop = th.RightStop();
+
+    if (!left_stop.IsZero() || !right_stop.IsZero())
+        return false;
+
+    // Left bends?
+    if (thermograph_bends_out_below_zero(th, true))
+        return true;
+
+    // Right bends?
+    if (thermograph_bends_out_below_zero(th, false))
+        return true;
+
+    return false;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////
-std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum)
+std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum,
+                                            const db_entry_partisan& entry)
 {
     assert_restore_sumgame ars(sum);
 
     vector<bounds_options> options_vec;
     vector<game_bounds_ptr> bounds_vec;
 
-    const bool is_small = sum_is_small(sum);
+    //const bool is_small = sum_is_small(sum);
+    const bool is_small = sum_is_small_from_thermograph(sum, entry);
 
     if (is_small)
     {
@@ -136,19 +166,88 @@ std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum)
 
         game_bounds_ptr bounds = bounds_vec.back();
 
+        //assert(bounds->both_valid());
         if (bounds->both_valid())
             return bounds;
     }
 
-    options_vec.clear();
-    options_vec.emplace_back(BOUND_SCALE_DYADIC_RATIONAL, -512, 512);
-    bounds_vec = find_bounds(sum, options_vec);
-    assert(options_vec.size() == 1 && bounds_vec.size() == 1);
+    //options_vec.clear();
+    //options_vec.emplace_back(BOUND_SCALE_DYADIC_RATIONAL, -512, 512);
+    //bounds_vec = find_bounds(sum, options_vec);
+    //assert(options_vec.size() == 1 && bounds_vec.size() == 1);
 
-    game_bounds_ptr bounds = bounds_vec.back();
+    //game_bounds_ptr bounds = bounds_vec.back();
 
-    if (bounds->both_valid())
-        return bounds;
+#if 1
+    {
+        //cout << "START" << endl;
+        //cout << sum << endl;
+
+        //cout << "Bounds (EXP): " << *bounds << endl;
+
+        // Read bounds from thermograph
+        assert(entry.thermograph);
+
+        const ThGraph& th = *entry.thermograph;
+        //print_thermograph(cout, th);
+        //cout << endl;
+
+        //th.Check();
+
+        const ThValue& left_stop = th.LeftStop();
+        const ThValue& right_stop = th.RightStop();
+
+        const bool left_bends = thermograph_bends_out_below_zero(th, true);
+        const bool right_bends = thermograph_bends_out_below_zero(th, false);
+
+        // Need to convert to MCGS scale (each scale ordinal is 1/8th)
+        fraction left_frac(left_stop.P() * 8, left_stop.Q());
+        left_frac.simplify();
+        int left_int = left_frac.get_integral_part();
+        left_frac.remove_integral_part();
+        const bool left_is_exact = (left_frac.top() == 0);
+        assert(left_is_exact);
+
+        fraction right_frac(right_stop.P() * 8, right_stop.Q());
+        right_frac.simplify();
+        int right_int = right_frac.get_integral_part();
+        right_frac.remove_integral_part();
+        const bool right_is_exact = (right_frac.top() == 0);
+        assert(right_is_exact);
+
+        //cout << "Bendy-ness: " << left_bends << " " << right_bends << endl;
+
+        if (left_bends)
+            left_int++;
+
+        if (right_bends)
+            right_int--;
+
+        const bool is_equal = (left_int == right_int) && !(left_bends || right_bends);
+
+        //cout << "Setting bounds: ";
+        //cout << "Lower: " << (is_equal ? "=" : "<") << right_int;
+        //cout << " ";
+        //cout << "Upper: " << left_int << (is_equal ? "=" : ">");
+        //cout << endl;
+
+        game_bounds_ptr bounds_therm(new game_bounds(BOUND_SCALE_DYADIC_RATIONAL));
+        bounds_therm->set_lower(right_int, is_equal ? REL_EQUAL : REL_LESS);
+        bounds_therm->set_upper(left_int, is_equal ? REL_EQUAL : REL_GREATER);
+
+        //cout << *bounds << " " << *bounds_therm << endl;
+
+        //if (*bounds_therm != *bounds)
+        //    assert(false);
+
+        //assert(*bounds == *bounds_therm);
+        return bounds_therm;
+    }
+#endif
+
+    //if (bounds->both_valid())
+    //    return bounds;
+
 
     THROW_ASSERT(false, "Bounds not found for game");
     return nullptr;

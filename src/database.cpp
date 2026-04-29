@@ -90,7 +90,7 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
         return false;
 
 #ifdef MCGS_USE_THERM
-    if (thermograph != other.thermograph)
+    if ((bool) thermograph != (bool) other.thermograph)
         return false;
 
     if (thermograph && !(*thermograph == *other.thermograph))
@@ -98,7 +98,7 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 #endif
 
 #ifdef MCGS_USE_BOUNDS
-    if (bounds_data != other.bounds_data)
+    if ((bool) bounds_data != (bool) other.bounds_data)
         return false;
 
     if (bounds_data && (*bounds_data != *other.bounds_data))
@@ -106,7 +106,7 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 #endif
 
 #ifdef MCGS_USE_DOMINANCE
-    if (dominated_moves != other.dominated_moves)
+    if ((bool) dominated_moves != (bool) other.dominated_moves)
         return false;
 
     if (dominated_moves && (*dominated_moves != *other.dominated_moves))
@@ -532,9 +532,12 @@ void database::generate_entry_single_partisan(sumgame& sum, unsigned int depth,
     entry.thermograph = db_make_thermograph(*this, sum, depth, silent);
 #endif
 
+#ifdef MCGS_USE_DOMINANCE
+        entry.dominated_moves = db_make_dominated_moves(sum);
+#endif
 
 #ifdef MCGS_USE_BOUNDS
-        entry.bounds_data = db_make_bounds(sum);
+        entry.bounds_data = db_make_bounds(sum, entry);
 
         // Debug info
         n_db_games++;
@@ -555,9 +558,6 @@ void database::generate_entry_single_partisan(sumgame& sum, unsigned int depth,
         }
 #endif
 
-#ifdef MCGS_USE_DOMINANCE
-        entry.dominated_moves = db_make_dominated_moves(sum);
-#endif
 
     //////////////////// Find outcome
     entry.outcome = db_make_outcome_class(sum, entry);
