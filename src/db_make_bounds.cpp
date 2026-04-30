@@ -160,13 +160,23 @@ std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum,
 
     if (is_small)
     {
-        options_vec.emplace_back(BOUND_SCALE_UP, -512, 512);
+        bound_t scale_min = -512;
+        bound_t scale_max = 512;
+
+        assert(entry.outcome != outcome_class::U);
+
+        if (entry.outcome == outcome_class::L)
+            scale_min = 0;
+        if (entry.outcome == outcome_class::R)
+            scale_max = 0;
+
+        options_vec.emplace_back(BOUND_SCALE_UP, scale_min, scale_max);
         bounds_vec = find_bounds(sum, options_vec);
         assert(options_vec.size() == 1 && bounds_vec.size() == 1);
 
         game_bounds_ptr bounds = bounds_vec.back();
 
-        //assert(bounds->both_valid());
+        assert(bounds->both_valid());
         if (bounds->both_valid())
             return bounds;
     }

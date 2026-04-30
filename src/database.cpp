@@ -532,6 +532,9 @@ void database::generate_entry_single_partisan(sumgame& sum, unsigned int depth,
     entry.thermograph = db_make_thermograph(*this, sum, depth, silent);
 #endif
 
+    //////////////////// Find outcome
+    entry.outcome = db_make_outcome_class(sum, entry);
+
 #ifdef MCGS_USE_DOMINANCE
         entry.dominated_moves = db_make_dominated_moves(sum);
 #endif
@@ -559,8 +562,6 @@ void database::generate_entry_single_partisan(sumgame& sum, unsigned int depth,
 #endif
 
 
-    //////////////////// Find outcome
-    entry.outcome = db_make_outcome_class(sum, entry);
 
     set_partisan(sum, entry);
 

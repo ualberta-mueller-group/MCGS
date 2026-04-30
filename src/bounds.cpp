@@ -14,6 +14,24 @@
 #include <vector>
 #include <utility>
 
+/*
+    Largely untested optimization for infinitesimal games having large confusion
+    intervals.
+
+    When enabled, a "fuzzy interval" tracks min/max scale indices `i` for
+    which the scale game `Si` is found to be fuzzy compared to the initial
+    bounds query game `G`. Search regions are clipped to exclude this fuzzy
+    interval.
+
+    It is assumed that for i <= j, if `G <> Si` and `G <> Sj`, then
+    for all k, `i <= k <= j`, `G <> Sk`.
+*/
+//#define CLIP_FUZZY_INTERVAL
+
+#ifdef CLIP_FUZZY_INTERVAL
+#error See above comment in this file
+#endif
+
 using namespace std;
 
 //////////////////////////////////////////////////
@@ -81,9 +99,18 @@ private:
 
     void _refine_bounds(bound_scale scale, game_bounds& bounds, sumgame& sum);
 
+#ifdef CLIP_FUZZY_INTERVAL
+    void _clip_fuzzy_interval(search_region& sr, vector<search_region>& regions_next);
+#endif
+
     bool _assume_below_midpoint;
     int _step_count;
     int _search_count;
+
+#ifdef CLIP_FUZZY_INTERVAL
+    optional<pair<bound_t, bound_t>> _fuzzy_interval;
+#endif
+
 
     vector<search_region> _regions;
     vector<search_region> _regions_next;
@@ -407,6 +434,9 @@ void bounds_finder::_reset()
     _assume_below_midpoint = true;
     _step_count = 0;
     _search_count = 0;
+#ifdef CLIP_FUZZY_INTERVAL
+    _fuzzy_interval.reset();
+#endif
 
     _regions.clear();
     _regions_next.clear();
@@ -434,6 +464,11 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum,
 
         for (search_region& sr : _regions)
         {
+
+#ifdef CLIP_FUZZY_INTERVAL
+            if (_fuzzy_interval.has_value() && sr.valid())
+                _clip_fuzzy_interval(sr, _regions_next);
+#endif
             // Skip if this region is invalid or outside of bounds
             if (prune_region(sr, *bounds))
             {
@@ -539,6 +574,20 @@ void bounds_finder::_step(search_region& region, bound_scale scale,
         // Gi fuzzy with S
         case REL_FUZZY:
         {
+
+#ifdef CLIP_FUZZY_INTERVAL
+            if (_fuzzy_interval.has_value())
+            {
+                bound_t& interval_low = _fuzzy_interval->first;
+                bound_t& interval_high = _fuzzy_interval->second;
+
+                interval_low = min(interval_low, scale_idx);
+                interval_high = max(interval_high, scale_idx);
+            }
+            else
+                _fuzzy_interval.emplace(scale_idx, scale_idx);
+#endif
+
             _regions_next.push_back(region.split(scale_idx));
             break;
         }
@@ -737,6 +786,52 @@ void bounds_finder::_refine_bounds(bound_scale scale, game_bounds& bounds,
         bounds.set_upper(upper, rel);
     }
 }
+
+
+#ifdef CLIP_FUZZY_INTERVAL
+void bounds_finder::_clip_fuzzy_interval(search_region& sr,
+                               vector<search_region>& regions_next)
+{
+    assert(sr.valid() && _fuzzy_interval.has_value());
+
+    const bound_t interval_left = _fuzzy_interval->first;
+    const bound_t interval_right = _fuzzy_interval->second;
+    assert(interval_left <= interval_right);
+
+    bound_t& p1 = sr.low;
+    bound_t& p2 = sr.high;
+    assert(p1 <= p2);
+
+    const bool p1_right_of_interval = p1 > interval_right;
+    const bool p2_left_of_interval = p2 < interval_left;
+
+    if (p1_right_of_interval || p2_left_of_interval)
+        return;
+
+    const bool p1_inside_interval = p1 >= interval_left;
+    const bool p2_inside_interval = p2 <= interval_right;
+
+    if (p1_inside_interval)
+        p1 = interval_right + 1;
+    if (p2_inside_interval)
+        p2 = interval_left - 1;
+    if (!(p1_inside_interval || p2_inside_interval))
+    {
+        // p1 and p2 are both outside the interval. The interval is entirely
+        // between p1 and p2. Split the search region into 2
+        const bound_t r1_p1 = p1;
+        const bound_t r1_p2 = interval_left - 1;
+
+        const bound_t r2_p1 = interval_right + 1;
+        const bound_t r2_p2 = p2;
+
+        sr.low = r1_p1;
+        sr.high = r1_p2;
+
+        _regions_next.push_back({r2_p1, r2_p2});
+    }
+}
+#endif
 
 ////////////////////////////////////////
 vector<game_bounds_ptr> find_bounds(sumgame& sum,
