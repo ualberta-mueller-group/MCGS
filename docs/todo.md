@@ -18,7 +18,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
         - need to keep a kind of parallel structure of the proven game and the real game
             - play in pruned G + (-G), follow mirror strategy
             - find and follow "at least as good" move when G has been simplified to G'
-            - similary when simple games have been combined, e.g. numbers have been added up, and opponent plays in some specific fraction
+            - similarly when simple games have been combined, e.g. numbers have been added up, and opponent plays in some specific fraction
             - Issue: optimal vs good enough play
                 - Solver can stop at a win, even if the winning move is not "optimal"
 
@@ -66,16 +66,19 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     Should we have an interface to call them?
 
 # Upcoming Versions
-## February/March 2026: Documentation and Publication
-- Slides for CGT Japan
+## Documentation and Publication
+- Slides for current version
 - More complete results page
+    - also summarise in new slides
     - clobber results
     - clobber\_1xn results
     - nogo results
     - nogo\_1xn results
+    - other new games without any published results
+    - compare MCGS with dedicated solvers? What is the gap?
+
 
 ## Version 1.6: focus on more information in DB
-- simplest equal game
 - thermograph DB
 - "Value scales" and bounds on game values
     - E.g. clobber: multiples of up, up-star
@@ -85,13 +88,29 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - sort test cases (semi-)automatically by difficulty
     - Taylor to experiment
 - keep the separate "dbg" and "opt" builds, or preferably these plus a few more
-    - T: I regularly compile MCGS with AddressSanitizer to check for memory errors
 
 ## Version 1.7: integrate thermographs in solving algorithms
+add simplest equal game to db
+use of database in search
+what do we have now?
+how to use it more/better?
+use the new instrumentation tools to compare with SEGClobber, NoGo and see where MCGS lags behind
+Work on move ordering
+
+- Improve DB
+    - SEG replacement - Game substitution
+        - can we do it in a game-independent way?
+- Serialisation for polymorphic types already mostly implemented (though is unused)
+Need to solve similar type remapping problem as with `game_type_t` in the database. Solve in a similar way by initializing all IDs on startup?
+
 - compute TG
 - store TG in TT and DB
 - use bounds from TG for solving hot games
 - Compare with Amazons solver
+- Add/integrate thermograph computation
+    - make it optional/separate from boolean solver?
+    - use in boolean solver. How exactly?
+    - Try with Amazons where we have another solver that already uses it to compare with
 
 ## Version 1.8: cleanup and performance improvement
 - No big new features
@@ -147,6 +166,9 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - simple hack: generate all moves, create list,
       and pick from list starting in the middle
 - sort by game size heuristic (already used implicitly in sumgame?)
+- Move ordering optimisations
+    - incentive
+    - TG
 
 ### Use bounds on subgames from db
 - add upper and lower bounds, use LS and RS from thermographs, considering toplay, as in Amazons paper.
@@ -159,7 +181,11 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 ## Code maintenance, build, C++ issues
 
-- CMake build for MCGS
+- done? CMake build for MCGS
+- github actions (compilation/tests)
+    - builds through github on several different systems, e.g. windows, Mac
+    - regularly compile MCGS with AddressSanitizer to check for memory errors
+
 
 ### Use a proper unit testing framework?
 - Easier to change this now rather than later
@@ -188,9 +214,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - i.e. `split_result()` vs `split_result(vector<game*>())`, 1st has no value, 2nd has a value
     - Try to make this both clearer AND less verbose
 - "Result" refers to `solve()` function's return value, but "Outcome" is still used in a few places (mostly variable names)
-- Add missing unit tests
-    - nogo_1xn: add unit tests for move generator
-    - Do a systematic check
 
 - Performance profiling for older solvers, and MCGS
     - Quick and dirty method just to get intuition and some basic data
@@ -198,18 +221,20 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
         - i.e. if in-memory DB lookups already dominate the run time, then adding disk reads may be especially costly
 
 ### Lower priority tasks, may push to after Version 2
-- Improve MCGS CLI args
-    - Some arg combinations don't make sense and should maybe throw or print a warning?
-        - i.e. "--test-timeout" without "--run-tests"
-        - Martin: yes I once wasted 20 minutes trying to figure out why my tests did not run, when I forgot a --run-tests. Either the other test-related flags should silently add the --run-tests, or it should complain.
-    - Arg parsing loop could be cleaned up/abstracted a bit
-    - Unify "--help" page styles across scripts/executables
 - Rename `x_1xn` to `x_strip` ?
 - Rename `x_game` to `game_x`? E.g. `integer_game` to `game_integer` ?
 
+# Testing
 
-## More tasks, unsorted
-### Test framework improvements
+## Testing existing code, unit tests
+- Remove duplication between performance and unit tests
+- Review unit tests for completeness, coverage of files and functions. Use a tool to check this?
+- Unit test for normalisation, grid games
+- Add missing unit tests
+    - nogo_1xn: add unit tests for move generator
+
+
+## Test framework improvements
 - More detailed timeouts
     - Per file? Per test?
 - Look into improving table performance for large data sets
@@ -217,7 +242,38 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - May need to paginate results, which may be undesired. Could also disable automatic update and add "Search" button
         - Do both in some way?
 
+## File-based test cases
+
+### Sort test cases by speed
+- semi-automatically (partially done?)
+- Allows implementation of "--sort-tests" to sort tests based on solve duration
+- Implies "--clear-tt"?
+    - no, independent setting
+    - NO: include options, git hash etc. info in csv header -> html file, for large-scale experiments, use e.g. names, index, script to organise
+- i.e. "--sort-tests 100,500,5000,20000,60000" <-- max run times in ms
+- fastest = autotest = 50 or 100ms?
+- easy = 500
+- medium = 5000
+- hard = 50000
+- veryhard = 500000
+- veryveryhard = 5000000 = 5000sec = 83 min.
+- veryveryveryhard = 50000000 = 50000sec = 833 min. = 13.8hr
+- slow = solved over 13.8 hr
+- unsolved
+- Output files into new directory, use old file name and append time suffix?     - i.e. "sort\_result/clobber\_tests\_500.test", ...,     
+- "sort\_result/clobber\_tests\_timeout.csv"
+- Can preserve comments and their relative locations
+- Could reasonably automate test generation on a larger scale instead of having to sift through randomly generated tests
+- Use node counts instead of times so results will be the same on different machines?
+- Reordering tests will change run times of tests with "--run-tests"
+
 ### Write more .test files
+- ".test" features for new DB features
+    - {B winning moves}: Add results to (some? all?) .test files?
+        - Automate this to some degree? 
+        - check using CGSuite? 
+        - Or same program as "verified by XYZ program" comments?
+
 - Interesting cases (i.e. "BBW"^N Clobber, integer-like NoGo, other conjectures)
 - Clobber: from graduate course in `~/Projects/ualberta-mueller-group/combinatorial_game_solver/PriorWork`
 - Random test generation
@@ -237,11 +293,37 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Other solvers may be unable to verify these (i.e. CGSuite)
 - How to use test results? Standard criteria for when program Version A is better than Version B? Cumulative total number of problems solved? Which time limit?
 
+### Impartial Test cases
+- Finish restructure
+    - still a few impartial game tests outside the new impartial directory, e.g. random boards
+    - make structure inside and outside of `autotests` match
+- Add more tests - impartial other games, e.g. elephants, new games, amazons
+
+## Performance Testing
+- More tests, more results, also put on website
+- Extend easy impartial games if we have more than 7 bits per coordinate on a grid
+- Maybe run on other machines - fire-creek
+
+## Command-line interface CLI for testing and experiments
+- Improve MCGS CLI args
+    - Some arg combinations don't make sense and should throw or print a warning
+        - i.e. "--test-timeout" without "--run-tests"
+        - Either the other test-related flags should silently add 
+          the --run-tests options, or print a warning.
+    - Arg parsing loop could be cleaned up/abstracted a bit
+    - Unify "--help" page styles across scripts/executables
+- Interactive mode ("GTP-like")
+    - keep a "current game" as state. Single game, or in named variables as in CGSuite?
+    - Analyze game function
+        - Given G, find out properties of G beyond win/loss
+        - confusion interval on number and other scales
+        - is it infinitesimal?
+        - compute and print its TG
 
 ## Publications and Talks
 - Grab a CGT online seminar spot to talk about MCGS and give a demo
-- Feb 20, 2026: CG 2026 submission
-- Mar 19-22, 2026: CG conference Japan
+- Update the Version 1.0 talk to cover everything up to now
+    - publish on website
 
 ## Beyond Version 2
 - Search heuristics
@@ -270,6 +352,12 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
            less efficient. Nogo, Clobber?
 
 # Search
+- debug/release build have node count differences (low priority)
+- Checkpointing/resume search
+    - Idea: if proof times out, store the most valuable solved nodes to a 
+      file (e.g. up to depth 6 or so?), 
+    - to restart the proof, read that file to seed the TT for the next search.
+
 ## Search algorithm
 - Try other search algorithms? EWS, proof number search, MCTS-solver
     - Can we dropin-replace the main search engine from minimax to one of those?
@@ -323,6 +411,11 @@ most important solved positions (closest to the root, most work) in a persistent
 - Specialised algorithm to recognise all small game?
     - build thermograph. stop if any subgame is not all-small
     
+## Parallel Search
+- Try some simple multithreading inside MCGS
+    - run different branches of search task in parallel with a shared transposition table
+    - `ttable` and `random_table` would need some synchronization
+- Can we use PEWS (parallel EWS) as a solver engine? What would it take to interface with it?
 
 # Program Evaluation and Benchmarks
 - Evaluate/compare program versions
@@ -330,8 +423,7 @@ most important solved positions (closest to the root, most work) in a persistent
     - Number of problems solved as function of time - standard in planning literature, nice robust measure if we have a good test set.
     - Taylor: separate the data by game type in some way, to see if specific games are more affected by changes
 
-# Future discussion topics TODO reorganise all content by topic
-## Databases
+# Databases
 - What can be reused from previous solvers? What's game-specific?
 - Simplification of sums using DB
 - Document internal and external database format
@@ -342,6 +434,7 @@ most important solved positions (closest to the root, most work) in a persistent
     - naming scheme? e.g. `database-clobber-4x5.bin, database-clobber_1xn-20.bin`
 
 ## Building Databases
+- Do we need configuration options?
 - Support for merging DB that were built separately
     - Or support multiple DB
         - Which one to choose for loopup if they overlap? Does it matter?
@@ -351,22 +444,57 @@ most important solved positions (closest to the root, most work) in a persistent
 - Support more than one rectangle dimension for the same game in one DB
     - Example: `[impartial domineering] max_dims = 5,5; [impartial domineering] max_dims = 2,10;`
     - Motivation: for example, if 5x5 is too large, but say 4x5, 3x7, and 2x10 are all reasonably small DB, then having all those could help
+- Allow loading from multiple files - read several files into the run time database at startup
+    - Probably not yet
 
-# Small Todo Items
-- Remove duplication between performance and unit tests
-- Add one-line documentation for these options in `global_options.h`
+## Database Improvement
+- Support partial or incomplete DB
+    - Example: only the 3x6 and 4x5 subsets of a 4x6 database 
+    (which would be too big)
+    - Example: only balanced subset of database, e.g. number of stones
+    by each player differs by at most 1 or 2
+        - We could do access statistics to see if that balance idea is actually true. 
+        - Unfortunately, in terms of size, the balanced parts are probably the largest.
+
+    - Taylor's initial comments: 
+        - Currently partisan DB entries are stored in a `unordered_map<game_type_t, unordered_map<hash_t, db_entry_partisan>>`. 
+        - DB accesses don't currently account for things like grid dimensions, and querying something not in the DB either returns a `nullptr` or empty `optional<db_entry_partisan>`. 
+        - The problem is less a question of how to store these "incomplete" databases, and more of a question of how the user should specify what rectangles to generate. Maybe when generating a database we could read the configuration string from a file instead of inline from the command line? This would make it easier to enumerate things like which rectangles to generate (and would probably help in adding DB support for the 2 parameterized games we have)
+        - In general it would be good to support more granularity for the database generation process (allowing different game types to have more control over the process). 
+        - Currently there's a monolithic `grid_generator` class whose constructor takes parameters (i.e. grid\_hash symmetry, maximum grid dimensions, and parameters relating to the ordering of stones/empties etc). 
+        - I'm not sure if it's worth breaking apart this monolithic approach into something like a "pipeline of modular functions", or if we can just continue to add parameters to this constructor. 
+        - There are trade offs, as it's nice to have a unified implementation for all grid and strip games, but there are some missing game-specific optimizations (i.e. normalizing the bit mask which determines where stones are placed) which could be beneficial now that we can generate databases larger than 3x3. 
+        - Maybe the `grid_generator` constructor can accept some optional function pointers to allow such behavior on a per-game basis
+
+- DB types are hardware/system-dependent
+    - Actually make DB file game_type_t assignments not matter?
+    - Translate local hashes upon loading the file by XORing out the 
+      disk type, and XORing in the run time type
+    - `impartial_game_wrapper` games all having the same type is problematic
+       for this (AND problematic for the error checking added in 
+       1.4 release)
+
+
+# Misc. Small Todo Items
+- Add one-line documentation for the options in `global_options.h`
 - Should DB hits also be stored in the TT? Do some tests.
 - rename the current `use_complexity_score` flag to make it clear that it is only for the LV algorithm
 - https://github.com/ualberta-mueller-group/MCGS/issues - use issues tracker, or delete/resolve
+- Too many "game registration" functions as part of `mcgs_init` steps?
+
 
 ## improve output
 - print improvement: `up_star:0* → *`, suppress 0 up
 - `up_star`:-1 → 1 down? In html can use uparrow and downarrow, &uarr; &darr
 - missing hours in html output conversion?
     - Total time: 22,372,154 ms ＝ 52s, 154ms
+
 # Impartial games
 - improved lookup, avoid redundant lookups for LV
-    - store nimber as well as boolean for g = *n ?
+    - store nimber as well as (many) booleans for g = *n ?
+    - inefficient if we need the nimber
+    - can we combine all known results for G in one entry (bitmap?), lookup the nimber if it has been computed?
+
 - re-test complexity_score
     - make it the default for impartial games if it works better
 
@@ -390,11 +518,6 @@ most important solved positions (closest to the root, most work) in a persistent
 - measure number of splits?
 - How much more effective with DB?
 
-## Impartial Test cases
-- Finish restructure
-    - still a few impartial game tests outside the new impartial directory, e.g. random boards
-    - make structure inside and outside of `autotests` match
-- Add more tests - impartial other games, e.g. elephants, new games, amazons
 
 ## Impartial Search
 
@@ -418,9 +541,29 @@ most important solved positions (closest to the root, most work) in a persistent
     - `make_game(Gl,Gr)` single option
     - `make_game(GL,GR)` sets of options
 
+## Amazons
+- Amazons solver for MCGS
+- build DB
+- Run test cases from Jiaxing Song's solver; compare
+
 ## Battle sheep
 - run MCGS on CMPUT 657 Assignment 1 and 2 test cases
     - compare with student codes?
+- collect interesting game positions
+- implement in CGSuite? Difficult with scripting bugs?
+- Collect research questions about battle sheep
+- Are there "defective territories"?
+    - Territory = subgame with sheep of only one player
+    - Movable sheep = n-1 for each size n herd
+    - Trivial bound B = min(empty points, sum of all locally movable sheep)
+    - Are there territories whose value is less than B?
+        - Step 1: build DB of territories, check contents for defectiveness
+- Variations on the "superherd" idea
+    - Superherd = can move sheep around for free later, just before move. Just keep one global pool of movable sheep
+    - Super sheep = Battle sheep with superhero rule. When is outcome(supersheep(G)) = outcome(battlesheep(G))?
+- what exactly is Churong doing and why is her "restricted supersheep" approach valid? Read her code?
+    - Iterative deepening on number of sheep used?
+    - Recognizes when extra sheep don't help?
 
 ## Clobber
 - Can we do Clobber 6x6?
@@ -431,6 +574,20 @@ most important solved positions (closest to the root, most work) in a persistent
 - Where to get high quality games? 
     - Just start with random games?
     - 2022 student project?
+- Avoid the slow test for split in many cases
+    - 3x3 (or 3x4?) split-nosplit pattern, where we move a stone out from the center, e.g. a no-split from
+```
+OOO
+OOO
+?.?
+```
+to
+
+```
+OOO
+O.O
+?.?
+```
 
 ## 1xn Clobber
 - Study bounds for G = (xo)^n. 0 < G < up?
@@ -453,3 +610,15 @@ most important solved positions (closest to the root, most work) in a persistent
 
 ## Development Notes
 - Move some discussion to there from here, where implementation has started
+
+## Papers
+- Discuss future papers
+    - updates since 1.0
+    - solving results
+    - timeline and venue
+
+# `cgt_lib` Subrepository
+- `cgt_lib` is a submodule on the v1.6-thermograph branch
+- The `cgt_lib` repo is private
+    - users will need access once branch is merged into v1.6-develop
+
