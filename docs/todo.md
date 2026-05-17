@@ -77,12 +77,29 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - other new games without any published results
     - compare MCGS with dedicated solvers? What is the gap?
 
+## Version 1.6 tasks
+- Merge `v1.6-develop` and `v1.6-thermograph` branches (including recent
+    unpushed changes)
+- Code cleanup
+    - clang-tidy errors
+    - Major "todo"s in code
+    - Delete unused code
+    - Move `sumgame_move_generator` code into its own file. Clean up the logic
+    - Serializers:
+        - Move each serializer template into its own header
+        - On error, call std::abort instead of THROW_ASSERT/assert
+        - Add `load_ptr` functions to serializer templates where sensible
+    - HTML: make "main" vs "comparison" file distinction more clear (at the top
+        of the HTML file)
 
-## Version 1.6: focus on more information in DB
-- thermograph DB
-- "Value scales" and bounds on game values
-    - E.g. clobber: multiples of up, up-star
-    - Binary search to find confusion interval
+- Unit tests
+    - `db_make_XYZ(...)` functions, where `XYZ` is one of the new partisan data
+        fields (thermograph, bounds, dominated moves)
+    - Encoding/decoding grid moves to/from the DB
+    - `sumgame`, `sumgame_move_generator`, `db_move_generator`: usage of new
+        DB features
+    - Others
+- Documentation/release
 
 ### Version 1.6 "other"
 - sort test cases (semi-)automatically by difficulty
