@@ -148,6 +148,8 @@ int main(int argc, char** argv)
     if (opts.should_exit)
         return 0;
 
+    mcgs_init_2(opts);
+
     //test_bounds_finder_optimization();
     //return 0;
 

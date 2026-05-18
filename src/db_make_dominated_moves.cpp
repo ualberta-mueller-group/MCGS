@@ -29,6 +29,7 @@
 #include "ThGraph.h"
 #include "cgt_basics.h"
 #include "database.h"
+#include "dominated_moves.h"
 #include "global_database.h"
 #include "safe_arithmetic.h"
 #include "sumgame.h"
@@ -100,10 +101,10 @@ inline bool generalized_sum_move::operator!=(const generalized_sum_move& rhs) co
 //}
 
 inline void add_generalized_sum_move_to_dominated_moves_t(
-    dominated_moves_t& dom, const generalized_sum_move& gsm,
-    bw player)
+    db_dom_moves_t& dom, const generalized_sum_move& gsm,
+    bw player, db_dom_moves_kind dom_moves_kind)
 {
-    dom.add_move(gsm.subgame_hash, gsm.move_db_encoded, player);
+    dom.add_move(gsm.subgame_hash, player, gsm.move_db_encoded, dom_moves_kind);
 }
 
 // relation is relative to player to play
@@ -349,7 +350,7 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
 //}
 //
 void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
-                              dominated_moves_t& dom, uint64_t& complexity)
+                              db_dom_moves_t& dom, uint64_t& complexity)
 {
     complexity = 0;
     database& db = get_global_database();
@@ -511,7 +512,7 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
         }
 
         add_generalized_sum_move_to_dominated_moves_t(dom, gsm,
-                                                      player);
+                                                      player, DB_DOM_MOVES_KIND_DOMINATED);
     }
 
 #warning TODO make this a warning instead of a throw
@@ -525,7 +526,8 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
 //////////////////////////////////////////////////
 void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry)
 {
-    shared_ptr<dominated_moves_t> dom(new dominated_moves_t());
+    shared_ptr<db_dom_moves_t> dom(new db_dom_moves_t());
+    dom->set_kind(DB_DOM_MOVES_KIND_DOMINATED);
 
     sumgame clone1(BLACK);
     sumgame clone2(BLACK);

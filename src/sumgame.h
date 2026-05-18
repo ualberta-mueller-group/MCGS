@@ -329,7 +329,7 @@ private:
 
     bool _prune_dominated;
 #ifdef MCGS_USE_DOMINANCE
-    std::shared_ptr<dominated_moves_t> _dom;
+    std::shared_ptr<db_dom_moves_t> _dom;
 #endif
     std::optional<hash_t> _current_local_hash;
 

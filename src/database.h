@@ -66,7 +66,7 @@ struct db_entry_partisan
 
 #ifdef MCGS_USE_DOMINANCE
     uint64_t complexity;
-    std::shared_ptr<dominated_moves_t> dominated_moves;
+    std::shared_ptr<db_dom_moves_t> dominated_moves;
 #endif
 };
 

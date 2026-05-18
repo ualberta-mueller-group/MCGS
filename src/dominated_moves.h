@@ -1,5 +1,5 @@
 /*
-    Class dominated_moves_t represents dominated moves for a sum. It's used
+    Class db_dom_moves_t represents dominated moves for a sum. It's used
     as a field in the db_entry_partisan struct.
 
     Query/add moves with:
@@ -13,168 +13,146 @@
 
 #include <set>
 #include <map>
+#include <variant>
 
 #include "cgt_basics.h"
 #include "hashing.h"
 #include "game.h"
 #include "serializer.h"
-#include "utilities.h"
 
-////////////////////////////////////////////////// class dominated_moves_t
-class dominated_moves_t
+enum db_dom_moves_kind
 {
-public:
-    // Map subgame hash to a set of its (DB encoded) dominated moves
-    typedef std::map<hash_t, std::set<move>> move_map_t;
-
-    bool move_is_dominated(hash_t subgame_hash, move move_db_encoded,
-                           bw player) const;
-
-    void add_move(hash_t subgame_hash, move move_db_encoded, bw player);
-
-    // Used in testing. Unlikely to be useful elsewhere
-    const move_map_t& get_black_move_map() const;
-    const move_map_t& get_white_move_map() const;
-
-    bool operator==(const dominated_moves_t& rhs) const;
-    bool operator!=(const dominated_moves_t& rhs) const;
-
-private:
-    // May be nullptr
-    const std::set<move>* _get_set_if_exists(hash_t subgame_hash,
-                                             bw player) const;
-    std::set<move>& _get_or_create_set(hash_t subgame_hash, bw player);
-
-    friend struct serializer<dominated_moves_t>;
-    friend std::ostream& operator<<(std::ostream& os,
-                                    const dominated_moves_t& dom);
-
-    move_map_t _black_moves;
-    move_map_t _white_moves;
+    DB_DOM_MOVES_KIND_NONE = 0,
+    DB_DOM_MOVES_KIND_DOMINATED,
+    DB_DOM_MOVES_KIND_NONDOMINATED,
 };
 
-////////////////////////////////////////////////// dominated_moves_t methods
-inline bool dominated_moves_t::move_is_dominated(hash_t subgame_hash,
-                                                 move move_db_encoded,
-                                                 bw player) const
+////////////////////////////////////////////////// class db_dom_moves_t
+class db_dom_moves_t
 {
-    assert(is_black_white(player));
+public:
+    db_dom_moves_t();
 
-    const std::set<move>* move_set = _get_set_if_exists(subgame_hash, player);
+    db_dom_moves_kind get_kind() const;
 
-    if (move_set == nullptr)
-        return false;
+    /*
+        Precondition: `get_kind() == DB_DOM_MOVES_KIND_NONE`,
+        and `new_kind != DB_DOM_MOVES_KIND_NONE`
+    */
+    void set_kind(db_dom_moves_kind new_kind);
 
-    return move_set->find(move_db_encoded) != move_set->end();
+    bool operator==(const db_dom_moves_t& rhs) const;
+    bool operator!=(const db_dom_moves_t& rhs) const;
+
+    /*
+        Precondition: `move_kind != DB_DOM_MOVES_KIND_NONE`, and
+        `move_kind = get_kind()`
+    */
+    void add_move(hash_t subgame_hash, bw player, move move_db_encoded, db_dom_moves_kind move_kind);
+
+    //// Following functions are valid only if kind is DOMINATED
+
+    // TODO cache the subgame/player pair lookup, or delete this function
+    bool move_is_dominated(hash_t subgame_hash, bw player,
+                           move move_db_encoded) const;
+
+    // May be nullptr
+    const std::set<move>* get_dominated_moves(hash_t subgame_hash, bw player) const;
+
+    //// Following functions are valid only if kind is NONDOMINATED
+    // May be nullptr
+    const std::vector<move>* get_nondominated_moves(hash_t subgame_hash, bw player) const;
+
+private:
+    typedef std::map<hash_t, std::set<move>> hash_to_set_t;
+    typedef std::map<hash_t, std::vector<move>> hash_to_vec_t;
+
+    /*
+        NOTE: monostate is 1st alternative for better performance (to prevent
+        default construction of one of the other alternatives)
+    */
+    typedef std::variant<std::monostate, hash_to_set_t, hash_to_vec_t> variant_map_t;
+
+    // The container type is either std::set<move> or std::vector<move>
+    template <size_t variant_idx>
+    using move_container_t = typename std::variant_alternative_t<variant_idx, variant_map_t>::mapped_type;
+
+    // Never nullptr. Return type is either std::set<move>* or std::vector<move>*
+    template <size_t variant_idx>
+    move_container_t<variant_idx>* _get_or_create_move_container(hash_t subgame_hash, bw player);
+
+    // May be nullptr. Return type is either const std::set<move>* or const std::vector<move>*
+    template <size_t variant_idx>
+    const move_container_t<variant_idx>* _get_move_container_if_exists(hash_t subgame_hash, bw player) const;
+
+    inline static constexpr size_t MONOSTATE_VARIANT_IDX = 0;
+    inline static constexpr size_t HASH_TO_SET_VARIANT_IDX = 1;
+    inline static constexpr size_t HASH_TO_VEC_VARIANT_IDX = 2;
+
+    friend struct serializer<db_dom_moves_t>;
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const db_dom_moves_t& dom);
+
+    db_dom_moves_kind _kind;
+    variant_map_t _black_moves;
+    variant_map_t _white_moves;
+};
+
+std::ostream& operator<<(std::ostream& os, const db_dom_moves_t& dom);
+
+////////////////////////////////////////////////// db_dom_moves_t methods
+inline db_dom_moves_t::db_dom_moves_t() : _kind(DB_DOM_MOVES_KIND_NONE)
+{
 }
 
-inline void dominated_moves_t::add_move(hash_t subgame_hash,
-                                        move move_db_encoded, bw player)
+inline db_dom_moves_kind db_dom_moves_t::get_kind() const
 {
-    assert(is_black_white(player));
-    std::set<move>& move_set = _get_or_create_set(subgame_hash, player);
-    move_set.insert(move_db_encoded);
+    return _kind;
 }
 
-inline const dominated_moves_t::move_map_t& dominated_moves_t::
-    get_black_move_map() const
+inline void db_dom_moves_t::set_kind(db_dom_moves_kind new_kind)
 {
-    return _black_moves;
+    assert(_kind == DB_DOM_MOVES_KIND_NONE && new_kind != DB_DOM_MOVES_KIND_NONE);
+    _kind = new_kind;
 }
 
-inline const dominated_moves_t::move_map_t& dominated_moves_t::
-    get_white_move_map() const
-{
-    return _white_moves;
-}
-
-inline bool dominated_moves_t::operator==(const dominated_moves_t& rhs) const
-{
-    return (_black_moves == rhs._black_moves) && //
-           (_white_moves == rhs._white_moves);   //
-}
-
-inline bool dominated_moves_t::operator!=(const dominated_moves_t& rhs) const
+inline bool db_dom_moves_t::operator!=(const db_dom_moves_t& rhs) const
 {
     return !(*this == rhs);
 }
 
-inline const std::set<move>* dominated_moves_t::_get_set_if_exists(
-    hash_t subgame_hash, bw player) const
-{
-    assert(is_black_white(player));
-
-    const move_map_t& move_map =
-        (player == BLACK) ? _black_moves : _white_moves;
-
-    auto result = move_map.find(subgame_hash);
-
-    if (result == move_map.end())
-        return nullptr;
-
-    return &result->second;
-}
-
-inline std::set<move>& dominated_moves_t::_get_or_create_set(
-    hash_t subgame_hash, bw player)
-{
-    assert(is_black_white(player));
-    move_map_t& move_map = (player == BLACK) ? _black_moves : _white_moves;
-    return move_map[subgame_hash];
-}
-
-////////////////////////////////////////////////// serializer<dominated_moves_t>
+//////////////////////////////////////////////////
 template <>
-struct serializer<dominated_moves_t>
+struct serializer<db_dom_moves_t>
 {
-#warning TODO: dominated_moves_t serializer not portable due to `move`
-
-    /*
-        iobuffer.h should implement:
-            write_integral_as<Int1, Int2>(...)
-            read_integral_as<Int1, Int2>(...)
-
-        and do runtime checks
-        - Maybe modify and use n_bit_int.h
-        - Or define `move` as `int32_t`?
-    */
-
-    inline static void save(obuffer& os, const dominated_moves_t& dom, serializer_ctx* ctx)
+    inline static void save(obuffer& os, const db_dom_moves_t& dom, serializer_ctx* ctx)
     {
-        serializer_save(os, dom._black_moves, ctx);
-        serializer_save(os, dom._white_moves, ctx);
+        os.write_enum(dom._kind);
+        serializer<db_dom_moves_t::variant_map_t>::save(os, dom._black_moves, ctx);
+        serializer<db_dom_moves_t::variant_map_t>::save(os, dom._white_moves, ctx);
     }
 
-    inline static dominated_moves_t load(ibuffer& is, serializer_ctx* ctx)
+    inline static db_dom_moves_t load(ibuffer& is, serializer_ctx* ctx)
     {
-        dominated_moves_t dom;
+        db_dom_moves_t dom;
 
-        serializer_load(is, dom._black_moves, ctx);
-        serializer_load(is, dom._white_moves, ctx);
+        dom._kind = is.read_enum<db_dom_moves_kind>();
+        dom._black_moves = serializer<db_dom_moves_t::variant_map_t>::load(is, ctx);
+        dom._white_moves = serializer<db_dom_moves_t::variant_map_t>::load(is, ctx);
 
         return dom;
     }
 
-    inline static dominated_moves_t* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    inline static db_dom_moves_t* load_ptr(ibuffer& is, serializer_ctx* ctx)
     {
-        dominated_moves_t* dom = new dominated_moves_t();
+        db_dom_moves_t* dom = new db_dom_moves_t();
 
-        serializer_load(is, dom->_black_moves, ctx);
-        serializer_load(is, dom->_white_moves, ctx);
+        dom->_kind = is.read_enum<db_dom_moves_kind>();
+        dom->_black_moves = serializer<db_dom_moves_t::variant_map_t>::load(is, ctx);
+        dom->_white_moves = serializer<db_dom_moves_t::variant_map_t>::load(is, ctx);
 
         return dom;
     }
+
 };
-
-////////////////////////////////////////////////// dominated_moves_t print
-inline std::ostream& operator<<(std::ostream& os, const dominated_moves_t& dom)
-{
-    os << "dom_B: ";
-    os << dom._black_moves;
-
-    os << " dom_W: ";
-    os << dom._white_moves;
-
-    return os;
-}
 

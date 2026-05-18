@@ -466,7 +466,7 @@ bool sumgame_move_generator::_increment_move(bool init)
             const move m_rotated = sg->encode_grid_move_to_db(m);
             assert(sg->decode_grid_move_from_db(m_rotated) == m);
 
-            if (_dom->move_is_dominated(*_current_local_hash, m_rotated, to_play()))
+            if (_dom->move_is_dominated(*_current_local_hash, to_play(), m_rotated))
             {
                 if (sgraph::is_recording())
                 {
