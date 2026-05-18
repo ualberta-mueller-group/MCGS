@@ -21,109 +21,109 @@ using namespace std;
 #define RATIONAL_EPSILON_DENOMINATOR 1
 
 ////////////////////////////////////////////////// helpers
-namespace {
-inline unique_ptr<dyadic_rational> get_epsilon(bool positive)
-{
-    const int p = positive ? 1 : -1;
-    return make_unique<dyadic_rational>(p, RATIONAL_EPSILON_DENOMINATOR);
-}
-
-bool sum_is_positive(sumgame& sum)
-{
-    assert_restore_sumgame ars(sum);
-    const bw restore_player = sum.to_play();
-
-    bool is_maybe_positive = true;
-
-    {
-        sum.set_to_play(BLACK);
-        const bool black_wins = sum.solve();
-        is_maybe_positive = black_wins;
-    }
-
-    if (is_maybe_positive)
-    {
-        sum.set_to_play(WHITE);
-        const bool white_wins = sum.solve();
-        is_maybe_positive = !white_wins;
-    }
-
-    sum.set_to_play(restore_player);
-    return is_maybe_positive;
-}
-
-bool sum_is_negative(sumgame& sum)
-{
-    assert_restore_sumgame ars(sum);
-    const bw restore_player = sum.to_play();
-
-    bool is_maybe_negative = true;
-
-    {
-        sum.set_to_play(WHITE);
-        const bool white_wins = sum.solve();
-        is_maybe_negative = white_wins;
-    }
-
-    if (is_maybe_negative)
-    {
-        sum.set_to_play(BLACK);
-        const bool black_wins = sum.solve();
-        is_maybe_negative = !black_wins;
-    }
-
-    sum.set_to_play(restore_player);
-    return is_maybe_negative;
-}
-
-/*
-    True IFF for epsilon := 1 / RATIONAL_EPSILON_DENOMINATOR,
-        -epsilon < sum < epsilon
-*/
-bool sum_is_small(sumgame& sum)
-{
-    assert_restore_sumgame ars(sum);
-    const bw restore_player = sum.to_play();
-
-    bool is_maybe_small = true;
-
-    /*
-        Check: -epsilon < sum
-            IFF: 0 < sum + epsilon
-            IFF: sum + epsilon > 0
-    */
-    {
-        unique_ptr<dyadic_rational> epsilon_unique = get_epsilon(true);
-        dyadic_rational* epsilon = epsilon_unique.get();
-        sum.add(epsilon);
-
-        is_maybe_small = sum_is_positive(sum);
-
-        sum.pop(epsilon);
-    }
-
-    /*
-        Check: sum < epsilon
-            IFF: sum - epsilon < 0
-    */
-    if (is_maybe_small)
-    {
-        unique_ptr<dyadic_rational> epsilon_unique = get_epsilon(false);
-        dyadic_rational* epsilon = epsilon_unique.get();
-        sum.add(epsilon);
-
-        is_maybe_small = sum_is_negative(sum);
-
-        sum.pop(epsilon);
-    }
-
-    sum.set_to_play(restore_player);
-    return is_maybe_small;
-}
-
-
-
-} // namespace
+//namespace {
+//inline unique_ptr<dyadic_rational> get_epsilon(bool positive)
+//{
+//    const int p = positive ? 1 : -1;
+//    return make_unique<dyadic_rational>(p, RATIONAL_EPSILON_DENOMINATOR);
+//}
+//
+//bool sum_is_positive(sumgame& sum)
+//{
+//    assert_restore_sumgame ars(sum);
+//    const bw restore_player = sum.to_play();
+//
+//    bool is_maybe_positive = true;
+//
+//    {
+//        sum.set_to_play(BLACK);
+//        const bool black_wins = sum.solve();
+//        is_maybe_positive = black_wins;
+//    }
+//
+//    if (is_maybe_positive)
+//    {
+//        sum.set_to_play(WHITE);
+//        const bool white_wins = sum.solve();
+//        is_maybe_positive = !white_wins;
+//    }
+//
+//    sum.set_to_play(restore_player);
+//    return is_maybe_positive;
+//}
+//
+//bool sum_is_negative(sumgame& sum)
+//{
+//    assert_restore_sumgame ars(sum);
+//    const bw restore_player = sum.to_play();
+//
+//    bool is_maybe_negative = true;
+//
+//    {
+//        sum.set_to_play(WHITE);
+//        const bool white_wins = sum.solve();
+//        is_maybe_negative = white_wins;
+//    }
+//
+//    if (is_maybe_negative)
+//    {
+//        sum.set_to_play(BLACK);
+//        const bool black_wins = sum.solve();
+//        is_maybe_negative = !black_wins;
+//    }
+//
+//    sum.set_to_play(restore_player);
+//    return is_maybe_negative;
+//}
+//
+///*
+//    True IFF for epsilon := 1 / RATIONAL_EPSILON_DENOMINATOR,
+//        -epsilon < sum < epsilon
+//*/
+//bool sum_is_small(sumgame& sum)
+//{
+//    assert_restore_sumgame ars(sum);
+//    const bw restore_player = sum.to_play();
+//
+//    bool is_maybe_small = true;
+//
+//    /*
+//        Check: -epsilon < sum
+//            IFF: 0 < sum + epsilon
+//            IFF: sum + epsilon > 0
+//    */
+//    {
+//        unique_ptr<dyadic_rational> epsilon_unique = get_epsilon(true);
+//        dyadic_rational* epsilon = epsilon_unique.get();
+//        sum.add(epsilon);
+//
+//        is_maybe_small = sum_is_positive(sum);
+//
+//        sum.pop(epsilon);
+//    }
+//
+//    /*
+//        Check: sum < epsilon
+//            IFF: sum - epsilon < 0
+//    */
+//    if (is_maybe_small)
+//    {
+//        unique_ptr<dyadic_rational> epsilon_unique = get_epsilon(false);
+//        dyadic_rational* epsilon = epsilon_unique.get();
+//        sum.add(epsilon);
+//
+//        is_maybe_small = sum_is_negative(sum);
+//
+//        sum.pop(epsilon);
+//    }
+//
+//    sum.set_to_play(restore_player);
+//    return is_maybe_small;
+//}
+//
+//
+//
+//} // namespace
 
 //////////////////////////////////////////////////
 std::shared_ptr<game_bounds> db_make_bounds(const database& db, sumgame& sum,
@@ -134,7 +134,7 @@ std::shared_ptr<game_bounds> db_make_bounds(const database& db, sumgame& sum,
     vector<bounds_options> options_vec;
     vector<game_bounds_ptr> bounds_vec;
 
-    const std::shared_ptr<const ThGraph> therm = entry.thermograph;
+    const std::shared_ptr<ThGraph>& therm = entry.thermograph;
     assert(therm);
 
     const bool is_small = game_is_small_from_thermograph(*therm);
@@ -183,46 +183,7 @@ std::shared_ptr<game_bounds> db_make_bounds(const database& db, sumgame& sum,
 
         //th.Check();
 
-        const ThValue& left_stop = therm->LeftStop();
-        const ThValue& right_stop = therm->RightStop();
-
-        const bool left_bends = thermograph_bends_out_below_zero(*therm, true);
-        const bool right_bends = thermograph_bends_out_below_zero(*therm, false);
-
-        // Need to convert to MCGS scale (each scale ordinal is 1/8th)
-        fraction left_frac(left_stop.P() * 8, left_stop.Q());
-        left_frac.simplify();
-        int left_int = left_frac.get_integral_part();
-        left_frac.remove_integral_part();
-        const bool left_is_exact = (left_frac.top() == 0);
-        assert(left_is_exact);
-
-        fraction right_frac(right_stop.P() * 8, right_stop.Q());
-        right_frac.simplify();
-        int right_int = right_frac.get_integral_part();
-        right_frac.remove_integral_part();
-        const bool right_is_exact = (right_frac.top() == 0);
-        assert(right_is_exact);
-
-        //cout << "Bendy-ness: " << left_bends << " " << right_bends << endl;
-
-        if (left_bends)
-            left_int++;
-
-        if (right_bends)
-            right_int--;
-
-        const bool is_equal = (left_int == right_int) && !(left_bends || right_bends);
-
-        //cout << "Setting bounds: ";
-        //cout << "Lower: " << (is_equal ? "=" : "<") << right_int;
-        //cout << " ";
-        //cout << "Upper: " << left_int << (is_equal ? "=" : ">");
-        //cout << endl;
-
-        game_bounds_ptr bounds_therm(new game_bounds(BOUND_SCALE_DYADIC_RATIONAL));
-        bounds_therm->set_lower(right_int, is_equal ? REL_EQUAL : REL_LESS);
-        bounds_therm->set_upper(left_int, is_equal ? REL_EQUAL : REL_GREATER);
+        shared_ptr<game_bounds> bounds_therm(make_bounds_from_thermograph(*therm));
 
         //cout << *bounds << " " << *bounds_therm << endl;
 

@@ -81,19 +81,19 @@ void print_option_thermographs_for_player(sumgame& sum, bw player)
     sum.set_to_play(restore_player);
 }
 
-void do_thermograph_stuff()
-{
-    sumgame sum(BLACK);
-    amazons g(".#.|#XO");
-    sum.add(&g);
-
-    print_thermograph_for_sum(sum);
-
-    print_option_thermographs_for_player(sum, BLACK);
-    print_option_thermographs_for_player(sum, WHITE);
-
-    sum.pop(&g);
-}
+//void do_thermograph_stuff()
+//{
+//    sumgame sum(BLACK);
+//    amazons g(".#.|#XO");
+//    sum.add(&g);
+//
+//    print_thermograph_for_sum(sum);
+//
+//    print_option_thermographs_for_player(sum, BLACK);
+//    print_option_thermographs_for_player(sum, WHITE);
+//
+//    sum.pop(&g);
+//}
 } // namespace
 
 
@@ -109,9 +109,6 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
-
-    //do_thermograph_stuff();
-    //return 0;
 
     if (opts.db_dump_file_name.has_value())
     {

@@ -21,6 +21,8 @@
 #include <cstdint>
 #include <iostream>
 
+#include "throw_assert.h"
+
 /*
     TODO: assert or THROW_ASSERT for this file?
 

@@ -2,6 +2,50 @@
 
 #include <cassert>
 #include "ThGraph.h"
+#include "ThValue.h"
+#include "all_game_headers.h"
+#include "amazons.h"
+#include "bounds.h"
+#include "cgt_basics.h"
+#include "cgt_dyadic_rational.h"
+#include "make_thermograph_slow.h"
+#include "safe_arithmetic.h"
+
+using namespace std;
+
+/*
+    Get specified rational bound along BOUND_SCALE_DYADIC_RATIONAL, where the
+    scale index represents a multiple of 1/8.
+
+    For a game G and the returned left bound B, G <= B.
+*/
+bound_t read_rational_bound_from_thermograph(const ThGraph& graph, bool left)
+{
+    const ThValue& stop = left ? graph.LeftStop() : graph.RightStop();
+
+    int p = stop.P();
+    const int q = stop.Q();
+
+    // Divide the stop by 1/8 by multiplying p by (8 == 2^3)
+    const bool multiply_ok = safe_mul2_shift(p, 3);
+    THROW_ASSERT(multiply_ok);
+
+#warning TODO use safe numeric_cast from header
+    bound_t scale_idx = static_cast<bound_t>(p / q);
+
+    const bool is_precise = (p % q) == 0;
+    const bool is_fuzzy = thermograph_bends_out_below_zero(graph, left);
+
+    // Relax the bound if necessary
+    if (!is_precise || is_fuzzy)
+    {
+        const bound_t relax_direction = left ? 1 : -1;
+        const bool add_ok = safe_add_negatable(scale_idx, relax_direction);
+        THROW_ASSERT(add_ok);
+    }
+
+    return scale_idx;
+}
 
 bool thermograph_bends_out_below_zero(const ThGraph& graph, bool left)
 {
@@ -76,5 +120,23 @@ bool game_is_small_from_thermograph(const ThGraph& graph)
         return true;
 
     return false;
+}
+
+game_bounds* make_bounds_from_thermograph(const ThGraph& graph)
+{
+    game_bounds* gb = new game_bounds(BOUND_SCALE_DYADIC_RATIONAL);
+
+    const bound_t left_bound = read_rational_bound_from_thermograph(graph, true);
+    const bound_t right_bound = read_rational_bound_from_thermograph(graph, false);
+
+    const bool equality = left_bound == right_bound;
+
+    const relation rel_left = equality ? REL_EQUAL : REL_GREATER;
+    const relation rel_right = equality ? REL_EQUAL : REL_LESS;
+
+    gb->set_upper(left_bound, rel_left);
+    gb->set_lower(right_bound, rel_right);
+
+    return gb;
 }
 
