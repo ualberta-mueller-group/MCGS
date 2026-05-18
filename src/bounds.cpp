@@ -26,11 +26,8 @@
     It is assumed that for i <= j, if `G <> Si` and `G <> Sj`, then
     for all k, `i <= k <= j`, `G <> Sk`.
 */
-//#define CLIP_FUZZY_INTERVAL
+#define CLIP_FUZZY_INTERVAL
 
-#ifdef CLIP_FUZZY_INTERVAL
-#error See above comment in this file
-#endif
 
 using namespace std;
 
