@@ -15,6 +15,7 @@
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "hashing.h"
+#include "thermograph_cache.h"
 #include "thermograph_helpers.h"
 #include "type_table.h"
 #include "game.h"
@@ -28,13 +29,13 @@
 #include "ThGraph.h"
 #include "serializer_lib_therm.h"
 
-
 extern uint64_t n_db_games;
 extern uint64_t n_db_games_with_bounds;
 extern uint64_t n_db_bounds_infinitesimal;
 extern uint64_t n_db_bounds_rational;
 extern uint64_t n_db_bounds_equal;
 
+class database;
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
     db.register_type(#game_class_name, game_type<game_class_name>())
@@ -42,17 +43,17 @@ extern uint64_t n_db_bounds_equal;
 ////////////////////////////////////////////////// struct db_entry_partisan
 struct db_entry_partisan
 {
-    db_entry_partisan() : outcome(outcome_class::U) {}
+    db_entry_partisan() : outcome(outcome_class::U), thermograph_id(THGRAPH_ID_NONE) {}
     bool operator==(const db_entry_partisan& other) const;
     bool operator!=(const db_entry_partisan& other) const;
 
     outcome_class outcome;
 
-    // TODO remove
-    std::string game_string;
+    void print(std::ostream& os, const database& db, bool endl = false) const;
 
 #ifdef MCGS_USE_THERM
-    std::shared_ptr<ThGraph> thermograph;
+    //std::shared_ptr<ThGraph> thermograph;
+    thgraph_id_t thermograph_id;
 #endif
 
 #ifdef MCGS_USE_BOUNDS
@@ -71,40 +72,39 @@ inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
 
 
 //////////////////////////////////////// db_entry_partisan print function
-inline std::ostream& operator<<(std::ostream& os, const db_entry_partisan& entry)
-{
-    os << "Games: `" << entry.game_string << "`";
-    os << " " << outcome_class_to_string(entry.outcome);
-
-#ifdef MCGS_USE_THERM
-    os << " Thermograph: `";
-    if (entry.thermograph.get() == nullptr)
-        os << "nullptr";
-    else
-        print_thermograph(os, *entry.thermograph);
-    os << "`";
-#endif
-
-#ifdef MCGS_USE_BOUNDS
-    os << " Bounds: `";
-    if (entry.bounds_data.get() == nullptr)
-        os << "nullptr";
-    else
-        os << *entry.bounds_data;
-    os << "`";
-#endif
-
-#ifdef MCGS_USE_DOMINANCE
-    os << " Dominated moves: `";
-    if (entry.dominated_moves.get() == nullptr)
-        os << "nullptr";
-    else
-        os << *entry.dominated_moves;
-    os << "`";
-#endif
-
-    return os;
-}
+//inline std::ostream& operator<<(std::ostream& os, const db_entry_partisan& entry)
+//{
+//    os << outcome_class_to_string(entry.outcome);
+//
+//#ifdef MCGS_USE_THERM
+//    os << " Thermograph: `";
+//    if (entry.thermograph.get() == nullptr)
+//        os << "nullptr";
+//    else
+//        print_thermograph(os, *entry.thermograph);
+//    os << "`";
+//#endif
+//
+//#ifdef MCGS_USE_BOUNDS
+//    os << " Bounds: `";
+//    if (entry.bounds_data.get() == nullptr)
+//        os << "nullptr";
+//    else
+//        os << *entry.bounds_data;
+//    os << "`";
+//#endif
+//
+//#ifdef MCGS_USE_DOMINANCE
+//    os << " Dominated moves: `";
+//    if (entry.dominated_moves.get() == nullptr)
+//        os << "nullptr";
+//    else
+//        os << *entry.dominated_moves;
+//    os << "`";
+//#endif
+//
+//    return os;
+//}
 
 
 //////////////////////////////////////// serializer<db_entry_partisan>
@@ -113,13 +113,11 @@ struct serializer<db_entry_partisan>
 {
     inline static void save(obuffer& os, const db_entry_partisan& entry)
     {
-        // TODO remove
-        serializer_save(os, entry.game_string);
-
         serializer_save(os, entry.outcome);
 
 #ifdef MCGS_USE_THERM
-        serializer_save(os, entry.thermograph);
+        //serializer_save(os, entry.thermograph);
+        serializer_save(os, entry.thermograph_id);
 #endif
 
 #ifdef MCGS_USE_BOUNDS
@@ -135,13 +133,11 @@ struct serializer<db_entry_partisan>
     {
         db_entry_partisan entry;
 
-        // TODO remove
-        serializer_load(is, entry.game_string);
-
         serializer_load(is, entry.outcome);
 
 #ifdef MCGS_USE_THERM
-        serializer_load(is, entry.thermograph);
+        //serializer_load(is, entry.thermograph);
+        serializer_load(is, entry.thermograph_id);
 #endif
 
 #ifdef MCGS_USE_BOUNDS
@@ -233,6 +229,7 @@ public:
     */
     db_entry_partisan* get_partisan_ptr(const game& g);
     db_entry_partisan* get_partisan_ptr(const sumgame& sum);
+    db_entry_partisan* get_or_allocate_partisan_ptr(const sumgame& sum);
 
     std::optional<db_entry_impartial> get_impartial(const game& g) const;
 
@@ -257,22 +254,51 @@ public:
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
+
 public:
     void generate_entries_partisan(i_db_game_generator& gen,
                                    bool silent = false);
     void generate_entry_single_partisan(sumgame& sum, unsigned int depth,
-                                         bool silent);
+                                        bool silent);
 
-    void generate_entry_single_partisan_impl(sumgame& sum, unsigned int depth,
-                                              bool silent);
+    void generate_entry_single_partisan_impl(sumgame& sum,
+
+                                             unsigned int depth, bool silent);
+
 private:
+    //void _generate_children(sumgame& sum, unsigned int depth, bool silent);
 
-//////////////////////////////////////////////////
-//////////////////////////////////////////////////
-//////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
 
 public:
     void generate_entries_impartial(i_db_game_generator& gen, bool silent = false);
+
+    inline thermograph_cache& get_thgraph_cache() { return _thgraphs; }
+
+    inline const thermograph_cache& get_thgraph_cache() const
+    {
+        return _thgraphs;
+    }
+
+    // Takes ownership from the caller and returns an ID
+    inline thgraph_id_t insert_graph(ThGraph* graph)
+    {
+        return get_thgraph_cache().insert(graph);
+    }
+
+    inline std::shared_ptr<const ThGraph> get_graph_from_id(
+        thgraph_id_t thgraph_id) const
+    {
+        return get_thgraph_cache().get_graph_from_id(thgraph_id);
+    }
+
+    inline std::shared_ptr<ThGraph> get_nonconst_graph_from_id(
+        thgraph_id_t thgraph_id)
+    {
+        return get_thgraph_cache().get_nonconst_graph_from_id(thgraph_id);
+    }
 
 private:
     friend std::ostream& operator<<(std::ostream& os, const database& db);
@@ -303,6 +329,7 @@ private:
     std::string _metadata_string;
     tree_partisan_t _tree_partisan;
     tree_impartial_t _tree_impartial;
+    thermograph_cache _thgraphs;
 
     unsigned int _max_generation_depth;
 
@@ -343,4 +370,5 @@ inline global_hash& database::_get_global_hash() const
 
     return *_global_hash;
 }
+
 

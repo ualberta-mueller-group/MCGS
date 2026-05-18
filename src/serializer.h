@@ -138,6 +138,24 @@ inline void serializer_save(obuffer& os, const T& val)
     serializer<T>::save(os, val);
 }
 
+//////////////////////////////////////// pointers
+template <class T>
+struct serializer<T*>
+{
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_Nonconst = std::remove_cv_t<T>;
+
+    inline static void save(obuffer& os, const T* ptr)
+    {
+        serializer<T_Nonconst>::save(os, *ptr);
+    }
+
+    inline static T* load(ibuffer& is)
+    {
+        return serializer<T_Nonconst>::load_ptr(is);
+    }
+};
+
 //////////////////////////////////////// integral types
 template <class T>
 struct serializer<T,

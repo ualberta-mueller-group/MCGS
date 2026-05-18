@@ -16,6 +16,7 @@ change_record::~change_record()
     // owner should have called one of the undo functions
     assert(deactivated_games.empty());
     assert(added_games.empty());
+    assert(normalized_games.empty());
 }
 
 change_record::change_record(change_record&& other) noexcept

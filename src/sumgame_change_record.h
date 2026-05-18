@@ -33,6 +33,7 @@ public:
 
     std::vector<game*> deactivated_games;
     std::vector<game*> added_games;
+    std::vector<game*> normalized_games;
 
 private:
     void _clear();

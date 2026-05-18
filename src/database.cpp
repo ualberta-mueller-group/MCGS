@@ -36,6 +36,7 @@
 #include "iobuffer.h"
 #include "serializer.h"
 #include "db_game_generator.h"
+#include "thermograph_cache.h"
 #include "throw_assert.h"
 #include "type_table.h"
 #include "clobber_1xn.h"
@@ -90,11 +91,8 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
         return false;
 
 #ifdef MCGS_USE_THERM
-    if ((bool) thermograph != (bool) other.thermograph)
+    if (thermograph_id != other.thermograph_id)
         return false;
-
-    if (thermograph && !(*thermograph == *other.thermograph))
-            return false;
 #endif
 
 #ifdef MCGS_USE_BOUNDS
@@ -270,6 +268,17 @@ db_entry_partisan* database::get_partisan_ptr(const sumgame& sum)
     return &it2->second;
 }
 
+db_entry_partisan* database::get_or_allocate_partisan_ptr(const sumgame& sum)
+{
+    const game_type_t sum_type = _get_sum_game_type(sum);
+
+    const game_type_t gt = _mapper.translate_type(sum_type);
+    THROW_ASSERT(gt > 0);
+
+    const hash_t hash = _get_db_hash(sum);
+    return &(_tree_partisan[gt][hash]);
+}
+
 std::optional<db_entry_impartial> database::get_impartial(const game& g) const
 {
     const game_type_t gt = _mapper.translate_type(g.game_type());
@@ -298,6 +307,7 @@ void database::save(const std::string& filename) const
     serializer<tree_partisan_t>::save(os, _tree_partisan);
     serializer<tree_impartial_t>::save(os, _tree_impartial);
     serializer<type_mapper>::save(os, _mapper);
+    serializer<thermograph_cache>::save(os, _thgraphs);
 
     os.close();
 }
@@ -313,6 +323,7 @@ void database::load(const std::string& filename)
     _tree_partisan = serializer<tree_partisan_t>::load(is);
     _tree_impartial = serializer<tree_impartial_t>::load(is);
     _mapper = serializer<type_mapper>::load(is);
+    _thgraphs = serializer<thermograph_cache>::load(is);
 
     is.close();
 }
@@ -334,6 +345,9 @@ bool database::is_equal(const database& other) const
 
     if (_mapper != other._mapper)
         return false;
+    
+    if (_thgraphs != other._thgraphs)
+        return false;
 
     return true;
 }
@@ -348,7 +362,8 @@ void database::dump_to_stream(std::ostream& os) const
         for (const std::pair<const hash_t, db_entry_partisan>& entry_pair :
              terminal_layer.second)
         {
-            os << entry_pair << '\n';
+            entry_pair.second.print(os, *this);
+            os << '\n';
         }
     }
 
@@ -499,13 +514,17 @@ void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
     }
 }
 
-void database::generate_entry_single_partisan(sumgame& sum, unsigned int depth,
-                                               bool silent)
+void database::generate_entry_single_partisan(sumgame& sum,
+                                              unsigned int depth, bool silent)
 {
     _max_generation_depth = max(_max_generation_depth, depth);
 
-    if (get_partisan_ptr(sum) != nullptr)
+    db_entry_partisan* entry = get_or_allocate_partisan_ptr(sum);
+    if (entry->thermograph_id != THGRAPH_ID_NONE)
         return;
+
+    //_generate_children(sum, depth, silent);
+    //assert(!entry->thermograph);
 
     assert_restore_sumgame ars(sum);
     const bw restore_player = sum.to_play();
@@ -520,50 +539,48 @@ void database::generate_entry_single_partisan(sumgame& sum, unsigned int depth,
     }
     _game_count++;
 
-    db_entry_partisan entry;
-
-    {
-        std::stringstream str;
-        sum.print_sorted(str);
-        entry.game_string = str.str();
-    }
-
 #ifdef MCGS_USE_THERM
-    entry.thermograph = db_make_thermograph(*this, sum, depth, silent);
+    {
+        ThGraph* graph = db_make_thermograph(*this, sum, depth, silent);
+
+        assert(entry->thermograph_id == THGRAPH_ID_NONE);
+        entry->thermograph_id = insert_graph(graph);
+        assert(entry->thermograph_id != THGRAPH_ID_NONE);
+    }
 #endif
 
     //////////////////// Find outcome
-    entry.outcome = db_make_outcome_class(sum, entry);
-
-#ifdef MCGS_USE_DOMINANCE
-        entry.dominated_moves = db_make_dominated_moves(sum);
-#endif
+    entry->outcome = db_make_outcome_class(*this, *entry);
 
 #ifdef MCGS_USE_BOUNDS
-        entry.bounds_data = db_make_bounds(sum, entry);
+    entry->bounds_data = db_make_bounds(*this, sum, *entry);
+#endif
 
-        // Debug info
-        n_db_games++;
-        {
-            assert(entry.bounds_data);
-            n_db_games_with_bounds++;
-
-            const game_bounds& bounds = *entry.bounds_data;
-            const bound_scale scale = bounds.get_scale();
-
-            if (scale == BOUND_SCALE_DYADIC_RATIONAL)
-                n_db_bounds_rational++;
-            else if (scale == BOUND_SCALE_UP)
-                n_db_bounds_infinitesimal++;
-
-            if (bounds.both_valid() && bounds.get_lower_relation() == REL_EQUAL)
-                n_db_bounds_equal++;
-        }
+#ifdef MCGS_USE_DOMINANCE
+    entry->dominated_moves = db_make_dominated_moves(sum);
 #endif
 
 
 
-    set_partisan(sum, entry);
+    // Debug info
+    // n_db_games++;
+    //{
+    //    assert(entry->bounds_data);
+    //    n_db_games_with_bounds++;
+
+    //    const game_bounds& bounds = *entry.bounds_data;
+    //    const bound_scale scale = bounds.get_scale();
+
+    //    if (scale == BOUND_SCALE_DYADIC_RATIONAL)
+    //        n_db_bounds_rational++;
+    //    else if (scale == BOUND_SCALE_UP)
+    //        n_db_bounds_infinitesimal++;
+
+    //    if (bounds.both_valid() && bounds.get_lower_relation() == REL_EQUAL)
+    //        n_db_bounds_equal++;
+    //}
+
+    // set_partisan(sum, entry);
 
     sum.set_to_play(restore_player);
 
@@ -572,11 +589,64 @@ void database::generate_entry_single_partisan(sumgame& sum, unsigned int depth,
 }
 
 void database::generate_entry_single_partisan_impl(sumgame& sum,
-                                                    unsigned int depth,
-                                                    bool silent)
+                                                   unsigned int depth,
+                                                   bool silent)
 {
     assert(false);
 }
+
+//void database::_generate_children(sumgame& sum, unsigned int depth, bool silent)
+//{
+//    assert_restore_sumgame ars(sum);
+//    const bw restore_player = sum.to_play();
+//    const int n_active_before = sum.num_active_games();
+//
+//    optional<sumgame> sum2_opt;
+//
+//    constexpr std::array<bw, 2> COLORS = {BLACK, WHITE};
+//
+//    for (const bw player : COLORS)
+//    {
+//        sum.set_to_play(player);
+//        unique_ptr<sumgame_move_generator> gen(
+//            sum.create_sum_move_generator(player));
+//
+//        while (*gen)
+//        {
+//            const sumgame_move sm = gen->gen_sum_move();
+//            ++(*gen);
+//
+//            assert(sum.to_play() == player);
+//            sum.play_sum(sm, player);
+//
+//            if (n_active_before == 1 && sum.num_active_games() >= 2)
+//            {
+//                const int n_games = sum.num_total_games();
+//                if (!sum2_opt.has_value())
+//                    sum2_opt.emplace(BLACK);
+//
+//                sumgame& sum2 = sum2_opt.value();
+//
+//                for (int i = 0; i < n_games; i++)
+//                {
+//                    game* gi = sum.subgame(i);
+//                    if (!gi->is_active())
+//                        continue;
+//
+//                    assert(sum2.num_total_games() == 0);
+//                    sum2.add(gi);
+//                    generate_entry_single_partisan(sum2, depth + 1, silent);
+//                    sum2.pop(gi);
+//                }
+//            }
+//
+//            generate_entry_single_partisan(sum, depth + 1, silent);
+//            sum.undo_move();
+//        }
+//    }
+//
+//    sum.set_to_play(restore_player);
+//}
 
 void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
 {
@@ -767,3 +837,41 @@ std::ostream& operator<<(std::ostream& os, const database& db)
 
     return os;
 }
+
+void db_entry_partisan::print(std::ostream& os, const database& db, bool endl) const
+{
+    os << outcome_class_to_string(outcome);
+
+#ifdef MCGS_USE_THERM
+    const std::shared_ptr<const ThGraph> graph = db.get_graph_from_id(thermograph_id);
+
+    os << " Thermograph: `";
+    if (graph.get() == nullptr)
+        os << "nullptr";
+    else
+        print_thermograph(os, *graph);
+    os << "`";
+#endif
+
+#ifdef MCGS_USE_BOUNDS
+    os << " Bounds: `";
+    if (bounds_data.get() == nullptr)
+        os << "nullptr";
+    else
+        os << *bounds_data;
+    os << "`";
+#endif
+
+#ifdef MCGS_USE_DOMINANCE
+    os << " Dominated moves: `";
+    if (dominated_moves.get() == nullptr)
+        os << "nullptr";
+    else
+        os << *dominated_moves;
+    os << "`";
+#endif
+
+    if (endl)
+        os << std::endl;
+}
+

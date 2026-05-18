@@ -8,6 +8,7 @@
 #include "cgt_basics.h"
 #include "database.h"
 #include "sumgame.h"
+#include "thermograph_cache.h"
 
 // Should be 0 or 1
 unsigned int max_thermograph_generation_depth = 0;
@@ -29,11 +30,12 @@ shared_ptr<ThGraph> get_thermograph_from_db(database& db, sumgame& sum,
         db.generate_entry_single_partisan(sum, depth + 1, silent);
         entry = db.get_partisan_ptr(sum);
     }
-
+    
     THROW_ASSERT(entry != nullptr);
-    THROW_ASSERT(entry->thermograph);
+    shared_ptr<ThGraph> graph = db.get_nonconst_graph_from_id(entry->thermograph_id);
+    THROW_ASSERT(graph.get() != nullptr);
 
-    return entry->thermograph;
+    return graph;
 }
 
 vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum,
@@ -50,8 +52,9 @@ vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum,
     unique_ptr<sumgame_move_generator> gen(
         sum.create_sum_move_generator(player));
 
-    const int n_active_before = sum.num_active_games();
     optional<sumgame> sum2_opt;
+
+    const int n_active_before = sum.num_active_games();
 
     while (*gen)
     {
@@ -95,7 +98,7 @@ vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum,
     return option_graphs;
 }
 
-shared_ptr<ThGraph> db_make_thermograph_impl(database& db, sumgame& sum,
+ThGraph* db_make_thermograph_impl(database& db, sumgame& sum,
                                              unsigned int depth, bool silent)
 {
     max_thermograph_generation_depth =
@@ -125,7 +128,7 @@ shared_ptr<ThGraph> db_make_thermograph_impl(database& db, sumgame& sum,
         option_graphs_raw_w.push_back(option);
     }
 
-    shared_ptr<ThGraph> graph(ThGraph::MakeGraphFromOptions(option_graphs_raw));
+    ThGraph* graph = ThGraph::MakeGraphFromOptions(option_graphs_raw);
     graph->Check();
 
     return graph;
@@ -135,8 +138,8 @@ shared_ptr<ThGraph> db_make_thermograph_impl(database& db, sumgame& sum,
 } // namespace
 
 //////////////////////////////////////////////////
-std::shared_ptr<ThGraph> db_make_thermograph(database& db, sumgame& sum,
-                                             unsigned int depth, bool silent)
+ThGraph* db_make_thermograph(database& db, sumgame& sum, unsigned int depth,
+                             bool silent)
 {
 #ifdef MCGS_USE_THERM
     return db_make_thermograph_impl(db, sum, depth, silent);

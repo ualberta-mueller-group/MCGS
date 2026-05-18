@@ -125,26 +125,26 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
             create_game_gen_fn_t& fn = fn_pair.first;
             const bool is_impartial = fn_pair.second;
 
-            i_db_game_generator* gen = nullptr;
+            unique_ptr<i_db_game_generator> gen1(nullptr);
 
             {
                 config_map config(game_config);
-                gen = fn(config);
+                gen1.reset(fn(config));
                 config.check_unused_keys();
             }
 
-            THROW_ASSERT(gen != nullptr);
+            THROW_ASSERT((bool) gen1);
 
             if (!dry_run)
             {
                 if (is_impartial)
-                    db.generate_entries_impartial(*gen);
+                    db.generate_entries_impartial(*gen1);
                 else
-                    //rank_games(*gen);
-                    db.generate_entries_partisan(*gen);
+                {
+                    db.generate_entries_partisan(*gen1);
+                }
             }
 
-            delete gen;
         }
     }
 

@@ -6,40 +6,23 @@
 #include "sumgame.h"
 #include "thermograph_helpers.h"
 
-namespace {
-
-inline outcome_class make_outcome_from_search(sumgame& sum)
+outcome_class db_make_outcome_class(const database& db,
+                                    const db_entry_partisan& entry)
 {
-    const bw restore_player = sum.to_play();
+    const std::shared_ptr<const ThGraph> therm =
+        db.get_graph_from_id(entry.thermograph_id);
+    assert(therm);
 
-    sum.set_to_play(BLACK);
-    const bool black_wins = sum.solve();
-
-    sum.set_to_play(WHITE);
-    const bool white_wins = sum.solve();
-
-    sum.set_to_play(restore_player);
-
-    return bools_to_outcome_class(black_wins, white_wins);
-}
-
-#ifdef MCGS_USE_THERM
-inline outcome_class make_outcome_from_thermograph(
-    const db_entry_partisan& entry)
-{
-    assert(entry.thermograph);
-    const ThGraph& th = *entry.thermograph;
-
-    const ThValue& left_stop = th.LeftStop();
-    const ThValue& right_stop = th.RightStop();
+    const ThValue& left_stop = therm->LeftStop();
+    const ThValue& right_stop = therm->RightStop();
 
     if (right_stop.IsPositive())
         return outcome_class::L;
     if (left_stop.IsNegative())
         return outcome_class::R;
 
-    const bool left_bends = thermograph_bends_out_below_zero(th, true);
-    const bool right_bends = thermograph_bends_out_below_zero(th, false);
+    const bool left_bends = thermograph_bends_out_below_zero(*therm, true);
+    const bool right_bends = thermograph_bends_out_below_zero(*therm, false);
 
     const bool zero_touches_left = (left_stop.IsZero() && !left_bends);
     const bool zero_touches_right = (right_stop.IsZero() && !right_bends);
@@ -54,19 +37,4 @@ inline outcome_class make_outcome_from_thermograph(
         return outcome_class::N;
 
     assert(false);
-}
-#endif
-
-} // namespace
-
-//////////////////////////////////////////////////
-outcome_class db_make_outcome_class(sumgame& sum,
-                                    const db_entry_partisan& entry)
-{
-    //const outcome_class oc_search = make_outcome_from_search(sum);
-    const outcome_class oc_therm = make_outcome_from_thermograph(entry);
-
-    //assert(oc_search == oc_therm);
-
-    return oc_therm;
 }

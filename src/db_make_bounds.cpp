@@ -122,32 +122,11 @@ bool sum_is_small(sumgame& sum)
 }
 
 
-bool sum_is_small_from_thermograph(sumgame& sum, const db_entry_partisan& entry)
-{
-    assert(entry.thermograph);
-    const ThGraph& th = *entry.thermograph;
-
-    const ThValue& left_stop = th.LeftStop();
-    const ThValue& right_stop = th.RightStop();
-
-    if (!left_stop.IsZero() || !right_stop.IsZero())
-        return false;
-
-    // Left bends?
-    if (thermograph_bends_out_below_zero(th, true))
-        return true;
-
-    // Right bends?
-    if (thermograph_bends_out_below_zero(th, false))
-        return true;
-
-    return false;
-}
 
 } // namespace
 
 //////////////////////////////////////////////////
-std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum,
+std::shared_ptr<game_bounds> db_make_bounds(const database& db, sumgame& sum,
                                             const db_entry_partisan& entry)
 {
     assert_restore_sumgame ars(sum);
@@ -155,8 +134,10 @@ std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum,
     vector<bounds_options> options_vec;
     vector<game_bounds_ptr> bounds_vec;
 
-    //const bool is_small = sum_is_small(sum);
-    const bool is_small = sum_is_small_from_thermograph(sum, entry);
+    const std::shared_ptr<const ThGraph> therm = db.get_graph_from_id(entry.thermograph_id);
+    assert(therm);
+
+    const bool is_small = game_is_small_from_thermograph(*therm);
 
     if (is_small)
     {
@@ -196,19 +177,17 @@ std::shared_ptr<game_bounds> db_make_bounds(sumgame& sum,
         //cout << "Bounds (EXP): " << *bounds << endl;
 
         // Read bounds from thermograph
-        assert(entry.thermograph);
 
-        const ThGraph& th = *entry.thermograph;
         //print_thermograph(cout, th);
         //cout << endl;
 
         //th.Check();
 
-        const ThValue& left_stop = th.LeftStop();
-        const ThValue& right_stop = th.RightStop();
+        const ThValue& left_stop = therm->LeftStop();
+        const ThValue& right_stop = therm->RightStop();
 
-        const bool left_bends = thermograph_bends_out_below_zero(th, true);
-        const bool right_bends = thermograph_bends_out_below_zero(th, false);
+        const bool left_bends = thermograph_bends_out_below_zero(*therm, true);
+        const bool right_bends = thermograph_bends_out_below_zero(*therm, false);
 
         // Need to convert to MCGS scale (each scale ordinal is 1/8th)
         fraction left_frac(left_stop.P() * 8, left_stop.Q());

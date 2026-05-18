@@ -1339,8 +1339,13 @@ optional<solve_result> sumgame::simplify_db(
 #ifdef MCGS_USE_THERM
                 assert(temperatures.has_value());
                 optional<ThValue>& temp = (*temperatures)[subgame_idx];
-                temp = entry->thermograph->Temperature();
-                at_least_one_temp = true;
+                //temp = entry->thermograph->Temperature();
+                const std::shared_ptr<const ThGraph> graph = db.get_graph_from_id(entry->thermograph_id);
+                if (graph)
+                {
+                    temp = graph->Temperature();
+                    at_least_one_temp = true;
+                }
 #endif
 
 #ifdef MCGS_USE_BOUNDS_WIN
@@ -1757,10 +1762,20 @@ void sumgame::split_and_normalize()
             {
                 sg->normalize();
                 cr.added_games.push_back(sg);
+                assert(sg->has_moves());
             }
         }
         else
+        {
             g->normalize();
+            cr.normalized_games.push_back(g);
+
+            if (!g->has_moves())
+            {
+                g->set_active(false);
+                cr.deactivated_games.push_back(g);
+            }
+        }
     }
 
     add(cr.added_games);
@@ -1776,20 +1791,19 @@ void sumgame::undo_split_and_normalize()
         delete sg;
     cr.added_games.clear();
 
-    const int n_games = num_total_games();
-    for (int i = 0; i < n_games; i++)
-    {
-        game* g = subgame(i);
-        if (g->is_active())
-            g->undo_normalize();
-    }
-
     for (game* g : cr.deactivated_games)
     {
         assert(!g->is_active());
         g->set_active(true);
     }
     cr.deactivated_games.clear();
+
+    for (game* g : cr.normalized_games)
+    {
+        assert(g->is_active());
+        g->undo_normalize();
+    }
+    cr.normalized_games.clear();
 
     _change_record_stack.pop_back();
 }
