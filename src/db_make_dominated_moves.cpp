@@ -473,8 +473,12 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
             if (rel == REL_LESS)
                 mark_dominated(idx1);
             else if (rel == REL_EQUAL)
-                // IMPORTANT: prune gsm2 so that both moves aren't pruned
-                mark_dominated(idx2);
+            {
+                if (gsm1.db_entry->complexity >= gsm2.db_entry->complexity)
+                    mark_dominated(idx1);
+                else
+                    mark_dominated(idx2);
+            }
             else if (rel == REL_GREATER)
                 mark_dominated(idx2);
             else
