@@ -32,7 +32,7 @@ shared_ptr<ThGraph> get_thermograph_from_db(database& db, sumgame& sum,
     }
     
     THROW_ASSERT(entry != nullptr);
-    shared_ptr<ThGraph> graph = db.get_nonconst_graph_from_id(entry->thermograph_id);
+    shared_ptr<ThGraph> graph = entry->thermograph;
     THROW_ASSERT(graph.get() != nullptr);
 
     return graph;

@@ -45,7 +45,6 @@ struct db_entry_partisan
 {
     db_entry_partisan()
         : outcome(outcome_class::U),
-          thermograph_id(THGRAPH_ID_NONE),
           complexity(0)
     {
     }
@@ -58,8 +57,7 @@ struct db_entry_partisan
     void print(std::ostream& os, const database& db, bool endl = false) const;
 
 #ifdef MCGS_USE_THERM
-    //std::shared_ptr<ThGraph> thermograph;
-    thgraph_id_t thermograph_id;
+    std::shared_ptr<ThGraph> thermograph;
 #endif
 
 #ifdef MCGS_USE_BOUNDS
@@ -123,8 +121,7 @@ struct serializer<db_entry_partisan>
         serializer_save(os, entry.outcome, ctx);
 
 #ifdef MCGS_USE_THERM
-        //serializer_save(os, entry.thermograph);
-        serializer_save(os, entry.thermograph_id, ctx);
+        serializer_save(os, entry.thermograph, ctx);
 #endif
 
 #ifdef MCGS_USE_BOUNDS
@@ -144,8 +141,7 @@ struct serializer<db_entry_partisan>
         serializer_load(is, entry.outcome, ctx);
 
 #ifdef MCGS_USE_THERM
-        //serializer_load(is, entry.thermograph);
-        serializer_load(is, entry.thermograph_id, ctx);
+        serializer_load(is, entry.thermograph, ctx);
 #endif
 
 #ifdef MCGS_USE_BOUNDS
@@ -284,31 +280,6 @@ private:
 public:
     void generate_entries_impartial(i_db_game_generator& gen, bool silent = false);
 
-    inline thermograph_cache& get_thgraph_cache() { return _thgraphs; }
-
-    inline const thermograph_cache& get_thgraph_cache() const
-    {
-        return _thgraphs;
-    }
-
-    // Takes ownership from the caller and returns an ID
-    inline thgraph_id_t insert_graph(ThGraph* graph)
-    {
-        return get_thgraph_cache().insert(graph);
-    }
-
-    inline std::shared_ptr<const ThGraph> get_graph_from_id(
-        thgraph_id_t thgraph_id) const
-    {
-        return get_thgraph_cache().get_graph_from_id(thgraph_id);
-    }
-
-    inline std::shared_ptr<ThGraph> get_nonconst_graph_from_id(
-        thgraph_id_t thgraph_id)
-    {
-        return get_thgraph_cache().get_nonconst_graph_from_id(thgraph_id);
-    }
-
 private:
     friend std::ostream& operator<<(std::ostream& os, const database& db);
 
@@ -336,9 +307,9 @@ private:
     static void _db_print_sum(std::ostream& os, const sumgame& sum);
 
     std::string _metadata_string;
+    thermograph_cache _graph_cache;
     tree_partisan_t _tree_partisan;
     tree_impartial_t _tree_impartial;
-    thermograph_cache _thgraphs;
 
     unsigned int _max_generation_depth;
 

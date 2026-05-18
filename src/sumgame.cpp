@@ -1340,7 +1340,7 @@ optional<solve_result> sumgame::simplify_db(
                 assert(temperatures.has_value());
                 optional<ThValue>& temp = (*temperatures)[subgame_idx];
                 //temp = entry->thermograph->Temperature();
-                const std::shared_ptr<const ThGraph> graph = db.get_graph_from_id(entry->thermograph_id);
+                const std::shared_ptr<const ThGraph> graph = entry->thermograph;
                 if (graph)
                 {
                     temp = graph->Temperature();

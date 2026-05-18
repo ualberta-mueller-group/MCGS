@@ -15,60 +15,60 @@
 
 using namespace std;
 
-thermograph_cache::thermograph_cache()
-{
-}
 
-thermograph_cache::~thermograph_cache()
-{
-}
-
-thgraph_id_t thermograph_cache::insert(ThGraph* graph)
+std::shared_ptr<ThGraph> thermograph_cache::insert_and_release(ThGraph* graph)
 {
     assert(graph != nullptr);
 
     const hash_t hash = get_thermograph_hash(*graph);
-    thgraph_id_t& map_id = _id_to_graph_map[hash];
+    thgraph_id_t& graph_id = _hash_to_graph_id[hash];
 
-    // map_id == 0 == THGRAPH_ID_NONE if the element didn't already exist
-    if (map_id != THGRAPH_ID_NONE)
+    if (graph_id != THGRAPH_ID_NONE)
     {
+        // Graph already inserted
         delete graph;
-        return map_id;
+        return get_graph_from_id(graph_id);
     }
 
-    const thgraph_id_t next_id = _graphs.size() + 1;
-    assert(next_id != THGRAPH_ID_NONE);
-    map_id = next_id;
+    graph_id = static_cast<thgraph_id_t>(_graphs.size() + 1);
+    assert(graph_id != THGRAPH_ID_NONE);
 
     _graphs.emplace_back(graph);
 
-    assert(graph == get_graph_from_id(map_id).get());
-    return map_id;
+    std::shared_ptr<ThGraph> cached_graph = get_graph_from_id(graph_id);
+    assert(graph == cached_graph.get());
+
+    return cached_graph;
 }
 
-shared_ptr<const ThGraph> thermograph_cache::get_graph_from_id(
-    thgraph_id_t thgraph_id) const
+thgraph_id_t thermograph_cache::get_graph_id(const ThGraph* graph_nullable) const
 {
-    assert(thgraph_id <= _graphs.size());
+    if (graph_nullable == nullptr)
+        return THGRAPH_ID_NONE;
 
-    if (thgraph_id == THGRAPH_ID_NONE)
+    const hash_t hash = get_thermograph_hash(*graph_nullable);
+    const auto result = _hash_to_graph_id.find(hash);
+
+    THROW_ASSERT(result != _hash_to_graph_id.end());
+
+    return result->second;
+}
+
+std::shared_ptr<ThGraph> thermograph_cache::get_graph_from_id(thgraph_id_t graph_id)
+{
+    if (graph_id == THGRAPH_ID_NONE)
         return nullptr;
 
-    return _graphs[thgraph_id - 1];
+    assert(graph_id > 0);
+
+#warning TODO use numeric cast from header
+    const size_t idx = static_cast<size_t>(graph_id - 1);
+    THROW_ASSERT(0 <= idx && idx < _graphs.size());
+
+    return _graphs[idx];
 }
 
-shared_ptr<ThGraph> thermograph_cache::get_nonconst_graph_from_id(
-    thgraph_id_t thgraph_id)
-{
-    assert(thgraph_id <= _graphs.size());
-
-    if (thgraph_id == THGRAPH_ID_NONE)
-        return nullptr;
-
-    return _graphs[thgraph_id - 1];
-}
-
+#warning TODO thermograph_cache equality
 bool thermograph_cache::operator==(const thermograph_cache& rhs) const
 {
     if (_graphs.size() != rhs._graphs.size())
@@ -79,6 +79,6 @@ bool thermograph_cache::operator==(const thermograph_cache& rhs) const
         if (!(*_graphs[i] == *rhs._graphs[i]))
             return false;
 
-    return _id_to_graph_map == rhs._id_to_graph_map;
+    return _hash_to_graph_id == rhs._hash_to_graph_id;
 }
 

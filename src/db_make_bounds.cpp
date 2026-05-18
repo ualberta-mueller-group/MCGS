@@ -134,7 +134,7 @@ std::shared_ptr<game_bounds> db_make_bounds(const database& db, sumgame& sum,
     vector<bounds_options> options_vec;
     vector<game_bounds_ptr> bounds_vec;
 
-    const std::shared_ptr<const ThGraph> therm = db.get_graph_from_id(entry.thermograph_id);
+    const std::shared_ptr<const ThGraph> therm = entry.thermograph;
     assert(therm);
 
     const bool is_small = game_is_small_from_thermograph(*therm);

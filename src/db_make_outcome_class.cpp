@@ -9,8 +9,7 @@
 outcome_class db_make_outcome_class(const database& db,
                                     const db_entry_partisan& entry)
 {
-    const std::shared_ptr<const ThGraph> therm =
-        db.get_graph_from_id(entry.thermograph_id);
+    const std::shared_ptr<ThGraph>& therm = entry.thermograph;
     assert(therm);
 
     const ThValue& left_stop = therm->LeftStop();

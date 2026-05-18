@@ -156,6 +156,11 @@ struct serializer
     */
 };
 
+template <class T, class Enable = void>
+struct serializer_impl
+{
+};
+
 ////////////////////////////////////////////////// save/load helpers
 template <class T>
 inline void serializer_load(ibuffer& is, T& val, serializer_ctx* ctx = nullptr)

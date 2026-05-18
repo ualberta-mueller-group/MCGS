@@ -91,7 +91,10 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
         return false;
 
 #ifdef MCGS_USE_THERM
-    if (thermograph_id != other.thermograph_id)
+    if ((bool) thermograph != (bool) other.thermograph)
+        return false;
+
+    if (thermograph && !(*thermograph == *other.thermograph))
         return false;
 #endif
 
@@ -309,10 +312,10 @@ void database::save(const std::string& filename) const
     serializer_ctx* ctx = nullptr;
 
     serializer<string>::save(os, _metadata_string, ctx);
+    serializer<thermograph_cache>::save(os, _graph_cache, ctx);
     serializer<tree_partisan_t>::save(os, _tree_partisan, ctx);
     serializer<tree_impartial_t>::save(os, _tree_impartial, ctx);
     serializer<type_mapper>::save(os, _mapper, ctx);
-    serializer<thermograph_cache>::save(os, _thgraphs, ctx);
 
     os.close();
 }
@@ -327,10 +330,10 @@ void database::load(const std::string& filename)
     serializer_ctx* ctx = nullptr;
 
     _metadata_string = serializer<string>::load(is, ctx);
+    _graph_cache = serializer<thermograph_cache>::load(is, ctx);
     _tree_partisan = serializer<tree_partisan_t>::load(is, ctx);
     _tree_impartial = serializer<tree_impartial_t>::load(is, ctx);
     _mapper = serializer<type_mapper>::load(is, ctx);
-    _thgraphs = serializer<thermograph_cache>::load(is, ctx);
 
     is.close();
 }
@@ -353,7 +356,7 @@ bool database::is_equal(const database& other) const
     if (_mapper != other._mapper)
         return false;
     
-    if (_thgraphs != other._thgraphs)
+    if (_graph_cache != other._graph_cache)
         return false;
 
     return true;
@@ -527,7 +530,7 @@ void database::generate_entry_single_partisan(sumgame& sum,
     _max_generation_depth = max(_max_generation_depth, depth);
 
     db_entry_partisan* entry = get_or_allocate_partisan_ptr(sum);
-    if (entry->thermograph_id != THGRAPH_ID_NONE)
+    if (entry->thermograph)
         return;
 
     //_generate_children(sum, depth, silent);
@@ -550,9 +553,9 @@ void database::generate_entry_single_partisan(sumgame& sum,
     {
         ThGraph* graph = db_make_thermograph(*this, sum, depth, silent);
 
-        assert(entry->thermograph_id == THGRAPH_ID_NONE);
-        entry->thermograph_id = insert_graph(graph);
-        assert(entry->thermograph_id != THGRAPH_ID_NONE);
+        assert(!entry->thermograph);
+        entry->thermograph = _graph_cache.insert_and_release(graph);
+        assert(entry->thermograph);
     }
 #endif
 
@@ -850,13 +853,12 @@ void db_entry_partisan::print(std::ostream& os, const database& db, bool endl) c
     os << outcome_class_to_string(outcome);
 
 #ifdef MCGS_USE_THERM
-    const std::shared_ptr<const ThGraph> graph = db.get_graph_from_id(thermograph_id);
 
     os << " Thermograph: `";
-    if (graph.get() == nullptr)
+    if (thermograph.get() == nullptr)
         os << "nullptr";
     else
-        print_thermograph(os, *graph);
+        print_thermograph(os, *thermograph);
     os << "`";
 #endif
 

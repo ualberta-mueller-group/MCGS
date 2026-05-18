@@ -423,7 +423,7 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
         if (oc != outcome_class::N)
             best_ordinal = max(best_ordinal, get_outcome_ordinal(oc, player));
 
-        const std::shared_ptr<const ThGraph> thermograph = db.get_graph_from_id(gsm.db_entry->thermograph_id);
+        const std::shared_ptr<const ThGraph> thermograph = gsm.db_entry->thermograph;
         THROW_ASSERT(thermograph.get() != nullptr);
         gsm.thermograph = thermograph.get();
 
