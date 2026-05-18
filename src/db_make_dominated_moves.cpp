@@ -446,20 +446,22 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
 
         for (size_t idx2 = idx1 + 1; idx2 < N_MOVES; idx2++)
         {
+            if (is_dominated(idx1))
+                break;
             if (is_dominated(idx2))
                 continue;
-            //if (is_dominated(idx1) && is_dominated(idx2))
-            //    continue;
 
             generalized_sum_move& gsm2 = sum_moves[idx2];
-            play_gsm_if_not_played(sum1, gsm1, player, sum1_played);
-            play_gsm_if_not_played(sum2, gsm2, player, sum2_played);
 
             relation rel = REL_UNKNOWN;
             rel = compare_thermographs(gsm1, gsm2, player);
 
             if (rel == REL_UNKNOWN)
+            {
+                play_gsm_if_not_played(sum1, gsm1, player, sum1_played);
+                play_gsm_if_not_played(sum2, gsm2, player, sum2_played);
                 rel = compare_sums(sum1, sum2, player);
+            }
 
             /*
                 `rel` is relative to the current player, and compares gsm1
