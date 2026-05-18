@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <vector>
+#include "cgt_basics.h"
 #include "game.h"
 #include <ostream>
 #include <cstdint>
@@ -169,14 +170,15 @@ std::ostream& operator<<(std::ostream& os, const game_bounds& gb);
 
 struct bounds_options
 {
-    inline bounds_options(bound_scale scale, bound_t min, bound_t max)
-        : scale(scale), min(min), max(max)
+    inline bounds_options(bound_scale scale, bound_t min, bound_t max, outcome_class outcome_hint = outcome_class::U)
+        : scale(scale), min(min), max(max), outcome_hint(outcome_hint)
     {
     }
 
     bound_scale scale;
     bound_t min;
     bound_t max;
+    outcome_class outcome_hint;
 };
 
 typedef std::shared_ptr<game_bounds> game_bounds_ptr;

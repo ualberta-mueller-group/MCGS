@@ -151,7 +151,7 @@ std::shared_ptr<game_bounds> db_make_bounds(const database& db, sumgame& sum,
         if (entry.outcome == outcome_class::R)
             scale_max = 0;
 
-        options_vec.emplace_back(BOUND_SCALE_UP, scale_min, scale_max);
+        options_vec.emplace_back(BOUND_SCALE_UP, scale_min, scale_max, entry.outcome);
         bounds_vec = find_bounds(sum, options_vec);
         assert(options_vec.size() == 1 && bounds_vec.size() == 1);
 

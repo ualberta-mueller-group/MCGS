@@ -3,6 +3,7 @@
 #include "cgt_up_star.h"
 #include "cgt_dyadic_rational.h"
 #include "sumgame.h"
+#include "sumgame_helpers.h"
 #include "throw_assert.h"
 #include "utilities.h"
 #include "safe_arithmetic.h"
@@ -27,6 +28,9 @@
     for all k, `i <= k <= j`, `G <> Sk`.
 */
 #define CLIP_FUZZY_INTERVAL
+
+#define INITIAL_INTERVAL_MAGNITUDE 1
+#define REPORT_FUZZY_IN_INITIAL_INTERVAL
 
 
 using namespace std;
@@ -77,6 +81,10 @@ private:
     void _reset();
     void _flip_tie_break_rule();
 
+    search_region _find_initial_interval(sumgame& sum,
+                                         const bounds_options& opt,
+                                         game_bounds* bounds);
+
     game_bounds* _make_bounds(sumgame& sum, const bounds_options& opt);
     void _step(search_region& region, bound_scale scale, sumgame& sum,
                game_bounds& bounds);
@@ -97,6 +105,7 @@ private:
     void _refine_bounds(bound_scale scale, game_bounds& bounds, sumgame& sum);
 
 #ifdef CLIP_FUZZY_INTERVAL
+    void _report_fuzzy_index(bound_t scale_idx);
     void _clip_fuzzy_interval(search_region& sr, vector<search_region>& regions_next);
 #endif
 
@@ -444,16 +453,154 @@ void bounds_finder::_flip_tie_break_rule()
     _assume_below_midpoint = !_assume_below_midpoint;
 }
 
+search_region bounds_finder::_find_initial_interval(sumgame& sum,
+                                                    const bounds_options& opt,
+                                                    game_bounds* bounds)
+{
+    search_region sr(opt.min, opt.max);
+    const bound_scale scale = opt.scale;
+
+    /*
+        TODO handle BOUND_SCALE_UP_STAR. This function makes several assumptions
+        about scale indices:
+            idx 0 == 0
+            idx 1 > 0
+            idx -1 < 0
+    */
+    switch (scale)
+    {
+        case BOUND_SCALE_UP_STAR:
+            return sr;
+        case BOUND_SCALE_UP:
+        case BOUND_SCALE_DYADIC_RATIONAL:
+            break;
+    }
+
+    const outcome_class oc_hint = opt.outcome_hint;
+
+    // TODO remove this assert or hide it behind a debug flag
+    //assert(LOGICAL_IMPLIES(oc_hint != outcome_class::U, oc_hint == get_sum_outcome(sum)));
+
+    switch (oc_hint)
+    {
+        case outcome_class::P:
+        {
+            bounds->set_equal(0);
+            sr.low = 0;
+            sr.high = 0;
+            return sr;
+        }
+
+        case outcome_class::N:
+        {
+            _report_fuzzy_index(0);
+            sr.low = -INITIAL_INTERVAL_MAGNITUDE;
+            sr.high = INITIAL_INTERVAL_MAGNITUDE;
+            break;
+        }
+
+        case outcome_class::U:
+        {
+            sr.low = -INITIAL_INTERVAL_MAGNITUDE;
+            sr.high = INITIAL_INTERVAL_MAGNITUDE;
+            break;
+        }
+
+        case outcome_class::L:
+        {
+            sr.low = 0;
+            sr.high = INITIAL_INTERVAL_MAGNITUDE;
+            bounds->set_lower(0, REL_LESS);
+            break;
+        }
+
+        case outcome_class::R:
+        {
+            sr.low = -INITIAL_INTERVAL_MAGNITUDE;
+            sr.high = 0;
+            bounds->set_upper(0, REL_GREATER);
+            break;
+        }
+    }
+
+    // Widen upper
+    if (sr.high != 0)
+    {
+        while (1)
+        {
+            unique_ptr<game> g_inv(get_inverse_scale_game(sr.high, scale));
+            const bool bound_ge_sum = _g_greater_or_equal_s(sum, g_inv.get());
+
+            if (bound_ge_sum)
+            {
+                bounds->set_upper(sr.high, REL_GREATER_OR_EQUAL);
+                break;
+            }
+
+#ifdef REPORT_FUZZY_IN_INITIAL_INTERVAL
+            const bool bound_le_sum = _g_less_or_equal_s(sum, g_inv.get());
+            if (!bound_le_sum)
+                _report_fuzzy_index(sr.high);
+#endif
+
+            // Multiply by 2 == 2^1
+            const bool double_ok = safe_mul2_shift(sr.high, 1);
+            THROW_ASSERT(double_ok);
+        }
+    }
+
+    // Widen lower
+    if (sr.low != 0)
+    {
+        while (1)
+        {
+            unique_ptr<game> g_inv(get_inverse_scale_game(sr.low, scale));
+            const bool bound_le_sum = _g_less_or_equal_s(sum, g_inv.get());
+
+            if (bound_le_sum)
+            {
+                bounds->set_lower(sr.low, REL_LESS_OR_EQUAL);
+                break;
+            }
+
+#ifdef REPORT_FUZZY_IN_INITIAL_INTERVAL
+            const bool bound_ge_sum = _g_greater_or_equal_s(sum, g_inv.get());
+            if (!bound_ge_sum)
+                _report_fuzzy_index(sr.low);
+#endif
+
+            // Multiply by 2 == 2^1
+            const bool double_ok = safe_mul2_shift(sr.low, 1);
+            THROW_ASSERT(double_ok);
+        }
+    }
+
+    //cout << "Initial region: ";
+    //cout << "{" << sr.low << " " << sr.high << "}" << endl;
+
+    return sr;
+}
+
 game_bounds* bounds_finder::_make_bounds(sumgame& sum,
                                          const bounds_options& opt)
 {
-    _regions.clear();
-    _regions_next.clear();
-    _regions.push_back({opt.min, opt.max});
-
     game_bounds* bounds = new game_bounds(opt.scale);
+
     bool validated_interval =
         false; // true when we've checked that Gmin <= S <= Gmax
+
+    _regions.clear();
+    _regions_next.clear();
+
+    _regions.push_back(_find_initial_interval(sum, opt, bounds));
+    validated_interval = true; // Validated by `_find_initial_interval(...)`
+
+    //_regions.push_back({opt.min, opt.max});
+
+
+    // i.e. 0
+    if (bounds->is_equal())
+        _regions.clear();
 
     while (!_regions.empty())
     {
@@ -573,16 +720,7 @@ void bounds_finder::_step(search_region& region, bound_scale scale,
         {
 
 #ifdef CLIP_FUZZY_INTERVAL
-            if (_fuzzy_interval.has_value())
-            {
-                bound_t& interval_low = _fuzzy_interval->first;
-                bound_t& interval_high = _fuzzy_interval->second;
-
-                interval_low = min(interval_low, scale_idx);
-                interval_high = max(interval_high, scale_idx);
-            }
-            else
-                _fuzzy_interval.emplace(scale_idx, scale_idx);
+            _report_fuzzy_index(scale_idx);
 #endif
 
             _regions_next.push_back(region.split(scale_idx));
@@ -786,6 +924,20 @@ void bounds_finder::_refine_bounds(bound_scale scale, game_bounds& bounds,
 
 
 #ifdef CLIP_FUZZY_INTERVAL
+void bounds_finder::_report_fuzzy_index(bound_t scale_idx)
+{
+    if (_fuzzy_interval.has_value())
+    {
+        bound_t& interval_low = _fuzzy_interval->first;
+        bound_t& interval_high = _fuzzy_interval->second;
+
+        interval_low = min(interval_low, scale_idx);
+        interval_high = max(interval_high, scale_idx);
+    }
+    else
+        _fuzzy_interval.emplace(scale_idx, scale_idx);
+}
+
 void bounds_finder::_clip_fuzzy_interval(search_region& sr,
                                vector<search_region>& regions_next)
 {

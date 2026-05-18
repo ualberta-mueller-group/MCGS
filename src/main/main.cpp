@@ -2,13 +2,16 @@
 // main.cpp - main loop of MCGS
 //---------------------------------------------------------------------------
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <memory>
 
 #include "ThGraph.h"
 #include "amazons.h"
+#include "bounds.h"
 #include "cgt_basics.h"
+#include "cgt_up_star.h"
 #include "cli_options.h"
 #include "database.h"
 #include "domineering.h"
@@ -16,6 +19,7 @@
 #include "autotests.h"
 #include "global_database.h"
 #include "make_thermograph_slow.h"
+#include "sumgame_helpers.h"
 #include "thermograph_helpers.h"
 #include "print_moves.h"
 #include "search_graph_debug.h"
@@ -35,6 +39,42 @@ using std::cout, std::endl, std::flush, std::string;
 using namespace std;
 
 namespace {
+
+void test_bounds_finder_optimization()
+{
+    vector<game*> games =
+    {
+        new up_star(6, false),
+    };
+
+    sumgame sum(BLACK);
+    sum.add(games);
+
+    cout << "Sum: ";
+    sum.print_simple(cout);
+    cout << endl;
+
+    const outcome_class oc = get_sum_outcome(sum);
+
+    vector<bounds_options> opts;
+    opts.emplace_back(BOUND_SCALE_UP, -512, 512, oc);
+
+    vector<game_bounds_ptr> bounds_vec;
+
+    for (int i = 0; i < 100'000; i++)
+    {
+        bounds_vec = find_bounds(sum, opts);
+        assert(bounds_vec.size() == 1);
+    }
+
+    game_bounds& bounds = *bounds_vec.back();
+    cout << "Bounds: " << bounds << endl;
+
+    sum.pop(games);
+    for (game* g : games)
+        delete g;
+}
+
 
 void print_thermograph_for_sum(sumgame& sum)
 {
@@ -109,6 +149,9 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
+
+    //test_bounds_finder_optimization();
+    //return 0;
 
     if (opts.db_dump_file_name.has_value())
     {
