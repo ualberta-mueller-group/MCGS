@@ -109,6 +109,9 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 
     if (dominated_moves && (*dominated_moves != *other.dominated_moves))
         return false;
+
+    if (complexity != other.complexity)
+        return false;
 #endif
 
     return true;
@@ -557,7 +560,7 @@ void database::generate_entry_single_partisan(sumgame& sum,
 #endif
 
 #ifdef MCGS_USE_DOMINANCE
-    entry->dominated_moves = db_make_dominated_moves(sum);
+    db_make_dominated_moves(sum, *entry);
 #endif
 
 

@@ -30,6 +30,7 @@
 #include "cgt_basics.h"
 #include "database.h"
 #include "global_database.h"
+#include "safe_arithmetic.h"
 #include "sumgame.h"
 
 using namespace std;
@@ -348,8 +349,9 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
 //}
 //
 void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
-                              dominated_moves_t& dom)
+                              dominated_moves_t& dom, uint64_t& complexity)
 {
+    complexity = 0;
     database& db = get_global_database();
 
     assert(is_black_white(player));
@@ -487,20 +489,37 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
     sum1.set_to_play(restore_player1);
     sum2.set_to_play(restore_player2);
 
+    uint64_t n_immediate_nondom = 0;
+    bool no_complexity_overflow = true;
+
     for (size_t i = 0; i < N_MOVES; i++)
     {
-        if (!is_dominated(i))
-            continue;
+        const generalized_sum_move& gsm = sum_moves[i];
 
-        add_generalized_sum_move_to_dominated_moves_t(dom, sum_moves[i],
+        if (!is_dominated(i))
+        {
+            n_immediate_nondom++;
+            const uint64_t move_complexity = gsm.db_entry->complexity;
+
+            no_complexity_overflow &= safe_add(complexity, move_complexity);
+
+            continue;
+        }
+
+        add_generalized_sum_move_to_dominated_moves_t(dom, gsm,
                                                       player);
     }
+
+#warning TODO make this a warning instead of a throw
+    no_complexity_overflow &= safe_add(complexity, n_immediate_nondom);
+    THROW_ASSERT(no_complexity_overflow);
+
 }
 
 } // namespace
 
 //////////////////////////////////////////////////
-shared_ptr<dominated_moves_t> db_make_dominated_moves(const sumgame& sum)
+void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry)
 {
     shared_ptr<dominated_moves_t> dom(new dominated_moves_t());
 
@@ -509,17 +528,26 @@ shared_ptr<dominated_moves_t> db_make_dominated_moves(const sumgame& sum)
     clone_sumgame(sum, clone1);
     clone_sumgame(sum, clone2);
 
+    uint64_t complexity_b = 0;
+    uint64_t complexity_w = 0;
+
     {
         assert_restore_sumgame ars1(clone1);
         assert_restore_sumgame ars2(clone2);
-        make_dominated_moves_for(clone1, clone2, BLACK, *dom);
-        make_dominated_moves_for(clone1, clone2, WHITE, *dom);
+        make_dominated_moves_for(clone1, clone2, BLACK, *dom, complexity_b);
+        make_dominated_moves_for(clone1, clone2, WHITE, *dom, complexity_w);
+
+
     }
+
+#warning TODO make this a warning instead of a throw
+    THROW_ASSERT(add_is_safe(complexity_b, complexity_w));
+    entry.complexity = complexity_b + complexity_w;
 
     cleanup_sumgame(clone1);
     cleanup_sumgame(clone2);
 
-    return dom;
+    entry.dominated_moves = dom;
 }
 #else
 shared_ptr<dominated_moves_t> db_make_dominated_moves(const sumgame& sum)

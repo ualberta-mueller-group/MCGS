@@ -43,7 +43,13 @@ class database;
 ////////////////////////////////////////////////// struct db_entry_partisan
 struct db_entry_partisan
 {
-    db_entry_partisan() : outcome(outcome_class::U), thermograph_id(THGRAPH_ID_NONE) {}
+    db_entry_partisan()
+        : outcome(outcome_class::U),
+          thermograph_id(THGRAPH_ID_NONE),
+          complexity(0)
+    {
+    }
+
     bool operator==(const db_entry_partisan& other) const;
     bool operator!=(const db_entry_partisan& other) const;
 
@@ -61,6 +67,7 @@ struct db_entry_partisan
 #endif
 
 #ifdef MCGS_USE_DOMINANCE
+    uint64_t complexity;
     std::shared_ptr<dominated_moves_t> dominated_moves;
 #endif
 };
@@ -125,6 +132,7 @@ struct serializer<db_entry_partisan>
 #endif
 
 #ifdef MCGS_USE_DOMINANCE
+        serializer_save(os, entry.complexity);
         serializer_save(os, entry.dominated_moves);
 #endif
     }
@@ -145,6 +153,7 @@ struct serializer<db_entry_partisan>
 #endif
 
 #ifdef MCGS_USE_DOMINANCE
+        serializer_load(is, entry.complexity);
         serializer_load(is, entry.dominated_moves);
 #endif
         return entry;

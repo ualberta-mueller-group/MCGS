@@ -1,6 +1,7 @@
 #pragma once
 
+#include "database.h"
 #include "sumgame.h"
 #include "dominated_moves.h"
 
-std::shared_ptr<dominated_moves_t> db_make_dominated_moves(const sumgame& sum);
+void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry);
