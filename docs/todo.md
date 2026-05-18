@@ -87,7 +87,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Move `sumgame_move_generator` code into its own file. Clean up the logic
     - Serializers:
         - Move each serializer template into its own header
-        - On error, call std::abort instead of THROW_ASSERT/assert
+        - On error, call std::abort instead of `THROW_ASSERT/assert`
         - Add `load_ptr` functions to serializer templates where sensible
     - HTML: make "main" vs "comparison" file distinction more clear (at the top
         of the HTML file)
@@ -133,59 +133,74 @@ Need to solve similar type remapping problem as with `game_type_t` in the databa
 - No big new features
 - Focus on performance testing, tuning, code review and cleanup
 
+# New Features
 
-
-# Other TODO, Unsorted
-
-## User interface and API
-- Python interface to MCGS?
-- Develop interface to Kyle's Javascript UI?
-- Interface for new databases? I.e. view confusion interval, thermograph
-- Look into ludii.games - can it interface with MCGS?
+## Big Future Directions - Ideas
+- Support games on Graphs
+    - Preliminary work by Prem with Claude
+        - status?
+    - Need graph isomorphism algorithms? Nauty?
+    - Test graph games by conversion from grid and strip
+        - for games such as cram, clobber: same game if same underlying graph
+        - could have improved symmetry detection?
+- abstract game class to construct arbitrary games from text
+    - Example: {1|*}
+    - Use example: test if game G is equal to a given canonical form C
+        - given G as game, and C as text
+        - search if G-C = 0
+- Other core search algorithms - PNS, df-pn, EWS
+    - what does it take to "swap out" the main search engine?
 
 ## Implement more games
 - Col, Snort
 - Cannibal clobber. It is like Clobber but you can also eat your own stones. But you can only move with your own pieces.
     - impartial Cannibal Clobber would be one of the simplest possible games. The color of stones does not matter anymore, and winning boils down to the parity of the number of isolated stones at the end. What kind of nimbers do occur? Can the outcome be related to graph properties?
 
-## Port more algorithms to MCGS
+## Port more CGT algorithms to MCGS
 - Locally informed...(code from Mueller and Li paper)
 - Amazons solver? Compare after we have thermographs?
 - Kao's mean and temperature search
     - 2022 student project for the simple case, single move option
 
-## Complexity Score
-- Measure complexity of a subgame
-- Implemented a hook - `game::complexity_score()` - in Version 1.5
-    - equal to `size()` for strip and grid
-    - 1 for all other games
-- Compare with Complexity Score 1..4 in SEGClobber
-- Currently only used in impartial games, LV algorithm, to select the
-   last subgame to search
-- Can be used to select "simplest" subgame in other circumstances
-- Can be used for move ordering within a subgame, with a 1 ply search
-- Use `complexity_score` better
-    - only used to find "largest" subgame in LV
-    - T: Perhaps we could look into using move counts as the complexity score? Not sure what the overhead of generating all moves would be...
-    - Results Martin 2025-12-07: 
-        - easy: results are mixed. 256 are slower, 266 are faster. Most of the ones with large nimbers are slower though, up to 6x in some cases, but it is not consistent.
-        - medium: works well. Speedup between 0-40%, with 30% typical
-        - hard: about 2x faster
-- would like to use for move ordering, to find well-splitting moves
-- T: Maybe we should leave exploration of this with partisan games until later (when we add thermographs?)
-- T: I wonder if game-specific heuristics would still work okay when game types are mixed. 
-    - add a simple complexity score to the database (just move count?) and  use one of these cheaper heuristics for games not in the database? 
-- T: Is there some sensible rule for choosing a most complex game when there are mixed types, and some games are in the database while others aren't?
+## User interface and API
+- Python interface to MCGS?
+- Develop interface to Kyle's Javascript UI?
+- Interface for new databases? I.e. view confusion interval, thermograph
+- Look into `ludii.games` - can it interface with MCGS?
 
-## Move ordering and heuristics
-- Can we define some in a game-independent way?
-- Play in the middle heuristic
-    - simple hack: generate all moves, create list,
-      and pick from list starting in the middle
-- sort by game size heuristic (already used implicitly in sumgame?)
-- Move ordering optimisations
-    - incentive
-    - TG
+## Use a proper unit testing framework?
+- Easier to change this now rather than later
+- Could possibly show code coverage and number of tests run
+- Possible option: MinUnit `https://github.com/siu/minunit`
+- Possible option: GoogleTest `https://google.github.io/googletest`
+
+# Code maintenance, build, C++ issues
+- done? CMake build for MCGS
+- Add one-line documentation for the options in `global_options.h`
+- rename the current `use_complexity_score` flag to make it clear that it is only for the LV algorithm
+- `https://github.com/ualberta-mueller-group/MCGS/issues`
+    - use issues tracker, or delete/resolve
+- Too many "game registration" functions as part of `mcgs_init` steps?
+- github actions (compilation/tests)
+    - free for public repositories        `https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#standard-github-hosted-runners-for-public-repositories`
+    - builds through github on several different systems, e.g. windows, Mac
+    - regularly compile MCGS with AddressSanitizer to check for memory errors
+- Taylor build on Mac?
+
+## Unresolved Code Issues
+- Consider alternatives to `move` being an int?
+    - Pass around pointers to heap-allocated moves, whose actual types
+    are defined by each game?
+    - Have an interface type for storing "to play"
+- Some code comments should be split between the code and `development-notes.md`
+- Ugly/confusing `std::optional` usage
+    - i.e. `split_result()` vs `split_result(vector<game*>())`, 1st has no value, 2nd has a value
+    - Try to make this both clearer AND less verbose
+- "Result" refers to `solve()` function's return value, but "Outcome" is still used in a few places (mostly variable names)
+- Rename `x_1xn` to `x_strip` ?
+- Rename `x_game` to `game_x`? E.g. `integer_game` to `game_integer` ?
+
+# Other TODO, Unsorted
 
 ### Use bounds on subgames from db
 - add upper and lower bounds, use LS and RS from thermographs, considering toplay, as in Amazons paper.
@@ -196,19 +211,6 @@ Need to solve similar type remapping problem as with `game_type_t` in the databa
 
     - More complicated schemes are possible if we have more than two subgames, all in DB. For example, if we can "almost" solve the sum statically, except for one subgame Gi, then play in Gi and try to get rid of it or change its outcome class.
 
-## Code maintenance, build, C++ issues
-
-- done? CMake build for MCGS
-- github actions (compilation/tests)
-    - builds through github on several different systems, e.g. windows, Mac
-    - regularly compile MCGS with AddressSanitizer to check for memory errors
-
-
-### Use a proper unit testing framework?
-- Easier to change this now rather than later
-- Could possibly show code coverage and number of tests run
-- Possible option: MinUnit `https://github.com/siu/minunit`
-- Possible option: GoogleTest `https://google.github.io/googletest`
 
 ### Ownership of games in `sumgame`
 - Decide and document semantics of game-in-sumgame. 
@@ -221,25 +223,6 @@ Need to solve similar type remapping problem as with `game_type_t` in the databa
         - currently there is an `assert` protecting against adding twice
     - Write test cases and documentation for these.
 
-### Resolve Code Problems
-- Consider alternatives to `move` being an int?
-    - Pass around pointers to heap-allocated moves, whose actual types
-    are defined by each game?
-    - Have an interface type for storing "to play"
-- Some code comments should be split between the code and `development-notes.md`
-- Ugly/confusing `std::optional` usage
-    - i.e. `split_result()` vs `split_result(vector<game*>())`, 1st has no value, 2nd has a value
-    - Try to make this both clearer AND less verbose
-- "Result" refers to `solve()` function's return value, but "Outcome" is still used in a few places (mostly variable names)
-
-- Performance profiling for older solvers, and MCGS
-    - Quick and dirty method just to get intuition and some basic data
-    - Good to know how much time is spent doing transposition table lookups, DB lookups, etc, before designing these
-        - i.e. if in-memory DB lookups already dominate the run time, then adding disk reads may be especially costly
-
-### Lower priority tasks, may push to after Version 2
-- Rename `x_1xn` to `x_strip` ?
-- Rename `x_game` to `game_x`? E.g. `integer_game` to `game_integer` ?
 
 # Testing
 
@@ -250,6 +233,12 @@ Need to solve similar type remapping problem as with `game_type_t` in the databa
 - Add missing unit tests
     - nogo_1xn: add unit tests for move generator
 
+## Testing program changes; comparing program versions
+- How to decide: When is program Version A better than Version B? 
+    - When a change makes some tests faster without making others slower
+    - When a change seems to make a majority of tests faster and have a better sum of times over all tests
+    - Should it be done automatically, or left to user-configured, or per-game, options?
+        - How to maintain, re-test thisover code changes?
 
 ## Test framework improvements
 - More detailed timeouts
@@ -262,8 +251,14 @@ Need to solve similar type remapping problem as with `game_type_t` in the databa
 ## File-based test cases
 
 ### Sort test cases by speed
-- semi-automatically (partially done?)
-- Allows implementation of "--sort-tests" to sort tests based on solve duration
+- Sort tests into speed categories
+    - standard vs "extra" tests
+        - review all the tests 
+        - decide which ones go to "extra"
+        - "make test" must stay fast enough that it can be run regularly, without disrupting the work flow.
+
+- Sort semi-automatically (partially done?)
+- implement "--sort-tests" to sort tests based on solve duration
 - Implies "--clear-tt"?
     - no, independent setting
     - NO: include options, git hash etc. info in csv header -> html file, for large-scale experiments, use e.g. names, index, script to organise
@@ -320,6 +315,10 @@ Need to solve similar type remapping problem as with `game_type_t` in the databa
 - More tests, more results, also put on website
 - Extend easy impartial games if we have more than 7 bits per coordinate on a grid
 - Maybe run on other machines - fire-creek
+- Performance profiling for older solvers, and MCGS
+    - Quick and dirty method just to get intuition and some basic data
+    - Good to know how much time is spent doing transposition table lookups, DB lookups, etc, before designing these
+        - i.e. if in-memory DB lookups already dominate the run time, then adding disk reads may be especially costly
 
 ## Command-line interface CLI for testing and experiments
 - Improve MCGS CLI args
@@ -378,7 +377,59 @@ Need to solve similar type remapping problem as with `game_type_t` in the databa
 ## Search algorithm
 - Try other search algorithms? EWS, proof number search, MCTS-solver
     - Can we dropin-replace the main search engine from minimax to one of those?
-    
+
+## Move ordering and heuristics
+- Generic, game-independent move ordering
+    - iterative deepening and heuristic "best move" from previous iteration
+        - requires proof complexity, expected work-type heuristic
+    - leave `complexity_score` on by default?
+
+- Play in the middle heuristic (PITM)
+    - simple hack: generate all moves, create list,
+      and pick from list starting in the middle
+    - try pitm again and see how it works in tests
+    - try pitm together with complexity_score
+
+- sort by game size heuristic (already used implicitly in sumgame?)
+- Move ordering optimisations
+    - incentive: option to sort moves by incentive, as in Go endgames
+        - play by dominated incentive
+        - incentive-based pruning in minimax search
+        - done within single subgame in database construction
+        - do it across subgames? Expensive?
+    - TG - sort moves by thermographic dominance
+        - what if overlap? sort by mean? LS or RS? Other property of TG?
+- Move ordering hook for specific games
+    - Move ordering in nim? match other game value?
+
+
+### Complexity Score
+- Measure complexity of a subgame
+- Implemented a hook - `game::complexity_score()` - in Version 1.5
+    - equal to `size()` for strip and grid
+    - 1 for all other games
+- Compare with Complexity Score 1..4 in SEGClobber
+- Currently only used in impartial games, LV algorithm, to select the
+   last subgame to search
+- test `complexity_score` in partisan games
+- leave `complexity_score` on by default?
+- Can be used to select "simplest" subgame in other circumstances
+- Can be used for move ordering within a subgame, with a 1 ply search
+- Use `complexity_score` better
+    - only used to find "largest" subgame in LV
+    - re-test carefully on impartial games for "hardest" subgame in LV
+    - T: Perhaps we could look into using move counts as the complexity score? Not sure what the overhead of generating all moves would be...
+    - Results Martin 2025-12-07: 
+        - easy: results are mixed. 256 are slower, 266 are faster. Most of the ones with large nimbers are slower though, up to 6x in some cases, but it is not consistent.
+        - medium: works well. Speedup between 0-40%, with 30% typical
+        - hard: about 2x faster
+- would like to use for move ordering, to find well-splitting moves
+- T: Maybe we should leave exploration of this with partisan games until later (when we add thermographs?)
+- T: I wonder if game-specific heuristics would still work okay when game types are mixed. 
+    - add a simple complexity score to the database (just move count?) and  use one of these cheaper heuristics for games not in the database? 
+- T: Is there some sensible rule for choosing a most complex game when there are mixed types, and some games are in the database while others aren't?
+- try only for subgame ordering after split?
+
 ## Search features
 
 - Search stats: node count, leaf count, time, depth
@@ -391,8 +442,6 @@ Need to solve similar type remapping problem as with `game_type_t` in the databa
 - `simplify()` hook for game
     - use cases? Use inverse()?
     - Will become really important after we have database
-- Move ordering hook for game
-    - Move ordering in nim? match other game value?
 - Replace a game (e.g. clobber position) by an equal game of simpler type
     - When we learn equality after evaluation or database lookup
     - Who manages the memory of the new and old games?
@@ -452,6 +501,9 @@ most important solved positions (closest to the root, most work) in a persistent
 
 ## Building Databases
 - Do we need configuration options?
+    - silent mode `--silence_warnings` for building databases? 
+        - It prints a lot of text for larger DB.
+
 - Support for merging DB that were built separately
     - Or support multiple DB
         - Which one to choose for loopup if they overlap? Does it matter?
@@ -463,6 +515,12 @@ most important solved positions (closest to the root, most work) in a persistent
     - Motivation: for example, if 5x5 is too large, but say 4x5, 3x7, and 2x10 are all reasonably small DB, then having all those could help
 - Allow loading from multiple files - read several files into the run time database at startup
     - Probably not yet
+
+## Database Use
+- Should entries found in the DB also be stored in the TT?
+    - T: I don't think so, my guess is that preserving TT entries is more valuable. 
+    - We should test once the database is more powerful
+- Done? DB lookups use `std::unordered_map`. There are faster implementations which can be used as a drop-in replacement
 
 ## Database Improvement
 - Support partial or incomplete DB
@@ -493,12 +551,6 @@ most important solved positions (closest to the root, most work) in a persistent
 
 
 # Misc. Small Todo Items
-- Add one-line documentation for the options in `global_options.h`
-- Should DB hits also be stored in the TT? Do some tests.
-- rename the current `use_complexity_score` flag to make it clear that it is only for the LV algorithm
-- https://github.com/ualberta-mueller-group/MCGS/issues - use issues tracker, or delete/resolve
-- Too many "game registration" functions as part of `mcgs_init` steps?
-
 
 ## improve output
 - print improvement: `up_star:0* → *`, suppress 0 up
@@ -515,7 +567,7 @@ most important solved positions (closest to the root, most work) in a persistent
 - re-test complexity_score
     - make it the default for impartial games if it works better
 
-## Algorithms
+## Impartial game Algorithms
 - Re-read Beling's paper
 - Read Beling's implementation, compare
 - Trace to find inefficiencies in LV
@@ -537,6 +589,10 @@ most important solved positions (closest to the root, most work) in a persistent
 
 
 ## Impartial Search
+- Impartial LV search in some functions does DB lookup before TT lookup
+    - TT should be significantly faster
+    - DB returns the nimber, and TT just a boolean
+    - Test tradeoffs
 
 ### Impartial Search Statistics
 - stats for search depth in LV
@@ -610,12 +666,14 @@ O.O
 - Study bounds for G = (xo)^n. 0 < G < up?
 - compare SEGClobber with MCGS
 
-## Game-specific Small Todo Items
-- domineering/cram: fill in single squares after move even if no split happens
+## Cram/Domineering
+- fill in single squares to simplify/normalise
+    - Do it after move even if no split happens
+    - T: The split function will fill in unusable empty points, but does not return a value when there is exactly one subgame and its bounding box is not smaller than the original game. This means single empty points aren't always filled in (grid games typically do normalization in the split functions)
 
 # Documentation and Publication
 ## Web page
-- add to results.html page
+- add to `results.html` page
     - add more partisan game results
         - Nogo
         - Hard clobber positions
@@ -632,7 +690,7 @@ O.O
 - Discuss future papers
     - updates since 1.0
     - solving results
-    - timeline and venue
+    - timeline and venue for next paper?
 
 # `cgt_lib` Subrepository
 - `cgt_lib` is a submodule on the v1.6-thermograph branch
