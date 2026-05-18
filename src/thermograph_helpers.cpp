@@ -10,6 +10,7 @@
 #include "cgt_dyadic_rational.h"
 #include "make_thermograph_slow.h"
 #include "safe_arithmetic.h"
+#include "utilities.h"
 
 using namespace std;
 
@@ -49,20 +50,25 @@ bound_t read_rational_bound_from_thermograph(const ThGraph& graph, bool left)
 
 bool thermograph_bends_out_below_zero(const ThGraph& graph, bool left)
 {
-    const ThValue& stop = (left ? graph.LeftStop() : graph.RightStop());
-
     const SgBlackWhite color = (left ? SG_BLACK : SG_WHITE);
     const ThScaffold* sc = graph.Sc(color);
     assert(sc != nullptr);
 
-    ThPoint p1, p2;
-    int idx_ignored;
-    bool last_ignored;
-    sc->SegmentAt(ThValue(0), &p1, &p2, &idx_ignored, &last_ignored);
+    const int dir = sc->DirectionTo(ThValue(0));
 
-    assert(p1.Temp() < p2.Temp());
+    assert(LOGICAL_IMPLIES(dir != 0, dir == left ? -1 : 1));
 
-    return p1.Value() != stop;
+    return dir != 0;
+
+
+    //ThPoint p1, p2;
+    //int idx_ignored;
+    //bool last_ignored;
+    //sc->SegmentAt(ThValue(0), &p1, &p2, &idx_ignored, &last_ignored);
+
+    //assert(p1.Temp() < p2.Temp());
+
+    //return p1.Value() != stop;
 }
 
 hash_t get_thermograph_hash(const ThGraph& graph)
