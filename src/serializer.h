@@ -69,6 +69,8 @@
         - std::map<T1, T2>
         - std::set<T>
         - std::unordered_set<T>
+        - std::variant<Ts...>
+        - std::monostate
 
     Removed:
         - std::tuple<Ts...>
@@ -76,6 +78,7 @@
 */
 #pragma once
 #include <any>
+#include <variant>
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
@@ -109,7 +112,6 @@
         time?
 */
 
-// clang-format off
 
 class serializer_ctx
 {
@@ -135,6 +137,8 @@ public:
 private:
     std::map<std::type_index, std::any> _values;
 };
+
+// clang-format off
 
 ////////////////////////////////////////////////// serializer<T>
 template <class T, class Enable = void>
@@ -568,5 +572,157 @@ struct serializer<std::unordered_set<T>>
             s.emplace(serializer<T_NoCV>::load(is, ctx));
 
         return s;
+    }
+};
+
+////////////////////////////////////////////////// std::monostate
+// TODO should this write anything to disk at all?
+template <>
+struct serializer<std::monostate>
+{
+    inline static void save(obuffer& os, const std::monostate& val, serializer_ctx* ctx)
+    {
+        os.write_bool(false);
+    }
+
+    inline static std::monostate load(ibuffer& is, serializer_ctx* ctx)
+    {
+        std::monostate val;
+
+        const bool b = is.read_bool();
+        if (b != false)
+            std::abort();
+
+        return val;
+    }
+
+    // TODO this function probably should never be used?
+    inline static std::monostate* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    {
+        std::monostate* val = new std::monostate();
+
+        const bool b = is.read_bool();
+        if (b != false)
+            std::abort();
+
+        return val;
+    }
+
+};
+
+////////////////////////////////////////////////// std::variant<Ts...>
+template <class... Ts>
+struct serializer<std::variant<Ts...>>
+{
+    inline static void save(obuffer& os, const std::variant<Ts...>& val,
+                            serializer_ctx* ctx)
+    {
+        const size_t variant_idx = val.index();
+        if (variant_idx == std::variant_npos)
+            std::abort();
+
+        os.write_u64(variant_idx);
+
+        save_impl<0, Ts...>(os, val, ctx);
+    }
+
+    inline static std::variant<Ts...> load(ibuffer& is, serializer_ctx* ctx)
+    {
+        std::variant<Ts...> val;
+
+        const uint64_t variant_idx_u64 = is.read_u64();
+        if (variant_idx_u64 == static_cast<uint64_t>(std::variant_npos))
+            std::abort();
+
+        load_impl<0, Ts...>(is, val, ctx, static_cast<size_t>(variant_idx_u64));
+
+        return val;
+    }
+
+    inline static std::variant<Ts...>* load_ptr(ibuffer& is,
+                                                serializer_ctx* ctx)
+    {
+        std::variant<Ts...>* val = new std::variant<Ts...>();
+
+        const uint64_t variant_idx_u64 = is.read_u64();
+        if (variant_idx_u64 == static_cast<uint64_t>(std::variant_npos))
+            std::abort();
+
+        load_impl<0, Ts...>(is, *val, ctx, static_cast<size_t>(variant_idx_u64));
+
+        return val;
+    }
+
+    template <size_t variant_idx, class T_First>
+    inline static void save_impl(obuffer& os, const std::variant<Ts...>& val,
+                                 serializer_ctx* ctx)
+    {
+        static_assert(
+            std::is_same_v<T_First, std::variant_alternative_t<
+                                        variant_idx, std::variant<Ts...>>>);
+
+        // NOLINTNEXTLINE(readability-identifier-naming)
+        using T_First_NoCV = std::remove_cv_t<T_First>;
+
+        if (val.index() == variant_idx)
+            serializer<T_First_NoCV>::save(os, std::get<variant_idx>(val), ctx);
+        else
+            std::abort();
+    }
+
+    template <size_t variant_idx, class T_First, class T_Second,
+              class... T_Rest>
+    inline static void save_impl(obuffer& os, const std::variant<Ts...>& val,
+                                 serializer_ctx* ctx)
+    {
+        static_assert(
+            std::is_same_v<T_First, std::variant_alternative_t<
+                                        variant_idx, std::variant<Ts...>>>);
+
+        // NOLINTNEXTLINE(readability-identifier-naming)
+        using T_First_NoCV = std::remove_cv_t<T_First>;
+
+        if (val.index() == variant_idx)
+            serializer<T_First_NoCV>::save(os, std::get<variant_idx>(val), ctx);
+        else
+            save_impl<variant_idx + 1, T_Second, T_Rest...>(os, val, ctx);
+    }
+
+    template <size_t variant_idx, class T_First>
+    inline static void load_impl(ibuffer& is, std::variant<Ts...>& val,
+                                 serializer_ctx* ctx, size_t disk_index)
+    {
+        static_assert(
+            std::is_same_v<T_First, std::variant_alternative_t<
+                                        variant_idx, std::variant<Ts...>>>);
+
+        // NOLINTNEXTLINE(readability-identifier-naming)
+        using T_First_NoCV = std::remove_cv_t<T_First>;
+
+        if (disk_index == variant_idx)
+            val.template emplace<variant_idx>(
+                serializer<T_First_NoCV>::load(is, ctx));
+        else
+            std::abort();
+    }
+
+    template <size_t variant_idx, class T_First, class T_Second,
+              class... T_Rest>
+    inline static void load_impl(ibuffer& is, std::variant<Ts...>& val,
+                                 serializer_ctx* ctx, size_t disk_index)
+    {
+        static_assert(
+            std::is_same_v<T_First, std::variant_alternative_t<
+                                        variant_idx, std::variant<Ts...>>>);
+
+        // NOLINTNEXTLINE(readability-identifier-naming)
+        using T_First_NoCV = std::remove_cv_t<T_First>;
+
+        if (disk_index == variant_idx)
+            val.template emplace<variant_idx>(
+                serializer<T_First_NoCV>::load(is, ctx));
+        else
+            load_impl<variant_idx + 1, T_Second, T_Rest...>(is, val, ctx,
+                                                            disk_index);
     }
 };

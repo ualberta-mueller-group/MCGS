@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <variant>
 
 #include "ThGraph.h"
 #include "amazons.h"
@@ -136,7 +137,6 @@ void print_option_thermographs_for_player(sumgame& sum, bw player)
 //}
 } // namespace
 
-
 ////////////////////////////////////////////////// main function
 int main(int argc, char** argv)
 {
@@ -147,8 +147,6 @@ int main(int argc, char** argv)
     // i.e. ./MCGS --help
     if (opts.should_exit)
         return 0;
-
-    mcgs_init_2(opts);
 
     //test_bounds_finder_optimization();
     //return 0;
