@@ -321,17 +321,38 @@ target_include_directories(mcgs_test_flags INTERFACE
 )
 
 ############################## Create executables and other targets
+
+#################### CGT libraries
+set(CGT_LIB_DIR PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/cgt_lib)
+
+file(GLOB cgt_lib_SRC CONFIGURE_DEPENDS
+    ${CGT_LIB_DIR}/sg/*.cpp
+    ${CGT_LIB_DIR}/sg/*.c
+    ${CGT_LIB_DIR}/therm/*.cpp
+    ${CGT_LIB_DIR}/therm/*.c
+)
+
+list(FILTER cgt_lib_SRC EXCLUDE REGEX ".*\/main\.c")
+list(FILTER cgt_lib_SRC EXCLUDE REGEX ".*\/main\.cpp")
+
+set(cgt_lib_INC 
+    ${CGT_LIB_DIR}/sg
+    ${CGT_LIB_DIR}/therm
+)
+
 #################### MCGS executable
 if ((NOT DEFINED ONLY_EMIT) OR ("${ONLY_EMIT}" STREQUAL "MCGS"))
     file(GLOB mcgs_SRC CONFIGURE_DEPENDS src/*.cpp src/main/*.cpp)
-    add_executable(MCGS ${mcgs_SRC})
+    add_executable(MCGS ${mcgs_SRC} ${cgt_lib_SRC})
+    target_include_directories(MCGS PRIVATE ${cgt_lib_INC})
     target_link_libraries(MCGS PRIVATE mcgs_flags)
 endif()
 
 #################### MCGS_test executable, and dependent scripts
 if ((NOT DEFINED ONLY_EMIT) OR ("${ONLY_EMIT}" STREQUAL "MCGS_test"))
     file(GLOB mcgs_test_SRC CONFIGURE_DEPENDS test/*.cpp src/*.cpp)
-    add_executable(MCGS_test EXCLUDE_FROM_ALL ${mcgs_test_SRC})
+    add_executable(MCGS_test EXCLUDE_FROM_ALL ${mcgs_test_SRC} ${cgt_lib_SRC})
+    target_include_directories(MCGS_test PRIVATE ${cgt_lib_INC})
     target_link_libraries(MCGS_test PRIVATE mcgs_test_flags)
 
     add_custom_target(test
