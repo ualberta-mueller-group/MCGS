@@ -46,17 +46,17 @@ private:
 template <>
 struct serializer<thermograph_cache>
 {
-    inline static void save(obuffer& os, const thermograph_cache& cache)
+    inline static void save(obuffer& os, const thermograph_cache& cache, serializer_ctx* ctx)
     {
-        serializer_save(os, cache._graphs);
-        serializer_save(os, cache._id_to_graph_map);
+        serializer_save(os, cache._graphs, ctx);
+        serializer_save(os, cache._id_to_graph_map, ctx);
     }
 
-    inline static thermograph_cache load(ibuffer& is)
+    inline static thermograph_cache load(ibuffer& is, serializer_ctx* ctx)
     {
         thermograph_cache cache;
-        serializer_load(is, cache._graphs);
-        serializer_load(is, cache._id_to_graph_map);
+        serializer_load(is, cache._graphs, ctx);
+        serializer_load(is, cache._id_to_graph_map, ctx);
         return cache;
     }
 };

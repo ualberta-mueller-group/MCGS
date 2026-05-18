@@ -118,43 +118,43 @@ inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
 template <>
 struct serializer<db_entry_partisan>
 {
-    inline static void save(obuffer& os, const db_entry_partisan& entry)
+    inline static void save(obuffer& os, const db_entry_partisan& entry, serializer_ctx* ctx)
     {
-        serializer_save(os, entry.outcome);
+        serializer_save(os, entry.outcome, ctx);
 
 #ifdef MCGS_USE_THERM
         //serializer_save(os, entry.thermograph);
-        serializer_save(os, entry.thermograph_id);
+        serializer_save(os, entry.thermograph_id, ctx);
 #endif
 
 #ifdef MCGS_USE_BOUNDS
-        serializer_save(os, entry.bounds_data);
+        serializer_save(os, entry.bounds_data, ctx);
 #endif
 
 #ifdef MCGS_USE_DOMINANCE
-        serializer_save(os, entry.complexity);
-        serializer_save(os, entry.dominated_moves);
+        serializer_save(os, entry.complexity, ctx);
+        serializer_save(os, entry.dominated_moves, ctx);
 #endif
     }
 
-    inline static db_entry_partisan load(ibuffer& is)
+    inline static db_entry_partisan load(ibuffer& is, serializer_ctx* ctx)
     {
         db_entry_partisan entry;
 
-        serializer_load(is, entry.outcome);
+        serializer_load(is, entry.outcome, ctx);
 
 #ifdef MCGS_USE_THERM
         //serializer_load(is, entry.thermograph);
-        serializer_load(is, entry.thermograph_id);
+        serializer_load(is, entry.thermograph_id, ctx);
 #endif
 
 #ifdef MCGS_USE_BOUNDS
-        serializer_load(is, entry.bounds_data);
+        serializer_load(is, entry.bounds_data, ctx);
 #endif
 
 #ifdef MCGS_USE_DOMINANCE
-        serializer_load(is, entry.complexity);
-        serializer_load(is, entry.dominated_moves);
+        serializer_load(is, entry.complexity, ctx);
+        serializer_load(is, entry.dominated_moves, ctx);
 #endif
         return entry;
     }
@@ -191,12 +191,12 @@ inline std::ostream& operator<<(std::ostream& os, const db_entry_impartial& entr
 template <>
 struct serializer<db_entry_impartial>
 {
-    inline static void save(obuffer& os, const db_entry_impartial& entry)
+    inline static void save(obuffer& os, const db_entry_impartial& entry, serializer_ctx* ctx)
     {
         os.write_i32(entry.nim_value);
     }
 
-    inline static db_entry_impartial load(ibuffer& is)
+    inline static db_entry_impartial load(ibuffer& is, serializer_ctx* ctx)
     {
         db_entry_impartial entry;
         entry.nim_value = is.read_i32();

@@ -45,7 +45,7 @@ private:
                                              bw player) const;
     std::set<move>& _get_or_create_set(hash_t subgame_hash, bw player);
 
-    friend struct serializer<dominated_moves_t*>;
+    friend struct serializer<dominated_moves_t>;
     friend std::ostream& operator<<(std::ostream& os,
                                     const dominated_moves_t& dom);
 
@@ -125,7 +125,7 @@ inline std::set<move>& dominated_moves_t::_get_or_create_set(
 
 ////////////////////////////////////////////////// serializer<dominated_moves_t>
 template <>
-struct serializer<dominated_moves_t*>
+struct serializer<dominated_moves_t>
 {
 #warning TODO: dominated_moves_t serializer not portable due to `move`
 
@@ -139,20 +139,30 @@ struct serializer<dominated_moves_t*>
         - Or define `move` as `int32_t`?
     */
 
-    inline static void save(obuffer& os, const dominated_moves_t* dm)
+    inline static void save(obuffer& os, const dominated_moves_t& dom, serializer_ctx* ctx)
     {
-        serializer_save(os, dm->_black_moves);
-        serializer_save(os, dm->_white_moves);
+        serializer_save(os, dom._black_moves, ctx);
+        serializer_save(os, dom._white_moves, ctx);
     }
 
-    inline static dominated_moves_t* load(ibuffer& is)
+    inline static dominated_moves_t load(ibuffer& is, serializer_ctx* ctx)
     {
-        dominated_moves_t* dm = new dominated_moves_t();
+        dominated_moves_t dom;
 
-        serializer_load(is, dm->_black_moves);
-        serializer_load(is, dm->_white_moves);
+        serializer_load(is, dom._black_moves, ctx);
+        serializer_load(is, dom._white_moves, ctx);
 
-        return dm;
+        return dom;
+    }
+
+    inline static dominated_moves_t* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    {
+        dominated_moves_t* dom = new dominated_moves_t();
+
+        serializer_load(is, dom->_black_moves, ctx);
+        serializer_load(is, dom->_white_moves, ctx);
+
+        return dom;
     }
 };
 

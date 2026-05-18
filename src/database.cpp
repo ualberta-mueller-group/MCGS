@@ -306,11 +306,13 @@ void database::save(const std::string& filename) const
 {
     obuffer os(filename);
 
-    serializer<string>::save(os, _metadata_string);
-    serializer<tree_partisan_t>::save(os, _tree_partisan);
-    serializer<tree_impartial_t>::save(os, _tree_impartial);
-    serializer<type_mapper>::save(os, _mapper);
-    serializer<thermograph_cache>::save(os, _thgraphs);
+    serializer_ctx* ctx = nullptr;
+
+    serializer<string>::save(os, _metadata_string, ctx);
+    serializer<tree_partisan_t>::save(os, _tree_partisan, ctx);
+    serializer<tree_impartial_t>::save(os, _tree_impartial, ctx);
+    serializer<type_mapper>::save(os, _mapper, ctx);
+    serializer<thermograph_cache>::save(os, _thgraphs, ctx);
 
     os.close();
 }
@@ -322,11 +324,13 @@ void database::load(const std::string& filename)
 
     ibuffer is(filename);
 
-    _metadata_string = serializer<string>::load(is);
-    _tree_partisan = serializer<tree_partisan_t>::load(is);
-    _tree_impartial = serializer<tree_impartial_t>::load(is);
-    _mapper = serializer<type_mapper>::load(is);
-    _thgraphs = serializer<thermograph_cache>::load(is);
+    serializer_ctx* ctx = nullptr;
+
+    _metadata_string = serializer<string>::load(is, ctx);
+    _tree_partisan = serializer<tree_partisan_t>::load(is, ctx);
+    _tree_impartial = serializer<tree_impartial_t>::load(is, ctx);
+    _mapper = serializer<type_mapper>::load(is, ctx);
+    _thgraphs = serializer<thermograph_cache>::load(is, ctx);
 
     is.close();
 }

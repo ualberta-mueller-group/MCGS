@@ -54,11 +54,11 @@
 
     NOTE: Polymorphic types must use pointers as in these examples
 
-    Currently implemented "standard" types:
+    Currently implemented:
+        - pointers
         - integral values
         - bool
         - enum values
-        - std::tuple<Ts...>
         - std::optional<T>
         - std::string
         - std::vector<T>
@@ -69,19 +69,24 @@
         - std::map<T1, T2>
         - std::set<T>
         - std::unordered_set<T>
+
+    Removed:
+        - std::tuple<Ts...>
+
 */
 #pragma once
-#include <tuple>
+#include <any>
 #include <type_traits>
+#include <typeindex>
 #include <unordered_map>
-#include <map>
+#include <vector>
+#include <optional>
+#include <string>
 #include <set>
 #include <unordered_set>
-#include <vector>
-#include <string>
 #include <cstddef>
-#include <optional>
 #include <cstdint>
+#include <map>
 #include <utility>
 #include <memory>
 #include "iobuffer.h"
@@ -104,8 +109,34 @@
         time?
 */
 
-////////////////////////////////////////////////// serializer<T>
 // clang-format off
+
+class serializer_ctx
+{
+public:
+    template <class T>
+    inline void set(const std::type_index& type_idx, const T& val)
+    {
+        _values[type_idx] = val;
+    }
+
+    template <class T>
+    T* get(const std::type_index& type_idx)
+    {
+        auto it = _values.find(type_idx);
+
+        if (it == _values.end())
+            return nullptr;
+
+        std::any& val = it->second;
+        return std::any_cast<T>(&val);
+    }
+
+private:
+    std::map<std::type_index, std::any> _values;
+};
+
+////////////////////////////////////////////////// serializer<T>
 template <class T, class Enable = void>
 struct serializer
 {
@@ -127,15 +158,16 @@ struct serializer
 
 ////////////////////////////////////////////////// save/load helpers
 template <class T>
-inline void serializer_load(ibuffer& is, T& val)
+inline void serializer_load(ibuffer& is, T& val, serializer_ctx* ctx = nullptr)
 {
-    val = serializer<T>::load(is);
+    val = serializer<T>::load(is, ctx);
 }
 
 template <class T>
-inline void serializer_save(obuffer& os, const T& val)
+inline void serializer_save(obuffer& os, const T& val,
+                            serializer_ctx* ctx = nullptr)
 {
-    serializer<T>::save(os, val);
+    serializer<T>::save(os, val, ctx);
 }
 
 //////////////////////////////////////// pointers
@@ -143,50 +175,50 @@ template <class T>
 struct serializer<T*>
 {
     // NOLINTNEXTLINE(readability-identifier-naming)
-    using T_Nonconst = std::remove_cv_t<T>;
+    using T_NoCV = std::remove_cv_t<T>;
 
-    inline static void save(obuffer& os, const T* ptr)
+    inline static void save(obuffer& os, const T* ptr, serializer_ctx* ctx)
     {
-        serializer<T_Nonconst>::save(os, *ptr);
+        serializer<T_NoCV>::save(os, *ptr, ctx);
     }
 
-    inline static T* load(ibuffer& is)
+    inline static T* load(ibuffer& is, serializer_ctx* ctx)
     {
-        return serializer<T_Nonconst>::load_ptr(is);
+        return serializer<T_NoCV>::load_ptr(is, ctx);
     }
 };
 
 //////////////////////////////////////// integral types
 template <class T>
-struct serializer<T,
+struct serializer<
+    T,
     std::enable_if_t<
         std::is_integral_v<T> && !std::is_same_v<T, bool>,
         void
     >
 >
 {
-    inline static void save(obuffer& os, const T& val)
+    inline static void save(obuffer& os, const T& val, serializer_ctx* ctx)
     {
         os.__write<T>(val);
     }
 
-    inline static T load(ibuffer& is)
+    inline static T load(ibuffer& is, serializer_ctx* ctx)
     {
         return is.__read<T>();
     }
 };
 
-
 //////////////////////////////////////// bool
 template <>
 struct serializer<bool>
 {
-    inline static void save(obuffer& os, const bool& val)
+    inline static void save(obuffer& os, const bool& val, serializer_ctx* ctx)
     {
         os.write_bool(val);
     }
 
-    inline static bool load(ibuffer& is)
+    inline static bool load(ibuffer& is, serializer_ctx* ctx)
     {
         return is.read_bool();
     }
@@ -194,127 +226,48 @@ struct serializer<bool>
 
 //////////////////////////////////////// enum types
 template <class Enum_T>
-struct serializer<Enum_T,
+struct serializer<
+    Enum_T,
     std::enable_if_t<
         std::is_enum_v<Enum_T>,
         void
     >
 >
 {
-    inline static void save(obuffer& os, const Enum_T& val)
+    inline static void save(obuffer& os, const Enum_T& val, serializer_ctx* ctx)
     {
         os.write_enum<Enum_T>(val);
     }
 
-    inline static Enum_T load(ibuffer& is)
+    inline static Enum_T load(ibuffer& is, serializer_ctx* ctx)
     {
         return is.read_enum<Enum_T>();
     }
-};
-
-// clang-format on
-
-//////////////////////////////////////// std::tuple (empty version)
-template <>
-struct serializer<std::tuple<>>
-{
-    inline static void save(obuffer& os, const std::tuple<>& tup)
-    {
-        os.write_u8(0);
-    }
-
-    inline static std::tuple<> load(ibuffer& os)
-    {
-        os.read_u8();
-        return {};
-    }
-};
-
-//////////////////////////////////////// std::tuple (non-empty version)
-
-// TODO this is kind of messy and maybe slow?
-template <class... Ts>
-struct serializer<std::tuple<Ts...>>
-{
-    inline static void save(obuffer& os, const std::tuple<Ts...>& tup)
-    {
-        save_impl impl(os);
-        std::apply(impl, tup);
-    }
-
-    inline static std::tuple<Ts...> load(ibuffer& is)
-    {
-        std::tuple<Ts...> tup;
-
-        load_impl impl(is);
-        std::apply(impl, tup);
-
-        return tup;
-    }
-
-private:
-    struct save_impl
-    {
-        inline save_impl(obuffer& os) : os(os) {}
-
-        template <class T_First>
-        inline void operator()(const T_First& first)
-        {
-            serializer<T_First>::save(os, first);
-        }
-
-        template <class T_First, class... T_Rest>
-        inline void operator()(const T_First& first, const T_Rest&... rest)
-        {
-            serializer<T_First>::save(os, first);
-            (*this)(rest...);
-        }
-
-        obuffer& os;
-    };
-
-    struct load_impl
-    {
-        inline load_impl(ibuffer& is): is(is) {}
-
-        template <class T_First>
-        inline void operator()(T_First& first)
-        {
-            first = serializer<T_First>::load(is);
-        }
-
-        template <class T_First, class... T_Rest>
-        inline void operator()(T_First& first, T_Rest&... rest)
-        {
-            first = serializer<T_First>::load(is);
-            (*this)(rest...);
-        }
-
-        ibuffer& is;
-    };
-
 };
 
 //////////////////////////////////////// std::optional
 template <class T>
 struct serializer<std::optional<T>>
 {
-    inline static void save(obuffer& os, const std::optional<T>& opt)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_NoCV = std::remove_cv_t<T>;
+
+    inline static void save(obuffer& os, const std::optional<T>& opt,
+                            serializer_ctx* ctx)
     {
         const bool has_value = opt.has_value();
-
         os.write_bool(has_value);
 
         if (has_value)
-            serializer<T>::save(os, *opt);
+            serializer<T_NoCV>::save(os, *opt, ctx);
     }
 
-    inline static std::optional<T> load(ibuffer& is)
+    inline static std::optional<T> load(ibuffer& is, serializer_ctx* ctx)
     {
         const bool has_value = is.read_bool();
 
         if (has_value)
-            return serializer<T>::load(is);
+            return serializer<T_NoCV>::load(is, ctx);
 
         return {};
     }
@@ -329,7 +282,8 @@ struct serializer<std::optional<T>>
 template <>
 struct serializer<std::string>
 {
-    inline static void save(obuffer& os, const std::string& str)
+    inline static void save(obuffer& os, const std::string& str,
+                            serializer_ctx* ctx)
     {
         const size_t size = str.size();
         os.write_u64(size);
@@ -338,7 +292,7 @@ struct serializer<std::string>
             os.write_i8(str[i]);
     }
 
-    inline static std::string load(ibuffer& is)
+    inline static std::string load(ibuffer& is, serializer_ctx* ctx)
     {
         std::string str;
 
@@ -356,16 +310,20 @@ struct serializer<std::string>
 template <class T>
 struct serializer<std::vector<T>>
 {
-    inline static void save(obuffer& os, const std::vector<T>& val)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_NoCV = std::remove_cv_t<T>;
+
+    inline static void save(obuffer& os, const std::vector<T>& val,
+                            serializer_ctx* ctx)
     {
         const size_t size = val.size();
         os.write_u64(size);
 
         for (size_t i = 0; i < size; i++)
-            serializer<T>::save(os, val[i]);
+            serializer<T_NoCV>::save(os, val[i], ctx);
     }
 
-    inline static std::vector<T> load(ibuffer& is)
+    inline static std::vector<T> load(ibuffer& is, serializer_ctx* ctx)
     {
         std::vector<T> vec;
 
@@ -373,7 +331,7 @@ struct serializer<std::vector<T>>
         vec.reserve(size);
 
         for (uint64_t i = 0; i < size; i++)
-            vec.emplace_back(serializer<T>::load(is));
+            vec.emplace_back(serializer<T_NoCV>::load(is, ctx));
 
         return vec;
     }
@@ -383,7 +341,11 @@ struct serializer<std::vector<T>>
 template <class T>
 struct serializer<std::shared_ptr<T>>
 {
-    static inline void save(obuffer& os, const std::shared_ptr<T>& smart_ptr)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_NoCV = std::remove_cv_t<T>;
+
+    static inline void save(obuffer& os, const std::shared_ptr<T>& smart_ptr,
+                            serializer_ctx* ctx)
     {
         const T* ptr = smart_ptr.get();
 
@@ -394,17 +356,17 @@ struct serializer<std::shared_ptr<T>>
         }
 
         os.write_bool(true);
-        serializer<T*>::save(os, ptr);
+        serializer<T_NoCV*>::save(os, ptr, ctx);
     }
 
-    static inline std::shared_ptr<T> load(ibuffer& is)
+    static inline std::shared_ptr<T> load(ibuffer& is, serializer_ctx* ctx)
     {
-        const bool has_value = is.read_bool();
-
         T* ptr = nullptr;
 
+        const bool has_value = is.read_bool();
+
         if (has_value)
-            ptr = serializer<T*>::load(is);
+            ptr = serializer<T_NoCV*>::load(is, ctx);
 
         return std::shared_ptr<T>(ptr);
     }
@@ -414,7 +376,11 @@ struct serializer<std::shared_ptr<T>>
 template <class T>
 struct serializer<std::unique_ptr<T>>
 {
-    static inline void save(obuffer& os, const std::unique_ptr<T>& smart_ptr)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_NoCV = std::remove_cv_t<T>;
+
+    static inline void save(obuffer& os, const std::unique_ptr<T>& smart_ptr,
+                            serializer_ctx* ctx)
     {
         const T* ptr = smart_ptr.get();
 
@@ -425,17 +391,17 @@ struct serializer<std::unique_ptr<T>>
         }
 
         os.write_bool(true);
-        serializer<T*>::save(os, ptr);
+        serializer<T_NoCV*>::save(os, ptr, ctx);
     }
 
-    static inline std::unique_ptr<T> load(ibuffer& is)
+    static inline std::unique_ptr<T> load(ibuffer& is, serializer_ctx* ctx)
     {
-        const bool has_value = is.read_bool();
-
         T* ptr = nullptr;
 
+        const bool has_value = is.read_bool();
+
         if (has_value)
-            ptr = serializer<T*>::load(is);
+            ptr = serializer<T_NoCV*>::load(is, ctx);
 
         return std::unique_ptr<T>(ptr);
     }
@@ -445,20 +411,24 @@ struct serializer<std::unique_ptr<T>>
 template <class T1, class T2>
 struct serializer<std::pair<T1, T2>>
 {
-    inline static void save(obuffer& os, const std::pair<T1, T2>& p)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T1_NoCV = std::remove_cv_t<T1>;
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T2_NoCV = std::remove_cv_t<T2>;
+
+    inline static void save(obuffer& os, const std::pair<T1, T2>& p,
+                            serializer_ctx* ctx)
     {
-        serializer<T1>::save(os, p.first);
-        serializer<T2>::save(os, p.second);
+        serializer<T1_NoCV>::save(os, p.first, ctx);
+        serializer<T2_NoCV>::save(os, p.second, ctx);
     }
 
-    // TODO make this more efficient
-    inline static std::pair<T1, T2> load(ibuffer& is)
+    inline static std::pair<T1, T2> load(ibuffer& is, serializer_ctx* ctx)
     {
-        // Put these on different lines so they aren't called in the wrong
-        // order...
-        T1 first = serializer<T1>::load(is);
-        T2 second = serializer<T2>::load(is);
-        return std::pair<T1, T2>(first, second);
+        T1_NoCV val1 = serializer<T1_NoCV>::load(is, ctx);
+        T2_NoCV val2 = serializer<T2_NoCV>::load(is, ctx);
+
+        return {std::move(val1), std::move(val2)};
     }
 };
 
@@ -470,16 +440,18 @@ struct serializer<std::pair<T1, T2>>
 template <class T1, class T2>
 struct serializer<std::unordered_map<T1, T2>>
 {
-    inline static void save(obuffer& os, const std::unordered_map<T1, T2>& m)
+    inline static void save(obuffer& os, const std::unordered_map<T1, T2>& m,
+                            serializer_ctx* ctx)
     {
         const size_t size = m.size();
         os.write_u64(size);
 
-        for (auto it = m.begin(); it != m.end(); it++)
-            serializer<std::pair<T1, T2>>::save(os, *it);
+        for (const std::pair<const T1, T2>& map_pair : m)
+            serializer<std::pair<const T1, T2>>::save(os, map_pair, ctx);
     }
 
-    inline static std::unordered_map<T1, T2> load(ibuffer& is)
+    inline static std::unordered_map<T1, T2> load(ibuffer& is,
+                                                  serializer_ctx* ctx)
     {
         std::unordered_map<T1, T2> m;
 
@@ -487,37 +459,35 @@ struct serializer<std::unordered_map<T1, T2>>
         m.reserve(size);
 
         for (size_t i = 0; i < size; i++)
-            m.emplace(serializer<std::pair<T1, T2>>::load(is));
+            m.emplace(serializer<std::pair<const T1, T2>>::load(is, ctx));
 
         return m;
     }
 };
 
 ////////////////////////////////////////////////// std::map<T1, T2>
-/*
-    TODO: similar problem as unordered_map?
-*/
 template <class T1, class T2>
 struct serializer<std::map<T1, T2>>
 {
-    inline static void save(obuffer& os, const std::map<T1, T2>& m)
+    inline static void save(obuffer& os, const std::map<T1, T2>& m,
+                            serializer_ctx* ctx)
     {
         const size_t size = m.size();
         os.write_u64(size);
 
-        for (auto it = m.begin(); it != m.end(); it++)
-            serializer<std::pair<T1, T2>>::save(os, *it);
+        for (const std::pair<const T1, T2>& map_pair : m)
+            serializer<std::pair<const T1, T2>>::save(os, map_pair, ctx);
     }
 
-    inline static std::map<T1, T2> load(ibuffer& is)
+    inline static std::map<T1, T2> load(ibuffer& is, serializer_ctx* ctx)
     {
         std::map<T1, T2> m;
 
         const uint64_t size = is.read_u64();
-        //m.reserve(size);
+        // m.reserve(size);
 
         for (size_t i = 0; i < size; i++)
-            m.emplace(serializer<std::pair<T1, T2>>::load(is));
+            m.emplace(serializer<std::pair<const T1, T2>>::load(is, ctx));
 
         return m;
     }
@@ -527,22 +497,26 @@ struct serializer<std::map<T1, T2>>
 template <class T>
 struct serializer<std::set<T>>
 {
-    inline static void save(obuffer& os, const std::set<T> s)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_NoCV = std::remove_cv_t<T>;
+
+    inline static void save(obuffer& os, const std::set<T>& s,
+                            serializer_ctx* ctx)
     {
         const uint64_t size = s.size();
         os.write_u64(size);
 
         for (const T& val : s)
-            serializer<T>::save(os, val);
+            serializer<T_NoCV>::save(os, val, ctx);
     }
 
-    inline static std::set<T> load(ibuffer& is)
+    inline static std::set<T> load(ibuffer& is, serializer_ctx* ctx)
     {
         std::set<T> s;
 
         const uint64_t size = is.read_u64();
         for (uint64_t i = 0; i < size; i++)
-            s.emplace(serializer<T>::load(is));
+            s.emplace(serializer<T_NoCV>::load(is, ctx));
 
         return s;
     }
@@ -552,24 +526,27 @@ struct serializer<std::set<T>>
 template <class T>
 struct serializer<std::unordered_set<T>>
 {
-    inline static void save(obuffer& os, const std::unordered_set<T>& s)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_NoCV = std::remove_cv_t<T>;
+
+    inline static void save(obuffer& os, const std::unordered_set<T>& s,
+                            serializer_ctx* ctx)
     {
         const uint64_t size = s.size();
         os.write_u64(size);
 
         for (const T& val : s)
-            serializer<T>::save(os, val);
+            serializer<T_NoCV>::save(os, val, ctx);
     }
 
-    inline static std::unordered_set<T> load(ibuffer& is)
+    inline static std::unordered_set<T> load(ibuffer& is, serializer_ctx* ctx)
     {
         std::unordered_set<T> s;
 
         const uint64_t size = is.read_u64();
         for (uint64_t i = 0; i < size; i++)
-            s.emplace(serializer<T>::load(is));
+            s.emplace(serializer<T_NoCV>::load(is, ctx));
 
         return s;
     }
 };
-
