@@ -40,7 +40,6 @@
 
 using namespace std;
 
-#ifdef MCGS_USE_DOMINANCE
 
 template<>
 struct std::hash<std::pair<hash_t, ::move>>
@@ -609,9 +608,3 @@ void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry)
 
     entry.dominated_moves = dom;
 }
-#else
-shared_ptr<dominated_moves_t> db_make_dominated_moves(const sumgame& sum)
-{
-    assert(false);
-}
-#endif

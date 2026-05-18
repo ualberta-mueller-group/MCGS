@@ -209,12 +209,8 @@ sumgame_move_generator::sumgame_move_generator(
         temperatures->size() >= as_unsigned_unsafe(sum.num_total_games()) //
         ));                                                               //
 
-#ifndef MCGS_USE_DOMINANCE
-    _prune_dominated = false;
-#else
     if (!global::use_db())
         _prune_dominated = false;
-#endif
 
     std::vector<std::pair<int, const game*>> numbers;
 
@@ -233,7 +229,6 @@ sumgame_move_generator::sumgame_move_generator(
             _subgames.emplace_back(i, g);
     }
 
-#ifdef MCGS_USE_THERM
     auto sort_fn = [&](const std::pair<int, const game*>& sg1,
                        const std::pair<int, const game*>& sg2) -> bool
     {
@@ -257,7 +252,6 @@ sumgame_move_generator::sumgame_move_generator(
 
     if (temperatures.has_value())
         std::sort(_subgames.begin(), _subgames.end(), sort_fn);
-#endif
 
     for (const std::pair<int, const game*>& sg : numbers)
         _subgames.push_back(sg);
@@ -387,10 +381,8 @@ bool sumgame_move_generator::_increment_generator(bool init)
     {
         _mg.reset();
 
-#ifdef MCGS_USE_DOMINANCE
         _dom.reset();
         _dom_kind = DB_DOM_MOVES_KIND_NONE;
-#endif
 
         _current_local_hash.reset();
 
@@ -413,7 +405,6 @@ bool sumgame_move_generator::_increment_generator(bool init)
             }
         }
 
-#ifdef MCGS_USE_DOMINANCE
         if (_prune_dominated && !sg->is_impartial())
         {
             assert(global::use_db());
@@ -431,7 +422,6 @@ bool sumgame_move_generator::_increment_generator(bool init)
             }
 
         }
-#endif
 
         if (_dom_kind == DB_DOM_MOVES_KIND_NONDOMINATED)
         {
@@ -453,10 +443,8 @@ bool sumgame_move_generator::_increment_generator(bool init)
     }
 
     _mg.reset();
-#ifdef MCGS_USE_DOMINANCE
     _dom.reset();
     _dom_kind = DB_DOM_MOVES_KIND_NONE;
-#endif
     _current_local_hash.reset();
 
     return false;
@@ -478,7 +466,6 @@ bool sumgame_move_generator::_increment_move(bool init)
             return false;
         }
 
-#ifdef MCGS_USE_DOMINANCE
         if (_prune_dominated && _dom && _dom_kind == DB_DOM_MOVES_KIND_DOMINATED)
         {
             assert(_current_local_hash.has_value());
@@ -512,7 +499,6 @@ bool sumgame_move_generator::_increment_move(bool init)
             }
 
         }
-#endif
 
         return true;
     }
@@ -1285,13 +1271,10 @@ optional<solve_result> sumgame::simplify_db(
 
     database& db = get_global_database();
 
-#ifdef MCGS_USE_THERM
     bool at_least_one_temp = false;
     temperatures.emplace();
     temperatures->resize(num_total_games());
-#endif
 
-#ifdef MCGS_USE_BOUNDS_WIN
     bound_t lower_bound_ups = 0;
     bound_t upper_bound_ups = 0;
 
@@ -1300,7 +1283,6 @@ optional<solve_result> sumgame::simplify_db(
 
     bool bounds_valid = true;
     bool at_least_one_impartial = false;
-#endif
 
 
     std::vector<unsigned int> counts = get_oc_indexable_vector();
@@ -1322,9 +1304,7 @@ optional<solve_result> sumgame::simplify_db(
 
         if (g->is_impartial())
         {
-#ifdef MCGS_USE_BOUNDS_WIN
             at_least_one_impartial = true;
-#endif
             /*
                Because simplify_impartial() should be called prior to this
                function, one of the following must hold:
@@ -1351,15 +1331,12 @@ optional<solve_result> sumgame::simplify_db(
             if (!has_value)
             {
 
-#ifdef MCGS_USE_BOUNDS_WIN
                 bounds_valid = false;
-#endif
             }
             else
             {
                 oc = entry->outcome;
 
-#ifdef MCGS_USE_THERM
                 assert(temperatures.has_value());
                 optional<ThValue>& temp = (*temperatures)[subgame_idx];
                 //temp = entry->thermograph->Temperature();
@@ -1369,9 +1346,7 @@ optional<solve_result> sumgame::simplify_db(
                     temp = graph->Temperature();
                     at_least_one_temp = true;
                 }
-#endif
 
-#ifdef MCGS_USE_BOUNDS_WIN
                 if (!(bounds_valid && entry->bounds_data))
                     bounds_valid = false;
                 else
@@ -1411,7 +1386,6 @@ optional<solve_result> sumgame::simplify_db(
                         }
                     }
                 }
-#endif
             }
         }
 
@@ -1427,12 +1401,9 @@ optional<solve_result> sumgame::simplify_db(
 
     assert(std::accumulate(counts.begin(), counts.end(), 0) == n_active_games);
 
-#ifdef MCGS_USE_THERM
     if (!at_least_one_temp)
         temperatures.reset();
-#endif
 
-#ifdef MCGS_USE_BOUNDS_WIN
     if (bounds_valid)
     {
         if (at_least_one_impartial)
@@ -1448,7 +1419,6 @@ optional<solve_result> sumgame::simplify_db(
         if (bounds_winner != EMPTY)
             return solve_result(bounds_winner == to_play());
     }
-#endif
     const ebw outcome_winner = analyze_outcome_count_vector(counts, to_play());
 
     if (outcome_winner != EMPTY)
@@ -1538,7 +1508,6 @@ void sumgame::db_replacement_pass()
         }
         else
         {
-#ifdef MCGS_USE_BOUNDS
             // sg is partisan
             const db_entry_partisan* entry = db.get_partisan_ptr(*sg);
             stats::report_db_access(entry != nullptr);
@@ -1560,7 +1529,6 @@ void sumgame::db_replacement_pass()
 
             sg->set_active(false);
             cr.deactivated_games.push_back(sg);
-#endif
         }
     }
 

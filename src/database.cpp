@@ -90,23 +90,18 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
     if (outcome != other.outcome)
         return false;
 
-#ifdef MCGS_USE_THERM
     if ((bool) thermograph != (bool) other.thermograph)
         return false;
 
     if (thermograph && !(*thermograph == *other.thermograph))
         return false;
-#endif
 
-#ifdef MCGS_USE_BOUNDS
     if ((bool) bounds_data != (bool) other.bounds_data)
         return false;
 
     if (bounds_data && (*bounds_data != *other.bounds_data))
         return false;
-#endif
 
-#ifdef MCGS_USE_DOMINANCE
     if ((bool) dominated_moves != (bool) other.dominated_moves)
         return false;
 
@@ -115,7 +110,6 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 
     if (complexity != other.complexity)
         return false;
-#endif
 
     return true;
 }
@@ -554,7 +548,6 @@ void database::generate_entry_single_partisan(sumgame& sum,
     }
     _game_count++;
 
-#ifdef MCGS_USE_THERM
     {
         ThGraph* graph = db_make_thermograph(*this, sum, depth, silent);
 
@@ -562,18 +555,13 @@ void database::generate_entry_single_partisan(sumgame& sum,
         entry->thermograph = _graph_cache.insert_and_release(graph);
         assert(entry->thermograph);
     }
-#endif
 
     //////////////////// Find outcome
     entry->outcome = db_make_outcome_class(*this, *entry);
 
-#ifdef MCGS_USE_BOUNDS
     entry->bounds_data = db_make_bounds(*this, sum, *entry);
-#endif
 
-#ifdef MCGS_USE_DOMINANCE
     db_make_dominated_moves(sum, *entry);
-#endif
 
 
 
@@ -857,7 +845,6 @@ void db_entry_partisan::print(std::ostream& os, const database& db, bool endl) c
 {
     os << outcome_class_to_string(outcome);
 
-#ifdef MCGS_USE_THERM
 
     os << " Thermograph: `";
     if (thermograph.get() == nullptr)
@@ -865,25 +852,20 @@ void db_entry_partisan::print(std::ostream& os, const database& db, bool endl) c
     else
         print_thermograph(os, *thermograph);
     os << "`";
-#endif
 
-#ifdef MCGS_USE_BOUNDS
     os << " Bounds: `";
     if (bounds_data.get() == nullptr)
         os << "nullptr";
     else
         os << *bounds_data;
     os << "`";
-#endif
 
-#ifdef MCGS_USE_DOMINANCE
     os << " Dominated moves: `";
     if (dominated_moves.get() == nullptr)
         os << "nullptr";
     else
         os << *dominated_moves;
     os << "`";
-#endif
 
     if (endl)
         os << std::endl;

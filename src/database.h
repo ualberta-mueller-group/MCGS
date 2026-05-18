@@ -56,18 +56,12 @@ struct db_entry_partisan
 
     void print(std::ostream& os, const database& db, bool endl = false) const;
 
-#ifdef MCGS_USE_THERM
     std::shared_ptr<ThGraph> thermograph;
-#endif
 
-#ifdef MCGS_USE_BOUNDS
     std::shared_ptr<game_bounds> bounds_data;
-#endif
 
-#ifdef MCGS_USE_DOMINANCE
     uint64_t complexity;
     std::shared_ptr<db_dom_moves_t> dominated_moves;
-#endif
 };
 
 inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
@@ -120,18 +114,12 @@ struct serializer<db_entry_partisan>
     {
         serializer_save(os, entry.outcome, ctx);
 
-#ifdef MCGS_USE_THERM
         serializer_save(os, entry.thermograph, ctx);
-#endif
 
-#ifdef MCGS_USE_BOUNDS
         serializer_save(os, entry.bounds_data, ctx);
-#endif
 
-#ifdef MCGS_USE_DOMINANCE
         serializer_save(os, entry.complexity, ctx);
         serializer_save(os, entry.dominated_moves, ctx);
-#endif
     }
 
     inline static db_entry_partisan load(ibuffer& is, serializer_ctx* ctx)
@@ -140,18 +128,12 @@ struct serializer<db_entry_partisan>
 
         serializer_load(is, entry.outcome, ctx);
 
-#ifdef MCGS_USE_THERM
         serializer_load(is, entry.thermograph, ctx);
-#endif
 
-#ifdef MCGS_USE_BOUNDS
         serializer_load(is, entry.bounds_data, ctx);
-#endif
 
-#ifdef MCGS_USE_DOMINANCE
         serializer_load(is, entry.complexity, ctx);
         serializer_load(is, entry.dominated_moves, ctx);
-#endif
         return entry;
     }
 };

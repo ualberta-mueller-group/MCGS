@@ -15,7 +15,6 @@ unsigned int max_thermograph_generation_depth = 0;
 
 using namespace std;
 
-#ifdef MCGS_USE_THERM
 
 ////////////////////////////////////////////////// helpers
 namespace {
@@ -133,7 +132,6 @@ ThGraph* db_make_thermograph_impl(database& db, sumgame& sum,
 
     return graph;
 }
-#endif
 
 } // namespace
 
@@ -141,9 +139,5 @@ ThGraph* db_make_thermograph_impl(database& db, sumgame& sum,
 ThGraph* db_make_thermograph(database& db, sumgame& sum, unsigned int depth,
                              bool silent)
 {
-#ifdef MCGS_USE_THERM
     return db_make_thermograph_impl(db, sum, depth, silent);
-#else
-    assert(false);
-#endif
 }
