@@ -307,13 +307,65 @@ private:
     static void _db_print_sum(std::ostream& os, const sumgame& sum);
 
     std::string _metadata_string;
-    thermograph_cache _graph_cache;
+#warning fix constness
+    mutable thermograph_cache _graph_cache;
     tree_partisan_t _tree_partisan;
     tree_impartial_t _tree_impartial;
 
     unsigned int _max_generation_depth;
 
     type_mapper _mapper;
+};
+
+template <>
+struct serializer<std::shared_ptr<ThGraph>>
+{
+    inline static void save(obuffer& os, const std::shared_ptr<ThGraph>& ptr,
+                            serializer_ctx* ctx)
+    {
+        thermograph_cache* cache = get_thermograph_cache(ctx);
+
+        if (cache == nullptr)
+            serializer_impl<std::shared_ptr<ThGraph>>::save(os, ptr, ctx);
+        else
+        {
+            const thgraph_id_t graph_id = cache->get_graph_id(ptr.get());
+            serializer<thgraph_id_t>::save(os, graph_id, ctx);
+        }
+    }
+
+    inline static std::shared_ptr<ThGraph> load(ibuffer& is,
+                                                serializer_ctx* ctx)
+    {
+        thermograph_cache* cache = get_thermograph_cache(ctx);
+
+        if (cache == nullptr)
+            return serializer_impl<std::shared_ptr<ThGraph>>::load(is, ctx);
+        else
+        {
+            const thgraph_id_t graph_id = serializer<thgraph_id_t>::load(is, ctx);
+            return cache->get_graph_from_id(graph_id);
+        }
+    }
+
+    // Utilities
+    inline static thermograph_cache* get_thermograph_cache(serializer_ctx* ctx_nullable)
+    {
+        if (ctx_nullable == nullptr)
+            return nullptr;
+
+        thermograph_cache** ptr = ctx_nullable->get<thermograph_cache*>(typeid(std::shared_ptr<ThGraph>));
+
+        if (ptr == nullptr)
+            return nullptr;
+        return *ptr;
+    }
+
+    inline static void set_thermograph_cache(serializer_ctx* ctx, thermograph_cache* cache)
+    {
+        assert(ctx != nullptr);
+        ctx->set<thermograph_cache*>(typeid(std::shared_ptr<ThGraph>), cache);
+    }
 };
 
 ////////////////////////////////////////////////// database methods

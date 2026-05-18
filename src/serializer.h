@@ -115,7 +115,7 @@ class serializer_ctx
 {
 public:
     template <class T>
-    inline void set(const std::type_index& type_idx, const T& val)
+    inline void set(const std::type_index& type_idx, T& val)
     {
         _values[type_idx] = val;
     }
@@ -344,7 +344,7 @@ struct serializer<std::vector<T>>
 
 //////////////////////////////////////// std::shared_ptr<T>
 template <class T>
-struct serializer<std::shared_ptr<T>>
+struct serializer_impl<std::shared_ptr<T>>
 {
     // NOLINTNEXTLINE(readability-identifier-naming)
     using T_NoCV = std::remove_cv_t<T>;
@@ -374,6 +374,21 @@ struct serializer<std::shared_ptr<T>>
             ptr = serializer<T_NoCV*>::load(is, ctx);
 
         return std::shared_ptr<T>(ptr);
+    }
+};
+
+template <class T>
+struct serializer<std::shared_ptr<T>>
+{
+    static inline void save(obuffer& os, const std::shared_ptr<T>& smart_ptr,
+                            serializer_ctx* ctx)
+    {
+        serializer_impl<std::shared_ptr<T>>::save(os, smart_ptr, ctx);
+    }
+
+    static inline std::shared_ptr<T> load(ibuffer& is, serializer_ctx* ctx)
+    {
+        return serializer_impl<std::shared_ptr<T>>::load(is, ctx);
     }
 };
 
