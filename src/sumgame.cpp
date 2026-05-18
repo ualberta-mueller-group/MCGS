@@ -6,6 +6,8 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "database.h"
+#include "db_move_generator.h"
+#include "dominated_moves.h"
 #include "global_database.h"
 #include "random.h"
 #include "search_graph_debug.h"
@@ -199,6 +201,7 @@ sumgame_move_generator::sumgame_move_generator(
     : move_generator(to_play),
       _subgame_idx_local(0),
       _prune_dominated(prune_dominated),
+      _dom_kind(DB_DOM_MOVES_KIND_NONE),
       _sum(sum)
 {
     assert(LOGICAL_IMPLIES(                                               //
@@ -386,6 +389,7 @@ bool sumgame_move_generator::_increment_generator(bool init)
 
 #ifdef MCGS_USE_DOMINANCE
         _dom.reset();
+        _dom_kind = DB_DOM_MOVES_KIND_NONE;
 #endif
 
         _current_local_hash.reset();
@@ -421,18 +425,37 @@ bool sumgame_move_generator::_increment_generator(bool init)
             stats::report_db_access(has_value);
 
             if (has_value && entry->dominated_moves)
+            {
                 _dom = entry->dominated_moves;
+                _dom_kind = _dom->get_kind();
+            }
 
         }
 #endif
 
-        _mg.reset(sg->create_move_generator(to_play()));
+        if (_dom_kind == DB_DOM_MOVES_KIND_NONDOMINATED)
+        {
+            assert(_dom && _current_local_hash);
+
+            const std::vector<move>* db_encoded_moves = _dom->get_nondominated_moves(*_current_local_hash, to_play());
+            if (db_encoded_moves == nullptr)
+            {
+                _subgame_idx_local++;
+                continue;
+            }
+
+            _mg.reset(new db_move_generator(*sg, to_play(), *db_encoded_moves));
+        }
+        else
+            _mg.reset(sg->create_move_generator(to_play()));
+
         return true;
     }
 
     _mg.reset();
 #ifdef MCGS_USE_DOMINANCE
     _dom.reset();
+    _dom_kind = DB_DOM_MOVES_KIND_NONE;
 #endif
     _current_local_hash.reset();
 
@@ -456,7 +479,7 @@ bool sumgame_move_generator::_increment_move(bool init)
         }
 
 #ifdef MCGS_USE_DOMINANCE
-        if (_prune_dominated && _dom)
+        if (_prune_dominated && _dom && _dom_kind == DB_DOM_MOVES_KIND_DOMINATED)
         {
             assert(_current_local_hash.has_value());
             assert(*_current_local_hash == _subgames[_subgame_idx_local].second->get_local_hash());

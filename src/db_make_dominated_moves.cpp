@@ -34,6 +34,10 @@
 #include "safe_arithmetic.h"
 #include "sumgame.h"
 
+// Maximum ratio of nondominated moves to total moves, above which dominated
+// moves are stored instead of nondominated ones
+#define MAX_NONDOMINATED_RATIO 1.0
+
 using namespace std;
 
 #ifdef MCGS_USE_DOMINANCE
@@ -56,7 +60,7 @@ class generalized_sum_move
 public:
     inline generalized_sum_move(hash_t subgame_hash, ::move move_db_encoded,
                                 const sumgame_move& sm, db_entry_partisan* db_entry)
-        : subgame_hash(subgame_hash), move_db_encoded(move_db_encoded), sm(sm), db_entry(db_entry), thermograph(nullptr)
+        : subgame_hash(subgame_hash), move_db_encoded(move_db_encoded), sm(sm), db_entry(db_entry), thermograph(nullptr), _is_dominated(false)
     {
     }
 
@@ -70,6 +74,20 @@ public:
     sumgame_move sm;
     db_entry_partisan* db_entry;
     const ThGraph* thermograph;
+
+    inline bool is_dominated() const
+    {
+        return _is_dominated;
+    }
+
+    inline void mark_dominated()
+    {
+        _is_dominated = true;
+    }
+
+
+private:
+    bool _is_dominated;
 };
 
 //////////////////////////////////////// generalized_sum_move methods
@@ -100,11 +118,31 @@ inline bool generalized_sum_move::operator!=(const generalized_sum_move& rhs) co
 //    sum.play_sum(gsm.sm, player);
 //}
 
-inline void add_generalized_sum_move_to_dominated_moves_t(
-    db_dom_moves_t& dom, const generalized_sum_move& gsm,
+inline void add_generalized_sum_moves_to_dominated_moves_t(
+    db_dom_moves_t& dom, const vector<generalized_sum_move>& sum_moves,
     bw player, db_dom_moves_kind dom_moves_kind)
 {
-    dom.add_move(gsm.subgame_hash, player, gsm.move_db_encoded, dom_moves_kind);
+    switch (dom_moves_kind)
+    {
+        case DB_DOM_MOVES_KIND_NONE:
+            assert(false);
+        case DB_DOM_MOVES_KIND_DOMINATED:
+        {
+            for (const generalized_sum_move& gsm : sum_moves)
+                if (gsm.is_dominated())
+                    dom.add_move(gsm.subgame_hash, player, gsm.move_db_encoded, dom_moves_kind);
+
+            return;
+        }
+        case DB_DOM_MOVES_KIND_NONDOMINATED:
+        {
+            for (const generalized_sum_move& gsm : sum_moves)
+                if (!gsm.is_dominated())
+                    dom.add_move(gsm.subgame_hash, player, gsm.move_db_encoded, dom_moves_kind);
+
+            return;
+        }
+    }
 }
 
 // relation is relative to player to play
@@ -295,12 +333,13 @@ relation compare_thermographs(const generalized_sum_move& gsm1, const generalize
     return rel;
 }
 
-vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw player)
+vector<generalized_sum_move> make_generalized_sum_moves(sumgame& sum, bw player)
 {
     assert(is_black_white(player));
     vector<generalized_sum_move> moves;
 
-    assert(sum.to_play() == player);
+    const bw restore_player = sum.to_play();
+    sum.set_to_play(player);
 
     /*
         IMPORTANT: Moves must be deduplicated, to avoid duplicates pruning
@@ -308,6 +347,7 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
     */
     std::unordered_set<std::pair<hash_t, ::move>> move_set;
 
+    assert(sum.to_play() == player);
     unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(player));
     for (; *gen; ++(*gen))
     {
@@ -329,6 +369,7 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
 
     std::sort(moves.begin(), moves.end());
 
+    sum.set_to_play(restore_player);
     return moves;
 }
 
@@ -350,7 +391,7 @@ vector<generalized_sum_move> make_generalized_sum_moves(const sumgame& sum, bw p
 //}
 //
 void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
-                              db_dom_moves_t& dom, uint64_t& complexity)
+                              db_dom_moves_t& dom, uint64_t& complexity, vector<generalized_sum_move>& sum_moves)
 {
     complexity = 0;
     database& db = get_global_database();
@@ -365,23 +406,10 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
     sum1.set_to_play(player);
     sum2.set_to_play(player);
 
-    vector<generalized_sum_move> sum_moves = make_generalized_sum_moves(sum1, player);
-    const size_t N_MOVES = sum_moves.size();
-
-    vector<bool> dominance_mask(N_MOVES, false);
 
     // TODO put this back?
     //assert(sum_moves == make_generalized_sum_moves(sum2, player));
 
-    auto is_dominated = [&dominance_mask](size_t move_idx) -> bool
-    {
-        return dominance_mask[move_idx];
-    };
-
-    auto mark_dominated = [&dominance_mask](size_t move_idx) -> void
-    {
-        dominance_mask[move_idx] = true;
-    };
 
     bool sum1_played = false;
     bool sum2_played = false;
@@ -431,30 +459,31 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
         sum1.undo_move();
     }
 
-    for (size_t idx1 = 0; idx1 < N_MOVES; idx1++)
+    const size_t n_moves = sum_moves.size();
+    for (size_t idx1 = 0; idx1 < n_moves; idx1++)
     {
-        if (is_dominated(idx1))
-            continue;
-
         generalized_sum_move& gsm1 = sum_moves[idx1];
+
+        if (gsm1.is_dominated())
+            continue;
 
         {
             const bool is_dom = compare_outcomes(gsm1, best_ordinal, player);
             if (is_dom)
             {
-                mark_dominated(idx1);
+                gsm1.mark_dominated();
                 continue;
             }
         }
 
-        for (size_t idx2 = idx1 + 1; idx2 < N_MOVES; idx2++)
+        for (size_t idx2 = idx1 + 1; idx2 < n_moves; idx2++)
         {
-            if (is_dominated(idx1))
-                break;
-            if (is_dominated(idx2))
-                continue;
-
             generalized_sum_move& gsm2 = sum_moves[idx2];
+
+            if (gsm1.is_dominated())
+                break;
+            if (gsm2.is_dominated())
+                continue;
 
             relation rel = REL_UNKNOWN;
             rel = compare_thermographs(gsm1, gsm2, player);
@@ -472,16 +501,16 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
                 of `player`
             */
             if (rel == REL_LESS)
-                mark_dominated(idx1);
+                gsm1.mark_dominated();
             else if (rel == REL_EQUAL)
             {
                 if (gsm1.db_entry->complexity >= gsm2.db_entry->complexity)
-                    mark_dominated(idx1);
+                    gsm1.mark_dominated();
                 else
-                    mark_dominated(idx2);
+                    gsm2.mark_dominated();
             }
             else if (rel == REL_GREATER)
-                mark_dominated(idx2);
+                gsm2.mark_dominated();
             else
                 assert(rel == REL_FUZZY);
 
@@ -497,11 +526,9 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
     uint64_t n_immediate_nondom = 0;
     bool no_complexity_overflow = true;
 
-    for (size_t i = 0; i < N_MOVES; i++)
+    for (const generalized_sum_move& gsm : sum_moves)
     {
-        const generalized_sum_move& gsm = sum_moves[i];
-
-        if (!is_dominated(i))
+        if (!gsm.is_dominated())
         {
             n_immediate_nondom++;
             const uint64_t move_complexity = gsm.db_entry->complexity;
@@ -510,9 +537,6 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
 
             continue;
         }
-
-        add_generalized_sum_move_to_dominated_moves_t(dom, gsm,
-                                                      player, DB_DOM_MOVES_KIND_DOMINATED);
     }
 
 #warning TODO make this a warning instead of a throw
@@ -527,7 +551,6 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
 void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry)
 {
     shared_ptr<db_dom_moves_t> dom(new db_dom_moves_t());
-    dom->set_kind(DB_DOM_MOVES_KIND_DOMINATED);
 
     sumgame clone1(BLACK);
     sumgame clone2(BLACK);
@@ -537,13 +560,44 @@ void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry)
     uint64_t complexity_b = 0;
     uint64_t complexity_w = 0;
 
+    vector<generalized_sum_move> black_moves = make_generalized_sum_moves(clone1, BLACK);
+    vector<generalized_sum_move> white_moves = make_generalized_sum_moves(clone1, WHITE);
+
     {
         assert_restore_sumgame ars1(clone1);
         assert_restore_sumgame ars2(clone2);
-        make_dominated_moves_for(clone1, clone2, BLACK, *dom, complexity_b);
-        make_dominated_moves_for(clone1, clone2, WHITE, *dom, complexity_w);
+        make_dominated_moves_for(clone1, clone2, BLACK, *dom, complexity_b, black_moves);
+        make_dominated_moves_for(clone1, clone2, WHITE, *dom, complexity_w, white_moves);
 
+        const size_t n_total_moves = black_moves.size() + white_moves.size();
+        size_t n_dominated_moves = 0;
 
+        for (const generalized_sum_move& gsm : black_moves)
+            if (gsm.is_dominated())
+                n_dominated_moves++;
+        for (const generalized_sum_move& gsm : white_moves)
+            if (gsm.is_dominated())
+                n_dominated_moves++;
+
+        const size_t n_nondominated_moves = n_total_moves - n_dominated_moves;
+
+        assert(dom->get_kind() == DB_DOM_MOVES_KIND_NONE);
+        db_dom_moves_kind moves_kind = DB_DOM_MOVES_KIND_NONDOMINATED;
+
+        if (n_total_moves != 0)
+        {
+            const double nondominated_ratio = (double) n_nondominated_moves / (double) n_total_moves;
+
+            if (nondominated_ratio > MAX_NONDOMINATED_RATIO)
+                moves_kind = DB_DOM_MOVES_KIND_DOMINATED;
+            else
+                moves_kind = DB_DOM_MOVES_KIND_NONDOMINATED;
+
+        }
+
+        dom->set_kind(moves_kind);
+        add_generalized_sum_moves_to_dominated_moves_t(*dom, black_moves, BLACK, moves_kind);
+        add_generalized_sum_moves_to_dominated_moves_t(*dom, white_moves, WHITE, moves_kind);
     }
 
 #warning TODO make this a warning instead of a throw
