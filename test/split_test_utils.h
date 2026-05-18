@@ -39,6 +39,7 @@ void test_grid_split(const std::string& board,
         assert_grid_split_result(&pos, expected);
 }
 
+// TODO replace this function with the one from split_test_gen_king_dirt.cpp?
 template <class T>
 bool game_split_matches(
     const std::string& game_as_string,

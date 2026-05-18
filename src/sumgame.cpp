@@ -8,6 +8,7 @@
 #include "database.h"
 #include "db_move_generator.h"
 #include "dominated_moves.h"
+#include "integral_conversion.h"
 #include "global_database.h"
 #include "random.h"
 #include "search_graph_debug.h"

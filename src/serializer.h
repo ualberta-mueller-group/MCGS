@@ -316,6 +316,7 @@ struct serializer<std::string>
     }
 };
 
+
 //////////////////////////////////////// std::vector<T>
 template <class T>
 struct serializer<std::vector<T>>

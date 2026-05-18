@@ -10,12 +10,13 @@
 #include "split_test_nogo.h"
 #include "split_test_nimber.h"
 #include "split_test_up_star.h"
-#include "test/split_test_amazons.h"
-#include "test/split_test_cannibal_clobber.h"
-#include "test/split_test_domineering.h"
-#include "test/split_test_fission.h"
-#include "test/split_test_toppling_dominoes.h"
+#include "split_test_amazons.h"
+#include "split_test_cannibal_clobber.h"
+#include "split_test_domineering.h"
+#include "split_test_fission.h"
+#include "split_test_toppling_dominoes.h"
 #include "split_test_sheep.h"
+#include "split_test_gen_king_dirt.h"
 
 void split_test_all()
 {
@@ -35,4 +36,5 @@ void split_test_all()
     split_test_fission_all();
     split_test_toppling_dominoes_all();
     split_test_sheep_all();
+    split_test_gen_king_dirt_all();
 }

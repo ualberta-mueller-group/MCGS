@@ -1,0 +1,40 @@
+{version 1.5}
+[clobber]
+
+/* game 3, after move 19: B c4d4 */
+.XO.O.|...XO.|.O..XX|X..XXX|..O..X|.OOO.. {W loss}
+
+/* game 3, after move 18: W b5c5 */
+.XO.O.|...XO.|.O..XX|X.XOXX|..O..X|.OOO.. {B win}
+
+/* game 3, after LOSING move 17: B c2d2 */
+.XO.O.|...XO.|.O..XX|X.XOXX|.OX..X|.OOO.. {W win}
+
+/* game 3, after move 16: W d1c1 */
+.XO.O.|..XOO.|.O..XX|X.XOXX|.OX..X|.OOO.. {B win}
+
+/* game 3, after move 15: B b4a4 */
+.XXOO.|..XOO.|.O..XX|X.XOXX|.OX..X|.OOO.. {W loss}
+
+/* game 3, after move 14: W d5d4 */
+.XXOO.|..XOO.|.O..XX|OXXOXX|.OX..X|.OOO.. {B win}
+
+/* game 3, after move 13: B b2c2 */
+.XXOO.|..XOO.|.O..XX|OXXXXX|.OXO.X|.OOO.. {W loss}
+
+/* game 3, after move 12: W a3a4 */
+.XXOO.|.XOOO.|.O..XX|OXXXXX|.OXO.X|.OOO.. {B win}
+
+/* game 3, after move 11: B e5e4 */
+.XXOO.|.XOOO.|OO..XX|XXXXXX|.OXO.X|.OOO.. {W loss}
+
+/* game 3, after LOSING move 10: W d3d2 */
+.XXOO.|.XOOO.|OO..XX|XXXXOX|.OXOXX|.OOO.. {B win}
+
+/* game 3, after LOSING move 9: B f6f5 */
+.XXOO.|.XOXO.|OO.OXX|XXXXOX|.OXOXX|.OOO.. {W win}
+
+/* game 3, after move 8: W e6d6 */
+.XXOO.|.XOXO.|OO.OXX|XXXXOX|.OXOXO|.OOO.X {B win}
+
+

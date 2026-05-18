@@ -8,7 +8,7 @@
 #include <cassert>
 
 #include "gen_toads.h"
-#include "test/test_utilities.h"
+#include "test_utilities.h"
 
 using namespace std;
 

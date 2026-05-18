@@ -1,4 +1,5 @@
 #include "file_iterator.h"
+#include "throw_assert.h"
 
 #include <filesystem>
 #include <vector>
@@ -11,7 +12,7 @@ using namespace std;
 // file_iterator_alphabetical methods
 void file_iterator_alphabetical::_expand(const filesystem::directory_entry& dir)
 {
-    assert(dir.is_directory());
+    THROW_ASSERT(dir.is_directory());
     assert(_file_entries.empty());
 
     vector<filesystem::directory_entry> new_dirs;

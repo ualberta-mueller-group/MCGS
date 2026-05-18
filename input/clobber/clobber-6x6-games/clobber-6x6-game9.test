@@ -1,0 +1,67 @@
+{version 1.5}
+[clobber]
+
+/* game 9, after move 20: W a3a4 */
+X..XXO|.O.X.O|.OO...|OX.X..|.X...O|O..X..
+ {B win}
+
+/* game 9, after move 19: B c4d4 */
+X..XXO|.O.X.O|OOO...|XX.X..|.X...O|O..X..
+ {W loss}
+
+/* game 9, after move 18: W f4f5 */
+X..XXO|.O.X.O|OOO...|XXXO..|.X...O|O..X..
+ {B win}
+
+/* game 9, after move 17: B e6d6 */
+X..XXO|.O.X.O|OOO...|XXXO.O|.X...X|O..X..
+ {W loss}
+
+/* game 9, after move 16: W f3f4 
+ {B win}*/
+
+/* game 9, after move 15: B f6e6 */
+X..XXO|.O.X.O|OOO..O|XXXO.X|.X...X|O..OX.
+ {W loss}
+
+/* game 9, after move 14: W d5d4 */
+X..XXO|.O.X.O|OOO..O|XXXO.X|.X...X|O..OOX
+ {B win}
+
+/* game 9, after move 13: B d3d4 */
+X..XXO|.O.X.O|OOO..O|XXXX.X|.X.O.X|O..OOX
+ {W loss}
+
+/* game 9, after move 12: W c2c3 */
+X..XXO|.O.X.O|OOOX.O|XXXO.X|.X.O.X|O..OOX
+ {B win}
+
+/* game 9, after move 11: B c1d1 */
+X..XXO|.OOX.O|OOXX.O|XXXO.X|.X.O.X|O..OOX
+ {W loss}
+
+/* game 9, after LOSING move 10: W e2f2 */
+X.XOXO|.OOX.O|OOXX.O|XXXO.X|.X.O.X|O..OOX
+ {B win}
+
+/* game 9, after LOSING move 9: B e5f5 */
+X.XOXO|.OOXOX|OOXX.O|XXXO.X|.X.O.X|O..OOX
+ {W win}
+
+/* game 9, after move 8: W e4d4 */
+X.XOXO|.OOXOX|OOXX.O|XXXO.X|.X.OXO|O..OOX
+ {B win}
+
+/* game 9, after move 7: B e3d3 */
+X.XOXO|.OOXOX|OOXX.O|XXXXOX|.X.OXO|O..OOX
+ {W loss}
+
+/* game 9, after LOSING move 6: W c6d6 */
+X.XOXO|.OOXOX|OOXOXO|XXXXOX|.X.OXO|O..OOX
+ {B win}
+ 
+/* game 9, after move 5: B c5c4
+up to after move 5: DUPLICATE of game 7
+X.XOXO|.OOXOX|OOXOXO|XXXXOX|.X.OXO|O.OXOX
+ {W win}
+*/

@@ -103,11 +103,6 @@ namespace global {
 INIT_GLOBAL_WITH_SUMMARY(random_seed, uint64_t, 7753);
 INIT_GLOBAL_WITH_SUMMARY(simplify_basic_cgt, bool, true);
 
-#ifdef LAB_MACHINE_COMPAT
-INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 27);     // ~656 MiB
-INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 26); // ~576 MiB
-#endif
-
 #ifdef __EMSCRIPTEN__
 INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 27);     // 27 -> ~656 MiB
 INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 26); // 26 -> ~576 MiB

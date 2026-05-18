@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "sheep.h"
-#include "test/split_test_utils.h"
+#include "split_test_utils.h"
 
 using namespace std;
 

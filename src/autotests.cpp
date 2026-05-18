@@ -13,6 +13,7 @@
 #include "file_parser.h"
 #include "global_options.h"
 #include "test_case.h"
+#include "test_filter.h"
 #include "throw_assert.h"
 #include "hashing.h"
 #include "game.h"
@@ -26,10 +27,13 @@ inline constexpr const char NEWLINE = '\n';
 
 
 //////////////////////////////////////// exported functions
-void run_autotests(const string& root_test_directory, const string& outfile_name,
-                   unsigned long long test_timeout)
+void run_autotests(const string& root_test_directory,
+                   const string& outfile_name, unsigned long long test_timeout,
+                   test_filter_enum filter_type)
 {
     THROW_ASSERT(root_test_directory.size() > 0);
+
+    uint64_t n_tests_filtered = 0;
 
     // Prepare output CSV file
     ofstream outfile(outfile_name); // .csv file
@@ -83,6 +87,12 @@ void run_autotests(const string& root_test_directory, const string& outfile_name
                 cout << file_name << " " << file_test_idx << endl;
                 shared_ptr<i_test_case> test_case = parser->get_test_case(chunk_test_idx);
 
+                if (!test_filter_permits_test_case(filter_type, *test_case))
+                {
+                    n_tests_filtered++;
+                    continue;
+                }
+
                 // Populate csv row fields
                 csv_row& row = test_case->get_csv_row();
                 row.fill_autotest_fields(relative_file_path.string(), file_test_idx);
@@ -100,9 +110,11 @@ void run_autotests(const string& root_test_directory, const string& outfile_name
         }
     }
 
+    if (n_tests_filtered > 0)
+        cout << n_tests_filtered << " skipped by the test filter" << endl;
+
     if (random_table::did_resize_warning())
         random_table::print_resize_warning();
 
     outfile.close();
 }
-

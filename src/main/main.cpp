@@ -11,6 +11,7 @@
 #include "cli_options.h"
 #include "database.h"
 #include "domineering.h"
+#include "convert_to_ctl.h"
 #include "file_parser.h"
 #include "autotests.h"
 #include "global_database.h"
@@ -25,6 +26,7 @@
 
 #include "gen_experiments.h"
 #include "basic_player.h"
+#include "test_filter.h"
 #include "utils_for_main.h"
 
 using std::cout, std::endl, std::flush, std::string;
@@ -34,7 +36,8 @@ using namespace std;
 ////////////////////////////////////////////////// main function
 int main(int argc, char** argv)
 {
-    mcgs_init_1();
+    THROW_ASSERT(argc >= 1);
+    mcgs_init_1(argv[0]);
 
     cli_options opts = parse_args(argc, (const char**) argv, false);
 
@@ -57,17 +60,27 @@ int main(int argc, char** argv)
     {
         std::shared_ptr<file_parser> parser = opts.parser;
 
+        // TODO should this use the test filter too?
         if (parser.get() != nullptr)
             play_games(*parser, opts.play_log_name);
 
         return 0;
     }
 
-
     if (opts.run_tests)
     {
-        run_autotests(opts.test_directory, opts.outfile_name,
-                      opts.test_timeout);
+        if (opts.lib_ctl_output_dir.has_value())
+        {
+            convert_tests_to_ctl_format(opts.test_directory,
+                                        *opts.lib_ctl_output_dir,
+                                        opts.test_filter_type);
+        }
+        else
+        {
+            run_autotests(opts.test_directory, opts.outfile_name,
+                          opts.test_timeout, opts.test_filter_type);
+        }
+
         return 0;
     }
 
@@ -84,7 +97,8 @@ int main(int argc, char** argv)
             }
             case PRINT_MOVES_ACTION_SUBGAME:
             {
-                print_subgame_moves_by_chunk(cout, opts.parser);
+                print_subgame_moves_by_chunk(cout, opts.parser,
+                                             opts.format_moves_as_options);
                 return 0;
             }
             case PRINT_MOVES_ACTION_SUM:
@@ -94,9 +108,9 @@ int main(int argc, char** argv)
             }
         }
     }
-    
+
     // Don't uncomment?
-    //if (opts.run_tests_stdin)
+    // if (opts.run_tests_stdin)
     //{
     //    run_autotests_stdin(opts.outfile_name, opts.test_timeout);
     //    return 0;
@@ -111,27 +125,11 @@ int main(int argc, char** argv)
     // Run sums from input
     if (opts.parser)
     {
-        bool first_case = true;
-        std::shared_ptr<file_parser> parser = opts.parser;
-
-        while (parser->parse_chunk())
-        {
-            const int n_test_cases = parser->n_test_cases();
-
-            for (int test_number = 0; test_number < n_test_cases; test_number++)
-            {
-
-                std::shared_ptr<i_test_case> test_case =
-                    parser->get_test_case(test_number);
-
-                if (!first_case)
-                    cout << endl;
-
-                run_test_from_main(test_case, opts);
-
-                first_case = false;
-            }
-        }
+        if (opts.lib_ctl_output_dir.has_value())
+            convert_tests_to_ctl_format(opts.parser, *opts.lib_ctl_output_dir,
+                                        opts.test_filter_type);
+        else
+            run_tests_from_main(opts.parser, opts, opts.test_filter_type);
     }
 
     if (opts.search_graph_verify_dir.has_value())

@@ -1,0 +1,45 @@
+{version 1.5}
+[clobber]
+
+/* game 1, after move 5: B e3d3 (4x4db, 839s) (4x5db, 570s) (3x6db, 566s) */
+X.OX.O|.OOXX.|XOXX.O|OXOXOX|XOXOXO|OXOXOX
+ {W win}
+
+/* game 2, after move 4: W f5e5 (4x4db, 4258s) (4x5db, 2856s) (3x6db, 3156s) */
+XOXOXO|OXOXOX|XOXOXO|OXOXOX|.XXOO.|O.XO.X
+ {B win}
+
+/* game 3, after move 7: B a1b1 (4x4db, 1542s) (4x5db, 999s) (3x6db, 1103s)  */
+.XXOO.|.XOXO.|OO.OXX|XXXXOX|.OXOXO|.OOXOX
+ {W win}
+
+/* game 3, after move 6: W a2a3 (4x4db, 1805s) (4x5db, 1126s) (3x6db, 1240s)  */
+XOXOO.|.XOXO.|OO.OXX|XXXXOX|.OXOXO|.OOXOX
+ {B win}
+
+/* game 3, after move 5: B c3c4 (4x5db, 2809s) */
+XOXOO.|OXOXO.|XO.OXX|XXXXOX|.OXOXO|.OOXOX
+    {W win}
+
+
+/* game 4, after move 5: B d2d3 (4x4db, 1802s) (4x5db, 1147s) (3x6db, 1290s)  */
+XOXO.O|OXO.X.|XOXXXX|OXOXOO|XOXOO.|OXOX.X
+ {W win}
+
+/* game 6, after move 4: W f5e5 (4x4db, 1763s) (4x5db, 1170s) (3x6db, 1250s)  */
+XOXX.O|OXOXO.|XOXOXX|OXOXOX|XOXOO.|OXOO.X
+ {B win}
+
+/* game 7, after move 4: W b1b2 (4x4db, 8816s) (4x5db, 5757s) (3x6db, 6284s)  */
+X.XOXO|.OOXOX|OOXOXO|XXOXOX|.XXOXO|O.OXOX
+ {B win}
+
+/* game 8, after move 4: W e6e5 (4x4db, 1353s) (4x5db, 928s) (3x6db, 991s)  */
+XOXOXO|OXOXOX|XOXOXO|XXOXOO|.OXOO.|O.XX.X
+ {B win}
+
+/* game 8, after move 3: B a5a4 (4x5db, 4458s) */
+XOXOXO|OXOXOX|XOXOXO|XXOXOO|.OXOX.|O.XXOX
+    {W win}
+
+/* game 9, game 10: duplicates of game 7 in the opening */

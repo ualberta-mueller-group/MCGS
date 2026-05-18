@@ -13,7 +13,7 @@
 #include "cgt_move.h"
 #include "game.h"
 #include "sheep.h"
-#include "test/test_utilities.h"
+#include "test_utilities.h"
 #include "utilities.h"
 
 using namespace std;

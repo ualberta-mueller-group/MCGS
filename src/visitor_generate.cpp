@@ -64,7 +64,8 @@ visitor_generate::~visitor_generate()
 vector<game*> visitor_generate::get_games(const fp_chunk& chunk)
 {
     vector<game*> games;
-    _ctx.emplace(chunk, games);
+    vector<string> game_types;
+    _ctx.emplace(chunk, games, game_types);
     reset_optional_on_return ror(_ctx);
 
     try
@@ -90,7 +91,8 @@ vector<game*> visitor_generate::get_games(const fp_chunk& chunk)
 i_test_case* visitor_generate::get_test_case(const fp_chunk& chunk, int test_case_idx)
 {
     vector<game*> games;
-    _ctx.emplace(chunk, games);
+    vector<string> game_types;
+    _ctx.emplace(chunk, games, game_types);
     reset_optional_on_return ror(_ctx);
     _ctx->test_case_idx = test_case_idx;
 
@@ -150,6 +152,7 @@ void visitor_generate::visit(const fp_expr_game& expr)
                                            game_token);
 
     _ctx->games.emplace_back(g);
+    _ctx->game_types.emplace_back(title_token);
 }
 
 void visitor_generate::visit(const fp_expr_comment& expr)
@@ -205,8 +208,8 @@ void visitor_generate::visit(const fp_expr_command_solve_bw& expr)
         input_hash.update(minimax_outcome_to_string(expr.get_expected_outcome()));
     }
 
-    _ctx->result_test_case =
-        new test_case_solve_bw(expr, std::move(_ctx->games));
+    _ctx->result_test_case = new test_case_solve_bw(
+        expr, std::move(_ctx->games), std::move(_ctx->game_types));
 }
 
 void visitor_generate::visit(const fp_expr_command_solve_n& expr)
@@ -223,8 +226,8 @@ void visitor_generate::visit(const fp_expr_command_solve_n& expr)
         input_hash.update(to_string(exp_value));
     }
 
-    _ctx->result_test_case =
-        new test_case_solve_n(expr, std::move(_ctx->games));
+    _ctx->result_test_case = new test_case_solve_n(expr, std::move(_ctx->games),
+                                                   std::move(_ctx->game_types));
 }
 
 void visitor_generate::visit(const fp_expr_command_winning_moves& expr)
@@ -249,7 +252,6 @@ void visitor_generate::visit(const fp_expr_command_winning_moves& expr)
             input_hash.update("???");
     }
 
-    _ctx->result_test_case =
-        new test_case_winning_moves(expr, std::move(_ctx->games));
+    _ctx->result_test_case = new test_case_winning_moves(
+        expr, std::move(_ctx->games), std::move(_ctx->game_types));
 }
-

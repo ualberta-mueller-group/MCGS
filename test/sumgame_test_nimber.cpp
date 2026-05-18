@@ -1,5 +1,6 @@
 #include "sumgame_test_nimber.h"
 #include "cgt_basics.h"
+#include "paths.h"
 #include "sumgame.h"
 #include "sum_of_nimbers.h"
 #include "cgt_nimber.h"
@@ -193,5 +194,5 @@ void sumgame_test_nimber_all()
                      new nimber(2),
                  });
 
-    assert_solve_test_file(UNIT_TEST_INPUT_DIR + "nimber.test", 22);
+    assert_solve_test_file(get_game_unit_test_input_path() / "nimber.test", 22);
 }

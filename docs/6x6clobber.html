@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+<title>Solving 6x6 Clobber</title>
+</head>
+
+<body>
+<h1>Solving 6x6 Clobber</h1>
+<p>Keeping track of the ongoing effort to solve this game.
+</p>
+
+<pre>
+a b c d e f
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; 1
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; 2
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; 3
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; 4
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; 5
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; 6
+</pre>
+
+&#x25CF; = black, 
+&#x25CB; = white, 
+&#x253C; = empty
+
+<h2>Done so far</h2>
+<ul>
+	<li>Played 10 test games with a student-built MCTS-based program, 30s per move</li>
+	<li>run MCGS with 4x4db, 10000s timeout</li>
+	<li>run MCGS with 3x6db - easier test cases only</li>
+	<li><b>For longer runs, use the DEBUG=0 version</b></li>
+	<li>TODO Details - version, machine used</li>
+</ul>
+
+<h2>To Do</h2>
+
+<ul>
+	<li>run on firecreek, firepoint. Try to solve 2-ply openings</li>
+	<li>run with 3x6db - hard test cases</li>
+	<li>make a log plot of solving times vs move number</li>
+	<li>play vs random, see if easier to solve?</li>
+	<li>build 4 move or 6 move opening book, with symmetry reduction. 
+	<br>Move 1, from-points: 6 of 36: 1-1, 1-2 (1-5 on standard board), 1-3, 2-2, 2-3 (2-4), 3-3.
+	<br>Move 1, to-moves, after symmetry:
+	from 1-1: 1, from 1-2: 3, from 1-3: 3,
+	from 2-2: 2, from 2-3: 4, from 3-3:2. Total 15 first moves.</li>
+	<li>Current plan: show that one of them is a first-player win</li>
+	<li>Problem: our current players seem to weak to pick a strongest first move</li>
+	<li>write a better Clobber player. Fuego? EWS?</li>
+</ul>
+
+<h2>Results so far - openings solved</h2>
+
+<h4>Game 1</h4>
+1: B f2e2
+2: W b1c1
+3: B e1d1
+4: W a2b2
+5: B e3d3
+<br>
+W to play wins (4x4db, 839s)
+<pre>
+&#x25CF; &#x253C; &#x25CB; &#x25CF; &#x253C; &#x25CB;
+&#x253C; &#x25CB; &#x25CB; &#x25CF; &#x25CF; &#x253C;
+&#x25CF; &#x25CB; &#x25CF; &#x25CF; &#x253C; &#x25CB;
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+</pre>
+
+<h4>Game 2</h4>
+1: B a5b5
+2: W e6d6
+3: B b6c6
+4: W f5e5
+<br>
+Black to play wins (4x4db, 4258s)
+
+<pre>
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+&#x253C; &#x25CF; &#x25CF; &#x25CB; &#x25CB; &#x253C;
+&#x25CB; &#x253C; &#x25CF; &#x25CB; &#x253C; &#x25CF;
+</pre>
+
+<h4>Game 3</h4>
+1: B a5a4
+2: W a6b6
+3: B f2f3
+4: W f1e1
+5: B c3c4
+6: W a2a3
+<br>
+Black to play wins (4x4db, 1805s)
+<pre>
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CB; &#x253C;
+&#x253C; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x253C;
+&#x25CB; &#x25CB; &#x253C; &#x25CB; &#x25CF; &#x25CF;
+&#x25CF; &#x25CF; &#x25CF; &#x25CF; &#x25CB; &#x25CF;
+&#x253C; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x253C; &#x25CB; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+</pre>
+
+<h4>Game 4</h4>
+1: B e1e2
+2: W f5f4
+3: B f2f3
+4: W e6e5
+5: B d2d3
+<br>
+White to play wins (4x4db, 1802s)
+
+<pre>
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x253C; &#x25CB;
+&#x25CB; &#x25CF; &#x25CB; &#x253C; &#x25CF; &#x253C;
+&#x25CF; &#x25CB; &#x25CF; &#x25CF; &#x25CF; &#x25CF;
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CB;
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CB; &#x253C;
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x253C; &#x25CF;
+</pre>
+
+<h4>Game 5</h4>
+1: B b6b5
+2: W a6a5
+3: B c5c4
+4: W a2a3
+5: B d6d5
+<br>
+After move 4, 4x4db, timeout with 10000s.
+After move 5 TODO wins
+<pre>
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x253C; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+&#x25CB; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x25CB; &#x25CF; &#x25CF; &#x25CF; &#x25CB; &#x25CF;
+&#x25CB; &#x25CF; &#x253C; &#x25CB; &#x25CF; &#x25CB;
+&#x253C; &#x253C; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+</pre>
+
+<h4>Game 6</h4>
+1: B f2f3
+2: W e6d6
+3: B e1d1
+4: W f5e5
+<br>
+B to play wins (4x4db, 1763s)
+
+<pre>
+&#x25CF; &#x25CB; &#x25CF; &#x25CF; &#x253C; &#x25CB;
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x253C;
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CF;
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CB; &#x253C;
+&#x25CB; &#x25CF; &#x25CB; &#x25CB; &#x253C; &#x25CF;
+</pre>
+
+
+<h4>Game 7</h4>
+1: B a5a4
+2: W a2a3
+3: B b6b5
+4: W b1b2
+<br>
+B to play wins (4x4db, 8816s)
+
+<pre>
+&#x25CF; &#x253C; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x253C; &#x25CB; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+&#x25CB; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x25CF; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+&#x253C; &#x25CF; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x25CB; &#x253C; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+</pre>
+
+<h4>Game 8</h4>
+1: B b6c6
+2: W f5f4
+3: B a5a4
+4: W e6e5
+<br>
+B to play wins  (4x4db, 1353s)
+
+<pre>
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF;
+&#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CF; &#x25CB;
+&#x25CF; &#x25CF; &#x25CB; &#x25CF; &#x25CB; &#x25CB;
+&#x253C; &#x25CB; &#x25CF; &#x25CB; &#x25CB; &#x253C;
+&#x25CB; &#x253C; &#x25CF; &#x25CF; &#x253C; &#x25CF;
+</pre>
+
+<h4>Game 9</h4>
+1: B b6b5
+2: W a2a3
+3: B a5a4
+4: W b1b2
+Transposed into game 7 (swap moves 1 and 3).
+
+<h4>Game 10</h4>
+1: B a5a4
+2: W a2a3
+3: B b6b5
+4: W b1b2
+Duplicate of game 7 in the opening (diverges later)
+
+<h2>Log</h2>
+<ul>
+	<li>Apr 3: first almost complete draft of this page.</li>
+	<li>March 8: built 3x6 database. 10 game runs are about 10-20% faster. Did not do the hard ones.</li>
+	<li>March 7: 4x5 database takes too much memory, cannot do it on my 24GB laptop</li>
+</ul>
+</body></html>

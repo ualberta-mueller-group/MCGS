@@ -9,6 +9,7 @@
 #include "init_grid_hash_mask.h"
 #include "init_hashing.h"
 #include "init_impartial_sumgame.h"
+#include "paths.h"
 #include "solver_stats.h"
 #include "init_lemoine_viennot.h"
 #include "init_random.h"
@@ -22,8 +23,9 @@ bool already_initialized = false;
 } // namespace
 
 
-void mcgs_init_1()
+void mcgs_init_1(const char* exec_path)
 {
+    mcgs_init::init_paths(exec_path);
     mcgs_init::init_color_tables();
 }
 
@@ -69,6 +71,6 @@ void mcgs_init_2(const cli_options& opts)
 
 void mcgs_init_2()
 {
-    cli_options opts("");
+    cli_options opts;
     mcgs_init_2(opts);
 }

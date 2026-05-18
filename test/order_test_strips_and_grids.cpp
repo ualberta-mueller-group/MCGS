@@ -19,7 +19,7 @@
 
 #include "clobber.h"
 #include "nogo.h"
-#include "test/order_test_utilities.h"
+#include "order_test_utilities.h"
 
 using namespace std;
 

@@ -1,5 +1,5 @@
 #include "split_test_cannibal_clobber.h"
-#include "test/split_test_utils.h"
+#include "split_test_utils.h"
 #include <string>
 #include <vector>
 #include "cannibal_clobber.h"

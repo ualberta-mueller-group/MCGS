@@ -1,0 +1,18 @@
+{version 1.5}
+[clobber]
+
+/* game 1, after move 4: W a2b2  (4x5db, 22959s)*/
+X.OX.O|.OOXX.|XOXOXO|OXOXOX|XOXOXO|OXOXOX
+    {B win}
+
+/* game 3, after move 4: W f1e1 (4x5db, 62910s) */
+XOXOO.|OXOXO.|XOXOXX|XXOXOX|.OXOXO|.OOXOX
+    {B loss}
+
+/* game 5, after move 4: W a2a3, (timeout 4x4db, 10000s) (4x5db, 71654s)  */
+XOXOXO|.XOXOX|OOXOXO|OXXXOX|OX.OXO|..OXOX
+ {B loss}
+
+/* game 6, after move 3: B e1d1 (4x5db, 37357s)*/
+XOXX.O|OXOXO.|XOXOXX|OXOXOX|XOXOXO|OXOO.X
+    {W win}

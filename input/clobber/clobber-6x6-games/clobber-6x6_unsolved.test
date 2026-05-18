@@ -1,0 +1,13 @@
+{version 1.5}
+[clobber]
+
+/* games in  /Users/mmueller/Projects/ualberta-mueller-group/MCGS/input/game-sources/6x6games.txt  */
+
+
+/* game 7, after move 3: B b6b5 (timeout 4x5db, 100000s) */
+XOXOXO|.XOXOX|OOXOXO|XXOXOX|.XXOXO|O.OXOX
+    {W }
+
+/* game 8, after move 2: W f5f4 (timeout 4x5db, 200000s) */
+XOXOXO|OXOXOX|XOXOXO|OXOXOO|XOXOX.|O.XXOX
+    {B }

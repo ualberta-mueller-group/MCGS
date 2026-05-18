@@ -1,0 +1,70 @@
+{version 1.5}
+[clobber]
+
+/* game 8, after move 21: B a4b4 */
+.....O|XOOO..|X...X.|.X....|.O.XO.|O.XX.X
+ {W loss}
+
+/* game 8, after move 20: W c4b4 */
+.....O|XOOO..|X...X.|XO....|.O.XO.|O.XX.X
+ {B win}
+
+/* game 8, after move 19: B e4e3 */
+.....O|XOOO..|X...X.|XXO...|.O.XO.|O.XX.X
+ {W loss}
+
+/* game 8, after move 18: W d1d2 */
+.....O|XOOO..|X...O.|XXO.X.|.O.XO.|O.XX.X
+ {B win}
+
+/* game 8, after move 17: B f4e4 */
+...O.O|XOOX..|X...O.|XXO.X.|.O.XO.|O.XX.X
+ {W loss}
+
+/* game 8, after move 16: W c1d1 */
+...O.O|XOOX..|X...O.|XXO.OX|.O.XO.|O.XX.X
+ {B win}
+
+/* game 8, after move 15: B f3f4 */
+..OX.O|XOOX..|X...O.|XXO.OX|.O.XO.|O.XX.X
+ {W loss}
+
+/* game 8, after move 14: W b3b2 */
+..OX.O|XOOX..|X...OX|XXO.OO|.O.XO.|O.XX.X
+ {B win}
+
+/* game 8, after move 13: B a1a2 */
+..OX.O|XXOX..|XO..OX|XXO.OO|.O.XO.|O.XX.X
+ {W loss}
+
+/* game 8, after move 12: W e2e3 */
+X.OX.O|OXOX..|XO..OX|XXO.OO|.O.XO.|O.XX.X
+ {B win}
+
+/* game 8, after move 11: B c5d5 */
+X.OX.O|OXOXO.|XO..XX|XXO.OO|.O.XO.|O.XX.X
+ {W loss}
+
+/* game 8, after move 10: W b1c1 */
+X.OX.O|OXOXO.|XO..XX|XXO.OO|.OXOO.|O.XX.X
+ {B win}
+
+/* game 8, after move 9: B f2f3 */
+XOXX.O|OXOXO.|XO..XX|XXO.OO|.OXOO.|O.XX.X
+ {W loss}
+
+/* game 8, after move 8: W c3c4 */
+XOXX.O|OXOXOX|XO..XO|XXO.OO|.OXOO.|O.XX.X
+ {B win}
+
+/* game 8, after move 7: B e1d1 */
+XOXX.O|OXOXOX|XOO.XO|XXX.OO|.OXOO.|O.XX.X
+ {W loss}
+
+/* game 8, after move 6: W d3c3 */
+XOXOXO|OXOXOX|XOO.XO|XXX.OO|.OXOO.|O.XX.X
+ {B win}
+
+/* game 8, after move 5: B d4c4 */
+XOXOXO|OXOXOX|XOXOXO|XXX.OO|.OXOO.|O.XX.X
+ {W loss}

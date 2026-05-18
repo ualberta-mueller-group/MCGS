@@ -7,6 +7,7 @@
 #include <cassert>
 #include <vector>
 #include <exception>
+#include "paths.h"
 #include "test_utilities.h"
 
 namespace {
@@ -56,7 +57,7 @@ void solve_1x6()
 
 void file()
 {
-    assert_solve_test_file(UNIT_TEST_INPUT_DIR + "nogo_1xn.test", 8);
+    assert_solve_test_file(get_game_unit_test_input_path() / "nogo_1xn.test", 8);
 }
 
 void exceptions()

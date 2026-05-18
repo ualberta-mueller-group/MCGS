@@ -1,0 +1,61 @@
+{version 1.5}
+[clobber]
+
+/* game 10, after move 18: W e4d4 */
+X.XOO.|...XX.|.O.O.O|.X.O.X|.X..O.|O.O.XX
+ {B win}
+
+/* game 10, after move 17: B c4d4 */
+X.XOO.|...XX.|.O.O.O|.X.XOX|.X..O.|O.O.XX
+ {W loss}
+
+/* game 10, after move 16: W b2b3 */
+X.XOO.|...XX.|.O.O.O|.XXOOX|.X..O.|O.O.XX
+ {B win}
+
+/* game 10, after move 15: B a3b3 */
+X.XOO.|.O.XX.|.X.O.O|.XXOOX|.X..O.|O.O.XX
+ {W loss}
+
+/* game 10, after move 14: W f5e5 */
+X.XOO.|.O.XX.|XO.O.O|.XXOOX|.X..O.|O.O.XX
+ {B win}
+
+/* game 10, after move 13: B a4a3 */
+X.XOO.|.O.XX.|XO.O.O|.XXOOX|.X..XO|O.O.XX
+ {W loss}
+
+/* game 10, after move 12: W f1e1 */
+X.XOO.|.O.XX.|OO.O.O|XXXOOX|.X..XO|O.O.XX
+ {B win}
+
+/* game 10, after move 11: B f2e2 */
+X.XOXO|.O.XX.|OO.O.O|XXXOOX|.X..XO|O.O.XX
+ {W loss}
+
+/* 
+game 10, after move 10: W c3d3
+up to after move 10: DUPLICATE of game 7
+X.XOXO|.O.XOX|OO.O.O|XXXOOX|.X..XO|O.O.XX
+ {B win}
+
+ game 10, after move 9: B e3d3
+X.XOXO|.O.XOX|OOOX.O|XXXOOX|.X..XO|O.O.XX
+ {W loss}
+
+ game 10, after move 8: W c2c3
+X.XOXO|.O.XOX|OOOOXO|XXXOOX|.X..XO|O.O.XX
+ {B win}
+
+ game 10, after move 7: B d6e6
+X.XOXO|.OOXOX|OOXOXO|XXXOOX|.X..XO|O.O.XX
+ {W loss}
+
+ game 10, after LOSING move 6: W d5d4
+X.XOXO|.OOXOX|OOXOXO|XXXOOX|.X..XO|O.OXOX
+ {B win}
+ 
+ game 10, after move 5: B c5c4
+X.XOXO|.OOXOX|OOXOXO|XXXXOX|.X.OXO|O.OXOX
+ {W win}
+*/

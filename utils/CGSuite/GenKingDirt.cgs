@@ -1,0 +1,82 @@
+
+class GenKingDirt(
+    black_remaining as Integer,
+    white_remaining as Integer,
+    must_place as Boolean
+    ) extends game.grid.GridRuleset
+
+    def assert(condition as Boolean) begin
+        if not condition then
+            System.Error("Assertion failed");
+        end
+    end
+
+    class Position(grid as Grid) extends GridGame
+        override def Options(player as Player) begin
+            assert(black_remaining >= 0);
+            assert(white_remaining >= 0);
+
+            var can_place := get_can_place(player);
+
+            var p := player.Ordinal;
+            var empty := 0;
+            var border := 3;
+
+            var positions := MutableList();
+
+            if can_place then
+                var child_class := get_child_class(player);
+
+                for coord in (grid FindAll empty) do
+                    positions.Add(child_class.Position(grid Updated {coord => p}));
+                end
+            end
+
+            var skip_slide_moves := (must_place and not positions.IsEmpty);
+
+            if not skip_slide_moves then
+                for coord in (grid FindAll p) do
+                    for dir in Coordinates.Compass do
+                        if grid[coord + dir] == empty then
+                            positions.Add(Position(grid Updated {
+                                coord => border,
+                                coord + dir => p
+                            }));
+                        end
+                    end
+                end
+            end
+
+            positions;
+
+        end // def Options
+
+        def get_can_place(player as Player) as Boolean begin
+            if player == Left then
+                black_remaining > 0;
+            else
+                assert(player == Right);
+                white_remaining > 0;
+            end
+        end
+
+        def get_child_class(player as Player) as game.grid.GridRuleset begin
+            if player == Left then
+                assert(black_remaining > 0);
+                GenKingDirt(black_remaining - 1, white_remaining, must_place);
+            else
+                assert(player == Right);
+                assert(white_remaining > 0);
+                GenKingDirt(black_remaining, white_remaining - 1, must_place);
+            end
+        end
+
+    end // class Position
+
+
+    override def CharMap := ".xo#";
+
+    override def Icons := [Icon.Blank, Icon.BlackKing, Icon.WhiteKing,
+        Icon.GraySquare];
+
+end // class GenKingDirt 

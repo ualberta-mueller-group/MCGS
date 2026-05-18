@@ -5,6 +5,7 @@
 #include <string>
 #include <cassert>
 #include "grid_test_utilities.h"
+#include "paths.h"
 #include "test_utilities.h"
 #include <exception>
 
@@ -113,7 +114,7 @@ void test_moves()
 
 void test_from_file()
 {
-    assert_solve_test_file(UNIT_TEST_INPUT_DIR + "/nogo.test", 18);
+    assert_solve_test_file(get_game_unit_test_input_path() / "nogo.test", 18);
 }
 
 void test_inverse()

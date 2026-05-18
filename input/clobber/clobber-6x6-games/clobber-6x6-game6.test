@@ -1,0 +1,75 @@
+{version 1.5}
+[clobber]
+
+/* game 6, after move 22: W a2b2 */
+.XX..O|.O..X.|.....O|XX...O|...O..|O.XO.X
+ {B loss}
+
+/* game 6, after move 21: B b3b4 */
+.XX..O|OX..X.|.....O|XX...O|...O..|O.XO.X
+ {W win}
+
+/* game 6, after move 20: W b5b4 */
+.XX..O|OX..X.|.X...O|XO...O|...O..|O.XO.X
+ {B loss}
+
+/* game 6, after move 19: B a3b3 */
+.XX..O|OX..X.|.X...O|XX...O|.O.O..|O.XO.X
+ {W win}
+
+/* game 6, after move 18: W e3f3 */
+.XX..O|OX..X.|XO...O|XX...O|.O.O..|O.XO.X
+ {B loss}
+
+/* game 6, after move 17: B d2e2 */
+.XX..O|OX..X.|XO..OX|XX...O|.O.O..|O.XO.X
+ {W win}
+
+/* game 6, after move 16: W e5d5 */
+.XX..O|OX.XO.|XO..OX|XX...O|.O.O..|O.XO.X
+ {B loss}
+
+/* game 6, after move 15: B c5d5 */
+.XX..O|OX.XO.|XO..OX|XX...O|.O.XO.|O.XO.X
+ {W win}
+
+/* game 6, after move 14: W e4f4 */
+.XX..O|OX.XO.|XO..OX|XX...O|.OXOO.|O.XO.X
+ {B loss}
+
+/* game 6, after LOSING move 13: B d1d2 */
+.XX..O|OX.XO.|XO..OX|XX..OX|.OXOO.|O.XO.X
+ {W win}
+
+/* game 6, after move 12: W c2d2 */
+.XXX.O|OX.OO.|XO..OX|XX..OX|.OXOO.|O.XO.X
+ {B win}
+
+/* game 6, after move 11: B a1b1 */
+.XXX.O|OXOXO.|XO..OX|XX..OX|.OXOO.|O.XO.X
+ {W loss}
+
+/* game 6, after move 10: W d3e3 */
+XOXX.O|OXOXO.|XO..OX|XX..OX|.OXOO.|O.XO.X
+ {B win}
+
+/* game 6, after move 9: B b6c6 */
+XOXX.O|OXOXO.|XO.OXX|XX..OX|.OXOO.|O.XO.X
+ {W loss}
+
+/* game 6, after move 8: W c3d3 */
+XOXX.O|OXOXO.|XO.OXX|XX..OX|.OXOO.|OXOO.X
+ {B win}
+
+/* game 6, after move 7: B a5a4 */
+XOXX.O|OXOXO.|XOOXXX|XX..OX|.OXOO.|OXOO.X
+ {W loss}
+
+/* game 6, after move 6: W c4c3 */
+XOXX.O|OXOXO.|XOOXXX|OX..OX|XOXOO.|OXOO.X
+ {B win}
+
+/* game 6, after move 5: B d4d3 */
+XOXX.O|OXOXO.|XOXXXX|OXO.OX|XOXOO.|OXOO.X
+ {W loss}
+

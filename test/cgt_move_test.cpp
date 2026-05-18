@@ -8,22 +8,30 @@
 #include "int_pair.h"
 #include "n_bit_int.h"
 #include "cannibal_clobber_move.h"
+#include "gen_king_dirt_move.h"
+#include "int_generator.h"
 
 using namespace std;
 
 #define TEST_LOOP(var, layout_t, move_part, full_interval, body)               \
-    for (int var = move_part_min<layout_t, move_part>();                       \
-         var <= move_part_max<layout_t, move_part>();                          \
-         var += (full_interval ? 1 : 8))                                      \
     {                                                                          \
-        body                                                                   \
+        int_generator<int64_t> var##_gen(move_part_min<layout_t, move_part>(), \
+                                         move_part_max<layout_t, move_part>(), \
+                                         (full_interval ? 40 : 20));        \
+                                                                               \
+        while (var##_gen)                                                      \
+        {                                                                      \
+            const int64_t var = var##_gen.gen_int();                           \
+            ++(var##_gen);                                                     \
+            body                                                               \
+        }                                                                      \
     }
 
 namespace {
 
 ////////////////////////////////////////////////// helpers
 template <class Move_Layout_T, unsigned int move_part_number>
-constexpr int move_part_min()
+constexpr int64_t move_part_min()
 {
     static_assert(cgt_move::move_layout_is_legal<Move_Layout_T>() && //
                   1 <= move_part_number &&                               //
@@ -40,7 +48,7 @@ constexpr int move_part_min()
 }
 
 template <class Move_Layout_T, unsigned int move_part_number>
-constexpr int move_part_max()
+constexpr int64_t move_part_max()
 {
     static_assert(cgt_move::move_layout_is_legal<Move_Layout_T>() && //
                   1 <= move_part_number &&                               //
@@ -113,10 +121,10 @@ void test_colors_move4()
 void test_move1(bool test_full_interval)
 {
     // Parts/coordinates, extracted from a move with "unpack" functions
-    int p1_unpack;
+    int64_t p1_unpack;
 
     // Parts/coordinates, extracted from a move with "get" functions
-    int p1_get;
+    int64_t p1_get;
 
     TEST_LOOP(p1, cgt_move::move1_layout, 1, test_full_interval, {
 
@@ -130,7 +138,7 @@ void test_move1(bool test_full_interval)
         assert(m_create_parts == m_set_parts);
 
         const ::move m = m_create_parts;
-        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+        assert(0 == (m & (int64_t(1) << N_BIT_INT_MAX_BITS)));
 
         // Test the different ways of getting move parts
         cgt_move::move1_unpack(m, p1_unpack);
@@ -175,7 +183,7 @@ void test_move2(bool test_full_interval)
         );
 
         const ::move m = m_create_parts;
-        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+        assert(0 == (m & (int64_t(1) << N_BIT_INT_MAX_BITS)));
 
         // Test the different ways of getting move parts
 
@@ -219,7 +227,7 @@ void test_move3(bool test_full_interval)
         assert(m_create_parts == m_set_parts);
 
         const ::move m = m_create_parts;
-        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+        assert(0 == (m & (int64_t(1) << N_BIT_INT_MAX_BITS)));
 
         // Test the different ways of getting move parts
         cgt_move::move3_unpack(m, p1_unpack, p2_unpack, p3_unpack);
@@ -276,7 +284,7 @@ void test_move4(bool test_full_interval)
         );
 
         const ::move m = m_create_parts;
-        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+        assert(0 == (m & (int64_t(1) << N_BIT_INT_MAX_BITS)));
 
         // Test the different ways of getting move parts
 
@@ -350,7 +358,7 @@ void test_move6(bool test_full_interval)
         );
 
         const ::move m = m_create_parts;
-        assert(0 == (m & (1 << N_BIT_INT_MAX_BITS)));
+        assert(0 == (m & (int64_t(1) << N_BIT_INT_MAX_BITS)));
 
         // Test the different ways of getting move parts
 
@@ -404,7 +412,7 @@ void test_cannibal_clobber_move(bool test_full_interval)
         const ::move m_create_coords =
             cannibal_clobber_move::create_from_coords(c1, c2, t1);
 
-        assert(0 == (m_create_coords & (1 << N_BIT_INT_MAX_BITS)));
+        assert(0 == (m_create_coords & (int64_t(1) << N_BIT_INT_MAX_BITS)));
 
         // Test the different ways of getting move parts
         cannibal_clobber_move::unpack_coords(m_create_coords, c1_unpack,
@@ -415,6 +423,41 @@ void test_cannibal_clobber_move(bool test_full_interval)
         assert(p3 == c2_unpack.first);
         assert(p4 == c2_unpack.second);
         assert(t1 == target_color_unpack);
+
+    }}}}}))));
+}
+
+void test_gen_king_dirt_move(bool test_full_interval)
+{
+    // Parts/coordinates, extracted from a move with "unpack" functions
+    int_pair c1_unpack, c2_unpack;
+    bool place_stone_unpack;
+
+    TEST_LOOP(p1, gen_king_dirt_move::custom_layout, 1, test_full_interval, {
+    TEST_LOOP(p2, gen_king_dirt_move::custom_layout, 2, test_full_interval, {
+    TEST_LOOP(p3, gen_king_dirt_move::custom_layout, 3, test_full_interval, {
+    TEST_LOOP(p4, gen_king_dirt_move::custom_layout, 4, test_full_interval, {
+    for (int p5 = 0; p5 <= 1; p5++) {
+
+        // Test different ways of creating the move
+        const int_pair c1(p1, p2);
+        const int_pair c2(p3, p4);
+        const bool place1((p5 == 0) ? false : true);
+
+        const ::move m_create_coords =
+            gen_king_dirt_move::create_from_coords(c1, c2, place1);
+
+        assert(0 == (m_create_coords & (int64_t(1) << N_BIT_INT_MAX_BITS)));
+
+        // Test the different ways of getting move parts
+        gen_king_dirt_move::unpack_coords(m_create_coords, c1_unpack,
+                                             c2_unpack, place_stone_unpack);
+
+        assert(p1 == c1_unpack.first);
+        assert(p2 == c1_unpack.second);
+        assert(p3 == c2_unpack.first);
+        assert(p4 == c2_unpack.second);
+        assert(place1 == place_stone_unpack);
 
     }}}}}))));
 }
@@ -434,4 +477,5 @@ void cgt_move_test_all(bool extra_tests)
     test_move4(extra_tests);
     test_move6(extra_tests);
     test_cannibal_clobber_move(extra_tests);
+    test_gen_king_dirt_move(extra_tests);
 }

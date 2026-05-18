@@ -1,0 +1,54 @@
+{version 1.5}
+[cannibal_clobber]
+
+/* 2x2  */
+XO|OX
+    {B win}
+
+/* 2x3  */
+XOX|OXO
+	 {B loss}
+
+/* 2x4  */
+XOXO|OXOX
+	 {B win}
+
+/* 2x5  */
+XOXOX|OXOXO
+	 {B win}
+
+/* 2x6  */
+XOXOXO|OXOXOX
+	 {B win}
+
+/* 2x7 */
+XOXOXOX|OXOXOXO
+	 {B win}
+
+/* 2x8 */
+XOXOXOXO|OXOXOXOX
+	 {B win}
+
+/* 2x9 */
+XOXOXOXOX|OXOXOXOXO
+	 {B win}
+
+/* 2x10 */
+XOXOXOXOXO|OXOXOXOXOX
+	 {B win}
+
+/* 3x3  */
+XOX|OXO|XOX
+    {B win, W win}
+
+/* 3x4  */
+XOXO|OXOX|XOXO
+	 {B win}
+
+/* 3x5  */
+XOXOX|OXOXO|XOXOX
+	 {B win, W win}
+
+/* 4x4  */
+XOXO|OXOX|XOXO|OXOX
+    {B win}

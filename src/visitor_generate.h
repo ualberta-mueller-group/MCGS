@@ -34,8 +34,9 @@ public:
 protected:
     struct visitor_context
     {
-        visitor_context(const fp_chunk& chunk, std::vector<game*>& games)
-            : chunk(chunk), games(games)
+        visitor_context(const fp_chunk& chunk, std::vector<game*>& games,
+                        std::vector<std::string>& game_types)
+            : chunk(chunk), games(games), game_types(game_types)
         {
             const std::optional<fp_expr_title>& implicit_title =
                 chunk.get_implicit_title();
@@ -48,6 +49,7 @@ protected:
         std::optional<int> test_case_idx;
 
         std::vector<game*>& games;
+        std::vector<std::string>& game_types;
         std::optional<fp_expr_title> title;
         std::vector<std::string> comments;
         simple_text_hash input_hash;

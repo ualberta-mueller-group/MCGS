@@ -4,19 +4,22 @@
 //---------------------------------------------------------------------------
 
 #include "global_options.h"
-#include "test/amazons_test.h"
-#include "test/cannibal_clobber_test.h"
-#include "test/domineering_test.h"
-#include "test/fission_test.h"
-#include "test/gen_toads_test.h"
-#include "test/grid_game_hashes_test.h"
-#include "test/grid_hash_test.h"
-#include "test/grid_mask_test.h"
-#include "test/n_bit_int_test.h"
-#include "test/sheep_grid_generator_test.h"
-#include "test/toppling_dominoes_test.h"
-#include "test/sheep_test.h"
-#include "test/winning_moves_test.h"
+#include "amazons_test.h"
+#include "cannibal_clobber_test.h"
+#include "domineering_test.h"
+#include "fission_test.h"
+#include "gen_king_dirt_test.h"
+#include "gen_toads_test.h"
+#include "grid_game_hashes_test.h"
+#include "grid_hash_test.h"
+#include "grid_mask_test.h"
+#include "n_bit_int_test.h"
+#include "sheep_grid_generator_test.h"
+#include "split_test_gen_king_dirt.h"
+#include "throw_assert.h"
+#include "toppling_dominoes_test.h"
+#include "sheep_test.h"
+#include "winning_moves_test.h"
 const bool RUN_OVERRIDE_TESTS = false;
 
 #include <cassert>
@@ -98,7 +101,9 @@ void print_usage(const char* exec_name)
 
 int main(int argc, const char** argv)
 {
-    mcgs_init_1();
+    THROW_ASSERT(argc >= 1);
+    mcgs_init_1(argv[0]);
+
     global::silence_warnings.set(true);
     global::use_db.set(false);
     mcgs_init_2();
@@ -189,6 +194,7 @@ int main(int argc, const char** argv)
     toppling_dominoes_test_all();
     gen_toads_test_all();
     sheep_test_all();
+    gen_king_dirt_test_all();
     //}
 
     normalize_test_all();
@@ -203,7 +209,9 @@ int main(int argc, const char** argv)
     // Other MCGS features
     simple_text_hash_test_all();
     file_parser_test_all();
-    cli_options_test_all();
+
+    THROW_ASSERT(argc >= 1);
+    cli_options_test_all(argv[0]);
     
     scale_test_all();
     game_bounds_test_all();

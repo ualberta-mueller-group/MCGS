@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "cgt_move.h"
+#include "integral_conversion.h"
 #include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "iobuffer.h"
@@ -111,7 +112,7 @@ void nogo_1xn::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
 
-    const int to = cgt_move::move1_get_part_1(m);
+    const int to = integral_cast_checked<int>(cgt_move::move1_get_part_1(m));
     assert(at(to) == EMPTY);
 
     // incremental hash
@@ -131,7 +132,7 @@ void nogo_1xn::undo_move()
     const move mc = last_move();
     game::undo_move();
 
-    const int to = cgt_move::move1_get_part_1(mc);
+    const int to = integral_cast_checked<int>(cgt_move::move1_get_part_1(mc));
     const bw player = cgt_move::get_color(mc);
     assert(at(to) == player);
 

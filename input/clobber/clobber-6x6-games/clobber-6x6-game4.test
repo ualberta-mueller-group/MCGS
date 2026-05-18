@@ -1,0 +1,72 @@
+{version 1.5}
+[clobber]
+
+/* game 4, after move 23: B b2c2 */
+.XO..O|X.X.X.|......|O.X.O.|.X....|..OO.X {W win}
+
+/* game 4, after move 22: W e3e4 */
+.XO..O|XXO.X.|......|O.X.O.|.X....|..OO.X {B loss}
+
+/* game 4, after move 21: B f4e4 */
+.XO..O|XXO.X.|....O.|O.X.X.|.X....|..OO.X {W win}
+
+/* game 4, after move 20: W b6c6 */
+.XO..O|XXO.X.|....O.|O.X.OX|.X....|..OO.X
+ {B loss}
+
+/* game 4, after move 19: B c5c6 */
+.XO..O|XXO.X.|....O.|O.X.OX|.X....|.OXO.X
+ {W win}
+
+/* game 4, after move 18: W d5d6 */
+.XO..O|XXO.X.|....O.|O.X.OX|.XX...|.OOO.X
+ {B loss}
+
+/* game 4, after LOSING move 17: B a1b1. 
+B d6c6 is the only winning move */
+.XO..O|XXO.X.|....O.|O.X.OX|.XXO..|.OOX.X
+ {W win}
+
+/* game 4, after move 16: W e5d5 */
+XOO..O|XXO.X.|....O.|O.X.OX|.XXO..|.OOX.X
+ {B win}
+
+/* game 4, after move 15: B f3f4 */
+XOO..O|XXO.X.|....O.|O.X.OX|.XXXO.|.OOX.X
+ {W loss}
+
+/* game 4, after move 14: W d3e3 */
+XOO..O|XXO.X.|....OX|O.X.OO|.XXXO.|.OOX.X
+ {B win}
+
+/* game 4, after move 13: B d4d5 */
+XOO..O|XXO.X.|...OXX|O.X.OO|.XXXO.|.OOX.X
+ {W loss}
+
+/* game 4, after LOSING move 12: W a6b6 */
+XOO..O|XXO.X.|...OXX|O.XXOO|.XXOO.|.OOX.X
+ {B win}
+
+/* game 4, after LOSING move 11: B a5b5 */
+XOO..O|XXO.X.|...OXX|O.XXOO|.XXOO.|OXOX.X
+ {W win}
+
+/* game 4, after move 10: W c3d3 */
+XOO..O|XXO.X.|...OXX|O.XXOO|XOXOO.|OXOX.X
+ {B win}
+
+/* game 4, after move 9: B a3a2 */
+XOO..O|XXO.X.|..OXXX|O.XXOO|XOXOO.|OXOX.X
+ {W loss}
+
+/* game 4, after move 8: W b3c3 */
+XOO..O|OXO.X.|X.OXXX|O.XXOO|XOXOO.|OXOX.X
+ {B win}
+
+/* game 4, after move 7: B b4c4 */
+XOO..O|OXO.X.|XOXXXX|O.XXOO|XOXOO.|OXOX.X
+ {W loss}
+
+/* game 4, after move 6: W d1c1 */
+XOO..O|OXO.X.|XOXXXX|OXOXOO|XOXOO.|OXOX.X
+ {B win}

@@ -10,6 +10,7 @@
 #include <optional>
 
 #include "init_database.h"
+#include "test_filter.h"
 
 enum print_moves_action_enum
 {
@@ -24,7 +25,7 @@ enum print_moves_action_enum
 */
 struct cli_options
 {
-    cli_options(const std::string& test_directory);
+    cli_options();
     ~cli_options();
 
     std::shared_ptr<file_parser> parser;
@@ -39,6 +40,7 @@ struct cli_options
     bool use_player;
 
     print_moves_action_enum print_moves_action;
+    bool format_moves_as_options;
 
     std::string test_directory;
     std::string outfile_name;        // CSV output file
@@ -56,10 +58,10 @@ struct cli_options
     std::optional<std::string> search_graph_verify_dir;
 
     std::optional<std::string> db_dump_file_name;
+    std::optional<std::string> lib_ctl_output_dir;
 
-    static constexpr const char* DEFAULT_RELATIVE_DB_FILE = "database.bin";
-    static constexpr const char* DEFAULT_RELATIVE_TEST_PATH = "input/autotests";
-    static constexpr const char* DEFAULT_TEST_OUTFILE = "out.csv";
+    test_filter_enum test_filter_type;
+
     static constexpr const unsigned long long DEFAULT_TEST_TIMEOUT = 500;
 };
 

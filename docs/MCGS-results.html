@@ -1,15 +1,32 @@
 <!DOCTYPE html>
+
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>MCGS Computational Results</title>
 </head>
+
 <body>
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
+
 <h1>MCGS Computational Results</h1>
 
 <p>Contents:</p>
 <ul>
-<li><a href="#partisan">Partisan Games</a></li>
+<li><a href="#partisan">Partisan Games</a>
+    <ul>
+    <li><a href="#amazons">Amazons</a></li>
+    <li><a href="#clobber-1xn">1xn Clobber, Linear Clobber</a></li>
+    <li><a href="#clobber">Clobber on a Grid</a></li>
+    <li><a href="#cannibal_clobber">Cannibal Clobber</a></li>
+    <li><a href="#nogo">NoGo</a></li>
+    </ul>
+</li>
 <li><a href="#impartial">Impartial Games</a>
     <ul>
     <li><a href="#impartial-clobber">Impartial Clobber</a></li>
@@ -21,26 +38,39 @@
 </ul>
 
 <h2><a name="partisan"></a>Partisan Games</h2>
+<h3><a name="amazons"></a>Amazons</h3>
+
 <h3><a name="clobber-1xn"></a>1xn Clobber, Linear Clobber</h3>
 <p>
 Conjectures from [Albert et al 2005]:
 </p>
 <p>
-Conjecture 1. Boards of the form (XO)^n are first player wins for all n != 3.
+Conjecture 1. Boards of the form <code>(XO)<sup>n</sup></code> are first player wins for all n != 3.
 </p>
 <p>
-Conjecture 2. (XXO)^n = floor((n + 1)/2)·up.
+Conjecture 2. <code>(XXO)<sup>n</sup></code> = floor((n + 1)/2)·&uarr;.
 </p>
 
 <p>Conjecture 1 was proven by [Chen et al 2025].
-Computationally, [Folkersen et al 2025] verify Conjecture 1 for all n up to 50, and Conjecture 2 for all n up to 28.
+<br>Computationally, [Folkersen et al 2025] verify Conjecture 1 for all n up to 50, and Conjecture 2 for all n up to 28.
+<br>MCGS has also verified Conjecture 1, for all n up to 30.
 </p>
+
+<p>Bounds for <code>(XO)<sup>n</sup></code> in terms of multiples of &uarr;:
+<br>For n=1, 2, 4, 5: &darr;&darr; &lt; <code>(XO)<sup>n</sup></code> &lt; &uarr;&uarr;, and these games are confused with &darr;, 0 and &uarr;.
+<br>For n=3: <code>(XO)<sup>n</sup></code> = 0
+<br>For 5 &lt; n &lt; 25, &darr; &lt; <code>(XO)<sup>n</sup></code> &lt; &uarr;.
+<br>
+Computed by Taylor Folkersen with MCGS 2026-03-03.
+<br>Conjecture: For all n &gt; 5, &darr; &lt; <code>(XO)<sup>n</sup></code> &lt; &uarr;
+</p>
+
 <p>References:
 <ol>
 <li>Albert, M., Grossman, J., Nowakowski, R., Wolfe, D.: An introduction to Clobber.
 Integers 5(2), 12 pp. (2005), article A01, MR2192079
 
-<li>T. Folkersen, Z. Bashir, F. Tavakoli and M. Müller. 
+<li>T. Folkersen, Z. Bashir, F. Tavakoli and M. M&uuml;ller. 
 <a href="https://webdocs.cs.ualberta.ca/~mmueller/ps/2025/Clobber_Solver_ACG_2025.pdf">
 SEGClobber - A Linear Clobber Solver</a>.
 Advances in Computer Games, 2025.
@@ -54,15 +84,10 @@ A Proof of the 2004 Albert-Grossman-Nowakowski-Wolfe Conjecture on Alternating L
 </p>
 
 <h3><a name="clobber"></a>Clobber</h3>
-Rectangular nxm grid, n >= m, alternating pattern, starting with Black (X).
+<p>
+Rectangular nxm grid, n &leq; m, alternating pattern, starting with Black (X).
 N = first player win, P = second player win.
-
-<style>
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
-</style>
+</p>
 
 <table><thead>
   <tr>
@@ -183,6 +208,95 @@ a clobber program to find all winning moves for small positions (up to 5x6).
 After thinking for ~43 hours, it determined that there are no winning moves from the 5x6 checkerboard position, so 5x6 clobber is a second player win.</q>
 </p>
 
+<h3><a name="cannibal_clobber"></a>Cannibal Clobber</h3>
+<p>
+Conjecture: Linear alternating Cannibal Clobber <code>(XO)<sup>n</sup></code> is in N for all n>0.
+MCGS verified this for all n &leq; 24.
+</p>
+<p>
+Conjecture: Cannibal Clobber, checkerboard pattern on a nxm rectangle, n &leq; m is in N for all n m except n=2, m=3 is in P.
+MCGS verified for 2xm, m &leq; 11, 3xm, m &leq; 7, 4x4, 4x5.
+</p>
+
+<h3><a name="nogo"></a>NoGo</h3>
+<p>
+1xn Nogo is in N for n &leq; 39, except 1x1 and 1x4 are in P. Known results for larger boards in the table below.
+See references [1,2] and the previous results reviewed in those.
+</p>
+<p>
+To do: try with MCGS
+</p>
+<table><thead>
+  <tr>
+    <th>n\m</th>
+    <th>2</th>
+    <th>3</th>
+    <th>4</th>
+    <th>5</th>
+    <th>6</th>
+    <th>7</th>
+    <th>8</th>
+    <th>9</th>
+    <th>10</th>
+    <th>11</th>
+    <th>12</th>
+    <th>13</th>
+  </tr></thead>
+<tbody>
+  <tr>
+    <th>2</th>
+    <td>N</td>
+    <td>P</td>
+    <td>P</td>
+    <td>N</td>
+    <td>N</td>
+    <td>N</td>
+    <td>N</td>
+    <td>P</td>
+    <td>P</td>
+    <td>N</td>
+    <td>N</td>
+    <td>N</td>
+  </tr>
+  <tr>
+    <th>3</th>
+    <td></td>
+    <td>N</td>
+    <td>P</td>
+    <td>N</td>
+    <td>N</td>
+    <td>N</td>
+    <td>N</td>
+    <td>N</td>
+  </tr>
+  <tr>
+    <th>4</th>
+    <td></td>
+    <td></td>
+    <td>P</td>
+    <td>N</td>
+    <td>N</td>
+  </tr>
+  <tr>
+    <th>5</th>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td>N</td>
+  </tr>
+</tbody>
+</table>
+
+<p>
+References:
+<br>
+1. H. Du and M. M&uuml;ller. Solving Linear NoGo with Combinatorial Game Theory. Computers and Games (CG 2024), pp. 54-65, Springer LNCS 15550, 2025.
+<br>
+2. H. Du, T.-h. Wei, and M&uuml;ller. Solving NoGo on Small Rectangular Boards. Advances in Computer Games (ACG) 2023, LNCS 14528, p. 39-49.
+</p>
+
+
+
 <h2><a name="impartial"></a>Impartial Games</h2>
 <h3><a name="impartial-clobber"></a>Impartial Clobber</h3>
 <h4><a name="impartial-clobber-1xn"></a>Impartial Linear Clobber</h4>
@@ -197,30 +311,52 @@ and added to the table. In contrast, random starting positions allow less re-use
 <figure>
 <img src="images/Impartial-Clobber-xo-1-2000.pdf" alt="Impartial-Clobber-xo-1-2000">
 <figcaption>
-Figure 1: Nim values for (xo)<sup>n</sup>, n=1..2000
+Figure 1: Nim values for <code>(XO)<sup>n</sup></code>, n=1..2000
 </figcaption>
 </figure>
 
 <figure>
 <img src="images/Impartial-Clobber-xxo-1-1000.pdf" alt="Impartial-Clobber-xxo-1-1000">
 <figcaption>
-Figure 2: Nim values for (xxo)<sup>n</sup>, n=1..1000
+Figure 2: Nim values for <code>(XXO)<sup>n</sup></code>, n=1..1000
 </figcaption>
 </figure>
 
 <figure>
 <img src="images/Impartial-Clobber-xxxo-1-1000.pdf" alt="Impartial-Clobber-xxxo-1-1000">
 <figcaption>
-Figure 3: Nim values for (xxxo)<sup>n</sup>, n=1..1000
+Figure 3: Nim values for <code>(XXXO)<sup>n</sup></code>>, n=1..1000
 </figcaption>
 </figure>
 
 <p>History: 
-<br>(xo)<sup>n</sup>, n=1..42, except n= 17, 21, 39, 40, by (Dai and Chen 2022).
-<br>(xo)<sup>n</sup>, n=1..2000 computed Nov 20, 2025. All values from (Dai and Chen 2022) confirmed.
-<br>(xxo)<sup>n</sup>, n=1..1000 computed Nov 20, 2025.
-<br>(xxxo)<sup>n</sup>, n=1..1000 computed Nov 20, 2025.
+<br>
+<code>(XO)<sup>n</sup></code>, 
+n=1..42, except n= 17, 21, 39, 40, 
+by (Dai and Chen 2022).
+<br>
+<code>(XO)<sup>n</sup></code>, 
+n=1..2000 computed by MCGS Nov 20, 2025. 
+All values from (Dai and Chen 2022) confirmed.
+<br>
+<code>(XXO)<sup>n</sup></code>, 
+n=1..1000 computed by MCGS Nov 20, 2025.
+<br>
+<code>(XXXO)<sup>n</sup></code>, 
+n=1..1000 computed by MCGS Nov 20, 2025.
 </p>
+
+<h3><a name="impartial_cannibal_clobber"></a>Impartial Cannibal Clobber</h3>
+<p><code>X<sup>n</sup></code> is equal to some octal game? Which one?</p>
+<p>First 127 Nim values:</p>
+
+<figure>
+<img src="images/Impartial-CannibalClobber-1xn-1-127.pdf" alt="Impartial-CannibalClobber-1xn-1-127">
+<figcaption>
+Figure 4: Impartial Cannibal Clobber, 1xn board, Nim values for <code>X<sup>n</sup></code>, n=1..127
+</figcaption>
+</figure>
+
 <h3><a name="impartial-nogo"></a>Impartial NoGo</h3>
 <p>We are not aware of any previous published results on this game.
 In the table, symmetric boards with rows &gt; columns are not shown.

@@ -24,6 +24,7 @@
 #include "domineering.h"
 #include "fission.h"
 #include "sheep.h"
+#include "gen_king_dirt.h"
 
 // Others
 #include "kayles.h"

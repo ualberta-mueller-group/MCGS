@@ -1,0 +1,67 @@
+{version 1.5}
+[clobber]
+
+/* game 5, after move 20: W e5d5 */
+X.XX..|.XO..O|O..O.O|X.XX.X|.O.O..|..O...
+ {B loss}
+
+/* game 5, after move 19: B b4a4 */
+X.XX..|.XO..O|O..O.O|X.XX.X|.O.XO.|..O...
+ {W win}
+
+/* game 5, after move 18: W d2d3 */
+X.XX..|.XO..O|O..O.O|OXXX.X|.O.XO.|..O...
+ {B loss}
+
+/* game 5, after LOSING move 17: B b3b2 */
+X.XX..|.XOO.O|O..X.O|OXXX.X|.O.XO.|..O...
+ {W win}
+
+/* game 5, after move 16: W a5b5 */
+X.XX..|.OOO.O|OX.X.O|OXXX.X|.O.XO.|..O...
+ {B win}
+
+/* game 5, after move 15: B c3b3 */
+X.XX..|.OOO.O|OX.X.O|OXXX.X|OX.XO.|..O...
+ {W loss}
+
+/* game 5, after move 14: W e6e5 */
+X.XX..|.OOO.O|OOXX.O|OXXX.X|OX.XO.|..O...
+ {B win}
+
+/* game 5, after move 13: B f5f4 */
+X.XX..|.OOO.O|OOXX.O|OXXX.X|OX.XX.|..O.O.
+ {W loss}
+
+/* game 5, after move 12: W e2d2 */
+X.XX..|.OOO.O|OOXX.O|OXXX.O|OX.XXX|..O.O.
+ {B win}
+
+/* game 5, after move 11: B f6f5 */
+X.XX..|.OOXOO|OOXX.O|OXXX.O|OX.XXX|..O.O.
+ {W loss}
+
+/* game 5, after move 10: W e4f4 */
+X.XX..|.OOXOO|OOXX.O|OXXX.O|OX.XXO|..O.OX
+ {B win}
+
+/* game 5, after move 9: B e3d3 */
+X.XX..|.OOXOO|OOXX.O|OXXXOX|OX.XXO|..O.OX
+ {W loss}
+
+/* game 5, after move 8: W f1f2 */
+X.XX..|.OOXOO|OOXOXO|OXXXOX|OX.XXO|..O.OX
+ {B win}
+
+/* game 5, after move 7: B e1d1 */
+X.XX.O|.OOXOX|OOXOXO|OXXXOX|OX.XXO|..O.OX
+ {W loss}
+
+/* game 5, after LOSING move 6: W b1b2 */
+X.XOXO|.OOXOX|OOXOXO|OXXXOX|OX.XXO|..O.OX
+ {B win}
+ 
+/* game 5, after move 5: B d6d5 */
+XOXOXO|.XOXOX|OOXOXO|OXXXOX|OX.XXO|..O.OX
+ {W win}
+

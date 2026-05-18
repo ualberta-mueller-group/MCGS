@@ -1,6 +1,6 @@
 #include "sumgame_test_clobber.h"
 #include "clobber.h"
-#include "test/test_utilities.h"
+#include "test_utilities.h"
 
 void sumgame_test_clobber_all()
 {
