@@ -78,6 +78,7 @@
 */
 #pragma once
 #include <any>
+#include <limits>
 #include <variant>
 #include <type_traits>
 #include <typeindex>
@@ -614,6 +615,9 @@ struct serializer<std::monostate>
 template <class... Ts>
 struct serializer<std::variant<Ts...>>
 {
+    // Can have at most 254 alternatives due to disk encoding using a uint8_t
+    static_assert(std::variant_size_v<std::variant<Ts...>> < std::numeric_limits<uint8_t>::max());
+
     inline static void save(obuffer& os, const std::variant<Ts...>& val,
                             serializer_ctx* ctx)
     {
@@ -621,7 +625,8 @@ struct serializer<std::variant<Ts...>>
         if (variant_idx == std::variant_npos)
             std::abort();
 
-        os.write_u64(variant_idx);
+        const uint8_t variant_idx_u8 = static_cast<uint8_t>(variant_idx);
+        os.write_u8(variant_idx_u8);
 
         save_impl<0, Ts...>(os, val, ctx);
     }
@@ -630,11 +635,11 @@ struct serializer<std::variant<Ts...>>
     {
         std::variant<Ts...> val;
 
-        const uint64_t variant_idx_u64 = is.read_u64();
-        if (variant_idx_u64 == static_cast<uint64_t>(std::variant_npos))
+        const uint8_t variant_idx_u8 = is.read_u8();
+        if (variant_idx_u8 == static_cast<uint8_t>(std::variant_npos))
             std::abort();
 
-        load_impl<0, Ts...>(is, val, ctx, static_cast<size_t>(variant_idx_u64));
+        load_impl<0, Ts...>(is, val, ctx, static_cast<size_t>(variant_idx_u8));
 
         return val;
     }
@@ -644,11 +649,11 @@ struct serializer<std::variant<Ts...>>
     {
         std::variant<Ts...>* val = new std::variant<Ts...>();
 
-        const uint64_t variant_idx_u64 = is.read_u64();
-        if (variant_idx_u64 == static_cast<uint64_t>(std::variant_npos))
+        const uint8_t variant_idx_u8 = is.read_u8();
+        if (variant_idx_u8 == static_cast<uint8_t>(std::variant_npos))
             std::abort();
 
-        load_impl<0, Ts...>(is, *val, ctx, static_cast<size_t>(variant_idx_u64));
+        load_impl<0, Ts...>(is, *val, ctx, static_cast<size_t>(variant_idx_u8));
 
         return val;
     }
