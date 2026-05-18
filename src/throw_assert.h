@@ -20,13 +20,13 @@
 #include <string>    // IWYU pragma: keep
 #include <stdexcept> // IWYU pragma: keep
 #include <type_traits> // IWYU pragma: keep
+#include "stringify_macro.h" // IWYU pragma: export
 
 // NOLINTBEGIN(readability-identifier-naming)
 
 // Generate assert-like exception message
 #define _GET_THROW_MESSAGE(cond)                                               \
-    (std::string(__FILE__) + ":" + std::to_string(__LINE__) +                  \
-     ": Condition `" + std::string(#cond) + "' failed.")
+    (__FILE__ ":" STRINGIFY(__LINE__) ": Condition `" #cond "' failed.")
 
 // 1 arg implementation
 #define _THROW_ASSERT_1(expr)                                                  \
