@@ -106,20 +106,17 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Taylor to experiment
 - keep the separate "dbg" and "opt" builds, or preferably these plus a few more
 
-## Version 1.7: integrate thermographs in solving algorithms
-add simplest equal game to db
-use of database in search
-what do we have now?
-how to use it more/better?
-use the new instrumentation tools to compare with SEGClobber, NoGo and see where MCGS lags behind
-Work on move ordering
+## Version 1.7: integrate thermograph DB in solving algorithms
 
-- Improve DB
-    - SEG replacement - Game substitution
+### Version 1.7 database improvements
+- simplest equal game (SEG) replacement - Game substitution
+        - add SEG entry to db
         - can we do it in a game-independent way?
-- Serialisation for polymorphic types already mostly implemented (though is unused)
-Need to solve similar type remapping problem as with `game_type_t` in the database. Solve in a similar way by initializing all IDs on startup?
+- use of database in search
+    - what do we have now?
+    - how to use it more/better?
 
+### Version 1.7 use of thermographs
 - compute TG
 - store TG in TT and DB
 - use bounds from TG for solving hot games
@@ -128,28 +125,100 @@ Need to solve similar type remapping problem as with `game_type_t` in the databa
     - make it optional/separate from boolean solver?
     - use in boolean solver. How exactly?
     - Try with Amazons where we have another solver that already uses it to compare with
+    
+### Version 1.7 improve move ordering
+- Work on move ordering
+- See section on this topic below
+
+### Version 1.7 "other tasks"
+- review and update MCGS - A User's Guide (in Google slides)
+- use the new instrumentation tools
+    - compare MCGS with SEGClobber, NoGo 
+    - see where MCGS lags behind
+- Serialisation for polymorphic types already mostly implemented (though is unused)
+    - Need to solve similar type remapping problem as with `game_type_t` in the database.
+    - Solve in a similar way by initializing all IDs on startup?
 
 ## Version 1.8: cleanup and performance improvement
 - No big new features
 - Focus on performance testing, tuning, code review and cleanup
+- Do some of the game-specific optimisations in this list?
 
 # New Features
 
 ## Big Future Directions - Ideas
-- Support games on Graphs
-    - Preliminary work by Prem with Claude
-        - status?
-    - Need graph isomorphism algorithms? Nauty?
-    - Test graph games by conversion from grid and strip
-        - for games such as cram, clobber: same game if same underlying graph
-        - could have improved symmetry detection?
-- abstract game class to construct arbitrary games from text
-    - Example: {1|*}
-    - Use example: test if game G is equal to a given canonical form C
-        - given G as game, and C as text
-        - search if G-C = 0
-- Other core search algorithms - PNS, df-pn, EWS
-    - what does it take to "swap out" the main search engine?
+
+### Support games on Graphs
+- Preliminary work by Prem with Claude
+    - status?
+    - T: I've briefly looked at the code and so far mostly have minor complaints:
+        - `graph_game`'s functions which take vertices could have better
+         argument naming: `color_at(v)` and `adjacent(u, v)`. I would name
+         these something like `v` and `v1`, `v2` (or make the first argument
+         of both be the same letter)
+        - `cgt_basics.h` provides `char_to_color(...)` and
+         `inverse_color(...)` which should be used instead of the 
+         verbose if/else blocks
+        - `board` is maybe a confusing name for the stones. 
+        I haven't thought of a better name
+        - The hash function seems functional, though ideally vertices 
+        should be removable and the adjacency matrix should reflect this
+        - Vectors should probably be flattened i.e. `vector<vector<bool>>`
+         should be `vector<bool>` for better cache locality
+    - M: concerned about using adjacency matrix instead of adjacency lists.
+        - Many games have bounded degree (e.g. grid, strip, hex boards)
+        - adjacency lists are O(n) storage while matrix is O(n^2)
+        - tradeoffs depending on which graph functions are bottlenecks
+        - Maybe n will be small enough in practice so that n^2 does not matter.
+        - Adj. lists have an advantage in finding all neighbors of a node
+- full support for graph games requirements:
+    - base class
+    - sample graph games
+        - which? What results are there to compare with?
+    - conversion from strip and grid
+    - correctness tests
+    - performance tests, scaling tests
+
+- Need graph isomorphism algorithms?
+    - Nauty `https://pallini.di.uniroma1.it/`
+        - produces canonical labellings of directed graphs, 
+        respecting vertex colors such as MCGS stone color
+        limitations? multi-edge support? performance?
+        - Given a canonical labelling it should be straightforward to compute
+         a local_hash for an MCGS graph game
+    - NetworkX (Python) library includes graph hashing
+        - T: not suitable for our purposes
+- Test graph games by conversion from grid and strip
+    - for games such as cram, clobber: same game if same underlying graph
+    - could have improved symmetry detection?
+
+### abstract game class to construct arbitrary games from text
+- Example: {1|*}
+- Use example: test if game G is equal to a given canonical form C
+- given G as game, and C as text
+- search if G-C = 0
+
+### Extract, store, verify proofs
+- Extract from TT
+- Store on file
+- Verify (without hashing, or with new set of hash codes)
+    - Justify replacement steps - re-solve by search?
+- Publish proofs on website
+- UI for proof replay tool
+    - translate back from simplified proof and real game
+    - must trace which parts of simplified sum correspond to 
+    which part of real game
+        - map to subgames
+    - handle play in replaced parts
+        - map to replaced games, e.g. in SEG (simplest equal game)
+        - find equally good move in real game
+    - handle play in pruned parts
+        - maintain 0 value for 0 subgames, e.g. G + (-G)
+        - when inequality between games used in proof of win or loss
+            - find better-or-equal move in real game
+
+### Other core search algorithms - PNS, df-pn, EWS
+- what does it take to "swap out" the main search engine?
 
 ## Implement more games
 - Col, Snort
@@ -682,7 +751,11 @@ O.O
         - Amazons
 
 - add other impartial games
-
+- collect/publish documentation for all our claims on the results page.
+    - the commands and MCGS version used
+    - the html and/or csv output
+    - save and store proofs
+    
 ## Development Notes
 - Move some discussion to there from here, where implementation has started
 
