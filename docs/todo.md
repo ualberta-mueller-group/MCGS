@@ -256,6 +256,14 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - regularly compile MCGS with AddressSanitizer to check for memory errors
 - Taylor build on Mac?
 
+## github
+- private branches to a public github repo.
+    - seems complex, not needed currently
+    - `https://stackoverflow.com/questions/7983204/having-a-private-branch-of-a-public-repo-on-github`
+        - approach: have a private copy of the repo 
+        - cross-push from one to the other. 
+        - It seems a bit complicated and easy to mess up
+
 ## Unresolved Code Issues
 - Consider alternatives to `move` being an int?
     - Pass around pointers to heap-allocated moves, whose actual types
@@ -273,12 +281,6 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 ### Use bounds on subgames from db
 - add upper and lower bounds, use LS and RS from thermographs, considering toplay, as in Amazons paper.
-
-### Almost solved sums
-- If all subgames are in the DB, but the sum is not solved (e.g. N+N, L+R, N+opponent), then:
-    - Play on the less (least) complex subgame, to try to reduce it to 0 and change the sum to a single game
-
-    - More complicated schemes are possible if we have more than two subgames, all in DB. For example, if we can "almost" solve the sum statically, except for one subgame Gi, then play in Gi and try to get rid of it or change its outcome class.
 
 
 ### Ownership of games in `sumgame`
@@ -300,7 +302,8 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Review unit tests for completeness, coverage of files and functions. Use a tool to check this?
 - Unit test for normalisation, grid games
 - Add missing unit tests
-    - nogo_1xn: add unit tests for move generator
+    - `nogo_1xn`: add unit tests for move generator
+- unit tests for `grid_location`, different size and shape of boards.
 
 ## Testing program changes; comparing program versions
 - How to decide: When is program Version A better than Version B? 
@@ -316,6 +319,8 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Bottleneck is UI reflow/repaint, not search time
     - May need to paginate results, which may be undesired. Could also disable automatic update and add "Search" button
         - Do both in some way?
+- allow even more filtering by time used
+    - show only cases that took over e.g. 0.1 seconds
 
 ## File-based test cases
 
@@ -388,6 +393,14 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Quick and dirty method just to get intuition and some basic data
     - Good to know how much time is spent doing transposition table lookups, DB lookups, etc, before designing these
         - i.e. if in-memory DB lookups already dominate the run time, then adding disk reads may be especially costly
+- re-run tests with `complexity_score` and/or `play in the middle` on, decide on default settings
+
+### Other programs to test against
+- Glop
+    - the main web page still works: `https://sprouts.tuxfamily.org/wiki/doku.php?id=home`
+    - the download did not: `http://download.tuxfamily.org/sprouts/glop-2.2.tar.bz2` 
+        - just sits there and does nothing.
+        - internet search also failed
 
 ## Command-line interface CLI for testing and experiments
 - Improve MCGS CLI args
@@ -448,6 +461,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - Can we dropin-replace the main search engine from minimax to one of those?
 
 ## Move ordering and heuristics
+- sort into sum-level and subgame-level ideas
 - Generic, game-independent move ordering
     - iterative deepening and heuristic "best move" from previous iteration
         - requires proof complexity, expected work-type heuristic
@@ -477,6 +491,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Implemented a hook - `game::complexity_score()` - in Version 1.5
     - equal to `size()` for strip and grid
     - 1 for all other games
+    - controlled by `global::use_complexity_score`
 - Compare with Complexity Score 1..4 in SEGClobber
 - Currently only used in impartial games, LV algorithm, to select the
    last subgame to search
@@ -498,6 +513,12 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - add a simple complexity score to the database (just move count?) and  use one of these cheaper heuristics for games not in the database? 
 - T: Is there some sensible rule for choosing a most complex game when there are mixed types, and some games are in the database while others aren't?
 - try only for subgame ordering after split?
+
+### Almost solved sums
+- If all subgames are in the DB, but the sum is not solved (e.g. N+N, L+R, N+opponent), then:
+    - Play on the less (least) complex subgame, to try to reduce it to 0 and change the sum to a single game
+
+    - More complicated schemes are possible if we have more than two subgames, all in DB. For example, if we can "almost" solve the sum statically, except for one subgame Gi, then play in Gi and try to get rid of it or change its outcome class.
 
 ## Search features
 
@@ -569,9 +590,9 @@ most important solved positions (closest to the root, most work) in a persistent
     - naming scheme? e.g. `database-clobber-4x5.bin, database-clobber_1xn-20.bin`
 
 ## Building Databases
-- Do we need configuration options?
-    - silent mode `--silence_warnings` for building databases? 
-        - It prints a lot of text for larger DB.
+- silent mode `--silence_warnings` for building databases
+    - It prints a lot of text for larger DB.
+    - or print only every n seconds
 
 - Support for merging DB that were built separately
     - Or support multiple DB
