@@ -304,6 +304,10 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Add missing unit tests
     - `nogo_1xn`: add unit tests for move generator
 - unit tests for `grid_location`, different size and shape of boards.
+- test move generators - no duplicate moves should be generated
+    - sometimes unavoidable for impartial wrapper? Unless we add
+      filtering in game-specific generator.
+    - impartial `toppling_dominoes` with a '#' character will generate the same move twice
 
 ## Testing program changes; comparing program versions
 - How to decide: When is program Version A better than Version B? 
@@ -355,7 +359,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 ### Write more .test files
 - ".test" features for new DB features
-    - {B winning moves}: Add results to (some? all?) .test files?
+    - {B/W winning moves}: Add results to (some? all?) .test files?
         - Automate this to some degree? 
         - check using CGSuite? 
         - Or same program as "verified by XYZ program" comments?
@@ -692,10 +696,11 @@ most important solved positions (closest to the root, most work) in a persistent
 # Specific Games
 
 ## Abstract game (text input)
-- `abstract_game` or `game_abstract` class
-- make abstract game from string e.g. "{ 3 | 5}"
+- `abstract_game` or `game_abstract` or `cgt_game`cclass
+- make abstract game from string e.g. "{ 5|| 3 | 2}"
 - move generator to move to left or right substring?
     - or convert into an internal representation when reading?
+- make tests that (sum) games are equal to an `abstract_game`
     
 ## Create Game from Options
 - Create game from options GL, GR
