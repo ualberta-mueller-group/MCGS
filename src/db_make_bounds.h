@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "bounds.h"
 #include "database.h"
 #include "sumgame.h"

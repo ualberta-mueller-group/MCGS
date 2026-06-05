@@ -1,26 +1,25 @@
 #include "thermograph_cache.h"
 
-#include <type_traits>
 #include <vector>
+#include <cassert>
 #include <memory>
+#include <cstddef>
 
-#include "SgBlackWhite.h"
-#include "ThValue.h"
 #include "hashing.h"
-
 #include "ThGraph.h"
-#include "ThScaffold.h"
-#include "iobuffer.h"
+#include "integral_conversion.h"
 #include "thermograph_helpers.h"
+#include "throw_assert.h"
 
 using namespace std;
 
-
-std::shared_ptr<ThGraph> thermograph_cache::insert_and_release(ThGraph* graph)
+shared_ptr<ThGraph> thermograph_cache::insert_and_release(ThGraph* graph)
 {
     assert(graph != nullptr);
 
     const hash_t hash = get_thermograph_hash(*graph);
+
+    static_assert(THGRAPH_ID_NONE == thgraph_id_t());
     thgraph_id_t& graph_id = _hash_to_graph_id[hash];
 
     if (graph_id != THGRAPH_ID_NONE)
@@ -30,18 +29,20 @@ std::shared_ptr<ThGraph> thermograph_cache::insert_and_release(ThGraph* graph)
         return get_graph_from_id(graph_id);
     }
 
-    graph_id = static_cast<thgraph_id_t>(_graphs.size() + 1);
+    // Allocate new ID
+    graph_id = integral_cast_unsafe<thgraph_id_t>(_graphs.size()) + 1;
     assert(graph_id != THGRAPH_ID_NONE);
 
     _graphs.emplace_back(graph);
 
-    std::shared_ptr<ThGraph> cached_graph = get_graph_from_id(graph_id);
+    shared_ptr<ThGraph> cached_graph = get_graph_from_id(graph_id);
     assert(graph == cached_graph.get());
 
     return cached_graph;
 }
 
-thgraph_id_t thermograph_cache::get_graph_id(const ThGraph* graph_nullable) const
+thgraph_id_t thermograph_cache::get_graph_id(
+    const ThGraph* graph_nullable) const
 {
     if (graph_nullable == nullptr)
         return THGRAPH_ID_NONE;
@@ -51,24 +52,23 @@ thgraph_id_t thermograph_cache::get_graph_id(const ThGraph* graph_nullable) cons
 
     THROW_ASSERT(result != _hash_to_graph_id.end());
 
+    assert(result->second != THGRAPH_ID_NONE);
     return result->second;
 }
 
-std::shared_ptr<ThGraph> thermograph_cache::get_graph_from_id(thgraph_id_t graph_id)
+shared_ptr<ThGraph> thermograph_cache::get_graph_from_id(thgraph_id_t graph_id)
 {
     if (graph_id == THGRAPH_ID_NONE)
         return nullptr;
 
     assert(graph_id > 0);
 
-#warning TODO use numeric cast from header
-    const size_t idx = static_cast<size_t>(graph_id - 1);
+    const size_t idx = integral_cast_checked<size_t>(graph_id - 1);
     THROW_ASSERT(0 <= idx && idx < _graphs.size());
 
     return _graphs[idx];
 }
 
-#warning TODO thermograph_cache equality
 bool thermograph_cache::operator==(const thermograph_cache& rhs) const
 {
     if (_graphs.size() != rhs._graphs.size())
@@ -79,6 +79,8 @@ bool thermograph_cache::operator==(const thermograph_cache& rhs) const
         if (!(*_graphs[i] == *rhs._graphs[i]))
             return false;
 
-    return _hash_to_graph_id == rhs._hash_to_graph_id;
-}
+    if (_hash_to_graph_id != rhs._hash_to_graph_id)
+        return false;
 
+    return true;
+}

@@ -7,6 +7,11 @@
 
 #include <memory>
 #include <optional>
+#include <unordered_map>
+#include <string>
+#include <vector>
+#include <cassert>
+#include <unordered_set>
 
 #include "test_case_enums.h"
 #include "cgt_move.h"
@@ -14,10 +19,6 @@
 #include "game.h"
 #include "sumgame.h"
 #include "file_parser.h"
-#include <string>
-#include <vector>
-#include <cassert>
-#include <unordered_set>
 
 std::unordered_set<move> get_generated_moves_for_player(const game* g,
                                                         bw player);
@@ -124,6 +125,19 @@ void add_row(std::vector<csv_row*>& rows, ebw player,
 
 void assert_solve_test_file(const std::string& file_name,
                             int expected_case_count);
+
+void play_nth_move(game* g, int move_idx);
+
+template <class Key_T, class Val_T>
+void insert_or_assert_equal(std::unordered_map<Key_T, Val_T>& m,
+                            const Key_T& key, Val_T&& val)
+{
+    auto element_iterator = m.try_emplace(key, val);
+
+    const bool did_insert = element_iterator.second;
+    const Val_T& map_val = element_iterator.first->second;
+    assert(LOGICAL_IMPLIES(!did_insert, map_val == val));
+}
 
 // static_assert forces a semicolon after usage of this macro
 #define ASSERT_DID_THROW(statements)                                           \

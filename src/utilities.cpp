@@ -14,6 +14,30 @@
 using std::vector, std::string, std::stringstream;
 
 ////////////////////////////////////////
+string get_current_time_as_string()
+{
+    string time_string;
+
+    const std::chrono::time_point time = std::chrono::system_clock::now();
+    const std::time_t time_converted = std::chrono::system_clock::to_time_t(time);
+
+    const char* time_ctime = std::ctime(&time_converted);
+    assert(time_ctime != nullptr);
+
+    while (true)
+    {
+        const char c = *time_ctime;
+        ++time_ctime;
+
+        if (c == 0 || c == '\n')
+            break;
+
+        time_string.push_back(c);
+    }
+
+    return time_string;
+}
+
 vector<string> split_string(const string& str)
 {
     vector<string> strs;

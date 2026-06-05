@@ -2,22 +2,36 @@
 
 #include <type_traits>
 #include <vector>
-#include "cgt_basics.h"
-#include "game.h"
 #include <ostream>
 #include <cstdint>
-#include "sumgame.h"
 #include <memory>
 #include <cassert>
+#include <string>
+
+#include "sumgame.h"
+#include "cgt_basics.h"
+#include "game.h"
+#include "serializer.h"
+#include "iobuffer.h"
 
 typedef int32_t bound_t;
 
 enum bound_scale
 {
+    BOUND_SCALE_UP_STAR = 0,
+    BOUND_SCALE_UP,
+    BOUND_SCALE_DYADIC_RATIONAL,
+};
+
+bool scale_is_infinitesimal(bound_scale scale);
+
+inline static constexpr std::array<bound_scale, 3> BOUND_SCALES_ALL
+{
     BOUND_SCALE_UP_STAR,
     BOUND_SCALE_UP,
     BOUND_SCALE_DYADIC_RATIONAL,
 };
+
 
 std::string bound_scale_to_string(bound_scale scale);
 

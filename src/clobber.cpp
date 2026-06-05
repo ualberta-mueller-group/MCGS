@@ -31,6 +31,7 @@ bool only_legal_colors(const std::vector<int>& board)
 } // namespace
 
 ////////////////////////////////////////////////// move generator
+namespace {
 class clobber_move_generator : public move_generator
 {
 public:
@@ -56,21 +57,18 @@ private:
     int _target_point;
     bool _has_move;
 };
+} // namespace
 
 ////////////////////////////////////////////////// clobber
 clobber::clobber(int n_rows, int n_cols) : grid(n_rows, n_cols, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<clobber>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 clobber::clobber(const vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<clobber>())
-#endif
 
 {
     THROW_ASSERT(only_legal_colors(board_const()));
@@ -78,9 +76,7 @@ clobber::clobber(const vector<int>& board, int_pair shape)
 
 clobber::clobber(const string& game_as_string)
     : grid(game_as_string, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<clobber>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
@@ -103,7 +99,6 @@ void clobber::play(const ::move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
-#ifdef USE_GRID_HASH
         _gh.toggle_value(from_coord, to_play);
         _gh.toggle_value(to_coord, opp);
 
@@ -111,15 +106,6 @@ void clobber::play(const ::move& m, bw to_play)
         _gh.toggle_value(to_coord, to_play);
 
         hash.__set_value(_gh.get_value());
-#else
-        // TODO hard coded "2" should go away...
-        hash.toggle_value(2 + from_point, to_play);
-        hash.toggle_value(2 + to_point, opp);
-
-        hash.toggle_value(2 + from_point, EMPTY);
-        hash.toggle_value(2 + to_point, to_play);
-#endif
-
         _mark_hash_updated();
     }
 
@@ -149,7 +135,6 @@ void clobber::undo_move()
     {
         local_hash& hash = _get_hash_ref();
 
-#ifdef USE_GRID_HASH
         _gh.toggle_value(from_coord, EMPTY);
         _gh.toggle_value(to_coord, to_play);
 
@@ -157,14 +142,6 @@ void clobber::undo_move()
         _gh.toggle_value(to_coord, opp);
 
         hash.__set_value(_gh.get_value());
-#else
-        // TODO hard coded "2" should go away...
-        hash.toggle_value(2 + from_point, EMPTY);
-        hash.toggle_value(2 + to_point, to_play);
-
-        hash.toggle_value(2 + from_point, to_play);
-        hash.toggle_value(2 + to_point, opp);
-#endif
         _mark_hash_updated();
     }
 
@@ -399,13 +376,11 @@ split_result clobber::_split_impl() const
     return result;
 }
 
-#ifdef USE_GRID_HASH
 void clobber::_init_hash(local_hash& hash) const
 {
     _gh.init_from_grid(*this);
     hash.__set_value(_gh.get_value());
 }
-#endif
 
 move_generator* clobber::create_move_generator(bw to_play) const
 {
@@ -431,7 +406,7 @@ game* clobber::inverse() const
 
 game* clobber::clone() const
 {
-    return new clobber(*this);
+    return new clobber(board_const(), shape());
 }
 
 ::move clobber::encode_grid_move_to_db(const ::move& m) const
@@ -467,6 +442,7 @@ game* clobber::clone() const
 
 
 ////////////////////////////////////////////////// move generator implementation
+namespace {
 clobber_move_generator::clobber_move_generator(const clobber& game, bw to_play)
     : move_generator(to_play),
       _game(game),
@@ -556,3 +532,4 @@ inline bool clobber_move_generator::_increment_dir()
     _dir_idx++;
     return _dir_idx < GRID_DIRS_CARDINAL.size();
 }
+} // namespace

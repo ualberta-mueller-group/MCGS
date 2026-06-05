@@ -1,12 +1,16 @@
 #include "gen_king_dirt_test.h"
-#include "gen_king_dirt.h"
-#include "print_moves.h"
-#include "test_utilities.h"
 
 #include <sstream>
 #include <vector>
 #include <string>
+#include <cassert>
 #include <tuple>
+
+#include "gen_king_dirt.h"
+#include "test_utilities.h"
+#include "int_pair.h"
+#include "cgt_basics.h"
+
 
 using namespace std;
 

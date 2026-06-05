@@ -57,6 +57,7 @@
 
 */
 
+namespace {
 class mcgs_out
 {
 public:
@@ -73,6 +74,7 @@ private:
     const std::string _filename;
     std::vector<subfile_pair> _streams;
 };
+} // namespace
 
 void test_streams()
 {

@@ -18,6 +18,7 @@ using namespace std;
 //////////////////////////////////////////////////
 // class gen_toads_move_generator
 
+namespace {
 enum toads_move_enum
 {
     TOADS_MOVE_UNKNOWN = 0,
@@ -59,6 +60,7 @@ private:
     toads_move_enum _move_kind;
     int _move_distance;
 };
+} // namespace
 
 ////////////////////////////////////////////////// helper functions
 namespace {
@@ -202,19 +204,22 @@ void gen_toads::print_move(std::ostream& str, const ::move& m, ebw to_play) cons
 
 game* gen_toads::inverse() const
 {
-    return new gen_toads(
-        {
-            get_min_slide(),
-            get_max_slide(),
-            get_max_jump(),
-            get_friendly_jump(),
-        },
-        inverse_mirror_board());
+    return new gen_toads(get_params(), inverse_mirror_board());
 }
 
 game* gen_toads::clone() const
 {
-    return new gen_toads(*this);
+    return new gen_toads(get_params(), board_const());
+}
+
+const std::vector<int> gen_toads::get_params() const
+{
+    return std::vector<int>({
+        _min_slide,    //
+        _max_slide,    //
+        _max_jump,     //
+        _friendly_jump //
+    });                //
 }
 
 //split_result gen_toads::_split_impl() const
@@ -299,6 +304,7 @@ void gen_toads::_init_params(const vector<int>& params)
 //////////////////////////////////////////////////
 // gen_toads_move_generator methods
 
+namespace {
 gen_toads_move_generator::gen_toads_move_generator(const gen_toads& g, bw to_play)
     : move_generator(to_play),
       _g(g),
@@ -500,3 +506,4 @@ inline bool gen_toads_move_generator::_distance_in_jump_bounds() const
     return (_min_jump_signed <= _move_distance) &&
            (_move_distance <= _max_jump_signed);
 }
+} // namespace

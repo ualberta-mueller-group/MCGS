@@ -37,6 +37,7 @@ inline void get_player_dirs(bw player, grid_dir& dir1, grid_dir& dir2)
 
 
 ////////////////////////////////////////////////// class fission_move_generator
+namespace {
 class fission_move_generator: public move_generator
 {
 public:
@@ -53,31 +54,26 @@ private:
     const fission& _game;
     grid_location _loc;
 };
+} // namespace
 
 ////////////////////////////////////////////////// fission methods
 fission::fission(int n_rows, int n_cols)
     : grid(n_rows, n_cols, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<fission>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 fission::fission(const vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<fission>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 fission::fission(const string& game_as_string)
     : grid(game_as_string, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<fission>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
@@ -129,7 +125,6 @@ void fission::play(const ::move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
-#ifdef USE_GRID_HASH
         // Remove old state
         _gh.toggle_value(coord_start, BLACK);
         _gh.toggle_value(coord1, EMPTY);
@@ -141,18 +136,6 @@ void fission::play(const ::move& m, bw to_play)
         _gh.toggle_value(coord2, BLACK);
 
         hash.__set_value(_gh.get_value());
-#else
-        // Remove old state
-        hash.toggle_value(2 + point_start, BLACK);
-        hash.toggle_value(2 + point1, EMPTY);
-        hash.toggle_value(2 + point2, EMPTY);
-
-        // Add new state
-        hash.toggle_value(2 + point_start, EMPTY);
-        hash.toggle_value(2 + point1, BLACK);
-        hash.toggle_value(2 + point2, BLACK);
-#endif
-
         _mark_hash_updated();
     }
 }
@@ -207,7 +190,6 @@ void fission::undo_move()
     {
         local_hash& hash = _get_hash_ref();
 
-#ifdef USE_GRID_HASH
         // Remove old state
         _gh.toggle_value(coord_start, EMPTY);
         _gh.toggle_value(coord1, BLACK);
@@ -219,17 +201,6 @@ void fission::undo_move()
         _gh.toggle_value(coord2, EMPTY);
 
         hash.__set_value(_gh.get_value());
-#else
-        // Remove old state
-        hash.toggle_value(2 + point_start, EMPTY);
-        hash.toggle_value(2 + point1, BLACK);
-        hash.toggle_value(2 + point2, BLACK);
-
-        // Add new state
-        hash.toggle_value(2 + point_start, BLACK);
-        hash.toggle_value(2 + point1, EMPTY);
-        hash.toggle_value(2 + point2, EMPTY);
-#endif
         _mark_hash_updated();
     }
 }
@@ -261,7 +232,7 @@ game* fission::inverse() const
 
 game* fission::clone() const
 {
-    return new fission(*this);
+    return new fission(board_const(), shape());
 }
 
 ::move fission::encode_grid_move_to_db(const ::move& m) const
@@ -292,17 +263,16 @@ game* fission::clone() const
     return cgt_move::move2_create_from_coords(coord1);
 }
 
-#ifdef USE_GRID_HASH
 void fission::_init_hash(local_hash& hash) const
 {
     _gh.init_from_grid(*this);
     hash.__set_value(_gh.get_value());
 }
-#endif
 
 //////////////////////////////////////////////////
 // fission_move_generator methods
 
+namespace {
 fission_move_generator::fission_move_generator(const fission& game, bw to_play)
     : move_generator(to_play),
       _game(game),
@@ -379,4 +349,4 @@ bool fission_move_generator::_is_move(const grid_location& query_loc)
         _game.at(point1) == EMPTY && //
         _game.at(point2) == EMPTY;   //
 }
-
+} // namespace

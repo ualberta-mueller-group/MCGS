@@ -6,6 +6,7 @@
 #include <memory>
 #include <iostream>
 #include <cassert>
+#include <cstdint>
 
 #include "cli_options.h"
 #include "game.h"
@@ -13,6 +14,7 @@
 #include "test_case.h"
 #include "test_filter.h"
 #include "utilities.h"
+#include "file_parser.h"
 
 using namespace std;
 

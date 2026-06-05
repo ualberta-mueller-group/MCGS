@@ -63,6 +63,7 @@ relation nimber::_order_impl(const game* rhs) const
 }
 
 //---------------------------------------------------------------------------
+namespace {
 class nimber_move_generator : public move_generator
 {
 public:
@@ -96,6 +97,7 @@ move nimber_move_generator::gen_move() const
 {
     return cgt_move::move1_create(_current_number);
 }
+} // namespace
 
 //---------------------------------------------------------------------------
 move_generator* nimber::create_move_generator() const

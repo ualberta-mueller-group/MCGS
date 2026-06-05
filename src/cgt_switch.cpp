@@ -136,6 +136,8 @@ relation switch_game::_order_impl(const game* rhs) const
 game* switch_game::inverse() const
 {
     switch_game* inv = new switch_game(-_right, -_left);
+    inv->_move_depth = _move_depth;
+
     if (is_rational())
         inv->_rational_game.reset(
             new dyadic_rational(-_rational_game->get_fraction()));
@@ -144,8 +146,14 @@ game* switch_game::inverse() const
 
 game* switch_game::clone() const
 {
-    assert(false);
-    throw std::logic_error("Clone not implemented!");
+    switch_game* g_copy = new switch_game(_left, _right);
+    g_copy->_move_depth = _move_depth;
+
+    if (is_rational())
+        g_copy->_rational_game.reset(
+            new dyadic_rational(_rational_game->get_fraction()));
+
+    return g_copy;
 }
 
 void switch_game::print(std::ostream& str) const
@@ -219,6 +227,7 @@ switch_kind switch_game::_init_kind() const
 }
 
 //---------------------------------------------------------------------------
+namespace {
 class switch_move_generator : public move_generator
 {
 public:
@@ -253,6 +262,7 @@ move switch_move_generator::gen_move() const
     assert(!_generated);
     return SWITCH_MOVE_CODE;
 }
+} // namespace
 
 //---------------------------------------------------------------------------
 move_generator* switch_game::create_move_generator(bw to_play) const

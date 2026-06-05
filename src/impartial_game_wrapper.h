@@ -31,6 +31,8 @@ public:
     void play(const move& m) override;
     void undo_move() override;
     move_generator* create_move_generator() const override;
+    move_generator* create_specific_move_generator(
+        bool use_alternating_version) const;
     void print_move(std::ostream& str, const move& m,
                     ebw to_play_ignore) const override;
     void print_move(std::ostream& str, const move& m) const;
@@ -44,6 +46,9 @@ public:
     move_generator* create_move_generator(bw ignore_to_play) const override;
 
     game* wrapped_game() const { return _game; }
+
+    move encode_grid_move_to_db(const move& m) const override;
+    move decode_grid_move_from_db(const move& m) const override;
 
     game* inverse() const override; // caller takes ownership
     game* clone() const override;

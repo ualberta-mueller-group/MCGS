@@ -1,10 +1,15 @@
 #include "dominated_moves.h"
 
-std::ostream& operator<<(std::ostream& os, const db_dom_moves_t& dom)
-{
-#warning TODO implement me!
-    assert(false);
-}
+#include <cstddef>
+#include <set>
+#include <vector>
+#include <cassert>
+#include <map>
+
+#include "game.h"
+#include "throw_assert.h"
+
+using namespace std;
 
 bool db_dom_moves_t::operator==(const db_dom_moves_t& rhs) const
 {
@@ -21,7 +26,8 @@ bool db_dom_moves_t::operator==(const db_dom_moves_t& rhs) const
 }
 
 void db_dom_moves_t::add_move(hash_t subgame_hash, bw player,
-                              move move_db_encoded, db_dom_moves_kind move_kind)
+                              ::move move_db_encoded,
+                              db_dom_moves_kind move_kind)
 {
     assert(is_black_white(player));
     assert(_kind != DB_DOM_MOVES_KIND_NONE && _kind == move_kind);
@@ -32,13 +38,13 @@ void db_dom_moves_t::add_move(hash_t subgame_hash, bw player,
             THROW_ASSERT(false);
         case DB_DOM_MOVES_KIND_DOMINATED:
         {
-            std::set<move>* container =
+            set<::move>* container =
                 _get_or_create_move_container<HASH_TO_SET_VARIANT_IDX>(
                     subgame_hash, player);
 
             assert(container != nullptr);
 
-            auto inserted = container->insert(move_db_encoded);
+            const auto inserted = container->insert(move_db_encoded);
             THROW_ASSERT(inserted.second, "Tried to insert duplicate dominated "
                                           "move into db_dom_moves_t!");
 
@@ -46,7 +52,7 @@ void db_dom_moves_t::add_move(hash_t subgame_hash, bw player,
         }
         case DB_DOM_MOVES_KIND_NONDOMINATED:
         {
-            std::vector<move>* container =
+            vector<::move>* container =
                 _get_or_create_move_container<HASH_TO_VEC_VARIANT_IDX>(
                     subgame_hash, player);
 
@@ -59,41 +65,25 @@ void db_dom_moves_t::add_move(hash_t subgame_hash, bw player,
     }
 }
 
-bool db_dom_moves_t::move_is_dominated(hash_t subgame_hash, bw player,
-                                       move move_db_encoded) const
+const set<::move>* db_dom_moves_t::get_dominated_moves(hash_t subgame_hash,
+                                                       bw player) const
 {
     assert(is_black_white(player));
     assert(_kind == DB_DOM_MOVES_KIND_DOMINATED);
 
-    const std::set<move>* container =
-        _get_move_container_if_exists<HASH_TO_SET_VARIANT_IDX>(subgame_hash,
-                                                               player);
-
-    if (container == nullptr)
-        return false;
-
-    return container->find(move_db_encoded) != container->end();
-}
-
-const std::set<move>* db_dom_moves_t::get_dominated_moves(hash_t subgame_hash,
-                                                          bw player) const
-{
-    assert(is_black_white(player));
-    assert(_kind == DB_DOM_MOVES_KIND_NONDOMINATED);
-
-    const std::set<move>* container =
+    const set<::move>* container =
         _get_move_container_if_exists<HASH_TO_SET_VARIANT_IDX>(subgame_hash,
                                                                player);
     return container;
 }
 
-const std::vector<move>* db_dom_moves_t::get_nondominated_moves(
+const vector<::move>* db_dom_moves_t::get_nondominated_moves(
     hash_t subgame_hash, bw player) const
 {
     assert(is_black_white(player));
     assert(_kind == DB_DOM_MOVES_KIND_NONDOMINATED);
 
-    const std::vector<move>* container =
+    const vector<::move>* container =
         _get_move_container_if_exists<HASH_TO_VEC_VARIANT_IDX>(subgame_hash,
                                                                player);
     return container;
@@ -111,8 +101,7 @@ db_dom_moves_t::move_container_t<variant_idx>* db_dom_moves_t::
     if (m_variant_idx == MONOSTATE_VARIANT_IDX)
         m_variant.emplace<variant_idx>();
 
-    std::map<hash_t, move_container_t<variant_idx>>& m =
-        std::get<variant_idx>(m_variant);
+    map<hash_t, move_container_t<variant_idx>>& m = get<variant_idx>(m_variant);
 
     return &m[subgame_hash];
 }
@@ -131,8 +120,8 @@ const db_dom_moves_t::move_container_t<variant_idx>* db_dom_moves_t::
     if (m_variant_idx == MONOSTATE_VARIANT_IDX)
         return nullptr;
 
-    const std::map<hash_t, move_container_t<variant_idx>>& m =
-        std::get<variant_idx>(m_variant);
+    const map<hash_t, move_container_t<variant_idx>>& m =
+        get<variant_idx>(m_variant);
 
     const auto it = m.find(subgame_hash);
     if (it == m.end())
@@ -140,3 +129,10 @@ const db_dom_moves_t::move_container_t<variant_idx>* db_dom_moves_t::
 
     return &it->second;
 }
+
+std::ostream& operator<<(std::ostream& os, const db_dom_moves_t& dom)
+{
+    os << "<db_dom_moves_t (TODO)>";
+    return os;
+}
+

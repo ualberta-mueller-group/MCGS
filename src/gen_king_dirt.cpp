@@ -3,6 +3,10 @@
 #include <algorithm>
 #include <cstddef>
 #include <vector>
+#include <ostream>
+#include <cassert>
+#include <utility>
+#include <string>
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
@@ -10,9 +14,11 @@
 #include "grid.h"
 #include "game.h"
 #include "grid_hash.h"
+#include "grid_hash_orientation.h"
 #include "grid_location.h"
 #include "throw_assert.h"
 #include "utilities.h"
+#include "bounding_box.h"
 
 using namespace std;
 
@@ -44,6 +50,7 @@ void update_grid_hash_params(grid_hash& gh, const std::vector<int>& params_old,
 //////////////////////////////////////////////////
 // class gen_king_dirt_move_generator
 
+namespace {
 class gen_king_dirt_move_generator: public move_generator
 {
 public:
@@ -82,6 +89,7 @@ private:
 
     static constexpr size_t N_DIRS = GRID_DIRS_ALL.size();
 };
+} // namespace
 
 ////////////////////////////////////////////////// gen_king_dirt methods
 gen_king_dirt::gen_king_dirt(const vector<int>& params,
@@ -170,7 +178,49 @@ game* gen_king_dirt::inverse() const
 
 game* gen_king_dirt::clone() const
 {
-    return new gen_king_dirt(*this);
+    return new gen_king_dirt(get_params(), board_const(), shape());
+}
+
+::move gen_king_dirt::encode_grid_move_to_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    assert(!grid_location::shape_is_empty(grid_shape));
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2;
+    bool place_stone;
+    gen_king_dirt_move::unpack_coords(m, coord1, coord2, place_stone);
+
+    coord1 = grid_hash::get_transformed_coords(grid_shape, coord1, ori);
+
+    // When placing a stone leave coord2 as (0, 0)
+    if (!place_stone)
+        coord2 = grid_hash::get_transformed_coords(grid_shape, coord2, ori);
+    else
+        assert(coord2.first == 0 && coord2.second == 0);
+
+    return gen_king_dirt_move::create_from_coords(coord1, coord2, place_stone);
+}
+
+::move gen_king_dirt::decode_grid_move_from_db(const ::move& m) const
+{
+    const int_pair& grid_shape = shape();
+    assert(!grid_location::shape_is_empty(grid_shape));
+    const grid_hash_orientation ori = _gh.get_orientation();
+
+    int_pair coord1, coord2;
+    bool place_stone;
+    gen_king_dirt_move::unpack_coords(m, coord1, coord2, place_stone);
+
+    coord1 = grid_hash::get_inverse_transformed_coords(grid_shape, coord1, ori);
+
+    // When placing a stone leave coord2 as (0, 0)
+    if (!place_stone)
+        coord2 = grid_hash::get_inverse_transformed_coords(grid_shape, coord2, ori);
+    else
+        assert(coord2.first == 0 && coord2.second == 0);
+
+    return gen_king_dirt_move::create_from_coords(coord1, coord2, place_stone);
 }
 
 bool gen_king_dirt::has_unplaced_stones(bw for_player) const
@@ -181,6 +231,11 @@ bool gen_king_dirt::has_unplaced_stones(bw for_player) const
         (for_player == BLACK) ? get_black_unplaced() : get_white_unplaced();
 
     return unplaced > 0;
+}
+
+const std::vector<int>& gen_king_dirt::get_params() const
+{
+    return _params;
 }
 
 void gen_king_dirt::_play_place_stone(const int_pair& place_coords, bw to_play)
@@ -354,58 +409,6 @@ void gen_king_dirt::_undo_move_slide_stone(const int_pair& from_coords,
 ////////////////////////////////////////////////////////////////////////////////
 //-------------------- Split function ------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
-
-// TODO extract some of this functionality from games which reimplement it
-
-namespace {
-struct bounding_box
-{
-    bounding_box(int row_shift, int col_shift, int_pair shape);
-
-    int row_shift;
-    int col_shift;
-    int_pair shape;
-};
-
-bounding_box::bounding_box(int row_shift, int col_shift, int_pair shape)
-    : row_shift(row_shift),
-      col_shift(col_shift),
-      shape(shape)
-{
-}
-
-vector<int> trim_to_bounding_box(const vector<int>& src_board,
-                                 const int_pair& src_shape,
-                                 const bounding_box& dst_box)
-{
-    vector<int> dst_board;
-
-    const int row_shift = dst_box.row_shift;
-    const int col_shift = dst_box.col_shift;
-    const int_pair dst_shape = dst_box.shape;
-
-    assert(!grid_location::shape_is_empty(dst_shape));
-
-    const int dst_size = dst_shape.first * dst_shape.second;
-    dst_board.reserve(dst_size);
-
-    int src_point = col_shift + (row_shift * src_shape.second);
-
-    for (int r = 0; r < dst_shape.first; r++)
-    {
-        for (int c = 0; c < dst_shape.second; c++)
-        {
-            const int src_val = src_board[src_point + c];
-            dst_board.push_back(src_val);
-        }
-
-        src_point += src_shape.second;
-    }
-
-    return dst_board;
-}
-
-} // namespace
 
 split_result gen_king_dirt::_split_impl() const
 {
@@ -814,6 +817,7 @@ void gen_king_dirt::_normalize_params(int& empty_count, std::vector<int>& params
 //////////////////////////////////////////////////
 // gen_king_dirt_move_generator methods
 
+namespace {
 gen_king_dirt_move_generator::gen_king_dirt_move_generator(
     const gen_king_dirt& g, bw to_play)
     : move_generator(to_play),
@@ -1034,3 +1038,4 @@ bool gen_king_dirt_move_generator::_increment_slide_to(bool init)
 
     return false;
 }
+} // namespace

@@ -13,16 +13,25 @@
 #include <ostream>
 #include <cassert>
 
-#include "ThValue.h"
 #include "alternating_move_game.h"
-#include "cgt_move.h"
 #include "game.h"
 #include "global_options.h"
 #include "sumgame_change_record.h"
 #include "dominated_moves.h"
 #include "transposition.h"
 #include "timeout_token.h"
+#include "ThValue.h"
 
+////////////////////////////////////////////////// Forward declarations
+namespace sumgame_impl {
+class change_record;
+}
+
+class sumgame_move_generator;
+
+class assert_restore_sumgame;
+
+////////////////////////////////////////////////// Simple types
 typedef std::optional<std::vector<std::optional<ThValue>>> temp_vec_opt_t;
 
 struct ttable_sumgame_entry
@@ -31,15 +40,6 @@ struct ttable_sumgame_entry
 
 typedef ttable<ttable_sumgame_entry> ttable_sumgame;
 
-//////////////////////////////////////// forward declarations
-class sumgame_move_generator;
-class assert_restore_sumgame;
-
-namespace sumgame_impl {
-class change_record;
-}
-
-// Used by class sumgame::undo_stack_unwinder
 enum sumgame_undo_code
 {
     SUMGAME_UNDO_STACK_FRAME = 0,
@@ -52,7 +52,7 @@ enum sumgame_undo_code
     SUMGAME_UNDO_DB_REPLACEMENT_PASS,
 };
 
-//////////////////////////////////////// sumgame_move
+////////////////////////////////////////////////// struct sumgame_move
 struct sumgame_move
 {
     sumgame_move() {} // TODO remove this?
@@ -75,7 +75,7 @@ inline bool sumgame_move::operator!=(const sumgame_move& rhs) const
     return !(*this == rhs);
 }
 
-//////////////////////////////////////// play_record
+////////////////////////////////////////////////// struct play_record
 struct play_record
 {
     play_record(sumgame_move sm)
@@ -92,13 +92,10 @@ struct play_record
     bool deactivated_g;
 };
 
-
-//////////////////////////////////////// solve_result
+////////////////////////////////////////////////// struct solve_result
 struct solve_result
 {
-
     solve_result() = delete;
-
     solve_result(bool win) : win(win) {}
 
     // return this on timeout
@@ -110,7 +107,7 @@ struct solve_result
     bool win;
 };
 
-//////////////////////////////////////// sumgame
+////////////////////////////////////////////////// class sumgame
 class sumgame : public alternating_move_game
 {
 public:
@@ -241,107 +238,10 @@ private:
     friend class assert_restore_sumgame;
 };
 
+std::ostream& operator<<(std::ostream& out, const sumgame& s);
 
-/*
-    TODO: Should sumgame_move_generator be semi-hidden in a namespace? Or leave
-    it public? Users of sumgame can't use the normal move_generator interface...
-*/
-
-////////////////////////////////////////////////// Move generators
-#define SUMGAME_MOVE_GENERATOR_1_6
-
-//////////////////////////////////////// sumgame_move_generator (i.e. v1.5)
-#ifndef SUMGAME_MOVE_GENERATOR_1_6
-
-class sumgame_move_generator : public move_generator
-{
-public:
-    sumgame_move_generator(const sumgame& game, bw to_play);
-    ~sumgame_move_generator();
-
-    void operator++() override;
-
-    // TODO make private
-    void next_move(bool init);
-
-    operator bool() const override;
-    sumgame_move gen_sum_move() const;
-
-    move gen_move() const override { assert(false); }
-
-private:
-    std::pair<int, const game*> _current() const;
-
-    const sumgame& _game;
-    const int _num_subgames;
-
-    std::vector<std::pair<int, const game*>> _skipped_games;
-    bool _use_skipped_games;
-
-    std::set<hash_t> _seen_games;
-
-    /*
-       When _use_skipped_games is true, this is an index into our list of
-       skipped games, and not the sumgame
-    */
-    int _subgame_idx;
-
-    move_generator* _subgame_generator;
-};
-
-inline std::pair<int, const game*> sumgame_move_generator::_current() const
-{
-    if (_use_skipped_games)
-        return _skipped_games[_subgame_idx];
-    else
-        return {_subgame_idx, _game.subgame(_subgame_idx)};
-}
-
-//////////////////////////////////////// sumgame_move_generator (v1.6 changes)
-#else
-class sumgame_move_generator : public move_generator
-{
-public:
-    sumgame_move_generator(const sumgame& sum, bw to_play,
-                           const temp_vec_opt_t& temperatures = {},
-                           bool prune_dominated = false);
-
-    ~sumgame_move_generator();
-
-    void operator++() override;
-    operator bool() const override;
-
-    sumgame_move gen_sum_move() const;
-
-    move gen_move() const override { assert(false); }
-
-private:
-    void _increment(bool init);
-    bool _increment_generator(bool init);
-    bool _increment_move(bool init);
-
-    // Index into _subgames, not subgame index in _sum
-    size_t _subgame_idx_local;
-    std::vector<std::pair<int, const game*>> _subgames;
-
-    std::unique_ptr<move_generator> _mg;
-    std::set<hash_t> _seen_games;
-
-    bool _prune_dominated;
-    std::shared_ptr<db_dom_moves_t> _dom;
-    db_dom_moves_kind _dom_kind;
-    std::optional<hash_t> _current_local_hash;
-
-    const sumgame& _sum;
-};
-
-
-#endif
-//////////////////////////////////////////////////
-
-//---------------------------------------------------------------------------
-
-inline sumgame::sumgame(bw color) : alternating_move_game(color), _subgames()
+////////////////////////////////////////////////// sumgame methods
+inline sumgame::sumgame(bw color) : alternating_move_game(color), _need_cgt_simplify(true), _subgames()
 {
 }
 
@@ -385,11 +285,45 @@ inline void sumgame::clear_ttable()
     _tt->clear();
 }
 
-//---------------------------------------------------------------------------
+//////////////////////////////////////////////////
+// class sumgame_move_generator
+class sumgame_move_generator : public move_generator
+{
+public:
+    sumgame_move_generator(const sumgame& sum, bw to_play,
+                           const temp_vec_opt_t& temperatures = {},
+                           bool prune_dominated = false);
 
-std::ostream& operator<<(std::ostream& out, const sumgame& s);
+    ~sumgame_move_generator();
 
-//---------------------------------------------------------------------------
+    void operator++() override;
+    operator bool() const override;
+
+    sumgame_move gen_sum_move() const;
+
+    move gen_move() const override { assert(false); }
+
+private:
+    void _increment(bool init);
+    bool _increment_generator(bool init);
+    bool _increment_move(bool init);
+
+    // Index into _subgames, not subgame index in _sum
+    size_t _subgame_idx_local;
+    std::vector<std::pair<int, const game*>> _subgames;
+
+    std::unique_ptr<move_generator> _mg;
+    std::set<hash_t> _seen_games;
+
+    bool _prune_dominated;
+    std::shared_ptr<db_dom_moves_t> _dom;
+    db_dom_moves_kind _dom_kind;
+    std::optional<hash_t> _current_local_hash;
+
+    const sumgame& _sum;
+};
+
+////////////////////////////////////////////////// class assert_restore_sumgame
 #ifdef ASSERT_RESTORE_DEBUG
 class assert_restore_sumgame : public assert_restore_alternating_game
 {
@@ -421,5 +355,3 @@ public:
 };
 
 #endif
-
-//---------------------------------------------------------------------------

@@ -9,18 +9,41 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "cgt_nimber.h"
+#include "game.h"
+#include "global_options.h"
 #include "pitm_move_generator.h"
+#include "utilities.h"
 
 const bool USE_PITM = false;
 
+move impartial_game_wrapper::encode_grid_move_to_db(const move& m) const
+{
+    const bw color = cgt_move::get_color(m);
+
+    const move m_nocolor = cgt_move::remove_color(m);
+    const move m_nocolor_enc = wrapped_game()->encode_grid_move_to_db(m_nocolor);
+
+    return cgt_move::set_color(m_nocolor_enc, color);
+}
+
+move impartial_game_wrapper::decode_grid_move_from_db(const move& m) const
+{
+    const bw color = cgt_move::get_color(m);
+
+    const move m_nocolor = cgt_move::remove_color(m);
+    const move m_nocolor_dec = wrapped_game()->decode_grid_move_from_db(m_nocolor);
+
+    return cgt_move::set_color(m_nocolor_dec, color);
+}
+
 game* impartial_game_wrapper::inverse() const
 {
-    return new impartial_game_wrapper(_game->inverse(), true);
+    return new impartial_game_wrapper(wrapped_game()->inverse(), true);
 }
 
 game* impartial_game_wrapper::clone() const
 {
-    return new impartial_game_wrapper(_game->clone());
+    return new impartial_game_wrapper(wrapped_game()->clone(), true);
 }
 
 void impartial_game_wrapper::print(std::ostream& str) const
@@ -147,6 +170,7 @@ relation impartial_game_wrapper::_order_impl(const game* rhs) const
 }
 
 //---------------------------------------------------------------------------
+namespace {
 class ig_wrapper_move_generator : public move_generator
 {
 public:
@@ -250,11 +274,123 @@ move ig_wrapper_move_generator::gen_move() const
 
     return cgt_move::set_color(m, color);
 }
+} // namespace
+
+
+//---------------------------------------------------------------------------
+namespace {
+class ig_wrapper_alternating_move_generator: public move_generator
+{
+public:
+    ig_wrapper_alternating_move_generator(const impartial_game_wrapper& wrapper);
+    ~ig_wrapper_alternating_move_generator();
+
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    void _next_move(bool init);
+
+    const game& _game; // the wrapped game, not the wrapper itself
+    move_generator* _mg_current;
+    move_generator* _mg_next;
+};
+
+ig_wrapper_alternating_move_generator::ig_wrapper_alternating_move_generator(
+    const impartial_game_wrapper& wrapper)
+    : move_generator(BLACK),
+      _game(*wrapper.wrapped_game()),
+      _mg_current(_game.create_move_generator(BLACK)),
+      _mg_next(_game.create_move_generator(WHITE))
+{
+    if (USE_PITM)
+    {
+        _mg_current = new pitm_move_generator(_mg_current, BLACK);
+        _mg_next = new pitm_move_generator(_mg_next, WHITE);
+    }
+
+    _next_move(true);
+}
+
+ig_wrapper_alternating_move_generator::~ig_wrapper_alternating_move_generator()
+{
+    if (_mg_current != nullptr)
+        delete _mg_current;
+    if (_mg_next != nullptr)
+        delete _mg_next;
+}
+
+void ig_wrapper_alternating_move_generator::operator++()
+{
+    assert(*this);
+    _next_move(false);
+}
+
+ig_wrapper_alternating_move_generator::operator bool() const
+{
+    assert(LOGICAL_IMPLIES(_mg_current == nullptr, _mg_next == nullptr));
+    return _mg_current != nullptr;
+}
+
+move ig_wrapper_alternating_move_generator::gen_move() const
+{
+    assert(*this && *_mg_current);
+
+    const move m = _mg_current->gen_move();
+    assert(cgt_move::get_color(m) == 0);
+
+    const bw color = _mg_current->to_play();
+    return cgt_move::set_color(m, color);
+}
+
+void ig_wrapper_alternating_move_generator::_next_move(bool init)
+{
+    assert(init || *this);
+    assert(_mg_current != nullptr);
+
+    if (!init)
+    {
+        assert(*_mg_current);
+        ++(*_mg_current);
+
+        if (_mg_next != nullptr)
+            std::swap(_mg_current, _mg_next);
+    }
+
+    while (1)
+    {
+        if (_mg_current == nullptr)
+        {
+            assert(_mg_next == nullptr);
+            break;
+        }
+
+        if (*_mg_current)
+            break;
+
+        delete _mg_current;
+        _mg_current = nullptr;
+
+        std::swap(_mg_current, _mg_next);
+    }
+}
+
+} // namespace
 
 //---------------------------------------------------------------------------
 move_generator* impartial_game_wrapper::create_move_generator() const
 {
-    return new ig_wrapper_move_generator(*this);
+    return create_specific_move_generator(global::imp_wrapper_alternate_color());
+}
+
+move_generator* impartial_game_wrapper::create_specific_move_generator(
+    bool use_alternating_version) const
+{
+    if (use_alternating_version)
+        return new ig_wrapper_alternating_move_generator(*this);
+    else
+        return new ig_wrapper_move_generator(*this);
 }
 
 void impartial_game_wrapper::print_move(std::ostream& str, const move& m,

@@ -9,6 +9,11 @@
 #include <cstdint>
 #include <type_traits>
 #include <vector>
+#include <cstddef>
+#include <cassert>
+#include <optional>
+#include <unordered_map>
+#include <iostream>
 
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"

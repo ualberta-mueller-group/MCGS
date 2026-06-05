@@ -13,10 +13,6 @@
 #include <utility>
 #include "cgt_move.h"
 
-// If defined: use sheep_alt_generator for different move ordering
-#define SHEEP_ALT_MOVE
-
-#define SHEEP_SPLIT
 
 class sheep: public grid
 {
@@ -39,9 +35,7 @@ public:
     static constexpr int MAX_HERD = 50;
 
 protected:
-#ifdef SHEEP_SPLIT
     split_result _split_impl() const override;
-#endif
 
 private:
 };

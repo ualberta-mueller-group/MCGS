@@ -32,6 +32,7 @@ bool only_legal_colors(const std::vector<int>& board)
 } // namespace
 
 ////////////////////////////////////////////////// move generator
+namespace {
 class cannibal_clobber_move_generator : public move_generator
 {
 public:
@@ -59,21 +60,18 @@ private:
 
     bool _has_move;
 };
+} // namespace
 
 ////////////////////////////////////////////////// cannibal_clobber
 cannibal_clobber::cannibal_clobber(int n_rows, int n_cols) : grid(n_rows, n_cols, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<cannibal_clobber>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 cannibal_clobber::cannibal_clobber(const vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<cannibal_clobber>())
-#endif
 
 {
     THROW_ASSERT(only_legal_colors(board_const()));
@@ -81,9 +79,7 @@ cannibal_clobber::cannibal_clobber(const vector<int>& board, int_pair shape)
 
 cannibal_clobber::cannibal_clobber(const string& game_as_string)
     : grid(game_as_string, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<cannibal_clobber>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
@@ -109,7 +105,6 @@ void cannibal_clobber::play(const ::move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
-#ifdef USE_GRID_HASH
         _gh.toggle_value(from_coord, from_point_color);
         _gh.toggle_value(to_coord, to_point_color);
 
@@ -117,11 +112,6 @@ void cannibal_clobber::play(const ::move& m, bw to_play)
         _gh.toggle_value(to_coord, to_play);
 
         hash.__set_value(_gh.get_value());
-#else
-#error cannibal_clobber USE_GRID_HASH not defined!
-        assert(false);
-#endif
-
         _mark_hash_updated();
     }
 
@@ -152,7 +142,6 @@ void cannibal_clobber::undo_move()
     {
         local_hash& hash = _get_hash_ref();
 
-#ifdef USE_GRID_HASH
         _gh.toggle_value(from_coord, EMPTY);
         _gh.toggle_value(to_coord, to_play);
 
@@ -160,10 +149,6 @@ void cannibal_clobber::undo_move()
         _gh.toggle_value(to_coord, target_color);
 
         hash.__set_value(_gh.get_value());
-#else
-#error cannibal_clobber USE_GRID_HASH not defined!
-        assert(false);
-#endif
         _mark_hash_updated();
     }
 
@@ -391,13 +376,11 @@ split_result cannibal_clobber::_split_impl() const
     return result;
 }
 
-#ifdef USE_GRID_HASH
 void cannibal_clobber::_init_hash(local_hash& hash) const
 {
     _gh.init_from_grid(*this);
     hash.__set_value(_gh.get_value());
 }
-#endif
 
 move_generator* cannibal_clobber::create_move_generator(bw to_play) const
 {
@@ -423,7 +406,7 @@ game* cannibal_clobber::inverse() const
 
 game* cannibal_clobber::clone() const
 {
-    return new cannibal_clobber(*this);
+    return new cannibal_clobber(board_const(), shape());
 }
 
 ::move cannibal_clobber::encode_grid_move_to_db(const ::move& m) const
@@ -462,6 +445,7 @@ game* cannibal_clobber::clone() const
 }
 
 ////////////////////////////////////////////////// move generator implementation
+namespace {
 cannibal_clobber_move_generator::cannibal_clobber_move_generator(const cannibal_clobber& game, bw to_play)
     : move_generator(to_play),
       _game(game),
@@ -555,3 +539,4 @@ inline bool cannibal_clobber_move_generator::_increment_dir()
     _dir_idx++;
     return _dir_idx < GRID_DIRS_CARDINAL.size();
 }
+} // namespace

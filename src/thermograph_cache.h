@@ -6,19 +6,18 @@
 #include <cstdint>
 
 #include "serializer.h"
-#include "serializer_lib_therm.h"
 #include "hashing.h"
 
 #include "ThGraph.h"
 
+// Disk ID of a thermograph
 typedef uint64_t thgraph_id_t;
 
-constexpr thgraph_id_t THGRAPH_ID_NONE = 0;
+inline constexpr thgraph_id_t THGRAPH_ID_NONE = 0;
 
 class thermograph_cache
 {
 public:
-
     // Precondition: graph != nullptr. Caller gives up ownership.
     std::shared_ptr<ThGraph> insert_and_release(ThGraph* graph);
 
@@ -42,22 +41,3 @@ private:
 
     friend struct serializer<thermograph_cache>;
 };
-
-template <>
-struct serializer<thermograph_cache>
-{
-    inline static void save(obuffer& os, const thermograph_cache& cache, serializer_ctx* ctx)
-    {
-        serializer_save(os, cache._graphs, ctx);
-        serializer_save(os, cache._hash_to_graph_id, ctx);
-    }
-
-    inline static thermograph_cache load(ibuffer& is, serializer_ctx* ctx)
-    {
-        thermograph_cache cache;
-        serializer_load(is, cache._graphs, ctx);
-        serializer_load(is, cache._hash_to_graph_id, ctx);
-        return cache;
-    }
-};
-

@@ -1,3 +1,3 @@
 #pragma once
 
-void database_test_all();
+void database_test_all(bool extra_tests);

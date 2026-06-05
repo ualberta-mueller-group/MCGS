@@ -1,6 +1,7 @@
 #include "gen_king_dirt_move.h"
 
 #include <ostream>
+#include <cassert>
 
 #include "print_move_helpers.h"
 #include "cgt_move.h"

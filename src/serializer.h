@@ -1,14 +1,16 @@
 /*
     Serialization API
 
-    Defines template struct serializer<T> with two static functions: save and
-    load.
+    Defines template struct serializer<T> with 3 static functions:
+        - save
+        - load
+        - load_ptr
 
     To make your (non-polymorphic) type serializable, implement the template
     specialization: serializer<Your_Type>, and implement the static functions
-    save and load. Several template specializations are defined in this file
-    for STL types. Polymorphic types are handled differently, explained further
-    below.
+    save, load, and load_ptr. Several template specializations are defined in
+    this file for STL types. Polymorphic types are handled differently,
+    explained further below.
 
     Save and load functions should recursively invoke the serializer template
     where necessary. See serializer<vector<T>> implementation in this file for
@@ -69,19 +71,17 @@
         - std::map<T1, T2>
         - std::set<T>
         - std::unordered_set<T>
-        - std::variant<Ts...>
         - std::monostate
+        - std::variant<Ts...>
 
     Removed:
         - std::tuple<Ts...>
-
 */
 #pragma once
-#include <any>
+#include <cstdlib>
 #include <limits>
 #include <variant>
 #include <type_traits>
-#include <typeindex>
 #include <unordered_map>
 #include <vector>
 #include <optional>
@@ -113,30 +113,14 @@
         time?
 */
 
-
-class serializer_ctx
+struct serializer_ctx
 {
 public:
-    template <class T>
-    inline void set(const std::type_index& type_idx, T& val)
+    inline serializer_ctx() : thermograph_cache_ptr(nullptr)
     {
-        _values[type_idx] = val;
     }
 
-    template <class T>
-    T* get(const std::type_index& type_idx)
-    {
-        auto it = _values.find(type_idx);
-
-        if (it == _values.end())
-            return nullptr;
-
-        std::any& val = it->second;
-        return std::any_cast<T>(&val);
-    }
-
-private:
-    std::map<std::type_index, std::any> _values;
+    void* thermograph_cache_ptr;
 };
 
 // clang-format off
@@ -161,9 +145,12 @@ struct serializer
     */
 };
 
+// TODO implement STL types as serializer_impl instead so that specialization
+// using serializer_ctx is easier
 template <class T, class Enable = void>
 struct serializer_impl
 {
+    static_assert(deferred_false_v<T>, "Not implemented!");
 };
 
 ////////////////////////////////////////////////// save/load helpers
@@ -484,7 +471,7 @@ struct serializer<std::unordered_map<T1, T2>>
         const uint64_t size = is.read_u64();
         m.reserve(size);
 
-        for (size_t i = 0; i < size; i++)
+        for (uint64_t i = 0; i < size; i++)
             m.emplace(serializer<std::pair<const T1, T2>>::load(is, ctx));
 
         return m;
@@ -512,7 +499,7 @@ struct serializer<std::map<T1, T2>>
         const uint64_t size = is.read_u64();
         // m.reserve(size);
 
-        for (size_t i = 0; i < size; i++)
+        for (uint64_t i = 0; i < size; i++)
             m.emplace(serializer<std::pair<const T1, T2>>::load(is, ctx));
 
         return m;
@@ -584,28 +571,16 @@ struct serializer<std::monostate>
 {
     inline static void save(obuffer& os, const std::monostate& val, serializer_ctx* ctx)
     {
-        os.write_bool(false);
+        //os.write_bool(false);
     }
 
     inline static std::monostate load(ibuffer& is, serializer_ctx* ctx)
     {
         std::monostate val;
 
-        const bool b = is.read_bool();
-        if (b != false)
-            std::abort();
-
-        return val;
-    }
-
-    // TODO this function probably should never be used?
-    inline static std::monostate* load_ptr(ibuffer& is, serializer_ctx* ctx)
-    {
-        std::monostate* val = new std::monostate();
-
-        const bool b = is.read_bool();
-        if (b != false)
-            std::abort();
+        //const bool b = is.read_bool();
+        //if (b != false)
+        //    std::abort();
 
         return val;
     }
@@ -616,10 +591,16 @@ struct serializer<std::monostate>
 template <class... Ts>
 struct serializer<std::variant<Ts...>>
 {
-    // Can have at most 254 alternatives due to disk encoding using a uint8_t
-    static_assert(std::variant_size_v<std::variant<Ts...>> < std::numeric_limits<uint8_t>::max());
+    typedef std::variant<Ts...> variant_t;
 
-    inline static void save(obuffer& os, const std::variant<Ts...>& val,
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    inline static constexpr uint8_t variant_npos_u8 =
+        static_cast<uint8_t>(std::variant_npos);
+
+    // Can have at most 254 alternatives due to disk encoding using a uint8_t
+    static_assert(std::variant_size_v<variant_t> < variant_npos_u8);
+
+    inline static void save(obuffer& os, const variant_t& val,
                             serializer_ctx* ctx)
     {
         const size_t variant_idx = val.index();
@@ -632,12 +613,12 @@ struct serializer<std::variant<Ts...>>
         save_impl<0, Ts...>(os, val, ctx);
     }
 
-    inline static std::variant<Ts...> load(ibuffer& is, serializer_ctx* ctx)
+    inline static variant_t load(ibuffer& is, serializer_ctx* ctx)
     {
-        std::variant<Ts...> val;
+        variant_t val;
 
         const uint8_t variant_idx_u8 = is.read_u8();
-        if (variant_idx_u8 == static_cast<uint8_t>(std::variant_npos))
+        if (variant_idx_u8 == variant_npos_u8)
             std::abort();
 
         load_impl<0, Ts...>(is, val, ctx, static_cast<size_t>(variant_idx_u8));
@@ -645,13 +626,12 @@ struct serializer<std::variant<Ts...>>
         return val;
     }
 
-    inline static std::variant<Ts...>* load_ptr(ibuffer& is,
-                                                serializer_ctx* ctx)
+    inline static variant_t* load_ptr(ibuffer& is, serializer_ctx* ctx)
     {
-        std::variant<Ts...>* val = new std::variant<Ts...>();
+        variant_t* val = new variant_t();
 
         const uint8_t variant_idx_u8 = is.read_u8();
-        if (variant_idx_u8 == static_cast<uint8_t>(std::variant_npos))
+        if (variant_idx_u8 == variant_npos_u8)
             std::abort();
 
         load_impl<0, Ts...>(is, *val, ctx, static_cast<size_t>(variant_idx_u8));
@@ -660,12 +640,12 @@ struct serializer<std::variant<Ts...>>
     }
 
     template <size_t variant_idx, class T_First>
-    inline static void save_impl(obuffer& os, const std::variant<Ts...>& val,
+    inline static void save_impl(obuffer& os, const variant_t& val,
                                  serializer_ctx* ctx)
     {
         static_assert(
             std::is_same_v<T_First, std::variant_alternative_t<
-                                        variant_idx, std::variant<Ts...>>>);
+                                        variant_idx, variant_t>>);
 
         // NOLINTNEXTLINE(readability-identifier-naming)
         using T_First_NoCV = std::remove_cv_t<T_First>;
@@ -678,12 +658,12 @@ struct serializer<std::variant<Ts...>>
 
     template <size_t variant_idx, class T_First, class T_Second,
               class... T_Rest>
-    inline static void save_impl(obuffer& os, const std::variant<Ts...>& val,
+    inline static void save_impl(obuffer& os, const variant_t& val,
                                  serializer_ctx* ctx)
     {
         static_assert(
             std::is_same_v<T_First, std::variant_alternative_t<
-                                        variant_idx, std::variant<Ts...>>>);
+                                        variant_idx, variant_t>>);
 
         // NOLINTNEXTLINE(readability-identifier-naming)
         using T_First_NoCV = std::remove_cv_t<T_First>;
@@ -695,12 +675,12 @@ struct serializer<std::variant<Ts...>>
     }
 
     template <size_t variant_idx, class T_First>
-    inline static void load_impl(ibuffer& is, std::variant<Ts...>& val,
+    inline static void load_impl(ibuffer& is, variant_t& val,
                                  serializer_ctx* ctx, size_t disk_index)
     {
         static_assert(
             std::is_same_v<T_First, std::variant_alternative_t<
-                                        variant_idx, std::variant<Ts...>>>);
+                                        variant_idx, variant_t>>);
 
         // NOLINTNEXTLINE(readability-identifier-naming)
         using T_First_NoCV = std::remove_cv_t<T_First>;
@@ -714,12 +694,12 @@ struct serializer<std::variant<Ts...>>
 
     template <size_t variant_idx, class T_First, class T_Second,
               class... T_Rest>
-    inline static void load_impl(ibuffer& is, std::variant<Ts...>& val,
+    inline static void load_impl(ibuffer& is, variant_t& val,
                                  serializer_ctx* ctx, size_t disk_index)
     {
         static_assert(
             std::is_same_v<T_First, std::variant_alternative_t<
-                                        variant_idx, std::variant<Ts...>>>);
+                                        variant_idx, variant_t>>);
 
         // NOLINTNEXTLINE(readability-identifier-naming)
         using T_First_NoCV = std::remove_cv_t<T_First>;

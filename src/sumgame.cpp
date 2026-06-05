@@ -1,28 +1,6 @@
 //---------------------------------------------------------------------------
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
-#include "sumgame.h"
-#include "bounds.h"
-#include "cgt_basics.h"
-#include "cgt_move.h"
-#include "database.h"
-#include "db_move_generator.h"
-#include "dominated_moves.h"
-#include "integral_conversion.h"
-#include "global_database.h"
-#include "random.h"
-#include "search_graph_debug.h"
-#include "type_table.h"
-#include "game.h"
-
-#include "cgt_dyadic_rational.h"
-#include "cgt_integer_game.h"
-#include "cgt_nimber.h"
-#include "cgt_switch.h"
-#include "cgt_up_star.h"
-#include "alternating_move_game.h"
-#include "timeout_token.h"
-
 #include <algorithm>
 #include <numeric>
 #include <utility>
@@ -30,30 +8,46 @@
 #include <ctime>
 #include <iostream>
 #include <memory>
-
 #include <cassert>
 #include <unordered_set>
 #include <vector>
 
+#include "sumgame.h"
+#include "bounds.h"
+#include "db_move_generator.h"
+#include "dominated_moves.h"
+#include "filtering_move_generator.h"
+#include "integral_conversion.h"
+#include "global_database.h"
+#include "random.h"
+#include "search_graph_debug.h"
+#include "game.h"
+#include "cgt_dyadic_rational.h"
+#include "cgt_integer_game.h"
+#include "cgt_nimber.h"
+#include "cgt_switch.h"
+#include "cgt_up_star.h"
+#include "alternating_move_game.h"
+#include "timeout_token.h"
 #include "global_options.h"
-#include "hashing.h"
 #include "solver_stats.h"
 #include "sumgame_change_record.h"
 #include "sumgame_undo_stack_unwinder.h"
 #include "impartial_game_wrapper.h"
 #include "utilities.h"
+#include "ThGraph.h"
+#include "ThValue.h"
 
-using std::cout;
-using std::endl;
-using std::optional;
-using sumgame_impl::change_record;
+using namespace sumgame_impl;
+using namespace std;
 
-std::shared_ptr<ttable_sumgame> sumgame::_tt(nullptr);
+shared_ptr<ttable_sumgame> sumgame::_tt(nullptr);
 
-//---------------------------------------------------------------------------
 
-// Helpers
+////////////////////////////////////////////////// Helpers
 namespace {
+unordered_set<game_type_t> basic_cgt_type_set;
+
 inline bool game_is_number(const game* g)
 {
     const game_type_t g_type = g->game_type();
@@ -63,459 +57,6 @@ inline bool game_is_number(const game* g)
         (g_type == game_type<dyadic_rational>()); //
 }
 
-
-} // namespace
-
-
-////////////////////////////////////////////////// Move generators
-
-//////////////////////////////////////// sumgame_move_generator (i.e. v1.5)
-#ifndef SUMGAME_MOVE_GENERATOR_1_6
-
-sumgame_move_generator::sumgame_move_generator(const sumgame& game, bw to_play)
-    : move_generator(to_play),
-      _game(game),
-      _num_subgames(game.num_total_games()),
-      _skipped_games(),
-      _use_skipped_games(false),
-      _subgame_idx(0),
-      _subgame_generator(nullptr)
-{
-    // scroll to first move
-    next_move(true);
-}
-
-sumgame_move_generator::~sumgame_move_generator()
-{
-    if (_subgame_generator != nullptr)
-    {
-        delete _subgame_generator;
-        _subgame_generator = nullptr;
-    }
-}
-
-void sumgame_move_generator::operator++()
-{
-    // scroll to next move
-    assert(*this);
-    next_move(false);
-}
-
-void sumgame_move_generator::next_move(bool init)
-{
-    // increment existing generator and check for move
-    if (_subgame_generator != nullptr)
-    {
-        ++(*_subgame_generator);
-
-        if (*_subgame_generator)
-            return; // we have a move
-    }
-
-    // discard generator
-    if (_subgame_generator != nullptr)
-    {
-        delete _subgame_generator;
-        _subgame_generator = nullptr;
-    }
-
-    // scroll until we have an active subgame AND its generator has a move
-    _subgame_idx = init ? 0 : _subgame_idx + 1;
-    assert(_subgame_generator == nullptr);
-
-    const int N = _use_skipped_games ? _skipped_games.size() : _num_subgames;
-
-    for (; _subgame_idx < N; _subgame_idx++)
-    {
-        assert(_subgame_generator == nullptr);
-        std::pair<int, const game*> p = _current();
-        const game* g = p.second;
-
-        // inactive game
-        if (!g->is_active())
-            continue;
-
-        // Skip integers and rationals
-        if (!_use_skipped_games && game_is_number(g))
-        {
-            _skipped_games.push_back({_subgame_idx, g});
-            continue;
-        }
-
-        // Skip already seen games
-        if (global::dedupe_movegen())
-        {
-            const hash_t hash = g->get_local_hash();
-            const bool already_seen = !_seen_games.insert(hash).second;
-
-            if (already_seen)
-                continue;
-        }
-
-        _subgame_generator = g->create_move_generator(to_play());
-
-        if (*_subgame_generator)
-            return; // found move
-        else
-        {
-            delete _subgame_generator;
-            _subgame_generator = nullptr;
-        }
-    }
-
-    if (!_use_skipped_games)
-    {
-        _use_skipped_games = true;
-        assert(_subgame_generator == nullptr);
-        next_move(true);
-    }
-}
-
-sumgame_move_generator::operator bool() const
-{
-    // do we have a move?
-    if (_use_skipped_games)
-        // TODO sumgame has a few of these casts. Either convince ourselves
-        // it's OK, or just use size_t?
-        return _subgame_idx < static_cast<int>(_skipped_games.size());
-    else
-        return _subgame_idx < _num_subgames;
-}
-
-sumgame_move sumgame_move_generator::gen_sum_move() const
-{
-    assert(_subgame_generator);
-    if (_use_skipped_games)
-        return sumgame_move(_skipped_games[_subgame_idx].first,
-                            _subgame_generator->gen_move());
-    else
-        return sumgame_move(_subgame_idx, _subgame_generator->gen_move());
-}
-
-
-//////////////////////////////////////// sumgame_move_generator (v1.6 changes)
-#else
-
-sumgame_move_generator::sumgame_move_generator(
-    const sumgame& sum, bw to_play, const temp_vec_opt_t& temperatures,
-    bool prune_dominated)
-    : move_generator(to_play),
-      _subgame_idx_local(0),
-      _prune_dominated(prune_dominated),
-      _dom_kind(DB_DOM_MOVES_KIND_NONE),
-      _sum(sum)
-{
-    assert(LOGICAL_IMPLIES(                                               //
-        temperatures.has_value(),                                         //
-        temperatures->size() >= as_unsigned_unsafe(sum.num_total_games()) //
-        ));                                                               //
-
-    if (!global::use_db())
-        _prune_dominated = false;
-
-    std::vector<std::pair<int, const game*>> numbers;
-
-    // TODO pruning duplicate games?
-
-    const int n_games = sum.num_total_games();
-    for (int i = 0; i < n_games; i++)
-    {
-        game* g = sum.subgame(i);
-        if (!g->is_active())
-            continue;
-
-        if (game_is_number(g))
-            numbers.emplace_back(i, g);
-        else
-            _subgames.emplace_back(i, g);
-    }
-
-    auto sort_fn = [&](const std::pair<int, const game*>& sg1,
-                       const std::pair<int, const game*>& sg2) -> bool
-    {
-        assert(temperatures.has_value());
-
-        const std::optional<ThValue>& temp1 = (*temperatures)[sg1.first];
-        const std::optional<ThValue>& temp2 = (*temperatures)[sg2.first];
-
-        if (temp1.has_value())
-        {
-            if (!temp2.has_value())
-                return true;
-                //return false;
-
-            return *temp1 > *temp2;
-        }
-
-        return false;
-        //return temp2.has_value();
-    };
-
-    if (temperatures.has_value())
-        std::sort(_subgames.begin(), _subgames.end(), sort_fn);
-
-    for (const std::pair<int, const game*>& sg : numbers)
-        _subgames.push_back(sg);
-
-    _increment(true);
-}
-
-sumgame_move_generator::~sumgame_move_generator()
-{
-}
-
-void sumgame_move_generator::operator++()
-{
-    assert(*this);
-    _increment(false);
-}
-
-sumgame_move_generator::operator bool() const
-{
-    return (_mg && *_mg);
-}
-
-sumgame_move sumgame_move_generator::gen_sum_move() const
-{
-    assert(*this && _mg && *_mg);
-    const std::pair<int, const game*>& sg = _subgames[_subgame_idx_local];
-    return sumgame_move(sg.first, _mg->gen_move());
-}
-
-//void sumgame_move_generator::_increment(bool init)
-//{
-//    assert(init || *this);
-//
-//    if (init)
-//    {
-//        assert(_subgame_idx_local == 0 && _seen_games.empty());
-//
-//        if (_subgames.empty())
-//            return;
-//
-//
-//        const game* sg_first = _subgames.front().second;
-//
-//        if (global::dedupe_movegen())
-//        {
-//            const hash_t hash = sg_first->get_local_hash();
-//            _seen_games.insert(hash);
-//        }
-//
-//        _mg.reset(sg_first->create_move_generator(to_play()));
-//    }
-//    else
-//    {
-//        assert(_mg && *_mg);
-//        ++(*_mg);
-//    }
-//
-//    const size_t n_subgames = _subgames.size();
-//
-//    while (true)
-//    {
-//        if (_mg && *_mg)
-//            return;
-//
-//        _mg.reset();
-//        _dom.reset();
-//
-//        _subgame_idx_local++;
-//
-//        if (!(_subgame_idx_local < n_subgames))
-//            return;
-//
-//        const game* sg = _subgames[_subgame_idx_local].second;
-//
-//        if (global::dedupe_movegen())
-//        {
-//            const hash_t hash = sg->get_local_hash();
-//
-//            auto inserted = _seen_games.insert(hash);
-//            if (!inserted.second)
-//                continue;
-//        }
-//        _mg.reset(sg->create_move_generator(to_play()));
-//    }
-//}
-
-void sumgame_move_generator::_increment(bool init)
-{
-    assert(init || *this);
-
-    bool has_generator = !init;
-    bool has_move = !init;
-
-    while (true)
-    {
-        // Try to increment move
-        if (has_generator && _increment_move(!has_move))
-        {
-            has_move = true;
-            assert(*this);
-            return;
-        }
-
-        has_move = false;
-
-        // Try to increment generator
-        if (_increment_generator(!has_generator))
-        {
-            has_generator = true;
-            continue;
-        }
-
-        has_generator = false;
-        assert(!*this);
-        return;
-    }
-}
-
-bool sumgame_move_generator::_increment_generator(bool init)
-{
-    if (init)
-        assert(_subgame_idx_local == 0);
-    else
-        _subgame_idx_local++;
-
-    while (_subgame_idx_local < _subgames.size())
-    {
-        _mg.reset();
-
-        _dom.reset();
-        _dom_kind = DB_DOM_MOVES_KIND_NONE;
-
-        _current_local_hash.reset();
-
-
-        const std::pair<int, const game*>& subgame_pair = _subgames[_subgame_idx_local];
-        const game* sg = subgame_pair.second;
-
-        if (global::dedupe_movegen() || _prune_dominated)
-            _current_local_hash = sg->get_local_hash();
-
-        if (global::dedupe_movegen())
-        {
-            assert(_current_local_hash.has_value());
-            auto inserted = _seen_games.insert(*_current_local_hash);
-
-            if (!inserted.second)
-            {
-                _subgame_idx_local++;
-                continue;
-            }
-        }
-
-        if (_prune_dominated && !sg->is_impartial())
-        {
-            assert(global::use_db());
-            database& db = get_global_database();
-
-            assert(sg->get_local_hash() == *_current_local_hash);
-            db_entry_partisan* entry = db.get_partisan_ptr(*sg);
-            const bool has_value = (entry != nullptr);
-            stats::report_db_access(has_value);
-
-            if (has_value && entry->dominated_moves)
-            {
-                _dom = entry->dominated_moves;
-                _dom_kind = _dom->get_kind();
-            }
-
-        }
-
-        if (_dom_kind == DB_DOM_MOVES_KIND_NONDOMINATED)
-        {
-            assert(_dom && _current_local_hash);
-
-            const std::vector<move>* db_encoded_moves = _dom->get_nondominated_moves(*_current_local_hash, to_play());
-            if (db_encoded_moves == nullptr)
-            {
-                _subgame_idx_local++;
-                continue;
-            }
-
-            _mg.reset(new db_move_generator(*sg, to_play(), *db_encoded_moves));
-        }
-        else
-            _mg.reset(sg->create_move_generator(to_play()));
-
-        return true;
-    }
-
-    _mg.reset();
-    _dom.reset();
-    _dom_kind = DB_DOM_MOVES_KIND_NONE;
-    _current_local_hash.reset();
-
-    return false;
-}
-
-bool sumgame_move_generator::_increment_move(bool init)
-{
-    assert(_mg.get() != nullptr);
-    assert(init || *_mg);
-
-    if (!init)
-        ++(*_mg);
-
-    while (true)
-    {
-        if (!(*_mg))
-        {
-            _mg.reset();
-            return false;
-        }
-
-        if (_prune_dominated && _dom && _dom_kind == DB_DOM_MOVES_KIND_DOMINATED)
-        {
-            assert(_current_local_hash.has_value());
-            assert(*_current_local_hash == _subgames[_subgame_idx_local].second->get_local_hash());
-
-            const move m = _mg->gen_move();
-            const game* sg = _subgames[_subgame_idx_local].second;
-            const move m_rotated = sg->encode_grid_move_to_db(m);
-            assert(sg->decode_grid_move_from_db(m_rotated) == m);
-
-            if (_dom->move_is_dominated(*_current_local_hash, to_play(), m_rotated))
-            {
-                if (sgraph::is_recording())
-                {
-                    sumgame& sum_nonconst = const_cast<sumgame&>(_sum);
-
-                    sumgame_move sm;
-                    sm.m = m;
-                    sm.subgame_idx = _subgames[_subgame_idx_local].first;
-
-                    sum_nonconst.play_sum(sm, to_play());
-
-                    sgraph::push(sum_nonconst);
-                    sgraph::pop(SEARCH_NODE_TYPE_PRUNED);
-
-                    sum_nonconst.undo_move();
-                }
-
-                ++(*_mg);
-                continue;
-            }
-
-        }
-
-        return true;
-    }
-}
-
-
-
-
-#endif
-//////////////////////////////////////////////////
-// Helpers
-
-namespace {
-
-std::unordered_set<game_type_t> basic_cgt_type_set;
-
 bool is_simple_cgt(const game* g)
 {
     assert(!basic_cgt_type_set.empty());
@@ -524,13 +65,95 @@ bool is_simple_cgt(const game* g)
     return basic_cgt_type_set.find(type) != basic_cgt_type_set.end();
 }
 
+vector<unsigned int> get_oc_indexable_vector()
+{
+    vector<unsigned int> vec;
+
+    static const outcome_class OC_MAX =
+        max({
+            outcome_class::U,
+            outcome_class::L,
+            outcome_class::R,
+            outcome_class::P,
+            outcome_class::N,
+        });
+
+    vec.resize(OC_MAX + 1, 0);
+    return vec;
+}
+
+/*
+    Conclusive:
+    - Only Ls
+    - Only Rs
+    - One N, all others non-negative for to_play
+*/
+ebw analyze_outcome_count_vector(const vector<unsigned int>& counts,
+                                 const bw player)
+{
+    assert(is_black_white(player));
+
+    const bool has_u = counts[outcome_class::U] > 0;
+    if (has_u)
+        return EMPTY;
+
+    const bool only_l = counts[outcome_class::L] > 0 &&
+                        counts[outcome_class::R] == 0 &&
+                        counts[outcome_class::N] == 0;
+
+    if (only_l)
+        return BLACK;
+
+    const bool only_r = counts[outcome_class::L] == 0 &&
+                        counts[outcome_class::R] > 0 &&
+                        counts[outcome_class::N] == 0;
+
+    if (only_r)
+        return WHITE;
+
+    const bool one_n = counts[outcome_class::N] == 1;
+
+    const outcome_class negative_class =
+        (player == BLACK) ? outcome_class::R : outcome_class::L;
+
+    const bool no_negative = counts[negative_class] == 0;
+
+    if (one_n && no_negative)
+        return player;
+
+    return EMPTY;
+}
+
+ebw analyze_bounds(bound_t lower_rational, bound_t upper_rational,
+                   bound_t lower_ups, bound_t upper_ups)
+{
+    assert(lower_rational <= upper_rational && //
+           lower_ups <= upper_ups              //
+    );
+
+    if (lower_rational > 0)
+        return BLACK;
+    if (upper_rational < 0)
+        return WHITE;
+
+
+    if (lower_rational == 0 && upper_rational == 0)
+    {
+        if (lower_ups > 0)
+            return BLACK;
+        if (upper_ups < 0)
+            return WHITE;
+    }
+
+    return EMPTY;
+}
+
 } // namespace
 
-//---------------------------------------------------------------------------
-
+////////////////////////////////////////////////// sumgame methods
 sumgame::~sumgame()
 {
-    // todo delete subgames, or store in vector of std::unique_ptr
+    // todo delete subgames, or store in vector of unique_ptr
     // assert(_play_record_stack.empty());
 }
 
@@ -547,7 +170,7 @@ void sumgame::add(game* g)
         _need_cgt_simplify = true;
 }
 
-void sumgame::add(std::vector<game*>& gs)
+void sumgame::add(vector<game*>& gs)
 {
     for (game* g : gs)
     {
@@ -562,7 +185,7 @@ void sumgame::pop(const game* g)
     _subgames.pop_back();
 }
 
-void sumgame::pop(const std::vector<game*>& gs)
+void sumgame::pop(const vector<game*>& gs)
 {
     for (auto it = gs.rbegin(); it != gs.rend(); it++)
         pop(*it);
@@ -622,7 +245,7 @@ optional<solve_result> sumgame::solve_with_timeout_token(
     return result;
 }
 
-bool sumgame::solve_with_games(std::vector<game*>& gs) const
+bool sumgame::solve_with_games(vector<game*>& gs) const
 {
     assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
@@ -693,7 +316,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
         db_replacement_pass();
         simplify_basic();
 
-        std::optional<solve_result> result = simplify_db(temperatures);
+        optional<solve_result> result = simplify_db(temperatures);
 
         if (result.has_value())
         {
@@ -710,7 +333,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 
        If tt_result holds a search_result, the queried hash may still be a miss.
     */
-    std::optional<ttable_sumgame::search_result> tt_result =
+    optional<ttable_sumgame::search_result> tt_result =
         _do_ttable_lookup();
 
     if (tt_result.has_value() && tt_result->entry_valid())
@@ -722,7 +345,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 
     const bw toplay = to_play();
 
-    std::unique_ptr<sumgame_move_generator> mgp(
+    unique_ptr<sumgame_move_generator> mgp(
         create_sum_move_generator(toplay, temperatures));
 
     sumgame_move_generator& mg = *mgp;
@@ -784,7 +407,7 @@ void sumgame::_pop_undo_code(sumgame_undo_code code)
     _undo_code_stack.pop_back();
 }
 
-std::optional<ttable_sumgame::search_result> sumgame::_do_ttable_lookup() const
+optional<ttable_sumgame::search_result> sumgame::_do_ttable_lookup() const
 {
     if (global::tt_sumgame_idx_bits() == 0)
         return {};
@@ -806,7 +429,7 @@ void sumgame::_debug_extra() const
 
 void sumgame::_assert_games_unique() const
 {
-    std::unordered_set<game*> game_set;
+    unordered_set<game*> game_set;
 
     const size_t n_games = num_total_games();
     for (size_t i = 0; i < n_games; i++)
@@ -830,7 +453,7 @@ void sumgame::_pre_solve_pass()
 
     // TODO change records are used in several places, but are kind of messy...
     // make this better
-    _change_record_stack.push_back({});
+    _change_record_stack.emplace_back();
     sumgame_impl::change_record& cr = _change_record_stack.back();
 
     const int N = num_total_games();
@@ -918,7 +541,7 @@ void sumgame::play_sum(const sumgame_move& sm, bw to_play)
     play_record& record = _play_record_stack.back();
 
     const int subg = sm.subgame_idx;
-    const move mv = sm.m;
+    const ::move mv = sm.m;
 
     game* g = subgame(subg);
 
@@ -1010,7 +633,7 @@ void sumgame::undo_move()
         }
     }
 
-    const move subm = cgt_move::remove_color(s->last_move());
+    const ::move subm = cgt_move::remove_color(s->last_move());
 
     assert(                                                         //
         sm.m == subm ||                                             //
@@ -1065,93 +688,6 @@ void sumgame::undo_simplify_basic()
     _change_record_stack.pop_back();
 }
 
-namespace {
-std::vector<unsigned int> get_oc_indexable_vector()
-{
-    std::vector<unsigned int> vec;
-
-    static const outcome_class OC_MAX =
-        std::max({
-            outcome_class::U,
-            outcome_class::L,
-            outcome_class::R,
-            outcome_class::P,
-            outcome_class::N,
-        });
-
-    vec.resize(OC_MAX + 1, 0);
-    return vec;
-}
-
-/*
-    Conclusive:
-    - Only Ls
-    - Only Rs
-    - One N, all others non-negative for to_play
-*/
-ebw analyze_outcome_count_vector(const std::vector<unsigned int>& counts,
-                                 const bw player)
-{
-    assert(is_black_white(player));
-
-    const bool has_u = counts[outcome_class::U] > 0;
-    if (has_u)
-        return EMPTY;
-
-    const bool only_l = counts[outcome_class::L] > 0 &&
-                        counts[outcome_class::R] == 0 &&
-                        counts[outcome_class::N] == 0;
-
-    if (only_l)
-        return BLACK;
-
-    const bool only_r = counts[outcome_class::L] == 0 &&
-                        counts[outcome_class::R] > 0 &&
-                        counts[outcome_class::N] == 0;
-
-    if (only_r)
-        return WHITE;
-
-    const bool one_n = counts[outcome_class::N] == 1;
-
-    const outcome_class negative_class =
-        (player == BLACK) ? outcome_class::R : outcome_class::L;
-
-    const bool no_negative = counts[negative_class] == 0;
-
-    if (one_n && no_negative)
-        return player;
-
-    return EMPTY;
-}
-
-ebw analyze_bounds(bound_t lower_rational, bound_t upper_rational,
-                   bound_t lower_ups, bound_t upper_ups)
-{
-    assert(lower_rational <= upper_rational && //
-           lower_ups <= upper_ups              //
-    );
-
-    if (lower_rational > 0)
-        return BLACK;
-    if (upper_rational < 0)
-        return WHITE;
-
-
-    if (lower_rational == 0 && upper_rational == 0)
-    {
-        if (lower_ups > 0)
-            return BLACK;
-        if (upper_ups < 0)
-            return WHITE;
-    }
-
-    return EMPTY;
-}
-
-} // namespace
-
-
 void sumgame::simplify_impartial()
 {
     _push_undo_code(SUMGAME_UNDO_SIMPLIFY_IMPARTIAL);
@@ -1195,7 +731,7 @@ void sumgame::simplify_impartial()
 
         assert(dynamic_cast<nimber*>(sg) == nullptr);
 
-        std::optional<db_entry_impartial> entry = db.get_impartial(*sg);
+        optional<db_entry_impartial> entry = db.get_impartial(*sg);
         stats::report_db_access(entry.has_value());
 
         if (!entry.has_value())
@@ -1286,7 +822,7 @@ optional<solve_result> sumgame::simplify_db(
     bool at_least_one_impartial = false;
 
 
-    std::vector<unsigned int> counts = get_oc_indexable_vector();
+    vector<unsigned int> counts = get_oc_indexable_vector();
 
     // Search all active games
     const int N_SUBGAMES = num_total_games();
@@ -1341,7 +877,7 @@ optional<solve_result> sumgame::simplify_db(
                 assert(temperatures.has_value());
                 optional<ThValue>& temp = (*temperatures)[subgame_idx];
                 //temp = entry->thermograph->Temperature();
-                const std::shared_ptr<const ThGraph> graph = entry->thermograph;
+                const shared_ptr<const ThGraph> graph = entry->thermograph;
                 if (graph)
                 {
                     temp = graph->Temperature();
@@ -1400,7 +936,7 @@ optional<solve_result> sumgame::simplify_db(
         }
     }
 
-    assert(std::accumulate(counts.begin(), counts.end(), 0) == n_active_games);
+    assert(accumulate(counts.begin(), counts.end(), 0) == n_active_games);
 
     if (!at_least_one_temp)
         temperatures.reset();
@@ -1494,7 +1030,7 @@ void sumgame::db_replacement_pass()
 
             assert(dynamic_cast<nimber*>(sg) == nullptr);
 
-            std::optional<db_entry_impartial> entry = db.get_impartial(*sg);
+            optional<db_entry_impartial> entry = db.get_impartial(*sg);
             stats::report_db_access(entry.has_value());
 
             if (!entry.has_value())
@@ -1580,7 +1116,7 @@ void sumgame::undo_db_replacement_pass()
     _change_record_stack.pop_back();
 }
 
-void sumgame::print(std::ostream& str) const
+void sumgame::print(ostream& str) const
 {
     str << "sumgame: " << num_total_games() << " total " << num_active_games()
         << " active: ";
@@ -1594,10 +1130,10 @@ void sumgame::print(std::ostream& str) const
                 str << ' ';
             g->print(str);
         }
-    str << std::endl;
+    str << endl;
 }
 
-void sumgame::print_simple(std::ostream& os) const
+void sumgame::print_simple(ostream& os) const
 {
     os << color_to_player_char(to_play());
 
@@ -1611,10 +1147,10 @@ void sumgame::print_simple(std::ostream& os) const
         os << " " << *sg;
     }
 
-    os << std::flush;
+    os << flush;
 }
 
-void sumgame::print_sorted(std::ostream& str) const
+void sumgame::print_sorted(ostream& str) const
 {
     vector<const game*> active_games;
 
@@ -1633,7 +1169,7 @@ void sumgame::print_sorted(std::ostream& str) const
         return g1->get_local_hash() < g2->get_local_hash();
     };
 
-    std::sort(active_games.begin(), active_games.end(), sort_fn);
+    sort(active_games.begin(), active_games.end(), sort_fn);
 
     const size_t n_active = active_games.size();
     for (size_t i = 0; i < n_active; i++)
@@ -1642,7 +1178,7 @@ void sumgame::print_sorted(std::ostream& str) const
         str << *g << " ";
     }
 
-    str << std::flush;
+    str << flush;
 }
 
 hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
@@ -1666,7 +1202,7 @@ bool sumgame::all_partisan() const
     return all_games_partisan(_subgames);
 }
 
-std::optional<sumgame_move> sumgame::get_winning_or_random_move(
+optional<sumgame_move> sumgame::get_winning_or_random_move(
     bw for_player) const
 {
     assert(is_black_white(for_player));
@@ -1677,10 +1213,10 @@ std::optional<sumgame_move> sumgame::get_winning_or_random_move(
     sumgame& sum = const_cast<sumgame&>(*this);
     sum.set_to_play(for_player);
 
-    std::unique_ptr<sumgame_move_generator> gen(
+    unique_ptr<sumgame_move_generator> gen(
         sum.create_sum_move_generator(for_player));
 
-    std::vector<sumgame_move> moves;
+    vector<sumgame_move> moves;
 
     while (*gen)
     {
@@ -1808,25 +1344,249 @@ sumgame_move_generator* sumgame::create_sum_move_generator(bw to_play) const
 sumgame_move_generator* sumgame::create_sum_move_generator(
     bw to_play, temp_vec_opt_t& temperatures) const
 {
-#ifdef SUMGAME_MOVE_GENERATOR_1_6
     const unsigned int n_games = as_unsigned_unsafe(num_total_games());
 
     if (temperatures.has_value() && (n_games > temperatures->size()))
         temperatures->resize(n_games);
 
     return new sumgame_move_generator(*this, to_play, temperatures, true);
-#else
-    return new sumgame_move_generator(*this, to_play);
-#endif
 }
 
-std::ostream& operator<<(std::ostream& out, const sumgame& s)
+ostream& operator<<(ostream& out, const sumgame& s)
 {
     s.print(out);
     return out;
 }
 
-//---------------------------------------------------------------------------
+//////////////////////////////////////////////////
+// sumgame_move_generator methods
+sumgame_move_generator::sumgame_move_generator(
+    const sumgame& sum, bw to_play, const temp_vec_opt_t& temperatures,
+    bool prune_dominated)
+    : move_generator(to_play),
+      _subgame_idx_local(0),
+      _prune_dominated(prune_dominated),
+      _dom_kind(DB_DOM_MOVES_KIND_NONE),
+      _sum(sum)
+{
+    assert(LOGICAL_IMPLIES(                                               //
+        temperatures.has_value(),                                         //
+        temperatures->size() >= as_unsigned_unsafe(sum.num_total_games()) //
+        ));                                                               //
+
+    if (!global::use_db())
+        _prune_dominated = false;
+
+    vector<pair<int, const game*>> numbers;
+
+    // TODO pruning duplicate games?
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        game* g = sum.subgame(i);
+        if (!g->is_active())
+            continue;
+
+        if (game_is_number(g))
+            numbers.emplace_back(i, g);
+        else
+            _subgames.emplace_back(i, g);
+    }
+
+    auto sort_fn = [&](const pair<int, const game*>& sg1,
+                       const pair<int, const game*>& sg2) -> bool
+    {
+        assert(temperatures.has_value());
+
+        const optional<ThValue>& temp1 = (*temperatures)[sg1.first];
+        const optional<ThValue>& temp2 = (*temperatures)[sg2.first];
+
+        if (temp1.has_value())
+        {
+            if (!temp2.has_value())
+                return true;
+                //return false;
+
+            return *temp1 > *temp2;
+        }
+
+        return false;
+        //return temp2.has_value();
+    };
+
+    if (temperatures.has_value())
+        sort(_subgames.begin(), _subgames.end(), sort_fn);
+
+    for (const pair<int, const game*>& sg : numbers)
+        _subgames.push_back(sg);
+
+    _increment(true);
+}
+
+sumgame_move_generator::~sumgame_move_generator()
+{
+}
+
+void sumgame_move_generator::operator++()
+{
+    assert(*this);
+    _increment(false);
+}
+
+sumgame_move_generator::operator bool() const
+{
+    return (_mg && *_mg);
+}
+
+sumgame_move sumgame_move_generator::gen_sum_move() const
+{
+    assert(*this && _mg && *_mg);
+    const pair<int, const game*>& sg = _subgames[_subgame_idx_local];
+    return sumgame_move(sg.first, _mg->gen_move());
+}
+
+void sumgame_move_generator::_increment(bool init)
+{
+    assert(init || *this);
+
+    bool has_generator = !init;
+    bool has_move = !init;
+
+    while (true)
+    {
+        // Try to increment move
+        if (has_generator && _increment_move(!has_move))
+        {
+            has_move = true;
+            assert(*this);
+            return;
+        }
+
+        has_move = false;
+
+        // Try to increment generator
+        if (_increment_generator(!has_generator))
+        {
+            has_generator = true;
+            continue;
+        }
+
+        has_generator = false;
+        assert(!*this);
+        return;
+    }
+}
+
+bool sumgame_move_generator::_increment_generator(bool init)
+{
+    if (init)
+        assert(_subgame_idx_local == 0);
+    else
+        _subgame_idx_local++;
+
+    while (_subgame_idx_local < _subgames.size())
+    {
+        _mg.reset();
+
+        _dom.reset();
+        _dom_kind = DB_DOM_MOVES_KIND_NONE;
+
+        _current_local_hash.reset();
+
+
+        const pair<int, const game*>& subgame_pair = _subgames[_subgame_idx_local];
+        const game* sg = subgame_pair.second;
+
+        if (global::dedupe_movegen() || _prune_dominated)
+            _current_local_hash = sg->get_local_hash();
+
+        if (global::dedupe_movegen())
+        {
+            assert(_current_local_hash.has_value());
+            auto inserted = _seen_games.insert(*_current_local_hash);
+
+            if (!inserted.second)
+            {
+                _subgame_idx_local++;
+                continue;
+            }
+        }
+
+        if (_prune_dominated && !sg->is_impartial())
+        {
+            assert(global::use_db());
+            database& db = get_global_database();
+
+            assert(sg->get_local_hash() == *_current_local_hash);
+            db_entry_partisan* entry = db.get_partisan_ptr(*sg);
+            const bool has_value = (entry != nullptr);
+            stats::report_db_access(has_value);
+
+            if (has_value && entry->dominated_moves)
+            {
+                _dom = entry->dominated_moves;
+                _dom_kind = _dom->get_kind();
+            }
+
+        }
+
+        if (_dom_kind == DB_DOM_MOVES_KIND_NONDOMINATED)
+        {
+            assert(_dom && _current_local_hash);
+
+            const vector<::move>* db_encoded_moves = _dom->get_nondominated_moves(*_current_local_hash, to_play());
+            if (db_encoded_moves == nullptr)
+            {
+                _subgame_idx_local++;
+                continue;
+            }
+
+            _mg.reset(new db_move_generator(*sg, to_play(), *db_encoded_moves));
+        }
+        else if (_dom_kind == DB_DOM_MOVES_KIND_DOMINATED)
+        {
+            assert(_dom && _current_local_hash);
+
+            const set<::move>* db_encoded_dom_moves = _dom->get_dominated_moves(*_current_local_hash, to_play());
+            if (db_encoded_dom_moves == nullptr)
+                _mg.reset(sg->create_move_generator(to_play()));
+            else
+                _mg.reset(new filtering_move_generator(*sg, to_play(), *db_encoded_dom_moves));
+        }
+        else
+            _mg.reset(sg->create_move_generator(to_play()));
+
+        return true;
+    }
+
+    _mg.reset();
+    _dom.reset();
+    _dom_kind = DB_DOM_MOVES_KIND_NONE;
+    _current_local_hash.reset();
+
+    return false;
+}
+
+bool sumgame_move_generator::_increment_move(bool init)
+{
+    assert(_mg.get() != nullptr);
+    assert(init || *_mg);
+
+    if (!init)
+        ++(*_mg);
+
+    if (!(*_mg))
+    {
+        _mg.reset();
+        return false;
+    }
+    
+    return true;
+}
+
+
+////////////////////////////////////////////////// assert_restore_sumgame methods
 
 #ifdef ASSERT_RESTORE_DEBUG
 assert_restore_sumgame::assert_restore_sumgame(const sumgame& sgame)

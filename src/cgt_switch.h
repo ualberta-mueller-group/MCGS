@@ -84,6 +84,9 @@ private:
 
     // nullptr if absent
     std::unique_ptr<dyadic_rational> _rational_game;
+
+    // May not match the actual number of moves played, i.e. if this game was
+    // created by the `clone` or `inverse` functions
     size_t _move_depth;
 };
 

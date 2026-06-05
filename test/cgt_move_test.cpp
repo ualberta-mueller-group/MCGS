@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <utility>
+#include <cstdint>
 
 #include "cgt_move.h"
 #include "cgt_basics.h"

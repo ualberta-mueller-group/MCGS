@@ -5,6 +5,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "hashing.h"
+#include "throw_assert.h"
 
 #include <ostream>
 #include <cassert>
@@ -70,12 +71,16 @@ void kayles::print_kayles_move(move m, std::ostream& str)
 
 game* kayles::inverse() const
 {
-    return new kayles(_value);
+    kayles* g = new kayles(_value);
+    g->_smaller_part = _smaller_part;
+    return g;
 }
 
 game* kayles::clone() const
 {
-    return new kayles(*this);
+    kayles* g = new kayles(_value);
+    g->_smaller_part = _smaller_part;
+    return g;
 }
 
 relation kayles::_order_impl(const game* rhs) const
@@ -140,6 +145,7 @@ void kayles::set_solved(int nim_value)
 }
 
 //---------------------------------------------------------------------------
+namespace {
 class kayles_move_generator : public move_generator
 {
 public:
@@ -188,6 +194,7 @@ move kayles_move_generator::gen_move() const
     assert(x <= y);
     return kayles::encode(_take, x, y);
 }
+} // namespace
 
 //---------------------------------------------------------------------------
 move_generator* kayles::create_move_generator() const

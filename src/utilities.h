@@ -2,7 +2,6 @@
    General utility functions
 */
 #pragma once
-#include <stdexcept>
 #include <vector>
 #include <iostream>
 #include <climits>
@@ -29,6 +28,8 @@
 #endif
 
 //////////////////////////////////////// general utility functions
+std::string get_current_time_as_string();
+
 template <class T>
 inline constexpr size_t size_in_bits(const T& expr)
 {
@@ -179,6 +180,8 @@ inline constexpr T rotate_right(const T& val, size_t distance)
     using T_Unsigned = typename std::make_unsigned_t<T>;
     const T_Unsigned& val_unsigned = reinterpret_cast<const T_Unsigned&>(val);
     constexpr size_t N_BITS = sizeof(T_Unsigned) * CHAR_BIT;
+
+    distance %= N_BITS;
 
     if (distance <= 0)
         return val;

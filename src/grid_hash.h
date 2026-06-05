@@ -45,17 +45,18 @@
 #include <cassert>
 #include <type_traits>
 #include <vector>
+#include <cstddef>
 
 #include "grid.h"
 #include "game.h"
-#include "grid_hash_orientation.h"
 #include "grid_location.h"
 #include "int_pair.h"
 #include "type_table.h"
 #include "utilities.h"
 
-// If defined: supported grid games use grid_hash class
-#define USE_GRID_HASH
+// IWYU pragma: begin_exports
+#include "grid_hash_orientation.h"
+// IWYU pragma: end_exports
 
 
 //////////////////////////////////////// Common active orientation bit masks
@@ -190,10 +191,15 @@ class grid_hash
 public:
     grid_hash(unsigned int grid_hash_mask);
 
+    //// Getters
+    hash_t get_value() const;
+
+    grid_hash_orientation get_orientation() const;
+
+    //// Mutators
     void reset(const int_pair& grid_shape);
 
-    hash_t get_value() const;
-    grid_hash_orientation get_orientation() const;
+    void toggle_type(game_type_t type);
 
     template <class T>
     void toggle_value(int r, int c, const T& color);
@@ -201,12 +207,11 @@ public:
     template <class T>
     void toggle_value(const int_pair& coord, const T& color);
 
-    // For parameterized games
     template <class T>
     void toggle_parameter(size_t parameter_idx, const T& param);
 
-    void toggle_type(game_type_t type);
 
+    //// Full hash computation
     void init_from_grid(const grid& g);
 
     template <class T>
@@ -218,20 +223,26 @@ public:
         const std::vector<Board_Element_T>& board, const int_pair& shape,
         game_type_t type, const std::vector<Param_Element_T>& params);
 
+    //// Static coordinate/shape transformation functions
+
     // All 4 of these properly handle "T" suffix for orientation
-    static int_pair get_transformed_coords(const int_pair& shape,
-                                           const int_pair& coords,
+
+    /*
+        shape1, coords1 -- transform --> shape2, coords2
+    */
+    static int_pair get_transformed_coords(const int_pair& shape1,
+                                           const int_pair& coords1,
                                            grid_hash_orientation ori);
 
-
-    static int_pair get_transformed_shape(const int_pair& shape,
+    static int_pair get_transformed_shape(const int_pair& shape1,
                                           grid_hash_orientation ori);
 
-    static int_pair get_inverse_transformed_coords(int_pair shape,
-                                                   int_pair coords,
+    // Note shape1 and not shape2
+    static int_pair get_inverse_transformed_coords(int_pair shape1,
+                                                   int_pair coords2,
                                                    grid_hash_orientation ori);
 
-    static int_pair get_inverse_transformed_shape(int_pair shape,
+    static int_pair get_inverse_transformed_shape(int_pair shape2,
                                                   grid_hash_orientation ori);
 
 private:
@@ -284,6 +295,13 @@ inline grid_hash_orientation grid_hash::get_orientation() const
 
     assert(!_is_dirty);
     return _selected_orientation;
+}
+
+inline void grid_hash::toggle_type(game_type_t type)
+{
+    _is_dirty = true;
+    for (local_hash& hash : _hashes)
+        hash.toggle_type(type);
 }
 
 template <class T>
@@ -340,7 +358,7 @@ inline void grid_hash::toggle_value(const int_pair& coord, const T& color)
 }
 
 template <class T>
-inline void grid_hash::toggle_parameter(size_t parameter_idx, const T& param)
+void grid_hash::toggle_parameter(size_t parameter_idx, const T& param)
 {
     static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
 
@@ -374,11 +392,13 @@ inline void grid_hash::toggle_parameter(size_t parameter_idx, const T& param)
 
 }
 
-inline void grid_hash::toggle_type(game_type_t type)
+inline void grid_hash::init_from_grid(const grid& g)
 {
     _is_dirty = true;
-    for (local_hash& hash : _hashes)
-        hash.toggle_type(type);
+    const int_pair& shape = g.shape();
+    const game_type_t type = g.game_type();
+
+    init_from_board_and_type(g.board_const(), shape, type);
 }
 
 template <class T>
@@ -422,12 +442,14 @@ void grid_hash::init_from_board_and_type_with_params(
         toggle_parameter<Param_Element_T>(i, params[i]);
 }
 
-inline int_pair grid_hash::get_transformed_coords(const int_pair& shape,
-                                                  const int_pair& coords,
+inline int_pair grid_hash::get_transformed_coords(const int_pair& shape1,
+                                                  const int_pair& coords1,
                                                  grid_hash_orientation ori)
 {
-    int r = coords.first;
-    int c = coords.second;
+    assert(shape1.first > 0 && shape1.second > 0);
+
+    int r = coords1.first;
+    int c = coords1.second;
 
     // op mask (not considering "T" suffix)
     const unsigned int op_mask_no_t = __grid_hash_impl::get_op_mask_no_t(ori);
@@ -437,10 +459,10 @@ inline int_pair grid_hash::get_transformed_coords(const int_pair& shape,
     do_swap ^= (bit_is_1(ori, 0)); // consider "T" suffix
 
     if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_ROW_INV)
-        r = (shape.first - 1) - r;
+        r = (shape1.first - 1) - r;
 
     if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_COL_INV)
-        c = (shape.second - 1) - c;
+        c = (shape1.second - 1) - c;
 
     int_pair result(r, c);
     if (do_swap)
@@ -449,7 +471,7 @@ inline int_pair grid_hash::get_transformed_coords(const int_pair& shape,
     return result;
 }
 
-inline int_pair grid_hash::get_transformed_shape(const int_pair& shape,
+inline int_pair grid_hash::get_transformed_shape(const int_pair& shape1,
                                                  grid_hash_orientation ori)
 {
     // op mask (not considering "T" suffix)
@@ -460,14 +482,16 @@ inline int_pair grid_hash::get_transformed_shape(const int_pair& shape,
     do_swap ^= (bit_is_1(ori, 0)); // consider "T" suffix
 
     if (do_swap)
-        return transpose_int_pair(shape);
+        return transpose_int_pair(shape1);
 
-    return shape;
+    return shape1;
 }
 
 inline int_pair grid_hash::get_inverse_transformed_coords(
-    int_pair shape, int_pair coords, grid_hash_orientation ori)
+    int_pair shape1, int_pair coords2, grid_hash_orientation ori)
 {
+    assert(shape1.first > 0 && shape1.second > 0);
+
     // op mask (not considering "T" suffix)
     const unsigned int op_mask_no_t = __grid_hash_impl::get_op_mask_no_t(ori);
 
@@ -476,16 +500,16 @@ inline int_pair grid_hash::get_inverse_transformed_coords(
     do_swap ^= (bit_is_1(ori, 0)); // consider "T" suffix
 
     if (do_swap)
-        coords = transpose_int_pair(coords);
+        coords2 = transpose_int_pair(coords2);
 
-    int r = coords.first;
-    int c = coords.second;
+    int r = coords2.first;
+    int c = coords2.second;
 
     if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_ROW_INV)
-        r = (shape.first - 1) - r;
+        r = (shape1.first - 1) - r;
 
     if (op_mask_no_t & __grid_hash_impl::ORIENTATION_OP_COL_INV)
-        c = (shape.second - 1) - c;
+        c = (shape1.second - 1) - c;
 
     int_pair result(r, c);
 
@@ -493,9 +517,9 @@ inline int_pair grid_hash::get_inverse_transformed_coords(
 }
 
 inline int_pair grid_hash::get_inverse_transformed_shape(
-    int_pair shape, grid_hash_orientation ori)
+    int_pair shape2, grid_hash_orientation ori)
 {
-    return get_transformed_shape(shape, ori);
+    return get_transformed_shape(shape2, ori);
 }
 
 inline int_pair grid_hash::_get_transformed_coords_no_t(
@@ -534,14 +558,6 @@ inline void grid_hash::_init_grid_shape(const int_pair& shape)
     _param_idx_start = 2 + grid_area;
 }
 
-inline void grid_hash::init_from_grid(const grid& g)
-{
-    _is_dirty = true;
-    const int_pair& shape = g.shape();
-    const game_type_t type = g.game_type();
-
-    init_from_board_and_type(g.board_const(), shape, type);
-}
 
 ////////////////////////////////////////////////// type_table stuff...
 template <class Game_T>

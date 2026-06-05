@@ -1,10 +1,12 @@
 #include "grid_hash.h"
 
 #include <cassert>
+#include <limits>
 
 #include "grid.h"
 #include "utilities.h"
 #include "hashing.h"
+
 
 using namespace std;
 

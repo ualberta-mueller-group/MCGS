@@ -267,7 +267,7 @@ game* clobber_1xn::inverse() const
 
 game* clobber_1xn::clone() const
 {
-    return new clobber_1xn(*this);
+    return new clobber_1xn(board_const());
 }
 
 void clobber_1xn::print_move(std::ostream& str, const move& m, ebw to_play) const
@@ -289,6 +289,7 @@ string clobber_1xn::xxo(int n)
 
 //---------------------------------------------------------------------------
 
+namespace {
 class clobber_1xn_move_generator : public move_generator
 {
 public:
@@ -376,6 +377,7 @@ move clobber_1xn_move_generator::gen_move() const
     assert(operator bool());
     return cgt_move::move2_create(_current, _current + _dir);
 }
+} // namespace
 
 //---------------------------------------------------------------------------
 

@@ -365,3 +365,33 @@ void assert_solve_test_file(const std::string& file_name,
 
     assert(actual_case_count == expected_case_count);
 }
+
+void play_nth_move(game* g, int move_idx)
+{
+    assert(move_idx >= 0);
+    assert(g != nullptr);
+
+    int idx = 0;
+    constexpr std::array<bw, 2> COLORS = {BLACK, WHITE};
+    for (const bw color : COLORS)
+    {
+        std::unique_ptr<move_generator> gen(g->create_move_generator(color));
+
+        while (*gen)
+        {
+            if (idx < move_idx)
+            {
+                idx++;
+                ++(*gen);
+                continue;
+            }
+
+            const ::move m = gen->gen_move();
+            g->play(m, color);
+            return;
+        }
+    }
+
+    assert(false); // No move to play
+}
+

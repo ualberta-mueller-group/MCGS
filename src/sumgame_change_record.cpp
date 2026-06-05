@@ -76,6 +76,7 @@ void change_record::_move_impl(change_record&& other) noexcept
 {
     deactivated_games = std::move(other.deactivated_games);
     added_games = std::move(other.added_games);
+    normalized_games = std::move(other.normalized_games);
 
     other._clear();
 }

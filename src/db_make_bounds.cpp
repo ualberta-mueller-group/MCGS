@@ -1,17 +1,16 @@
 #include "db_make_bounds.h"
 
 #include <memory>
+#include <cassert>
+#include <vector>
 
-#include "SgBlackWhite.h"
 #include "ThGraph.h"
-#include "ThScaffold.h"
-#include "ThValue.h"
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
-#include "fraction.h"
 #include "thermograph_helpers.h"
 #include "sumgame.h"
+#include "database.h"
 
 using namespace std;
 
@@ -45,12 +44,13 @@ std::shared_ptr<game_bounds> db_make_bounds(const database& db, sumgame& sum,
         assert(options_vec.size() == 1 && bounds_vec.size() == 1);
 
         game_bounds_ptr bounds = bounds_vec.back();
+        assert(bounds);
 
         assert(bounds->both_valid());
         return bounds;
     }
 
-    shared_ptr<game_bounds> bounds_therm(make_bounds_from_thermograph(*therm));
+    shared_ptr<game_bounds> bounds_therm(make_rational_bounds_from_thermograph(*therm));
     assert(bounds_therm->both_valid());
     return bounds_therm;
 }

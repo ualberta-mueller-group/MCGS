@@ -5,11 +5,13 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <type_traits>
 
 #include "amazons.h"
 #include "cgt_up_star.h"
 #include "cli_options.h"
 #include "database.h"
+#include "dominated_moves.h"
 #include "domineering.h"
 #include "convert_to_ctl.h"
 #include "file_parser.h"
@@ -17,16 +19,15 @@
 #include "global_database.h"
 #include "print_moves.h"
 #include "search_graph_debug.h"
-#include "test_case.h"
 #include "mcgs_init.h"
 #include "hashing.h"
 #include "global_options.h"
 #include "clobber.h"
 #include "clobber_1xn.h"
+#include "throw_assert.h"
 
 #include "gen_experiments.h"
 #include "basic_player.h"
-#include "test_filter.h"
 #include "utils_for_main.h"
 
 using std::cout, std::endl, std::flush, std::string;

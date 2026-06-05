@@ -1,6 +1,12 @@
+/*
+    Takes as input a game and a vector of DB-encoded moves. Generates these
+    moves after decoding them.
+*/
 #pragma once
 
 #include <vector>
+#include <cstddef>
+#include <cassert>
 
 #include "game.h"
 

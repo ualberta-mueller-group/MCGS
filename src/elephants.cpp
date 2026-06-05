@@ -456,7 +456,7 @@ game* elephants::inverse() const
 
 game* elephants::clone() const
 {
-    return new elephants(*this);
+    return new elephants(board_const());
 }
 
 //////////////////////////////////////// elephants_move_generator

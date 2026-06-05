@@ -1,10 +1,6 @@
 /*
     TODO: These save and load functions are not machine/compiler-independent
     (because game_type_t is an unsigned int).
-
-    STL container serializer templates probably should all be removed, or,
-    probably just the generic integer serializer template? It is very easy
-    to write unsafe code with this...
 */
 #include <algorithm>
 #include <cassert>
@@ -12,7 +8,6 @@
 #include <ctime>
 #include <fstream>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -36,6 +31,7 @@
 #include "iobuffer.h"
 #include "serializer.h"
 #include "db_game_generator.h"
+#include "db_entry_serializers.h" // IWYU pragma: keep
 #include "thermograph_cache.h"
 #include "throw_assert.h"
 #include "type_table.h"
@@ -43,332 +39,144 @@
 #include "utilities.h"
 #include "version_info.h"
 #include "impartial_game_wrapper.h"
-
-
-uint64_t n_db_games = 0;
-uint64_t n_db_games_with_bounds = 0;
-uint64_t n_db_bounds_infinitesimal = 0;
-uint64_t n_db_bounds_rational = 0;
-uint64_t n_db_bounds_equal = 0;
+#include "thermograph_helpers.h"
 
 using namespace std;
-
-////////////////////////////////////////////////// helper functions
-namespace {
-
-string get_time_string()
-{
-    string time_string;
-
-    const std::chrono::time_point time = std::chrono::system_clock::now();
-    const std::time_t time_converted = std::chrono::system_clock::to_time_t(time);
-
-    const char* time_ctime = std::ctime(&time_converted);
-    assert(time_ctime != nullptr);
-
-    while (true)
-    {
-        const char c = *time_ctime;
-        ++time_ctime;
-
-        if (c == 0 || c == '\n')
-            break;
-
-        time_string.push_back(c);
-    }
-
-    return time_string;
-}
-
-} // namespace
 
 ////////////////////////////////////////////////// db_entry_partisan methods
 bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 {
     // Note confusing use of `shared_ptr::operator bool()` in this function
 
+    // Outcome
     if (outcome != other.outcome)
         return false;
 
+    // Thermograph
     if ((bool) thermograph != (bool) other.thermograph)
         return false;
 
     if (thermograph && !(*thermograph == *other.thermograph))
         return false;
 
+    // Bounds
     if ((bool) bounds_data != (bool) other.bounds_data)
         return false;
 
     if (bounds_data && (*bounds_data != *other.bounds_data))
         return false;
 
+    // Complexity
+    if (complexity != other.complexity)
+        return false;
+
+    // Dominated moves
     if ((bool) dominated_moves != (bool) other.dominated_moves)
         return false;
 
     if (dominated_moves && (*dominated_moves != *other.dominated_moves))
         return false;
 
-    if (complexity != other.complexity)
-        return false;
-
     return true;
 }
 
+void db_entry_partisan::print(ostream& os, const database& db,
+                              bool print_endl) const
+{
+    // Outcome
+    os << outcome_class_to_string(outcome);
+
+    // Thermograph
+    os << " Thermograph: `";
+
+    if (thermograph.get() == nullptr)
+        os << "nullptr";
+    else
+        print_thermograph(os, *thermograph);
+
+    os << "`";
+
+    // Bounds
+    os << " Bounds: `";
+
+    if (bounds_data.get() == nullptr)
+        os << "nullptr";
+    else
+        os << *bounds_data;
+
+    os << "`";
+
+    // Complexity
+    os << " Complexity: " << complexity;
+
+    // Dominated moves
+    os << " Dominated moves: `";
+
+    if (dominated_moves.get() == nullptr)
+        os << "nullptr";
+    else
+        os << *dominated_moves;
+
+    os << "`";
+
+    // Newline
+    if (print_endl)
+        os << endl;
+}
+
 ////////////////////////////////////////////////// database methods
-database::database() : _sum(nullptr), _game_count(0), _max_generation_depth(0)
+database::database()
+    : _n_entries_generated(0), _graph_cache(make_unique<thermograph_cache>())
 {
 }
 
-/*
-    - MCGS version
-    - Date created
-    - Game config string
-*/
-void database::update_metadata_string(const string& config_string)
-{
-    _metadata_string.clear();
-
-    // TODO commit hash instead?
-    _metadata_string += "Version: \"" + string(MCGS_VERSION_STRING) + "\"\n";
-
-    // Date
-    _metadata_string += "Date created: \"" + get_time_string() + "\"\n";
-
-    // Game config
-    _metadata_string += "DB config string: \"" + config_string + "\"";
-}
-
-void database::set_partisan(const game& g, const db_entry_partisan& entry)
-{
-    const game_type_t gt = _mapper.translate_type(g.game_type());
-    THROW_ASSERT(gt > 0);
-
-    const hash_t hash = _get_db_hash(g);
-    auto it = _tree_partisan[gt].emplace(hash, entry);
-
-    THROW_ASSERT(it.second); // not already found
-}
-
-void database::set_partisan(const sumgame& sum, const db_entry_partisan& entry)
-{
-    const game_type_t sum_type = _get_sum_game_type(sum);
-
-    const game_type_t gt = _mapper.translate_type(sum_type);
-    THROW_ASSERT(gt > 0);
-
-    const hash_t hash = _get_db_hash(sum);
-    auto it = _tree_partisan[gt].emplace(hash, entry);
-
-    THROW_ASSERT(it.second); // not already found
-}
-
-void database::set_impartial(const game& g, const db_entry_impartial& entry)
-{
-    const game_type_t gt = _mapper.translate_type(g.game_type());
-    THROW_ASSERT(gt > 0);
-
-    const hash_t hash = g.get_local_hash();
-    auto it = _tree_impartial[gt].emplace(hash, entry);
-
-    THROW_ASSERT(it.second); // not already found
-}
-
-void database::__register_built_in_types()
-{
-    DATABASE_REGISTER_TYPE((*this), integer_game);
-}
-
-std::optional<db_entry_partisan> database::get_partisan(const game& g) const
-{
-    const game_type_t gt = _mapper.translate_type(g.game_type());
-    if (gt == 0)
-        return {};
-
-    auto it1 = _tree_partisan.find(gt);
-    if (it1 == _tree_partisan.end())
-        return {};
-
-    const terminal_layer_partisan_t& layer = it1->second;
-    const hash_t hash = _get_db_hash(g);
-    auto it2 = layer.find(hash);
-
-    if (it2 == layer.end())
-        return {};
-
-    return it2->second;
-}
-
-std::optional<db_entry_partisan> database::get_partisan(const sumgame& sum) const
-{
-    const optional<game_type_t> sum_type_opt = _get_sum_game_type(sum);
-    if (!sum_type_opt.has_value())
-        return {};
-    const game_type_t sum_type = *sum_type_opt;
-
-    const game_type_t gt = _mapper.translate_type(sum_type);
-    if (gt == 0)
-        return {};
-
-    auto it1 = _tree_partisan.find(gt);
-    if (it1 == _tree_partisan.end())
-        return {};
-
-    const terminal_layer_partisan_t& layer = it1->second;
-    const hash_t hash = _get_db_hash(sum);
-    auto it2 = layer.find(hash);
-
-    if (it2 == layer.end())
-        return {};
-
-    return it2->second;
-}
-
-db_entry_partisan* database::get_partisan_ptr(const game& g)
-{
-    const game_type_t gt = _mapper.translate_type(g.game_type());
-    if (gt == 0)
-        return nullptr;
-
-    auto it1 = _tree_partisan.find(gt);
-    if (it1 == _tree_partisan.end())
-        return nullptr;
-
-    terminal_layer_partisan_t& layer = it1->second;
-    const hash_t hash = _get_db_hash(g);
-    auto it2 = layer.find(hash);
-
-    if (it2 == layer.end())
-        return nullptr;
-
-    return &(it2->second);
-}
-
-db_entry_partisan* database::get_partisan_ptr(const sumgame& sum)
-{
-    const optional<game_type_t> sum_type_opt = _get_sum_game_type(sum);
-    if (!sum_type_opt.has_value())
-        return nullptr;
-    const game_type_t sum_type = *sum_type_opt;
-
-    const game_type_t gt = _mapper.translate_type(sum_type);
-    if (gt == 0)
-        return nullptr;
-
-    auto it1 = _tree_partisan.find(gt);
-    if (it1 == _tree_partisan.end())
-        return nullptr;
-
-    terminal_layer_partisan_t& layer = it1->second;
-    const hash_t hash = _get_db_hash(sum);
-    auto it2 = layer.find(hash);
-
-    if (it2 == layer.end())
-        return nullptr;
-
-    return &it2->second;
-}
-
-db_entry_partisan* database::get_or_allocate_partisan_ptr(const sumgame& sum)
-{
-    const game_type_t sum_type = _get_sum_game_type(sum);
-
-    const game_type_t gt = _mapper.translate_type(sum_type);
-    THROW_ASSERT(gt > 0);
-
-    const hash_t hash = _get_db_hash(sum);
-    return &(_tree_partisan[gt][hash]);
-}
-
-std::optional<db_entry_impartial> database::get_impartial(const game& g) const
-{
-    const game_type_t gt = _mapper.translate_type(g.game_type());
-    if (gt == 0)
-        return {};
-
-    auto it1 = _tree_impartial.find(gt);
-    if (it1 == _tree_impartial.end())
-        return {};
-
-    const terminal_layer_impartial_t& layer = it1->second;
-    const hash_t hash = g.get_local_hash();
-    auto it2 = layer.find(hash);
-
-    if (it2 == layer.end())
-        return {};
-
-    return it2->second;
-}
-
-void database::save(const std::string& filename) const
+void database::save(const string& filename) const
 {
     obuffer os(filename);
-
     serializer_ctx ctx;
 
-    serializer<string>::save(os, _metadata_string, &ctx);
-    serializer<thermograph_cache>::save(os, _graph_cache, &ctx);
+    serializer_save(os, _metadata_string, &ctx);
+    serializer_save(os, _mapper, &ctx);
+    serializer_save(os, _graph_cache, &ctx);
 
-    serializer<std::shared_ptr<ThGraph>>::set_thermograph_cache(&ctx, &_graph_cache);
-    serializer<tree_partisan_t>::save(os, _tree_partisan, &ctx);
-    serializer<tree_impartial_t>::save(os, _tree_impartial, &ctx);
-    serializer<type_mapper>::save(os, _mapper, &ctx);
+    // Thermographs in the DB entry are saved to disk as `thgraph_id_t`
+    serializer<shared_ptr<ThGraph>>::set_thermograph_cache(&ctx,
+                                                           &_get_graph_cache());
+    serializer_save(os, _tree_partisan, &ctx);
+    serializer_save(os, _tree_impartial, &ctx);
 
     os.close();
 }
 
-void database::load(const std::string& filename)
+void database::load(const string& filename)
 {
     assert(_tree_partisan.empty());
     assert(_tree_impartial.empty());
 
     ibuffer is(filename);
-
     serializer_ctx ctx;
 
-    _metadata_string = serializer<string>::load(is, &ctx);
-    _graph_cache = serializer<thermograph_cache>::load(is, &ctx);
+    serializer_load(is, _metadata_string, &ctx);
+    serializer_load(is, _mapper, &ctx);
+    serializer_load(is, _graph_cache, &ctx);
 
-    serializer<std::shared_ptr<ThGraph>>::set_thermograph_cache(&ctx, &_graph_cache);
-
-    _tree_partisan = serializer<tree_partisan_t>::load(is, &ctx);
-    _tree_impartial = serializer<tree_impartial_t>::load(is, &ctx);
-    _mapper = serializer<type_mapper>::load(is, &ctx);
+    // Thermographs in the DB entry are saved to disk as `thgraph_id_t`
+    serializer<shared_ptr<ThGraph>>::set_thermograph_cache(&ctx,
+                                                           &_get_graph_cache());
+    serializer_load(is, _tree_partisan, &ctx);
+    serializer_load(is, _tree_impartial, &ctx);
 
     is.close();
 }
 
-void database::clear()
-{
-    _tree_partisan.clear();
-    _tree_impartial.clear();
-    _mapper.clear();
-}
-
-bool database::is_equal(const database& other) const
-{
-    if (_tree_partisan != other._tree_partisan)
-        return false;
-
-    if (_tree_impartial != other._tree_impartial)
-        return false;
-
-    if (_mapper != other._mapper)
-        return false;
-    
-    if (_graph_cache != other._graph_cache)
-        return false;
-
-    return true;
-}
-
-void database::dump_to_stream(std::ostream& os) const
+void database::dump_to_stream(ostream& os) const
 {
     os << _mapper << '\n';
 
-    for (const std::pair<const game_type_t, terminal_layer_partisan_t>&
+    for (const pair<const game_type_t, terminal_layer_partisan_t>&
              terminal_layer : _tree_partisan)
     {
-        for (const std::pair<const hash_t, db_entry_partisan>& entry_pair :
+        for (const pair<const hash_t, db_entry_partisan>& entry_pair :
              terminal_layer.second)
         {
             entry_pair.second.print(os, *this);
@@ -376,23 +184,22 @@ void database::dump_to_stream(std::ostream& os) const
         }
     }
 
-    for (const std::pair<const game_type_t, terminal_layer_impartial_t>&
+    for (const pair<const game_type_t, terminal_layer_impartial_t>&
              terminal_layer : _tree_impartial)
     {
-        for (const std::pair<const hash_t, db_entry_impartial>& entry_pair :
+        for (const pair<const hash_t, db_entry_impartial>& entry_pair :
              terminal_layer.second)
         {
             os << entry_pair << '\n';
         }
     }
 
-    os << std::flush;
-
+    os << flush;
 }
 
-void database::dump_to_file(const std::string& out_filename) const
+void database::dump_to_file(const string& out_filename) const
 {
-    std::ofstream of(out_filename);
+    ofstream of(out_filename);
     THROW_ASSERT(of.is_open());
 
     dump_to_stream(of);
@@ -400,87 +207,79 @@ void database::dump_to_file(const std::string& out_filename) const
     of.close();
 }
 
-/*
-    function gen_main(GEN):
-        for G in GEN:
-            SUM = sum([G])
-            make_entry(SUM)
+const db_entry_partisan* database::get_partisan_ptr(const game& g) const
+{
+    return _get_partisan_impl(g);
+}
 
-    function make_entry(S):
-        split_and_normalize(S)
+db_entry_partisan* database::get_partisan_ptr(const game& g)
+{
+    return _get_partisan_impl(g);
+}
 
-        if has_entry(S):
-            continue
+db_entry_partisan* database::get_or_allocate_partisan_ptr(const game& g)
+{
+    db_entry_partisan* entry_ptr = _get_or_allocate_partisan_impl(g);
+    assert(entry_ptr != nullptr);
+    return entry_ptr;
+}
 
-        optional<sum> SUM2
-        for SG of S:
-            if !has_entry(SG): // check with _get_db_hash to avoid constructing a sum
-                make_entry(SG) // using SUM2
+const db_entry_partisan* database::get_partisan_ptr(const sumgame& sum) const
+{
+    return _get_partisan_impl(sum);
+}
 
-        TG <- make_therm(S) // calls make_entry for children which don't have entries
-        oc <- find_outcome_class(S)
-        ...
+db_entry_partisan* database::get_partisan_ptr(const sumgame& sum)
+{
+    return _get_partisan_impl(sum);
+}
 
-    - `make_therm`-like function MUST always be called first (regardless of any
-      CLI options which may disable DB fields in the future). All children must
-      be checked i.e. because of thermographs, finding dominated moves, and due
-      to how nogo has positions which only show up as a result of splitting (the
-      game generator doesn't generate positions with safe stones)
+db_entry_partisan* database::get_or_allocate_partisan_ptr(const sumgame& sum)
+{
+    db_entry_partisan* entry_ptr = _get_or_allocate_partisan_impl(sum);
+    assert(entry_ptr != nullptr);
+    return entry_ptr;
+}
 
-    - TODO: why is DB search depth > 1 for some non-nogo games? (amazons,
-      domineering?)
-*/
+optional<db_entry_impartial> database::get_impartial(const game& g) const
+{
+    const game_type_t runtime_type = _get_game_db_type(g);
 
-/*
-    New (better) algorithm:
-    NOTE: This only seems to be slightly better, but also produces a different
-        DB according to `compare_databases.h` (???)
+    const game_type_t disk_type = _mapper.translate_type(runtime_type);
+    if (disk_type == 0)
+        return {};
 
-    function gen_main(GEN):
-        for G in GEN:
-            SUM1 = sum([G])
-            SUM1.split_and_normalize()
+    auto terminal_layer_iterator = _tree_impartial.find(disk_type);
+    if (terminal_layer_iterator == _tree_impartial.end())
+        return {};
 
-            if (SUM1.num_total_games() > 0):
-                for Gi in SUM1:
-                    SUM2 = sum([Gi])
-                    gen_single(SUM2)
+    const terminal_layer_impartial_t& layer = terminal_layer_iterator->second;
 
-            # NOTE: The loop should count active games and this should be
-            # skipped where appropriate
-            gen_single(SUM1)
+    const hash_t hash = get_db_hash(g);
 
-    function gen_single(SUM):
-        if have_entry(SUM):
-            return
+    const auto entry_iterator = layer.find(hash);
+    if (entry_iterator == layer.end())
+        return {};
 
-        therm = make_thermograph(SUM)
-        ...
+    const db_entry_impartial& entry = entry_iterator->second;
 
+    return entry;
+}
 
-    function make_thermograph(SUM):
-        black_options = make_option_graphs(SUM, BLACK)
-        white_options = make_option_graphs(SUM, WHITE)
-        ...
+void database::set_impartial(const game& g, const db_entry_impartial& entry)
+{
+    const game_type_t runtime_type = _get_game_db_type(g);
 
-    function make_option_graphs(SUM, PLAYER):
-        MG = SUM.make_generator(PLAYER)
+    const game_type_t disk_type = _mapper.translate_type(runtime_type);
+    THROW_ASSERT(disk_type > 0); // game type not registered!
 
-        N_ACTIVE_BEFORE = SUM.num_active_games()
+    terminal_layer_impartial_t& layer = _tree_impartial[disk_type];
 
-        for M in MG:
-            SUM.play(M)
+    const hash_t hash = get_db_hash(g);
+    const auto inserted_entry_iterator = layer.emplace(hash, entry);
+    THROW_ASSERT(inserted_entry_iterator.second); // not already found
+}
 
-            if N_ACTIVE_BEFORE == 1 and SUM.num_active_games() >= 2:
-                for Gi in SUM:
-                    gen_single(Gi)
-
-            # Either returns the graph or calls gen_single(...)
-            option = get_option_graph(SUM)
-
-            SUM.undo(M)
-
-*/
 void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
 {
     sumgame sum1(BLACK);
@@ -510,146 +309,74 @@ void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
             assert(sum2.num_total_games() == 0);
             sum2.add(gi);
 
-            generate_entry_single_partisan(sum2, 0, silent);
+            generate_single_partisan_entry(sum2, silent);
 
             sum2.pop(gi);
         }
 
         if (n_active >= 2)
-            generate_entry_single_partisan(sum1, 0, silent);
+            generate_single_partisan_entry(sum1, silent);
 
         sum1.undo_split_and_normalize();
         sum1.pop(g.get());
     }
 }
 
-void database::generate_entry_single_partisan(sumgame& sum,
-                                              unsigned int depth, bool silent)
+void database::generate_single_partisan_entry(sumgame& sum, bool silent)
 {
-    _max_generation_depth = max(_max_generation_depth, depth);
-
     db_entry_partisan* entry = get_or_allocate_partisan_ptr(sum);
+    assert(entry != nullptr);
+
+    /*
+        TODO `get_or_allocate...` should instead report whether or not the
+        entry was just allocated, to avoid generating an entry twice. For now
+        we catch this by checking that `entry->thermograph` is nullptr after
+        generating the thermograph, but immediately before storing it in the
+        entry.
+    */
     if (entry->thermograph)
         return;
-
-    //_generate_children(sum, depth, silent);
-    //assert(!entry->thermograph);
 
     assert_restore_sumgame ars(sum);
     const bw restore_player = sum.to_play();
 
-    bool print_game = !silent && ((_game_count % 128) == 0);
+    const bool print_game = !silent && ((_n_entries_generated % 128) == 0);
 
     if (print_game)
     {
-        cout << "Game # " << _game_count << ": ";
+        cout << "Game # " << _n_entries_generated << ": ";
         _db_print_sum(cout, sum);
-        cout << std::flush;
+        cout << flush;
     }
-    _game_count++;
+    _n_entries_generated++;
 
     {
-        ThGraph* graph = db_make_thermograph(*this, sum, depth, silent);
+        ThGraph* graph = db_make_thermograph(*this, sum, silent);
 
-        assert(!entry->thermograph);
-        entry->thermograph = _graph_cache.insert_and_release(graph);
+#warning TODO remove this check?
+        graph->Check();
+
+        assert(!entry->thermograph); // Ensure we don't generate the entry twice
+
+        // `graph` is invalidated after next line
+        entry->thermograph = _get_graph_cache().insert_and_release(graph);
         assert(entry->thermograph);
     }
 
-    //////////////////// Find outcome
     entry->outcome = db_make_outcome_class(*this, *entry);
+    assert(entry->outcome != outcome_class::U);
 
     entry->bounds_data = db_make_bounds(*this, sum, *entry);
+    assert(entry->bounds_data && entry->bounds_data->both_valid());
 
-    db_make_dominated_moves(sum, *entry);
-
-
-
-    // Debug info
-    // n_db_games++;
-    //{
-    //    assert(entry->bounds_data);
-    //    n_db_games_with_bounds++;
-
-    //    const game_bounds& bounds = *entry.bounds_data;
-    //    const bound_scale scale = bounds.get_scale();
-
-    //    if (scale == BOUND_SCALE_DYADIC_RATIONAL)
-    //        n_db_bounds_rational++;
-    //    else if (scale == BOUND_SCALE_UP)
-    //        n_db_bounds_infinitesimal++;
-
-    //    if (bounds.both_valid() && bounds.get_lower_relation() == REL_EQUAL)
-    //        n_db_bounds_equal++;
-    //}
-
-    // set_partisan(sum, entry);
+    db_make_dominated_moves(sum, *entry, *this);
+    assert(entry->dominated_moves);
 
     sum.set_to_play(restore_player);
 
     if (print_game)
         cout << " DONE" << endl;
 }
-
-void database::generate_entry_single_partisan_impl(sumgame& sum,
-                                                   unsigned int depth,
-                                                   bool silent)
-{
-    assert(false);
-}
-
-//void database::_generate_children(sumgame& sum, unsigned int depth, bool silent)
-//{
-//    assert_restore_sumgame ars(sum);
-//    const bw restore_player = sum.to_play();
-//    const int n_active_before = sum.num_active_games();
-//
-//    optional<sumgame> sum2_opt;
-//
-//    constexpr std::array<bw, 2> COLORS = {BLACK, WHITE};
-//
-//    for (const bw player : COLORS)
-//    {
-//        sum.set_to_play(player);
-//        unique_ptr<sumgame_move_generator> gen(
-//            sum.create_sum_move_generator(player));
-//
-//        while (*gen)
-//        {
-//            const sumgame_move sm = gen->gen_sum_move();
-//            ++(*gen);
-//
-//            assert(sum.to_play() == player);
-//            sum.play_sum(sm, player);
-//
-//            if (n_active_before == 1 && sum.num_active_games() >= 2)
-//            {
-//                const int n_games = sum.num_total_games();
-//                if (!sum2_opt.has_value())
-//                    sum2_opt.emplace(BLACK);
-//
-//                sumgame& sum2 = sum2_opt.value();
-//
-//                for (int i = 0; i < n_games; i++)
-//                {
-//                    game* gi = sum.subgame(i);
-//                    if (!gi->is_active())
-//                        continue;
-//
-//                    assert(sum2.num_total_games() == 0);
-//                    sum2.add(gi);
-//                    generate_entry_single_partisan(sum2, depth + 1, silent);
-//                    sum2.pop(gi);
-//                }
-//            }
-//
-//            generate_entry_single_partisan(sum, depth + 1, silent);
-//            sum.undo_move();
-//        }
-//    }
-//
-//    sum.set_to_play(restore_player);
-//}
 
 void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
 {
@@ -659,7 +386,7 @@ void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
            g can be partisan OR impartial. If partisan, we must wrap it
            in an impartial_game_wrapper
         */
-        std::unique_ptr<game> g(gen.gen_game());
+        unique_ptr<game> g(gen.gen_game());
         ++gen;
 
         assert(logical_iff(                                   //
@@ -690,7 +417,7 @@ void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
                 impartial_game* sg_impartial = static_cast<impartial_game*>(sg);
                 sg_impartial->normalize();
 
-                _generate_entry_single_impartial(sg_impartial, silent);
+                _generate_single_impartial_entry(sg_impartial, silent);
                 delete sg;
             }
 
@@ -699,36 +426,134 @@ void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
 
         // Normalize, handle ig
         ig->normalize();
-        _generate_entry_single_impartial(ig, silent);
+        _generate_single_impartial_entry(ig, silent);
     }
 }
 
+void database::clear()
+{
+    _metadata_string.clear();
+    _mapper.clear();
+    _graph_cache = make_unique<thermograph_cache>();
+    _tree_partisan.clear();
+    _tree_impartial.clear();
+}
 
-void database::_generate_entry_single_impartial(impartial_game* ig, bool silent)
+bool database::empty() const
+{
+    return _tree_partisan.empty() && _tree_impartial.empty();
+}
+
+bool database::is_equal(const database& other) const
+{
+    if (_mapper != other._mapper)
+        return false;
+
+    if (_get_graph_cache() != other._get_graph_cache())
+        return false;
+
+    if (_tree_partisan != other._tree_partisan)
+        return false;
+
+    if (_tree_impartial != other._tree_impartial)
+        return false;
+
+    return true;
+}
+
+/*
+    - MCGS version
+    - Date created
+    - Game config string
+*/
+void database::update_metadata_string(const string& config_string)
+{
+    _metadata_string.clear();
+
+    // TODO commit hash instead?
+    _metadata_string += "Version: \"" + string(MCGS_VERSION_STRING) + "\"\n";
+
+    // Date
+    _metadata_string +=
+        "Date created: \"" + get_current_time_as_string() + "\"\n";
+
+    // Game config
+    _metadata_string += "DB config string: \"" + config_string + "\"";
+}
+
+hash_t database::get_db_hash(const game& g, global_hash& gh)
+{
+    return gh.get_global_hash_value(&g, EMPTY);
+}
+
+hash_t database::get_db_hash(const sumgame& sum)
+{
+    return sum.get_global_hash_for_player(EMPTY);
+}
+
+hash_t database::get_db_hash(const game& g) const
+{
+    global_hash& gh = _get_global_hash();
+    return get_db_hash(g, gh);
+}
+
+void database::register_type(const string& type_name,
+                                    game_type_t runtime_type)
+{
+    _mapper.register_type(type_name, runtime_type);
+}
+
+void database::__register_built_in_types()
+{
+    DATABASE_REGISTER_TYPE((*this), integer_game);
+}
+
+sumgame& database::_get_sumgame()
+{
+    if (_sum.get() == nullptr)
+        _sum.reset(new sumgame(BLACK));
+
+    return *_sum;
+}
+
+global_hash& database::_get_global_hash() const
+{
+    if (_global_hash.get() == nullptr)
+        _global_hash.reset(new global_hash());
+
+    return *_global_hash;
+}
+
+thermograph_cache& database::_get_graph_cache() const
+{
+    // Should be created by database constructor
+    assert(_graph_cache.get() != nullptr);
+    return *_graph_cache;
+}
+
+void database::_generate_single_impartial_entry(impartial_game* ig, bool silent)
 {
     if (get_impartial(*ig).has_value())
         return;
 
-    // bool print_game = true;
-    bool print_game = !silent && ((_game_count % 128) == 0);
+    const bool print_game = !silent && ((_n_entries_generated % 128) == 0);
 
     if (print_game)
-        cout << "Game # " << _game_count << ": " << *ig << std::flush;
-    _game_count++;
+        cout << "Game # " << _n_entries_generated << ": " << *ig << flush;
+    _n_entries_generated++;
 
     sumgame& s = _get_sumgame();
     assert(s.num_total_games() == 0);
 
     s.add(ig);
 
-    int nim_value = search_impartial_sumgame(s);
+    const int nim_value = search_impartial_sumgame(s);
     assert(nim_value >= 0);
 
     s.pop(ig);
 
     db_entry_impartial entry;
     entry.nim_value = nim_value;
-
 
     set_impartial(*ig, entry);
     assert(s.num_total_games() == 0);
@@ -737,20 +562,9 @@ void database::_generate_entry_single_impartial(impartial_game* ig, bool silent)
         cout << " DONE" << endl;
 }
 
-hash_t database::_get_db_hash(const game& g) const
+game_type_t database::_get_sum_db_type(const sumgame& sum)
 {
-    global_hash& gh = _get_global_hash();
-    return gh.get_global_hash_value(&g, EMPTY);
-}
-
-hash_t database::_get_db_hash(const sumgame& sum) const
-{
-    return sum.get_global_hash_for_player(EMPTY);
-}
-
-game_type_t database::_get_sum_game_type(const sumgame& sum)
-{
-    std::optional<game_type_t> sum_type;
+    optional<game_type_t> sum_type;
 
     const int n_games = sum.num_total_games();
     for (int i = 0; i < n_games; i++)
@@ -773,7 +587,12 @@ game_type_t database::_get_sum_game_type(const sumgame& sum)
     return game_type<integer_game>(); // hack to allow empty sums
 }
 
-void database::_db_print_sum(std::ostream& os, const sumgame& sum)
+game_type_t database::_get_game_db_type(const game& g)
+{
+    return g.game_type();
+}
+
+void database::_db_print_sum(ostream& os, const sumgame& sum)
 {
     bool not_first_game = false;
 
@@ -792,9 +611,68 @@ void database::_db_print_sum(std::ostream& os, const sumgame& sum)
     }
 }
 
+template <class Game_Or_Sum_T>
+db_entry_partisan* database::_get_partisan_impl(const Game_Or_Sum_T& g) const
+{
+    static_assert(is_same_v<game, Game_Or_Sum_T> ||
+                  is_same_v<sumgame, Game_Or_Sum_T>);
 
-//////////////////////////////////////////////////
-std::ostream& operator<<(std::ostream& os, const database& db)
+    constexpr bool IS_SUM = is_same_v<sumgame, Game_Or_Sum_T>;
+
+    game_type_t runtime_type;
+    if constexpr (IS_SUM)
+        runtime_type = _get_sum_db_type(g);
+    else
+        runtime_type = _get_game_db_type(g);
+
+    const game_type_t disk_type = _mapper.translate_type(runtime_type);
+    if (disk_type == 0)
+        return nullptr;
+
+    auto terminal_layer_iterator = _tree_partisan.find(disk_type);
+    if (terminal_layer_iterator == _tree_partisan.end())
+        return nullptr;
+
+    const terminal_layer_partisan_t& layer = terminal_layer_iterator->second;
+
+    const hash_t hash = get_db_hash(g);
+
+    auto entry_iterator = layer.find(hash);
+    if (entry_iterator == layer.end())
+        return nullptr;
+
+    const db_entry_partisan& entry = entry_iterator->second;
+    db_entry_partisan& entry_nonconst = const_cast<db_entry_partisan&>(entry);
+
+    return &entry_nonconst;
+}
+
+template <class Game_Or_Sum_T>
+db_entry_partisan* database::_get_or_allocate_partisan_impl(const Game_Or_Sum_T& g)
+{
+    static_assert(is_same_v<game, Game_Or_Sum_T> ||
+                  is_same_v<sumgame, Game_Or_Sum_T>);
+
+    constexpr bool IS_SUM = is_same_v<sumgame, Game_Or_Sum_T>;
+
+    game_type_t runtime_type;
+    if constexpr (IS_SUM)
+        runtime_type = _get_sum_db_type(g);
+    else
+        runtime_type = _get_game_db_type(g);
+
+    const game_type_t disk_type = _mapper.translate_type(runtime_type);
+    THROW_ASSERT(disk_type > 0); // game type not registered!
+
+    terminal_layer_partisan_t& layer = _tree_partisan[disk_type];
+
+    const hash_t hash = get_db_hash(g);
+    db_entry_partisan& entry = layer[hash];
+
+    return &entry;
+}
+
+ostream& operator<<(ostream& os, const database& db)
 {
     const unordered_map<game_type_t, string>& disk_type_to_name_map =
         db._mapper.get_disk_type_to_name_map();
@@ -832,42 +710,10 @@ std::ostream& operator<<(std::ostream& os, const database& db)
         os << "Count: " << layer.size() << '\n';
     }
 
-
-
     os << "=== Database metadata string begin ===" << "\n";
     os << db._metadata_string << "\n";
     os << "=== Database metadata string end ===" << "\n";
 
     return os;
-}
-
-void db_entry_partisan::print(std::ostream& os, const database& db, bool endl) const
-{
-    os << outcome_class_to_string(outcome);
-
-
-    os << " Thermograph: `";
-    if (thermograph.get() == nullptr)
-        os << "nullptr";
-    else
-        print_thermograph(os, *thermograph);
-    os << "`";
-
-    os << " Bounds: `";
-    if (bounds_data.get() == nullptr)
-        os << "nullptr";
-    else
-        os << *bounds_data;
-    os << "`";
-
-    os << " Dominated moves: `";
-    if (dominated_moves.get() == nullptr)
-        os << "nullptr";
-    else
-        os << *dominated_moves;
-    os << "`";
-
-    if (endl)
-        os << std::endl;
 }
 

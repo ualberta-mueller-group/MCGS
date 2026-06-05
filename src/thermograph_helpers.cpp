@@ -1,52 +1,108 @@
 #include "thermograph_helpers.h"
 
 #include <cassert>
+
 #include "ThGraph.h"
 #include "ThValue.h"
+#include "SgBlackWhite.h"
+#include "ThScaffold.h"
+#include "ThPoint.h"
 #include "all_game_headers.h"
 #include "amazons.h"
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "cgt_dyadic_rational.h"
-#include "make_thermograph_slow.h"
+#include "integral_conversion.h"
 #include "safe_arithmetic.h"
 #include "utilities.h"
+#include "throw_assert.h"
 
 using namespace std;
 
-/*
-    Get specified rational bound along BOUND_SCALE_DYADIC_RATIONAL, where the
-    scale index represents a multiple of 1/8.
+void print_thermograph(ostream& os, const ThGraph& graph)
+{
+    os << "Left Scaffold: " << *graph.Sc(SG_BLACK);
+    os << " Right Scaffold: " << *graph.Sc(SG_WHITE);
+}
 
-    For a game G and the returned left bound B, G <= B.
-*/
 bound_t read_rational_bound_from_thermograph(const ThGraph& graph, bool left)
 {
     const ThValue& stop = left ? graph.LeftStop() : graph.RightStop();
 
     int p = stop.P();
-    const int q = stop.Q();
+    int q = stop.Q();
+
+    if (q < 0)
+    {
+        const bool negate_p_success = safe_negate(p);
+        const bool negate_q_success = safe_negate(q);
+        THROW_ASSERT(negate_p_success && negate_q_success);
+    }
 
     // Divide the stop by 1/8 by multiplying p by (8 == 2^3)
     const bool multiply_ok = safe_mul2_shift(p, 3);
     THROW_ASSERT(multiply_ok);
 
-#warning TODO use safe numeric_cast from header
-    bound_t scale_idx = static_cast<bound_t>(p / q);
+    assert(q > 0);
+    const int quotient = p / q;
+    const int remainder = p % q;
 
-    const bool is_precise = (p % q) == 0;
+    bound_t scale_idx = integral_cast_checked<bound_t>(quotient);
+
+    assert(                            //
+        LOGICAL_IMPLIES(               //
+            remainder != 0,            //
+            (remainder < 0) == (p < 0) //
+            ));                        //
+
+    const bool is_precise = (remainder == 0);
     const bool is_fuzzy = thermograph_bends_out_below_zero(graph, left);
 
     // Relax the bound if necessary
     if (!is_precise || is_fuzzy)
     {
+        bound_t truncate_direction = 0;
+        if (remainder != 0)
+            truncate_direction = (remainder < 0) ? 1 : -1;
+
         const bound_t relax_direction = left ? 1 : -1;
-        const bool add_ok = safe_add_negatable(scale_idx, relax_direction);
-        THROW_ASSERT(add_ok);
+
+        if (relax_direction != truncate_direction)
+        {
+            const bool add_ok = safe_add_negatable(scale_idx, relax_direction);
+            THROW_ASSERT(add_ok);
+        }
     }
 
     return scale_idx;
 }
+
+//bound_t read_rational_bound_from_thermograph(const ThGraph& graph, bool left)
+//{
+//    const ThValue& stop = left ? graph.LeftStop() : graph.RightStop();
+//
+//    int p = stop.P();
+//    const int q = stop.Q();
+//
+//    // Divide the stop by 1/8 by multiplying p by (8 == 2^3)
+//    const bool multiply_ok = safe_mul2_shift(p, 3);
+//    THROW_ASSERT(multiply_ok);
+//
+//    bound_t scale_idx = integral_cast_checked<bound_t>(p / q);
+//
+//    const bool is_precise = (p % q) == 0;
+//    const bool is_fuzzy = thermograph_bends_out_below_zero(graph, left);
+//
+//    // Relax the bound if necessary
+//    if (!is_precise || is_fuzzy)
+//    {
+//        const bound_t relax_direction = left ? 1 : -1;
+//        const bool add_ok = safe_add_negatable(scale_idx, relax_direction);
+//        THROW_ASSERT(add_ok);
+//    }
+//
+//    return scale_idx;
+//}
 
 bool thermograph_bends_out_below_zero(const ThGraph& graph, bool left)
 {
@@ -55,20 +111,15 @@ bool thermograph_bends_out_below_zero(const ThGraph& graph, bool left)
     assert(sc != nullptr);
 
     const int dir = sc->DirectionTo(ThValue(0));
+    const int in_dir = left ? -1 : 1;
 
-    assert(LOGICAL_IMPLIES(dir != 0, dir == left ? -1 : 1));
+    // TODO not a reasonable assumption in general?
+    assert(LOGICAL_IMPLIES( //
+        dir != 0,           //
+        dir == in_dir       //
+        ));                 //
 
-    return dir != 0;
-
-
-    //ThPoint p1, p2;
-    //int idx_ignored;
-    //bool last_ignored;
-    //sc->SegmentAt(ThValue(0), &p1, &p2, &idx_ignored, &last_ignored);
-
-    //assert(p1.Temp() < p2.Temp());
-
-    //return p1.Value() != stop;
+    return dir == in_dir;
 }
 
 hash_t get_thermograph_hash(const ThGraph& graph)
@@ -125,10 +176,11 @@ bool game_is_small_from_thermograph(const ThGraph& graph)
     if (thermograph_bends_out_below_zero(graph, false))
         return true;
 
+    // Is 0
     return false;
 }
 
-game_bounds* make_bounds_from_thermograph(const ThGraph& graph)
+game_bounds* make_rational_bounds_from_thermograph(const ThGraph& graph)
 {
     game_bounds* gb = new game_bounds(BOUND_SCALE_DYADIC_RATIONAL);
 

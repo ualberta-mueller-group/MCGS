@@ -1,9 +1,18 @@
 #include "convert_to_ctl.h"
 
 #include <cassert>
+#include <optional>
+#include <vector>
 #include <cctype>
 #include <filesystem>
 #include <ostream>
+#include <utility>
+#include <fstream>
+#include <memory>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <iostream>
 
 #include "cgt_basics.h"
 #include "clobber_1xn.h"
@@ -15,6 +24,7 @@
 #include "test_case_enums.h"
 #include "test_file_iterator.h"
 #include "throw_assert.h"
+#include "file_parser.h"
 
 using namespace std;
 

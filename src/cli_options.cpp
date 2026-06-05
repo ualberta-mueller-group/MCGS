@@ -161,6 +161,11 @@ void print_help_message(const string& exec_name)
                "heuristic for impartial game search (when " +
                    global::impartial_algorithm_mex.flag() + " is not used).");
 
+    print_flag(
+        global::imp_wrapper_alternate_color.no_flag(),
+        "For impartial wrapper games, play all BLACK moves and then all WHITE "
+        "moves (instead of alternating between BLACK and WHITE moves).");
+
     // print_flag(global::play_split.no_flag(), "Don't split games after "
     //                                          "playing a move.");
 
@@ -844,6 +849,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::use_complexity_score.flag())
         {
             global::use_complexity_score.set(true);
+            continue;
+        }
+
+        if (arg == global::imp_wrapper_alternate_color.no_flag())
+        {
+            global::imp_wrapper_alternate_color.set(false);
             continue;
         }
 

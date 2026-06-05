@@ -93,9 +93,7 @@ inline int combine_board_and_immortal_val(int board_val, int immortal_val)
 
 //////////////////////////////////////// nogo
 nogo::nogo(std::string game_as_string) : grid(game_as_string, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<nogo>())
-#endif
 {
     _immortal = std::vector<int>(size(), EMPTY);
     _immortal_copy = _immortal;
@@ -108,9 +106,7 @@ nogo::nogo(std::string game_as_string) : grid(game_as_string, GRID_TYPE_COLOR)
 
 nogo::nogo(const std::vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<nogo>())
-#endif
 {
     _immortal = std::vector<int>(size(), EMPTY);
     _immortal_copy = _immortal;
@@ -124,9 +120,7 @@ nogo::nogo(const std::vector<int>& board, int_pair shape)
 nogo::nogo(const std::vector<int>& board, const std::vector<int>& immortal,
            int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR), _immortal(immortal)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<nogo>())
-#endif
 {
     _immortal_copy = _immortal;
 
@@ -166,15 +160,10 @@ void nogo::play(const move& m, bw to_play)
         const int val2 =
             combine_board_and_immortal_val(to_play, _immortal[to_point]);
 
-#ifdef USE_GRID_HASH
         _gh.toggle_value(to_coord, val1);
         _gh.toggle_value(to_coord, val2);
-        hash.__set_value(_gh.get_value());
-#else
-        hash.toggle_value(2 + to_point, val1);
-        hash.toggle_value(2 + to_point, val2);
-#endif
 
+        hash.__set_value(_gh.get_value());
         _mark_hash_updated();
     }
 }
@@ -207,15 +196,10 @@ void nogo::undo_move()
         const int val2 =
             combine_board_and_immortal_val(EMPTY, _immortal_copy[to_point]);
 
-#ifdef USE_GRID_HASH
         _gh.toggle_value(to_coord, val1);
         _gh.toggle_value(to_coord, val2);
-        hash.__set_value(_gh.get_value());
-#else
-        hash.toggle_value(2 + to_point, val1);
-        hash.toggle_value(2 + to_point, val2);
-#endif
 
+        hash.__set_value(_gh.get_value());
         _mark_hash_updated();
     }
 
@@ -270,17 +254,6 @@ void nogo::_init_hash(local_hash& hash) const
 {
     const int_pair board_shape = shape();
 
-    /*
-    // hash board
-    for (size_t i = 0; i < N; i++)
-        hash.toggle_value(i + 2, at(i));
-
-    // hash immortal
-    for (size_t i = 0; i < N; i++)
-        hash.toggle_value(i + N + 2, _immortal[i]);
-    */
-
-#ifdef USE_GRID_HASH
     _gh.reset(board_shape);
     _gh.toggle_type(::game_type<nogo>());
 
@@ -294,20 +267,6 @@ void nogo::_init_hash(local_hash& hash) const
     }
 
     hash.__set_value(_gh.get_value());
-
-#else
-    const size_t N = size();
-
-    // hash board shape
-    hash.toggle_value(0, board_shape.first);
-    hash.toggle_value(1, board_shape.second);
-
-    for (size_t i = 0; i < N; i++)
-    {
-        const int val = combine_board_and_immortal_val(at(i), _immortal[i]);
-        hash.toggle_value(2 + i, val);
-    }
-#endif
 }
 
 split_result nogo::_split_impl() const
@@ -354,7 +313,7 @@ game* nogo::inverse() const
 
 game* nogo::clone() const
 {
-    return new nogo(*this);
+    return new nogo(board_const(), shape());
 }
 
 move nogo::encode_grid_move_to_db(const move& m) const
@@ -682,6 +641,7 @@ std::vector<nogo_board> split_by_nogo::split(const nogo_board& board)
 
 //---------------------------------------------------------------------------
 
+namespace {
 class nogo_move_generator : public move_generator
 {
 public:
@@ -737,6 +697,7 @@ move nogo_move_generator::gen_move() const
     assert(operator bool());
     return cgt_move::move2_create_from_coords(_current.get_coord());
 }
+} // namespace
 
 //---------------------------------------------------------------------------
 

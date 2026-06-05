@@ -2,6 +2,5 @@
 
 #include "database.h"
 #include "sumgame.h"
-#include "dominated_moves.h"
 
-void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry);
+void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry, database& db);

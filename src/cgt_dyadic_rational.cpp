@@ -115,7 +115,7 @@ game* dyadic_rational::inverse() const
 
 game* dyadic_rational::clone() const
 {
-    return new dyadic_rational(*this);
+    return new dyadic_rational(_p, _q);
 }
 
 void dyadic_rational::print(std::ostream& str) const
@@ -130,6 +130,7 @@ void dyadic_rational::_check_legal() const
 
 //---------------------------------------------------------------------------
 
+namespace {
 class dyadic_rational_move_generator : public move_generator
 {
 public:
@@ -172,6 +173,7 @@ move dyadic_rational_move_generator::gen_move() const
     assert(_has_move);
     return cgt_move::move2_create(_game.p(), _game.q());
 }
+} // namespace
 
 //---------------------------------------------------------------------------
 move_generator* dyadic_rational::create_move_generator(bw to_play) const
@@ -186,5 +188,3 @@ void dyadic_rational::print_move(std::ostream& str, const move& m, ebw to_play) 
 
     str << (to_play == BLACK ? "DEC" : "INC");
 }
-
-

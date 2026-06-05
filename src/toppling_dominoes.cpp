@@ -171,7 +171,7 @@ game* toppling_dominoes::inverse() const
 
 game* toppling_dominoes::clone() const
 {
-    return new toppling_dominoes(*this);
+    return new toppling_dominoes(current_dominoes());
 }
 
 const vector<int> toppling_dominoes::current_dominoes() const

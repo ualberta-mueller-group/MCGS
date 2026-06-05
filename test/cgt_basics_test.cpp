@@ -281,6 +281,17 @@ void test_enum_to_string_functions()
     assert(relation_to_string(REL_UNKNOWN) == "relation_unknown");
 }
 
+void test_flip_relation()
+{
+    assert(flip_relation(REL_EQUAL) == REL_EQUAL);
+    assert(flip_relation(REL_FUZZY) == REL_FUZZY);
+    assert(flip_relation(REL_LESS_OR_EQUAL) == REL_GREATER_OR_EQUAL);
+    assert(flip_relation(REL_LESS) == REL_GREATER);
+    assert(flip_relation(REL_GREATER_OR_EQUAL) == REL_LESS_OR_EQUAL);
+    assert(flip_relation(REL_GREATER) == REL_LESS);
+    assert(flip_relation(REL_UNKNOWN) == REL_UNKNOWN);
+}
+
 } // namespace cgt_basics_test
 } // namespace
 
@@ -308,4 +319,5 @@ void cgt_basics_test_all()
     cgt_basics_test::test_is_empty_or_stone_char();
 
     cgt_basics_test::test_enum_to_string_functions();
+    cgt_basics_test::test_flip_relation();
 }

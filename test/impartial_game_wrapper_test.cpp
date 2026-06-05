@@ -2,6 +2,7 @@
 // Unit tests for impartial_game_wrapper
 //---------------------------------------------------------------------------
 #include "impartial_game_wrapper_test.h"
+#include "cgt_basics.h"
 #include "impartial_game_wrapper.h"
 
 #include <cassert>
@@ -10,11 +11,29 @@
 #include "cgt_move.h"
 #include "clobber_1xn.h"
 #include "nogo_1xn.h"
+#include "domineering.h"
 #include "test_utilities.h"
 
 using std::string;
 
 namespace {
+
+std::vector<move> generate_moves(const impartial_game_wrapper& g,
+                                 bool use_alternating_version)
+{
+    std::vector<move> moves;
+
+    std::unique_ptr<move_generator> gen(
+        g.create_specific_move_generator(use_alternating_version));
+
+    while (*gen)
+    {
+        moves.push_back(gen->gen_move());
+        ++(*gen);
+    }
+
+    return moves;
+}
 
 void test_num_moves(const string& s, int num_moves)
 {
@@ -109,6 +128,41 @@ void impartial_game_wrapper_test_nogo()
     }
 }
 
+void impartial_game_wrapper_test_alternating_move_generator()
+{
+    std::vector<game*> games
+    {
+        new clobber_1xn("XOXOXOXOXO"),
+        new nogo_1xn("....."),
+        new domineering(".."),
+        new domineering(".|."),
+        new domineering("..|..|.."),
+        new domineering("...|..."),
+    };
+
+    bool move_orders_all_identical = true;
+
+    for (game* g : games)
+    {
+        impartial_game_wrapper* g_wrapped = new impartial_game_wrapper(g, true);
+
+        std::vector<move> moves_alternating = generate_moves(*g_wrapped, true);
+        std::vector<move> moves_non_alternating =
+            generate_moves(*g_wrapped, false);
+
+        if (moves_alternating != moves_non_alternating)
+            move_orders_all_identical = false;
+
+        std::sort(moves_alternating.begin(), moves_alternating.end());
+        std::sort(moves_non_alternating.begin(), moves_non_alternating.end());
+        assert(moves_alternating == moves_non_alternating);
+
+        delete g_wrapped;
+    }
+
+    assert(!move_orders_all_identical);
+}
+
 } // namespace
 
 void impartial_game_wrapper_test_all()
@@ -117,4 +171,5 @@ void impartial_game_wrapper_test_all()
     impartial_game_wrapper_test_play_undo();
     impartial_game_wrapper_test_values();
     impartial_game_wrapper_test_nogo();
+    impartial_game_wrapper_test_alternating_move_generator();
 }

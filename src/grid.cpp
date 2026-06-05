@@ -376,10 +376,6 @@ std::pair<std::vector<int>, int_pair> string_to_grid(
     return string_to_board(game_as_string);
 }
 
-
-
-
-
 // TODO make it faster?
 std::pair<std::vector<int>, int_pair> string_to_int_grid(
     const std::string& game_as_string)

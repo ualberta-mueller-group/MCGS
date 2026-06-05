@@ -14,8 +14,10 @@
 #include "grid_hash.h"
 #include "print_move_helpers.h"
 #include "grid_location.h"
+#include "bounding_box.h"
 #include "throw_assert.h"
 
+namespace {
 class amazons_move_generator: public move_generator
 {
 public:
@@ -52,6 +54,7 @@ private:
 
     static constexpr size_t N_DIRS = GRID_DIRS_ALL.size();
 };
+} // namespace
 
 using namespace std;
 
@@ -71,27 +74,21 @@ bool only_legal_colors(const std::vector<int>& board)
 ////////////////////////////////////////////////// amazons methods
 amazons::amazons(int n_rows, int n_cols)
     : grid(n_rows, n_cols, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<amazons>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 amazons::amazons(const std::vector<int>& board, int_pair shape)
     : grid(board, shape, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<amazons>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 amazons::amazons(const std::string& game_as_string)
     : grid(game_as_string, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<amazons>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
@@ -129,7 +126,6 @@ void amazons::play(const ::move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
-#ifdef USE_GRID_HASH
         // Remove old state
         _gh.toggle_value(coord1, to_play);
         _gh.toggle_value(coord2, EMPTY);
@@ -145,22 +141,6 @@ void amazons::play(const ::move& m, bw to_play)
             _gh.toggle_value(coord1, EMPTY);
 
         hash.__set_value(_gh.get_value());
-#else
-        // Remove old state
-        hash.toggle_value(2 + point1, to_play);
-        hash.toggle_value(2 + point2, EMPTY);
-
-        if (point1 != point3)
-            hash.toggle_value(2 + point3, EMPTY);
-
-        // Add new state
-        hash.toggle_value(2 + point2, to_play);
-        hash.toggle_value(2 + point3, BORDER);
-
-        if (point1 != point3)
-            hash.toggle_value(2 + point1, EMPTY);
-#endif
-
         _mark_hash_updated();
     }
 }
@@ -198,7 +178,7 @@ void amazons::undo_move()
     if (_hash_updatable())
     {
         local_hash& hash = _get_hash_ref();
-#ifdef USE_GRID_HASH
+
         // Remove old state
         _gh.toggle_value(coord2, to_play);
         _gh.toggle_value(coord3, BORDER);
@@ -214,22 +194,6 @@ void amazons::undo_move()
             _gh.toggle_value(coord3, EMPTY);
 
         hash.__set_value(_gh.get_value());
-#else
-        // Remove old state
-        hash.toggle_value(2 + point2, to_play);
-        hash.toggle_value(2 + point3, BORDER);
-
-        if (point1 != point3)
-            hash.toggle_value(2 + point1, EMPTY);
-
-        // Add new state
-        hash.toggle_value(2 + point1, to_play);
-        hash.toggle_value(2 + point2, EMPTY);
-
-        if (point1 != point3)
-            hash.toggle_value(2 + point3, EMPTY);
-#endif
-
         _mark_hash_updated();
     }
 }
@@ -253,7 +217,7 @@ game* amazons::inverse() const
 
 game* amazons::clone() const
 {
-    return new amazons(*this);
+    return new amazons(board_const(), shape());
 }
 
 ::move amazons::encode_grid_move_to_db(const ::move& m) const
@@ -289,60 +253,6 @@ game* amazons::clone() const
 }
 
 ////////////////////////////////////////////////// split
-#ifdef AMAZONS_SPLIT
-
-
-namespace {
-
-//////////////////////////////////////// struct bounding_box
-struct bounding_box
-{
-    bounding_box(int row_shift, int col_shift, int_pair shape);
-
-    int row_shift;
-    int col_shift;
-    int_pair shape;
-};
-
-bounding_box::bounding_box(int row_shift, int col_shift, int_pair shape)
-    : row_shift(row_shift),
-      col_shift(col_shift),
-      shape(shape)
-{
-}
-
-vector<int> trim_to_bounding_box(const vector<int>& src_board,
-                                 const int_pair& src_shape,
-                                 const bounding_box& dst_box)
-{
-    vector<int> dst_board;
-
-    const int& row_shift = dst_box.row_shift;
-    const int& col_shift = dst_box.col_shift;
-    const int_pair& dst_shape = dst_box.shape;
-
-    assert(!grid_location::shape_is_empty(dst_shape));
-
-    const int dst_size = dst_shape.first * dst_shape.second;
-    dst_board.reserve(dst_size);
-
-    int src_point = col_shift + (row_shift * src_shape.second);
-
-    for (int r = 0; r < dst_shape.first; r++)
-    {
-        for (int c = 0; c < dst_shape.second; c++)
-        {
-            const int src_val = src_board[src_point + c];
-            dst_board.push_back(src_val);
-        }
-
-        src_point += src_shape.second;
-    }
-
-    return dst_board;
-}
-
-} // namespace
 
 /*
     Find 8-connected components, following BLACK/WHITE/EMPTY, having at least
@@ -505,19 +415,17 @@ split_result amazons::_split_impl() const
 
     return result;
 }
-#endif
 
-#ifdef USE_GRID_HASH
 void amazons::_init_hash(local_hash& hash) const
 {
     _gh.init_from_grid(*this);
     hash.__set_value(_gh.get_value());
 }
-#endif
 
 //////////////////////////////////////////////////
 // amazons_move_generator methods
 
+namespace {
 amazons_move_generator::amazons_move_generator(const amazons& g, bw to_play)
     : move_generator(to_play),
       _game(g),
@@ -692,3 +600,4 @@ inline bool amazons_move_generator::_point_is_empty(int point) const
 
     return _game.at(point) == EMPTY;
 }
+} // namespace

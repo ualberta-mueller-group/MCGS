@@ -77,7 +77,7 @@ game* up_star::inverse() const
 
 game* up_star::clone() const
 {
-    return new up_star(*this);
+    return new up_star(num_ups(), has_star());
 }
 
 void up_star::print(std::ostream& str) const
@@ -115,6 +115,7 @@ relation up_star::_order_impl(const game* rhs) const
 
 //---------------------------------------------------------------------------
 
+namespace {
 class up_star_move_generator : public move_generator
 {
 public:
@@ -190,6 +191,7 @@ move up_star_move_generator::gen_move() const
     }
     return m;
 }
+} // namespace
 
 //---------------------------------------------------------------------------
 move_generator* up_star::create_move_generator(bw to_play) const

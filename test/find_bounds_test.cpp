@@ -1,9 +1,10 @@
 #include "all_game_headers.h"
-#include "find_bounds_test.h"
-#include "bounds.h"
+
 #include <string>
 #include <vector>
 #include <cassert>
+#include "find_bounds_test.h"
+#include "bounds.h"
 
 using namespace std;
 
@@ -97,7 +98,8 @@ void test_simple_games()
     test_game(new up_star(5, false), BOUND_SCALE_UP_STAR, 3, REL_LESS, 7,
               REL_GREATER);
 
-    test_game_invalid(new integer_game(10), BOUND_SCALE_DYADIC_RATIONAL, 8);
+    test_game(new integer_game(10), BOUND_SCALE_DYADIC_RATIONAL, 80, REL_EQUAL,
+              80, REL_EQUAL);
 
     test_game_invalid(new dyadic_rational(1, 8), BOUND_SCALE_UP_STAR, 1000);
     test_game_invalid(new dyadic_rational(1, 8), BOUND_SCALE_UP, 1000);

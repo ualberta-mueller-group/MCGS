@@ -62,9 +62,7 @@ private:
                                 // EMPTY for others.
     std::vector<int> _immortal_copy; // A copy for undoing move
 
-#ifdef USE_GRID_HASH
     mutable grid_hash _gh;
-#endif
 };
 
 // Compact nogo board for fast legality checking and board partitioning.

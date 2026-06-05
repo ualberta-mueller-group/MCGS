@@ -11,7 +11,6 @@
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
-#include "grid_hash.h"
 #include "warn_default.h"
 #include "type_table.h"
 

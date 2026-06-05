@@ -167,6 +167,7 @@ extern global_option<uint64_t> experiment_seed;
 extern global_option<bool> impartial_algorithm_mex;
 // Use virtual game::complexity_score() to define the hardest subgame in sum
 extern global_option<bool> use_complexity_score;
+extern global_option<bool> imp_wrapper_alternate_color;
 
 extern global_option<bool> play_normalize;
 extern global_option<bool> dedupe_movegen;

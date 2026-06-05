@@ -64,7 +64,7 @@ inline game* nimber::inverse() const
 
 inline game* nimber::clone() const
 {
-    return new nimber(*this);
+    return new nimber(value());
 }
 
 inline void nimber::play(const move& m)

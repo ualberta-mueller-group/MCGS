@@ -22,9 +22,15 @@
 #include "db_make_dominated_moves.h"
 
 #include <memory>
+#include <vector>
 #include <algorithm>
 #include <utility>
 #include <sstream>
+#include <cassert>
+#include <unordered_set>
+#include <cstdint>
+#include <cstddef>
+#include <functional>
 
 #include "ThGraph.h"
 #include "cgt_basics.h"
@@ -33,10 +39,12 @@
 #include "global_database.h"
 #include "safe_arithmetic.h"
 #include "sumgame.h"
+#include "game.h"
+#include "throw_assert.h"
 
 // Maximum ratio of nondominated moves to total moves, above which dominated
 // moves are stored instead of nondominated ones
-#define MAX_NONDOMINATED_RATIO 1.0
+#define MAX_NONDOMINATED_RATIO 0.7
 
 using namespace std;
 
@@ -390,10 +398,9 @@ vector<generalized_sum_move> make_generalized_sum_moves(sumgame& sum, bw player)
 //}
 //
 void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
-                              db_dom_moves_t& dom, uint64_t& complexity, vector<generalized_sum_move>& sum_moves)
+                              db_dom_moves_t& dom, uint64_t& complexity, vector<generalized_sum_move>& sum_moves, database& db)
 {
     complexity = 0;
-    database& db = get_global_database();
 
     assert(is_black_white(player));
     assert_restore_sumgame ars1(sum1);
@@ -547,7 +554,7 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
 } // namespace
 
 //////////////////////////////////////////////////
-void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry)
+void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry, database& db)
 {
     shared_ptr<db_dom_moves_t> dom(new db_dom_moves_t());
 
@@ -565,8 +572,10 @@ void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry)
     {
         assert_restore_sumgame ars1(clone1);
         assert_restore_sumgame ars2(clone2);
-        make_dominated_moves_for(clone1, clone2, BLACK, *dom, complexity_b, black_moves);
-        make_dominated_moves_for(clone1, clone2, WHITE, *dom, complexity_w, white_moves);
+        make_dominated_moves_for(clone1, clone2, BLACK, *dom, complexity_b,
+                                 black_moves, db);
+        make_dominated_moves_for(clone1, clone2, WHITE, *dom, complexity_w,
+                                 white_moves, db);
 
         const size_t n_total_moves = black_moves.size() + white_moves.size();
         size_t n_dominated_moves = 0;

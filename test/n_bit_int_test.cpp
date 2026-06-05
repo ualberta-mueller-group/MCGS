@@ -1,6 +1,7 @@
 #include "n_bit_int_test.h"
 
 #include <cassert>
+#include <cstdint>
 
 #include "n_bit_int.h"
 #include "int_generator.h"

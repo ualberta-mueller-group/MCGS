@@ -5,6 +5,7 @@
 #include <functional>
 #include <unordered_set>
 #include <optional>
+#include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -149,18 +150,7 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
     }
 
     if (!dry_run)
-    {
-        cout << "Max partisan DB generation depth: " << db.get_max_generation_depth() << endl;
-        cout << "Max thermograph generation depth: " << max_thermograph_generation_depth << endl;
-        cout << "Total games: " << n_db_games << endl;
-        cout << "Total games with bounds data: " << n_db_games_with_bounds << endl;
-        cout << "Total games without bounds data: " << n_db_games - n_db_games_with_bounds << endl;
-        cout << "Number of infinitesimal bounds: " << n_db_bounds_infinitesimal << endl;
-        cout << "Number of rational bounds: " << n_db_bounds_rational << endl;
-        cout << "Number of games equal to their bounds: " << n_db_bounds_equal << endl;
-
         db.update_metadata_string(db_config_string);
-    }
 }
 
 init_database_enum resolve_auto_init_type(const string& filename)
@@ -340,6 +330,8 @@ void register_games(database& db)
         see the "Database File Portability" section in development-notes.md
     */
 
+    // Registers `integer_game`
+    db.__register_built_in_types();
 
     /*
         TODO impartial wrapper games having the same game_type_t is problematic
@@ -360,7 +352,6 @@ void register_games(database& db)
     DATABASE_REGISTER_TYPE(db, sheep);
 
     DATABASE_REGISTER_TYPE(db, cannibal_clobber);
-    db.__register_built_in_types();
 
     /*
         NOTE: 2nd argument to register_create_game_gen_fn(...) indicates

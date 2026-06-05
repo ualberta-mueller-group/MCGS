@@ -250,7 +250,7 @@ game* nogo_1xn::inverse() const
 
 game* nogo_1xn::clone() const
 {
-    return new nogo_1xn(*this);
+    return new nogo_1xn(board_const());
 }
 
 void nogo_1xn::print_move(std::ostream& str, const move& m, ebw to_play) const
@@ -268,6 +268,7 @@ std::ostream& operator<<(std::ostream& out, const nogo_1xn& g)
 }
 
 //////////////////////////////////////// nogo_1xn_move_generator
+namespace {
 class nogo_1xn_move_generator : public move_generator
 {
 public:
@@ -357,6 +358,7 @@ move nogo_1xn_move_generator::gen_move() const
     assert(operator bool());
     return cgt_move::move1_create(_current);
 }
+} // namespace
 
 //---------------------------------------------------------------------------
 

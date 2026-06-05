@@ -876,6 +876,11 @@ def get_metadata_string():
 
     dates = []
     hashes = []
+    prefixes = None
+    if comparison_file_name is None:
+        prefixes = [""]
+    else:
+        prefixes = ["Primary file: ", "Comparison file: "]
 
     date_format = "%Y-%m-%d %H:%M:%S"
     for fname in file_names:
@@ -892,13 +897,15 @@ def get_metadata_string():
 
     assert len(file_names) == len(dates)
     assert len(file_names) == len(hashes)
+    assert len(file_names) == len(prefixes)
 
     result = "<p id=\"metadata-string\">"
     for i in range(len(file_names)):
         fname = file_names[i]
         date = dates[i]
         hash = hashes[i]
-        result += f"{fname} ({date} MD5:{hash})"
+        prefix = prefixes[i]
+        result += f"{prefix}{fname} ({date} MD5:{hash})"
 
         if i + 1 < len(file_names):
             result += "\n"

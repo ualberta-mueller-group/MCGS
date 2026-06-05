@@ -1,10 +1,5 @@
 /*
     serializer templates for various cgt_lib/therm data types:
-
-        ThValue
-        ThPoint
-        ThScaffold
-        ThGraph
 */
 #pragma once
 #include "serializer.h"
@@ -18,6 +13,8 @@
 #include "ThPoint.h"
 #include "ThScaffold.h"
 #include "ThGraph.h"
+#include "SgBlackWhite.h"
+#include "thermograph_cache.h"
 
 template <>
 struct serializer<ThValue>
@@ -147,3 +144,74 @@ struct serializer<ThGraph>
     }
 };
 
+template <>
+struct serializer<std::shared_ptr<ThGraph>>
+{
+    inline static void save(obuffer& os, const std::shared_ptr<ThGraph>& ptr,
+                            serializer_ctx* ctx)
+    {
+        thermograph_cache* cache = get_thermograph_cache(ctx);
+
+        if (cache == nullptr)
+            serializer_impl<std::shared_ptr<ThGraph>>::save(os, ptr, ctx);
+        else
+        {
+            const thgraph_id_t graph_id = cache->get_graph_id(ptr.get());
+            serializer<thgraph_id_t>::save(os, graph_id, ctx);
+        }
+    }
+
+    inline static std::shared_ptr<ThGraph> load(ibuffer& is,
+                                                serializer_ctx* ctx)
+    {
+        thermograph_cache* cache = get_thermograph_cache(ctx);
+
+        if (cache == nullptr)
+            return serializer_impl<std::shared_ptr<ThGraph>>::load(is, ctx);
+        else
+        {
+            const thgraph_id_t graph_id = serializer<thgraph_id_t>::load(is, ctx);
+            return cache->get_graph_from_id(graph_id);
+        }
+    }
+
+    inline static thermograph_cache* get_thermograph_cache(serializer_ctx* ctx_nullable)
+    {
+        if (ctx_nullable == nullptr)
+            return nullptr;
+
+        return reinterpret_cast<thermograph_cache*>(ctx_nullable->thermograph_cache_ptr);
+    }
+
+    inline static void set_thermograph_cache(serializer_ctx* ctx, thermograph_cache* cache)
+    {
+        assert(ctx != nullptr);
+        ctx->thermograph_cache_ptr = cache;
+    }
+};
+
+template <>
+struct serializer<thermograph_cache>
+{
+    inline static void save(obuffer& os, const thermograph_cache& cache, serializer_ctx* ctx)
+    {
+        serializer_save(os, cache._graphs, ctx);
+        serializer_save(os, cache._hash_to_graph_id, ctx);
+    }
+
+    inline static thermograph_cache load(ibuffer& is, serializer_ctx* ctx)
+    {
+        thermograph_cache cache;
+        serializer_load(is, cache._graphs, ctx);
+        serializer_load(is, cache._hash_to_graph_id, ctx);
+        return cache;
+    }
+
+    inline static thermograph_cache* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    {
+        thermograph_cache* cache = new thermograph_cache();
+        serializer_load(is, cache->_graphs, ctx);
+        serializer_load(is, cache->_hash_to_graph_id, ctx);
+        return cache;
+    }
+};

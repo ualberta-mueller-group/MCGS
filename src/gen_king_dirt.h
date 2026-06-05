@@ -1,8 +1,15 @@
 #pragma once
 
+#include <vector>
+#include <string>
+#include <ostream>
+#include <cstddef>
+#include <cassert>
+
 #include "grid.h"
 #include "grid_hash.h"
-#include <vector>
+#include "game.h"
+#include "cgt_basics.h"
 
 ////////////////////////////////////////////////// class gen_king_dirt
 
@@ -32,11 +39,16 @@ public:
     game* inverse() const override;
     game* clone() const override;
 
+    move encode_grid_move_to_db(const move& m) const override;
+    move decode_grid_move_from_db(const move& m) const override;
+
     int get_black_unplaced() const;
     int get_white_unplaced() const;
     bool get_must_place() const;
 
     bool has_unplaced_stones(bw for_player) const;
+
+    const std::vector<int>& get_params() const;
 
 protected:
     void _play_place_stone(const int_pair& place_coords, bw to_play);

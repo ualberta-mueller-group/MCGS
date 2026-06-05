@@ -51,7 +51,7 @@ game* integer_game::inverse() const
 
 game* integer_game::clone() const
 {
-    return new integer_game(*this);
+    return new integer_game(value());
 }
 
 void integer_game::print(std::ostream& str) const
@@ -80,6 +80,7 @@ relation integer_game::_order_impl(const game* rhs) const
 
 //---------------------------------------------------------------------------
 
+namespace {
 class integer_move_generator : public move_generator
 {
 public:
@@ -119,6 +120,7 @@ move integer_move_generator::gen_move() const
     assert(_has_move);
     return INTEGER_MOVE_CODE;
 }
+} // namespace
 
 //---------------------------------------------------------------------------
 

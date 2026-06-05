@@ -34,11 +34,9 @@ public:
     move decode_grid_move_from_db(const move& m) const override;
 
 protected:
-#ifdef USE_GRID_HASH
     void _init_hash(local_hash& hash) const override;
 
     mutable grid_hash _gh;
-#endif
 
     /*
         TODO

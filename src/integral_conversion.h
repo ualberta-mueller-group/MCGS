@@ -34,6 +34,7 @@
 #include <type_traits>
 #include <stdexcept>
 #include <cassert>
+#include <cstddef>
 
 ////////////////////////////////////////////////// Custom type traits
 // NOLINTBEGIN(readability-identifier-naming)
@@ -82,19 +83,19 @@ struct integral_cast_traits
     static_assert(std::is_integral_v<From_Integral_T>);
     static_assert(std::is_integral_v<To_Integral_T>);
 
-    static constexpr bool is_widening =
+    inline static constexpr bool is_widening =
         sizeof(From_Integral_T) < sizeof(To_Integral_T);
 
-    static constexpr bool is_narrowing = sizeof(From_Integral_T) >
+    inline static constexpr bool is_narrowing = sizeof(From_Integral_T) >
                                          sizeof(To_Integral_T);
 
-    static constexpr bool is_same_width =
+    inline static constexpr bool is_same_width =
         sizeof(From_Integral_T) == sizeof(To_Integral_T);
 
-    static constexpr size_t to_integral_t_bits =
+    inline static constexpr size_t to_integral_t_bits =
         sizeof(To_Integral_T) * CHAR_BIT;
 
-    static constexpr size_t from_integral_t_bits =
+    inline static constexpr size_t from_integral_t_bits =
         sizeof(From_Integral_T) * CHAR_BIT;
 
     using widest_unsigned_t =
@@ -126,7 +127,7 @@ inline constexpr bool static_cast_is_safe_u_to_u(From_Integral_T from)
         using wide_t = typename traits::widest_unsigned_t;
 
         const wide_t from_wide = (wide_t) from;
-        constexpr wide_t MASK = (wide_t(-1) << traits::to_integral_t_bits);
+        constexpr wide_t MASK = static_cast<wide_t>(wide_t(-1) << traits::to_integral_t_bits);
 
         return (from_wide & MASK) == 0;
     }
@@ -158,7 +159,7 @@ inline constexpr bool static_cast_is_safe_i_to_u(From_Integral_T from)
         using wide_t = typename traits::widest_unsigned_t;
 
         const wide_t from_wide = (wide_t) from;
-        constexpr wide_t MASK = (wide_t(-1) << traits::to_integral_t_bits);
+        constexpr wide_t MASK = static_cast<wide_t>(wide_t(-1) << traits::to_integral_t_bits);
 
         return (from_wide & MASK) == 0;
     }
@@ -183,7 +184,7 @@ inline constexpr bool static_cast_is_safe_u_to_i(From_Integral_T from)
     using wide_t = typename traits::widest_unsigned_t;
 
     const wide_t from_wide = (wide_t) from;
-    constexpr wide_t MASK = (wide_t(-1) << (traits::to_integral_t_bits - 1));
+    constexpr wide_t MASK = static_cast<wide_t>(wide_t(-1) << (traits::to_integral_t_bits - 1));
 
     return (from_wide & MASK) == 0;
 }
@@ -214,7 +215,7 @@ inline constexpr bool static_cast_is_safe_i_to_i(From_Integral_T from)
         using wide_t = typename traits::widest_unsigned_t;
 
         const wide_t from_wide = (from < 0) ? ~((wide_t) from) : (wide_t) from;
-        constexpr wide_t MASK = (wide_t(-1) << (traits::to_integral_t_bits - 1));
+        constexpr wide_t MASK = static_cast<wide_t>(wide_t(-1) << (traits::to_integral_t_bits - 1));
 
         return (from_wide & MASK) == 0;
     }

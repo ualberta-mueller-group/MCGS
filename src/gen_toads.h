@@ -45,6 +45,8 @@ public:
     game* inverse() const override;
     game* clone() const override;
 
+    const std::vector<int> get_params() const;
+
 
     int get_min_slide() const;
     int get_max_slide() const;

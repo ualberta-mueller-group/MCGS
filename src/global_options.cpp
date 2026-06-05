@@ -121,6 +121,7 @@ INIT_GLOBAL_WITH_SUMMARY(count_sums, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(experiment_seed, uint64_t, 0);
 INIT_GLOBAL_WITH_SUMMARY(impartial_algorithm_mex, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(use_complexity_score, bool, false);
+INIT_GLOBAL_WITH_SUMMARY(imp_wrapper_alternate_color, bool, true);
 
 INIT_GLOBAL_WITH_SUMMARY(play_normalize, bool, true);
 INIT_GLOBAL_WITH_SUMMARY(dedupe_movegen, bool, true);
@@ -131,5 +132,6 @@ INIT_GLOBAL_WITHOUT_SUMMARY(print_ttable_size, bool, false);
 INIT_GLOBAL_WITHOUT_SUMMARY(play_split, bool, true);
 INIT_GLOBAL_WITHOUT_SUMMARY(print_db_info, bool, false);
 INIT_GLOBAL_WITHOUT_SUMMARY(player_color, bool, true);
+
 
 } // namespace global

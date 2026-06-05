@@ -11,6 +11,8 @@
 #include <string>
 #include <cstdint>
 #include <vector>
+#include <optional>
+#include <cassert>
 
 #include "sumgame.h"
 
@@ -93,6 +95,7 @@ inline void push(const sumgame& sum)
     if (!is_recording())
         return;
 
+    assert(_sgraph_impl::graph_printer.has_value());
     _sgraph_impl::graph_printer.value().push(sum);
 }
 
@@ -101,6 +104,7 @@ inline void push(const std::string& node_string)
     if (!is_recording())
         return;
 
+    assert(_sgraph_impl::graph_printer.has_value());
     _sgraph_impl::graph_printer.value().push(node_string);
 }
 
@@ -109,6 +113,7 @@ inline void pop(search_node_type_t node_type)
     if (!is_recording())
         return;
 
+    assert(_sgraph_impl::graph_printer.has_value());
     _sgraph_impl::graph_printer.value().pop(node_type);
 }
 
@@ -117,6 +122,7 @@ inline void pop_winloss(bool win)
     if (!is_recording())
         return;
 
+    assert(_sgraph_impl::graph_printer.has_value());
     _sgraph_impl::graph_printer.value().pop(win ? SEARCH_NODE_TYPE_WIN
                                                 : SEARCH_NODE_TYPE_LOSS);
 }

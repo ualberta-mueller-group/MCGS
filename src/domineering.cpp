@@ -17,12 +17,14 @@
 #include "throw_assert.h"
 #include "grid_location.h"
 #include "grid_hash.h"
+#include "bounding_box.h"
 
 using namespace std;
 
 //////////////////////////////////////////////////
 // class domineering_move_generator
 
+namespace {
 class domineering_move_generator: public move_generator
 {
 public:
@@ -46,6 +48,7 @@ private:
     int_pair _coord2;
     int _point2;
 };
+} // namespace
 
 ////////////////////////////////////////////////// helper functions
 
@@ -99,27 +102,21 @@ bool only_legal_colors(const std::vector<int>& board)
 ////////////////////////////////////////////////// domineering methods
 domineering::domineering(int n_rows, int n_cols)
     : grid(n_rows, n_cols, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<domineering>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 domineering::domineering(const std::vector<int>& board, int_pair shape) :
     grid(board, shape, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<domineering>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
 
 domineering::domineering(const std::string& game_as_string):
     grid(game_as_string, GRID_TYPE_COLOR)
-#ifdef USE_GRID_HASH
       , _gh(grid_hash_mask<domineering>())
-#endif
 {
     THROW_ASSERT(only_legal_colors(board_const()));
 }
@@ -145,7 +142,6 @@ void domineering::play(const ::move& m, bw to_play)
     {
         local_hash& hash = _get_hash_ref();
 
-#ifdef USE_GRID_HASH
         _gh.toggle_value(coord1, EMPTY);
         _gh.toggle_value(coord2, EMPTY);
 
@@ -153,16 +149,6 @@ void domineering::play(const ::move& m, bw to_play)
         _gh.toggle_value(coord2, BORDER);
 
         hash.__set_value(_gh.get_value());
-#else
-        // Remove EMPTY from hash
-        hash.toggle_value(2 + point1, EMPTY);
-        hash.toggle_value(2 + point2, EMPTY);
-
-        // Add BORDER to hash
-        hash.toggle_value(2 + point1, BORDER);
-        hash.toggle_value(2 + point2, BORDER);
-#endif
-
         _mark_hash_updated();
     }
 
@@ -190,7 +176,7 @@ void domineering::undo_move()
     if (_hash_updatable())
     {
         local_hash &hash = _get_hash_ref();
-#ifdef USE_GRID_HASH
+
         _gh.toggle_value(coord1, BORDER);
         _gh.toggle_value(coord2, BORDER);
 
@@ -198,16 +184,6 @@ void domineering::undo_move()
         _gh.toggle_value(coord2, EMPTY);
 
         hash.__set_value(_gh.get_value());
-#else
-        // Remove BORDER
-        hash.toggle_value(2 + point1, BORDER);
-        hash.toggle_value(2 + point2, BORDER);
-
-        // Add EMPTY
-        hash.toggle_value(2 + point1, EMPTY);
-        hash.toggle_value(2 + point2, EMPTY);
-#endif
-
         _mark_hash_updated();
     }
 
@@ -233,7 +209,7 @@ game* domineering::inverse() const
 
 game* domineering::clone() const
 {
-    return new domineering(*this);
+    return new domineering(board_const(), shape());
 }
 
 ::move domineering::encode_grid_move_to_db(const ::move& m) const
@@ -288,56 +264,9 @@ void domineering::print_move(std::ostream& str, const ::move& m, ebw to_play) co
 }
 
 ////////////////////////////////////////////////// split
-namespace {
-
-struct bounding_box
-{
-    bounding_box(int row_shift, int col_shift, int_pair shape):
-        row_shift(row_shift), col_shift(col_shift), shape(shape)
-    {
-    }
-
-    int row_shift;
-    int col_shift;
-    int_pair shape;
-};
-
-vector<int> trim_to_bounding_box(const vector<int>& src_board,
-                                 const int_pair& src_shape,
-                                 const bounding_box& dst_box)
-{
-    vector<int> dst_board;
-
-    const int& row_shift = dst_box.row_shift;
-    const int& col_shift = dst_box.col_shift;
-    const int_pair& dst_shape = dst_box.shape;
-
-    assert(!grid_location::shape_is_empty(dst_shape));
-
-    const int dst_size = dst_shape.first * dst_shape.second;
-    dst_board.reserve(dst_size);
-
-    int src_point = col_shift + (row_shift * src_shape.second);
-
-    for (int r = 0; r < dst_shape.first; r++)
-    {
-        for (int c = 0; c < dst_shape.second; c++)
-        {
-            const int val = src_board[src_point + c];
-            dst_board.push_back(val);
-        }
-
-        src_point += src_shape.second;
-    }
-
-    return dst_board;
-}
-
-} // namespace
 
 // Find all 4-connected components with at least 2 spaces
 
-#ifdef DOMINEERING_SPLIT
 split_result domineering::_split_impl() const
 {
     if (size() == 0)
@@ -473,19 +402,17 @@ split_result domineering::_split_impl() const
 
     return result;
 }
-#endif
 
-#ifdef USE_GRID_HASH
 void domineering::_init_hash(local_hash& hash) const
 {
     _gh.init_from_grid(*this);
     hash.__set_value(_gh.get_value());
 }
-#endif
 
 //////////////////////////////////////////////////
 // domineering_move_generator methods
 
+namespace {
 domineering_move_generator::domineering_move_generator(const domineering& g,
                                                        bw to_play)
     : move_generator(to_play),
@@ -557,4 +484,4 @@ void domineering_move_generator::_increment(bool init)
         break;
     }
 }
-
+} // namespace

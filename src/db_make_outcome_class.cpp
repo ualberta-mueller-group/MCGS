@@ -1,10 +1,13 @@
 #include "db_make_outcome_class.h"
 
+#include <memory>
+#include <cassert>
+
 #include "cgt_basics.h"
 #include "database.h"
-#include "solver_stats.h"
-#include "sumgame.h"
 #include "thermograph_helpers.h"
+#include "ThGraph.h"
+#include "ThValue.h"
 
 outcome_class db_make_outcome_class(const database& db,
                                     const db_entry_partisan& entry)

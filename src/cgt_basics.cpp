@@ -122,6 +122,31 @@ std::string relation_to_string(relation rel)
     assert(false);
 }
 
+relation flip_relation(relation rel)
+{
+    switch (rel)
+    {
+        case REL_EQUAL:
+        case REL_FUZZY:
+        case REL_UNKNOWN:
+            return rel;
+
+        case REL_LESS_OR_EQUAL:
+            return REL_GREATER_OR_EQUAL;
+
+        case REL_LESS:
+            return REL_GREATER;
+
+        case REL_GREATER_OR_EQUAL:
+            return REL_LESS_OR_EQUAL;
+
+        case REL_GREATER:
+            return REL_LESS;
+    }
+
+    assert(false);
+}
+
 std::string player_name_bw_imp(ebw to_play)
 {
     if (is_black_white(to_play))

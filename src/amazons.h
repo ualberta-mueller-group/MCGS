@@ -11,7 +11,6 @@
 #include <vector>
 #include <string>
 
-#define AMAZONS_SPLIT
 
 ////////////////////////////////////////////////// class amazons
 class amazons: public grid
@@ -35,16 +34,11 @@ public:
 
 
 protected:
-
-#ifdef AMAZONS_SPLIT
     split_result _split_impl() const override;
-#endif
 
-#ifdef USE_GRID_HASH
     void _init_hash(local_hash& hash) const override;
 
     mutable grid_hash _gh;
-#endif
 };
 
 ////////////////////////////////////////////////// amazons methods

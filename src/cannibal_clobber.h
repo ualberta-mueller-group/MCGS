@@ -26,11 +26,9 @@ public:
 protected:
     split_result _split_impl() const override;
 
-#ifdef USE_GRID_HASH
     void _init_hash(local_hash& hash) const override;
 
     mutable grid_hash _gh;
-#endif
 
 public:
     move_generator* create_move_generator(bw to_play) const override;

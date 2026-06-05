@@ -89,6 +89,9 @@ enum relation
 
 std::string relation_to_string(relation rel);
 
+// Flips >, >=, <, <=, and leaves others unchanged
+relation flip_relation(relation rel);
+
 // A move encoding any move in some simple CGT games.
 enum simple_cgt_move_code
 {

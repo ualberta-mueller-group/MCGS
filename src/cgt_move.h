@@ -13,6 +13,7 @@
 
 #include <cassert>
 #include <array>
+#include <climits>
 #include <tuple>
 #include <type_traits>
 #include <utility>
