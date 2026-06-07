@@ -313,7 +313,7 @@ game* nogo::inverse() const
 
 game* nogo::clone() const
 {
-    return new nogo(board_const(), shape());
+    return new nogo(board_const(), immortal(), shape());
 }
 
 move nogo::encode_grid_move_to_db(const move& m) const

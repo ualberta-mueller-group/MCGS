@@ -190,6 +190,10 @@ void game_clone_test_all()
     // nogo
     game_clone_test_main_impl(new nogo("..|.."));
     game_clone_test_main_impl(make_impartial(new nogo("..|..")));
+    game_clone_test_main_impl(
+        new nogo({BLACK, EMPTY}, {BORDER, EMPTY}, int_pair(1, 2)));
+    game_clone_test_main_impl(make_impartial(
+        new nogo({BLACK, EMPTY}, {BORDER, EMPTY}, int_pair(1, 2))));
 
     // clobber
     game_clone_test_main_impl(new clobber("XO|OX"));
