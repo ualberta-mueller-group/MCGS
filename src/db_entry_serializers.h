@@ -3,6 +3,7 @@
 #include "serializer.h"
 #include "database.h"
 #include "serializer_lib_therm.h" // IWYU pragma: keep
+#include "game_bounds_serializer.h" // IWYU pragma: keep
 
 ////////////////////////////////////////////////// serializer<db_entry_partisan>
 template <>

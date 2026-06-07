@@ -13,16 +13,15 @@
 #include "cgt_basics.h"
 #include "cgt_up_star.h"
 #include "cgt_dyadic_rational.h"
+#include "integral_conversion.h"
 #include "sumgame.h"
 #include "throw_assert.h"
 #include "utilities.h"
 #include "safe_arithmetic.h"
 #include "bounds_finder.h"
 
-
 using namespace std;
 
-//////////////////////////////////////////////////
 std::string bound_scale_to_string(bound_scale scale)
 {
     switch (scale)
@@ -52,29 +51,28 @@ bool scale_is_infinitesimal(bound_scale scale)
     assert(false);
 }
 
-
-//////////////////////////////////////// helper functions
-
 //////////////////////////////////////// bound_scale functions
 game* get_scale_game(bound_t scale_idx, bound_scale scale)
 {
+    const int scale_idx_int = integral_cast_checked<int>(scale_idx);
+
     switch (scale)
     {
         case BOUND_SCALE_UP_STAR:
         {
-            return new up_star(scale_idx, true);
+            return new up_star(scale_idx_int, true);
             break;
         }
 
         case BOUND_SCALE_UP:
         {
-            return new up_star(scale_idx, false);
+            return new up_star(scale_idx_int, false);
             break;
         }
 
         case BOUND_SCALE_DYADIC_RATIONAL:
         {
-            return new dyadic_rational(scale_idx, 8);
+            return new dyadic_rational(scale_idx_int, 8);
             break;
         }
 
@@ -89,6 +87,7 @@ game* get_scale_game(bound_t scale_idx, bound_scale scale)
 
 game* get_inverse_scale_game(bound_t scale_idx, bound_scale scale)
 {
+    THROW_ASSERT(negate_is_safe(scale_idx));
     return get_scale_game(-scale_idx, scale);
 }
 
@@ -97,10 +96,10 @@ game_bounds::game_bounds(bound_scale scale)
     : _scale(scale),
       _lower(numeric_limits<bound_t>::max()),
       _lower_valid(false),
-      _lower_relation(REL_FUZZY),
+      _lower_relation(REL_UNKNOWN),
       _upper(numeric_limits<bound_t>::min()),
       _upper_valid(false),
-      _upper_relation(REL_FUZZY)
+      _upper_relation(REL_UNKNOWN)
 {
 }
 
@@ -110,21 +109,15 @@ void game_bounds::set_lower(bound_t lower, relation lower_relation)
            lower_relation == REL_EQUAL);
 
     if (lower_valid())
-    {
         assert(lower >= _lower);
-    }
 
     _set_lower(lower, lower_relation);
 
     if (lower_relation == REL_EQUAL)
-    {
         _set_upper(lower, REL_EQUAL);
-    }
 
     if (upper_valid())
-    {
         assert(_lower <= _upper);
-    }
 }
 
 void game_bounds::set_upper(bound_t upper, relation upper_relation)
@@ -134,21 +127,15 @@ void game_bounds::set_upper(bound_t upper, relation upper_relation)
            upper_relation == REL_EQUAL);
 
     if (upper_valid())
-    {
         assert(upper <= _upper);
-    }
 
     _set_upper(upper, upper_relation);
 
     if (upper_relation == REL_EQUAL)
-    {
         _set_lower(upper, REL_EQUAL);
-    }
 
     if (lower_valid())
-    {
         assert(_lower <= _upper);
-    }
 }
 
 void game_bounds::set_equal(bound_t lower_and_upper)
@@ -285,6 +272,7 @@ ostream& operator<<(ostream& os, const game_bounds& gb)
 vector<game_bounds_ptr> find_bounds(sumgame& sum,
                                     const vector<bounds_options>& options)
 {
+    assert_restore_sumgame ars(sum);
     bw old_to_play = sum.to_play();
 
     bounds_finder bf;
@@ -299,13 +287,16 @@ vector<game_bounds_ptr> find_bounds(vector<game*>& games,
 {
     sumgame sum(BLACK);
     sum.add(games);
+    assert_restore_sumgame ars(sum);
     return find_bounds(sum, options);
 }
 
 vector<game_bounds_ptr> find_bounds(game* game,
                                     const vector<bounds_options>& options)
 {
+    assert(game != nullptr);
     sumgame sum(BLACK);
     sum.add(game);
+    assert_restore_game arg(*game);
     return find_bounds(sum, options);
 }
