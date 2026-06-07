@@ -1,4 +1,4 @@
-{version 1.5}
+{version 1.6}
 /* This is a comment */
 
 /*_ This file is valid input to MCGS, and describes the input syntax. You can
@@ -51,7 +51,7 @@ There are 5 types of 'things' that appear in input:
         preceding the command block. There are currently 4 types of commands:
 
             Version command:
-                {version 1.5}
+                {version 1.6}
             A special command which must be present at the very start of a file,
             but may be omited from input read from stdin or passed as a
             command line argument to MCGS. The current version is 1.5.
