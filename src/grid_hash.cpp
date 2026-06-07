@@ -7,18 +7,28 @@
 #include "utilities.h"
 #include "hashing.h"
 
-
 using namespace std;
-
-////////////////////////////////////////////////// helper functions
 
 ////////////////////////////////////////////////// grid_hash methods
 void grid_hash::reset(const int_pair& grid_shape)
 {
-    _init_grid_shape(grid_shape);
+    _is_dirty = true;
 
+    _grid_shape = grid_shape;
+    assert(grid_shape.first >= 0 && grid_shape.second >= 0);
+
+    /*
+        Each (active) `local_hash` accounts for values in the following
+        positions:
+            - Grid shape: [0, 1]
+            - Board contents: [2, 2 + grid_area)
+            - Game parameters, if any: [2 + grid_area, ...]
+    */
+    const int grid_area = grid_shape.first * grid_shape.second;
+    _param_idx_start = 2 + grid_area;
+
+    // Reset active `local_hash`es and update them with shape data
     static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
-
     for (unsigned int idx_no_t = 0; idx_no_t < GRID_HASH_ORIENTATIONS.size();
          idx_no_t += 2)
     {

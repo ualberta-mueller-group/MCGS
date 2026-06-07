@@ -20,6 +20,7 @@
 #include <cassert>
 #include "cgt_basics.h"
 #include "type_table.h"
+#include "warn_on_exit.h"
 
 class game;
 
@@ -50,9 +51,6 @@ public:
 
     size_t current_size() const;
 
-    inline static bool did_resize_warning();
-    static void print_resize_warning();
-
 private:
     void _init(uint64_t seed, size_t n_positions);
     void _resize_to(size_t new_n_positions);
@@ -63,8 +61,6 @@ private:
     // using hash_t for int distribution may be undefined behavior
     static_assert(sizeof(unsigned long long) >= sizeof(hash_t));
     static std::uniform_int_distribution<unsigned long long> _dist;
-
-    static bool _did_resize_warning;
 
     std::mt19937_64 _rng;
     size_t _n_positions;
@@ -128,11 +124,6 @@ inline size_t random_table::current_size() const
     return _n_positions;
 }
 
-inline bool random_table::did_resize_warning()
-{
-    return _did_resize_warning;
-}
-
 inline void random_table::_resize_if_out_of_range(size_t idx)
 {
     if (idx < _n_positions)
@@ -143,11 +134,7 @@ inline void random_table::_resize_if_out_of_range(size_t idx)
 
     _resize_to(target_size);
 
-    if (!_did_resize_warning && !global::silence_warnings())
-    {
-        _did_resize_warning = true;
-        std::cerr << "WARNING: random_table resized" << std::endl;
-    }
+    warn_on_exit::on_random_table_resize();
 }
 
 ////////////////////////////////////////////////// global random_tables

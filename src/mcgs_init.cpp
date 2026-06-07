@@ -17,6 +17,7 @@
 #include "init_sumgame.h"
 #include "throw_assert.h"
 #include "type_table.h"
+#include "warn_on_exit.h"
 
 namespace {
 bool already_initialized = false;
@@ -25,6 +26,7 @@ bool already_initialized = false;
 
 void mcgs_init_1(const char* exec_path)
 {
+    mcgs_init::init_warn_on_exit();
     mcgs_init::init_paths(exec_path);
     mcgs_init::init_color_tables();
 }

@@ -250,3 +250,18 @@ outcome_class bools_to_outcome_class(bool black_wins, bool white_wins)
 
     assert(false);
 }
+
+relation bools_to_relation(bool black_wins, bool white_wins)
+{
+    if (!black_wins && !white_wins) // 00
+        return REL_EQUAL;
+    if (!black_wins && white_wins) // 01
+        return REL_LESS;
+    if (black_wins && !white_wins) // 10
+        return REL_GREATER;
+    if (black_wins && white_wins) // 11
+        return REL_FUZZY;
+
+    assert(false);
+}
+

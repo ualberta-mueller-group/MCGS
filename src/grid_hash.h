@@ -10,8 +10,10 @@
     minimum of these.
 
     Orientations are enabled by passing a bit mask to the grid_hash constructor.
+    See `grid_hash_orientation.h` for common bit masks.
 
-    TODO check inlining in this file
+    NOTE/TODO: Probably doesn't support parameterized games which have a
+        variable number of parameters?
 */
 
 /*
@@ -24,11 +26,8 @@
    This means the mask containing only 0 and 90 is illegal:
    - The inverse of 90 (270) is missing
    - 90 implies 180, but this takes a 2nd step to reach...
-*/
 
-/*
-   These are all of the masks which pass all test cases:
-
+    These are all of the masks which pass all test cases:
     1: 00000000000000000000000000000001
     3: 00000000000000000000000000000011
     9: 00000000000000000000000000001001
@@ -58,95 +57,7 @@
 #include "grid_hash_orientation.h"
 // IWYU pragma: end_exports
 
-
-//////////////////////////////////////// Common active orientation bit masks
-// TODO static_assert that these are 8 and 4 bits, and within the lower 8 bits
-
-
-/*
-    Bit mask indicating that all 8 orientations should be active.
-
-    i.e. clobber, nogo, amazons
-*/
-static constexpr unsigned int GRID_HASH_ACTIVE_MASK_ALL =
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0) |    //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0T) |   //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_90) |   //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_90T) |  //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_180) |  //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_180T) | //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_270) |  //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_270T);  //
-
-/*
-    Bit mask indicating that only orientations achievable by mirroring the grid
-    (vertically, horizontally, or both) should be active.
-
-    i.e. domineering, fission
-*/
-static constexpr unsigned int GRID_HASH_ACTIVE_MASK_MIRRORS =
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0) |    //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_0T) |   //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90) |   //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_90T) |  // vert flip
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_180) |  // vert and horiz flip
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180T) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270) |  //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_270T);  // horiz flip
-
-static constexpr unsigned int GRID_HASH_ACTIVE_MASK_ROTATION90 =
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_0T) |   //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_90) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90T) |  //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_180) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180T) | //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_270); //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270T);  //
-
-static constexpr unsigned int GRID_HASH_ACTIVE_MASK_MIRROR_VERT =
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0) |    //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_0T) |   //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90) |   //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_90T);  // vert flip
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180) |  // vert and horiz flip
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180T) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270) |  //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270T);  // horiz flip
-
-static constexpr unsigned int GRID_HASH_ACTIVE_MASK_MIRROR_HORIZ =
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0) |    //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_0T) |   //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90) |   //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90T) | // vert flip
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180) |  // vert and horiz flip
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180T) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270) |  //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_270T);  // horiz flip
-
-static constexpr unsigned int GRID_HASH_ACTIVE_MASK_ROTATION180 =
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_0T) |   //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90T) |  //
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_180); //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180T) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270); //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270T);  //
-
-static constexpr unsigned int GRID_HASH_ACTIVE_MASK_IDENTITY =
-    set_bit<unsigned int>(GRID_HASH_ORIENTATION_0);     //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_0T) |   //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90) |   //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_90T) |  //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180) |  //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_180T) | //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270) |  //
-    //set_bit<unsigned int>(GRID_HASH_ORIENTATION_270T);  //
-
-
 ////////////////////////////////////////////////// implementation details
-
 // NOLINTNEXTLINE(readability-identifier-naming)
 namespace __grid_hash_impl {
 
@@ -165,14 +76,14 @@ enum orientation_op
     Bit masks of `orientation_op`s for each 90 degree rotation (excluding
     transposes)
 */
-static constexpr std::array<unsigned int, 4> ORIENTATION_OPS_NO_T {
+inline static constexpr std::array<unsigned int, 4> ORIENTATION_OPS_NO_T {
     0, // 0
     ORIENTATION_OP_ROW_INV | ORIENTATION_OP_SWAP, // 90
     ORIENTATION_OP_ROW_INV | ORIENTATION_OP_COL_INV, // 180
     ORIENTATION_OP_COL_INV | ORIENTATION_OP_SWAP, // 270
 };
 
-// Ignores "T" in grid_hash_orientation
+// Ignores "T" in grid_hash_orientation (T suffix corresponds to odd values)
 inline unsigned int get_op_mask_no_t(grid_hash_orientation ori)
 {
     assert(0 <= ori && //
@@ -191,12 +102,18 @@ class grid_hash
 public:
     grid_hash(unsigned int grid_hash_mask);
 
-    //// Getters
-    hash_t get_value() const;
+    /*
+        Getters.
 
+        `get_orientation()` denotes the "canonical" grid orientation, relative
+        to the actual game's board.
+    */
+    hash_t get_value() const;
     grid_hash_orientation get_orientation() const;
 
-    //// Mutators
+    /*
+        Mutators (for incremental hash updates).
+    */
     void reset(const int_pair& grid_shape);
 
     void toggle_type(game_type_t type);
@@ -210,8 +127,9 @@ public:
     template <class T>
     void toggle_parameter(size_t parameter_idx, const T& param);
 
-
-    //// Full hash computation
+    /*
+        Full board hash computation.
+    */
     void init_from_grid(const grid& g);
 
     template <class T>
@@ -223,12 +141,15 @@ public:
         const std::vector<Board_Element_T>& board, const int_pair& shape,
         game_type_t type, const std::vector<Param_Element_T>& params);
 
-    //// Static coordinate/shape transformation functions
-
-    // All 4 of these properly handle "T" suffix for orientation
-
     /*
-        shape1, coords1 -- transform --> shape2, coords2
+        Static coordinate/shape transformation functions.
+
+        All 4 of these properly handle "T" suffix for orientation.
+
+        shape1, coords1 --transform--> shape2, coords2
+
+        `get_XYZ` applies the specified orientation.
+        `get_inverse_XYZ` applies the inverse.
     */
     static int_pair get_transformed_coords(const int_pair& shape1,
                                            const int_pair& coords1,
@@ -246,25 +167,27 @@ public:
                                                   grid_hash_orientation ori);
 
 private:
+    // Clears `_is_dirty` and selects the "canonical" hash by setting
+    // `_selected_orientation`
     void _compute_value() const;
 
-    // Both of these ignore "T" suffix
+    // Both of these ignore "T" suffix in given orientation
     int_pair _get_transformed_coords_no_t(int r, int c,
                                           grid_hash_orientation ori) const;
 
     int_pair _get_transformed_shape_no_t(grid_hash_orientation ori) const;
 
-    void _init_grid_shape(const int_pair& shape);
-
-    static constexpr unsigned int _N_HASHES = GRID_HASH_ORIENTATIONS.size();
+    inline static constexpr unsigned int _N_HASHES =
+        GRID_HASH_ORIENTATIONS.size();
 
     const unsigned int _grid_hash_mask;
 
-    mutable bool _is_dirty;
+    mutable bool _is_dirty; // Set after modifying `_hashes`
     mutable grid_hash_orientation _selected_orientation;
 
     int_pair _grid_shape;
     int _param_idx_start;
+    // Indexable by `grid_hash_orientation`
     std::array<local_hash, _N_HASHES> _hashes;
 };
 
@@ -285,6 +208,7 @@ inline hash_t grid_hash::get_value() const
         _compute_value();
 
     assert(!_is_dirty);
+    assert(bit_is_1(_grid_hash_mask, _selected_orientation));
     return _hashes[_selected_orientation].get_value();
 }
 
@@ -294,6 +218,7 @@ inline grid_hash_orientation grid_hash::get_orientation() const
         _compute_value();
 
     assert(!_is_dirty);
+    assert(bit_is_1(_grid_hash_mask, _selected_orientation));
     return _selected_orientation;
 }
 
@@ -307,9 +232,11 @@ inline void grid_hash::toggle_type(game_type_t type)
 template <class T>
 void grid_hash::toggle_value(int r, int c, const T& color)
 {
-    static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
     _is_dirty = true;
 
+    assert(grid_location::coord_in_shape(int_pair(r, c), _grid_shape));
+
+    static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
     for (unsigned int idx_no_t = 0; idx_no_t < GRID_HASH_ORIENTATIONS.size();
          idx_no_t += 2)
     {
@@ -360,8 +287,9 @@ inline void grid_hash::toggle_value(const int_pair& coord, const T& color)
 template <class T>
 void grid_hash::toggle_parameter(size_t parameter_idx, const T& param)
 {
-    static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
+    _is_dirty = true;
 
+    static_assert(_N_HASHES == GRID_HASH_ORIENTATIONS.size());
     for (unsigned int idx_no_t = 0; idx_no_t < GRID_HASH_ORIENTATIONS.size();
          idx_no_t += 2)
     {
@@ -395,6 +323,7 @@ void grid_hash::toggle_parameter(size_t parameter_idx, const T& param)
 inline void grid_hash::init_from_grid(const grid& g)
 {
     _is_dirty = true;
+
     const int_pair& shape = g.shape();
     const game_type_t type = g.game_type();
 
@@ -407,6 +336,7 @@ void grid_hash::init_from_board_and_type(const std::vector<T>& board,
                                          game_type_t type)
 {
     _is_dirty = true;
+
     reset(shape);
     toggle_type(type);
 
@@ -425,6 +355,8 @@ void grid_hash::init_from_board_and_type_with_params(
     const std::vector<Board_Element_T>& board, const int_pair& shape,
     game_type_t type, const std::vector<Param_Element_T>& params)
 {
+    _is_dirty = true;
+
     reset(shape);
     toggle_type(type);
 
@@ -539,25 +471,6 @@ inline int_pair grid_hash::_get_transformed_shape_no_t(
 
     return get_transformed_shape(_grid_shape, ori);
 }
-
-inline void grid_hash::_init_grid_shape(const int_pair& shape)
-{
-    assert(shape.first >= 0 && shape.second >= 0);
-
-    _grid_shape = shape;
-
-    /*
-        Compute index into a `local_hash` where a parameterized game's parameter
-        list should be accounted for (i.e. gen_king_dirt).
-
-        - First 2 positions are for grid shape
-        - Then comes grid contents
-        - Then comes parameter list
-    */
-    const int grid_area = shape.first * shape.second;
-    _param_idx_start = 2 + grid_area;
-}
-
 
 ////////////////////////////////////////////////// type_table stuff...
 template <class Game_T>

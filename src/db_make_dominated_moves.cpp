@@ -41,6 +41,7 @@
 #include "sumgame.h"
 #include "game.h"
 #include "throw_assert.h"
+#include "warn_on_exit.h"
 
 // Maximum ratio of nondominated moves to total moves, above which dominated
 // moves are stored instead of nondominated ones
@@ -52,7 +53,7 @@ using namespace std;
 template<>
 struct std::hash<std::pair<hash_t, ::move>>
 {
-    inline uint64_t operator()(const std::pair<hash_t, ::move>& p) const noexcept
+    inline size_t operator()(const std::pair<hash_t, ::move>& p) const noexcept
     {
         return p.first ^ p.second;
     }
@@ -66,8 +67,13 @@ class generalized_sum_move
 {
 public:
     inline generalized_sum_move(hash_t subgame_hash, ::move move_db_encoded,
-                                const sumgame_move& sm, db_entry_partisan* db_entry)
-        : subgame_hash(subgame_hash), move_db_encoded(move_db_encoded), sm(sm), db_entry(db_entry), thermograph(nullptr), _is_dominated(false)
+                                const sumgame_move& sm)
+        : subgame_hash(subgame_hash),
+          move_db_encoded(move_db_encoded),
+          sm(sm),
+          db_entry(nullptr),
+          thermograph(nullptr),
+          _is_dominated(false)
     {
     }
 
@@ -79,7 +85,7 @@ public:
     ::move move_db_encoded;
 
     sumgame_move sm;
-    db_entry_partisan* db_entry;
+    const db_entry_partisan* db_entry;
     const ThGraph* thermograph;
 
     inline bool is_dominated() const
@@ -91,7 +97,6 @@ public:
     {
         _is_dominated = true;
     }
-
 
 private:
     bool _is_dominated;
@@ -119,13 +124,7 @@ inline bool generalized_sum_move::operator!=(const generalized_sum_move& rhs) co
 }
 
 ////////////////////////////////////////
-//inline void play_generalized_sum_move(sumgame& sum, const generalized_sum_move& gsm, bw player)
-//{
-//    assert(sum.to_play() == player);
-//    sum.play_sum(gsm.sm, player);
-//}
-
-inline void add_generalized_sum_moves_to_dominated_moves_t(
+void add_generalized_sum_moves_to_dominated_moves_t(
     db_dom_moves_t& dom, const vector<generalized_sum_move>& sum_moves,
     bw player, db_dom_moves_kind dom_moves_kind)
 {
@@ -153,26 +152,21 @@ inline void add_generalized_sum_moves_to_dominated_moves_t(
 }
 
 // relation is relative to player to play
-relation bools_to_relation(bool black_wins, bool white_wins, bw player)
+relation bools_to_relation_relative(bool black_wins, bool white_wins, bw player)
 {
     assert(is_black_white(player));
 
-    if (!black_wins && !white_wins) // 00
-        return REL_EQUAL;
-    if (!black_wins && white_wins) // 01
-        return (player == BLACK) ? REL_LESS : REL_GREATER;
-    if (black_wins && !white_wins) // 10
-        return (player == BLACK) ? REL_GREATER: REL_LESS;
-    if (black_wins && white_wins) // 11
-        return REL_FUZZY;
+    relation rel = bools_to_relation(black_wins, white_wins);
+    if (player == WHITE)
+        rel = flip_relation(rel);
 
-    assert(false);
+    return rel;
 }
 
 bool sum_cloned_properly(const sumgame& sum1, const sumgame& sum2)
 {
-    std::stringstream str1;
-    std::stringstream str2;
+    stringstream str1;
+    stringstream str2;
 
     sum1.print_simple(str1);
     sum2.print_simple(str2);
@@ -241,6 +235,7 @@ void pop_inverse(sumgame& sum1, const subgame_append_info_t& append_info)
     for (int i = 0; i < append_info.sum2_n_active; i++)
     {
         const int idx = end - 1 - i;
+        assert(idx >= 0);
 
         game* g = sum1.subgame(idx);
         sum1.pop(g);
@@ -262,6 +257,8 @@ void cleanup_sumgame(sumgame& cloned_sum)
     assert(cloned_sum.num_total_games() == 0);
 }
 
+// Relation is relative to `player`'s perspective, with ">" being better
+// for `player`
 relation compare_sums(sumgame& sum1, const sumgame& sum2, bw player)
 {
     assert(is_black_white(player));
@@ -280,14 +277,15 @@ relation compare_sums(sumgame& sum1, const sumgame& sum2, bw player)
     pop_inverse(sum1, append_info);
     sum1.set_to_play(restore_player);
 
-    return bools_to_relation(black_wins, white_wins, player);
+    return bools_to_relation_relative(black_wins, white_wins, player);
 }
 
+// Outcome class rank for `player` (higher is better). Must be L/P/R
 int get_outcome_ordinal(outcome_class oc, bw player)
 {
     assert(is_black_white(player));
 
-    // L > P > R
+    // For BLACK: L > P > R
     switch (oc)
     {
         case outcome_class::R:
@@ -301,10 +299,13 @@ int get_outcome_ordinal(outcome_class oc, bw player)
     }
 }
 
+// true IFF can prune `gsm` (considering outcomes)
 bool compare_outcomes(const generalized_sum_move& gsm,
                           int best_ordinal, bw player)
 {
     assert(is_black_white(player));
+    assert(gsm.db_entry != nullptr);
+
     const outcome_class oc = gsm.db_entry->outcome;
 
     if (oc == outcome_class::N)
@@ -318,8 +319,9 @@ bool compare_outcomes(const generalized_sum_move& gsm,
     return false;
 }
 
-// Might be REL_UNKNOWN
-relation compare_thermographs(const generalized_sum_move& gsm1, const generalized_sum_move& gsm2, bw player)
+// Relation is from `player`'s perspective. Might be REL_UNKNOWN
+relation compare_thermographs(const generalized_sum_move& gsm1,
+                              const generalized_sum_move& gsm2, bw player)
 {
     assert(is_black_white(player));
     assert(gsm1.thermograph != nullptr && gsm2.thermograph != nullptr);
@@ -334,8 +336,8 @@ relation compare_thermographs(const generalized_sum_move& gsm1, const generalize
     else if (th1.LeftStop() < th2.RightStop())
         rel = REL_LESS;
 
-    if (rel != REL_UNKNOWN && player == WHITE)
-        rel = (rel == REL_GREATER) ? REL_LESS : REL_GREATER;
+    if (player == WHITE)
+        rel = flip_relation(rel);
 
     return rel;
 }
@@ -345,14 +347,16 @@ vector<generalized_sum_move> make_generalized_sum_moves(sumgame& sum, bw player)
     assert(is_black_white(player));
     vector<generalized_sum_move> moves;
 
+    assert_restore_sumgame ars(sum);
     const bw restore_player = sum.to_play();
+
     sum.set_to_play(player);
 
     /*
         IMPORTANT: Moves must be deduplicated, to avoid duplicates pruning
         themselves
     */
-    std::unordered_set<std::pair<hash_t, ::move>> move_set;
+    unordered_set<pair<hash_t, ::move>> move_set;
 
     assert(sum.to_play() == player);
     unique_ptr<sumgame_move_generator> gen(sum.create_sum_move_generator(player));
@@ -371,7 +375,7 @@ vector<generalized_sum_move> make_generalized_sum_moves(sumgame& sum, bw player)
         if (!inserted.second)
             continue;
         
-        moves.emplace_back(subgame_hash, move_db_encoded, sm, nullptr);
+        moves.emplace_back(subgame_hash, move_db_encoded, sm);
     }
 
     std::sort(moves.begin(), moves.end());
@@ -380,25 +384,46 @@ vector<generalized_sum_move> make_generalized_sum_moves(sumgame& sum, bw player)
     return moves;
 }
 
-//std::vector<bool> get_oc_indexable_vector()
-//{
-//    std::vector<bool> vec;
-//
-//    static const outcome_class OC_MAX =
-//        std::max({
-//            outcome_class::U,
-//            outcome_class::L,
-//            outcome_class::R,
-//            outcome_class::P,
-//            outcome_class::N,
-//        });
-//
-//    vec.resize(OC_MAX + 1, false);
-//    return vec;
-//}
-//
+void preprocess_generalized_sum_moves(sumgame& sum,
+                                      vector<generalized_sum_move>& sum_moves,
+                                      bw player, int& best_ordinal,
+                                      database& db)
+{
+    assert(is_black_white(player));
+    assert_restore_sumgame ars(sum);
+
+    best_ordinal = -1;
+
+    for (generalized_sum_move& gsm : sum_moves)
+    {
+        assert(gsm.db_entry == nullptr);
+
+        assert(sum.to_play() == player);
+        sum.play_sum(gsm.sm, player);
+
+        gsm.db_entry = db.get_partisan_ptr(sum);
+        assert(gsm.db_entry != nullptr);
+
+        const outcome_class oc = gsm.db_entry->outcome;
+        assert(oc != outcome_class::U);
+
+        if (oc != outcome_class::N)
+            best_ordinal = max(best_ordinal, get_outcome_ordinal(oc, player));
+
+        const std::shared_ptr<const ThGraph> thermograph =
+            gsm.db_entry->thermograph;
+        THROW_ASSERT(thermograph.get() != nullptr);
+        gsm.thermograph = thermograph.get();
+
+        sum.undo_move();
+    }
+}
+
+// sum1 and sum2 should be 2 clones of the same sumgame
 void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
-                              db_dom_moves_t& dom, uint64_t& complexity, vector<generalized_sum_move>& sum_moves, database& db)
+                              uint64_t& complexity,
+                              vector<generalized_sum_move>& sum_moves,
+                              database& db)
 {
     complexity = 0;
 
@@ -412,15 +437,15 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
     sum1.set_to_play(player);
     sum2.set_to_play(player);
 
-
     // TODO put this back?
     //assert(sum_moves == make_generalized_sum_moves(sum2, player));
-
 
     bool sum1_played = false;
     bool sum2_played = false;
 
-    auto play_gsm_if_not_played = [&](sumgame& sum, generalized_sum_move& gsm, bw player, bool& played) -> void
+    auto play_gsm_if_not_played = [](sumgame& sum,
+                                     const generalized_sum_move& gsm, bw player,
+                                     bool& played) -> void
     {
         if (played)
             return;
@@ -440,56 +465,41 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
         assert(sum.to_play() == player);
     };
 
+    // Populate sum moves with DB entries, and find best outcome class
     int best_ordinal = -1;
+    preprocess_generalized_sum_moves(sum1, sum_moves, player, best_ordinal, db);
 
-    for (generalized_sum_move& gsm : sum_moves)
-    {
-        assert(gsm.db_entry == nullptr);
-
-        assert(sum1.to_play() == player);
-        sum1.play_sum(gsm.sm, player);
-
-        gsm.db_entry = db.get_partisan_ptr(sum1);
-        assert(gsm.db_entry != nullptr);
-
-        const outcome_class oc = gsm.db_entry->outcome;
-        assert(oc != outcome_class::U);
-
-        if (oc != outcome_class::N)
-            best_ordinal = max(best_ordinal, get_outcome_ordinal(oc, player));
-
-        const std::shared_ptr<const ThGraph> thermograph = gsm.db_entry->thermograph;
-        THROW_ASSERT(thermograph.get() != nullptr);
-        gsm.thermograph = thermograph.get();
-
-        sum1.undo_move();
-    }
-
+    // Compare moves to find dominated ones
     const size_t n_moves = sum_moves.size();
     for (size_t idx1 = 0; idx1 < n_moves; idx1++)
     {
+        assert(!sum1_played);
         generalized_sum_move& gsm1 = sum_moves[idx1];
 
         if (gsm1.is_dominated())
             continue;
 
+        if (compare_outcomes(gsm1, best_ordinal, player))
         {
-            const bool is_dom = compare_outcomes(gsm1, best_ordinal, player);
-            if (is_dom)
-            {
-                gsm1.mark_dominated();
-                continue;
-            }
+            gsm1.mark_dominated();
+            continue;
         }
 
         for (size_t idx2 = idx1 + 1; idx2 < n_moves; idx2++)
         {
+            assert(!sum2_played);
             generalized_sum_move& gsm2 = sum_moves[idx2];
 
             if (gsm1.is_dominated())
                 break;
             if (gsm2.is_dominated())
                 continue;
+
+            if (compare_outcomes(gsm2, best_ordinal, player))
+            {
+                gsm2.mark_dominated();
+                continue;
+            }
 
             relation rel = REL_UNKNOWN;
             rel = compare_thermographs(gsm1, gsm2, player);
@@ -504,7 +514,7 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
             /*
                 `rel` is relative to the current player, and compares gsm1
                 to gsm2. `GREATER` means gsm1 > gsm2 (from the perspective
-                of `player`
+                of `player`)
             */
             if (rel == REL_LESS)
                 gsm1.mark_dominated();
@@ -530,7 +540,7 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
     sum2.set_to_play(restore_player2);
 
     uint64_t n_immediate_nondom = 0;
-    bool no_complexity_overflow = true;
+    bool add_ok = true;
 
     for (const generalized_sum_move& gsm : sum_moves)
     {
@@ -539,16 +549,13 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
             n_immediate_nondom++;
             const uint64_t move_complexity = gsm.db_entry->complexity;
 
-            no_complexity_overflow &= safe_add(complexity, move_complexity);
-
-            continue;
+            add_ok &= safe_add(complexity, move_complexity);
         }
     }
 
-#warning TODO make this a warning instead of a throw
-    no_complexity_overflow &= safe_add(complexity, n_immediate_nondom);
-    THROW_ASSERT(no_complexity_overflow);
-
+    add_ok &= safe_add(complexity, n_immediate_nondom);
+    if (!add_ok)
+        warn_on_exit::on_db_dom_moves_complexity_overflow();
 }
 
 } // namespace
@@ -572,9 +579,9 @@ void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry, datab
     {
         assert_restore_sumgame ars1(clone1);
         assert_restore_sumgame ars2(clone2);
-        make_dominated_moves_for(clone1, clone2, BLACK, *dom, complexity_b,
+        make_dominated_moves_for(clone1, clone2, BLACK, complexity_b,
                                  black_moves, db);
-        make_dominated_moves_for(clone1, clone2, WHITE, *dom, complexity_w,
+        make_dominated_moves_for(clone1, clone2, WHITE, complexity_w,
                                  white_moves, db);
 
         const size_t n_total_moves = black_moves.size() + white_moves.size();
@@ -608,8 +615,9 @@ void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry, datab
         add_generalized_sum_moves_to_dominated_moves_t(*dom, white_moves, WHITE, moves_kind);
     }
 
-#warning TODO make this a warning instead of a throw
-    THROW_ASSERT(add_is_safe(complexity_b, complexity_w));
+    if (!add_is_safe(complexity_b, complexity_w))
+        warn_on_exit::on_db_dom_moves_complexity_overflow();
+
     entry.complexity = complexity_b + complexity_w;
 
     cleanup_sumgame(clone1);

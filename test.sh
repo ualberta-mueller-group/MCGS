@@ -2,18 +2,19 @@ set -e
 sudo renice -19 -p "$$"
 
 # Command to run
-CMD1="./MCGS --db-file-create 1_0.bin \"[amazons] max_dims=3,3;\""
-CMD2="./MCGS --db-file-create 2_0.bin \"[nogo_1xn] max_dims=15;\""
-CMD3="./MCGS --db-file-create 3_0.bin \"[domineering] max_dims=4,5;\""
-CMD4="./MCGS --db-file-create 4_0.bin \"[clobber_1xn] max_dims=15;\""
-CMD5="./MCGS --db-file-create 5_0.bin \"[clobber] max_dims=3,4;\""
+CMD1="./build/MCGS --db-file-create 1_1.bin \"[amazons] max_dims=3,3;\""
+CMD2="./build/MCGS --db-file-create 2_1.bin \"[nogo_1xn] max_dims=15;\""
+CMD3="./build/MCGS --db-file-create 3_1.bin \"[domineering] max_dims=4,5;\""
+CMD4="./build/MCGS --db-file-create 4_1.bin \"[clobber_1xn] max_dims=15;\""
+CMD5="./build/MCGS --db-file-create 5_1.bin \"[clobber] max_dims=3,4;\""
 
 clear_screen() {
     echo -ne "\e[3J" && clear
 }
 
 build_mcgs() {
-    make -j 11
+    cmake -B build
+    cmake --build build -- -j 11
 }
 
 run_perf() {
@@ -33,11 +34,11 @@ clear_screen
 build_mcgs
 clear_screen
 
-run_perf "$CMD1"
+#run_perf "$CMD1"
 #run_perf "$CMD2"
 #run_perf "$CMD3"
 #run_perf "$CMD4"
-#run_perf "$CMD5"
+run_perf "$CMD5"
 
 #run "$CMD1"
 #run "$CMD2"

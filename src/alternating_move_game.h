@@ -29,13 +29,13 @@ public:
 
     game& game_pos()
     {
-        has_game_pos();
+        assert(has_game_pos());
         return *_game;
     }
 
     const game& game_pos() const
     {
-        has_game_pos();
+        assert(has_game_pos());
         return *_game;
     }
 

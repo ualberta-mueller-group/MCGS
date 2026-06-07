@@ -482,6 +482,14 @@ void test_bools_to_outcome_class()
     assert(bools_to_outcome_class(true, true) == outcome_class::N);
 }
 
+void test_bools_to_relation()
+{
+    assert(bools_to_relation(false, false) == REL_EQUAL);
+    assert(bools_to_relation(false, true) == REL_LESS);
+    assert(bools_to_relation(true, false) == REL_GREATER);
+    assert(bools_to_relation(true, true) == REL_FUZZY);
+}
+
 } // namespace
 
 void utilities_test_all()
@@ -498,4 +506,5 @@ void utilities_test_all()
     test_new_vector_capacity();
     test_relation_from_search_results();
     test_bools_to_outcome_class();
+    test_bools_to_relation();
 }

@@ -113,8 +113,5 @@ void run_autotests(const string& root_test_directory,
     if (n_tests_filtered > 0)
         cout << n_tests_filtered << " skipped by the test filter" << endl;
 
-    if (random_table::did_resize_warning())
-        random_table::print_resize_warning();
-
     outfile.close();
 }

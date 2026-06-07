@@ -29,9 +29,11 @@
 #include "gen_experiments.h"
 #include "basic_player.h"
 #include "utils_for_main.h"
+#include "warn_on_exit.h"
 
 using std::cout, std::endl, std::flush, std::string;
 using namespace std;
+
 
 
 ////////////////////////////////////////////////// main function
@@ -39,6 +41,7 @@ int main(int argc, char** argv)
 {
     THROW_ASSERT(argc >= 1);
     mcgs_init_1(argv[0]);
+    warn_on_exit print_warn;
 
     cli_options opts = parse_args(argc, (const char**) argv, false);
 
@@ -135,10 +138,6 @@ int main(int argc, char** argv)
 
     if (opts.search_graph_verify_dir.has_value())
         sgraph::annotate_graphs(*opts.search_graph_verify_dir);
-
-    if (random_table::did_resize_warning())
-        random_table::print_resize_warning();
-
 
     return 0;
 }

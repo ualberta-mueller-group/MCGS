@@ -507,6 +507,7 @@ std::ostream& operator<<(std::ostream& os, const std::unordered_map<T1, T2>& m)
 
 ////////////////////////////////////////////////// other stuff
 outcome_class bools_to_outcome_class(bool black_wins, bool white_wins);
+relation bools_to_relation(bool black_wins, bool white_wins);
 
 // optional printing
 template <class T>

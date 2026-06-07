@@ -1186,10 +1186,11 @@ hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
     return _sumgame_hash.get_global_hash_value(subgames(), to_play());
 }
 
-hash_t sumgame::get_global_hash_for_player(ebw for_player, bool invalidate_game_hashes) const
+hash_t sumgame::get_global_hash_for_player(ebw for_player,
+                                           bool invalidate_game_hashes) const
 {
     assert(is_empty_black_white(for_player));
-    return _sumgame_hash.get_global_hash_value(subgames(), for_player);;
+    return _sumgame_hash.get_global_hash_value(subgames(), for_player);
 }
 
 bool sumgame::all_impartial() const

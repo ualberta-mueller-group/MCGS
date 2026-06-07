@@ -20,8 +20,6 @@
 using namespace std;
 
 ////////////////////////////////////////////////// random_table
-bool random_table::_did_resize_warning = false;
-
 std::uniform_int_distribution<unsigned long long> random_table::_dist(
     1, std::numeric_limits<unsigned long long>::max());
 
@@ -33,16 +31,6 @@ random_table::random_table(size_t n_positions, uint64_t seed) : _n_positions(0)
     // std::cout << "Random table constructing with seed " << seed << std::endl;
 
     _init(seed, n_positions);
-}
-
-void random_table::print_resize_warning()
-{
-    if (global::silence_warnings())
-        return;
-
-    cerr << "WARNING: a random_table was resized 1 or more times during search."
-            " This may affect validity of reported times."
-         << endl;
 }
 
 void random_table::_init(uint64_t seed, size_t n_positions)
@@ -146,7 +134,6 @@ void local_hash::toggle_type(game_type_t type)
 }
 
 ////////////////////////////////////////////////// global_hash
-
 void global_hash::reset()
 {
     _value = 0;

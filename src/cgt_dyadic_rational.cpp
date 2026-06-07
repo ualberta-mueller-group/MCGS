@@ -19,8 +19,12 @@ void dyadic_rational::simplify()
 
     while ((_p & 0x1) == 0 && (_q & 0x1) == 0)
     {
-        _p >>= 1;
-        _q >>= 1;
+        _p /= 2;
+        _q /= 2;
+
+        // This is UB:
+        //_p >>= 1;
+        //_q >>= 1;
     }
 }
 
