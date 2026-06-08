@@ -204,6 +204,7 @@ target_compile_definitions(mcgs_flags_extra INTERFACE
     -DSUMGAME_DEBUG
     -DTYPE_TABLE_DEBUG
     -DNOGO_DEBUG
+    -DINITIAL_BOUND_INTERVAL_DEBUG
     -D_GLIBCXX_DEBUG
 )
 

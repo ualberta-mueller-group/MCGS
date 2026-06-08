@@ -1,5 +1,8 @@
 #include "bounds_finder.h"
+#include "cgt_basics.h"
 #include "safe_arithmetic.h"
+#include "sumgame.h"
+#include "sumgame_helpers.h"
 
 
 using namespace std;
@@ -8,26 +11,50 @@ namespace {
 bool prune_region(const search_region& sr, const game_bounds& bounds)
 {
     if (!sr.valid())
-    {
         return true;
-    }
 
     // regions don't overlap, so they shouldn't need to be "clipped";
     // either the entire region is OK, or the entire region is outside the
     // bounds
 
     if (bounds.lower_valid() && (bounds.get_lower() > sr.high))
-    {
         return true;
-    }
 
     if (bounds.upper_valid() && (bounds.get_upper() < sr.low))
-    {
         return true;
-    }
 
     return false;
 }
+
+#ifdef INITIAL_BOUND_INTERVAL_DEBUG
+void assert_initial_values_ok(sumgame& sum, bound_scale scale,
+                              const game_bounds& bounds,
+                              const search_region& sr, bool validated_interval)
+{
+    assert_restore_sumgame ars(sum);
+
+    if (bounds.lower_valid())
+        assert(sum_rel_scale_game(sum,                                        //
+                                  flip_relation(bounds.get_lower_relation()), //
+                                  scale,                                      //
+                                  bounds.get_lower())                         //
+        );
+
+    if (bounds.upper_valid())
+        assert(sum_rel_scale_game(sum,                                        //
+                                  flip_relation(bounds.get_upper_relation()), //
+                                  scale,                                      //
+                                  bounds.get_upper())                         //
+        );
+
+    if (validated_interval)
+    {
+        assert(sr.valid());
+        assert(sum_rel_scale_game(sum, REL_GREATER_OR_EQUAL, scale, sr.low));
+        assert(sum_rel_scale_game(sum, REL_LESS_OR_EQUAL, scale, sr.high));
+    }
+}
+#endif
 
 } // namespace
 
@@ -43,12 +70,11 @@ search_region search_region::split(bound_t midpoint)
     assert(low <= midpoint);
     assert(midpoint <= high);
 
-    bound_t old_high = high;
+    const bound_t old_high = high;
     high = midpoint - 1;
 
     return search_region(midpoint + 1, old_high);
 }
-
 
 bound_t search_region::get_midpoint() const
 {
@@ -62,6 +88,17 @@ bound_t search_region::get_midpoint() const
 ////////////////////////////////////////////////// bounds_finder methods
 bounds_finder::bounds_finder()
 {
+}
+
+void bounds_finder::reset()
+{
+    _assume_below_midpoint = true;
+    _step_count = 0;
+    _search_count = 0;
+    _fuzzy_interval.reset();
+
+    _regions.clear();
+    _regions_next.clear();
 }
 
 vector<game_bounds_ptr> bounds_finder::find_bounds(
@@ -82,22 +119,6 @@ vector<game_bounds_ptr> bounds_finder::find_bounds(
     return bounds_list;
 }
 
-void bounds_finder::reset()
-{
-    _assume_below_midpoint = true;
-    _step_count = 0;
-    _search_count = 0;
-    _fuzzy_interval.reset();
-
-    _regions.clear();
-    _regions_next.clear();
-}
-
-void bounds_finder::_flip_tie_break_rule()
-{
-    _assume_below_midpoint = !_assume_below_midpoint;
-}
-
 search_region bounds_finder::find_initial_interval(sumgame& sum,
                                                     const bounds_options& opt,
                                                     game_bounds* bounds)
@@ -106,6 +127,7 @@ search_region bounds_finder::find_initial_interval(sumgame& sum,
     const bound_scale scale = opt.scale;
     assert(!bounds->lower_valid() && !bounds->upper_valid());
     assert(sr.valid());
+
 
     /*
         TODO handle BOUND_SCALE_UP_STAR. This function makes several assumptions
@@ -126,8 +148,10 @@ search_region bounds_finder::find_initial_interval(sumgame& sum,
     const outcome_class oc_hint = opt.outcome_hint;
 
     // TODO remove this assert or hide it behind a debug flag
-    //assert(LOGICAL_IMPLIES(oc_hint != outcome_class::U, oc_hint == get_sum_outcome(sum)));
+    // assert(LOGICAL_IMPLIES(oc_hint != outcome_class::U, oc_hint ==
+    // get_sum_outcome(sum)));
 
+    static_assert(INITIAL_INTERVAL_MAGNITUDE > 0);
     switch (oc_hint)
     {
         case outcome_class::P:
@@ -242,10 +266,56 @@ search_region bounds_finder::find_initial_interval(sumgame& sum,
         }
     }
 
-    //cout << "Initial region: ";
-    //cout << "{" << sr.low << " " << sr.high << "}" << endl;
-
     return sr;
+}
+
+void bounds_finder::clip_using_fuzzy_interval(
+    search_region& sr, vector<search_region>& regions_next,
+    const pair<bound_t, bound_t>& fuzzy_interval)
+{
+    assert(sr.valid());
+
+    const bound_t interval_left = fuzzy_interval.first;
+    const bound_t interval_right = fuzzy_interval.second;
+    assert(interval_left <= interval_right);
+
+    bound_t& p1 = sr.low;
+    bound_t& p2 = sr.high;
+    assert(p1 <= p2);
+
+    const bool p1_right_of_interval = p1 > interval_right;
+    const bool p2_left_of_interval = p2 < interval_left;
+
+    if (p1_right_of_interval || p2_left_of_interval)
+        return;
+
+    const bool p1_inside_interval = p1 >= interval_left;
+    const bool p2_inside_interval = p2 <= interval_right;
+
+    if (p1_inside_interval)
+        p1 = interval_right + 1;
+    if (p2_inside_interval)
+        p2 = interval_left - 1;
+    if (!(p1_inside_interval || p2_inside_interval))
+    {
+        // p1 and p2 are both outside the interval. The interval is entirely
+        // between p1 and p2. Split the search region into 2
+        const bound_t r1_p1 = p1;
+        const bound_t r1_p2 = interval_left - 1;
+
+        const bound_t r2_p1 = interval_right + 1;
+        const bound_t r2_p2 = p2;
+
+        sr.low = r1_p1;
+        sr.high = r1_p2;
+
+        regions_next.push_back({r2_p1, r2_p2});
+    }
+}
+
+void bounds_finder::_flip_tie_break_rule()
+{
+    _assume_below_midpoint = !_assume_below_midpoint;
 }
 
 game_bounds* bounds_finder::_make_bounds(sumgame& sum,
@@ -253,14 +323,32 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum,
 {
     game_bounds* bounds = new game_bounds(opt.scale);
 
-    bool validated_interval =
-        false; // true when we've checked that Gmin <= S <= Gmax
+    // true when we've checked that Gmin <= S <= Gmax
+    bool validated_interval = false;
 
     _regions.clear();
     _regions_next.clear();
 
     _regions.push_back(find_initial_interval(sum, opt, bounds));
-    validated_interval = true; // Validated by `_find_initial_interval(...)`
+
+    switch (opt.scale)
+    {
+        case BOUND_SCALE_UP_STAR:
+            break;
+        case BOUND_SCALE_UP:
+        case BOUND_SCALE_DYADIC_RATIONAL:
+        {
+            // Validated by `_find_initial_interval(...)`
+            validated_interval = true;
+            break;
+        }
+    }
+
+#ifdef INITIAL_BOUND_INTERVAL_DEBUG
+    assert(_regions.size() == 1);
+    assert_initial_values_ok(sum, opt.scale, *bounds, _regions.back(),
+                             validated_interval);
+#endif
 
     // Couldn't find initial interval
     if (!_regions.back().valid())
@@ -268,9 +356,6 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum,
         assert(!bounds->both_valid());
         return bounds;
     }
-
-    //_regions.push_back({opt.min, opt.max});
-
 
     // i.e. 0
     if (bounds->is_equal())
@@ -285,11 +370,10 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum,
 
             if (_fuzzy_interval.has_value() && sr.valid())
                 clip_using_fuzzy_interval(sr, _regions_next, *_fuzzy_interval);
+
             // Skip if this region is invalid or outside of bounds
             if (prune_region(sr, *bounds))
-            {
                 continue;
-            }
 
             // stop if no more work remaining
             if (bounds->lower_valid() &&
@@ -310,18 +394,14 @@ game_bounds* bounds_finder::_make_bounds(sumgame& sum,
             validated_interval = true;
 
             if (!_validate_interval(opt.min, opt.max, opt.scale, sum, *bounds))
-            {
                 break;
-            }
         }
 
         swap(_regions, _regions_next);
     }
 
     if (bounds->both_valid())
-    {
         _refine_bounds(opt.scale, *bounds, sum);
-    }
 
     return bounds;
 }
@@ -347,9 +427,7 @@ void bounds_finder::_step(search_region& region, bound_scale scale,
     int midpoint = 0;
 
     if (bounds.both_valid())
-    {
         midpoint = bounds.get_midpoint();
-    }
 
     if (scale_idx != midpoint)
     {
@@ -363,9 +441,7 @@ void bounds_finder::_step(search_region& region, bound_scale scale,
                                         below_midpoint, &sumgame_solve_count);
 
     if (did_tie_break && sumgame_solve_count > 1 && rel != REL_FUZZY)
-    {
         _flip_tie_break_rule();
-    }
 
     switch (rel)
     {
@@ -390,7 +466,6 @@ void bounds_finder::_step(search_region& region, bound_scale scale,
         // Gi fuzzy with S
         case REL_FUZZY:
         {
-
             _report_fuzzy_index(scale_idx);
 
             _regions_next.push_back(region.split(scale_idx));
@@ -462,9 +537,7 @@ relation bounds_finder::_get_step_comparison(sumgame& sum,
     assert(is_conclusive() || (le_known && ge_known));
 
     if (solve_count != nullptr)
-    {
         *solve_count = (int) le_known + (int) ge_known;
-    }
 
     relation rel =
         relation_from_search_results(le_known, is_le, ge_known, is_ge);
@@ -535,13 +608,9 @@ bool bounds_finder::_validate_interval(bound_t min, bound_t max,
             _get_step_comparison(sum, inverse_scale_game.get(), true, nullptr);
 
         if (rel != REL_LESS_OR_EQUAL && rel != REL_LESS && rel != REL_EQUAL)
-        {
             return false;
-        }
         else
-        {
             bounds.set_lower(min, rel);
-        }
     }
 
     if (!bounds.upper_valid())
@@ -554,13 +623,9 @@ bool bounds_finder::_validate_interval(bound_t min, bound_t max,
 
         if (rel != REL_GREATER_OR_EQUAL && rel != REL_GREATER &&
             rel != REL_EQUAL)
-        {
             return false;
-        }
         else
-        {
             bounds.set_upper(max, rel);
-        }
     }
 
     return true;
@@ -592,7 +657,6 @@ void bounds_finder::_refine_bounds(bound_scale scale, game_bounds& bounds,
     }
 }
 
-
 void bounds_finder::_report_fuzzy_index(bound_t scale_idx)
 {
     if (_fuzzy_interval.has_value())
@@ -607,46 +671,4 @@ void bounds_finder::_report_fuzzy_index(bound_t scale_idx)
         _fuzzy_interval.emplace(scale_idx, scale_idx);
 }
 
-void bounds_finder::clip_using_fuzzy_interval(
-    search_region& sr, vector<search_region>& regions_next,
-    const pair<bound_t, bound_t>& fuzzy_interval)
-{
-    assert(sr.valid());
 
-    const bound_t interval_left = fuzzy_interval.first;
-    const bound_t interval_right = fuzzy_interval.second;
-    assert(interval_left <= interval_right);
-
-    bound_t& p1 = sr.low;
-    bound_t& p2 = sr.high;
-    assert(p1 <= p2);
-
-    const bool p1_right_of_interval = p1 > interval_right;
-    const bool p2_left_of_interval = p2 < interval_left;
-
-    if (p1_right_of_interval || p2_left_of_interval)
-        return;
-
-    const bool p1_inside_interval = p1 >= interval_left;
-    const bool p2_inside_interval = p2 <= interval_right;
-
-    if (p1_inside_interval)
-        p1 = interval_right + 1;
-    if (p2_inside_interval)
-        p2 = interval_left - 1;
-    if (!(p1_inside_interval || p2_inside_interval))
-    {
-        // p1 and p2 are both outside the interval. The interval is entirely
-        // between p1 and p2. Split the search region into 2
-        const bound_t r1_p1 = p1;
-        const bound_t r1_p2 = interval_left - 1;
-
-        const bound_t r2_p1 = interval_right + 1;
-        const bound_t r2_p2 = p2;
-
-        sr.low = r1_p1;
-        sr.high = r1_p2;
-
-        regions_next.push_back({r2_p1, r2_p2});
-    }
-}

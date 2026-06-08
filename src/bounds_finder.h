@@ -2,6 +2,7 @@
 
 #include "bounds.h"
 
+////////////////////////////////////////////////// class search_region
 class search_region
 {
 public:
@@ -34,6 +35,7 @@ public:
     bound_t high;
 };
 
+////////////////////////////////////////////////// class bounds_finder
 class bounds_finder
 {
 public:
@@ -41,26 +43,27 @@ public:
 
     bounds_finder();
 
-    std::vector<game_bounds_ptr> find_bounds(sumgame& sum,
-                                        const std::vector<bounds_options>& options);
-
     void reset();
+
+    const fuzzy_interval_t& get_fuzzy_interval() const;
+
+    std::vector<game_bounds_ptr> find_bounds(
+        sumgame& sum, const std::vector<bounds_options>& options);
+
+    search_region find_initial_interval(sumgame& sum, const bounds_options& opt,
+                                        game_bounds* bounds);
+
+    static void clip_using_fuzzy_interval(
+        search_region& sr, std::vector<search_region>& regions_next,
+        const std::pair<bound_t, bound_t>& fuzzy_interval);
+
+    inline static constexpr bound_t INITIAL_INTERVAL_MAGNITUDE = 1;
+
 private:
     void _flip_tie_break_rule();
 
-public:
-    search_region find_initial_interval(sumgame& sum,
-                                         const bounds_options& opt,
-                                         game_bounds* bounds);
-
-    inline const fuzzy_interval_t& get_fuzzy_interval() const
-    {
-        return _fuzzy_interval;
-    }
-
-private:
-
     game_bounds* _make_bounds(sumgame& sum, const bounds_options& opt);
+
     void _step(search_region& region, bound_scale scale, sumgame& sum,
                game_bounds& bounds);
 
@@ -81,22 +84,19 @@ private:
 
     void _report_fuzzy_index(bound_t scale_idx);
 
-public:
-    static void clip_using_fuzzy_interval(
-        search_region& sr, std::vector<search_region>& regions_next,
-        const std::pair<bound_t, bound_t>& fuzzy_interval);
-
-    inline static constexpr bound_t INITIAL_INTERVAL_MAGNITUDE = 1;
-
-private:
     bool _assume_below_midpoint;
     int _step_count;
     int _search_count;
 
     fuzzy_interval_t _fuzzy_interval;
 
-
     std::vector<search_region> _regions;
     std::vector<search_region> _regions_next;
 };
 
+////////////////////////////////////////////////// bounds_finder methods
+inline const bounds_finder::fuzzy_interval_t& bounds_finder::
+    get_fuzzy_interval() const
+{
+    return _fuzzy_interval;
+}
