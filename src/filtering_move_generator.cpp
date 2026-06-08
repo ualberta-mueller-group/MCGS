@@ -1,5 +1,8 @@
-
 #include "filtering_move_generator.h"
+
+#include <cassert>
+
+#include "game.h"
 
 void filtering_move_generator::_increment(bool init)
 {

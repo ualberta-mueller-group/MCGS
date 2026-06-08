@@ -1,12 +1,10 @@
 #include "hashing.h"
 #include "cgt_basics.h"
-#include "global_options.h"
 #include "throw_assert.h"
 #include "utilities.h"
 #include "type_table.h"
 #include "game.h"
 
-#include <iostream>
 #include <limits>
 #include <type_traits>
 #include <memory>

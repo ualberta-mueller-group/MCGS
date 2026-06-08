@@ -1,18 +1,17 @@
 #pragma once
 
-#include <type_traits>
 #include <vector>
 #include <ostream>
 #include <cstdint>
 #include <memory>
 #include <cassert>
 #include <string>
+#include <array>
 
 #include "sumgame.h"
 #include "cgt_basics.h"
 #include "game.h"
 #include "serializer.h"
-#include "iobuffer.h"
 
 typedef int32_t bound_t;
 

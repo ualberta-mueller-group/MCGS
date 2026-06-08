@@ -3,8 +3,13 @@
 // TODO merge this with the DB-dependent version
 
 #include <memory>
+#include <vector>
+#include <unordered_map>
+
 #include "ThGraph.h"
 #include "sumgame.h"
+#include "cgt_basics.h"
+#include "hashing.h"
 
 class thermograph_builder_no_db
 {

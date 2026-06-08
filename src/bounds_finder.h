@@ -1,6 +1,14 @@
 #pragma once
 
+#include <limits>
+#include <cassert>
+#include <optional>
+#include <utility>
+#include <vector>
+
 #include "bounds.h"
+#include "sumgame.h"
+#include "game.h"
 
 ////////////////////////////////////////////////// class search_region
 class search_region

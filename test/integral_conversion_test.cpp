@@ -1,10 +1,13 @@
 #include "integral_conversion_test.h"
 
+#include <cstdint>
+#include <cassert>
+#include <limits>
+#include <type_traits>
+
 #include "integral_conversion.h"
 #include "test_utilities.h"
 
-#include <limits>
-#include <type_traits>
 
 namespace {
 

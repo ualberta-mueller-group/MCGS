@@ -19,6 +19,7 @@
 #include "game.h"
 #include "sumgame.h"
 #include "file_parser.h"
+#include "utilities.h"
 
 std::unordered_set<move> get_generated_moves_for_player(const game* g,
                                                         bw player);

@@ -13,11 +13,10 @@
 #include <cstddef>
 #include <climits>
 #include <type_traits>
-#include "global_options.h"
-#include "utilities.h"
 #include <random>
-#include <iostream>
 #include <cassert>
+
+#include "utilities.h"
 #include "cgt_basics.h"
 #include "type_table.h"
 #include "warn_on_exit.h"

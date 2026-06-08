@@ -3,16 +3,10 @@
 //---------------------------------------------------------------------------
 
 #include <iostream>
-#include <string>
 #include <memory>
-#include <type_traits>
 
-#include "amazons.h"
-#include "cgt_up_star.h"
 #include "cli_options.h"
 #include "database.h"
-#include "dominated_moves.h"
-#include "domineering.h"
 #include "convert_to_ctl.h"
 #include "file_parser.h"
 #include "autotests.h"
@@ -20,10 +14,7 @@
 #include "print_moves.h"
 #include "search_graph_debug.h"
 #include "mcgs_init.h"
-#include "hashing.h"
 #include "global_options.h"
-#include "clobber.h"
-#include "clobber_1xn.h"
 #include "throw_assert.h"
 
 #include "gen_experiments.h"
@@ -31,10 +22,7 @@
 #include "utils_for_main.h"
 #include "warn_on_exit.h"
 
-using std::cout, std::endl, std::flush, std::string;
 using namespace std;
-
-
 
 ////////////////////////////////////////////////// main function
 int main(int argc, char** argv)
@@ -62,7 +50,7 @@ int main(int argc, char** argv)
 
     if (opts.use_player)
     {
-        std::shared_ptr<file_parser> parser = opts.parser;
+        shared_ptr<file_parser> parser = opts.parser;
 
         // TODO should this use the test filter too?
         if (parser.get() != nullptr)

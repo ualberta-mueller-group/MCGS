@@ -2,22 +2,26 @@
 // Utility functions for unit tests
 //---------------------------------------------------------------------------
 #include "test_utilities.h"
+
+#include <string>
+#include <vector>
+#include <array>
+#include <sstream>
+#include <cassert>
+#include <cstddef>
+#include <unordered_set>
+#include <memory>
+#include <optional>
+
 #include "cgt_basics.h"
 #include "csv_row.h"
 #include "file_parser.h"
-#include <string>
-#include <vector>
-#include <sstream>
-#include <optional>
 #include "game.h"
 #include "sumgame.h"
 #include "alternating_move_game.h"
 #include "test_case.h"
 #include "test_case_enums.h"
-#include <cassert>
-#include <cstddef>
-#include <unordered_set>
-#include <memory>
+
 
 using std::vector, std::string, std::stringstream;
 

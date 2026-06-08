@@ -42,6 +42,7 @@
 #include "game.h"
 #include "throw_assert.h"
 #include "warn_on_exit.h"
+#include "utilities.h"
 
 // Maximum ratio of nondominated moves to total moves, above which dominated
 // moves are stored instead of nondominated ones

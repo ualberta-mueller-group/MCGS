@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <vector>
+#include <string>
 
 #include "grid.h"
 #include "int_pair.h"

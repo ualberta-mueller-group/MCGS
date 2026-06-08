@@ -1,12 +1,21 @@
 #include "thermograph_helpers_test.h"
 
+#include <tuple>
+#include <utility>
+#include <vector>
+#include <cstdint>
+#include <memory>
+#include <unordered_map>
+#include <cassert>
+
 #include "bounds.h"
-#include "cgt_basics.h"
+#include "game.h"
 #include "cgt_dyadic_rational.h"
 #include "cgt_up_star.h"
 #include "grid_generator.h"
 #include "grid_hash.h"
 #include "sumgame.h"
+#include "ThGraph.h"
 #include "sumgame_helpers.h"
 #include "thermograph_builder_no_db.h"
 #include "thermograph_helpers.h"

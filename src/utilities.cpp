@@ -1,4 +1,5 @@
 #include "utilities.h"
+
 #include <sstream>
 #include <chrono>
 #include <string>
@@ -7,8 +8,10 @@
 #include <cassert>
 #include <vector>
 #include <cstdint>
-#include "cgt_basics.h"
 #include <algorithm>
+#include <ctime>
+
+#include "cgt_basics.h"
 #include "throw_assert.h"
 
 using std::vector, std::string, std::stringstream;

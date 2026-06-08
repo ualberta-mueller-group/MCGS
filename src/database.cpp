@@ -1,11 +1,6 @@
-/*
-    TODO: These save and load functions are not machine/compiler-independent
-    (because game_type_t is an unsigned int).
-*/
-#include <algorithm>
+#include "database.h"
+
 #include <cassert>
-#include <chrono>
-#include <ctime>
 #include <fstream>
 #include <optional>
 #include <string>
@@ -14,22 +9,20 @@
 #include <memory>
 #include <iostream>
 
-#include "database.h"
+#include "serializer.h"
+#include "serializer_lib_therm.h" // IWYU pragma: keep
 #include "ThGraph.h"
 #include "bounds.h"
-#include "cgt_basics.h"
 #include "cgt_integer_game.h"
 #include "db_make_bounds.h"
 #include "db_make_dominated_moves.h"
 #include "db_make_outcome_class.h"
 #include "db_make_thermograph.h"
 #include "game.h"
-#include "hashing.h"
 #include "impartial_sumgame.h"
 #include "impartial_game.h"
 #include "sumgame.h"
 #include "iobuffer.h"
-#include "serializer.h"
 #include "db_game_generator.h"
 #include "db_entry_serializers.h" // IWYU pragma: keep
 #include "thermograph_cache.h"

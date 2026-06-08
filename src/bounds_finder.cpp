@@ -1,9 +1,18 @@
 #include "bounds_finder.h"
-#include "cgt_basics.h"
+
+#include <vector>
+#include <memory>
+#include <utility>
+#include <algorithm>
+#include <cassert>
+
 #include "safe_arithmetic.h"
 #include "sumgame.h"
+#include "bounds.h"
+#include "game.h"
+#include "utilities.h"
+#include "throw_assert.h"
 #include "sumgame_helpers.h"
-
 
 using namespace std;
 
@@ -26,10 +35,10 @@ bool prune_region(const search_region& sr, const game_bounds& bounds)
     return false;
 }
 
-#ifdef INITIAL_BOUND_INTERVAL_DEBUG
-void assert_initial_values_ok(sumgame& sum, bound_scale scale,
-                              const game_bounds& bounds,
-                              const search_region& sr, bool validated_interval)
+[[maybe_unused]] void assert_initial_values_ok(sumgame& sum, bound_scale scale,
+                                               const game_bounds& bounds,
+                                               const search_region& sr,
+                                               bool validated_interval)
 {
     assert_restore_sumgame ars(sum);
 
@@ -47,14 +56,12 @@ void assert_initial_values_ok(sumgame& sum, bound_scale scale,
                                   bounds.get_upper())                         //
         );
 
-    if (validated_interval)
+    if (validated_interval && sr.valid())
     {
-        assert(sr.valid());
         assert(sum_rel_scale_game(sum, REL_GREATER_OR_EQUAL, scale, sr.low));
         assert(sum_rel_scale_game(sum, REL_LESS_OR_EQUAL, scale, sr.high));
     }
 }
-#endif
 
 } // namespace
 

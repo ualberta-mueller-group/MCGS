@@ -10,7 +10,9 @@
 #include <memory>
 #include <cassert>
 #include <unordered_set>
+#include <set>
 #include <vector>
+#include <cstdint>
 
 #include "sumgame.h"
 #include "bounds.h"

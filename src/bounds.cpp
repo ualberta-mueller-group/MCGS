@@ -1,13 +1,9 @@
 #include "bounds.h"
 
-#include <algorithm>
 #include <iostream>
 #include <limits>
-#include <optional>
 #include <cassert>
-#include <memory>
 #include <vector>
-#include <utility>
 #include <string>
 
 #include "cgt_basics.h"
@@ -16,7 +12,6 @@
 #include "integral_conversion.h"
 #include "sumgame.h"
 #include "throw_assert.h"
-#include "utilities.h"
 #include "safe_arithmetic.h"
 #include "bounds_finder.h"
 

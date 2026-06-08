@@ -1,16 +1,18 @@
 #include "game_bounds_test.h"
-#include "bounds.h"
+
 #include <cassert>
 #include <memory>
 #include <tuple>
+#include <utility>
+#include <vector>
+#include <optional>
+
+#include "bounds.h"
 #include "cgt_basics.h"
 #include "bounds_finder.h"
 #include "cgt_dyadic_rational.h"
 #include "cgt_integer_game.h"
 #include "cgt_up_star.h"
-#include "db_game_generator.h"
-#include "grid_generator.h"
-#include "gridlike_db_game_generator.h"
 #include "sumgame.h"
 #include "sumgame_helpers.h"
 #include "all_game_headers.h"

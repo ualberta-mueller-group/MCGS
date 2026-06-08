@@ -1,6 +1,7 @@
 #include "thermograph_helpers.h"
 
 #include <cassert>
+#include <ostream>
 
 #include "ThGraph.h"
 #include "ThValue.h"

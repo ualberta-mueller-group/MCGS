@@ -4,7 +4,11 @@
 #include <vector>
 #include <cassert>
 #include <tuple>
+#include <memory>
+#include <unordered_map>
 #include <string>
+#include <set>
+#include <cstddef>
 
 #include "cgt_basics.h"
 #include "elephants.h"
@@ -13,7 +17,6 @@
 #include "grid.h"
 #include "grid_hash.h"
 #include "grid_hash_orientation.h"
-#include "grid_location.h"
 #include "hashing.h"
 #include "grid_hash_test_utilities.h"
 #include "impartial_game_wrapper.h"

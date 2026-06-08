@@ -1,6 +1,9 @@
 #include "grid_hash_test_utilities.h"
 
 #include <vector>
+#include <optional>
+#include <string>
+#include <cassert>
 
 #include "int_pair.h"
 #include "hashing.h"

@@ -1,6 +1,9 @@
 #include "game_clone_test.h"
 
 #include <memory>
+#include <cassert>
+#include <string>
+#include <array>
 
 #include "game.h"
 #include "impartial_game_wrapper.h"

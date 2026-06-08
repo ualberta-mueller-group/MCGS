@@ -2,13 +2,16 @@
 // Unit tests for impartial_game_wrapper
 //---------------------------------------------------------------------------
 #include "impartial_game_wrapper_test.h"
-#include "cgt_basics.h"
-#include "impartial_game_wrapper.h"
 
 #include <cassert>
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <vector>
+
 #include "cgt_move.h"
+#include "cgt_basics.h"
+#include "impartial_game_wrapper.h"
 #include "clobber_1xn.h"
 #include "nogo_1xn.h"
 #include "domineering.h"

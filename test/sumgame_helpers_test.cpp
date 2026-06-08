@@ -1,5 +1,11 @@
 #include "sumgame_helpers_test.h"
 
+#include <tuple>
+#include <array>
+#include <vector>
+#include <set>
+#include <cassert>
+
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "cgt_integer_game.h"

@@ -5,7 +5,6 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "hashing.h"
-#include "throw_assert.h"
 
 #include <ostream>
 #include <cassert>

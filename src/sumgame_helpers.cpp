@@ -1,8 +1,11 @@
 #include "sumgame_helpers.h"
 
+#include <cassert>
+#include <vector>
+
 #include "bounds.h"
 #include "sumgame.h"
-#include "cgt_basics.h"
+#include "game.h"
 #include "utilities.h"
 
 ////////////////////////////////////////////////// Helpers

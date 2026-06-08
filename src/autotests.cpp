@@ -16,7 +16,6 @@
 #include "test_filter.h"
 #include "throw_assert.h"
 #include "hashing.h"
-#include "game.h"
 #include "file_iterator.h"
 
 //////////////////////////////////////////////////

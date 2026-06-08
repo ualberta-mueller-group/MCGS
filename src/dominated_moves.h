@@ -15,6 +15,7 @@
 #include <cassert>
 #include <vector>
 #include <cstddef>
+#include <ostream>
 
 #include "cgt_basics.h"
 #include "hashing.h"

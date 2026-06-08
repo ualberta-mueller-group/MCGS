@@ -2,7 +2,7 @@
 
 #include "bounds.h"
 #include "sumgame.h"
-#include "cgt_basics.h"
+#include "game.h"
 
 // TODO this function is probably duplicated in several places...
 outcome_class get_sum_outcome(sumgame& sum);

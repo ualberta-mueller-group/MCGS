@@ -5,6 +5,7 @@
 #include <vector>
 #include <cassert>
 #include <map>
+#include <ostream>
 
 #include "game.h"
 #include "throw_assert.h"

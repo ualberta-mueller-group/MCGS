@@ -6,6 +6,8 @@
 #include <ostream>
 #include <vector>
 #include <cassert>
+#include <utility>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "cgt_nimber.h"

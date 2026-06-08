@@ -17,7 +17,6 @@
 #include "config_map.h"
 #include "database.h"
 #include "db_game_generator.h"
-#include "db_make_thermograph.h"
 #include "global_database.h"
 #include "global_options.h"
 

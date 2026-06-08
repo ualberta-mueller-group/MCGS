@@ -1,8 +1,10 @@
 #include "database_test.h"
 
 #include <memory>
+#include <unordered_set>
+#include <set>
 #include <cassert>
-#include <optional>
+#include <vector>
 
 #include "bounds.h"
 #include "cgt_basics.h"
@@ -18,6 +20,7 @@
 #include "database.h"
 #include "sumgame_helpers.h"
 #include "thermograph_builder_no_db.h"
+#include "ThGraph.h"
 #include "utilities.h"
 
 using namespace std;

@@ -11,7 +11,6 @@
 
 #include <iostream>
 #include <cassert>
-#include <stdexcept>
 
 using std::cout;
 using std::endl;

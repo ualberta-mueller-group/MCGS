@@ -1,7 +1,12 @@
 #pragma once
 
+#include <type_traits>
+#include <cstdint>
+
 #include "serializer.h"
+#include "iobuffer.h"
 #include "bounds.h"
+#include "cgt_basics.h"
 
 template <>
 struct serializer<game_bounds>
