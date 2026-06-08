@@ -345,8 +345,6 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
 
     {
         ThGraph* graph = db_make_thermograph(*this, sum, silent);
-
-#warning TODO remove this check?
         graph->Check();
 
         assert(!entry->thermograph); // Ensure we don't generate the entry twice

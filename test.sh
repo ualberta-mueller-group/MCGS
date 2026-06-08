@@ -34,7 +34,7 @@ clear_screen
 build_mcgs
 clear_screen
 
-#run_perf "$CMD1"
+run_perf "$CMD1"
 #run_perf "$CMD2"
 #run_perf "$CMD3"
 #run_perf "$CMD4"
@@ -44,4 +44,4 @@ clear_screen
 #run "$CMD2"
 #run "$CMD3"
 #run "$CMD4"
-run "$CMD5"
+#run "$CMD5"
