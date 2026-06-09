@@ -396,14 +396,16 @@ bool sumgame::all_partisan() const
 
 hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 {
-    return _sumgame_hash.get_global_hash_value(subgames(), to_play());
+    return _sumgame_hash.get_global_hash_value(subgames(), to_play(),
+                                               invalidate_game_hashes);
 }
 
 hash_t sumgame::get_global_hash_for_player(ebw for_player,
                                            bool invalidate_game_hashes) const
 {
     assert(is_empty_black_white(for_player));
-    return _sumgame_hash.get_global_hash_value(subgames(), for_player);
+    return _sumgame_hash.get_global_hash_value(subgames(), for_player,
+                                               invalidate_game_hashes);
 }
 
 void sumgame::print(ostream& str) const
