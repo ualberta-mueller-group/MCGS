@@ -2,7 +2,6 @@
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
 #include <algorithm>
-#include <numeric>
 #include <utility>
 #include <optional>
 #include <ctime>
@@ -22,6 +21,7 @@
 #include "integral_conversion.h"
 #include "global_database.h"
 #include "random.h"
+#include "safe_arithmetic.h"
 #include "search_graph_debug.h"
 #include "game.h"
 #include "cgt_dyadic_rational.h"
@@ -39,6 +39,8 @@
 #include "utilities.h"
 #include "ThGraph.h"
 #include "ThValue.h"
+
+constexpr bool PRINT_SUBGAMES = false;
 
 using namespace sumgame_impl;
 using namespace std;
@@ -138,7 +140,6 @@ ebw analyze_bounds(bound_t lower_rational, bound_t upper_rational,
     if (upper_rational < 0)
         return WHITE;
 
-
     if (lower_rational == 0 && upper_rational == 0)
     {
         if (lower_ups > 0)
@@ -150,13 +151,48 @@ ebw analyze_bounds(bound_t lower_rational, bound_t upper_rational,
     return EMPTY;
 }
 
+/*
+    Puts hottest games first, then games without temperatures.
+*/
+class game_pair_sort
+{
+public:
+    game_pair_sort(const temperature_vec_t& temperatures)
+        : _temperatures(temperatures)
+    {
+    }
+
+    bool operator()(const pair<int, const game*>& game_pair_1,
+                    const pair<int, const game*>& game_pair_2) const
+    {
+        const optional<ThValue>& temp1 = _temperatures[game_pair_1.first];
+        const optional<ThValue>& temp2 = _temperatures[game_pair_2.first];
+
+        if (temp1.has_value())
+        {
+            if (!temp2.has_value())
+                return true;
+
+            return *temp1 > *temp2;
+        }
+
+        return false;
+    };
+
+private:
+    const temperature_vec_t& _temperatures;
+};
+
 } // namespace
 
 ////////////////////////////////////////////////// sumgame methods
+sumgame::sumgame(bw color)
+    : alternating_move_game(color), _need_cgt_simplify(true)
+{
+}
+
 sumgame::~sumgame()
 {
-    // todo delete subgames, or store in vector of unique_ptr
-    // assert(_play_record_stack.empty());
 }
 
 void sumgame::add(game* g)
@@ -172,12 +208,11 @@ void sumgame::add(game* g)
         _need_cgt_simplify = true;
 }
 
-void sumgame::add(vector<game*>& gs)
+
+void sumgame::add(const std::vector<game*>& games)
 {
-    for (game* g : gs)
-    {
+    for (game* g : games)
         add(g);
-    }
 }
 
 void sumgame::pop(const game* g)
@@ -187,13 +222,254 @@ void sumgame::pop(const game* g)
     _subgames.pop_back();
 }
 
-void sumgame::pop(const vector<game*>& gs)
+void sumgame::pop(const std::vector<game*>& games)
 {
-    for (auto it = gs.rbegin(); it != gs.rend(); it++)
+    for (auto it = games.rbegin(); it != games.rend(); it++)
         pop(*it);
 }
 
-const bool PRINT_SUBGAMES = false;
+game* sumgame::subgame(int i) const
+{
+    return _subgames[i];
+}
+
+const game* sumgame::subgame_const(int i) const
+{
+    return _subgames[i];
+}
+
+const std::vector<game*>& sumgame::subgames() const
+{
+    return _subgames;
+}
+
+sumgame_move_generator* sumgame::create_sum_move_generator(bw to_play) const
+{
+    return new sumgame_move_generator(*this, to_play, nullptr, nullptr);
+}
+
+void sumgame::play_sum(const sumgame_move& sm, bw to_play)
+{
+    assert(is_black_white(to_play));
+
+    _push_undo_code(SUMGAME_UNDO_PLAY);
+
+    _play_record_stack.push_back(play_record(sm));
+    play_record& record = _play_record_stack.back();
+
+    const int subg = sm.subgame_idx;
+    const ::move mv = sm.m;
+
+    game* g = subgame(subg);
+    assert(g->is_active());
+
+    g->play(mv, to_play);
+    split_result sr;
+
+    if (global::play_split())
+        sr = g->split();
+
+    if (sr) // split changed the sum
+    {
+        assert(global::play_split());
+        record.split_g = true;
+
+        // Don't normalize g, it's no longer part of the sum
+        g->set_active(false);
+        record.deactivated_g = true;
+
+        for (game* gp : *sr)
+        {
+            if (global::play_normalize())
+                gp->normalize();
+
+            add(gp);
+            record.add_game(gp); // save these games in the record for debugging
+        }
+    }
+    else
+    {
+        // TODO has_moves() is maybe slow...
+        if (!g->has_moves())
+        {
+            g->set_active(false);
+            record.deactivated_g = true;
+        }
+        else
+        {
+            if (global::play_normalize())
+                g->normalize();
+        }
+    }
+
+    alternating_move_game::play(mv);
+}
+
+void sumgame::undo_move()
+{
+    _pop_undo_code(SUMGAME_UNDO_PLAY);
+
+    play_record& record = _play_record_stack.back();
+
+    const sumgame_move& sm = record.sm;
+    const int subg = sm.subgame_idx;
+    game* s = subgame(subg);
+
+    // undo split (if necessary)
+    if (record.split_g)
+    {
+        assert(global::play_split());
+        assert(
+            !s->is_active() &&
+            record.deactivated_g); // should have been deactivated on last split
+
+        s->set_active(true);
+
+        for (auto it = record.new_games.rbegin(); it != record.new_games.rend();
+             it++)
+        {
+            game const* g = *it;
+            assert(g->is_active());
+
+            // No need for g->undo_normalize() -- g is being deleted
+            pop(g);
+            delete g;
+        }
+    }
+    else
+    {
+        assert(s->is_active() == !record.deactivated_g);
+
+        if (record.deactivated_g)
+            s->set_active(true);
+        else if (global::play_normalize())
+            s->undo_normalize();
+    }
+
+    const ::move subm = cgt_move::remove_color(s->last_move());
+
+    assert(                                                            //
+        sm.m == subm ||                                                //
+        (                                                              //
+            (s->game_type() == game_type<impartial_game_wrapper>()) && //
+            (cgt_move::remove_color(sm.m) == subm)                     //
+            )                                                          //
+    );                                                                 //
+
+    s->undo_move();
+    alternating_move_game::undo_move();
+
+    _play_record_stack.pop_back();
+}
+
+int sumgame::num_total_games() const
+{
+    return static_cast<int>(_subgames.size());
+}
+
+int sumgame::num_active_games() const
+{
+    int active = 0;
+    for (const game* g : _subgames)
+        if (g->is_active())
+            ++active;
+    return active;
+}
+
+bool sumgame::is_empty() const
+{
+    for (const game* g : _subgames)
+        if (g->is_active())
+            return false;
+    return true;
+}
+
+bool sumgame::all_impartial() const
+{
+    return all_games_impartial(_subgames);
+}
+
+bool sumgame::all_partisan() const
+{
+    return all_games_partisan(_subgames);
+}
+
+hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
+{
+    return _sumgame_hash.get_global_hash_value(subgames(), to_play());
+}
+
+hash_t sumgame::get_global_hash_for_player(ebw for_player,
+                                           bool invalidate_game_hashes) const
+{
+    assert(is_empty_black_white(for_player));
+    return _sumgame_hash.get_global_hash_value(subgames(), for_player);
+}
+
+void sumgame::print(ostream& str) const
+{
+    str << "sumgame: " << num_total_games() << " total " << num_active_games()
+        << " active: ";
+    bool first = true;
+    for (auto g : _subgames)
+        if (g->is_active())
+        {
+            if (first)
+                first = false;
+            else
+                str << ' ';
+            g->print(str);
+        }
+    str << endl;
+}
+
+void sumgame::print_simple(ostream& os) const
+{
+    os << color_to_player_char(to_play());
+
+    const int n_games = num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        const game* sg = subgame_const(i);
+        if (!sg->is_active())
+            continue;
+
+        os << " " << *sg;
+    }
+
+    os << flush;
+}
+
+void sumgame::print_sorted(ostream& str) const
+{
+    vector<const game*> active_games;
+
+    const int n_games = num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        const game* g = subgame(i);
+        if (!g->is_active())
+            continue;
+
+        active_games.push_back(g);
+    }
+
+    auto sort_fn = [](const game* g1, const game* g2) -> bool
+    {
+        return g1->get_local_hash() < g2->get_local_hash();
+    };
+
+    sort(active_games.begin(), active_games.end(), sort_fn);
+
+    const size_t n_active = active_games.size();
+    for (size_t i = 0; i < n_active; i++)
+    {
+        const game* g = active_games[i];
+        str << *g << " ";
+    }
+
+    str << flush;
+}
 
 // Solve combinatorial game - find winner
 // Game-independent implementation of boolean minimax,
@@ -207,68 +483,6 @@ bool sumgame::solve() const
     assert(result.has_value());
 
     return result.value().win;
-}
-
-optional<solve_result> sumgame::solve_with_timeout(
-    unsigned long long timeout) const
-{
-    timeout_source src;
-    timeout_token tok = src.get_timeout_token();
-
-    src.start_timeout(timeout);
-    optional<solve_result> result = solve_with_timeout_token(tok, INITIAL_SEARCH_DEPTH);
-    src.cancel_timeout();
-
-    return result;
-}
-
-optional<solve_result> sumgame::solve_with_timeout_token(
-    const timeout_token& timeout_tok, uint64_t depth) const
-{
-    assert_restore_sumgame ars(*this);
-    sumgame& sum = const_cast<sumgame&>(*this);
-
-    // Set up timeout_token
-    assert(!sum._timeout_tok.has_value());
-    sum._timeout_tok = timeout_tok;
-
-    sum._pre_solve_pass();
-
-    assert(sum.num_active_games() >= 0);
-
-    _need_cgt_simplify = true;
-
-    optional<solve_result> result = sum._solve_impl(depth);
-
-    sum._undo_pre_solve_pass();
-
-    sum._timeout_tok.reset();
-
-    return result;
-}
-
-bool sumgame::solve_with_games(vector<game*>& gs) const
-{
-    assert_restore_sumgame ars(*this);
-    sumgame& sum = const_cast<sumgame&>(*this);
-
-    for (game* g : gs)
-    {
-        sum.add(g);
-    }
-
-    bool result = solve();
-
-    const size_t N = gs.size();
-    for (size_t i = 0; i < N; i++)
-    {
-        game* back = sum._pop_game();
-        game* g = gs[N - 1 - i];
-
-        assert(back == g);
-    }
-
-    return result;
 }
 
 bool sumgame::solve_with_games(game* g) const
@@ -286,115 +500,629 @@ bool sumgame::solve_with_games(game* g) const
     return result;
 }
 
-optional<solve_result> sumgame::_solve_impl(uint64_t depth)
+bool sumgame::solve_with_games(const vector<game*>& games) const
 {
+    assert_restore_sumgame ars(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+    for (game* g : games)
+        sum.add(g);
+
+    bool result = solve();
+
+    const size_t N = games.size();
+    for (size_t i = 0; i < N; i++)
+    {
+        game* back = sum._pop_game();
+        game* g = games[N - 1 - i];
+
+        assert(back == g);
+    }
+
+    return result;
+}
+
+optional<solve_result> sumgame::solve_with_timeout(
+    unsigned long long timeout) const
+{
+    timeout_source src;
+    timeout_token tok = src.get_timeout_token();
+
+    src.start_timeout(timeout);
+    optional<solve_result> result =
+        solve_with_timeout_token(tok, INITIAL_SEARCH_DEPTH);
+    src.cancel_timeout();
+
+    return result;
+}
+
+optional<solve_result> sumgame::solve_with_timeout_token(
+    const timeout_token& timeout_tok, uint64_t depth) const
+{
+    assert_restore_sumgame ars(*this);
+    sumgame& sum = const_cast<sumgame&>(*this);
+
+    // Set up timeout_token
+    assert(!sum._timeout_tok.has_value());
+    sum._timeout_tok = timeout_tok;
+
+    sum._pre_solve_pass();
+
+    _need_cgt_simplify = true;
+
+    optional<solve_result> result = sum._solve_impl(depth);
+
+    sum._undo_pre_solve_pass();
+
+    sum._timeout_tok.reset();
+
+    return result;
+}
+
+void sumgame::simplify_basic()
+{
+    if (!global::simplify_basic_cgt())
+        return;
+
+    if (!_need_cgt_simplify)
+        return;
+
+    _change_record_stack.emplace_back();
+    change_record& record = _change_record_stack.back();
+
 #ifdef SUMGAME_DEBUG
-    _debug_extra();
-    assert_restore_sumgame ars(*this); // must come before the stack unwinder
+    const hash_t hash_before = get_global_hash();
 #endif
 
-    undo_stack_unwinder stack_unwinder(*this);
-    sgraph::push(*this);
+    record.simplify_basic(*this);
+    _need_cgt_simplify = false;
 
-    if (_over_time())
-        return solve_result::invalid();
+#ifdef SUMGAME_DEBUG
+    const hash_t hash_after = get_global_hash();
+    assert((hash_before == hash_after) == record.no_change());
+#endif
 
-
-    stats::report_search_node(*this, to_play(), depth);
-    const uint64_t next_depth = depth + 1; // for after a move is played
-
-    if (PRINT_SUBGAMES)
+    if (record.no_change())
     {
-        cout << "solve sum ";
-        print(cout);
+        _change_record_stack.pop_back();
+        return;
     }
 
+    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
+}
 
-    temp_vec_opt_t temperatures;
+void sumgame::undo_simplify_basic()
+{
+    if (!global::simplify_basic_cgt())
+        return;
 
+    _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
+
+    _need_cgt_simplify = true;
+
+    assert(!_change_record_stack.empty());
+    change_record& record = _change_record_stack.back();
+    record.undo_simplify_basic(*this);
+
+    _change_record_stack.pop_back();
+}
+
+/*
+    Extracts data from the DB entries of partisan subgames. Also deactivates
+    games with outcome_class::P, and uses outcome classes and bounds to solve
+    the sum.
+
+    When the sum is not solved, `temperatures` and `dom_objects` may or may not
+    be empty. When not empty, they are indexable by subgame index and have size
+    `num_total_games()`.
+
+    - Adds up bounds on scales BOUND_SCALE_UP and BOUND_SCALE_DYADIC_RATIONAL.
+        The bound sum is invalidated in the following cases:
+
+        1. A partisan game has no DB entry, or its entry has no bounds, or the
+            bounds are on a different scale.
+
+        2. Bound addition would overflow.
+
+        3. When an impartial game is active, the UP component of the sum is
+            zeroed before use (though the RATIONAL component is still valid).
+*/
+optional<solve_result> sumgame::db_lookup_pass(temperature_vec_t& temperatures,
+                                               dom_object_vec_t& dom_objects)
+{
+    assert(temperatures.empty() && dom_objects.empty());
+    _push_undo_code(SUMGAME_UNDO_DB_LOOKUP_PASS);
+
+    if (!global::use_db())
+        return {};
+
+    _change_record_stack.emplace_back();
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    const int N_SUBGAMES = num_total_games();
+
+    database& db = get_global_database();
+
+    bound_t lower_bound_ups = 0;
+    bound_t upper_bound_ups = 0;
+
+    bound_t lower_bound_rationals = 0;
+    bound_t upper_bound_rationals = 0;
+
+    bool bounds_valid = true;
+    bool at_least_one_impartial = false;
+
+    vector<unsigned int> oc_counts = get_oc_indexable_vector();
+
+    // Search all active games
+    for (int subgame_idx = 0; subgame_idx < N_SUBGAMES; subgame_idx++)
     {
-        //simplify_impartial();
+        game* g = subgame(subgame_idx);
+        if (!g->is_active())
+            continue;
 
-        db_replacement_pass();
-        simplify_basic();
+        // Get g's outcome class
+        outcome_class oc = outcome_class::U;
 
-        optional<solve_result> result = simplify_db(temperatures);
-
-        if (result.has_value())
+        if (g->is_impartial())
         {
-            sgraph::pop_winloss(result->win);
-            return result;
-        }
-    }
-
-
-
-    /*      NOTE:
-       This is sort of a nested optional. If sumgame's ttable is disabled (i.e.
-       it uses 0 index bits), then tt_result doesn't hold a search_result.
-
-       If tt_result holds a search_result, the queried hash may still be a miss.
-    */
-    optional<ttable_sumgame::search_result> tt_result =
-        _do_ttable_lookup();
-
-    if (tt_result.has_value() && tt_result->entry_valid())
-    {
-        const bool win = tt_result->get_bool(0);
-        sgraph::pop_winloss(win);
-        return win;
-    }
-
-    const bw toplay = to_play();
-
-    unique_ptr<sumgame_move_generator> mgp(
-        create_sum_move_generator(toplay, temperatures));
-
-    sumgame_move_generator& mg = *mgp;
-
-    for (; mg; ++mg)
-    {
-        const sumgame_move m = mg.gen_sum_move();
-        play_sum(m, toplay);
-
-        solve_result result(false);
-
-        bool found = find_static_winner(result.win);
-
-        if (!found)
-        {
-            optional<solve_result> child_result = _solve_impl(next_depth);
-
-            if (!child_result.has_value() || _over_time())
-                return solve_result::invalid();
-
-            result.win = not child_result.value().win;
-        }
-
-        undo_move();
-
-        if (result.win)
-        {
-            if (tt_result.has_value())
+            /*
+               Because db_replacement_pass() should be called prior to this
+               function, one of the following must hold:
+                   1. g is a nimber
+                   2. g is not a nimber, AND is not in the database
+            */
+            if (g->game_type() == game_type<nimber>())
             {
-                tt_result->init_entry();
-                tt_result->set_bool(0, result.win);
+                assert(dynamic_cast<nimber*>(g) != nullptr);
+                nimber* g_nimber = static_cast<nimber*>(g);
+
+                const int g_nim_value = g_nimber->value();
+                assert(g_nim_value >= 0);
+
+                oc = (g_nim_value == 0) ? outcome_class::P : outcome_class::N;
             }
 
-            sgraph::pop_winloss(result.win);
-            return result;
+            if (oc != outcome_class::P)
+                at_least_one_impartial = true;
+        }
+        else
+        {
+            const db_entry_partisan* entry = db.get_partisan_ptr(*g);
+            const bool has_value = entry != nullptr;
+            stats::report_db_access(has_value);
+
+            if (!has_value)
+            {
+                bounds_valid = false;
+            }
+            else
+            {
+                // Use outcome
+                oc = entry->outcome;
+
+                // Use thermograph
+                const shared_ptr<ThGraph>& entry_graph = entry->thermograph;
+
+                if (entry_graph)
+                {
+                    if (temperatures.empty())
+                        temperatures.resize(N_SUBGAMES);
+
+                    optional<ThValue>& g_temp = temperatures[subgame_idx];
+                    g_temp = entry_graph->Temperature();
+                }
+
+                // Use dominated moves
+                const shared_ptr<db_dom_moves_t>& entry_dom_object = entry->dominated_moves;
+
+                if (entry_dom_object)
+                {
+                    if (dom_objects.empty())
+                        dom_objects.resize(N_SUBGAMES);
+
+                    shared_ptr<const db_dom_moves_t>& g_dom_obj = dom_objects[subgame_idx];
+                    g_dom_obj = entry_dom_object;
+                }
+
+                // Use bounds
+                if (!(bounds_valid && entry->bounds_data && entry->bounds_data->both_valid()))
+                    bounds_valid = false;
+                else
+                {
+                    const game_bounds& bounds = *entry->bounds_data;
+                    const bound_scale scale = bounds.get_scale();
+
+                    THROW_ASSERT(bounds.get_lower_relation() == REL_LESS &&
+                                 bounds.get_upper_relation() == REL_GREATER);
+
+                    switch (scale)
+                    {
+                        case BOUND_SCALE_UP:
+                        {
+                            bounds_valid &= safe_add(lower_bound_ups, bounds.get_lower());
+                            bounds_valid &= safe_add(upper_bound_ups, bounds.get_upper());
+                            break;
+                        }
+
+                        case BOUND_SCALE_DYADIC_RATIONAL:
+                        {
+                            bounds_valid &= safe_add(lower_bound_rationals, bounds.get_lower());
+                            bounds_valid &= safe_add(upper_bound_rationals, bounds.get_upper());
+                            break;
+                        }
+
+                        case BOUND_SCALE_UP_STAR:
+                        {
+                            bounds_valid = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        oc_counts[oc]++;
+
+        if (oc == outcome_class::P)
+        {
+            assert(g->is_active());
+            g->set_active(false);
+            cr.deactivated_games.push_back(g);
         }
     }
 
-    if (tt_result.has_value())
+    if (bounds_valid)
     {
-        tt_result->init_entry();
-        tt_result->set_bool(0, false);
+        if (at_least_one_impartial)
+        {
+            // Can't use infinitesimal part of bounds
+            lower_bound_ups = 0;
+            upper_bound_ups = 0;
+        }
+
+        const ebw bounds_winner =
+            analyze_bounds(lower_bound_rationals, upper_bound_rationals,
+                           lower_bound_ups, upper_bound_ups);
+
+        if (bounds_winner != EMPTY)
+            return solve_result(bounds_winner == to_play());
     }
 
+    const ebw outcome_winner = analyze_outcome_count_vector(oc_counts, to_play());
 
-    sgraph::pop_winloss(false);
-    return solve_result(false);
+    if (outcome_winner != EMPTY)
+        return solve_result(outcome_winner == to_play());
+
+    return {};
+}
+
+void sumgame::undo_db_lookup_pass()
+{
+    _pop_undo_code(SUMGAME_UNDO_DB_LOOKUP_PASS);
+
+    if (!global::use_db())
+        return;
+
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+    assert(cr.added_games.empty());
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+
+    cr.deactivated_games.clear();
+    _change_record_stack.pop_back();
+}
+
+void sumgame::split_and_normalize()
+{
+    _push_undo_code(SUMGAME_UNDO_SPLIT_AND_NORMALIZE);
+    _change_record_stack.emplace_back();
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    const int n_games = num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        game* g = subgame(i);
+        if (!g->is_active())
+            continue;
+
+        split_result sr = g->split();
+
+        if (sr)
+        {
+            g->set_active(false);
+            cr.deactivated_games.push_back(g);
+
+            for (game* sg : *sr)
+            {
+                sg->normalize();
+                // actually add later
+                cr.added_games.push_back(sg);
+                assert(sg->has_moves());
+            }
+        }
+        else
+        {
+            if (!g->has_moves())
+            {
+                g->set_active(false);
+                cr.deactivated_games.push_back(g);
+            }
+            else
+            {
+                g->normalize();
+                cr.normalized_games.push_back(g);
+            }
+        }
+    }
+
+    add(cr.added_games);
+}
+
+void sumgame::undo_split_and_normalize()
+{
+    _pop_undo_code(SUMGAME_UNDO_SPLIT_AND_NORMALIZE);
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    pop(cr.added_games);
+    for (game* sg : cr.added_games)
+        delete sg;
+    cr.added_games.clear();
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+    cr.deactivated_games.clear();
+
+    for (game* g : cr.normalized_games)
+    {
+        assert(g->is_active());
+        g->undo_normalize();
+    }
+    cr.normalized_games.clear();
+
+    _change_record_stack.pop_back();
+}
+
+/*
+   1. nim-add impartial games which are nimbers or have DB entries
+   2. Replace partisan games with their bound games (when they're equal)
+*/
+void sumgame::db_replacement_pass()
+{
+    _push_undo_code(SUMGAME_UNDO_DB_REPLACEMENT_PASS);
+
+    if (!global::use_db())
+        return;
+
+    database& db = get_global_database();
+
+    // Push record
+    _change_record_stack.emplace_back();
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    int n_known_imp = 0; // nimbers and impartial_games
+    int n_known_imp_non_nimber = 0; // known values which are not nimbers
+    int final_nim_sum = 0;
+    vector<game*> deactivated_impartial_games; // deactivation is deferred
+
+    const int N_SUBGAMES = num_total_games();
+    for (int i = 0; i < N_SUBGAMES; i++)
+    {
+        game* sg = subgame(i);
+        if (!sg->is_active())
+            continue;
+
+        if (sg->is_impartial())
+        {
+            assert(dynamic_cast<impartial_game*>(sg) != nullptr);
+
+            // Don't need to look up nimber
+            if (sg->game_type() == game_type<nimber>())
+            {
+                assert(dynamic_cast<nimber*>(sg) != nullptr);
+                nimber* sg_nimber = static_cast<nimber*>(sg);
+
+                n_known_imp++;
+                nimber::add_nimber(final_nim_sum, sg_nimber->value());
+
+                // Actually deactivate later
+                deactivated_impartial_games.push_back(sg_nimber);
+                continue;
+            }
+
+            assert(dynamic_cast<nimber*>(sg) == nullptr);
+
+            optional<db_entry_impartial> entry = db.get_impartial(*sg);
+            stats::report_db_access(entry.has_value());
+
+            if (!entry.has_value())
+                continue;
+
+            n_known_imp++;
+            n_known_imp_non_nimber++;
+
+            const int entry_nimber = entry->nim_value;
+            assert(entry_nimber >= 0);
+
+            // Actually deactivate later
+            deactivated_impartial_games.push_back(sg);
+            nimber::add_nimber(final_nim_sum, entry_nimber);
+        }
+        else
+        {
+            // sg is partisan
+            const db_entry_partisan* entry = db.get_partisan_ptr(*sg);
+            stats::report_db_access(entry != nullptr);
+
+            if (entry == nullptr)
+                continue;
+
+            if (!entry->bounds_data)
+                continue;
+
+            const game_bounds& bounds = *entry->bounds_data;
+
+            if (!bounds.is_equal())
+                continue;
+
+            game* sg_replacement = get_scale_game(bounds.get_lower(), bounds.get_scale());
+            add(sg_replacement);
+            cr.added_games.push_back(sg_replacement);
+
+            sg->set_active(false);
+            cr.deactivated_games.push_back(sg);
+        }
+    }
+
+    if (n_known_imp >= 2 || n_known_imp_non_nimber > 0)
+    {
+        for (game* sg : deactivated_impartial_games)
+        {
+            assert(sg->is_active());
+            sg->set_active(false);
+            cr.deactivated_games.push_back(sg);
+        }
+
+        if (final_nim_sum != 0)
+        {
+            nimber* nim_sum_as_nimber = new nimber(final_nim_sum);
+
+            add(nim_sum_as_nimber);
+            cr.added_games.push_back(nim_sum_as_nimber);
+        }
+    }
+}
+
+void sumgame::undo_db_replacement_pass()
+{
+    _pop_undo_code(SUMGAME_UNDO_DB_REPLACEMENT_PASS);
+
+    if (!global::use_db())
+        return;
+
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    for (game* g : cr.added_games)
+        assert(g->is_active());
+
+    pop(cr.added_games);
+    for (game* g : cr.added_games)
+        delete g;
+
+    cr.added_games.clear();
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+    cr.deactivated_games.clear();
+
+    _change_record_stack.pop_back();
+}
+
+optional<sumgame_move> sumgame::get_winning_or_random_move(
+    bw for_player) const
+{
+    assert(is_black_white(for_player));
+    assert_restore_sumgame ars(*this);
+
+    const bw prev_player = to_play();
+
+    sumgame& sum = const_cast<sumgame&>(*this);
+    sum.set_to_play(for_player);
+
+    unique_ptr<sumgame_move_generator> gen(
+        sum.create_sum_move_generator(for_player));
+
+    vector<sumgame_move> moves;
+
+    while (*gen)
+    {
+        moves.emplace_back(gen->gen_sum_move());
+        const sumgame_move& sm = moves.back();
+        ++(*gen);
+
+        assert(sum.to_play() == for_player);
+        sum.play_sum(sm, for_player);
+        assert(sum.to_play() == ::opponent(for_player));
+        bool opp_loss = !sum.solve();
+        sum.undo_move();
+
+        if (opp_loss)
+        {
+            sum.set_to_play(prev_player);
+            return sm;
+        }
+    }
+
+    sum.set_to_play(prev_player);
+
+    if (moves.empty())
+        return {};
+
+    // TODO: random_generator should work for arbitrary types...
+    const uint32_t choice = get_global_rng().get_u32(0, moves.size() - 1);
+    return moves[choice];
+}
+
+void sumgame::init_sumgame(size_t index_bits)
+{
+    assert(basic_cgt_type_set.empty());
+    basic_cgt_type_set.insert(game_type<dyadic_rational>());
+    basic_cgt_type_set.insert(game_type<integer_game>());
+    basic_cgt_type_set.insert(game_type<nimber>());
+    basic_cgt_type_set.insert(game_type<switch_game>());
+    basic_cgt_type_set.insert(game_type<up_star>());
+
+    // Now initialize ttable
+    if (global::tt_sumgame_idx_bits() == 0)
+        return;
+
+    assert(_tt.get() == nullptr); // Not already initialized
+    _tt.reset(new ttable_sumgame(index_bits, 1));
+}
+
+void sumgame::clear_ttable()
+{
+    assert(global::clear_tt());
+
+    if (_tt.get() == nullptr)
+    {
+        assert(global::tt_sumgame_idx_bits() == 0);
+        return;
+    }
+
+    _tt->clear();
+}
+
+hash_t sumgame::game_hash() const
+{
+    return get_global_hash();
+}
+
+bool sumgame::_over_time() const
+{
+    if (_timeout_tok.has_value())
+        return _timeout_tok->stop_requested();
+    return false;
+}
+
+game* sumgame::_pop_game()
+{
+    assert(!_subgames.empty());
+
+    game* back = _subgames.back();
+    _subgames.pop_back();
+
+    return back;
 }
 
 void sumgame::_push_undo_code(sumgame_undo_code code)
@@ -407,46 +1135,6 @@ void sumgame::_pop_undo_code(sumgame_undo_code code)
     assert(!_undo_code_stack.empty());
     assert(_undo_code_stack.back() == code);
     _undo_code_stack.pop_back();
-}
-
-optional<ttable_sumgame::search_result> sumgame::_do_ttable_lookup() const
-{
-    if (global::tt_sumgame_idx_bits() == 0)
-        return {};
-
-    assert(_tt != nullptr);
-
-    const hash_t current_hash = get_global_hash();
-
-    ttable_sumgame::search_result sr = _tt->search(current_hash);
-    stats::report_tt_access(sr.entry_valid());
-
-    return sr;
-}
-
-void sumgame::_debug_extra() const
-{
-    _assert_games_unique();
-}
-
-void sumgame::_assert_games_unique() const
-{
-    unordered_set<game*> game_set;
-
-    const size_t n_games = num_total_games();
-    for (size_t i = 0; i < n_games; i++)
-    {
-        game* g = subgame(i);
-        auto it = game_set.insert(g);
-        assert(it.second == true);
-    }
-}
-
-bool sumgame::_over_time() const
-{
-    if (_timeout_tok.has_value())
-        return _timeout_tok->stop_requested();
-    return false;
 }
 
 void sumgame::_pre_solve_pass()
@@ -523,839 +1211,149 @@ void sumgame::_undo_pre_solve_pass()
     _change_record_stack.pop_back();
 }
 
-game* sumgame::_pop_game()
+optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 {
-    assert(!_subgames.empty());
+#ifdef SUMGAME_DEBUG
+    _debug_extra();
+    assert_restore_sumgame ars(*this); // must come before the stack unwinder
+#endif
 
-    game* back = _subgames.back();
-    _subgames.pop_back();
+    undo_stack_unwinder stack_unwinder(*this);
+    sgraph::push(*this);
 
-    return back;
-}
+    if (_over_time())
+        return solve_result::invalid();
 
-void sumgame::play_sum(const sumgame_move& sm, bw to_play)
-{
-    assert(is_black_white(to_play));
 
-    _push_undo_code(SUMGAME_UNDO_PLAY);
+    stats::report_search_node(*this, to_play(), depth);
+    const uint64_t next_depth = depth + 1; // for after a move is played
 
-    _play_record_stack.push_back(play_record(sm));
-    play_record& record = _play_record_stack.back();
-
-    const int subg = sm.subgame_idx;
-    const ::move mv = sm.m;
-
-    game* g = subgame(subg);
-
-    g->play(mv, to_play);
-    split_result sr;
-
-    if (global::play_split())
-        sr = g->split();
-
-    if (sr) // split changed the sum
+    if (PRINT_SUBGAMES)
     {
-        assert(global::play_split());
-        record.did_split = true;
+        cout << "solve sum ";
+        print(cout);
+    }
 
-        // Don't normalize g, it's no longer part of the sum
-        g->set_active(false);
-        record.deactivated_g = true;
+    temperature_vec_t temperatures;
+    dom_object_vec_t dom_move_objects;
 
-        for (game* gp : *sr)
+    {
+        db_replacement_pass();
+        simplify_basic();
+
+        optional<solve_result> result =
+            db_lookup_pass(temperatures, dom_move_objects);
+
+        if (result.has_value())
         {
-            if (global::play_normalize())
-                gp->normalize();
-
-            add(gp);
-            record.add_game(gp); // save these games in the record for debugging
+            sgraph::pop_winloss(result->win);
+            return result;
         }
     }
-    else
-    {
-        if (global::play_normalize())
-        {
-            g->normalize();
 
-            // TODO has_moves() is maybe slow...
-            if (!g->has_moves())
+    /*      NOTE:
+       This is sort of a nested optional. If sumgame's ttable is disabled (i.e.
+       it uses 0 index bits), then tt_result doesn't hold a search_result.
+
+       If tt_result holds a search_result, the queried hash may still be a miss.
+    */
+    optional<ttable_sumgame::search_result> tt_result =
+        _do_ttable_lookup();
+
+    if (tt_result.has_value() && tt_result->entry_valid())
+    {
+        const bool win = tt_result->get_bool(0);
+        sgraph::pop_winloss(win);
+        return win;
+    }
+
+    const bw toplay = to_play();
+
+    unique_ptr<sumgame_move_generator> mgp =
+        make_unique<sumgame_move_generator>(*this, toplay, &temperatures,
+                                            &dom_move_objects);
+
+    sumgame_move_generator& mg = *mgp;
+
+    for (; mg; ++mg)
+    {
+        const sumgame_move m = mg.gen_sum_move();
+        play_sum(m, toplay);
+
+        solve_result result(false);
+
+        bool found = find_static_winner(result.win);
+
+        if (!found)
+        {
+            optional<solve_result> child_result = _solve_impl(next_depth);
+
+            if (!child_result.has_value() || _over_time())
+                return solve_result::invalid();
+
+            result.win = not child_result.value().win;
+        }
+
+        undo_move();
+
+        if (result.win)
+        {
+            if (tt_result.has_value())
             {
-                g->set_active(false);
-                record.deactivated_g = true;
-            }
-        }
-
-    }
-
-    alternating_move_game::play(mv);
-}
-
-void sumgame::undo_move()
-{
-    _pop_undo_code(SUMGAME_UNDO_PLAY);
-
-    play_record& record = _play_record_stack.back();
-
-    const sumgame_move sm = record.sm;
-    const int subg = sm.subgame_idx;
-    game* s = subgame(subg);
-
-    // undo split (if necessary)
-    if (record.did_split)
-    {
-        assert(global::play_split());
-        assert(
-            !s->is_active() &&
-            record.deactivated_g); // should have been deactivated on last split
-
-        s->set_active(true);
-
-        for (auto it = record.new_games.rbegin(); it != record.new_games.rend();
-             it++)
-        {
-            game const* g = *it;
-            // ensure we're deleting the same game that was added earlier
-            assert(g == _subgames.back());
-            // a previous undo should have reactivated g
-            assert(_subgames.back()->is_active());
-
-            // No need for g->undo_normalize() -- g is being deleted
-            pop(g);
-            delete g;
-        }
-    }
-    else
-    {
-        if (global::play_normalize())
-        {
-            if (record.deactivated_g)
-                s->set_active(true);
-
-            s->undo_normalize();
-        }
-    }
-
-    const ::move subm = cgt_move::remove_color(s->last_move());
-
-    assert(                                                         //
-        sm.m == subm ||                                             //
-        (                                                           //
-            (cgt_move::remove_color(sm.m) == subm) &&                     //
-            (s->game_type() == game_type<impartial_game_wrapper>()) //
-            )                                                       //
-    );                                                              //
-
-    s->undo_move();
-    alternating_move_game::undo_move();
-
-    _play_record_stack.pop_back();
-}
-
-void sumgame::simplify_basic()
-{
-    if (!global::simplify_basic_cgt())
-        return;
-
-    if (!_need_cgt_simplify)
-        return;
-
-    _change_record_stack.emplace_back();
-    change_record& record = _change_record_stack.back();
-
-    record.simplify_basic(*this);
-    _need_cgt_simplify = false;
-
-    if (record.no_change())
-    {
-        _change_record_stack.pop_back();
-        return;
-    }
-
-    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
-}
-
-void sumgame::undo_simplify_basic()
-{
-    if (!global::simplify_basic_cgt())
-        return;
-
-    _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_BASIC);
-
-    _need_cgt_simplify = true;
-
-    assert(!_change_record_stack.empty());
-    change_record& record = _change_record_stack.back();
-    record.undo_simplify_basic(*this);
-
-    _change_record_stack.pop_back();
-}
-
-void sumgame::simplify_impartial()
-{
-    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_IMPARTIAL);
-
-    if (!global::use_db())
-        return;
-
-    database& db = get_global_database();
-
-    // Push record
-    _change_record_stack.emplace_back();
-    sumgame_impl::change_record& cr = _change_record_stack.back();
-
-    int n_known_values = 0; // nimbers and impartial_games
-    int n_known_non_nimbers = 0; // known values which are not nimbers
-
-    int final_nim_sum = 0;
-
-    const int N_SUBGAMES = num_total_games();
-    for (int i = 0; i < N_SUBGAMES; i++)
-    {
-        game* sg = subgame(i);
-        if (!sg->is_active() || !sg->is_impartial())
-            continue;
-
-        assert(dynamic_cast<impartial_game*>(sg) != nullptr);
-
-        // Don't need to look up nimber
-        if (sg->game_type() == game_type<nimber>())
-        {
-            assert(dynamic_cast<nimber*>(sg) != nullptr);
-            nimber* sg_nimber = static_cast<nimber*>(sg);
-
-            n_known_values++;
-            nimber::add_nimber(final_nim_sum, sg_nimber->value());
-
-            // Actually deactivate later
-            cr.deactivated_games.push_back(sg);
-            continue;
-        }
-
-        assert(dynamic_cast<nimber*>(sg) == nullptr);
-
-        optional<db_entry_impartial> entry = db.get_impartial(*sg);
-        stats::report_db_access(entry.has_value());
-
-        if (!entry.has_value())
-            continue;
-
-        n_known_values++;
-        n_known_non_nimbers++;
-        // Actually deactivate later
-        cr.deactivated_games.push_back(sg);
-        nimber::add_nimber(final_nim_sum, entry.value().nim_value);
-    }
-
-    if (n_known_values < 2 && n_known_non_nimbers == 0)
-    {
-        cr.deactivated_games.clear();
-        assert(cr.added_games.empty());
-        return;
-    }
-
-    for (game* sg : cr.deactivated_games)
-    {
-        assert(sg->is_active());
-        sg->set_active(false);
-    }
-
-    if (final_nim_sum != 0)
-    {
-        nimber* nim_sum_as_nimber = new nimber(final_nim_sum);
-
-        cr.added_games.push_back(nim_sum_as_nimber);
-        add(nim_sum_as_nimber);
-    }
-}
-
-void sumgame::undo_simplify_impartial()
-{
-    _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_IMPARTIAL);
-
-    if (!global::use_db())
-        return;
-
-    sumgame_impl::change_record& cr = _change_record_stack.back();
-
-    for (game* g : cr.added_games)
-        assert(g->is_active());
-
-    pop(cr.added_games);
-    for (game* g : cr.added_games)
-        delete g;
-
-    cr.added_games.clear();
-
-    for (game* g : cr.deactivated_games)
-    {
-        assert(!g->is_active());
-        g->set_active(true);
-    }
-    cr.deactivated_games.clear();
-
-    _change_record_stack.pop_back();
-}
-
-optional<solve_result> sumgame::simplify_db(
-    temp_vec_opt_t& temperatures)
-{
-    assert(!temperatures.has_value());
-    _push_undo_code(SUMGAME_UNDO_SIMPLIFY_DB);
-
-    if (!global::use_db())
-        return {};
-
-    _change_record_stack.emplace_back();
-    sumgame_impl::change_record& cr = _change_record_stack.back();
-
-    database& db = get_global_database();
-
-    bool at_least_one_temp = false;
-    temperatures.emplace();
-    temperatures->resize(num_total_games());
-
-    bound_t lower_bound_ups = 0;
-    bound_t upper_bound_ups = 0;
-
-    bound_t lower_bound_rationals = 0;
-    bound_t upper_bound_rationals = 0;
-
-    bool bounds_valid = true;
-    bool at_least_one_impartial = false;
-
-
-    vector<unsigned int> counts = get_oc_indexable_vector();
-
-    // Search all active games
-    const int N_SUBGAMES = num_total_games();
-    int n_active_games = 0;
-
-    for (int subgame_idx = 0; subgame_idx < N_SUBGAMES; subgame_idx++)
-    {
-        game* g = subgame(subgame_idx);
-        if (!g->is_active())
-            continue;
-
-        n_active_games++;
-
-        // Get g's outcome class
-        outcome_class oc = outcome_class::U;
-
-        if (g->is_impartial())
-        {
-            at_least_one_impartial = true;
-            /*
-               Because simplify_impartial() should be called prior to this
-               function, one of the following must hold:
-                   1. g is a nimber
-                   2. g is not a nimber, AND is not in the database
-            */
-            if (g->game_type() == game_type<nimber>())
-            {
-                assert(dynamic_cast<nimber*>(g) != nullptr);
-                nimber* g_nimber = static_cast<nimber*>(g);
-
-                const int g_nim_value = g_nimber->value();
-                assert(g_nim_value >= 0);
-
-                oc = (g_nim_value == 0) ? outcome_class::P : outcome_class::N;
-            }
-        }
-        else
-        {
-            const db_entry_partisan* entry = db.get_partisan_ptr(*g);
-            const bool has_value = entry != nullptr;
-            stats::report_db_access(has_value);
-
-            if (!has_value)
-            {
-
-                bounds_valid = false;
-            }
-            else
-            {
-                oc = entry->outcome;
-
-                assert(temperatures.has_value());
-                optional<ThValue>& temp = (*temperatures)[subgame_idx];
-                //temp = entry->thermograph->Temperature();
-                const shared_ptr<const ThGraph> graph = entry->thermograph;
-                if (graph)
-                {
-                    temp = graph->Temperature();
-                    at_least_one_temp = true;
-                }
-
-                if (!(bounds_valid && entry->bounds_data))
-                    bounds_valid = false;
-                else
-                {
-                    const game_bounds& bounds = *entry->bounds_data;
-                    const bound_scale scale = bounds.get_scale();
-
-                    if (!bounds.both_valid())
-                        bounds_valid = false;
-                    else
-                    {
-                        assert(bounds.get_lower_relation() == REL_LESS &&
-                                bounds.get_upper_relation() == REL_GREATER);
-
-                        switch (scale)
-                        {
-                            case BOUND_SCALE_UP:
-                            {
-                                lower_bound_ups += bounds.get_lower();
-                                upper_bound_ups += bounds.get_upper();
-                                break;
-                            }
-
-                            case BOUND_SCALE_DYADIC_RATIONAL:
-                            {
-                                lower_bound_rationals += bounds.get_lower();
-                                upper_bound_rationals += bounds.get_upper();
-                                break;
-                            }
-
-                            default:
-                            {
-                                bounds_valid = false;
-                                break;
-                            }
-
-                        }
-                    }
-                }
-            }
-        }
-
-        counts[oc]++;
-
-        if (oc == outcome_class::P)
-        {
-            cr.deactivated_games.push_back(g);
-            assert(g->is_active());
-            g->set_active(false);
-        }
-    }
-
-    assert(accumulate(counts.begin(), counts.end(), 0) == n_active_games);
-
-    if (!at_least_one_temp)
-        temperatures.reset();
-
-    if (bounds_valid)
-    {
-        if (at_least_one_impartial)
-        {
-            lower_bound_ups = 0;
-            upper_bound_ups = 0;
-        }
-
-        const ebw bounds_winner =
-            analyze_bounds(lower_bound_rationals, upper_bound_rationals,
-                           lower_bound_ups, upper_bound_ups);
-
-        if (bounds_winner != EMPTY)
-            return solve_result(bounds_winner == to_play());
-    }
-    const ebw outcome_winner = analyze_outcome_count_vector(counts, to_play());
-
-    if (outcome_winner != EMPTY)
-        return solve_result(outcome_winner == to_play());
-
-    return {};
-
-}
-
-void sumgame::undo_simplify_db()
-{
-    _pop_undo_code(SUMGAME_UNDO_SIMPLIFY_DB);
-
-    if (!global::use_db())
-        return;
-
-    sumgame_impl::change_record& cr = _change_record_stack.back();
-    assert(cr.added_games.empty());
-
-    for (game* g : cr.deactivated_games)
-    {
-        assert(!g->is_active());
-        g->set_active(true);
-    }
-
-    cr.deactivated_games.clear();
-    _change_record_stack.pop_back();
-}
-
-void sumgame::db_replacement_pass()
-{
-    _push_undo_code(SUMGAME_UNDO_DB_REPLACEMENT_PASS);
-
-    if (!global::use_db())
-        return;
-
-    database& db = get_global_database();
-
-    // Push record
-    _change_record_stack.emplace_back();
-    sumgame_impl::change_record& cr = _change_record_stack.back();
-
-    int n_known_imp = 0; // nimbers and impartial_games
-    int n_known_imp_non_nimber = 0; // known values which are not nimbers
-    int final_nim_sum = 0;
-    vector<game*> deactivated_impartial_games; // deactivation is deferred
-
-    const int N_SUBGAMES = num_total_games();
-    for (int i = 0; i < N_SUBGAMES; i++)
-    {
-        game* sg = subgame(i);
-        if (!sg->is_active())
-            continue;
-
-        if (sg->is_impartial())
-        {
-            assert(dynamic_cast<impartial_game*>(sg) != nullptr);
-
-            // Don't need to look up nimber
-            if (sg->game_type() == game_type<nimber>())
-            {
-                assert(dynamic_cast<nimber*>(sg) != nullptr);
-                nimber* sg_nimber = static_cast<nimber*>(sg);
-
-                n_known_imp++;
-                nimber::add_nimber(final_nim_sum, sg_nimber->value());
-
-                // Actually deactivate later
-                deactivated_impartial_games.push_back(sg_nimber);
-                continue;
+                tt_result->init_entry();
+                tt_result->set_bool(0, result.win);
             }
 
-            assert(dynamic_cast<nimber*>(sg) == nullptr);
-
-            optional<db_entry_impartial> entry = db.get_impartial(*sg);
-            stats::report_db_access(entry.has_value());
-
-            if (!entry.has_value())
-                continue;
-
-            n_known_imp++;
-            n_known_imp_non_nimber++;
-
-            // Actually deactivate later
-            deactivated_impartial_games.push_back(sg);
-            nimber::add_nimber(final_nim_sum, entry.value().nim_value);
-        }
-        else
-        {
-            // sg is partisan
-            const db_entry_partisan* entry = db.get_partisan_ptr(*sg);
-            stats::report_db_access(entry != nullptr);
-
-            if (entry == nullptr)
-                continue;
-
-            if (!entry->bounds_data)
-                continue;
-
-            const game_bounds& bounds = *entry->bounds_data;
-
-            if (!bounds.is_equal())
-                continue;
-
-            game* sg_replacement = get_scale_game(bounds.get_lower(), bounds.get_scale());
-            add(sg_replacement);
-            cr.added_games.push_back(sg_replacement);
-
-            sg->set_active(false);
-            cr.deactivated_games.push_back(sg);
+            sgraph::pop_winloss(result.win);
+            return result;
         }
     }
 
-    if (n_known_imp >= 2 || n_known_imp_non_nimber > 0)
+    if (tt_result.has_value())
     {
-        for (game* sg : deactivated_impartial_games)
-        {
-            assert(sg->is_active());
-            sg->set_active(false);
-            cr.deactivated_games.push_back(sg);
-        }
-
-        if (final_nim_sum != 0)
-        {
-            nimber* nim_sum_as_nimber = new nimber(final_nim_sum);
-
-            add(nim_sum_as_nimber);
-            cr.added_games.push_back(nim_sum_as_nimber);
-        }
-    }
-}
-
-void sumgame::undo_db_replacement_pass()
-{
-    _pop_undo_code(SUMGAME_UNDO_DB_REPLACEMENT_PASS);
-
-    if (!global::use_db())
-        return;
-
-    sumgame_impl::change_record& cr = _change_record_stack.back();
-
-    for (game* g : cr.added_games)
-        assert(g->is_active());
-
-    pop(cr.added_games);
-    for (game* g : cr.added_games)
-        delete g;
-
-    cr.added_games.clear();
-
-    for (game* g : cr.deactivated_games)
-    {
-        assert(!g->is_active());
-        g->set_active(true);
-    }
-    cr.deactivated_games.clear();
-
-    _change_record_stack.pop_back();
-}
-
-void sumgame::print(ostream& str) const
-{
-    str << "sumgame: " << num_total_games() << " total " << num_active_games()
-        << " active: ";
-    bool first = true;
-    for (auto g : _subgames)
-        if (g->is_active())
-        {
-            if (first)
-                first = false;
-            else
-                str << ' ';
-            g->print(str);
-        }
-    str << endl;
-}
-
-void sumgame::print_simple(ostream& os) const
-{
-    os << color_to_player_char(to_play());
-
-    const int n_games = num_total_games();
-    for (int i = 0; i < n_games; i++)
-    {
-        const game* sg = subgame_const(i);
-        if (!sg->is_active())
-            continue;
-
-        os << " " << *sg;
+        tt_result->init_entry();
+        tt_result->set_bool(0, false);
     }
 
-    os << flush;
+
+    sgraph::pop_winloss(false);
+    return solve_result(false);
 }
 
-void sumgame::print_sorted(ostream& str) const
+optional<ttable_sumgame::search_result> sumgame::_do_ttable_lookup() const
 {
-    vector<const game*> active_games;
-
-    const int n_games = num_total_games();
-    for (int i = 0; i < n_games; i++)
-    {
-        const game* g = subgame(i);
-        if (!g->is_active())
-            continue;
-
-        active_games.push_back(g);
-    }
-
-    auto sort_fn = [](const game* g1, const game* g2) -> bool
-    {
-        return g1->get_local_hash() < g2->get_local_hash();
-    };
-
-    sort(active_games.begin(), active_games.end(), sort_fn);
-
-    const size_t n_active = active_games.size();
-    for (size_t i = 0; i < n_active; i++)
-    {
-        const game* g = active_games[i];
-        str << *g << " ";
-    }
-
-    str << flush;
-}
-
-hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
-{
-    return _sumgame_hash.get_global_hash_value(subgames(), to_play());
-}
-
-hash_t sumgame::get_global_hash_for_player(ebw for_player,
-                                           bool invalidate_game_hashes) const
-{
-    assert(is_empty_black_white(for_player));
-    return _sumgame_hash.get_global_hash_value(subgames(), for_player);
-}
-
-bool sumgame::all_impartial() const
-{
-    return all_games_impartial(_subgames);
-}
-
-bool sumgame::all_partisan() const
-{
-    return all_games_partisan(_subgames);
-}
-
-optional<sumgame_move> sumgame::get_winning_or_random_move(
-    bw for_player) const
-{
-    assert(is_black_white(for_player));
-    assert_restore_sumgame ars(*this);
-
-    const bw prev_player = to_play();
-
-    sumgame& sum = const_cast<sumgame&>(*this);
-    sum.set_to_play(for_player);
-
-    unique_ptr<sumgame_move_generator> gen(
-        sum.create_sum_move_generator(for_player));
-
-    vector<sumgame_move> moves;
-
-    while (*gen)
-    {
-        moves.emplace_back(gen->gen_sum_move());
-        const sumgame_move& sm = moves.back();
-        ++(*gen);
-
-        assert(sum.to_play() == for_player);
-        sum.play_sum(sm, for_player);
-        assert(sum.to_play() == ::opponent(for_player));
-        bool opp_loss = !sum.solve();
-        sum.undo_move();
-
-        if (opp_loss)
-        {
-            sum.set_to_play(prev_player);
-            return sm;
-        }
-    }
-
-    sum.set_to_play(prev_player);
-
-    if (moves.empty())
-        return {};
-
-    // TODO: random_generator should work for arbitrary types...
-    const uint32_t choice = get_global_rng().get_u32(0, moves.size() - 1);
-    return moves[choice];
-}
-
-void sumgame::init_sumgame(size_t index_bits)
-{
-    // Call helper once so that its static member is already stored when we
-    // use it during search
-    assert(basic_cgt_type_set.empty());
-    basic_cgt_type_set.insert(game_type<dyadic_rational>());
-    basic_cgt_type_set.insert(game_type<integer_game>());
-    basic_cgt_type_set.insert(game_type<nimber>());
-    basic_cgt_type_set.insert(game_type<switch_game>());
-    basic_cgt_type_set.insert(game_type<up_star>());
-
-    // Now initialize ttable
     if (global::tt_sumgame_idx_bits() == 0)
-        return;
+        return {};
 
-    assert(_tt.get() == nullptr); // Not already initialized
-    _tt.reset(new ttable_sumgame(index_bits, 1));
+    assert(_tt != nullptr);
+
+    const hash_t current_hash = get_global_hash();
+
+    ttable_sumgame::search_result sr = _tt->search(current_hash);
+    stats::report_tt_access(sr.entry_valid());
+
+    return sr;
 }
 
-void sumgame::split_and_normalize()
+void sumgame::_debug_extra() const
 {
-    _push_undo_code(SUMGAME_UNDO_SPLIT_AND_NORMALIZE);
-    _change_record_stack.emplace_back();
-    sumgame_impl::change_record& cr = _change_record_stack.back();
+    _assert_games_unique();
+}
 
-    const int n_games = num_total_games();
-    for (int i = 0; i < n_games; i++)
+void sumgame::_assert_games_unique() const
+{
+    unordered_set<game*> game_set;
+
+    const size_t n_games = num_total_games();
+    for (size_t i = 0; i < n_games; i++)
     {
         game* g = subgame(i);
-        if (!g->is_active())
-            continue;
-
-        split_result sr = g->split();
-
-        if (sr)
-        {
-            g->set_active(false);
-            cr.deactivated_games.push_back(g);
-
-            for (game* sg : *sr)
-            {
-                sg->normalize();
-                cr.added_games.push_back(sg);
-                assert(sg->has_moves());
-            }
-        }
-        else
-        {
-            g->normalize();
-            cr.normalized_games.push_back(g);
-
-            if (!g->has_moves())
-            {
-                g->set_active(false);
-                cr.deactivated_games.push_back(g);
-            }
-        }
+        auto it = game_set.insert(g);
+        assert(it.second == true);
     }
-
-    add(cr.added_games);
 }
 
-void sumgame::undo_split_and_normalize()
-{
-    _pop_undo_code(SUMGAME_UNDO_SPLIT_AND_NORMALIZE);
-    sumgame_impl::change_record& cr = _change_record_stack.back();
-
-    pop(cr.added_games);
-    for (game* sg : cr.added_games)
-        delete sg;
-    cr.added_games.clear();
-
-    for (game* g : cr.deactivated_games)
-    {
-        assert(!g->is_active());
-        g->set_active(true);
-    }
-    cr.deactivated_games.clear();
-
-    for (game* g : cr.normalized_games)
-    {
-        assert(g->is_active());
-        g->undo_normalize();
-    }
-    cr.normalized_games.clear();
-
-    _change_record_stack.pop_back();
-}
-
-sumgame_move_generator* sumgame::create_sum_move_generator(bw to_play) const
-{
-    return new sumgame_move_generator(*this, to_play);
-}
-
-sumgame_move_generator* sumgame::create_sum_move_generator(
-    bw to_play, temp_vec_opt_t& temperatures) const
-{
-    const unsigned int n_games = as_unsigned_unsafe(num_total_games());
-
-    if (temperatures.has_value() && (n_games > temperatures->size()))
-        temperatures->resize(n_games);
-
-    return new sumgame_move_generator(*this, to_play, temperatures, true);
-}
-
-ostream& operator<<(ostream& out, const sumgame& s)
+std::ostream& operator<<(std::ostream& out, const sumgame& s)
 {
     s.print(out);
     return out;
@@ -1364,66 +1362,73 @@ ostream& operator<<(ostream& out, const sumgame& s)
 //////////////////////////////////////////////////
 // sumgame_move_generator methods
 sumgame_move_generator::sumgame_move_generator(
-    const sumgame& sum, bw to_play, const temp_vec_opt_t& temperatures,
-    bool prune_dominated)
+    const sumgame& sum, bw to_play, temperature_vec_t* temperatures,
+    dom_object_vec_t* dom_move_objects)
     : move_generator(to_play),
+      _sum(sum),
       _subgame_idx_local(0),
-      _prune_dominated(prune_dominated),
-      _dom_kind(DB_DOM_MOVES_KIND_NONE),
-      _sum(sum)
+      _subgame_current(nullptr),
+      _mg_current(nullptr)
 {
-    assert(LOGICAL_IMPLIES(                                               //
-        temperatures.has_value(),                                         //
-        temperatures->size() >= as_unsigned_unsafe(sum.num_total_games()) //
-        ));                                                               //
+    const int N_SUBGAMES = sum.num_total_games();
 
-    if (!global::use_db())
-        _prune_dominated = false;
+    // Steal contents of DB data vectors (if not nullptr)
+    temperature_vec_t temperatures_local;
 
+    if (temperatures != nullptr)
+    {
+        temperatures_local = std::move(*temperatures);
+
+        assert(temperatures_local.empty() ||                               //
+               temperatures_local.size() == as_unsigned_unsafe(N_SUBGAMES) //
+        );
+    }
+
+    if (dom_move_objects != nullptr)
+    {
+        _dom_objects = std::move(*dom_move_objects);
+
+        assert(_dom_objects.empty() ||                               //
+               _dom_objects.size() == as_unsigned_unsafe(N_SUBGAMES) //
+        );
+    }
+
+    assert(LOGICAL_IMPLIES(!global::use_db(),
+                           temperatures_local.empty() && _dom_objects.empty()));
+
+    /*
+        Apply ordering to subgames in sumgame_move_generator:
+
+        1. Hottest games
+        2. Games without temperatures
+        3. integers/rationals
+    */
     vector<pair<int, const game*>> numbers;
 
-    // TODO pruning duplicate games?
-
-    const int n_games = sum.num_total_games();
-    for (int i = 0; i < n_games; i++)
+    size_t n_active = 0;
+    for (int i = 0; i < N_SUBGAMES; i++)
     {
         game* g = sum.subgame(i);
         if (!g->is_active())
             continue;
+        n_active++;
 
         if (game_is_number(g))
             numbers.emplace_back(i, g);
         else
-            _subgames.emplace_back(i, g);
+            _subgame_pairs.emplace_back(i, g);
     }
 
-    auto sort_fn = [&](const pair<int, const game*>& sg1,
-                       const pair<int, const game*>& sg2) -> bool
+    if (!temperatures_local.empty())
     {
-        assert(temperatures.has_value());
+        game_pair_sort sorter(temperatures_local);
+        sort(_subgame_pairs.begin(), _subgame_pairs.end(), sorter);
+    }
 
-        const optional<ThValue>& temp1 = (*temperatures)[sg1.first];
-        const optional<ThValue>& temp2 = (*temperatures)[sg2.first];
+    for (const pair<int, const game*>& game_pair : numbers)
+        _subgame_pairs.push_back(game_pair);
 
-        if (temp1.has_value())
-        {
-            if (!temp2.has_value())
-                return true;
-                //return false;
-
-            return *temp1 > *temp2;
-        }
-
-        return false;
-        //return temp2.has_value();
-    };
-
-    if (temperatures.has_value())
-        sort(_subgames.begin(), _subgames.end(), sort_fn);
-
-    for (const pair<int, const game*>& sg : numbers)
-        _subgames.push_back(sg);
-
+    assert(_subgame_pairs.size() == n_active);
     _increment(true);
 }
 
@@ -1439,27 +1444,29 @@ void sumgame_move_generator::operator++()
 
 sumgame_move_generator::operator bool() const
 {
-    return (_mg && *_mg);
+    return _subgame_idx_local < _subgame_pairs.size();
 }
 
 sumgame_move sumgame_move_generator::gen_sum_move() const
 {
-    assert(*this && _mg && *_mg);
-    const pair<int, const game*>& sg = _subgames[_subgame_idx_local];
-    return sumgame_move(sg.first, _mg->gen_move());
+    assert(*this);
+    assert(_mg_current && *_mg_current);
+
+    const pair<int, const game*>& sg = _subgame_pairs[_subgame_idx_local];
+    return sumgame_move(sg.first, _mg_current->gen_move());
 }
 
 void sumgame_move_generator::_increment(bool init)
 {
     assert(init || *this);
 
-    bool has_generator = !init;
+    bool has_subgame = !init;
     bool has_move = !init;
 
     while (true)
     {
         // Try to increment move
-        if (has_generator && _increment_move(!has_move))
+        if (has_subgame && _increment_move(!has_move))
         {
             has_move = true;
             assert(*this);
@@ -1468,126 +1475,122 @@ void sumgame_move_generator::_increment(bool init)
 
         has_move = false;
 
-        // Try to increment generator
-        if (_increment_generator(!has_generator))
+        // Try to increment subgame
+        if (_increment_subgame(!has_subgame))
         {
-            has_generator = true;
+            has_subgame = true;
             continue;
         }
 
-        has_generator = false;
+        has_subgame = false;
         assert(!*this);
         return;
     }
 }
 
-bool sumgame_move_generator::_increment_generator(bool init)
+bool sumgame_move_generator::_increment_subgame(bool init)
 {
     if (init)
         assert(_subgame_idx_local == 0);
     else
         _subgame_idx_local++;
 
-    while (_subgame_idx_local < _subgames.size())
+    while (_subgame_idx_local < _subgame_pairs.size())
     {
-        _mg.reset();
+        const pair<int, const game*>& game_pair =
+            _subgame_pairs[_subgame_idx_local];
 
-        _dom.reset();
-        _dom_kind = DB_DOM_MOVES_KIND_NONE;
+        const int subgame_idx_nonlocal = game_pair.first;
+        _subgame_current = game_pair.second;
 
-        _current_local_hash.reset();
-
-
-        const pair<int, const game*>& subgame_pair = _subgames[_subgame_idx_local];
-        const game* sg = subgame_pair.second;
-
-        if (global::dedupe_movegen() || _prune_dominated)
-            _current_local_hash = sg->get_local_hash();
-
-        if (global::dedupe_movegen())
+        if (_should_skip_game(*_subgame_current))
         {
-            assert(_current_local_hash.has_value());
-            auto inserted = _seen_games.insert(*_current_local_hash);
-
-            if (!inserted.second)
-            {
-                _subgame_idx_local++;
-                continue;
-            }
+            _subgame_idx_local++;
+            continue;
         }
+        
+        const db_dom_moves_t* dom_obj = nullptr;
 
-        if (_prune_dominated && !sg->is_impartial())
-        {
-            assert(global::use_db());
-            database& db = get_global_database();
+        if (!_dom_objects.empty())
+            dom_obj = _dom_objects[subgame_idx_nonlocal].get();
 
-            assert(sg->get_local_hash() == *_current_local_hash);
-            db_entry_partisan* entry = db.get_partisan_ptr(*sg);
-            const bool has_value = (entry != nullptr);
-            stats::report_db_access(has_value);
-
-            if (has_value && entry->dominated_moves)
-            {
-                _dom = entry->dominated_moves;
-                _dom_kind = _dom->get_kind();
-            }
-
-        }
-
-        if (_dom_kind == DB_DOM_MOVES_KIND_NONDOMINATED)
-        {
-            assert(_dom && _current_local_hash);
-
-            const vector<::move>* db_encoded_moves = _dom->get_nondominated_moves(*_current_local_hash, to_play());
-            if (db_encoded_moves == nullptr)
-            {
-                _subgame_idx_local++;
-                continue;
-            }
-
-            _mg.reset(new db_move_generator(*sg, to_play(), *db_encoded_moves));
-        }
-        else if (_dom_kind == DB_DOM_MOVES_KIND_DOMINATED)
-        {
-            assert(_dom && _current_local_hash);
-
-            const set<::move>* db_encoded_dom_moves = _dom->get_dominated_moves(*_current_local_hash, to_play());
-            if (db_encoded_dom_moves == nullptr)
-                _mg.reset(sg->create_move_generator(to_play()));
-            else
-                _mg.reset(new filtering_move_generator(*sg, to_play(), *db_encoded_dom_moves));
-        }
-        else
-            _mg.reset(sg->create_move_generator(to_play()));
+        _mg_current.reset(
+            _make_subgame_move_generator(*_subgame_current, dom_obj));
 
         return true;
     }
-
-    _mg.reset();
-    _dom.reset();
-    _dom_kind = DB_DOM_MOVES_KIND_NONE;
-    _current_local_hash.reset();
 
     return false;
 }
 
 bool sumgame_move_generator::_increment_move(bool init)
 {
-    assert(_mg.get() != nullptr);
-    assert(init || *_mg);
+    assert(_mg_current.get() != nullptr);
+    assert(init || *_mg_current);
 
     if (!init)
-        ++(*_mg);
+        ++(*_mg_current);
 
-    if (!(*_mg))
+    if (!(*_mg_current))
     {
-        _mg.reset();
+        _mg_current.reset();
         return false;
     }
     
     return true;
 }
 
+bool sumgame_move_generator::_should_skip_game(const game& g)
+{
+    if (global::dedupe_movegen())
+    {
+        const hash_t hash = g.get_local_hash();
+        const auto inserted = _seen_local_hashes.insert(hash);
+
+        if (!inserted.second)
+            return true;
+    }
+
+    return false;
+}
+
+move_generator* sumgame_move_generator::_make_subgame_move_generator(
+    const game& g, const db_dom_moves_t* dom_moves_object) const
+{
+    if (dom_moves_object == nullptr ||                         //
+        dom_moves_object->get_kind() == DB_DOM_MOVES_KIND_NONE //
+    )
+        return g.create_move_generator(to_play());
+
+    switch (dom_moves_object->get_kind())
+    {
+        case DB_DOM_MOVES_KIND_NONE:
+            assert(false);
+        case DB_DOM_MOVES_KIND_DOMINATED:
+        {
+            const set<::move>* dom_set = dom_moves_object->get_dominated_moves(
+                g.get_local_hash(), to_play());
+
+            if (dom_set == nullptr)
+                break;
+
+            return new filtering_move_generator(g, to_play(), *dom_set);
+        }
+        case DB_DOM_MOVES_KIND_NONDOMINATED:
+        {
+            const vector<::move>* nondom_vec =
+                dom_moves_object->get_nondominated_moves(g.get_local_hash(),
+                                                         to_play());
+
+            if (nondom_vec == nullptr)
+                break;
+
+            return new db_move_generator(g, to_play(), *nondom_vec);
+        }
+    }
+
+    return g.create_move_generator(to_play());
+}
 
 ////////////////////////////////////////////////// assert_restore_sumgame methods
 

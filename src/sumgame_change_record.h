@@ -1,6 +1,6 @@
 /*
    sumgame_impl::change_record tracks changes to sumgame state. On destruction,
-   the deactivated_games and added_games vectors must be empty
+   the game vectors must be empty.
 
    Also has simplify_basic(), which calls simplify_basic_all() from
    cgt_game_simplification.h

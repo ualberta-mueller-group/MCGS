@@ -32,7 +32,9 @@ class sumgame_move_generator;
 class assert_restore_sumgame;
 
 ////////////////////////////////////////////////// Simple types
-typedef std::optional<std::vector<std::optional<ThValue>>> temp_vec_opt_t;
+typedef std::vector<std::optional<ThValue>> temperature_vec_t;
+typedef std::vector<std::shared_ptr<const db_dom_moves_t>> dom_object_vec_t;
+
 
 struct ttable_sumgame_entry
 {
@@ -45,8 +47,7 @@ enum sumgame_undo_code
     SUMGAME_UNDO_STACK_FRAME = 0,
     SUMGAME_UNDO_SIMPLIFY_BASIC,
     SUMGAME_UNDO_PLAY,
-    SUMGAME_UNDO_SIMPLIFY_DB,
-    SUMGAME_UNDO_SIMPLIFY_IMPARTIAL,
+    SUMGAME_UNDO_DB_LOOKUP_PASS,
     SUMGAME_UNDO_PRE_SOLVE_PASS,
     SUMGAME_UNDO_SPLIT_AND_NORMALIZE,
     SUMGAME_UNDO_DB_REPLACEMENT_PASS,
@@ -78,18 +79,17 @@ inline bool sumgame_move::operator!=(const sumgame_move& rhs) const
 ////////////////////////////////////////////////// struct play_record
 struct play_record
 {
-    play_record(sumgame_move sm)
-        : did_split(false), sm(sm), new_games(), deactivated_g(false)
+    play_record(sumgame_move sm) : sm(sm), deactivated_g(false), split_g(false)
     {
     }
 
     inline void add_game(game* game) { new_games.push_back(game); }
 
-    bool did_split;
     sumgame_move sm;
+    bool deactivated_g;
+    bool split_g;
     // doesn't own games, just stores them for debugging
     std::vector<game const*> new_games;
-    bool deactivated_g;
 };
 
 ////////////////////////////////////////////////// struct solve_result
@@ -114,81 +114,98 @@ public:
     sumgame(bw color);
     virtual ~sumgame();
 
-    void play_sum(const sumgame_move& m, bw to_play);
-    void undo_move() override;
-    void simplify_basic();
-    void undo_simplify_basic();
+    /*
+        Basic mutators.
 
-    void simplify_impartial();
-    void undo_simplify_impartial();
-
-    std::optional<solve_result> simplify_db(
-        temp_vec_opt_t& temperatures);
-    void undo_simplify_db();
-
-    //////////////////////////////////////////////////
-    void db_replacement_pass();
-    void undo_db_replacement_pass();
-    //////////////////////////////////////////////////
-
+        The caller should `pop` and delete any games `add`ed.
+    */
     void add(game* g);
-    void add(std::vector<game*>& gs);
-    void pop(const game* g);
-    void pop(const std::vector<game*>& gs);
+    void add(const std::vector<game*>& games);
 
-    bool solve() const override;
+    void pop(const game* g);
+    void pop(const std::vector<game*>& games);
 
     /*
-        Timeout is in milliseconds. 0 means never timeout
-
-        On timeout, the returned optional has no value
+        Basic accessors.
     */
+    game* subgame(int i) const;
+    const game* subgame_const(int i) const;
+    const std::vector<game*>& subgames() const;
+
+    /*
+        Move playing.
+    */
+    sumgame_move_generator* create_sum_move_generator(bw to_play) const;
+    
+    void play_sum(const sumgame_move& m, bw to_play);
+    void undo_move() override;
+
+    /*
+        Properties.
+
+        TODO v1.7: implement `is_logically_empty()`, `is_physically_empty()`,
+        etc.
+    */
+    int num_total_games() const;
+    int num_active_games() const;
+
+    bool is_empty() const; // no active games, game over
+
+    bool all_impartial() const; // considers inactive games
+    bool all_partisan() const; // considers inactive games
+
+    hash_t get_global_hash(bool invalidate_game_hashes = false) const;
+    hash_t get_global_hash_for_player(
+        ebw for_player, bool invalidate_game_hashes = false) const;
+
+    /*
+        Printing.
+
+        - `print` shows number of total and active games, and prints active
+            games.
+        - `print_simple` shows to_play, and active games.
+        - `print_sorted` shows active games (sorted by hash).
+    */
+    void print(std::ostream& str) const;
+    void print_simple(std::ostream& str) const;
+    void print_sorted(std::ostream& str) const;
+
+    /*
+        Solving.
+
+        Timeout is in milliseconds. 0 means never timeout. On timeout, the
+        returned optional has no value.
+    */
+    bool solve() const override;
+
+    bool solve_with_games(game* g) const;
+    bool solve_with_games(const std::vector<game*>& games) const;
+
     std::optional<solve_result> solve_with_timeout(
         unsigned long long timeout) const;
 
     std::optional<solve_result> solve_with_timeout_token(
         const timeout_token& timeout_tok, uint64_t depth) const;
 
-    bool solve_with_games(std::vector<game*>& gs) const;
-    bool solve_with_games(game* g) const;
+    /*
+        Simplification.
+    */
+    void simplify_basic();
+    void undo_simplify_basic();
 
-    int num_total_games() const;
-    int num_active_games() const;
-    bool is_empty() const; // no active games, game over
+    std::optional<solve_result> db_lookup_pass(temperature_vec_t& temperatures,
+                                               dom_object_vec_t& dom_objects);
+    void undo_db_lookup_pass();
 
-    const game* subgame_const(int i) const { return _subgames[i]; }
+    void split_and_normalize(); // for DB
+    void undo_split_and_normalize(); // for DB
 
-    game* subgame(int i) const { return _subgames[i]; }
+    void db_replacement_pass();
+    void undo_db_replacement_pass();
 
-    const std::vector<game*>& subgames() const { return _subgames; }
-
-    sumgame_move_generator* create_sum_move_generator(bw to_play) const;
-
-    // Resizes temperature vector
-    sumgame_move_generator* create_sum_move_generator(
-        bw to_play, temp_vec_opt_t& temperatures) const;
-
-    // gives number of active/inactive games
-    void print(std::ostream& str) const;
-
-    // prints to_play and active games in order of their subgame indices
-    void print_simple(std::ostream& str) const;
-
-    // prints active games after sorting them by hash. More expensive, and
-    // used for debugging
-    void print_sorted(std::ostream& str) const;
-
-    hash_t get_global_hash(bool invalidate_game_hashes = false) const;
-    hash_t get_global_hash_for_player(ebw for_player, bool invalidate_game_hashes = false) const;
-
-    // TODO this function is strange, as alternating_move_game could have a
-    // game...
-    hash_t game_hash() const override;
-
-    bool all_impartial() const; // considers inactive games
-    bool all_partisan() const; // considers inactive games
-
-    // Used by player
+    /*
+        Utilities and static functions.
+    */
     std::optional<sumgame_move> get_winning_or_random_move(bw for_player) const;
 
     // called by mcgs_init_all()
@@ -197,36 +214,60 @@ public:
     // Called by derived classes of i_test_case, in their _run_impl() methods
     static void clear_ttable();
 
-    void split_and_normalize(); // for DB
-    void undo_split_and_normalize(); // for DB
+    /*
+        Deprecated functions.
+
+        TODO: remove (artifact from alternating_move_game)
+    */
+    hash_t game_hash() const override;
 
 private:
+    /*
+        Friends and typedefs.
+    */
     class undo_stack_unwinder;
+    friend class assert_restore_sumgame;
+
+    /*
+       Utilities.
+    */
+    bool _over_time() const;
+
+    game* _pop_game();
+
+    void _push_undo_code(sumgame_undo_code code);
+    void _pop_undo_code(sumgame_undo_code code);
 
     void _pre_solve_pass();
     void _undo_pre_solve_pass();
 
-    bool _over_time() const;
-    game* _pop_game();
-
     /*
-        Main search logic. Respects timeout defined by sumgame::_over_time(),
+        Search implementation, and other algorithms.
+
+        `_solve_impl` Respects timeout defined by sumgame::_over_time(),
         which uses a (possibly absent) timeout_token. If not present, search
         never times out.
     */
     std::optional<solve_result> _solve_impl(uint64_t depth);
 
-    void _push_undo_code(sumgame_undo_code code);
-    void _pop_undo_code(sumgame_undo_code code);
-
     std::optional<ttable_sumgame::search_result> _do_ttable_lookup() const;
 
+    /*
+        Debugging/asserts.
+    */
     void _debug_extra() const;
     void _assert_games_unique() const;
 
+    /*
+        Transient data. Used during search and intermediate computations.
+    */
     std::optional<timeout_token> _timeout_tok;
     mutable bool _need_cgt_simplify;
     mutable global_hash _sumgame_hash;
+
+    /*
+        Persistent data. Has meaning outside of search.
+    */
     std::vector<game*> _subgames;
 
     std::vector<sumgame_undo_code> _undo_code_stack;
@@ -234,65 +275,25 @@ private:
     std::vector<sumgame_impl::change_record> _change_record_stack;
 
     static std::shared_ptr<ttable_sumgame> _tt;
-
-    friend class assert_restore_sumgame;
 };
 
+// Calls `sumgame::print`
 std::ostream& operator<<(std::ostream& out, const sumgame& s);
-
-////////////////////////////////////////////////// sumgame methods
-inline sumgame::sumgame(bw color) : alternating_move_game(color), _need_cgt_simplify(true), _subgames()
-{
-}
-
-inline int sumgame::num_total_games() const
-{
-    return static_cast<int>(_subgames.size());
-}
-
-inline int sumgame::num_active_games() const
-{
-    int active = 0;
-    for (const game* g : _subgames)
-        if (g->is_active())
-            ++active;
-    return active;
-}
-
-inline bool sumgame::is_empty() const
-{
-    for (const game* g : _subgames)
-        if (g->is_active())
-            return false;
-    return true;
-}
-
-inline hash_t sumgame::game_hash() const
-{
-    return get_global_hash();
-}
-
-inline void sumgame::clear_ttable()
-{
-    assert(global::clear_tt());
-
-    if (_tt.get() == nullptr)
-    {
-        assert(global::tt_sumgame_idx_bits() == 0);
-        return;
-    }
-
-    _tt->clear();
-}
 
 //////////////////////////////////////////////////
 // class sumgame_move_generator
 class sumgame_move_generator : public move_generator
 {
 public:
+    /*
+        Either/both pointers can be nullptr.
+
+        When not nullptr, uses std::move to steal the contents of the vectors.
+        Caller still owns the (now emptied) vectors.
+    */
     sumgame_move_generator(const sumgame& sum, bw to_play,
-                           const temp_vec_opt_t& temperatures = {},
-                           bool prune_dominated = false);
+                           temperature_vec_t* temperatures,
+                           dom_object_vec_t* dom_move_objects);
 
     ~sumgame_move_generator();
 
@@ -305,22 +306,25 @@ public:
 
 private:
     void _increment(bool init);
-    bool _increment_generator(bool init);
+    bool _increment_subgame(bool init);
     bool _increment_move(bool init);
 
-    // Index into _subgames, not subgame index in _sum
-    size_t _subgame_idx_local;
-    std::vector<std::pair<int, const game*>> _subgames;
+    bool _should_skip_game(const game& g);
 
-    std::unique_ptr<move_generator> _mg;
-    std::set<hash_t> _seen_games;
-
-    bool _prune_dominated;
-    std::shared_ptr<db_dom_moves_t> _dom;
-    db_dom_moves_kind _dom_kind;
-    std::optional<hash_t> _current_local_hash;
+    move_generator* _make_subgame_move_generator(
+        const game& g, const db_dom_moves_t* dom_moves_object) const;
 
     const sumgame& _sum;
+
+    dom_object_vec_t _dom_objects;
+
+    std::vector<std::pair<int, const game*>> _subgame_pairs;
+    size_t _subgame_idx_local; // index into _subgame_pairs
+
+    const game* _subgame_current;
+    std::unique_ptr<move_generator> _mg_current;
+
+    std::set<hash_t> _seen_local_hashes;
 };
 
 ////////////////////////////////////////////////// class assert_restore_sumgame

@@ -37,15 +37,9 @@ sumgame::undo_stack_unwinder::~undo_stack_unwinder()
                 continue;
             }
 
-            case SUMGAME_UNDO_SIMPLIFY_IMPARTIAL:
+            case SUMGAME_UNDO_DB_LOOKUP_PASS:
             {
-                _sum.undo_simplify_impartial();
-                continue;
-            }
-
-            case SUMGAME_UNDO_SIMPLIFY_DB:
-            {
-                _sum.undo_simplify_db();
+                _sum.undo_db_lookup_pass();
                 continue;
             }
 

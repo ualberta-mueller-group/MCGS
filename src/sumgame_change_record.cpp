@@ -63,13 +63,16 @@ void change_record::undo_simplify_basic(sumgame& sum)
 
 bool change_record::no_change() const
 {
-    return deactivated_games.empty() && added_games.empty();
+    return deactivated_games.empty() && //
+           added_games.empty() &&       //
+           normalized_games.empty();    //
 }
 
 void change_record::_clear()
 {
     deactivated_games.clear();
     added_games.clear();
+    normalized_games.clear();
 }
 
 void change_record::_move_impl(change_record&& other) noexcept
