@@ -1,4 +1,4 @@
-# MCGS V1.5
+# MCGS V1.6
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
