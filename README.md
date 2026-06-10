@@ -59,7 +59,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
     - Play moves in subgames in order of decreasing temperature.
     - Use bounds to solve sums.
     - Prune dominated moves.
-      - Replace games which are equal to their bounds, with the equivalent `dyadic_rational` or `up_star`.
+    - Replace games which are equal to their bounds, with the equivalent `dyadic_rational` or `up_star`.
 - Input language version `1.5` --> `1.6`.
 - New CLI options
   - `--dump-db` dumps contents of the loaded database into a human readable text format.
