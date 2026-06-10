@@ -371,8 +371,11 @@ void sumgame::print_sorted(ostream& str) const
     const size_t n_active = active_games.size();
     for (size_t i = 0; i < n_active; i++)
     {
+        if (i > 0)
+           str << " ";
+
         const game* g = active_games[i];
-        str << *g << " ";
+        str << *g;
     }
 
     str << flush;

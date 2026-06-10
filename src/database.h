@@ -44,6 +44,10 @@ struct db_entry_partisan
     void print(std::ostream& os, const database& db,
                bool print_endl = false) const;
 
+#ifdef DB_INCLUDE_STRINGS
+    std::string sum_string;
+#endif
+
     outcome_class outcome;
     std::shared_ptr<ThGraph> thermograph;
     std::shared_ptr<game_bounds> bounds_data;
@@ -65,6 +69,9 @@ struct db_entry_impartial
     bool operator==(const db_entry_impartial& other) const;
     bool operator!=(const db_entry_impartial& other) const;
 
+#ifdef DB_INCLUDE_STRINGS
+    std::string sum_string;
+#endif
     int nim_value;
 };
 
@@ -74,6 +81,11 @@ std::ostream& operator<<(std::ostream& os, const db_entry_impartial& entry);
 inline bool db_entry_impartial::operator==(
     const db_entry_impartial& other) const
 {
+#ifdef DB_INCLUDE_STRINGS
+    if (sum_string != other.sum_string)
+        return false;
+#endif
+
     return nim_value == other.nim_value;
 }
 
@@ -86,6 +98,9 @@ inline bool db_entry_impartial::operator!=(
 inline std::ostream& operator<<(std::ostream& os,
                                 const db_entry_impartial& entry)
 {
+#ifdef DB_INCLUDE_STRINGS
+    os << "\"" << entry.sum_string << "\" ";
+#endif
     os << entry.nim_value;
     return os;
 }

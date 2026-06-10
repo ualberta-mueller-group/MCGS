@@ -3,12 +3,14 @@
 #include <cassert>
 #include <fstream>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <memory>
 #include <iostream>
 
+#include "db_make_sum_string.h"
 #include "serializer.h"
 #include "serializer_lib_therm.h" // IWYU pragma: keep
 #include "ThGraph.h"
@@ -40,6 +42,11 @@ using namespace std;
 bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 {
     // Note confusing use of `shared_ptr::operator bool()` in this function
+
+#ifdef DB_INCLUDE_STRINGS
+    if (sum_string != other.sum_string)
+        return false;
+#endif
 
     // Outcome
     if (outcome != other.outcome)
@@ -76,6 +83,10 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 void db_entry_partisan::print(ostream& os, const database& db,
                               bool print_endl) const
 {
+#ifdef DB_INCLUDE_STRINGS
+    os << "\"" << sum_string << "\" ";
+#endif
+
     // Outcome
     os << outcome_class_to_string(outcome);
 
@@ -183,7 +194,7 @@ void database::dump_to_stream(ostream& os) const
         for (const pair<const hash_t, db_entry_impartial>& entry_pair :
              terminal_layer.second)
         {
-            os << entry_pair << '\n';
+            os << entry_pair.second << '\n';
         }
     }
 
@@ -353,6 +364,10 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
         entry->thermograph = _get_graph_cache().insert_and_release(graph);
         assert(entry->thermograph);
     }
+
+#ifdef DB_INCLUDE_STRINGS
+    entry->sum_string = db_make_sum_string(sum);
+#endif
 
     entry->outcome = db_make_outcome_class(*this, *entry);
     assert(entry->outcome != outcome_class::U);
@@ -544,6 +559,9 @@ void database::_generate_single_impartial_entry(impartial_game* ig, bool silent)
     s.pop(ig);
 
     db_entry_impartial entry;
+#ifdef DB_INCLUDE_STRINGS
+    entry.sum_string = ig->to_string();
+#endif
     entry.nim_value = nim_value;
 
     set_impartial(*ig, entry);

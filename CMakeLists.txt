@@ -35,6 +35,10 @@ set(DEBUG_MESSAGES "0" CACHE STRING
 "Debug messages ([0]/1). If 1, print extra/annoying debugging info."
 )
 
+set(DB_INCLUDE_STRINGS "0" CACHE STRING
+"Include sum strings in DB entries? ([0]/1). Only useful with --dump-db."
+)
+
 set(ASAN "0" CACHE STRING
 "Compile with AddressSanitizer? ([0]/1). \
 If 1, compiles and links with AddressSanitizer to find memory errors \
@@ -299,6 +303,11 @@ target_link_libraries(mcgs_flags INTERFACE
     $<$<STREQUAL:${DEBUG},2>:mcgs_flags_extra>
 
     $<${WASM}:wasm_flags_mcgs>
+
+)
+
+target_compile_definitions(mcgs_flags INTERFACE
+    $<$<STREQUAL:${DB_INCLUDE_STRINGS},1>:DB_INCLUDE_STRINGS>
 )
 
 target_include_directories(mcgs_flags INTERFACE

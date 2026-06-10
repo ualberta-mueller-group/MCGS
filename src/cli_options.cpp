@@ -281,7 +281,8 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
 
     print_flag("--dump-db <output file>",
                "Dump DB to specified file, in readable format, with one entry "
-               "per line.");
+               "per line. Set DB_INCLUDE_STRINGS=1 in the CMake build "
+               "configuration to see game strings in the output.");
 }
 
 } // namespace
