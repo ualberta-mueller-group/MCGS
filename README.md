@@ -52,6 +52,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 - New games (see `input/info.test`)
   - `cannibal_clobber`
   - `gen_king_dirt`
+- New results in the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS)
 - New optimizations:
   - Impartial wrapper games generate moves by alternating between the moves of `BLACK` and `WHITE`.
     - Use `--no-imp-wrapper-alternate-color` to revert this (will generate all `BLACK` moves followed by all `WHITE` moves).
