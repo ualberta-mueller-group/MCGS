@@ -54,7 +54,7 @@ There are 5 types of 'things' that appear in input:
                 {version 1.6}
             A special command which must be present at the very start of a file,
             but may be omited from input read from stdin or passed as a
-            command line argument to MCGS. The current version is 1.5.
+            command line argument to MCGS. The current version is 1.6.
 
             Partisan solve command:
                 {<Player> <Expected result>}
@@ -252,6 +252,18 @@ XOXOO...XO
 
         [amazons]
             A grid of '.', 'X', 'O', and '#'.
+
+        [gen_king_dirt]
+            Parameter list of 3 ints, followed by ':', followed by a grid of
+            '.', 'X', 'O', and '#'.
+
+            Parameters (in order, see gen_king_dirt.h for more info):
+                - black unplaced >= 0
+                - white unplaced >= 0
+                - must place in [0, 1]
+
+            Example:
+                '1,1,0:.X.|.#.|.O.'
 
         [domineering]
             A grid of '.' and '#'.
