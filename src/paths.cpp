@@ -33,28 +33,11 @@ path get_project_root_path()
 {
     assert(is_initialized);
 
-#ifdef MCGS_CMAKE_BUILD
-    // New CMake build
-    const path root_path = exec_abs_path.parent_path().parent_path();
-#else
-    // Old Make build
     const path root_path = exec_abs_path.parent_path();
-#endif
-
     return root_path;
 }
 
-path get_default_db_path_1()
-{
-    assert(is_initialized);
-
-    const path exec_path = get_exec_path();
-    const path db_path = (exec_path.parent_path()) / DEFAULT_DB_PATH;
-
-    return db_path;
-}
-
-path get_default_db_path_2()
+path get_default_db_path()
 {
     assert(is_initialized);
 

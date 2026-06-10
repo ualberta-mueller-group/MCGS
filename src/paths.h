@@ -14,13 +14,8 @@ std::filesystem::path get_exec_path();
 // Repository root
 std::filesystem::path get_project_root_path();
 
-/*
-    Default database.bin
-    1: database.bin in same directory as executable
-    2: database.bin in project root directory
-*/
-std::filesystem::path get_default_db_path_1();
-std::filesystem::path get_default_db_path_2();
+// Default database.bin
+std::filesystem::path get_default_db_path();
 
 // Default `input/autotests` directory
 std::filesystem::path get_default_input_path();

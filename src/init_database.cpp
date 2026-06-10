@@ -157,13 +157,10 @@ init_database_enum resolve_auto_init_type(optional<string>& filename)
 {
     THROW_ASSERT(!filename.has_value());
 
-    const filesystem::path p1 = get_default_db_path_1();
-    const filesystem::path p2 = get_default_db_path_2();
+    const filesystem::path p = get_default_db_path();
 
-    if (filesystem::exists(p1))
-        filename = p1.string();
-    else if (filesystem::exists(p2))
-        filename = p2.string();
+    if (filesystem::exists(p))
+        filename = p.string();
 
     if (filename.has_value())
     {

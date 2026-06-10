@@ -146,11 +146,8 @@ void print_help_message(const string& exec_name)
 
     print_flag("--db-file-load <file name>",
                "Load database file. If unspecified, checks for `" +
-                   path_relative_to_cwd(get_default_db_path_1()).string() +
-                   "` and then `" +
-                   path_relative_to_cwd(get_default_db_path_2()).string() +
-                   "` (database.bin beside the executable, and then in the "
-                   "project root directory).");
+                   path_relative_to_cwd(get_default_db_path()).string() +
+                   "` (beside the executable).");
 
     print_flag("--db-file-create <file name> <config string>",
                "Create and populate a new database file. See README for "
