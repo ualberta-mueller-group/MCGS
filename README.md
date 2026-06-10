@@ -68,7 +68,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
   - `--convert-to-ctl` exports test cases to a format readable by the [CGT Testing Library](https://github.com/ualberta-mueller-group/cgt_testing_library).
     - Aids in comparison of MCGS to other CGT projects.
     - Can use with `--test-filter`.
-  - `--search-graph-print` and `--search-graph-verify` are experimental debugging tools for visualizing.
+  - `--search-graph-print` and `--search-graph-verify` are experimental debugging tools for visualizing search nodes visited by partisan search algorithms.
 - Code cleaned up, new utilities added
   - `thermograh_builder_no_db.h`: builds the thermograph of a game outside of database generation.
   - `thermograph_helpers.h`: derives various data from a thermograph.
