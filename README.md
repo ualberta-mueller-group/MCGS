@@ -14,7 +14,7 @@ search optimizations.
 Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of results so far are available from the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
 
 ### Sections
-- [Version 1.5 Additions](#version-15-additions)
+- [Version 1.6 Additions](#version-16-additions)
 - [Building MCGS](#building-mcgs)
 - [Using MCGS](#using-mcgs)
 - [Using the Database](#using-the-database)
@@ -28,41 +28,54 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
     - [Hashing-Related Hooks](#hashing-related-hooks)
     - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
-### Version 1.5 Additions
-#### New Features
-- Lemoine and Viennot (LV) algorithm is the new default impartial search algorithm
-    - `--impartial-algorithm-mex`: uses previous (Mex) algorithm (NOTE: LV queries the database, but Mex does not)
-- Added impartial game support to database
-    - Used by impartial LV search, and partisan `sumgame` search functions
-- Added new command type to `.test` files (winning moves test). See `input/info.test`
-- `print_move` function now implemented for all game types; output of `--print-winning-moves`-like features should now be sensible for all games
-- Added features to `.html` output and `create-table.py`:
-    - More output columns
-    - Checkboxes to show/hide columns, several columns are hidden by default
-    - More sorting and filtering options
-    - Dynamic summary of rows which are not currently filtered out. Includes comparison of new vs old values
-- New CLI options
-    - `--use-complexity-score` enable complexity score heuristic for LV algorithm
-    - `--print-sum-moves` and `--print-subgame-moves`
-    - `--clear-tt`: clearing ttable is much faster (`ttable` class now has a `clear()` method)
-    - `--print-winning-moves` and `--play-mcgs`: behavior changed
-    - `--db-file-compare` reports whether two database files differ (not considering their metadata strings)
-- Input language version `1.4` --> `1.5`
+### Version 1.6 Additions
+#### Important Notes
+- A CMake build has replaced the old makefile build. The project now also depends on a git submodule. See `README.md` for new build instructions.
+- Partisan games must implement 3 new functions to have correct DB entries (see `game.h` for explanation).
+  - `game* clone() const = 0;`
+  - `move game::encode_grid_move_to_db(const move& m) const;`
+  - `move game::decode_grid_move_from_db(const move& m) const;`
 
-#### Major Code Additions
-- Major refactoring
-    - `solver_stats.h` usage simplified, added more fields
-    - `csv_row` class with helper functions for populating fields and writing to streams
-    - Standardized measuring time, and polling timeouts
-        - Classes: `stopwatch`, `timeout_source`/`timeout_token`
-    - `file_parser`
-        - More features and more granularity
-        - Creates an AST as it parses input. Visitor classes operate on the AST
-    - `i_test_case`: abstract test case class for `.test` input. More general than old solution
-- Deprecation (see notes at the top of these `.h` files):
-    - `game_case.h`
-    - `search_utils.h`
-    - `parsing_utilities.h`
+#### Bug Fixes
+- Fixed a bug where `switch_game::inverse()` could trigger an `assert`. In an unmodified copy of MCGS this couldn't actually happen in practice.
+- Fixed minor create-table.py HTML bug in summary pane: time conversion from ms to days/hours/minutes/seconds/ms showed incorrect (truncated) converted times.
+- Fixed a bug where data was needlessly copied during saving/loading of the database (resulting in higher memory usage during save/load, and longer startup times).
+
+#### New Features
+- `move` is now `int64_t` (instead of `int` which is likely 32 bits).
+  - Games can now be constructed with much larger boards as a result.
+- The database has several new fields for partisan games:
+  - Lower/upper bounds on value (in terms of multiples of up/down, or `1/8`).
+  - Thermograph.
+  - A set of dominated (or nondominated) moves.
+  - Complexity score. 
+- New games (see `input/info.test`)
+  - `cannibal_clobber`
+  - `gen_king_dirt`
+- New optimizations:
+  - Impartial wrapper games generate moves by alternating between the moves of `BLACK` and `WHITE`.
+    - Use `--no-imp-wrapper-alternate-color` to revert this (will generate all `BLACK` moves followed by all `WHITE` moves).
+  - For partisan search algorithms:
+    - Play moves in subgames in order of decreasing temperature.
+    - Use bounds to solve sums.
+    - Prune dominated moves.
+      - Replace games which are equal to their bounds, with the equivalent `dyadic_rational` or `up_star`.
+- Input language version `1.5` --> `1.6`.
+- New CLI options
+  - `--dump-db` dumps contents of the loaded database into a human readable text format.
+    - Use with CMake option `-DDB_INCLUDE_STRINGS=1` (to include human readable games in DB entries).
+  - `--test-filter` skips test cases which are incompatible with a specified external CGT project i.e. [SEGClobber](https://github.com/tfolkersen/SEGClobber).
+  - `--convert-to-ctl` exports test cases to a format readable by the [CGT Testing Library](https://github.com/ualberta-mueller-group/cgt_testing_library).
+    - Aids in comparison of MCGS to other CGT projects.
+    - Can use with `--test-filter`.
+  - `--search-graph-print` and `--search-graph-verify` are experimental debugging tools for visualizing.
+- Code cleaned up, new utilities added
+  - `thermograh_builder_no_db.h`: builds the thermograph of a game outside of database generation.
+  - `thermograph_helpers.h`: derives various data from a thermograph.
+  - `sumgame_helpers.h`: sumgame comparisons.
+  - `integral_conversion.h`: casting of integral types with runtime safety checks.
+  - `serializer.h`: implements more STL container types, and less verbose `serializer_save()` and `serializer_load()` functions.
+  - `utilities.h`: has new generic helper functions.
 
 ### Building MCGS
 First download this repository, and enter its directory.
