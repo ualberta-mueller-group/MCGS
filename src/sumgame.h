@@ -311,7 +311,7 @@ private:
     move_generator* _make_subgame_move_generator(
         const game& g, const db_dom_moves_t* dom_moves_object) const;
 
-    const sumgame& _sum;
+    //const sumgame& _sum;
 
     dom_object_vec_t _dom_objects;
 
