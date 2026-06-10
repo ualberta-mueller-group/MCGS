@@ -183,6 +183,10 @@ void database::dump_to_stream(ostream& os) const
         for (const pair<const hash_t, db_entry_partisan>& entry_pair :
              terminal_layer.second)
         {
+            os << "Hash: `";
+            os << entry_pair.first;
+            os << "` ";
+
             entry_pair.second.print(os, *this);
             os << '\n';
         }
@@ -194,6 +198,10 @@ void database::dump_to_stream(ostream& os) const
         for (const pair<const hash_t, db_entry_impartial>& entry_pair :
              terminal_layer.second)
         {
+            os << "Hash: `";
+            os << entry_pair.first;
+            os << "` ";
+
             os << entry_pair.second << '\n';
         }
     }

@@ -36,7 +36,8 @@ set(DEBUG_MESSAGES "0" CACHE STRING
 )
 
 set(DB_INCLUDE_STRINGS "0" CACHE STRING
-"Include sum strings in DB entries? ([0]/1). Only useful with --dump-db."
+"Include sum strings in DB entries? ([0]/1). Only useful with --dump-db.
+Database files produced with this option are incompatible with normal ones."
 )
 
 set(ASAN "0" CACHE STRING

@@ -66,12 +66,12 @@ public:
     std::string to_string() const;
 
     /*
-       TODO move to dev notes?
-
-        Game types using `grid_hash` must implement these functions. Such game
-        types may have games which share a database entry, but which differ
-        by rotation/transpose orientation, making their `move`s incompatible
-        with each other.
+        Game types using `grid_hash` (or which otherwise map games with
+        different boards to the same hash value) must implement these functions.
+        Such game types may have games which share a database entry, but which
+        differ by rotation/transpose orientation, making their `move`s
+        incompatible with each other. If your game does not do this, you can
+        ignore these functions.
 
         - The encode function converts a `move` TO the database format by
             transforming it to the equivalent move on the grid specified by the
@@ -84,11 +84,11 @@ public:
             selected orientation. Implement using
             `grid_hash::get_inverse_transformed_coords(...)`.
 
-        See `domineering.cpp` for examples. Note that it is sometimes insufficient
-        to simply transform coordinates; the `move`s returned must be valid
-        `move`s on the corresponding grid game. The points in a domineering
-        move are ordered top-left to bottom-right, so after transforming the
-        points, they sometimes must be swapped.
+        See `domineering.cpp` for examples. Note that it is sometimes
+       insufficient to simply transform coordinates; the `move`s returned must
+       be valid `move`s on the corresponding grid game. The points in a
+       domineering move are ordered top-left to bottom-right, so after
+       transforming the points, they sometimes must be swapped.
     */
     virtual move encode_grid_move_to_db(const move& m) const;
     virtual move decode_grid_move_from_db(const move& m) const;
@@ -159,6 +159,11 @@ public:
             i.e. for the game "4", this should return the game "-4"
     */
     virtual game* inverse() const = 0; // caller takes ownership
+
+    /*
+        Create a copy of the current game state. Ideally you shouldn't copy
+        the move/undo stack.
+    */
     virtual game* clone() const = 0; // caller takes ownership
 
 private:
