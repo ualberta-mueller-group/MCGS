@@ -336,9 +336,9 @@ versions. Optimizations are enabled by default, and some can be toggled off
 optimizations introduce significant overhead.
 
 #### Splitting Into Subgames (`subgame_split`)
-In your game `x`, override and implement `game::split_implementation()`. See
+In your game `x`, override and implement `game::_split_impl()`. See
 `game.h` for important implementation details, and add unit tests.
-`split_implementation()` is used to break apart a `game` into a list of
+`_split_impl()` is used to break apart a `game` into a list of
 subgames whose sum is equal to the original `game`. This may speed up search by
 allowing MCGS to reason about smaller independent subproblems.
 
@@ -354,7 +354,7 @@ smaller dimensions), as smaller boards are more likely to be in the database.
 Currently MCGS simplifies sums containing "basic" CGT games (`integer_game`,
 `dyadic_rational`, `up_star`, `switch_game`, and `nimber`), by summing together
 their values, resulting in fewer subgames. If your game's
-`split_implementation()` method returns subgames of these types, they will be
+`_split_impl()` method returns subgames of these types, they will be
 included in this simplification step. 
 
 Currently there is no hook to write your own similar simplification steps, but
