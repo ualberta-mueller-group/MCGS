@@ -15,7 +15,6 @@
 
 #include "alternating_move_game.h"
 #include "game.h"
-#include "global_options.h"
 #include "sumgame_change_record.h"
 #include "dominated_moves.h"
 #include "transposition.h"

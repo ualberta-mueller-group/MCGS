@@ -3,14 +3,12 @@
 #include <cassert>
 #include <fstream>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <memory>
 #include <iostream>
 
-#include "db_make_sum_string.h"
 #include "serializer.h"
 #include "serializer_lib_therm.h" // IWYU pragma: keep
 #include "ThGraph.h"
@@ -35,6 +33,10 @@
 #include "version_info.h"
 #include "impartial_game_wrapper.h"
 #include "thermograph_helpers.h"
+
+#ifdef DB_INCLUDE_STRINGS
+#include "db_make_sum_string.h"
+#endif
 
 using namespace std;
 

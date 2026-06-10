@@ -14,6 +14,7 @@
 #include <cstdint>
 
 #include "sumgame.h"
+#include "throw_assert.h"
 #include "bounds.h"
 #include "db_move_generator.h"
 #include "dominated_moves.h"
