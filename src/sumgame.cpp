@@ -65,7 +65,7 @@ bool is_simple_cgt(const game* g)
 {
     assert(!basic_cgt_type_set.empty());
 
-    game_type_t type = g->game_type();
+    const game_type_t type = g->game_type();
     return basic_cgt_type_set.find(type) != basic_cgt_type_set.end();
 }
 
@@ -186,15 +186,6 @@ private:
 } // namespace
 
 ////////////////////////////////////////////////// sumgame methods
-sumgame::sumgame(bw color)
-    : alternating_move_game(color), _need_cgt_simplify(true)
-{
-}
-
-sumgame::~sumgame()
-{
-}
-
 void sumgame::add(game* g)
 {
     _subgames.push_back(g);
@@ -206,46 +197,6 @@ void sumgame::add(game* g)
         is_simple_cgt(g)                //
         )                               //
         _need_cgt_simplify = true;
-}
-
-
-void sumgame::add(const std::vector<game*>& games)
-{
-    for (game* g : games)
-        add(g);
-}
-
-void sumgame::pop(const game* g)
-{
-    assert(!_subgames.empty());
-    assert(_subgames.back() == g);
-    _subgames.pop_back();
-}
-
-void sumgame::pop(const std::vector<game*>& games)
-{
-    for (auto it = games.rbegin(); it != games.rend(); it++)
-        pop(*it);
-}
-
-game* sumgame::subgame(int i) const
-{
-    return _subgames[i];
-}
-
-const game* sumgame::subgame_const(int i) const
-{
-    return _subgames[i];
-}
-
-const std::vector<game*>& sumgame::subgames() const
-{
-    return _subgames;
-}
-
-sumgame_move_generator* sumgame::create_sum_move_generator(bw to_play) const
-{
-    return new sumgame_move_generator(*this, to_play, nullptr, nullptr);
 }
 
 void sumgame::play_sum(const sumgame_move& sm, bw to_play)
@@ -360,52 +311,6 @@ void sumgame::undo_move()
     alternating_move_game::undo_move();
 
     _play_record_stack.pop_back();
-}
-
-int sumgame::num_total_games() const
-{
-    return static_cast<int>(_subgames.size());
-}
-
-int sumgame::num_active_games() const
-{
-    int active = 0;
-    for (const game* g : _subgames)
-        if (g->is_active())
-            ++active;
-    return active;
-}
-
-bool sumgame::is_empty() const
-{
-    for (const game* g : _subgames)
-        if (g->is_active())
-            return false;
-    return true;
-}
-
-bool sumgame::all_impartial() const
-{
-    return all_games_impartial(_subgames);
-}
-
-bool sumgame::all_partisan() const
-{
-    return all_games_partisan(_subgames);
-}
-
-hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
-{
-    return _sumgame_hash.get_global_hash_value(subgames(), to_play(),
-                                               invalidate_game_hashes);
-}
-
-hash_t sumgame::get_global_hash_for_player(ebw for_player,
-                                           bool invalidate_game_hashes) const
-{
-    assert(is_empty_black_white(for_player));
-    return _sumgame_hash.get_global_hash_value(subgames(), for_player,
-                                               invalidate_game_hashes);
 }
 
 void sumgame::print(ostream& str) const
@@ -1105,40 +1010,6 @@ void sumgame::clear_ttable()
     _tt->clear();
 }
 
-hash_t sumgame::game_hash() const
-{
-    return get_global_hash();
-}
-
-bool sumgame::_over_time() const
-{
-    if (_timeout_tok.has_value())
-        return _timeout_tok->stop_requested();
-    return false;
-}
-
-game* sumgame::_pop_game()
-{
-    assert(!_subgames.empty());
-
-    game* back = _subgames.back();
-    _subgames.pop_back();
-
-    return back;
-}
-
-void sumgame::_push_undo_code(sumgame_undo_code code)
-{
-    _undo_code_stack.push_back(code);
-}
-
-void sumgame::_pop_undo_code(sumgame_undo_code code)
-{
-    assert(!_undo_code_stack.empty());
-    assert(_undo_code_stack.back() == code);
-    _undo_code_stack.pop_back();
-}
-
 void sumgame::_pre_solve_pass()
 {
     _push_undo_code(SUMGAME_UNDO_PRE_SOLVE_PASS);
@@ -1355,12 +1226,6 @@ void sumgame::_assert_games_unique() const
     }
 }
 
-std::ostream& operator<<(std::ostream& out, const sumgame& s)
-{
-    s.print(out);
-    return out;
-}
-
 //////////////////////////////////////////////////
 // sumgame_move_generator methods
 sumgame_move_generator::sumgame_move_generator(
@@ -1434,20 +1299,6 @@ sumgame_move_generator::sumgame_move_generator(
     _increment(true);
 }
 
-sumgame_move_generator::~sumgame_move_generator()
-{
-}
-
-void sumgame_move_generator::operator++()
-{
-    assert(*this);
-    _increment(false);
-}
-
-sumgame_move_generator::operator bool() const
-{
-    return _subgame_idx_local < _subgame_pairs.size();
-}
 
 sumgame_move sumgame_move_generator::gen_sum_move() const
 {
