@@ -277,9 +277,9 @@ Analogue of `strip` for games played on an `MxN` grid. Used by `clobber` and `no
 
 #### move (cgt_move.h)
 Represents a move that can be played within a `game`. In this version, `move`
-is an integer with 32 bits. Each game defines the encoding of legal
+is an integer with 64 bits. Each game defines the encoding of legal
 moves into `move`. The highest order bit is always used to encode the color of
-the player making the move, leaving 31 bits for the move itself. File
+the player making the move, leaving 63 bits for the move itself. File
 `cgt_move.h` defines utility functions for packing and unpacking `move`s, to
 deal with the color bit and the "rest" of each `move`. This includes functions
 to encode/decode multiple small integers to/from a `move`.
