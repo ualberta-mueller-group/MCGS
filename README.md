@@ -53,10 +53,10 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 - New optimizations
   - Impartial wrapper games generate moves by alternating between the moves of `BLACK` and `WHITE`.
     - Use `--no-imp-wrapper-alternate-color` to revert this (will generate all `BLACK` moves followed by all `WHITE` moves).
-  - For partisan search algorithms:
-    - Play moves in subgames in order of decreasing temperature.
+  - For partisan search algorithms (all of these rely on partisan DB entries):
+    - Play moves in subgames in order of decreasing temperature. Subgames without thermographs (those without partisan DB entries) come last.
     - Use bounds to solve sums.
-    - Prune dominated moves.
+    - Prune dominated moves within single subgames.
     - Replace games which are equal to their bounds, with the equivalent `dyadic_rational` or `up_star`.
 - Input language version `1.5` --> `1.6`.
 - New CLI options
