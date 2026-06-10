@@ -24,7 +24,7 @@ This document includes more detailed information than `README.md`, including des
 - [RTTI - Run-time type information (`type_table.h`)](#rtti---run-time-type-information-type_tableh)
 - [Sumgame Simplification (cgt_game_simplification.h)](#sumgame-simplification-cgt_game_simplificationh)
 - [Time: Measuring Time, and Respecting Timeouts (`stopwatch.h`, `timeout_token.h`)](#time-measuring-time-and-respecting-timeouts-stopwatchh-timeout_tokenh)
-- [Bounds (`bounds.h`)](#bounds-boundsh)
+- [Bounds (`bounds.h` and `bounds_finder.h`)](#bounds-boundsh-and-bounds_finderh)
 - [File Parser and Internals](#file-parser-and-internals)
 - [Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)](#serialization-iobufferh-serializerh-dynamic_serializableh)
 - [Unused `game::_order_impl` Method](#unused-game_order_impl-method)
@@ -37,18 +37,24 @@ This document includes more detailed information than `README.md`, including des
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Build Options
+See output of `cmake -B build -LH` for explanation of options. Possible values
+are in parentheses and defaults are in square brackets i.e. "([0]/1)".
+Example setting options:
+```
+cmake -B build -DDEBUG=2 -DASAN=1
+```
 
-MCGS has separate build directories for the `MCGS` and `MCGS_test` executables, but changing compilation options requires a clean build at the moment.
+You must then recompile:
+```
+cmake --build build -j4
+```
 
-Some different builds supported in MCGS:
-- `make MCGS`: has asserts, and assert_restore_game etc
-- `make MCGS DEBUG=1`: adds additional expensive/annoying checks i.e. standard library debugging, printing a list of games which called default implementations of some base class functions when the program exits, and others
-- `make MCGS DEBUG=0`: disables asserts and `assert_restore_games`, and some exceptions which should only result from programming errors and not bad user input. The documentation warns that this is still experimental (lots of compiler warnings i.e. unused variables)
-- `make MCGS ASAN=address`: runtime checking for memory leaks, use after free, double free, and global variables whose initialization order causes undefined behavior, (and probably more?)
-- `make MCGS ASAN=leak`: uses AddressSanitizer to check (only?) for leaks. Rarely used.
-- `make MCGS WASM=1`: compiles the WebAssembly version of MCGS instead of the native version. You probably need to move some files into the root directory first, which should be documented somewhere.
-
-It makes sense to mix some of these options too, i.e. `WASM=1 DEBUG=0`
+To build the WebAssembly version, you must move the files from the `utils/wasm`
+directory into the project root, then prefix the CMake configure command with
+`emcmake`, i.e:
+```
+emcmake cmake -B build
+```
 
 # Search and Solving a Game
 - Two classes implement minimax game solving: `alternating_move_game` and `sumgame`
@@ -62,9 +68,7 @@ It makes sense to mix some of these options too, i.e. `WASM=1 DEBUG=0`
         - Splits a subgame into more subgames after playing a move in it
         - Normalizes subgames
         - Simplifies "basic" CGT games
-        - Uses a transposition table
-        - Uses a database of subgame outcomes (for partisan games) and nim
-          values (for impartial games)
+        - Uses a transposition table, and a database (with partisan and impartial entries)
     - `sumgame::_solve_impl`
         - `private` method implements most of the search algorithm
         - Runs until it either completes, or times out
@@ -101,20 +105,26 @@ it must be restored before the end of `solve` in any case, including timeout or 
         - Ensures global_hash, number of subgames (active or inactive), and undo_code/play_record/change_record stack sizes are all restored
 
 ## Sumgame's Usage Of the Database
-The database stores information for single subgames. Partisan games in the
-database have outcome classes, and impartial games have nim values. `sumgame`
-uses this data, from the global database object (`get_global_database()` in
-`global_database.h`), during solving, to simplify search and even terminate
-search early in some cases.
+The database stores information for sums of games. Partisan games in the
+database have outcome classes, bounds, thermographs, complexity scores, and
+dominated (or nondominated) moves, while impartial games have nim values.
+`sumgame` uses this data, from the global database object
+(`get_global_database()` in `global_database.h`), during solving, to simplify
+search and even terminate search early in some cases.
 
-- `sumgame::simplify_impartial()` is called at the start of
-  `sumgame::_solve_impl()`
+- `sumgame::db_replacement_pass()` is called at the start of `sumgame::_solve_impl()`
     - Looks up every impartial subgame's nim value in the database, then
       combines all nimbers using nim addition
+    - Replaces partisan games with their bounds (when equal). The substituted
+        games have type of `dyadic_rational` or `up_star`
 
-- `sumgame::simplify_db()` is called next
-    - This method looks up every active subgame's outcome class in the database
-    - P positions are deactivated, and all other outcome classes are counted
+- `sumgame::simplify_basic()` is called next
+    - Combines "basic" CGT games i.e. integers, rationals, nimbers, etc
+
+- `sumgame::db_lookup_pass()` is called next
+    - Looks up every active partisan subgame in the database
+    - P positions are deactivated, and all other outcome classes are counted,
+        and bounds are summed.
     - The winner of the current game is known without further search when all
     subgames' outcome classes are known, and one of the following holds
     (after omitting P positions):
@@ -124,6 +134,10 @@ search early in some cases.
         for current player
             - For `BLACK` to play, this means there are no `R` outcome classes
             - For `WHITE` to play, this means there are no `L` outcome classes
+    - The winner is also known when the sum of bounds is positive/negative (and
+    all subgames have bounds). When an impartial game is present, the UP/DOWN
+    part of the sum is zeroed before use.
+    - Generates temperature and dominated move data used by `sumgame_move_generator`
 
 ## Solver Stats
 During search, `sumgame::_solve_impl()` records events using the global
@@ -159,7 +173,7 @@ since the program's start
 
 ## `sumgame_impl::change_record` class (`sumgame_change_record.h`)
 - Similar to `play_record`; used to track changes to `sumgame` (i.e. by sumgame simplification steps), to allow undoing of changes
-- Holds 2 `vector<game*>`s: one for deactivated games, and one for added games
+- Holds 3 `vector<game*>`s: one for deactivated games, one for added games, and one for normalized games
 - Undo operation first reactivates games, then pops games from `sumgame` and deletes them
 
 ## `sumgame_map_view` class (`sumgame_map_view.h`)
@@ -177,15 +191,13 @@ since the program's start
     - Destructor iteratively pops undo stack, calling undo functions until it sees the marker i.e:
     - `sumgame::undo_move()`
     - `sumgame::undo_simplify_basic()`
-    - `sumgame::undo_simplify_db()`
+    - `sumgame::undo_db_lookup_pass()`
 
 ## `sumgame` class (`sumgame.h`)
 A `sumgame` represents a (possibly empty) set of subgames.
 It derives from `alternating_move_game` and reimplements the
 `solve` method to take advantage of sum structure
 - Main data structure: `vector<game*> _subgames`
-    - TODO sumgame should be owner of these games? Use `std::unique_ptr`
-    - TODO copy on add?
 - `sumgame` is derived from `alternating_move_game` but reimplements solve
     - It uses `sumgame_move`
     - It keeps its own `_play_record_stack` with sum-level info
@@ -303,6 +315,7 @@ as there are several similar looking functions?
     - `solve` for both black and white
     - Convert from/to string
     - Write test cases in file, read and solve
+    - `inverse` and `clone` functions
     - Game-specific move generator
         - Count the number of moves and details of moves generated, such as move order and specific moves
 - `play()` may not assume alternating colors, since a game can be a subgame
@@ -448,7 +461,8 @@ be initialized from one of these functions to avoid "Static Initialization Order
 Fiasco" problems, as the initialization order of global variables in C++ is
 undefined across translation units.
 
-`mcgs_init_1` initializes lookup tables used for color/char conversions.
+`mcgs_init_1` initializes paths, lookup tables used for color/char conversions,
+and other things.
 
 Things initialized by `mcgs_init_2` functions:
 - `grid_hash` masks stored in grid games' `type_table_t` structs
@@ -1076,16 +1090,24 @@ class but is ineffective (though it currently prints warnings if the runtime
 
 # Database (`database.h`, `global_database.h`)
 `database.h` defines the `database` class, and two database entry structs. The
-struct `db_entry_partisan` is used to store outcome classes for partisan games,
+struct `db_entry_partisan` is used to store data for partisan games,
 and the struct `db_entry_impartial` is used to store nim values for impartial
 games. The database is not used by `MCGS_test` (CLI option `--no-use-db` is
 implied).
 
-- `set_partisan` and `set_impartial` methods take a game (single `game`) and
-    entry, and store the entry in the database using the game's local hash value
-- `get_partisan` and `get_impartial` methods take a game, and return a
-    `std::optional` of the corresponding entry type. The value is empty (i.e.
-    `returned_entry.has_value() == false`) if the entry is not found
+- The database stores data for sums, but only single subgames are queried outside
+    of DB generation. Sums are needed to compute thermographs.
+
+- `get_impartial()` takes a single game as an argument. Returns an
+    `optional<db_entry_impartial>`.
+- `set_impartial()` takes a single game, and `db_entry_impartial` entry as
+    an argument, and stores it in the DB.
+- `get_partisan_ptr()` functions take a single game or sumgame as an argument.
+    Returns a (possibly `nullptr`) pointer to a DB entry for the game. Some fields
+    may be `nullptr` as well (i.e. during the DB generation process).
+    - The `get_or_allocate_partisan_ptr()` versions will create a DB entry (with
+        `nullptr` fields) if not present
+
 - `save` and `load` methods save/load the entire database to/from a file
 - A global instance of `database` is accessible through
     `database& get_global_database()` (`global_database.h`), after
@@ -1122,28 +1144,38 @@ Several types are used for database generation:
           exists, the method returns true.
 
 Given an `i_db_game_generator`, `database::generate_entries` consumes games from
-the generator, and for each generated game `g`:
-1. `g.split()` is called
-2. If `g` didn't split, `g.normalize()` is called
-3. If `g` did split, then for each resulting subgame `sg`, `sg.normalize()` is called
-4. Each subgame `sg` (either resulting from a split or not), is passed to the method
-    `database::_generate_entry_single`. This searches for `sg` in the database, and
-    if not found, generates its entry by solving the game for both players to find
-    its outcome class
+the generator. These games are split and normalized, and the database
+then contains:
+1. All single subgames in the resulting sum
+2. The entire sum
+3. All of the above, for each sum reached by playing a single sumgame move (and doing any splitting/normalization after)
 
-NOTE: It currently would not be sufficient to simply handle only games which
-don't split, as `nogo`'s split method generates subgames which are not created
-by the `grid_generator`s. The `nogo::_immortal` vector is not considered by the
-current `grid_generator`s, so boards with meaningful immortal markers are
-found by calling `split()`
+This ensures that when generating the DB entry for a game, all child nodes
+have DB entries (this is a hard requirement due to the addition of thermographs
+in v1.6). This also ensures that subgames which are only produced by `split()`
+and not the game generator (i.e. for nogo) will have DB entries.
+
 
 ## New database in Version 1.6
-- Bounds computation: 
-    - no specific/fixed scale type for each game type
-    - first checks how it compares to some small rationals i.e. -1/1024 and 1/1024
-    - then chooses whether to search for the game's bounds on an infinitesimal scale type, or rational scale type accordingly
+Partisan entry fields are computed in this order:
+- Thermograph
+    - Thermograph generation will generate DB entries for child nodes which are not in the DB
+- Outcome (derived from thermograph)
+- Bounds
+    - The theromgraph is used to determine whether a game is small but not 0.
+        - If so, `bounds_finder.h` does binary search to find the game's bounds
+            along `BOUND_SCALE_UP`.
+        - Otherwise bounds along `BOUND_SCALE_DYADIC_RATIONAL` are read from
+            the thermograph
+- Dominated moves
 
 # Adding A Game To the Database
+IMPORTANT: If your game uses `grid_hash` or otherwise maps games with different
+boards to the same hash value, you must implement the following functions
+(see `game.h` for more details):
+- `move game::encode_grid_move_to_db(const move& m) const;`
+- `move game::decode_grid_move_from_db(const move& m) const;`
+
 If your game is a grid game, first set its grid hash mask in
 `init_grid_hash_mask.cpp`. If your grid game does not use the `grid_hash` class,
 set this value to `GRID_HASH_ACTIVE_MASK_IDENTITY`. This value can later be
@@ -1468,7 +1500,7 @@ NOTE:
 - In the WebAssembly build, no thread is spawned, and timeouts never expire.
 
 
-# Bounds (`bounds.h`)
+# Bounds (`bounds.h` and `bounds_finder.h`)
 Defines functions and types used for finding lower and upper bounds of games.
 
 - The `bound_scale` enum represents a scale of games on which bounds are found.
@@ -1476,6 +1508,11 @@ Defines functions and types used for finding lower and upper bounds of games.
 - The functions `get_scale_game()` and `get_inverse_scale_game()` return a new `game` object for a given scale and index along the scale.
 - The `relation` enum, (`cgt_basics.h`), is used to represent how a game relates to its bounds
 - The `bounds_options` struct specifies a scale and interval on which bounds should be searched for.
+    - Set `outcome_hint` field to speed up search somewhat
+    - As of v1.6, the `min` and `max` fields are ignored for `BOUND_SCALE_UP`,
+    and `BOUND_SCALE_DYADIC_RATIONAL`. Instead, these values are computed
+    before binary search by initializing them to some small value i.e. `-1` and `1`,
+    then iteratively doubling them until the game is bounded.
 
 Some scales and their games at select indices are shown in the following table:
 | Scale | -2 | -1 | 0 | 1 | 2 |
@@ -1769,15 +1806,8 @@ talks about non-polymorphic types.
     - This is used to define the template for all integer types
 - Instantiating the template for a type that doesn't define it will trigger
     a static assert
-- `serializer.h` defines the template for several standard library types:
-    - all integer types
-    - `std::string`
-    - `std::vector<T>`
-    - `std::shared_ptr<T>` and `std::unique_ptr<T>`
-    - `std::pair<T1, T2>`
-    - `std::unordered_map<T1, T2>`
-        - `unordered_map` actually has more template arguments. TODO:
-            implement the rest?
+- `serializer.h` defines the template for several standard library types. See
+    `serializer.h` comment
 
 Example usage:
 ```
@@ -1932,6 +1962,7 @@ Maybe we can have a subgame sorting pass which occasionally runs?
 
 # Design Choices and Remaining Uglinesses
 ## A `move` must be implemented as an `int`
+- As of v1.6 is actually `int64_t`
 - It is challenging to make a generic abstract move class, in a "nice" and efficient way.
 - Future Plan: probably keep it this way unless we find an elegant general solution
 - It will break for games which have complex move descriptions
@@ -2012,17 +2043,25 @@ indicates that all `.test` files are still valid.
 ## Code/Documentation/Testing
 1. Resolve relevant TODOs
     ```
-    make find_todo
+    cmake --build build -t find_todo
     ```
 2. Fix clang-tidy errors
-    - Check `tidy_result.txt` after each run. When complete, no errors should be produced by these commands
-    1. ```
-       make tidy_headers
-       ```
-    2. ```
-       make tidy
-       ```
+    First extract compilation options from `build/compile_commands.json`. Omit
+    -c, -o, the compiler executable path, and input/output file names.
+
+    To run on `cpp` files (replace `<CPP FLAGS>` with compilation options):
+    ```
+    find {src,test} -regex '.*\.cpp$' | parallel -j11 clang-tidy --config-file=.clang-tidy --exclude-header-filter='.*\/MCGS\/libs\/.*' {} -- -x c++ <CPP FLAGS> 2>&1 | tee log.txt
+    ```
+
+    To run on `h` files (replace `<CPP FLAGS>` with compilation options):
+    ```
+    find {src,test} -regex '.*\.h$' | parallel -j11 clang-tidy --config-file=.clang-tidy-headers --exclude-header-filter='.*\/MCGS\/libs\/.*' {} -- -x c++-header <CPP FLAGS> 2>&1 | tee log.txt
+    ```
+
 3. Apply clang-format
+    Note: Use `cmake --build build -t TARGET` in place of `make TARGET`
+
     - Basic procedure: edit original source files, then (re-)render formatted files. Repeat until desired result is achieved (see clang-format section of `style.md` for more information)
     1. Option 1: Using `make format` target
         - Render all formatted files:
@@ -2055,7 +2094,8 @@ indicates that all `.test` files are still valid.
     - When finished, `make format` should ideally leave behind no formatted files (files containing `___transformed` in their names)
 4. Run unit tests with all debugging tools:
    ```
-   make clean && make test DEBUG=1 ASAN=address
+   cmake -B build -DDEBUG=2 -DASAN=1
+   cmake --build build -t test
    ```
 5. Run game search tests with different debugging tools
     - Check results after each run (view resulting `out.html` in your web browser):
@@ -2064,13 +2104,17 @@ indicates that all `.test` files are still valid.
       ```
     1. Run default tests with all debugging tools (this will be very slow):
        ```
-       make clean && make DEBUG=1 ASAN=address && ./MCGS --run-tests
+       cmake -B build -DDEBUG=2 -DASAN=1
+       cmake --build build
+       ./MCGS --run-tests
        ```
        Check list of default implementation warnings at the end to see if some
        games are missing implementations of functions.
     2. Run larger test set with default compilation flags (also quite slow):
        ```
-       make clean && make && ./MCGS --run-tests --test-dir input/main_tests
+       cmake -B build
+       cmake --build build
+       ./MCGS --run-tests --test-dir input/main_tests
        ```
 6. Update documentation. Prune outdated/resolved notes
     - `development-notes.md`

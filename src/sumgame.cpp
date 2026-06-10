@@ -1236,7 +1236,7 @@ sumgame_move_generator::sumgame_move_generator(
     const sumgame& sum, bw to_play, temperature_vec_t* temperatures,
     dom_object_vec_t* dom_move_objects)
     : move_generator(to_play),
-      _sum(sum),
+      //_sum(sum),
       _subgame_idx_local(0),
       _subgame_current(nullptr),
       _mg_current(nullptr)
