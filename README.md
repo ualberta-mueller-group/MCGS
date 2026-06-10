@@ -48,7 +48,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
   - Complexity score. 
 - New games (see `input/info.test`)
   - `cannibal_clobber`
-  - `gen_king_dirt`
+  - `gen_king_dirt` (also has CGSuite implementation, see `utils/CGSuite/GenKingDirt.cgs`).
 - New results in the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
 - New optimizations
   - Impartial wrapper games generate moves by alternating between the moves of `BLACK` and `WHITE`.
