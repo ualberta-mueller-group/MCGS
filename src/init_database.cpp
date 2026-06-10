@@ -35,6 +35,7 @@
 #include "amazons.h"
 #include "fission.h"
 #include "cgt_integer_game.h"
+#include "paths.h"
 #include "sheep_grid_generator.h"
 #include "throw_assert.h"
 #include "toppling_dominoes.h"
@@ -152,18 +153,29 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
         db.update_metadata_string(db_config_string);
 }
 
-init_database_enum resolve_auto_init_type(const string& filename)
+init_database_enum resolve_auto_init_type(optional<string>& filename)
 {
-    if (filesystem::exists(filename))
+    THROW_ASSERT(!filename.has_value());
+
+    const filesystem::path p1 = get_default_db_path_1();
+    const filesystem::path p2 = get_default_db_path_2();
+
+    if (filesystem::exists(p1))
+        filename = p1.string();
+    else if (filesystem::exists(p2))
+        filename = p2.string();
+
+    if (filename.has_value())
     {
-        cout << "Autodetected database file: \"" << filename << "\". Loading..."
+        cout << "Autodetected database file: \"" << *filename << "\". Loading..."
                   << endl;
 
         return INIT_DATABASE_LOAD;
     }
 
-    cout << "Failed to autodetect database file: \"" << filename
-              << "\". Disabling database..." << endl;
+    cout << "Failed to autodetect database.bin. Disabling database. See "
+            "--db-file-load in `MCGS -h` output."
+         << endl;
 
     global::use_db.set(false);
     return INIT_DATABASE_NONE;
@@ -172,7 +184,7 @@ init_database_enum resolve_auto_init_type(const string& filename)
 } // namespace
 
 namespace mcgs_init {
-void init_database(const string& filename, init_database_enum init_type,
+void init_database(optional<string> filename, init_database_enum init_type,
                    const string& db_config_string)
 {
     init_global_database();
@@ -185,9 +197,11 @@ void init_database(const string& filename, init_database_enum init_type,
 
     if (init_type == INIT_DATABASE_LOAD)
     {
-        db.load(filename);
+        THROW_ASSERT(filename.has_value());
+
+        db.load(*filename);
         cout << "Database file loaded:";
-        cout << " \"" << filename << "\"" << endl;
+        cout << " \"" << *filename << "\"" << endl;
     }
 
     register_games(db);
@@ -195,10 +209,12 @@ void init_database(const string& filename, init_database_enum init_type,
 
     if (init_type == INIT_DATABASE_CREATE)
     {
+        THROW_ASSERT(filename.has_value());
+
         fill_database(db, db_config_string, false);
-        db.save(filename);
+        db.save(*filename);
         cout << "Database file saved:";
-        cout << " \"" << filename << "\"" << endl;
+        cout << " \"" << *filename << "\"" << endl;
     }
 
     if (init_type != INIT_DATABASE_NONE && global::print_db_info())

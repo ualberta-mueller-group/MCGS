@@ -37,7 +37,7 @@ cli_options::cli_options()
       outfile_name(get_default_csv_path()),
       test_timeout(cli_options::DEFAULT_TEST_TIMEOUT),
       play_log_name(),
-      db_file_name(get_default_db_path()),
+      db_file_name(),
       init_database_type(INIT_DATABASE_AUTO),
       db_config_string(),
       test_filter_type(TEST_FILTER_MCGS)
@@ -145,8 +145,12 @@ void print_help_message(const string& exec_name)
     print_flag(global::use_db.no_flag(), "Disable database usage.");
 
     print_flag("--db-file-load <file name>",
-               "Load database file. Default is " +
-                   path_relative_to_cwd(get_default_db_path()).string());
+               "Load database file. If unspecified, checks for `" +
+                   path_relative_to_cwd(get_default_db_path_1()).string() +
+                   "` and then `" +
+                   path_relative_to_cwd(get_default_db_path_2()).string() +
+                   "` (database.bin beside the executable, and then in the "
+                   "project root directory).");
 
     print_flag("--db-file-create <file name> <config string>",
                "Create and populate a new database file. See README for "

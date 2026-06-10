@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <optional>
 
 enum init_database_enum
 {
@@ -12,7 +13,8 @@ enum init_database_enum
 };
 
 namespace mcgs_init {
-void init_database(const std::string& filename, init_database_enum init_type,
+void init_database(std::optional<std::string> filename,
+                   init_database_enum init_type,
                    const std::string& db_config_string);
 
 /*

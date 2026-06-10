@@ -48,7 +48,7 @@ struct cli_options
 
     std::string play_log_name;
 
-    std::string db_file_name;
+    std::optional<std::string> db_file_name; // If absent, use defaults
     init_database_enum init_database_type;
     std::string db_config_string;
 

@@ -5,7 +5,7 @@
 
 #include "throw_assert.h"
 
-// All relative to project root
+// All relative to project root (except DEFAULT_DB_PATH)
 #define DEFAULT_DB_PATH "database.bin"
 #define DEFAULT_INPUT_PATH "input/autotests"
 #define DEFAULT_CSV_PATH "out.csv"
@@ -44,7 +44,17 @@ path get_project_root_path()
     return root_path;
 }
 
-path get_default_db_path()
+path get_default_db_path_1()
+{
+    assert(is_initialized);
+
+    const path exec_path = get_exec_path();
+    const path db_path = (exec_path.parent_path()) / DEFAULT_DB_PATH;
+
+    return db_path;
+}
+
+path get_default_db_path_2()
 {
     assert(is_initialized);
 
