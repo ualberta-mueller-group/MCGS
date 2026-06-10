@@ -81,7 +81,7 @@ void print_help_message(const string& exec_name)
     print_flag("--no-color", "Disable color printing for --play-mcgs.");
 
     print_flag("--play-log <file name>", "When specified, --play-mcgs "
-                                         "logs the game to the specified file");
+                                         "logs the game to the specified file.");
     
     print_flag("--stdin",
                "Read input from stdin. Causes [input string] to be ignored.");
@@ -273,16 +273,21 @@ milliseconds. Timeout of 0 means tests never time out. Default is " +
                "means files are considered different even if a type "
                "mapping difference involves games not found in either file.");
 
+    print_flag("--dump-db <output file>",
+               "Dump DB to specified file, in readable format, with one entry "
+               "per line. Set DB_INCLUDE_STRINGS=1 in the CMake build "
+               "configuration to see game strings in the output.");
+
+    cout << "Search graphs (experimental and incomplete):\n" << endl;
+    cout << "\tSee search_graph_debug.h and search_graph_debug.cpp to "
+            "understand colors."
+         << endl << endl;
+
     print_flag("--search-graph-print <directory name>",
                "Print BW solve command search graphs to directory.");
 
     print_flag("--search-graph-verify <directory name>",
                "Verify and annotate search graphs from given directory.");
-
-    print_flag("--dump-db <output file>",
-               "Dump DB to specified file, in readable format, with one entry "
-               "per line. Set DB_INCLUDE_STRINGS=1 in the CMake build "
-               "configuration to see game strings in the output.");
 }
 
 } // namespace
@@ -502,6 +507,20 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == "--dump-db")
+        {
+            arg_idx++; // consume the file name
+
+            if (arg_next.size() == 0)
+            {
+                throw cli_options_exception(
+                    "Error: got --dump-db but no file path");
+            }
+
+            opts.db_dump_file_name = arg_next;
+            continue;
+        }
+
         if (arg == "--search-graph-print")
         {
             arg_idx++;
@@ -525,20 +544,6 @@ cli_options parse_args(int argc, const char** argv, bool silent)
 
             opts.search_graph_verify_dir = arg_next;
 
-            continue;
-        }
-
-        if (arg == "--dump-db")
-        {
-            arg_idx++; // consume the file name
-
-            if (arg_next.size() == 0)
-            {
-                throw cli_options_exception(
-                    "Error: got --dump-db but no file path");
-            }
-
-            opts.db_dump_file_name = arg_next;
             continue;
         }
 
