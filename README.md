@@ -31,10 +31,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 ### Version 1.6 Additions
 #### Important Notes
 - A CMake build has replaced the old makefile build. The project now also depends on a git submodule. See `README.md` for new build instructions.
-- Partisan games must implement 3 new functions to have correct DB entries (see `game.h` for explanation).
-  - `game* clone() const = 0;`
-  - `move game::encode_grid_move_to_db(const move& m) const;`
-  - `move game::decode_grid_move_from_db(const move& m) const;`
+- All games must implement the new `game::clone()` function. Partisan games must implement 2 new functions to have correct DB entries. See [development-notes.md (Adding A Game To the Database)](docs/development-notes.md#adding-a-game-to-the-database).
 
 #### Bug Fixes
 - Fixed a bug where `switch_game::inverse()` could trigger an `assert`. In an unmodified copy of MCGS this couldn't actually happen in practice.
@@ -44,7 +41,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 #### New Features
 - `move` is now `int64_t` (instead of `int` which is likely 32 bits).
   - Games can now be constructed with much larger boards as a result.
-- The database has several new fields for partisan games:
+- The database has several new fields for partisan games
   - Lower/upper bounds on value (in terms of multiples of up/down, or `1/8`).
   - Thermograph.
   - A set of dominated (or nondominated) moves.
@@ -52,8 +49,8 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 - New games (see `input/info.test`)
   - `cannibal_clobber`
   - `gen_king_dirt`
-- New results in the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS)
-- New optimizations:
+- New results in the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
+- New optimizations
   - Impartial wrapper games generate moves by alternating between the moves of `BLACK` and `WHITE`.
     - Use `--no-imp-wrapper-alternate-color` to revert this (will generate all `BLACK` moves followed by all `WHITE` moves).
   - For partisan search algorithms:
@@ -69,7 +66,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
   - `--convert-to-ctl` exports test cases to a format readable by the [CGT Testing Library](https://github.com/ualberta-mueller-group/cgt_testing_library).
     - Aids in comparison of MCGS to other CGT projects.
     - Can use with `--test-filter`.
-  - `--search-graph-print` and `--search-graph-verify` are experimental debugging tools for visualizing search nodes visited by partisan search algorithms.
+  - `--search-graph-print` and `--search-graph-verify` are experimental debugging tools for visualizing search nodes visited by partisan search algorithms. Use a tool like Graphviz or Gephi to view the data.
 - Code cleaned up, new utilities added
   - `thermograph_builder_no_db.h`: builds the thermograph of a game outside of database generation.
   - `thermograph_helpers.h`: derives various data from a thermograph.
@@ -79,32 +76,37 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
   - `utilities.h`: has new generic helper functions.
 
 ### Building MCGS
-First download this repository, and enter its directory.
+First download this repository, and enter its directory. Either download from the
+[releases page](https://github.com/ualberta-mueller-group/MCGS/releases) or
+`git clone --recursive https://github.com/ualberta-mueller-group/MCGS.git`
+(the `--recursive` ensures dependencies are downloaded).
 
-To build the program, `./MCGS`, run:
+To build the program, `./MCGS`, from the project's root directory run:
 ```
-make
+cmake -B build
+cmake --build build
 ```
 This may take a few minutes. Depending on your hardware, you may build using
 more threads, i.e. to build using 4 threads:
 ```
-make -j 4
+cmake --build build -j4
 ```
 
 To run all unit tests, run:
 ```
-make test
+cmake --build build -t test
 ```
 or:
 ```
-make test -j 4
+cmake --build build -j4 -t test
 ```
 This will build and then run `./MCGS_test`, and on successful completion of
-unit tests, the text "SUCCESS" should appear. Running all tests can take
-several seconds, depending on your hardware. The `test_extra` makefile target
+unit tests, the text "SUCCESS" should appear. Running all tests may take ~30 seconds
+or longer, depending on your hardware. The `test_extra` target
 runs some unit tests on larger ranges of values, which takes much longer.
 
-For other build options, including DEBUG level, AddressSanitizer options, and creating the WebAssembly version, see `docs/development-notes.md`.
+To see configurable build options, run `cmake -B build -LH`. For more info on build
+options and creating the WebAssembly version, see `docs/development-notes.md`.
 
 ### Using MCGS
 `MCGS` can read input from a file, or as a quoted command line argument, or
@@ -124,12 +126,13 @@ For a full description of input syntax, including game-specific input syntax,
 see [input/info.test](input/info.test).
 
 ### Using the Database
-NOTE: Database files from previous versions are not compatible with version 1.5.
+NOTE: Database files from previous versions are not compatible with version 1.6.
 
 The database is loaded from `database.bin` automatically on startup if it
-exists and `--no-use-db` is not specified. `--db-file-load <file name>` is used
-to specify a different file. This file is not included in the repository and
-must be generated for specific games manually.
+exists and `--no-use-db` is not specified. MCGS first searches for it in the same
+directory as the executable, and then the project root directory if not found.
+`--db-file-load <file name>` is used to specify a different file. This file is
+not included in the repository and must be generated for specific games manually.
 
 `./MCGS --db-file-create <file name> <DB config string>` is used to create the
 database. The config string specifies games to include in the database, and
@@ -146,17 +149,18 @@ into more subgames.
 
 Games currently supported by the database:
 - Strip games:
-    - `clobber_1xn`
-    - `nogo_1xn`
-    - `elephants`
-    - `toppling_dominoes`
+  - `clobber_1xn`
+  - `nogo_1xn`
+  - `elephants`
+  - `toppling_dominoes`
 - Grid games:
-    - `amazons`
-    - `nogo`
-    - `clobber`
-    - `domineering`
-    - `fission`
-    - `sheep`
+  - `amazons`
+  - `nogo`
+  - `clobber`
+  - `cannibal_clobber`
+  - `domineering`
+  - `fission`
+  - `sheep`
 - All impartial versions of the above games
 
 The `max_dims` parameter must be specified for all of these games. For strip
@@ -234,30 +238,25 @@ For more information about ongoing development, see
 project, follow the style guide: [style.md](docs/style.md).
 
 Developers can check for memory leaks and other memory errors by overriding the
-`ASAN` makefile variable, setting it to either `leak` or `address`, i.e:
+`ASAN` CMake variable, setting it to `1` i.e:
 ```
-make MCGS ASAN=leak
+cmake -B build -DASAN=1
+cmake --build build
 ```
-or
-```
-make MCGS ASAN=address
-```
-This will compile source files with either the `-fsanitize=leak` or
-`-fsanitize=address` flags respectively, and requires a clean build.
-`-fsanitize=leak` links against LeakSanitizer and has very little overhead, but
-detects fewer errors, whereas `-fsanitize=address` links LeakSanitizer and
-additionally instruments compiled code, to detect more memory errors and give
-more detailed diagnostics.
+
+This will compile source files with `-fsanitize=address`, which links against
+LeakSanitizer and additionally instruments compiled code, to detect memory
+errors and give diagnostics.
 
 See: [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html) for
 more information.
 
-Additionally, the `DEBUG` makefile variable adds or removes debugging checks,
+Additionally, the `DEBUG` CMake variable adds or removes debugging checks,
 to the extent that's sensible (you can't build MCGS_test with NDEBUG).
-- `make DEBUG=0` removes debugging code (expects lots of warnings -- this is
+- `cmake -B build -DDEBUG=0` removes debugging code (expects lots of warnings -- this is
   still experimental)
-- `make DEBUG=1` adds more debugging code
-- `make` (leaving `DEBUG` undefined) builds with default debugging code
+- `cmake -B build -DDEBUG=2` adds more debugging code
+- The default `DEBUG` level is `1`.
 
 ### MCGS data types
 #### game (game.h)
@@ -315,7 +314,7 @@ To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
 - Define `class x` in `x.h`, derive from `game`, `strip` or `grid`.
     - Impartial games should instead derive from `impartial_game`
-- Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, `inverse()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
+- Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, `inverse()`, `clone()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
     - Impartial games have a slightly different set of methods to implement
         - `create_move_generator()` doesn't take a color argument
         - Both `play` methods must be implemented: one with a color argument, and one without
@@ -378,6 +377,7 @@ For complete details, with examples, see [development-notes.md (Adding Hashing t
 
 #### Adding A Game To the Database
 To add your game to the database, you must register your game class with the database,
-and define or reuse a function to create a game generator. See
+and define or reuse a function to create a game generator. A few additional `game` functions
+must also be implemented. See
 [development-notes.md (Adding A Game To the Database)](docs/development-notes.md#adding-a-game-to-the-database)
 for details.
