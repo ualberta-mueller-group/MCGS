@@ -138,7 +138,7 @@ database::database()
 
 void database::save(const string& filename) const
 {
-    obuffer os(filename);
+    file_obuffer os(filename);
     serializer_ctx ctx;
 
     serializer_save(os, _metadata_string, &ctx);
@@ -159,7 +159,7 @@ void database::load(const string& filename)
     assert(_tree_partisan.empty());
     assert(_tree_impartial.empty());
 
-    ibuffer is(filename);
+    file_ibuffer is(filename);
     serializer_ctx ctx;
 
     serializer_load(is, _metadata_string, &ctx);

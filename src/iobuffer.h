@@ -35,70 +35,13 @@
 
 */
 
-////////////////////////////////////////////////// fmt_write/fmt_read
-
-// Pass T by value, not reference (avoid size mismatch)
-template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
-inline void __fmt_write(std::ostream& os, T val)
-{
-    static_assert(CHAR_BIT == 8); // 8 bits per byte
-    static_assert(std::is_integral_v<T>);
-
-    // NOLINTNEXTLINE(readability-identifier-naming)
-    using T_Unsigned = std::make_unsigned_t<T>;
-    const T_Unsigned& val_uns = reinterpret_cast<const T_Unsigned&>(val);
-
-    constexpr unsigned int SIZE = sizeof(T);
-
-    for (unsigned int i = 0; i < SIZE; i++)
-    {
-        assert(os);
-
-        uint8_t byte = (uint8_t) (val_uns >> (i * 8));
-
-        // Don't use insertion operator (control codes mess up the data)
-        os.write((const char*) &byte, 1);
-    }
-
-    assert(os);
-}
-
-template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
-inline T __fmt_read(std::istream& is)
-{
-    static_assert(CHAR_BIT == 8); // 8 bits per byte
-    static_assert(std::is_integral_v<T>);
-
-    constexpr unsigned int SIZE = sizeof(T);
-
-    T val(0);
-    uint8_t byte;
-
-    for (unsigned int i = 0; i < SIZE; i++)
-    {
-        assert(is);
-
-        // Don't use extraction operator (control codes mess up the data)
-        is.read((char*) &byte, 1);
-
-        const T byte_longer = byte;
-        val |= (byte_longer << (i * 8));
-    }
-
-    assert(is);
-
-    return val;
-}
-
-////////////////////////////////////////////////// class ibuffer
-class ibuffer
+////////////////////////////////////////////////// interface i_ibuffer
+class i_ibuffer
 {
 public:
-    ibuffer(const std::string& file_name);
+    virtual ~i_ibuffer() {}
 
-    void close();
-
-    uint8_t read_u8();
+    virtual uint8_t read_u8() = 0;
     uint16_t read_u16();
     uint32_t read_u32();
     uint64_t read_u64();
@@ -114,48 +57,16 @@ public:
     Enum_T read_enum();
 
     template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
-    T __read()
-    {
-        return __fmt_read<T>(_fs);
-    }
-
-private:
-    static constexpr std::ifstream::openmode OPEN_MODE = std::ifstream::binary;
-
-    std::ifstream _fs;
+    T __read();
 };
 
-////////////////////////////////////////////////// ibuffer methods
-inline void ibuffer::close()
-{
-    assert(_fs.is_open());
-    _fs.close();
-    assert(!_fs.is_open());
-}
-
-inline bool ibuffer::read_bool()
-{
-    const uint8_t val = read_u8();
-    return static_cast<bool>(val);
-}
-
-template <class Enum_T>
-inline Enum_T ibuffer::read_enum()
-{
-    static_assert(std::is_enum_v<Enum_T>);
-    const uint8_t value = read_u8();
-    return static_cast<Enum_T>(value);
-}
-
-////////////////////////////////////////////////// class obuffer
-class obuffer
+////////////////////////////////////////////////// interface i_obuffer
+class i_obuffer
 {
 public:
-    obuffer(const std::string& file_name);
+    virtual ~i_obuffer() {}
 
-    inline void close();
-
-    void write_u8(const uint8_t& val);
+    virtual void write_u8(const uint8_t& val) = 0;
     void write_u16(const uint16_t& val);
     void write_u32(const uint32_t& val);
     void write_u64(const uint64_t& val);
@@ -171,10 +82,32 @@ public:
     void write_enum(const Enum_T& val);
 
     template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
-    void __write(const T& val)
-    {
-        __fmt_write(_fs, val);
-    }
+    void __write(const T& val);
+};
+
+////////////////////////////////////////////////// class file_ibuffer
+class file_ibuffer: public i_ibuffer
+{
+public:
+    file_ibuffer(const std::string& file_name);
+    void close();
+
+    uint8_t read_u8() override;
+
+private:
+    static constexpr std::ifstream::openmode OPEN_MODE = std::ifstream::binary;
+
+    std::ifstream _fs;
+};
+
+////////////////////////////////////////////////// class file_obuffer
+class file_obuffer: public i_obuffer
+{
+public:
+    file_obuffer(const std::string& file_name);
+    inline void close();
+
+    void write_u8(const uint8_t& val) override;
 
 private:
     static constexpr std::ofstream::openmode OPEN_MODE = //
@@ -184,28 +117,80 @@ private:
     std::ofstream _fs;
 };
 
-////////////////////////////////////////////////// obuffer methods
-inline obuffer::obuffer(const std::string& file_name)
-    : _fs(file_name, OPEN_MODE)
+////////////////////////////////////////////////// fmt_read/fmt_write templates
+template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
+T __fmt_read(i_ibuffer& is)
 {
-    assert(_fs.is_open());
+    static_assert(CHAR_BIT == 8); // 8 bits per byte
+    static_assert(std::is_integral_v<T>);
+
+    constexpr unsigned int SIZE = sizeof(T);
+
+    T val(0);
+    uint8_t byte;
+
+    for (unsigned int i = 0; i < SIZE; i++)
+    {
+        byte = is.read_u8();
+
+        const T byte_longer = byte;
+        val |= (byte_longer << (i * 8));
+    }
+
+    return val;
 }
 
-inline void obuffer::close()
+// Pass T by value, not reference (avoid size mismatch)
+template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
+void __fmt_write(i_obuffer& os, T val)
 {
-    assert(_fs.is_open());
-    _fs.close();
-    assert(!_fs.is_open());
+    static_assert(CHAR_BIT == 8); // 8 bits per byte
+    static_assert(std::is_integral_v<T>);
+
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using T_Unsigned = std::make_unsigned_t<T>;
+    const T_Unsigned& val_uns = reinterpret_cast<const T_Unsigned&>(val);
+
+    constexpr unsigned int SIZE = sizeof(T);
+
+    for (unsigned int i = 0; i < SIZE; i++)
+    {
+        const uint8_t byte = (uint8_t) (val_uns >> (i * 8));
+        os.write_u8(byte);
+    }
 }
 
-inline void obuffer::write_bool(const bool& val)
+//////////////////////////////////////// i_ibuffer methods
+inline bool i_ibuffer::read_bool()
+{
+    const uint8_t val = read_u8();
+    return static_cast<bool>(val);
+}
+
+template <class Enum_T>
+inline Enum_T i_ibuffer::read_enum()
+{
+    static_assert(std::is_enum_v<Enum_T>);
+    const uint8_t value = read_u8();
+    return static_cast<Enum_T>(value);
+}
+
+template <class T>
+inline T i_ibuffer::__read()
+{
+    static_assert(std::is_integral_v<T>);
+    return __fmt_read<T>(*this);
+}
+
+//////////////////////////////////////// i_obuffer methods
+inline void i_obuffer::write_bool(const bool& val)
 {
     const uint8_t val_casted = static_cast<bool>(val);
     write_u8(val_casted);
 }
 
 template <class Enum_T>
-void obuffer::write_enum(const Enum_T& val)
+void i_obuffer::write_enum(const Enum_T& val)
 {
     static_assert(std::is_enum_v<Enum_T>);
 
@@ -217,4 +202,32 @@ void obuffer::write_enum(const Enum_T& val)
     write_u8(val_casted);
 }
 
+template <class T>
+inline void i_obuffer::__write(const T& val)
+{
+    static_assert(std::is_integral_v<T>);
+    return __fmt_write<T>(*this, val);
+}
+
+//////////////////////////////////////// file_ibuffer methods
+inline void file_ibuffer::close()
+{
+    assert(_fs.is_open());
+    _fs.close();
+    assert(!_fs.is_open());
+}
+
+//////////////////////////////////////// file_obuffer methods
+inline file_obuffer::file_obuffer(const std::string& file_name)
+    : _fs(file_name, OPEN_MODE)
+{
+    assert(_fs.is_open());
+}
+
+inline void file_obuffer::close()
+{
+    assert(_fs.is_open());
+    _fs.close();
+    assert(!_fs.is_open());
+}
 

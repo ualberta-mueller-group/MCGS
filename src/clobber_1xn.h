@@ -24,8 +24,8 @@ public:
     void undo_move() override;
 
     // Serialization
-    void save_impl(obuffer& os) const override;
-    static dyn_serializable* load_impl(ibuffer& is);
+    void save_impl(i_obuffer& os) const override;
+    static dyn_serializable* load_impl(i_ibuffer& is);
 
     game* inverse() const override;
     game* clone() const override;

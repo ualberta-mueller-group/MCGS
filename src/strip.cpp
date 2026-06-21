@@ -205,7 +205,7 @@ void strip::_mirror_self()
     }
 }
 
-void strip::_save_board(obuffer& os, const std::vector<int>& board)
+void strip::_save_board(i_obuffer& os, const std::vector<int>& board)
 {
     const size_t size = board.size();
     os.write_u64(size);
@@ -223,7 +223,7 @@ void strip::_save_board(obuffer& os, const std::vector<int>& board)
     }
 }
 
-std::vector<int> strip::_load_board(ibuffer& is)
+std::vector<int> strip::_load_board(i_ibuffer& is)
 {
     std::vector<int> board;
 

@@ -147,12 +147,12 @@ void clobber_1xn::undo_move()
     replace(to, opponent(player));
 }
 
-void clobber_1xn::save_impl(obuffer& os) const
+void clobber_1xn::save_impl(i_obuffer& os) const
 {
     _save_board(os, board_const());
 }
 
-dyn_serializable* clobber_1xn::load_impl(ibuffer& is)
+dyn_serializable* clobber_1xn::load_impl(i_ibuffer& is)
 {
     return new clobber_1xn(_load_board(is));
 }

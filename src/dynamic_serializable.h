@@ -25,9 +25,9 @@ class dyn_serializable;
     "Load" function pointer typedef
 
     i.e. function pointer to:
-    static dyn_serializable* clobber_1xn::load_impl(ibuffer&)
+    static dyn_serializable* clobber_1xn::load_impl(i_ibuffer&)
 */
-typedef dyn_serializable* (*load_fn_ptr_t)(ibuffer&);
+typedef dyn_serializable* (*load_fn_ptr_t)(i_ibuffer&);
 
 ////////////////////////////////////////////////// type traits
 // NOLINTBEGIN(readability-identifier-naming)
@@ -45,7 +45,7 @@ struct has_save_impl<T,
     std::enable_if_t<
         std::is_same_v<
             decltype(&T::save_impl),
-            void (T::*)(obuffer&) const
+            void (T::*)(i_obuffer&) const
         >,
         void
     >
@@ -92,7 +92,7 @@ public:
 
     dyn_serializable_id_t dyn_serializable_id() const;
 
-    virtual void save_impl(obuffer&) const { THROW_ASSERT(false); }
+    virtual void save_impl(i_obuffer&) const { THROW_ASSERT(false); }
 
 private:
 };
@@ -156,7 +156,7 @@ template <class T>
 struct serializer<
     T*, std::enable_if_t<std::is_base_of_v<dyn_serializable, T>, void>>
 {
-    static void save(obuffer& os, const dyn_serializable* obj)
+    static void save(i_obuffer& os, const dyn_serializable* obj)
     {
         dyn_serializable_id_t sid = obj->dyn_serializable_id();
         THROW_ASSERT(sid > 0);
@@ -165,7 +165,7 @@ struct serializer<
         obj->save_impl(os);
     }
 
-    static T* load(ibuffer& is)
+    static T* load(i_ibuffer& is)
     {
         dyn_serializable_id_t sid = is.read_u32();
 

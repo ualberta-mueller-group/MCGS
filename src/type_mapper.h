@@ -53,7 +53,7 @@ private:
 template <>
 struct serializer<type_mapper>
 {
-    inline static void save(obuffer& os, const type_mapper& mapper, serializer_ctx* ctx)
+    inline static void save(i_obuffer& os, const type_mapper& mapper, serializer_ctx* ctx)
     {
         serializer<decltype(mapper._name_to_id_map)>::save(
             os, mapper._name_to_id_map, ctx);
@@ -62,7 +62,7 @@ struct serializer<type_mapper>
             os, mapper._id_to_name_map, ctx);
     }
 
-    inline static type_mapper load(ibuffer& is, serializer_ctx* ctx)
+    inline static type_mapper load(i_ibuffer& is, serializer_ctx* ctx)
     {
         type_mapper mapper;
 

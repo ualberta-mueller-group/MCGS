@@ -13,7 +13,7 @@ struct serializer<game_bounds>
 {
     static_assert(std::is_same_v<bound_t, int32_t>);
 
-    inline static void save(obuffer& os, const game_bounds& bounds, serializer_ctx* ctx)
+    inline static void save(i_obuffer& os, const game_bounds& bounds, serializer_ctx* ctx)
     {
         os.write_enum<bound_scale>(bounds._scale);
 
@@ -26,7 +26,7 @@ struct serializer<game_bounds>
         os.write_enum<relation>(bounds._upper_relation);
     }
 
-    inline static game_bounds load(ibuffer& is, serializer_ctx* ctx)
+    inline static game_bounds load(i_ibuffer& is, serializer_ctx* ctx)
     {
         const bound_scale scale = is.read_enum<bound_scale>();
 
@@ -43,7 +43,7 @@ struct serializer<game_bounds>
         return bounds;
     }
 
-    inline static game_bounds* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    inline static game_bounds* load_ptr(i_ibuffer& is, serializer_ctx* ctx)
     {
         const bound_scale scale = is.read_enum<bound_scale>();
 

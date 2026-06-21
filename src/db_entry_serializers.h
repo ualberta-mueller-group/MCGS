@@ -10,7 +10,7 @@
 template <>
 struct serializer<db_entry_partisan>
 {
-    inline static void save(obuffer& os, const db_entry_partisan& entry,
+    inline static void save(i_obuffer& os, const db_entry_partisan& entry,
                             serializer_ctx* ctx)
     {
 
@@ -24,7 +24,7 @@ struct serializer<db_entry_partisan>
         serializer_save(os, entry.dominated_moves, ctx);
     }
 
-    inline static db_entry_partisan load(ibuffer& is, serializer_ctx* ctx)
+    inline static db_entry_partisan load(i_ibuffer& is, serializer_ctx* ctx)
     {
         db_entry_partisan entry;
 
@@ -47,7 +47,7 @@ struct serializer<db_entry_partisan>
 template <>
 struct serializer<db_entry_impartial>
 {
-    inline static void save(obuffer& os, const db_entry_impartial& entry,
+    inline static void save(i_obuffer& os, const db_entry_impartial& entry,
                             serializer_ctx* ctx)
     {
 #ifdef DB_INCLUDE_STRINGS
@@ -56,7 +56,7 @@ struct serializer<db_entry_impartial>
         os.write_i32(entry.nim_value);
     }
 
-    inline static db_entry_impartial load(ibuffer& is, serializer_ctx* ctx)
+    inline static db_entry_impartial load(i_ibuffer& is, serializer_ctx* ctx)
     {
         db_entry_impartial entry;
 #ifdef DB_INCLUDE_STRINGS

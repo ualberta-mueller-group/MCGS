@@ -318,12 +318,12 @@ void elephants::undo_move()
     remove_stone(to);
 }
 
-void elephants::save_impl(obuffer& os) const
+void elephants::save_impl(i_obuffer& os) const
 {
     _save_board(os, board_const());
 }
 
-dyn_serializable* elephants::load_impl(ibuffer& is)
+dyn_serializable* elephants::load_impl(i_ibuffer& is)
 {
     return new elephants(_load_board(is));
 }
