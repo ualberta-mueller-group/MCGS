@@ -20,6 +20,7 @@
 #include <fstream>
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
 #include "throw_assert.h"
 
@@ -115,6 +116,33 @@ private:
         std::ofstream::trunc;                            //
 
     std::ofstream _fs;
+};
+
+
+////////////////////////////////////////////////// class memory_ibuffer
+class memory_ibuffer: public i_ibuffer
+{
+public:
+    memory_ibuffer(const std::vector<uint8_t>& data_vec);
+
+    uint8_t read_u8() override;
+
+private:
+    const std::vector<uint8_t>& _data_vec;
+    size_t _idx;
+};
+
+////////////////////////////////////////////////// class memory_obuffer
+class memory_obuffer: public i_obuffer
+{
+public:
+    void write_u8(const uint8_t& val) override;
+
+    const std::vector<uint8_t>& get_data() const;
+    std::vector<uint8_t>& get_data();
+
+private:
+    std::vector<uint8_t> _data_vec;
 };
 
 ////////////////////////////////////////////////// fmt_read/fmt_write templates
@@ -229,5 +257,33 @@ inline void file_obuffer::close()
     assert(_fs.is_open());
     _fs.close();
     assert(!_fs.is_open());
+}
+
+////////////////////////////////////////////////// memory_ibuffer methods
+inline memory_ibuffer::memory_ibuffer(const std::vector<uint8_t>& data_vec)
+    : _data_vec(data_vec), _idx(0)
+{
+}
+
+inline uint8_t memory_ibuffer::read_u8()
+{
+    THROW_ASSERT(_idx < _data_vec.size());
+    return _data_vec[_idx++];
+}
+
+////////////////////////////////////////////////// memory_obuffer methods
+inline void memory_obuffer::write_u8(const uint8_t& val)
+{
+    _data_vec.push_back(val);
+}
+
+inline const std::vector<uint8_t>& memory_obuffer::get_data() const
+{
+    return _data_vec;
+}
+
+inline std::vector<uint8_t>& memory_obuffer::get_data()
+{
+    return _data_vec;
 }
 
