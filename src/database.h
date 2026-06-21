@@ -196,7 +196,6 @@ private:
     typedef DB_MAP_T<hash_t, db_entry_impartial> terminal_layer_impartial_t;
 
     // Trees
-    typedef DB_MAP_T<game_type_t, terminal_layer_partisan_t> tree_partisan_t;
     typedef DB_MAP_T<game_type_t, terminal_layer_impartial_t> tree_impartial_t;
 
     friend std::ostream& operator<<(std::ostream& os, const database& db);
@@ -237,7 +236,7 @@ private:
     std::string _metadata_string;
     type_mapper _mapper;
     std::unique_ptr<thermograph_cache> _graph_cache;
-    tree_partisan_t _tree_partisan;
+    terminal_layer_partisan_t _terminal_partisan;
     tree_impartial_t _tree_impartial;
 };
 

@@ -148,7 +148,7 @@ void database::save(const string& filename) const
     // Thermographs in the DB entry are saved to disk as `thgraph_id_t`
     serializer<shared_ptr<ThGraph>>::set_thermograph_cache(&ctx,
                                                            &_get_graph_cache());
-    serializer_save(os, _tree_partisan, &ctx);
+    serializer_save(os, _terminal_partisan, &ctx);
     serializer_save(os, _tree_impartial, &ctx);
 
     os.close();
@@ -156,7 +156,7 @@ void database::save(const string& filename) const
 
 void database::load(const string& filename)
 {
-    assert(_tree_partisan.empty());
+    assert(_terminal_partisan.empty());
     assert(_tree_impartial.empty());
 
     file_ibuffer is(filename);
@@ -169,7 +169,7 @@ void database::load(const string& filename)
     // Thermographs in the DB entry are saved to disk as `thgraph_id_t`
     serializer<shared_ptr<ThGraph>>::set_thermograph_cache(&ctx,
                                                            &_get_graph_cache());
-    serializer_load(is, _tree_partisan, &ctx);
+    serializer_load(is, _terminal_partisan, &ctx);
     serializer_load(is, _tree_impartial, &ctx);
 
     is.close();
@@ -179,19 +179,15 @@ void database::dump_to_stream(ostream& os) const
 {
     os << _mapper << '\n';
 
-    for (const pair<const game_type_t, terminal_layer_partisan_t>&
-             terminal_layer : _tree_partisan)
+    for (const pair<const hash_t, db_entry_partisan>& entry_pair :
+         _terminal_partisan)
     {
-        for (const pair<const hash_t, db_entry_partisan>& entry_pair :
-             terminal_layer.second)
-        {
-            os << "Hash: `";
-            os << entry_pair.first;
-            os << "` ";
+        os << "Hash: `";
+        os << entry_pair.first;
+        os << "` ";
 
-            entry_pair.second.print(os, *this);
-            os << '\n';
-        }
+        entry_pair.second.print(os, *this);
+        os << '\n';
     }
 
     for (const pair<const game_type_t, terminal_layer_impartial_t>&
@@ -451,13 +447,13 @@ void database::clear()
     _metadata_string.clear();
     _mapper.clear();
     _graph_cache = make_unique<thermograph_cache>();
-    _tree_partisan.clear();
+    _terminal_partisan.clear();
     _tree_impartial.clear();
 }
 
 bool database::empty() const
 {
-    return _tree_partisan.empty() && _tree_impartial.empty();
+    return _terminal_partisan.empty() && _tree_impartial.empty();
 }
 
 bool database::is_equal(const database& other) const
@@ -468,7 +464,7 @@ bool database::is_equal(const database& other) const
     if (_get_graph_cache() != other._get_graph_cache())
         return false;
 
-    if (_tree_partisan != other._tree_partisan)
+    if (_terminal_partisan != other._terminal_partisan)
         return false;
 
     if (_tree_impartial != other._tree_impartial)
@@ -648,16 +644,10 @@ db_entry_partisan* database::_get_partisan_impl(const Game_Or_Sum_T& g) const
     if (disk_type == 0)
         return nullptr;
 
-    auto terminal_layer_iterator = _tree_partisan.find(disk_type);
-    if (terminal_layer_iterator == _tree_partisan.end())
-        return nullptr;
-
-    const terminal_layer_partisan_t& layer = terminal_layer_iterator->second;
-
     const hash_t hash = get_db_hash(g);
 
-    auto entry_iterator = layer.find(hash);
-    if (entry_iterator == layer.end())
+    auto entry_iterator = _terminal_partisan.find(hash);
+    if (entry_iterator == _terminal_partisan.end())
         return nullptr;
 
     const db_entry_partisan& entry = entry_iterator->second;
@@ -683,10 +673,8 @@ db_entry_partisan* database::_get_or_allocate_partisan_impl(const Game_Or_Sum_T&
     const game_type_t disk_type = _mapper.translate_type(runtime_type);
     THROW_ASSERT(disk_type > 0); // game type not registered!
 
-    terminal_layer_partisan_t& layer = _tree_partisan[disk_type];
-
     const hash_t hash = get_db_hash(g);
-    db_entry_partisan& entry = layer[hash];
+    db_entry_partisan& entry = _terminal_partisan[hash];
 
     return &entry;
 }
@@ -696,23 +684,24 @@ ostream& operator<<(ostream& os, const database& db)
     const unordered_map<game_type_t, string>& disk_type_to_name_map =
         db._mapper.get_disk_type_to_name_map();
 
-    os << "# of Partisan game types: " << db._tree_partisan.size() << '\n';
+#warning TODO printing partisan DB stuff!
+    //os << "# of Partisan game types: " << db._tree_partisan.size() << '\n';
     os << "# of Impartial game types: " << db._tree_impartial.size() << '\n';
 
-    for (const pair<const game_type_t, database::terminal_layer_partisan_t>& p :
-         db._tree_partisan)
-    {
-        const game_type_t disk_type = p.first;
-        const database::terminal_layer_partisan_t& layer = p.second;
+    //for (const pair<const game_type_t, database::terminal_layer_partisan_t>& p :
+    //     db._tree_partisan)
+    //{
+    //    const game_type_t disk_type = p.first;
+    //    const database::terminal_layer_partisan_t& layer = p.second;
 
-        auto it = disk_type_to_name_map.find(disk_type);
-        THROW_ASSERT(it != disk_type_to_name_map.end());
+    //    auto it = disk_type_to_name_map.find(disk_type);
+    //    THROW_ASSERT(it != disk_type_to_name_map.end());
 
-        const string& game_name = it->second;
+    //    const string& game_name = it->second;
 
-        os << "\tGame type: \"" << game_name << "\" ";
-        os << "Count: " << layer.size() << '\n';
-    }
+    //    os << "\tGame type: \"" << game_name << "\" ";
+    //    os << "Count: " << layer.size() << '\n';
+    //}
 
     for (const pair<const game_type_t, database::terminal_layer_impartial_t>& p :
          db._tree_impartial)
