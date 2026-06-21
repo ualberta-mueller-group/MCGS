@@ -31,6 +31,17 @@
 #define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
     db.register_type(#game_class_name, game_type<game_class_name>())
 
+/*
+    Represents either `hash_t` or `std::pair<hash_t, db_entry_partisan>*`
+
+    Save to disk as `hash_t`. Load from disk as `hash_t`, and then convert to
+    pointer once all entries are loaded.
+*/
+typedef uint64_t db_link_t;
+
+static_assert(sizeof(db_link_t) >= sizeof(hash_t) &&
+              sizeof(db_link_t) >= sizeof(void*));
+
 class database;
 
 ////////////////////////////////////////////////// struct db_entry_partisan
