@@ -719,6 +719,8 @@ void database::assert_links_equal()
     uint64_t n_sums = 0;
     uint64_t n_sums_with_links = 0;
 
+    uint64_t n_links_with_differing_types = 0;
+
     for (const pair<const hash_t, db_entry_partisan>& entry_pair :
          _terminal_partisan)
     {
@@ -750,6 +752,9 @@ void database::assert_links_equal()
                 n_singles_with_links++;
             if (entry_games.size() > 1)
                 n_sums_with_links++;
+
+            if (entry.disk_game_type != linked_entry->disk_game_type)
+                n_links_with_differing_types++;
 
             vector<game*> linked_games = linked_entry->load_sum();
 
@@ -783,6 +788,9 @@ void database::assert_links_equal()
 
     PRINT_FRAC(n_sums_with_links, n_sums);
     cout << " sums with links" << endl;
+
+    PRINT_FRAC(n_links_with_differing_types, n_entries_with_links);
+    cout << " # differing types/# links" << endl;
 
 
     assert(sum.num_total_games() == 0);
