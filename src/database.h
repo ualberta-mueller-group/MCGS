@@ -160,6 +160,8 @@ public:
     db_entry_partisan* get_partisan_ptr(const sumgame& sum);
     db_entry_partisan* get_or_allocate_partisan_ptr(const sumgame& sum);
 
+    db_entry_partisan* get_partisan_ptr(const db_link_t& link);
+
     std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
         const sumgame& sum);
 
@@ -171,6 +173,8 @@ public:
 
     std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
         const db_link_t& link);
+
+    db_link_t get_partisan_link(const sumgame& sum);
 
     /*
         Impartial lookup functions.

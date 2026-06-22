@@ -10,6 +10,7 @@
 #include <memory>
 #include <iostream>
 
+#include "db_link_t.h"
 #include "db_make_simplest_equal_game.h"
 #include "serializer.h"
 #include "serializer_lib_therm.h" // IWYU pragma: keep
@@ -350,6 +351,17 @@ db_entry_partisan* database::get_or_allocate_partisan_ptr(const sumgame& sum)
     return &ptr->second;
 }
 
+
+db_entry_partisan* database::get_partisan_ptr(const db_link_t& link)
+{
+    pair<const hash_t, db_entry_partisan>* pair_ptr = get_partisan_ptr_pair(link);
+
+    if (pair_ptr == nullptr)
+        return nullptr;
+
+    return &pair_ptr->second;
+}
+
 pair<const hash_t, db_entry_partisan>* database::get_partisan_ptr_pair(
     const sumgame& sum)
 {
@@ -377,6 +389,16 @@ pair<const hash_t, db_entry_partisan>* database::get_partisan_ptr_pair(
     const db_link_t& link)
 {
     return link.get_as_pointer();
+}
+
+db_link_t database::get_partisan_link(const sumgame& sum)
+{
+    pair<const hash_t, db_entry_partisan>* ptr = get_partisan_ptr_pair(sum);
+    THROW_ASSERT(ptr != nullptr);
+
+    db_link_t link;
+    link.set_as_pointer(ptr);
+    return link;
 }
 
 optional<db_entry_impartial> database::get_impartial(const game& g) const
@@ -528,7 +550,7 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
     db_make_dominated_moves(sum, *entry, *this);
     assert(entry->dominated_moves);
 
-    // Size score, ...
+    // Size score, simplest equal entry
     db_make_simplest_equal_game(sum, *entry, *this);
 
     sum.set_to_play(restore_player);
