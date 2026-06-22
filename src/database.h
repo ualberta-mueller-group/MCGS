@@ -47,7 +47,13 @@ class database;
 ////////////////////////////////////////////////// struct db_entry_partisan
 struct db_entry_partisan
 {
-    inline db_entry_partisan() : outcome(outcome_class::U), complexity(0) {}
+    db_entry_partisan()
+        : disk_game_type(0),
+          outcome(outcome_class::U),
+          complexity(0),
+          size_score(0)
+    {
+    }
 
     bool operator==(const db_entry_partisan& other) const;
     bool operator!=(const db_entry_partisan& other) const;
@@ -59,10 +65,12 @@ struct db_entry_partisan
     std::string sum_string;
 #endif
 
+    game_type_t disk_game_type;
     outcome_class outcome;
     std::shared_ptr<ThGraph> thermograph;
     std::shared_ptr<game_bounds> bounds_data;
     uint64_t complexity;
+    uint64_t size_score;
     std::shared_ptr<db_dom_moves_t> dominated_moves;
 };
 

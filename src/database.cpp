@@ -9,6 +9,7 @@
 #include <memory>
 #include <iostream>
 
+#include "db_make_simplest_equal_game.h"
 #include "serializer.h"
 #include "serializer_lib_therm.h" // IWYU pragma: keep
 #include "ThGraph.h"
@@ -50,6 +51,10 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
         return false;
 #endif
 
+    // Game type
+    if (disk_game_type != other.disk_game_type)
+        return false;
+
     // Outcome
     if (outcome != other.outcome)
         return false;
@@ -72,6 +77,10 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
     if (complexity != other.complexity)
         return false;
 
+    // Size score
+    if (size_score != other.size_score)
+        return false;
+
     // Dominated moves
     if ((bool) dominated_moves != (bool) other.dominated_moves)
         return false;
@@ -88,6 +97,9 @@ void db_entry_partisan::print(ostream& os, const database& db,
 #ifdef DB_INCLUDE_STRINGS
     os << "\"" << sum_string << "\" ";
 #endif
+
+    // Game type
+    os << "Game type: `" << disk_game_type << "` ";
 
     // Outcome
     os << outcome_class_to_string(outcome);
@@ -113,7 +125,10 @@ void db_entry_partisan::print(ostream& os, const database& db,
     os << "`";
 
     // Complexity
-    os << " Complexity: " << complexity;
+    os << " Complexity: `" << complexity << "`";
+
+    // Size score
+    os << " Size score: `" << size_score << "`";
 
     // Dominated moves
     os << " Dominated moves: `";
@@ -360,6 +375,7 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
     }
     _n_entries_generated++;
 
+    // Thermograph
     {
         ThGraph* graph = db_make_thermograph(*this, sum, silent);
         graph->Check();
@@ -371,18 +387,33 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
         assert(entry->thermograph);
     }
 
+    // Disk game type
+    {
+        const game_type_t runtime_type = _get_sum_db_type(sum);
+        const game_type_t disk_type = _mapper.translate_type(runtime_type);
+        THROW_ASSERT(disk_type != 0);
+        entry->disk_game_type = disk_type;
+    }
+
 #ifdef DB_INCLUDE_STRINGS
+    // Sum string
     entry->sum_string = db_make_sum_string(sum);
 #endif
 
+    // Outcome
     entry->outcome = db_make_outcome_class(*this, *entry);
     assert(entry->outcome != outcome_class::U);
 
+    // Bounds
     entry->bounds_data = db_make_bounds(*this, sum, *entry);
     assert(entry->bounds_data && entry->bounds_data->both_valid());
 
+    // Dominated moves, complexity
     db_make_dominated_moves(sum, *entry, *this);
     assert(entry->dominated_moves);
+
+    // Size score, ...
+    db_make_simplest_equal_game(sum, *entry, *this);
 
     sum.set_to_play(restore_player);
 

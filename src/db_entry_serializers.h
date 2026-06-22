@@ -17,10 +17,12 @@ struct serializer<db_entry_partisan>
 #ifdef DB_INCLUDE_STRINGS
         serializer_save(os, entry.sum_string, ctx);
 #endif
+        serializer_save(os, entry.disk_game_type, ctx);
         serializer_save(os, entry.outcome, ctx);
         serializer_save(os, entry.thermograph, ctx);
         serializer_save(os, entry.bounds_data, ctx);
         serializer_save(os, entry.complexity, ctx);
+        serializer_save(os, entry.size_score, ctx);
         serializer_save(os, entry.dominated_moves, ctx);
     }
 
@@ -31,10 +33,12 @@ struct serializer<db_entry_partisan>
 #ifdef DB_INCLUDE_STRINGS
         serializer_load(is, entry.sum_string, ctx);
 #endif
+        serializer_load(is, entry.disk_game_type, ctx);
         serializer_load(is, entry.outcome, ctx);
         serializer_load(is, entry.thermograph, ctx);
         serializer_load(is, entry.bounds_data, ctx);
         serializer_load(is, entry.complexity, ctx);
+        serializer_load(is, entry.size_score, ctx);
         serializer_load(is, entry.dominated_moves, ctx);
 
         return entry;
