@@ -401,6 +401,15 @@ db_link_t database::get_partisan_link(const sumgame& sum)
     return link;
 }
 
+db_link_t database::get_partisan_link(std::pair<const hash_t, db_entry_partisan>* ptr)
+{
+    THROW_ASSERT(ptr != nullptr);
+
+    db_link_t link;
+    link.set_as_pointer(ptr);
+    return link;
+}
+
 optional<db_entry_impartial> database::get_impartial(const game& g) const
 {
     const game_type_t runtime_type = _get_game_db_type(g);
@@ -609,6 +618,17 @@ void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)
         ig->normalize();
         _generate_single_impartial_entry(ig, silent);
     }
+}
+
+void database::refine_partisan_links()
+{
+    for (pair<const hash_t, db_entry_partisan>& entry_pair : _terminal_partisan)
+        db_refine_simplest_equal_game(entry_pair, *this);
+
+    cout << db_n_links_refined << "/" << _terminal_partisan.size() << " ";
+    cout << " links refined (";
+    cout << db_n_links_refined / static_cast<double>(_terminal_partisan.size());
+    cout << ")" << endl;
 }
 
 void database::clear()

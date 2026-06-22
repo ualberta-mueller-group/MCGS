@@ -175,6 +175,7 @@ public:
         const db_link_t& link);
 
     db_link_t get_partisan_link(const sumgame& sum);
+    db_link_t get_partisan_link(std::pair<const hash_t, db_entry_partisan>* ptr);
 
     /*
         Impartial lookup functions.
@@ -192,6 +193,8 @@ public:
 
     void generate_entries_impartial(i_db_game_generator& gen,
                                     bool silent = false);
+
+    void refine_partisan_links();
 
     /*
         Misc utility functions.

@@ -17,6 +17,7 @@
 #include "config_map.h"
 #include "database.h"
 #include "db_game_generator.h"
+#include "db_make_simplest_equal_game.h"
 #include "global_database.h"
 #include "global_options.h"
 
@@ -150,7 +151,10 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
     }
 
     if (!dry_run)
+    {
+        db.refine_partisan_links();
         db.update_metadata_string(db_config_string);
+    }
 }
 
 init_database_enum resolve_auto_init_type(optional<string>& filename)

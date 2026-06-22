@@ -15,8 +15,11 @@
 #include "database.h"
 #include "sumgame_helpers.h"
 #include "thermograph_helpers.h"
+#include "throw_assert.h"
 
 using namespace std;
+
+uint64_t db_n_links_refined = 0;
 
 namespace {
 ////////////////////////////////////////////////// Helper types
@@ -296,6 +299,23 @@ optional<size_t> find_sum_equivalence_class(sumgame& sum, const vector<equivalen
     return class_idx;
 }
 
+const equivalence_class& get_previous_equivalence_class(
+    hash_t sum_hash, const db_entry_partisan& entry)
+{
+    const seg_map_idx_t seg_idx = make_seg_map_index(entry);
+
+    const auto vec_iterator = seg_map.find(seg_idx);
+    THROW_ASSERT(vec_iterator != seg_map.end());
+    const vector<equivalence_class>& vec = vec_iterator->second;
+
+    const auto idx_iterator = global_hash_to_seg_vec_idx.find(sum_hash);
+    THROW_ASSERT(idx_iterator != global_hash_to_seg_vec_idx.end());
+    const size_t idx = idx_iterator->second;
+
+    THROW_ASSERT(idx < vec.size());
+    return vec[idx];
+}
+
 } // namespace
 
 ////////////////////////////////////////////////// Exported functions
@@ -331,7 +351,37 @@ void db_make_simplest_equal_game(sumgame& sum, db_entry_partisan& entry,
 
     // Find the best link
     const db_link_t best_link = eq_class->get_best_link_for_game(sum_link, db);
-    if (!best_link.equal_as_pointers(sum_link))
-        entry.simplest_equal_entry = best_link;
+    entry.simplest_equal_entry = best_link;
 
 }
+
+void db_refine_simplest_equal_game(
+    pair<const hash_t, db_entry_partisan>& entry_pair, database& db)
+{
+    const equivalence_class& eq_class =
+        get_previous_equivalence_class(entry_pair.first, entry_pair.second);
+
+    const db_link_t sum_link = db.get_partisan_link(&entry_pair);
+    const db_link_t stored_link = entry_pair.second.simplest_equal_entry;
+    const db_link_t best_link = eq_class.get_best_link_for_game(sum_link, db);
+
+    assert(sum_link.get_as_pointer() != nullptr);
+    assert(stored_link.get_as_pointer() != nullptr);
+    assert(best_link.get_as_pointer() != nullptr);
+
+    if (!stored_link.equal_as_pointers(best_link))
+        db_n_links_refined++;
+
+    if (sum_link.equal_as_pointers(best_link))
+    {
+        // Link shouldn't get worse
+        THROW_ASSERT(sum_link.equal_as_pointers(stored_link));
+    }
+    else
+    {
+        link_compare cmp(db);
+        THROW_ASSERT(cmp.compare(best_link, stored_link) != REL_GREATER);
+        entry_pair.second.simplest_equal_entry = best_link;
+    }
+}
+
