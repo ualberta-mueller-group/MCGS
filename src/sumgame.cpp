@@ -14,6 +14,7 @@
 #include <cstdint>
 
 #include "sumgame.h"
+#include "database.h"
 #include "throw_assert.h"
 #include "bounds.h"
 #include "db_move_generator.h"
@@ -875,20 +876,38 @@ void sumgame::db_replacement_pass()
             if (entry == nullptr)
                 continue;
 
-            if (!entry->bounds_data)
+            if (entry->bounds_data)
+            {
+                const game_bounds& bounds = *entry->bounds_data;
+
+                if (!bounds.is_equal())
+                    continue;
+
+                game* sg_replacement = get_scale_game(bounds.get_lower(), bounds.get_scale());
+                add(sg_replacement);
+                cr.added_games.push_back(sg_replacement);
+
+                sg->set_active(false);
+                cr.deactivated_games.push_back(sg);
+
                 continue;
+            }
 
-            const game_bounds& bounds = *entry->bounds_data;
+            const db_entry_partisan* linked_entry = db.get_partisan_ptr(entry->simplest_equal_entry);
+            if (linked_entry != nullptr && linked_entry != entry)
+            {
+                sg->set_active(false);
+                cr.deactivated_games.push_back(sg);
 
-            if (!bounds.is_equal())
+                vector<game*> linked_games = linked_entry->load_sum();
+                for (game* g : linked_games)
+                {
+                    add(g);
+                    cr.added_games.push_back(g);
+                }
+
                 continue;
-
-            game* sg_replacement = get_scale_game(bounds.get_lower(), bounds.get_scale());
-            add(sg_replacement);
-            cr.added_games.push_back(sg_replacement);
-
-            sg->set_active(false);
-            cr.deactivated_games.push_back(sg);
+            }
         }
     }
 

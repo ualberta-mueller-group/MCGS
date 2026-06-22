@@ -699,9 +699,25 @@ hash_t database::get_db_hash(const game& g) const
     return get_db_hash(g, gh);
 }
 
+#define PRINT_FRAC(val1, val2)                                                 \
+    do                                                                         \
+    {                                                                          \
+        cout << val1 << "/" << val2;                                           \
+        if (val2 > 0)                                                          \
+            cout << " (" << val1 / static_cast<double>(val2) << ")";           \
+    } while (0)
+
 void database::assert_links_equal()
 {
     sumgame sum(BLACK);
+
+    uint64_t n_entries_with_links = 0;
+
+    uint64_t n_singles = 0;
+    uint64_t n_singles_with_links = 0;
+
+    uint64_t n_sums = 0;
+    uint64_t n_sums_with_links = 0;
 
     for (const pair<const hash_t, db_entry_partisan>& entry_pair :
          _terminal_partisan)
@@ -712,6 +728,11 @@ void database::assert_links_equal()
         assert(sum.num_total_games() == 0);
 
         vector<game*> entry_games = entry.load_sum();
+        if (entry_games.size() == 1)
+            n_singles++;
+        if (entry_games.size() > 1)
+            n_sums++;
+
         sum.add(entry_games);
 
         cout << "Validating: ";
@@ -723,6 +744,13 @@ void database::assert_links_equal()
         db_entry_partisan* linked_entry = get_partisan_ptr(entry.simplest_equal_entry);
         if (linked_entry != nullptr && linked_entry != &entry)
         {
+            n_entries_with_links++;
+
+            if (entry_games.size() == 1)
+                n_singles_with_links++;
+            if (entry_games.size() > 1)
+                n_sums_with_links++;
+
             vector<game*> linked_games = linked_entry->load_sum();
 
             vector<game*> inverse_linked_games;
@@ -746,6 +774,16 @@ void database::assert_links_equal()
     }
 
     cout << "Serialized sums and entry links OK" << endl;
+
+    PRINT_FRAC(n_entries_with_links, _terminal_partisan.size());
+    cout << " entries with links" << endl;
+
+    PRINT_FRAC(n_singles_with_links, n_singles);
+    cout << " singles with links" << endl;
+
+    PRINT_FRAC(n_sums_with_links, n_sums);
+    cout << " sums with links" << endl;
+
 
     assert(sum.num_total_games() == 0);
 }

@@ -1,0 +1,77 @@
+{version 1.6}
+[clobber_1xn]
+
+/* 1 pair(s) */
+XO {B win, W win}
+
+/* 2 pair(s) */
+XOXO {B win, W win}
+
+/* 3 pair(s) */
+XOXOXO {B loss, W loss}
+
+/* 4 pair(s) */
+XOXOXOXO {B win, W win}
+
+/* 5 pair(s) */
+XOXOXOXOXO {B win, W win}
+
+/* 6 pair(s) */
+XOXOXOXOXOXO {B win, W win}
+
+/* 7 pair(s) */
+XOXOXOXOXOXOXO {B win, W win}
+
+/* 8 pair(s) */
+XOXOXOXOXOXOXOXO {B win, W win}
+
+/* 9 pair(s) */
+XOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 10 pair(s) */
+XOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 11 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 12 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 13 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 14 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 15 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 16 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 17 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 18 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 19 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 20 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 21 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 22 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 23 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 24 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
+
+/* 25 pair(s) */
+XOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXOXO {B win, W win}
