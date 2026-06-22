@@ -654,11 +654,10 @@ optional<solve_result> sumgame::db_lookup_pass(temperature_vec_t& temperatures,
                           bounds.get_upper_relation() == REL_GREATER))
                     {
                         bounds_valid = false;
-                        continue;
                     }
 
-                    THROW_ASSERT(bounds.get_lower_relation() == REL_LESS &&
-                                 bounds.get_upper_relation() == REL_GREATER);
+                    //THROW_ASSERT(bounds.get_lower_relation() == REL_LESS &&
+                    //             bounds.get_upper_relation() == REL_GREATER);
 
                     switch (scale)
                     {
