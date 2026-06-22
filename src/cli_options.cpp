@@ -144,6 +144,9 @@ void print_help_message(const string& exec_name)
 
     print_flag(global::use_db.no_flag(), "Disable database usage.");
 
+    print_flag(global::use_seg.no_flag(),
+               "Disable SEG replacement during partisan search.");
+
     print_flag("--db-file-load <file name>",
                "Load database file. If unspecified, checks for `" +
                    path_relative_to_cwd(get_default_db_path()).string() +
@@ -730,6 +733,12 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::use_db.no_flag())
         {
             global::use_db.set(false);
+            continue;
+        }
+
+        if (arg == global::use_seg.no_flag())
+        {
+            global::use_seg.set(false);
             continue;
         }
 

@@ -520,6 +520,17 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
     }
     _n_entries_generated++;
 
+    // Serialized sum
+    entry->save_sum(sum);
+
+    // Disk game type
+    {
+        const game_type_t runtime_type = _get_sum_db_type(sum);
+        const game_type_t disk_type = _mapper.translate_type(runtime_type);
+        THROW_ASSERT(disk_type != 0);
+        entry->disk_game_type = disk_type;
+    }
+
     // Thermograph
     {
         ThGraph* graph = db_make_thermograph(*this, sum, silent);
@@ -531,17 +542,6 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
         entry->thermograph = _get_graph_cache().insert_and_release(graph);
         assert(entry->thermograph);
     }
-
-    // Disk game type
-    {
-        const game_type_t runtime_type = _get_sum_db_type(sum);
-        const game_type_t disk_type = _mapper.translate_type(runtime_type);
-        THROW_ASSERT(disk_type != 0);
-        entry->disk_game_type = disk_type;
-    }
-
-    // Serialized sum
-    entry->save_sum(sum);
 
 #ifdef DB_INCLUDE_STRINGS
     // Sum string

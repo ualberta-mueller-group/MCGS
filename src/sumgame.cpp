@@ -2,6 +2,7 @@
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
 #include <algorithm>
+#include <ostream>
 #include <utility>
 #include <optional>
 #include <ctime>
@@ -645,6 +646,17 @@ optional<solve_result> sumgame::db_lookup_pass(temperature_vec_t& temperatures,
                     const game_bounds& bounds = *entry->bounds_data;
                     const bound_scale scale = bounds.get_scale();
 
+#warning TODO review this assumption
+                    //THROW_ASSERT(bounds.get_lower_relation() == REL_LESS &&
+                    //             bounds.get_upper_relation() == REL_GREATER);
+
+                    if (!(bounds.get_lower_relation() == REL_LESS &&
+                          bounds.get_upper_relation() == REL_GREATER))
+                    {
+                        bounds_valid = false;
+                        continue;
+                    }
+
                     THROW_ASSERT(bounds.get_lower_relation() == REL_LESS &&
                                  bounds.get_upper_relation() == REL_GREATER);
 
@@ -880,34 +892,38 @@ void sumgame::db_replacement_pass()
             {
                 const game_bounds& bounds = *entry->bounds_data;
 
-                if (!bounds.is_equal())
+                if (bounds.is_equal())
+                {
+                    game* sg_replacement = get_scale_game(bounds.get_lower(), bounds.get_scale());
+                    add(sg_replacement);
+                    cr.added_games.push_back(sg_replacement);
+
+                    sg->set_active(false);
+                    cr.deactivated_games.push_back(sg);
                     continue;
-
-                game* sg_replacement = get_scale_game(bounds.get_lower(), bounds.get_scale());
-                add(sg_replacement);
-                cr.added_games.push_back(sg_replacement);
-
-                sg->set_active(false);
-                cr.deactivated_games.push_back(sg);
-
-                continue;
+                }
             }
 
-            const db_entry_partisan* linked_entry = db.get_partisan_ptr(entry->simplest_equal_entry);
-            if (linked_entry != nullptr && linked_entry != entry)
+            if (global::use_seg())
             {
+                const db_entry_partisan* linked_entry = db.get_partisan_ptr(entry->simplest_equal_entry);
+                if (linked_entry == nullptr || linked_entry == entry)
+                    continue;
+
                 sg->set_active(false);
                 cr.deactivated_games.push_back(sg);
 
                 vector<game*> linked_games = linked_entry->load_sum();
                 for (game* g : linked_games)
                 {
+                    assert(g->is_active());
                     add(g);
                     cr.added_games.push_back(g);
                 }
 
                 continue;
             }
+
         }
     }
 
@@ -957,6 +973,7 @@ void sumgame::undo_db_replacement_pass()
 
     _change_record_stack.pop_back();
 }
+
 
 optional<sumgame_move> sumgame::get_winning_or_random_move(
     bw for_player) const
