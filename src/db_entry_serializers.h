@@ -6,6 +6,33 @@
 #include "serializer_lib_therm.h" // IWYU pragma: keep
 #include "game_bounds_serializer.h" // IWYU pragma: keep
 
+////////////////////////////////////////////////// db_link_t serializer
+template <>
+struct serializer<db_link_t>
+{
+    static void save(i_obuffer& os, const db_link_t& link, serializer_ctx* ctx)
+    {
+        hash_t hash = 0;
+
+        const std::pair<const hash_t, db_entry_partisan>* ptr = link.get_as_pointer();
+
+        if (ptr != nullptr)
+            hash = ptr->first;
+
+        serializer<hash_t>::save(os, hash, ctx);
+    }
+
+    static db_link_t load(i_ibuffer& is, serializer_ctx* ctx)
+    {
+        db_link_t link;
+
+        const hash_t hash = serializer<hash_t>::load(is, ctx);
+        link.set_as_hash(hash);
+
+        return link;
+    }
+};
+
 ////////////////////////////////////////////////// serializer<db_entry_partisan>
 template <>
 struct serializer<db_entry_partisan>
@@ -25,6 +52,7 @@ struct serializer<db_entry_partisan>
         serializer_save(os, entry.size_score, ctx);
         serializer_save(os, entry.dominated_moves, ctx);
         serializer_save(os, entry.serialized_sum, ctx);
+        serializer_save(os, entry.simplest_equal_entry, ctx);
     }
 
     inline static db_entry_partisan load(i_ibuffer& is, serializer_ctx* ctx)
@@ -42,6 +70,7 @@ struct serializer<db_entry_partisan>
         serializer_load(is, entry.size_score, ctx);
         serializer_load(is, entry.dominated_moves, ctx);
         serializer_load(is, entry.serialized_sum, ctx);
+        serializer_load(is, entry.simplest_equal_entry, ctx);
 
         return entry;
     }

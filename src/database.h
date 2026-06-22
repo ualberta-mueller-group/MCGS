@@ -25,22 +25,13 @@
 #include "thermograph_cache.h"
 #include "type_mapper.h"
 #include "type_table.h"
+#include "db_link_t.h"
 
 #include "ThGraph.h"
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
     db.register_type(#game_class_name, game_type<game_class_name>())
 
-/*
-    Represents either `hash_t` or `std::pair<hash_t, db_entry_partisan>*`
-
-    Save to disk as `hash_t`. Load from disk as `hash_t`, and then convert to
-    pointer once all entries are loaded.
-*/
-typedef uint64_t db_link_t;
-
-static_assert(sizeof(db_link_t) >= sizeof(hash_t) &&
-              sizeof(db_link_t) >= sizeof(void*));
 
 class database;
 
@@ -79,6 +70,7 @@ struct db_entry_partisan
     uint64_t size_score;
     std::shared_ptr<db_dom_moves_t> dominated_moves;
     std::vector<uint8_t> serialized_sum;
+    db_link_t simplest_equal_entry;
 };
 
 //////////////////////////////////////// db_entry_partisan methods
@@ -168,6 +160,18 @@ public:
     db_entry_partisan* get_partisan_ptr(const sumgame& sum);
     db_entry_partisan* get_or_allocate_partisan_ptr(const sumgame& sum);
 
+    std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
+        const sumgame& sum);
+
+    std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
+        const game& g);
+
+    std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
+        hash_t hash);
+
+    std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
+        const db_link_t& link);
+
     /*
         Impartial lookup functions.
     */
@@ -235,6 +239,8 @@ private:
 
     void _generate_single_impartial_entry(impartial_game* ig, bool silent);
 
+    void _convert_links_to_pointers();
+
     static game_type_t _get_sum_db_type(const sumgame& sum);
     static game_type_t _get_game_db_type(const game& g);
 
@@ -244,10 +250,12 @@ private:
         Lookup implementations.
     */
     template <class Game_Or_Sum_T>
-    db_entry_partisan* _get_partisan_impl(const Game_Or_Sum_T& g) const;
+    std::pair<const hash_t, db_entry_partisan>* _get_partisan_impl(
+        const Game_Or_Sum_T& g) const;
 
     template <class Game_Or_Sum_T>
-    db_entry_partisan* _get_or_allocate_partisan_impl(const Game_Or_Sum_T& g);
+    std::pair<const hash_t, db_entry_partisan>* _get_or_allocate_partisan_impl(
+        const Game_Or_Sum_T& g);
 
     /*
         "Runtime-only" data that isn't stored on disk.

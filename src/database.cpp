@@ -89,7 +89,12 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
     if (dominated_moves && (*dominated_moves != *other.dominated_moves))
         return false;
 
+    // Serialized sum
     if (serialized_sum != other.serialized_sum)
+        return false;
+
+    // Link
+    if (!simplest_equal_entry.equal_as_pointers(other.simplest_equal_entry))
         return false;
 
     return true;
@@ -146,6 +151,14 @@ void db_entry_partisan::print(ostream& os, const database& db,
 
     // Serialized sum
     os << " Serialized sum: " << serialized_sum.size() << " bytes";
+
+    // Simplest equal entry
+    os << " SEG hash: `";
+    if (simplest_equal_entry.get_as_pointer() == nullptr)
+        os << "nullptr";
+    else
+        os << simplest_equal_entry.get_as_pointer()->first;
+    os << "`";
     
     // Newline
     if (print_endl)
@@ -236,6 +249,8 @@ void database::load(const string& filename)
     serializer_load(is, _terminal_partisan, &ctx);
     serializer_load(is, _tree_impartial, &ctx);
 
+    _convert_links_to_pointers();
+
     is.close();
 }
 
@@ -283,36 +298,85 @@ void database::dump_to_file(const string& out_filename) const
 
 const db_entry_partisan* database::get_partisan_ptr(const game& g) const
 {
-    return _get_partisan_impl(g);
+    pair<const hash_t, db_entry_partisan>* ptr = _get_partisan_impl(g);
+
+    if (ptr == nullptr)
+        return nullptr;
+
+    return &ptr->second;
 }
 
 db_entry_partisan* database::get_partisan_ptr(const game& g)
 {
-    return _get_partisan_impl(g);
+    pair<const hash_t, db_entry_partisan>* ptr = _get_partisan_impl(g);
+
+    if (ptr == nullptr)
+        return nullptr;
+
+    return &ptr->second;
 }
 
 db_entry_partisan* database::get_or_allocate_partisan_ptr(const game& g)
 {
-    db_entry_partisan* entry_ptr = _get_or_allocate_partisan_impl(g);
-    assert(entry_ptr != nullptr);
-    return entry_ptr;
+    pair<const hash_t, db_entry_partisan>* ptr = _get_or_allocate_partisan_impl(g);
+    assert(ptr != nullptr);
+    return &ptr->second;
 }
 
 const db_entry_partisan* database::get_partisan_ptr(const sumgame& sum) const
 {
-    return _get_partisan_impl(sum);
+    pair<const hash_t, db_entry_partisan>* ptr = _get_partisan_impl(sum);
+
+    if (ptr == nullptr)
+        return nullptr;
+
+    return &ptr->second;
 }
 
 db_entry_partisan* database::get_partisan_ptr(const sumgame& sum)
 {
-    return _get_partisan_impl(sum);
+    pair<const hash_t, db_entry_partisan>* ptr = _get_partisan_impl(sum);
+
+    if (ptr == nullptr)
+        return nullptr;
+
+    return &ptr->second;
 }
 
 db_entry_partisan* database::get_or_allocate_partisan_ptr(const sumgame& sum)
 {
-    db_entry_partisan* entry_ptr = _get_or_allocate_partisan_impl(sum);
-    assert(entry_ptr != nullptr);
-    return entry_ptr;
+    pair<const hash_t, db_entry_partisan>* ptr = _get_or_allocate_partisan_impl(sum);
+    assert(ptr != nullptr);
+    return &ptr->second;
+}
+
+pair<const hash_t, db_entry_partisan>* database::get_partisan_ptr_pair(
+    const sumgame& sum)
+{
+    return _get_partisan_impl(sum);
+}
+
+pair<const hash_t, db_entry_partisan>* database::get_partisan_ptr_pair(
+    const game& g)
+{
+    return _get_partisan_impl(g);
+}
+
+pair<const hash_t, db_entry_partisan>* database::get_partisan_ptr_pair(
+    hash_t hash)
+{
+    auto pair_iterator = _terminal_partisan.find(hash);
+    if (pair_iterator == _terminal_partisan.end())
+        return nullptr;
+
+    pair<const hash_t, db_entry_partisan>& p = *pair_iterator;
+    return &p;
+}
+
+pair<const hash_t, db_entry_partisan>* database::get_partisan_ptr_pair(
+    const db_link_t& link)
+{
+    return link.get_as_pointer();
 }
 
 optional<db_entry_impartial> database::get_impartial(const game& g) const
@@ -660,6 +724,24 @@ void database::_generate_single_impartial_entry(impartial_game* ig, bool silent)
         cout << " DONE" << endl;
 }
 
+void database::_convert_links_to_pointers()
+{
+    THROW_ASSERT(get_partisan_ptr_pair(hash_t(0)) == nullptr);
+
+    for (pair<const hash_t, db_entry_partisan>& entry_pair : _terminal_partisan)
+    {
+        db_entry_partisan& entry = entry_pair.second;
+
+        const hash_t link_hash = entry.simplest_equal_entry.get_as_hash();
+        pair<const hash_t, db_entry_partisan>* link_ptr = nullptr;
+
+        if (link_hash != 0)
+            link_ptr = get_partisan_ptr_pair(link_hash);
+
+        entry.simplest_equal_entry.set_as_pointer(link_ptr);
+    }
+}
+
 game_type_t database::_get_sum_db_type(const sumgame& sum)
 {
     optional<game_type_t> sum_type;
@@ -710,7 +792,8 @@ void database::_db_print_sum(ostream& os, const sumgame& sum)
 }
 
 template <class Game_Or_Sum_T>
-db_entry_partisan* database::_get_partisan_impl(const Game_Or_Sum_T& g) const
+pair<const hash_t, db_entry_partisan>* database::_get_partisan_impl(
+    const Game_Or_Sum_T& g) const
 {
     static_assert(is_same_v<game, Game_Or_Sum_T> ||
                   is_same_v<sumgame, Game_Or_Sum_T>);
@@ -733,14 +816,17 @@ db_entry_partisan* database::_get_partisan_impl(const Game_Or_Sum_T& g) const
     if (entry_iterator == _terminal_partisan.end())
         return nullptr;
 
-    const db_entry_partisan& entry = entry_iterator->second;
-    db_entry_partisan& entry_nonconst = const_cast<db_entry_partisan&>(entry);
+    const pair<const hash_t, db_entry_partisan>& p = *entry_iterator;
 
-    return &entry_nonconst;
+    pair<const hash_t, db_entry_partisan>& p_nonconst =
+        const_cast<pair<const hash_t, db_entry_partisan>&>(p);
+
+    return &p_nonconst;
 }
 
 template <class Game_Or_Sum_T>
-db_entry_partisan* database::_get_or_allocate_partisan_impl(const Game_Or_Sum_T& g)
+pair<const hash_t, db_entry_partisan>* database::_get_or_allocate_partisan_impl(
+    const Game_Or_Sum_T& g)
 {
     static_assert(is_same_v<game, Game_Or_Sum_T> ||
                   is_same_v<sumgame, Game_Or_Sum_T>);
@@ -757,9 +843,13 @@ db_entry_partisan* database::_get_or_allocate_partisan_impl(const Game_Or_Sum_T&
     THROW_ASSERT(disk_type > 0); // game type not registered!
 
     const hash_t hash = get_db_hash(g);
-    db_entry_partisan& entry = _terminal_partisan[hash];
 
-    return &entry;
+#warning TODO ensure this doesn't default construct when already present!!!
+    auto entry_iterator = _terminal_partisan.try_emplace(hash);
+
+    pair<const hash_t, db_entry_partisan>& p = *entry_iterator.first;
+
+    return &p;
 }
 
 ostream& operator<<(ostream& os, const database& db)
