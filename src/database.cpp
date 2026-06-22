@@ -28,6 +28,7 @@
 #include "iobuffer.h"
 #include "db_game_generator.h"
 #include "db_entry_serializers.h" // IWYU pragma: keep
+#include "sumgame_helpers.h"
 #include "thermograph_cache.h"
 #include "throw_assert.h"
 #include "type_table.h"
@@ -696,6 +697,57 @@ hash_t database::get_db_hash(const game& g) const
 {
     global_hash& gh = _get_global_hash();
     return get_db_hash(g, gh);
+}
+
+void database::assert_links_equal()
+{
+    sumgame sum(BLACK);
+
+    for (const pair<const hash_t, db_entry_partisan>& entry_pair :
+         _terminal_partisan)
+    {
+        const hash_t entry_hash = entry_pair.first;
+        const db_entry_partisan& entry = entry_pair.second;
+
+        assert(sum.num_total_games() == 0);
+
+        vector<game*> entry_games = entry.load_sum();
+        sum.add(entry_games);
+
+        cout << "Validating: ";
+        sum.print_simple(cout);
+        cout << endl;
+
+        assert(entry_hash == database::get_db_hash(sum));
+
+        db_entry_partisan* linked_entry = get_partisan_ptr(entry.simplest_equal_entry);
+        if (linked_entry != nullptr && linked_entry != &entry)
+        {
+            vector<game*> linked_games = linked_entry->load_sum();
+
+            vector<game*> inverse_linked_games;
+            for (game* g : linked_games)
+                inverse_linked_games.push_back(g->inverse());
+
+            sum.add(inverse_linked_games);
+            assert(sum_rel_zero(sum, REL_EQUAL));
+            sum.pop(inverse_linked_games);
+
+            for (game* g: linked_games)
+                delete g;
+            for (game* g: inverse_linked_games)
+                delete g;
+        }
+
+        sum.pop(entry_games);
+        for (game* g : entry_games)
+            delete g;
+
+    }
+
+    cout << "Serialized sums and entry links OK" << endl;
+
+    assert(sum.num_total_games() == 0);
 }
 
 void database::register_type(const string& type_name,

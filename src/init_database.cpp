@@ -154,6 +154,8 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
     {
         db.refine_partisan_links();
         db.update_metadata_string(db_config_string);
+
+        db.assert_links_equal();
     }
 }
 

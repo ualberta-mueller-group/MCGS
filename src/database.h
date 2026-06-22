@@ -210,6 +210,8 @@ public:
     static hash_t get_db_hash(const sumgame& sum);
     hash_t get_db_hash(const game& g) const;
 
+    void assert_links_equal();
+
     /*
         Game-type-related functions.
 
