@@ -61,6 +61,12 @@ struct db_entry_partisan
     void print(std::ostream& os, const database& db,
                bool print_endl = false) const;
 
+    void save_sum(const sumgame& sum);
+    void load_sum(sumgame& sum) const;
+
+    void save_sum(const std::vector<game*>& games);
+    std::vector<game*> load_sum() const;
+
 #ifdef DB_INCLUDE_STRINGS
     std::string sum_string;
 #endif
@@ -72,6 +78,7 @@ struct db_entry_partisan
     uint64_t complexity;
     uint64_t size_score;
     std::shared_ptr<db_dom_moves_t> dominated_moves;
+    std::vector<uint8_t> serialized_sum;
 };
 
 //////////////////////////////////////// db_entry_partisan methods

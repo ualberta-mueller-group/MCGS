@@ -62,8 +62,8 @@ protected:
     void _set_board(const std::vector<int>& new_board);
     void _set_board(const std::vector<int>&& new_board);
 
-    static void _save_board(i_obuffer& os, const std::vector<int>& board);
-    static std::vector<int> _load_board(i_ibuffer& is);
+    static void _save_board(i_obuffer& os, const std::vector<int>& board, serializer_ctx* ctx);
+    static std::vector<int> _load_board(i_ibuffer& is, serializer_ctx* ctx);
 
 private:
     bool _is_legal_strip() const;

@@ -24,6 +24,7 @@ struct serializer<db_entry_partisan>
         serializer_save(os, entry.complexity, ctx);
         serializer_save(os, entry.size_score, ctx);
         serializer_save(os, entry.dominated_moves, ctx);
+        serializer_save(os, entry.serialized_sum, ctx);
     }
 
     inline static db_entry_partisan load(i_ibuffer& is, serializer_ctx* ctx)
@@ -40,6 +41,7 @@ struct serializer<db_entry_partisan>
         serializer_load(is, entry.complexity, ctx);
         serializer_load(is, entry.size_score, ctx);
         serializer_load(is, entry.dominated_moves, ctx);
+        serializer_load(is, entry.serialized_sum, ctx);
 
         return entry;
     }

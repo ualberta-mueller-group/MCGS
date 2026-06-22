@@ -25,9 +25,9 @@ class dyn_serializable;
     "Load" function pointer typedef
 
     i.e. function pointer to:
-    static dyn_serializable* clobber_1xn::load_impl(i_ibuffer&)
+    static dyn_serializable* clobber_1xn::load_impl(i_ibuffer&, serializer_ctx*)
 */
-typedef dyn_serializable* (*load_fn_ptr_t)(i_ibuffer&);
+typedef dyn_serializable* (*load_fn_ptr_t)(i_ibuffer&, serializer_ctx*);
 
 ////////////////////////////////////////////////// type traits
 // NOLINTBEGIN(readability-identifier-naming)
@@ -37,7 +37,7 @@ typedef dyn_serializable* (*load_fn_ptr_t)(i_ibuffer&);
 template <class T, class Enable = void>
 struct has_save_impl
 {
-    static constexpr bool value = false;
+    inline static constexpr bool value = false;
 };
 
 template <class T>
@@ -45,23 +45,23 @@ struct has_save_impl<T,
     std::enable_if_t<
         std::is_same_v<
             decltype(&T::save_impl),
-            void (T::*)(i_obuffer&) const
+            void (T::*)(i_obuffer&, serializer_ctx*) const
         >,
         void
     >
 >
 {
-    static constexpr bool value = true;
+    inline static constexpr bool value = true;
 };
 
 template <class T>
-static constexpr bool has_save_impl_v = has_save_impl<T>::value;
+inline static constexpr bool has_save_impl_v = has_save_impl<T>::value;
 
 //////////////////////////////////////// has_load_impl<T>
 template <class T, class Enable = void>
 struct has_load_impl
 {
-    static constexpr bool value = false;
+    inline static constexpr bool value = false;
 };
 
 template <class T>
@@ -75,11 +75,11 @@ struct has_load_impl<T,
     >
 >
 {
-    static constexpr bool value = true;
+    inline static constexpr bool value = true;
 };
 
 template <class T>
-static constexpr bool has_load_impl_v = has_load_impl<T>::value;
+inline static constexpr bool has_load_impl_v = has_load_impl<T>::value;
 
 // clang-format on
 // NOLINTEND(readability-identifier-naming)
@@ -92,7 +92,7 @@ public:
 
     dyn_serializable_id_t dyn_serializable_id() const;
 
-    virtual void save_impl(i_obuffer&) const { THROW_ASSERT(false); }
+    virtual void save_impl(i_obuffer&, serializer_ctx*) const { THROW_ASSERT(false); }
 
 private:
 };
@@ -156,23 +156,23 @@ template <class T>
 struct serializer<
     T*, std::enable_if_t<std::is_base_of_v<dyn_serializable, T>, void>>
 {
-    static void save(i_obuffer& os, const dyn_serializable* obj)
+    static void save(i_obuffer& os, const dyn_serializable* obj, serializer_ctx* ctx)
     {
         dyn_serializable_id_t sid = obj->dyn_serializable_id();
         THROW_ASSERT(sid > 0);
         os.write_u32(sid);
 
-        obj->save_impl(os);
+        obj->save_impl(os, ctx);
     }
 
-    static T* load(i_ibuffer& is)
+    static T* load(i_ibuffer& is, serializer_ctx* ctx)
     {
         dyn_serializable_id_t sid = is.read_u32();
 
         load_fn_ptr_t load_fn = __dyn_serializable_impl::get_load_function(sid);
         assert(load_fn != nullptr);
 
-        dyn_serializable* obj = load_fn(is);
+        dyn_serializable* obj = load_fn(is, ctx);
 
         if constexpr (!std::is_same_v<dyn_serializable, T>)
         {

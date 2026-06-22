@@ -205,7 +205,8 @@ void strip::_mirror_self()
     }
 }
 
-void strip::_save_board(i_obuffer& os, const std::vector<int>& board)
+void strip::_save_board(i_obuffer& os, const std::vector<int>& board,
+                        serializer_ctx* ctx)
 {
     const size_t size = board.size();
     os.write_u64(size);
@@ -223,7 +224,7 @@ void strip::_save_board(i_obuffer& os, const std::vector<int>& board)
     }
 }
 
-std::vector<int> strip::_load_board(i_ibuffer& is)
+std::vector<int> strip::_load_board(i_ibuffer& is, serializer_ctx* ctx)
 {
     std::vector<int> board;
 

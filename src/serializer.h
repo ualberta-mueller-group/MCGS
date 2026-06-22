@@ -92,6 +92,7 @@
 #include <map>
 #include <utility>
 #include <memory>
+
 #include "iobuffer.h"
 #include "custom_traits.h"
 
@@ -111,6 +112,8 @@
     TODO: Enforce interface of serializer template's static functions at compile
         time?
 */
+
+class dyn_serializable;
 
 struct serializer_ctx
 {
@@ -168,7 +171,12 @@ inline void serializer_save(i_obuffer& os, const T& val,
 
 //////////////////////////////////////// pointers
 template <class T>
-struct serializer<T*>
+struct serializer<T*,
+    std::enable_if_t<
+        !std::is_base_of_v<dyn_serializable, T>,
+        void
+    >
+>
 {
     // NOLINTNEXTLINE(readability-identifier-naming)
     using T_NoCV = std::remove_cv_t<T>;

@@ -1,5 +1,6 @@
 #include "database.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include <optional>
@@ -88,6 +89,9 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
     if (dominated_moves && (*dominated_moves != *other.dominated_moves))
         return false;
 
+    if (serialized_sum != other.serialized_sum)
+        return false;
+
     return true;
 }
 
@@ -140,9 +144,54 @@ void db_entry_partisan::print(ostream& os, const database& db,
 
     os << "`";
 
+    // Serialized sum
+    os << " Serialized sum: " << serialized_sum.size() << " bytes";
+    
     // Newline
     if (print_endl)
         os << endl;
+}
+
+void db_entry_partisan::save_sum(const sumgame& sum)
+{
+    vector<game*> active_games;
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        game* g = sum.subgame(i);
+        if (g->is_active())
+            active_games.push_back(g);
+    }
+
+    save_sum(active_games);
+}
+
+void db_entry_partisan::load_sum(sumgame& sum) const
+{
+    vector<game*> games = load_sum();
+
+    for (game* g : games)
+    {
+        assert(g->is_active());
+        sum.add(g);
+    }
+}
+
+void db_entry_partisan::save_sum(const vector<game*>& games)
+{
+    assert(serialized_sum.empty());
+
+    memory_obuffer os;
+    serializer<vector<game*>>::save(os, games, nullptr);
+
+    serialized_sum = std::move(os.get_data());
+}
+
+vector<game*> db_entry_partisan::load_sum() const
+{
+    memory_ibuffer is(serialized_sum);
+    return serializer<vector<game*>>::load(is, nullptr);
 }
 
 ////////////////////////////////////////////////// database methods
@@ -394,6 +443,9 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
         THROW_ASSERT(disk_type != 0);
         entry->disk_game_type = disk_type;
     }
+
+    // Serialized sum
+    entry->save_sum(sum);
 
 #ifdef DB_INCLUDE_STRINGS
     // Sum string

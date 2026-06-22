@@ -12,8 +12,6 @@
 #include <vector>
 #include <ostream>
 
-#include "iobuffer.h"
-
 //////////////////////////////////////// elephants
 class elephants : public strip
 {
@@ -23,10 +21,6 @@ public:
 
     void play(const move& m, bw to_play) override;
     void undo_move() override;
-
-    // Serialization
-    void save_impl(i_obuffer& os) const override;
-    static dyn_serializable* load_impl(i_ibuffer& is);
 
 protected:
     split_result _split_impl() const override;

@@ -148,14 +148,14 @@ void nogo_1xn::undo_move()
     replace(to, EMPTY);
 }
 
-void nogo_1xn::save_impl(i_obuffer& os) const
+void nogo_1xn::save_impl(i_obuffer& os, serializer_ctx* ctx) const
 {
-    _save_board(os, board_const());
+    _save_board(os, board_const(), ctx);
 }
 
-dyn_serializable* nogo_1xn::load_impl(i_ibuffer& is)
+dyn_serializable* nogo_1xn::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 {
-    return new nogo_1xn(_load_board(is));
+    return new nogo_1xn(_load_board(is, ctx));
 }
 
 /*
