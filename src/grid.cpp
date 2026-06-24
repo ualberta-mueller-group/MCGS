@@ -9,6 +9,7 @@
 #include <vector>
 #include "cgt_basics.h"
 #include "grid_location.h"
+#include "integral_conversion.h"
 #include "parsing_utilities.h"
 #include "safe_arithmetic.h"
 #include "string_to_int.h"
@@ -16,15 +17,16 @@
 #include "throw_assert.h"
 #include "warn_default.h"
 
+using namespace std;
+
 //---------------------------------------------------------------------------
 
 
-
 namespace {
-std::pair<std::vector<int>, int_pair> string_to_board(
-    const std::string& game_as_string)
+pair<vector<int>, int_pair> string_to_board(
+    const string& game_as_string)
 {
-    std::vector<int> board;
+    vector<int> board;
     int n_rows = 0, n_cols = 0, counter = 0;
 
     for (const char& c : game_as_string)
@@ -58,7 +60,7 @@ std::pair<std::vector<int>, int_pair> string_to_board(
 }
 
 
-inline std::vector<int> get_default_grid(int n_rows, int n_cols,
+inline vector<int> get_default_grid(int n_rows, int n_cols,
                                          grid_type_enum grid_type)
 {
     const int SIZE = n_rows * n_cols;
@@ -67,13 +69,13 @@ inline std::vector<int> get_default_grid(int n_rows, int n_cols,
     {
         case GRID_TYPE_COLOR:
         {
-            return std::vector<int>(SIZE, EMPTY);
+            return vector<int>(SIZE, EMPTY);
             break;
         }
 
         case GRID_TYPE_NUMBER:
         {
-            return std::vector<int>(SIZE, 0);
+            return vector<int>(SIZE, 0);
             break;
         }
     }
@@ -96,7 +98,7 @@ grid::grid(int n_rows, int n_cols, grid_type_enum grid_type)
     THROW_ASSERT(_is_legal_grid());
 }
 
-grid::grid(const std::vector<int>& board, int_pair shape,
+grid::grid(const vector<int>& board, int_pair shape,
            grid_type_enum grid_type)
     : game(), _board(board), _shape(shape), _grid_type(grid_type)
 {
@@ -104,7 +106,7 @@ grid::grid(const std::vector<int>& board, int_pair shape,
     THROW_ASSERT(_is_legal_grid());
 }
 
-grid::grid(const std::pair<std::vector<int>, int_pair>& board_pair,
+grid::grid(const pair<vector<int>, int_pair>& board_pair,
            grid_type_enum grid_type)
     : game(),
       _board(board_pair.first),
@@ -115,10 +117,10 @@ grid::grid(const std::pair<std::vector<int>, int_pair>& board_pair,
     THROW_ASSERT(_is_legal_grid());
 }
 
-grid::grid(const std::string& game_as_string, grid_type_enum grid_type)
+grid::grid(const string& game_as_string, grid_type_enum grid_type)
     : game(), _grid_type(grid_type)
 {
-    std::pair<std::vector<int>, int_pair> board_and_shape;
+    pair<vector<int>, int_pair> board_and_shape;
 
     switch (_grid_type)
     {
@@ -141,15 +143,50 @@ grid::grid(const std::string& game_as_string, grid_type_enum grid_type)
     THROW_ASSERT(_is_legal_grid());
 }
 
-std::string grid::board_as_string() const
+string grid::board_as_string() const
 {
     assert(_grid_type == GRID_TYPE_COLOR);
     return board_to_string(_board, _shape);
 }
 
-const std::vector<int>& grid::board_const() const
+const vector<int>& grid::board_const() const
 {
     return _board;
+}
+
+void grid::save_board(i_obuffer& os, const vector<int>& board, int_pair shape,
+                      serializer_ctx* ctx)
+{
+#warning TODO review size assumptions here (esp. the i8)!
+    assert(board.size() == shape.first * shape.second && //
+           shape.first >= 0 &&                           //
+           shape.second >= 0                             //
+    );
+
+    os.write_i32(integral_cast_unsafe<int32_t>(shape.first));
+    os.write_i32(integral_cast_unsafe<int32_t>(shape.second));
+
+    for (const int val : board)
+        os.write_i8(integral_cast_unsafe<int8_t>(val));
+}
+
+pair<vector<int>, int_pair> grid::load_board(i_ibuffer& is, serializer_ctx* ctx)
+{
+    pair<vector<int>, int_pair> result;
+    vector<int>& board = result.first;
+    int& n_rows = result.second.first;
+    int& n_cols = result.second.second;
+
+    n_rows = integral_cast_unsafe<int>(is.read_i32());
+    n_cols = integral_cast_unsafe<int>(is.read_i32());
+
+    const int64_t size =
+        static_cast<int64_t>(n_rows) * static_cast<int64_t>(n_cols);
+
+    for (int64_t i = 0; i < size; i++)
+        board.push_back(is.read_i8());
+
+    return result;
 }
 
 void grid::_init_hash(local_hash& hash) const
@@ -252,22 +289,22 @@ bool grid::_is_legal_number_grid()
     return true;
 }
 
-std::vector<int> grid::inverse_board() const
+vector<int> grid::inverse_board() const
 {
     assert(_grid_type == GRID_TYPE_COLOR);
 
-    std::vector<int> new_board = _board;
+    vector<int> new_board = _board;
     for (int& p : new_board)
         p = inverse_color(p);
     return new_board;
 }
 
-std::vector<int> grid::inverse_number_board() const
+vector<int> grid::inverse_number_board() const
 {
     assert(_grid_type == GRID_TYPE_NUMBER);
 
     const int SIZE = size();
-    std::vector<int> inv_board;
+    vector<int> inv_board;
     inv_board.reserve(SIZE);
 
     for (int i = 0; i < SIZE; i++)
@@ -286,7 +323,7 @@ std::vector<int> grid::inverse_number_board() const
     return inv_board;
 }
 
-std::vector<int> grid::get_transpose_board(int_pair& new_shape)
+vector<int> grid::get_transpose_board(int_pair& new_shape)
 {
     const int_pair& s = shape();
 
@@ -297,10 +334,10 @@ std::vector<int> grid::get_transpose_board(int_pair& new_shape)
 }
 
 // TODO unit test this
-std::vector<int> grid::transpose_board(const std::vector<int>& board,
+vector<int> grid::transpose_board(const vector<int>& board,
                                        const int_pair& shape)
 {
-    std::vector<int> new_board;
+    vector<int> new_board;
 
     const size_t board_n = board.size();
     new_board.reserve(board_n);
@@ -325,10 +362,10 @@ std::vector<int> grid::transpose_board(const std::vector<int>& board,
 // 90 degree clockwise
 // TODO make faster
 // TODO unit test this
-std::vector<int> grid::rotate_90_board(const std::vector<int>& board,
+vector<int> grid::rotate_90_board(const vector<int>& board,
                                        const int_pair& shape)
 {
-    std::vector<int> new_board;
+    vector<int> new_board;
     new_board.resize(shape.first * shape.second, COLOR_INVALID);
     int_pair new_shape(shape.second, shape.first);
 
@@ -348,9 +385,9 @@ std::vector<int> grid::rotate_90_board(const std::vector<int>& board,
     return new_board;
 }
 
-std::string grid::board_to_string(const std::vector<int>& board, const int_pair shape)
+string grid::board_to_string(const vector<int>& board, const int_pair shape)
 {
-    std::string result;
+    string result;
     int n_cols = shape.second;
     for (int r = 0; r < shape.first; r++)
     {
@@ -370,35 +407,35 @@ std::string grid::board_to_string(const std::vector<int>& board, const int_pair 
 
 ////////////////////////////////////////////////// Helpers
 
-std::pair<std::vector<int>, int_pair> string_to_grid(
-    const std::string& game_as_string)
+pair<vector<int>, int_pair> string_to_grid(
+    const string& game_as_string)
 {
     return string_to_board(game_as_string);
 }
 
 // TODO make it faster?
-std::pair<std::vector<int>, int_pair> string_to_int_grid(
-    const std::string& game_as_string)
+pair<vector<int>, int_pair> string_to_int_grid(
+    const string& game_as_string)
 {
     // Declare first to allow copy elision?
-    std::pair<std::vector<int>, int_pair> ret_pair;
+    pair<vector<int>, int_pair> ret_pair;
 
-    std::vector<int>& board = ret_pair.first;
+    vector<int>& board = ret_pair.first;
     int_pair& shape = ret_pair.second;
 
-    const std::string SEP_STRING = std::string(1, color_to_char(ROW_SEP));
+    const string SEP_STRING = string(1, color_to_char(ROW_SEP));
 
     int n_rows = 0;
     int n_cols = 0;
     int counter = 0;
     bool prev_was_control = false; // previous token was ',' or '|'
 
-    std::vector<std::string> tokens = get_string_tokens(game_as_string, {',', '|'});
+    vector<string> tokens = get_string_tokens(game_as_string, {',', '|'});
     const size_t N_TOKENS = tokens.size();
 
     for (size_t idx = 0; idx < N_TOKENS; idx++)
     {
-        const std::string& token = tokens[idx];
+        const string& token = tokens[idx];
 
         if (token == ",") // comma
         {

@@ -149,6 +149,17 @@ void clobber::undo_move()
     replace(to_point, opp);
 }
 
+void clobber::save_impl(i_obuffer& os, serializer_ctx* ctx) const
+{
+    save_board(os, board_const(), shape(), ctx);
+}
+
+dyn_serializable* clobber::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    pair<vector<int>, int_pair> board_pair = load_board(is, ctx);
+    return new clobber(board_pair.first, board_pair.second);
+}
+
 bool clobber::is_move(const int& from, const int& to, bw to_play) const
 {
     assert(is_black_white(to_play));

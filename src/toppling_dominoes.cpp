@@ -9,6 +9,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "integral_conversion.h"
 #include "strip.h"
 #include "throw_assert.h"
 
@@ -116,6 +117,34 @@ void toppling_dominoes::undo_move()
 
     _domino_start = new_start;
     _domino_end = new_end;
+}
+
+void toppling_dominoes::save_impl(i_obuffer& os,
+                                  serializer_ctx* ctx) const
+{
+    // TODO fix size limit imposed by using `int`?
+    const int32_t size = n_dominoes();
+    os.write_i32(size);
+
+    for (int32_t i = 0; i < size; i++)
+    {
+        const int val = get_domino_at(i);
+        os.write_i8(integral_cast_unsafe<int8_t>(val));
+    }
+}
+
+dyn_serializable* toppling_dominoes::load_impl(i_ibuffer& is,
+                                               serializer_ctx* ctx)
+{
+    vector<int> board;
+
+    const int32_t size = is.read_i32();
+    board.reserve(size);
+
+    for (int32_t i = 0; i < size; i++)
+        board.push_back(is.read_i8());
+
+    return new toppling_dominoes(board);
 }
 
 move_generator* toppling_dominoes::create_move_generator(bw to_play) const

@@ -22,6 +22,10 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
+    // Serialization
+    void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
+    static dyn_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
+
     move_generator* create_move_generator(bw to_play) const override;
 
     void print(std::ostream& str) const override;

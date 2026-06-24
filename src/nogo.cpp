@@ -206,6 +206,26 @@ void nogo::undo_move()
     _immortal[to_point] = _immortal_copy[to_point];
 }
 
+void nogo::save_impl(i_obuffer& os, serializer_ctx* ctx) const
+{
+    assert(_immortal.size() == board_const().size());
+
+    save_board(os, board_const(), shape(), ctx);
+    save_board(os, _immortal, shape(), ctx);
+}
+
+dyn_serializable* nogo::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    std::pair<std::vector<int>, int_pair> board_pair = load_board(is, ctx);
+    std::pair<std::vector<int>, int_pair> immortal_pair = load_board(is, ctx);
+
+    const std::vector<int>& board = board_pair.first;
+    const int_pair& shape = board_pair.second;
+    const std::vector<int>& immortal = immortal_pair.first;
+
+    return new nogo(board, immortal, shape);
+}
+
 bool nogo::is_legal() const
 {
     const int N = size();

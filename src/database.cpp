@@ -12,6 +12,7 @@
 
 #include "db_link_t.h"
 #include "db_make_simplest_equal_game.h"
+#include "global_options.h"
 #include "serializer.h"
 #include "serializer_lib_therm.h" // IWYU pragma: keep
 #include "ThGraph.h"
@@ -223,6 +224,7 @@ void database::save(const string& filename) const
     serializer_save(os, _metadata_string, &ctx);
     serializer_save(os, _mapper, &ctx);
     serializer_save(os, _graph_cache, &ctx);
+    serializer_save(os, _max_size_scores, &ctx);
 
     // Thermographs in the DB entry are saved to disk as `thgraph_id_t`
     serializer<shared_ptr<ThGraph>>::set_thermograph_cache(&ctx,
@@ -244,6 +246,7 @@ void database::load(const string& filename)
     serializer_load(is, _metadata_string, &ctx);
     serializer_load(is, _mapper, &ctx);
     serializer_load(is, _graph_cache, &ctx);
+    serializer_load(is, _max_size_scores, &ctx);
 
     // Thermographs in the DB entry are saved to disk as `thgraph_id_t`
     serializer<shared_ptr<ThGraph>>::set_thermograph_cache(&ctx,
@@ -632,11 +635,31 @@ void database::refine_partisan_links()
     cout << ")" << endl;
 }
 
+void database::report_size_score(game_type_t disk_type, uint64_t size_score)
+{
+    assert(disk_type > 0);
+    if (disk_type >= _max_size_scores.size())
+        _max_size_scores.resize(disk_type + 1, 0);
+
+    uint64_t& max_score = _max_size_scores[disk_type];
+    max_score = max(max_score, size_score);
+}
+
+uint64_t database::get_max_size_score(game_type_t disk_type) const
+{
+    assert(disk_type > 0);
+    if (disk_type >= _max_size_scores.size())
+        return 0;
+
+    return _max_size_scores[disk_type];
+}
+
 void database::clear()
 {
     _metadata_string.clear();
     _mapper.clear();
     _graph_cache = make_unique<thermograph_cache>();
+    _max_size_scores.clear();
     _terminal_partisan.clear();
     _tree_impartial.clear();
 }
@@ -709,6 +732,8 @@ hash_t database::get_db_hash(const game& g) const
 
 void database::assert_links_equal()
 {
+    cout << "Disabling `global::use_seg`" << endl;
+    global::use_seg.set(false);
     sumgame sum(BLACK);
 
     uint64_t n_entries_with_links = 0;

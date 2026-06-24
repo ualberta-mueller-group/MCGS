@@ -43,6 +43,10 @@ public:
 
     // void print(std::ostream& str) const { str << board_as_string();}
 
+    static void save_board(i_obuffer& os, const std::vector<int>& board,
+                           serializer_ctx* ctx);
+    static std::vector<int> load_board(i_ibuffer& is, serializer_ctx* ctx);
+
 protected:
     void _init_hash(local_hash& hash) const override;
 
@@ -61,9 +65,6 @@ protected:
 
     void _set_board(const std::vector<int>& new_board);
     void _set_board(const std::vector<int>&& new_board);
-
-    static void _save_board(i_obuffer& os, const std::vector<int>& board, serializer_ctx* ctx);
-    static std::vector<int> _load_board(i_ibuffer& is, serializer_ctx* ctx);
 
 private:
     bool _is_legal_strip() const;

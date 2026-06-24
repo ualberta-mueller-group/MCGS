@@ -149,12 +149,12 @@ void clobber_1xn::undo_move()
 
 void clobber_1xn::save_impl(i_obuffer& os, serializer_ctx* ctx) const
 {
-    _save_board(os, board_const(), ctx);
+    save_board(os, board_const(), ctx);
 }
 
 dyn_serializable* clobber_1xn::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 {
-    return new clobber_1xn(_load_board(is, ctx));
+    return new clobber_1xn(load_board(is, ctx));
 }
 
 split_result clobber_1xn::_split_impl() const

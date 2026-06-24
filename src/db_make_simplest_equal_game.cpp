@@ -323,6 +323,7 @@ void db_make_simplest_equal_game(sumgame& sum, db_entry_partisan& entry,
                                  database& db)
 {
     entry.size_score = make_size_score(sum, db);
+    db.report_size_score(entry.disk_game_type, entry.size_score);
 
     // Find equivalence class
     const seg_map_idx_t seg_map_idx = make_seg_map_index(entry);

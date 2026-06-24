@@ -318,6 +318,16 @@ void elephants::undo_move()
     remove_stone(to);
 }
 
+void elephants::save_impl(i_obuffer& os, serializer_ctx* ctx) const
+{
+    save_board(os, board_const(), ctx);
+}
+
+dyn_serializable* elephants::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    return new elephants(load_board(is, ctx));
+}
+
 // Two types of splits: O\.*X, and XO
 split_result elephants::_split_impl() const
 {

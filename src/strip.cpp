@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstddef>
 
+#include "integral_conversion.h"
 #include "iobuffer.h"
 #include "warn_default.h"
 #include "cgt_basics.h"
@@ -86,6 +87,30 @@ strip::strip(const std::string& game_as_string)
 std::string strip::board_as_string() const
 {
     return board_to_string(_board);
+}
+
+void strip::save_board(i_obuffer& os, const std::vector<int>& board,
+                        serializer_ctx* ctx)
+{
+#warning TODO review size assumptions here (esp. the i8)!
+    const size_t size = board.size();
+    os.write_u64(size);
+
+    for (const int val : board)
+        os.write_i8(integral_cast_unsafe<int8_t>(val));
+}
+
+std::vector<int> strip::load_board(i_ibuffer& is, serializer_ctx* ctx)
+{
+    std::vector<int> board;
+
+    const uint64_t size = is.read_u64();
+    board.reserve(size);
+
+    for (uint64_t i = 0; i < size; i++)
+        board.push_back(is.read_i8());
+
+    return board;
 }
 
 void strip::_init_hash(local_hash& hash) const
@@ -205,37 +230,7 @@ void strip::_mirror_self()
     }
 }
 
-void strip::_save_board(i_obuffer& os, const std::vector<int>& board,
-                        serializer_ctx* ctx)
-{
-    const size_t size = board.size();
-    os.write_u64(size);
 
-    for (size_t i = 0; i < size; i++)
-    {
-        const int& tile = board[i];
-
-        THROW_ASSERT(                                            //
-            (int) std::numeric_limits<uint8_t>::min() <= tile && //
-            tile <= (int) std::numeric_limits<uint8_t>::max()    //
-        );                                                       //
-
-        os.write_u8(board[i]);
-    }
-}
-
-std::vector<int> strip::_load_board(i_ibuffer& is, serializer_ctx* ctx)
-{
-    std::vector<int> board;
-
-    const size_t size = is.read_u64();
-    board.reserve(size);
-
-    for (size_t i = 0; i < size; i++)
-        board.push_back(is.read_u8());
-
-    return board;
-}
 
 bool strip::_is_legal_strip() const
 {

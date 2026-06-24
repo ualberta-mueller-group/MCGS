@@ -197,6 +197,12 @@ public:
     void refine_partisan_links();
 
     /*
+        Misc data lookup.
+    */
+    void report_size_score(game_type_t disk_type, uint64_t size_score);
+    uint64_t get_max_size_score(game_type_t disk_type) const;
+
+    /*
         Misc utility functions.
     */
     void clear();
@@ -279,6 +285,7 @@ private:
     std::string _metadata_string;
     type_mapper _mapper;
     std::unique_ptr<thermograph_cache> _graph_cache;
+    std::vector<uint64_t> _max_size_scores;
     terminal_layer_partisan_t _terminal_partisan;
     tree_impartial_t _tree_impartial;
 };
