@@ -12,6 +12,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "pitm_move_generator.h"
 #include "print_move_helpers.h"
 #include "strip.h"
 #include "throw_assert.h"
@@ -383,7 +384,9 @@ move clobber_1xn_move_generator::gen_move() const
 
 move_generator* clobber_1xn::create_move_generator(bw to_play) const
 {
-    return new clobber_1xn_move_generator(*this, to_play);
+#warning TODO reconsider this
+    return new pitm_move_generator(
+        new clobber_1xn_move_generator(*this, to_play), to_play);
 }
 
 //---------------------------------------------------------------------------

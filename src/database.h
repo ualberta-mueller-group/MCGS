@@ -71,6 +71,8 @@ struct db_entry_partisan
     std::shared_ptr<db_dom_moves_t> dominated_moves;
     std::vector<uint8_t> serialized_sum;
     db_link_t simplest_equal_entry;
+    std::vector<db_link_t> subgame_links;
+    std::vector<hash_t> subgame_hashes; // TODO delete me at some point!
 };
 
 //////////////////////////////////////// db_entry_partisan methods
@@ -254,6 +256,7 @@ private:
 
     void _generate_single_impartial_entry(impartial_game* ig, bool silent);
 
+    void _convert_link_single(db_link_t& link);
     void _convert_links_to_pointers();
 
     static game_type_t _get_sum_db_type(const sumgame& sum);

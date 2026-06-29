@@ -8,6 +8,7 @@
 
 #include "bounds.h"
 #include "cgt_basics.h"
+#include "clobber_1xn.h"
 #include "db_link_t.h"
 #include "hashing.h"
 #include "safe_arithmetic.h"
@@ -221,6 +222,29 @@ seg_map_idx_t make_seg_map_index(const db_entry_partisan& entry)
 
 uint64_t make_size_score(sumgame& sum, database& db)
 {
+# warning TODO double check this!
+    int n_active = 0;
+    int total_size = 0;
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        game* g = sum.subgame(i);
+        if (!g->is_active())
+            continue;
+
+        n_active++;
+
+        clobber_1xn* clob = dynamic_cast<clobber_1xn*>(g);
+        THROW_ASSERT(clob != nullptr);
+
+        total_size += clob->size();
+    }
+
+    total_size += min(0, n_active - 1);
+    return total_size;
+    ///////////////////////////////////
+
     assert_restore_sumgame ars(sum);
     restore_sumgame_player restore(sum);
 

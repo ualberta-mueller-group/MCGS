@@ -12,6 +12,7 @@
 
 #include "db_link_t.h"
 #include "db_make_simplest_equal_game.h"
+#include "db_make_subgame_links.h"
 #include "global_options.h"
 #include "serializer.h"
 #include "serializer_lib_therm.h" // IWYU pragma: keep
@@ -100,6 +101,9 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
     if (!simplest_equal_entry.equal_as_pointers(other.simplest_equal_entry))
         return false;
 
+    // Subgame links
+#warning TODO implement me!
+
     return true;
 }
 
@@ -162,6 +166,9 @@ void db_entry_partisan::print(ostream& os, const database& db,
     else
         os << simplest_equal_entry.get_as_pointer()->first;
     os << "`";
+
+    // Subgame links
+#warning TODO implement me!
     
     // Newline
     if (print_endl)
@@ -525,6 +532,9 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
 
     // Serialized sum
     entry->save_sum(sum);
+
+    // Subgame links
+    db_make_subgame_links(sum, *entry, *this);
 
     // Disk game type
     {
@@ -895,6 +905,18 @@ void database::_generate_single_impartial_entry(impartial_game* ig, bool silent)
         cout << " DONE" << endl;
 }
 
+
+void database::_convert_link_single(db_link_t& link)
+{
+    const hash_t hash = link.get_as_hash();
+    pair<const hash_t, db_entry_partisan>* entry_ptr = nullptr;
+
+    if (hash != 0)
+        entry_ptr = get_partisan_ptr_pair(hash);
+
+    link.set_as_pointer(entry_ptr);
+}
+
 void database::_convert_links_to_pointers()
 {
     THROW_ASSERT(get_partisan_ptr_pair(hash_t(0)) == nullptr);
@@ -903,13 +925,10 @@ void database::_convert_links_to_pointers()
     {
         db_entry_partisan& entry = entry_pair.second;
 
-        const hash_t link_hash = entry.simplest_equal_entry.get_as_hash();
-        pair<const hash_t, db_entry_partisan>* link_ptr = nullptr;
+        _convert_link_single(entry.simplest_equal_entry);
 
-        if (link_hash != 0)
-            link_ptr = get_partisan_ptr_pair(link_hash);
-
-        entry.simplest_equal_entry.set_as_pointer(link_ptr);
+        for (db_link_t& subgame_link : entry.subgame_links)
+            _convert_link_single(subgame_link);
     }
 }
 

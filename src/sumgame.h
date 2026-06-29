@@ -30,6 +30,8 @@ class sumgame_move_generator;
 
 class assert_restore_sumgame;
 
+class seg_replacer;
+
 ////////////////////////////////////////////////// Simple types
 typedef std::vector<std::optional<ThValue>> temperature_vec_t;
 typedef std::vector<std::shared_ptr<const db_dom_moves_t>> dom_object_vec_t;
@@ -50,6 +52,7 @@ enum sumgame_undo_code
     SUMGAME_UNDO_PRE_SOLVE_PASS,
     SUMGAME_UNDO_SPLIT_AND_NORMALIZE,
     SUMGAME_UNDO_DB_REPLACEMENT_PASS,
+    SUMGAME_UNDO_SEG_PASS,
 };
 
 ////////////////////////////////////////////////// struct sumgame_move
@@ -202,6 +205,9 @@ public:
     void db_replacement_pass();
     void undo_db_replacement_pass();
 
+    void seg_pass(seg_replacer* replacer);
+    void undo_seg_pass();
+
     /*
         Utilities and static functions.
     */
@@ -263,6 +269,7 @@ private:
     std::optional<timeout_token> _timeout_tok;
     mutable bool _need_cgt_simplify;
     mutable global_hash _sumgame_hash;
+    mutable seg_replacer* _replacer;
 
     /*
         Persistent data. Has meaning outside of search.
@@ -359,7 +366,7 @@ public:
 
 ////////////////////////////////////////////////// sumgame methods
 inline sumgame::sumgame(bw color)
-    : alternating_move_game(color), _need_cgt_simplify(true)
+    : alternating_move_game(color), _need_cgt_simplify(true), _replacer(nullptr)
 {
 }
 

@@ -21,6 +21,7 @@
 #include "basic_player.h"
 #include "utils_for_main.h"
 #include "warn_on_exit.h"
+#include "seg_replacer.h"
 
 using namespace std;
 
@@ -38,6 +39,9 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
+
+    //test_seg_replacer_stuff();
+    //return 0;
 
     if (opts.db_dump_file_name.has_value())
     {

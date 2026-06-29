@@ -194,6 +194,9 @@ public:
     void add_subgame(size_t subgame_idx, const game* g);
     void remove_subgame(size_t subgame_idx, const game* g);
 
+    void add_hash(size_t subgame_idx, hash_t local_hash);
+    void remove_hash(size_t subgame_idx, hash_t local_hash);
+
     void set_to_play(ebw to_play);
 
     hash_t get_global_hash_value(const std::vector<game*>& games, ebw to_play,
@@ -202,12 +205,15 @@ public:
     hash_t get_global_hash_value(const game* g, ebw to_play,
                                  bool invalidate_game_hashes = false);
 
+    static bool hash_compare_fn(hash_t hash1, hash_t hash2);
+
 private:
     void _resize_if_out_of_range(size_t subgame_idx);
     void _reserve_space(size_t capacity);
 
     // hash modifier of a local_hash based on subgame index
     hash_t _get_modified_hash(size_t subgame_idx, const game* g);
+    hash_t _get_modified_hash(size_t subgame_idx, hash_t local_hash);
 
     hash_t _value;
 
@@ -215,3 +221,9 @@ private:
     std::vector<hash_t> _subgame_hashes;
     std::vector<bool> _subgame_valid_mask;
 };
+
+inline bool global_hash::hash_compare_fn(hash_t hash1, hash_t hash2)
+{
+    return hash1 < hash2;
+}
+

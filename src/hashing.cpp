@@ -170,6 +170,30 @@ void global_hash::remove_subgame(size_t subgame_idx, const game* g)
     _subgame_hashes[subgame_idx] = 0;
 }
 
+void global_hash::add_hash(size_t subgame_idx, hash_t local_hash)
+{
+    _resize_if_out_of_range(subgame_idx);
+    assert(!_subgame_valid_mask[subgame_idx]);
+
+    hash_t modified_hash = _get_modified_hash(subgame_idx, local_hash);
+
+    _subgame_valid_mask[subgame_idx] = true;
+    _subgame_hashes[subgame_idx] = modified_hash;
+
+    _value ^= modified_hash;
+}
+
+void global_hash::remove_hash(size_t subgame_idx, hash_t local_hash)
+{
+    _resize_if_out_of_range(subgame_idx);
+    assert(_subgame_valid_mask[subgame_idx]);
+    assert(_subgame_hashes[subgame_idx] == _get_modified_hash(subgame_idx, local_hash));
+
+    _value ^= _subgame_hashes[subgame_idx];
+    _subgame_valid_mask[subgame_idx] = false;
+    _subgame_hashes[subgame_idx] = 0;
+}
+
 void global_hash::set_to_play(ebw new_to_play)
 {
     assert(is_empty_black_white(new_to_play));
@@ -279,4 +303,10 @@ hash_t global_hash::_get_modified_hash(size_t subgame_idx, const game* g)
 
     random_table& rt = get_global_random_table(RANDOM_TABLE_MODIFIER);
     return rt.get_zobrist_val(subgame_idx, base_hash);
+}
+
+hash_t global_hash::_get_modified_hash(size_t subgame_idx, hash_t local_hash)
+{
+    random_table& rt = get_global_random_table(RANDOM_TABLE_MODIFIER);
+    return rt.get_zobrist_val(subgame_idx, local_hash);
 }

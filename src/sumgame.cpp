@@ -16,6 +16,7 @@
 
 #include "sumgame.h"
 #include "database.h"
+#include "seg_replacer.h"
 #include "throw_assert.h"
 #include "bounds.h"
 #include "db_move_generator.h"
@@ -463,7 +464,13 @@ optional<solve_result> sumgame::solve_with_timeout_token(
 
     _need_cgt_simplify = true;
 
+    assert(_replacer == nullptr);
+    _replacer = seg_replacer_new();
+
     optional<solve_result> result = sum._solve_impl(depth);
+
+    seg_replacer_delete(_replacer);
+    _replacer = nullptr;
 
     sum._undo_pre_solve_pass();
 
@@ -880,6 +887,9 @@ void sumgame::db_replacement_pass()
         }
         else
         {
+            if (global::use_seg())
+                continue;
+
             // sg is partisan
             const db_entry_partisan* entry = db.get_partisan_ptr(*sg);
             stats::report_db_access(entry != nullptr);
@@ -903,25 +913,25 @@ void sumgame::db_replacement_pass()
                 }
             }
 
-            if (global::use_seg())
-            {
-                const db_entry_partisan* linked_entry = db.get_partisan_ptr(entry->simplest_equal_entry);
-                if (linked_entry == nullptr || linked_entry == entry)
-                    continue;
+            //if (global::use_seg())
+            //{
+            //    const db_entry_partisan* linked_entry = db.get_partisan_ptr(entry->simplest_equal_entry);
+            //    if (linked_entry == nullptr || linked_entry == entry)
+            //        continue;
 
-                sg->set_active(false);
-                cr.deactivated_games.push_back(sg);
+            //    sg->set_active(false);
+            //    cr.deactivated_games.push_back(sg);
 
-                vector<game*> linked_games = linked_entry->load_sum();
-                for (game* g : linked_games)
-                {
-                    assert(g->is_active());
-                    add(g);
-                    cr.added_games.push_back(g);
-                }
+            //    vector<game*> linked_games = linked_entry->load_sum();
+            //    for (game* g : linked_games)
+            //    {
+            //        assert(g->is_active());
+            //        add(g);
+            //        cr.added_games.push_back(g);
+            //    }
 
-                continue;
-            }
+            //    continue;
+            //}
 
         }
     }
@@ -973,6 +983,47 @@ void sumgame::undo_db_replacement_pass()
     _change_record_stack.pop_back();
 }
 
+/*
+    TODO this needs to report stats and fully respect global options! Bounds
+    lookup needs to be done even when `--no-use-seg` is specified!
+*/
+void sumgame::seg_pass(seg_replacer* replacer)
+{
+    _push_undo_code(SUMGAME_UNDO_SEG_PASS);
+    if (!global::use_db() || !global::use_seg())
+        return;
+
+    database& db = get_global_database();
+    sumgame_impl::change_record& cr = _change_record_stack.emplace_back();
+
+    seg_replacer_replace_all(replacer, *this, cr, db);
+}
+
+void sumgame::undo_seg_pass()
+{
+    _pop_undo_code(SUMGAME_UNDO_SEG_PASS);
+    if (!global::use_db() || !global::use_seg())
+        return;
+
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    pop(cr.added_games);
+    for (game* g : cr.added_games)
+    {
+        assert(g->is_active());
+        delete g;
+    }
+    cr.added_games.clear();
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+    cr.deactivated_games.clear();
+
+    _change_record_stack.pop_back();
+}
 
 optional<sumgame_move> sumgame::get_winning_or_random_move(
     bw for_player) const
@@ -1151,6 +1202,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 
     {
         db_replacement_pass();
+        seg_pass(_replacer);
         simplify_basic();
 
         optional<solve_result> result =
