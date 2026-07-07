@@ -15,6 +15,8 @@
 #include "print_move_helpers.h"
 #include "grid_location.h"
 #include "bounding_box.h"
+#include "global_options.h"
+#include "pitm_move_generator.h"
 #include "throw_assert.h"
 
 namespace {
@@ -211,7 +213,12 @@ dyn_serializable* amazons::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 
 move_generator* amazons::create_move_generator(bw to_play) const
 {
-    return new amazons_move_generator(*this, to_play);
+    move_generator* mg = new amazons_move_generator(*this, to_play);
+
+    if (global::pitm())
+        return new pitm_move_generator(mg, to_play);
+
+    return mg;
 }
 
 void amazons::print_move(std::ostream& str, const ::move& m, ebw to_play) const

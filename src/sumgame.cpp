@@ -49,7 +49,9 @@ constexpr bool PRINT_SUBGAMES = false;
 using namespace sumgame_impl;
 using namespace std;
 
+bool sumgame::use_npos = true;
 shared_ptr<ttable_sumgame> sumgame::_tt(nullptr);
+
 
 
 ////////////////////////////////////////////////// Helpers
@@ -126,7 +128,7 @@ ebw analyze_outcome_count_vector(const vector<unsigned int>& counts,
 
     const bool no_negative = counts[negative_class] == 0;
 
-    if (one_n && no_negative)
+    if (one_n && no_negative && sumgame::use_npos)
         return player;
 
     return EMPTY;
@@ -397,6 +399,14 @@ bool sumgame::solve() const
     assert(result.has_value());
 
     return result.value().win;
+}
+
+bool sumgame::solve_with_ttable(shared_ptr<ttable_sumgame> temp_ttable)
+{
+    swap(temp_ttable, _tt);
+    const bool result = solve();
+    swap(temp_ttable, _tt);
+    return result;
 }
 
 bool sumgame::solve_with_games(game* g) const

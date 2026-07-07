@@ -113,6 +113,8 @@ struct solve_result
 class sumgame : public alternating_move_game
 {
 public:
+    static bool use_npos;
+
     sumgame(bw color);
     virtual ~sumgame();
 
@@ -179,6 +181,8 @@ public:
         returned optional has no value.
     */
     bool solve() const override;
+
+    bool solve_with_ttable(std::shared_ptr<ttable_sumgame> temp_ttable);
 
     bool solve_with_games(game* g) const;
     bool solve_with_games(const std::vector<game*>& games) const;

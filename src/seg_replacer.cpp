@@ -3,6 +3,7 @@
 
 #include "bounds.h"
 #include "db_link_t.h"
+#include "global_options.h"
 #include "grid_generator.h"
 #include "gridlike_db_game_generator.h"
 #include "safe_arithmetic.h"
@@ -18,6 +19,13 @@ using namespace std;
 ////////////////////////////////////////////////// Helpers
 namespace {
 typedef pair<const hash_t, db_entry_partisan> db_pair_t;
+
+enum replace_result
+{
+    REPLACE_RESULT_FAIL = 0,
+    REPLACE_RESULT_OK,
+    REPLACE_RESULT_DB_MISS,
+};
 
 //////////////////////////////////////// struct temp_db_game_t
 struct temp_db_game_t
@@ -75,8 +83,8 @@ bool temp_db_game_t::compare(const temp_db_game_t& tg1, const temp_db_game_t& tg
     if (!tg2.is_valid())
         return true;
 
-    const uint64_t size_score1 = tg1.entry_ptr->second.size_score;
-    const uint64_t size_score2 = tg2.entry_ptr->second.size_score;
+    const uint64_t size_score1 = tg1.entry_ptr->second.get_size_score();
+    const uint64_t size_score2 = tg2.entry_ptr->second.get_size_score();
 
     return size_score1 < size_score2;
 
@@ -107,7 +115,7 @@ public:
     */
     bool replace_with_bounds(db_pair_t* entry_ptr);
     bool replace_with_seg(db_pair_t* entry_ptr);
-    bool replace_selection();
+    replace_result replace_selection();
 
     /*
         Abstract game/container operations
@@ -145,8 +153,8 @@ private:
     game_type_t _current_container_type;
     vector<temp_db_game_t>* _current_container;
 
-    uint64_t _max_size_score;
-    uint64_t _size_score_sum;
+    //uint64_t _max_size_score;
+    //uint64_t _size_score_sum;
 
     vector<size_t> _selection_indices;
     vector<hash_t> _selection_hashes;
@@ -180,8 +188,8 @@ void seg_replacer::reset(sumgame* sum, change_record* cr, database* db)
     _current_container_type = 0;
     _current_container = nullptr;
 
-    _max_size_score = 0;
-    _size_score_sum = 0;
+    //_max_size_score = 0;
+    //_size_score_sum = 0;
 
     _selection_indices.clear();
     _selection_hashes.clear();
@@ -206,8 +214,13 @@ void seg_replacer::replace_all()
     }
 
     replace1();
-    replace2();
-    replace3_plus();
+
+    if (!global::single_seg())
+    {
+        replace2();
+        replace3_plus();
+    }
+
     inflate_games();
 }
 
@@ -220,14 +233,14 @@ void seg_replacer::replace1()
             continue;
 
         bind_container(container_type);
-        if (_max_size_score == 0)
-            continue;
+        //if (_max_size_score == 0)
+        //    continue;
 
-        const size_t container_size = _current_container->size();
-        for (size_t sel_idx = 0; sel_idx < container_size; sel_idx++)
+        //const size_t container_size = _current_container->size();
+        for (size_t sel_idx = 0; sel_idx < _current_container->size(); sel_idx++)
         {
             clear_selection();
-            if (try_add_to_selection(sel_idx) && replace_selection())
+            if (try_add_to_selection(sel_idx) && replace_selection() == REPLACE_RESULT_OK)
                 delete_selection_games();
         }
     }
@@ -243,23 +256,23 @@ void seg_replacer::replace2()
             continue;
 
         bind_container(container_type);
-        if (_max_size_score == 0)
-            continue;
+        //if (_max_size_score == 0)
+        //    continue;
 
-        const size_t container_size = _current_container->size();
-        for (size_t sel1 = 0; sel1 < container_size; sel1++)
+        //const size_t container_size = _current_container->size();
+        for (size_t sel1 = 0; sel1 < _current_container->size(); sel1++)
         {
             clear_selection();
 
             if (!try_add_to_selection(sel1))
                 continue;
 
-            for (size_t sel2 = sel1 + 1; sel2 < container_size; sel2++)
+            for (size_t sel2 = sel1 + 1; sel2 < _current_container->size(); sel2++)
             {
                 if (!try_add_to_selection(sel2))
                     continue;
 
-                if (replace_selection())
+                if (replace_selection() == REPLACE_RESULT_OK)
                 {
                     delete_selection_games();
                     break;
@@ -269,7 +282,6 @@ void seg_replacer::replace2()
             }
         }
     }
-
 }
 
 void seg_replacer::replace3_plus()
@@ -281,8 +293,8 @@ void seg_replacer::replace3_plus()
             continue;
 
         bind_container(container_type);
-        if (_max_size_score == 0)
-            continue;
+        //if (_max_size_score == 0)
+        //    continue;
 
         std::sort(_current_container->begin(), _current_container->end(),
                   temp_db_game_t::compare);
@@ -293,34 +305,80 @@ void seg_replacer::replace3_plus()
             if (!(*_current_container)[sel1].is_valid())
                 continue;
 
-            // Window is maxed out
-            if (!try_add_to_selection(sel1))
+            const bool added = try_add_to_selection(sel1);
+            assert(added);
+
+            if (_selection_indices.size() >= 3)
             {
-                if (_selection_indices.size() < 3)
+                const replace_result result = replace_selection();
+
+                if (result == REPLACE_RESULT_OK)
                 {
+                    delete_selection_games();
                     clear_selection();
                     continue;
                 }
 
-                // Put smallest size score last
-                reverse_selection();
+                if (result == REPLACE_RESULT_FAIL)
+                    continue;
 
-                while (_selection_indices.size() >= 3)
-                {
-                    if (replace_selection())
-                    {
-                        delete_selection_games();
-                        break;
-                    }
-
-                    pop_selection();
-                }
-
-                clear_selection();
+                if (result == REPLACE_RESULT_DB_MISS)
+                    clear_selection();
             }
         }
     }
 }
+
+
+//void seg_replacer::replace3_plus()
+//{
+//    for (size_t container_type = 1;
+//         container_type < _active_container_mask.size(); container_type++)
+//    {
+//        if (!_active_container_mask[container_type])
+//            continue;
+//
+//        bind_container(container_type);
+//        //if (_max_size_score == 0)
+//        //    continue;
+//
+//        std::sort(_current_container->begin(), _current_container->end(),
+//                  temp_db_game_t::compare);
+//
+//        clear_selection();
+//        for (size_t sel1 = 0; sel1 < _current_container->size(); sel1++)
+//        {
+//            if (!(*_current_container)[sel1].is_valid())
+//                continue;
+//
+//            // Window is maxed out
+//            if (!try_add_to_selection(sel1))
+//            {
+//                if (_selection_indices.size() < 3)
+//                {
+//                    clear_selection();
+//                    continue;
+//                }
+//
+//                // Put smallest size score last
+//                reverse_selection();
+//
+//                while (_selection_indices.size() >= 3)
+//                {
+//                    if (replace_selection())
+//                    {
+//                        delete_selection_games();
+//                        break;
+//                    }
+//
+//                    pop_selection();
+//                }
+//
+//                clear_selection();
+//            }
+//        }
+//    }
+//}
 
 void seg_replacer::inflate_games()
 {
@@ -414,26 +472,30 @@ bool seg_replacer::replace_with_seg(db_pair_t* entry_ptr)
     return true;
 }
 
-bool seg_replacer::replace_selection()
+replace_result seg_replacer::replace_selection()
 {
     db_pair_t* selection_entry = get_selection_entry();
 
     if (selection_entry == nullptr)
-        return false;
+        return REPLACE_RESULT_DB_MISS;
 
     if (replace_with_bounds(selection_entry))
-        return true;
+        return REPLACE_RESULT_OK;
 
     if (replace_with_seg(selection_entry))
-        return true;
+        return REPLACE_RESULT_OK;
 
-    return false;
+    return REPLACE_RESULT_FAIL;
 }
 
 void seg_replacer::insert_temp_game(temp_db_game_t temp_game)
 {
     const game_type_t disk_type = temp_game.entry_ptr->second.disk_game_type;
     vector<temp_db_game_t>& container = get_or_create_container(disk_type);
+
+    if (container.size() >= 200)
+        cout << "WARNING: container size " << container.size() << endl;
+    assert(container.size() < 1000);
 
     container.push_back(temp_game);
     _active_container_mask[disk_type] = true;
@@ -461,8 +523,8 @@ void seg_replacer::bind_container(game_type_t new_disk_type)
     _current_container_type = new_disk_type;
     _current_container = &_game_containers[new_disk_type];
 
-    _max_size_score = _db->get_max_size_score(new_disk_type);
-    _size_score_sum = 0;
+    //_max_size_score = _db->get_max_size_score(new_disk_type);
+    //_size_score_sum = 0;
 }
 
 bool seg_replacer::try_add_to_selection(size_t sel_idx)
@@ -474,10 +536,10 @@ bool seg_replacer::try_add_to_selection(size_t sel_idx)
 
     db_entry_partisan& entry = tg.entry_ptr->second;
 
-    if (_size_score_sum + entry.size_score > _max_size_score)
-        return false;
+    //if (_size_score_sum + entry.size_score > _max_size_score)
+    //    return false;
 
-    _size_score_sum += entry.size_score;
+    //_size_score_sum += entry.size_score;
     _selection_indices.push_back(sel_idx);
     return true;
 }
@@ -491,7 +553,7 @@ void seg_replacer::pop_selection()
 
     temp_db_game_t& tg = (*_current_container)[sel_idx];
 
-    _size_score_sum -= tg.entry_ptr->second.size_score;
+    //_size_score_sum -= tg.entry_ptr->second.size_score;
 }
 
 void seg_replacer::reverse_selection()
@@ -575,7 +637,7 @@ db_pair_t* seg_replacer::get_selection_entry()
 void seg_replacer::clear_selection()
 {
     _selection_indices.clear();
-    _size_score_sum = 0;
+    //_size_score_sum = 0;
 }
 
 void seg_replacer::delete_selection_games()

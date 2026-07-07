@@ -26,6 +26,7 @@
 #include "game.h"
 #include "impartial_sumgame.h"
 #include "impartial_game.h"
+#include "size_score_enum.h"
 #include "sumgame.h"
 #include "iobuffer.h"
 #include "db_game_generator.h"
@@ -47,6 +48,76 @@
 using namespace std;
 
 ////////////////////////////////////////////////// db_entry_partisan methods
+
+// Defines order in seg_replacer 3+ subgame pass
+uint64_t db_entry_partisan::get_size_score() const
+{
+    switch (static_cast<size_score_enum>(global::size_score()))
+    {
+        case SIZE_SCORE_NONE:
+            assert(false);
+        case SIZE_SCORE_PAIR:
+            return ss_stone_count;
+        case SIZE_SCORE_BOARD_SIZE:
+            return ss_board_size;
+        case SIZE_SCORE_NODE_COUNT:
+            assert(false);
+            //return ss_node_count;
+        case SIZE_SCORE_STONE_COUNT:
+            return ss_stone_count;
+        case SIZE_SCORE_TREE_HEIGHT:
+            return ss_tree_height;
+        case SIZE_SCORE_MAX_LOCAL_OPTIONS:
+            return ss_max_local_options;
+    }
+
+    assert(false);
+}
+
+// Influences order inside equivalence class
+relation db_entry_partisan::compare_size_score(
+    const db_entry_partisan& rhs) const
+{
+    assert(global::size_score() != SIZE_SCORE_NONE);
+
+    if (global::size_score() != SIZE_SCORE_PAIR)
+    {
+        const uint64_t score1 = get_size_score();
+        const uint64_t score2 = rhs.get_size_score();
+
+        if (score1 != score2)
+            return score1 < score2 ? REL_LESS : REL_GREATER;
+
+        return REL_EQUAL;
+    }
+
+    if (ss_stone_count != rhs.ss_stone_count)
+        return ss_stone_count < rhs.ss_stone_count ? REL_LESS : REL_GREATER;
+
+    if (ss_board_size != rhs.ss_board_size)
+        return ss_board_size < rhs.ss_board_size ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
+}
+
+bool db_entry_partisan::size_score_allows_replacement_by(
+    const db_entry_partisan& rhs) const
+{
+    assert(global::size_score() != SIZE_SCORE_NONE);
+
+    if (global::size_score() != SIZE_SCORE_PAIR)
+        return get_size_score() > rhs.get_size_score();
+
+    if (ss_stone_count < rhs.ss_stone_count)
+        return true;
+
+    if (ss_board_size < rhs.ss_board_size)
+        return true;
+
+    return false;
+}
+
+
 bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 {
     // Note confusing use of `shared_ptr::operator bool()` in this function
@@ -82,9 +153,9 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
     if (complexity != other.complexity)
         return false;
 
-    // Size score
-    if (size_score != other.size_score)
-        return false;
+    //// Size score
+    //if (size_score != other.size_score)
+    //    return false;
 
     // Dominated moves
     if ((bool) dominated_moves != (bool) other.dominated_moves)
@@ -143,8 +214,8 @@ void db_entry_partisan::print(ostream& os, const database& db,
     // Complexity
     os << " Complexity: `" << complexity << "`";
 
-    // Size score
-    os << " Size score: `" << size_score << "`";
+    //// Size score
+    //os << " Size score: `" << size_score << "`";
 
     // Dominated moves
     os << " Dominated moves: `";
@@ -645,24 +716,24 @@ void database::refine_partisan_links()
     cout << ")" << endl;
 }
 
-void database::report_size_score(game_type_t disk_type, uint64_t size_score)
-{
-    assert(disk_type > 0);
-    if (disk_type >= _max_size_scores.size())
-        _max_size_scores.resize(disk_type + 1, 0);
-
-    uint64_t& max_score = _max_size_scores[disk_type];
-    max_score = max(max_score, size_score);
-}
-
-uint64_t database::get_max_size_score(game_type_t disk_type) const
-{
-    assert(disk_type > 0);
-    if (disk_type >= _max_size_scores.size())
-        return 0;
-
-    return _max_size_scores[disk_type];
-}
+//void database::report_size_score(game_type_t disk_type, uint64_t size_score)
+//{
+//    assert(disk_type > 0);
+//    if (disk_type >= _max_size_scores.size())
+//        _max_size_scores.resize(disk_type + 1, 0);
+//
+//    uint64_t& max_score = _max_size_scores[disk_type];
+//    max_score = max(max_score, size_score);
+//}
+//
+//uint64_t database::get_max_size_score(game_type_t disk_type) const
+//{
+//    assert(disk_type > 0);
+//    if (disk_type >= _max_size_scores.size())
+//        return 0;
+//
+//    return _max_size_scores[disk_type];
+//}
 
 void database::clear()
 {
@@ -742,7 +813,7 @@ hash_t database::get_db_hash(const game& g) const
 
 void database::assert_links_equal()
 {
-    cout << "Disabling `global::use_seg`" << endl;
+    cout << "Disabling `global::use_seg` for validation pass..." << endl;
     global::use_seg.set(false);
     sumgame sum(BLACK);
 
@@ -773,9 +844,9 @@ void database::assert_links_equal()
 
         sum.add(entry_games);
 
-        cout << "Validating: ";
-        sum.print_simple(cout);
-        cout << endl;
+        //cout << "Validating: ";
+        //sum.print_simple(cout);
+        //cout << endl;
 
         assert(entry_hash == database::get_db_hash(sum));
 

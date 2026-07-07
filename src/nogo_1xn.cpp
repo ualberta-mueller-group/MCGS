@@ -12,6 +12,8 @@
 
 #include "cgt_move.h"
 #include "integral_conversion.h"
+#include "global_options.h"
+#include "pitm_move_generator.h"
 #include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "iobuffer.h"
@@ -364,7 +366,12 @@ move nogo_1xn_move_generator::gen_move() const
 
 move_generator* nogo_1xn::create_move_generator(bw to_play) const
 {
-    return new nogo_1xn_move_generator(*this, to_play);
+    move_generator* mg = new nogo_1xn_move_generator(*this, to_play);
+
+    if (global::pitm())
+        return new pitm_move_generator(mg, to_play);
+
+    return mg;
 }
 
 //---------------------------------------------------------------------------

@@ -19,8 +19,10 @@
 #include "db_game_generator.h"
 #include "dominated_moves.h"
 #include "game.h"
+#include "global_options.h"
 #include "hashing.h"
 #include "impartial_game.h"
+#include "size_score_enum.h"
 #include "sumgame.h"
 #include "thermograph_cache.h"
 #include "type_mapper.h"
@@ -42,7 +44,10 @@ struct db_entry_partisan
         : disk_game_type(0),
           outcome(outcome_class::U),
           complexity(0),
-          size_score(0)
+          ss_board_size(0),
+          ss_node_count(0),
+          ss_stone_count(0),
+          ss_tree_height(0)
     {
     }
 
@@ -58,6 +63,10 @@ struct db_entry_partisan
     void save_sum(const std::vector<game*>& games);
     std::vector<game*> load_sum() const;
 
+    uint64_t get_size_score() const;
+    relation compare_size_score(const db_entry_partisan& rhs) const;
+    bool size_score_allows_replacement_by(const db_entry_partisan& rhs) const;
+
 #ifdef DB_INCLUDE_STRINGS
     std::string sum_string;
 #endif
@@ -67,7 +76,11 @@ struct db_entry_partisan
     std::shared_ptr<ThGraph> thermograph;
     std::shared_ptr<game_bounds> bounds_data;
     uint64_t complexity;
-    uint64_t size_score;
+    uint64_t ss_board_size;
+    uint64_t ss_node_count;
+    uint64_t ss_stone_count;
+    uint64_t ss_tree_height;
+    uint64_t ss_max_local_options;
     std::shared_ptr<db_dom_moves_t> dominated_moves;
     std::vector<uint8_t> serialized_sum;
     db_link_t simplest_equal_entry;
@@ -80,6 +93,7 @@ inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
 {
     return !(*this == other);
 }
+
 
 ////////////////////////////////////////////////// struct db_entry_impartial
 struct db_entry_impartial
@@ -201,8 +215,8 @@ public:
     /*
         Misc data lookup.
     */
-    void report_size_score(game_type_t disk_type, uint64_t size_score);
-    uint64_t get_max_size_score(game_type_t disk_type) const;
+    //void report_size_score(game_type_t disk_type, uint64_t size_score);
+    //uint64_t get_max_size_score(game_type_t disk_type) const;
 
     /*
         Misc utility functions.

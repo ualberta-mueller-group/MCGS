@@ -10,3 +10,5 @@ void db_make_simplest_equal_game(sumgame& sum, db_entry_partisan& entry,
 
 void db_refine_simplest_equal_game(
     std::pair<const hash_t, db_entry_partisan>& entry_pair, database& db);
+
+void delete_equivalence_classes();

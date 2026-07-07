@@ -49,7 +49,11 @@ struct serializer<db_entry_partisan>
         serializer_save(os, entry.thermograph, ctx);
         serializer_save(os, entry.bounds_data, ctx);
         serializer_save(os, entry.complexity, ctx);
-        serializer_save(os, entry.size_score, ctx);
+        serializer_save(os, entry.ss_board_size, ctx);
+        serializer_save(os, entry.ss_node_count, ctx);
+        serializer_save(os, entry.ss_stone_count, ctx);
+        serializer_save(os, entry.ss_tree_height, ctx);
+        serializer_save(os, entry.ss_max_local_options, ctx);
         serializer_save(os, entry.dominated_moves, ctx);
         serializer_save(os, entry.serialized_sum, ctx);
         serializer_save(os, entry.simplest_equal_entry, ctx);
@@ -69,7 +73,11 @@ struct serializer<db_entry_partisan>
         serializer_load(is, entry.thermograph, ctx);
         serializer_load(is, entry.bounds_data, ctx);
         serializer_load(is, entry.complexity, ctx);
-        serializer_load(is, entry.size_score, ctx);
+        serializer_load(is, entry.ss_board_size, ctx);
+        serializer_load(is, entry.ss_node_count, ctx);
+        serializer_load(is, entry.ss_stone_count, ctx);
+        serializer_load(is, entry.ss_tree_height, ctx);
+        serializer_load(is, entry.ss_max_local_options, ctx);
         serializer_load(is, entry.dominated_moves, ctx);
         serializer_load(is, entry.serialized_sum, ctx);
         serializer_load(is, entry.simplest_equal_entry, ctx);

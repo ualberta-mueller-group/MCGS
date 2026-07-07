@@ -13,6 +13,8 @@
 #include "cgt_move.h"
 #include "print_move_helpers.h"
 #include "strip.h"
+#include "pitm_move_generator.h"
+#include "global_options.h"
 #include "iobuffer.h"
 #include "throw_assert.h"
 #include "utilities.h"
@@ -439,7 +441,12 @@ void elephants::_undo_normalize_impl()
 
 move_generator* elephants::create_move_generator(bw to_play) const
 {
-    return new elephants_move_generator(*this, to_play);
+    move_generator* mg = new elephants_move_generator(*this, to_play);
+
+    if (global::pitm())
+        return new pitm_move_generator(mg, to_play);
+
+    return mg;
 }
 
 void elephants::print_move(std::ostream& str, const move& m, ebw to_play) const

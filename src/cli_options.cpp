@@ -14,6 +14,7 @@
 #include "init_database.h"
 #include "search_graph_debug.h"
 #include "paths.h"
+#include "size_score_enum.h"
 #include "string_to_int.h"
 #include "test_filter.h"
 #include "utilities.h"
@@ -198,6 +199,21 @@ void print_help_message(const string& exec_name)
     print_flag(global::clear_tt.flag(),
                "Clear ttable between test runs. Default: " +
                    global::clear_tt.get_default_str() + ".");
+
+    print_flag("--size-score <score_type>",
+               "Where <score_type> is one of [board_size, tree_height, "
+               "node_count, stone_count, pair, max_local_options]");
+
+    print_flag(global::local_cs4.flag(), "Don't use sum-level info to compute CS4.");
+
+    print_flag(global::single_seg.flag(), "Only replace single subgames.");
+
+
+    print_flag(global::experimental_cs.flag(), "Estimate CS as runtime cost.");
+
+    // TODO
+    print_flag(global::pitm.no_flag(), "Disable play in the middle for games "
+                                       "which support it.");
 
     print_flag(global::count_sums.flag(),
                "Count unique sums found during "
@@ -626,6 +642,77 @@ cli_options parse_args(int argc, const char** argv, bool silent)
         if (arg == global::clear_tt.flag())
         {
             global::clear_tt.set(true);
+            continue;
+        }
+
+        if (arg == "--size-score")
+        {
+            arg_idx++;
+
+            if (arg_next == "board_size")
+            {
+                global::size_score.set(SIZE_SCORE_BOARD_SIZE);
+                continue;
+            }
+
+            if (arg_next == "tree_height")
+            {
+                global::size_score.set(SIZE_SCORE_TREE_HEIGHT);
+                continue;
+            }
+
+            if (arg_next == "node_count")
+            {
+                global::size_score.set(SIZE_SCORE_NODE_COUNT);
+                continue;
+            }
+
+            if (arg_next == "stone_count")
+            {
+                global::size_score.set(SIZE_SCORE_STONE_COUNT);
+                continue;
+            }
+
+            if (arg_next == "pair")
+            {
+                global::size_score.set(SIZE_SCORE_PAIR);
+                continue;
+            }
+
+            if (arg_next == "max_local_options")
+            {
+                global::size_score.set(SIZE_SCORE_MAX_LOCAL_OPTIONS);
+                continue;
+            }
+
+            throw cli_options_exception("--size-score invalid/unspecified!");
+        }
+
+        if (arg == global::local_cs4.flag())
+        {
+            assert(!global::local_cs4());
+            global::local_cs4.set(true);
+            continue;
+        }
+
+        if (arg == global::single_seg.flag())
+        {
+            assert(!global::single_seg());
+            global::single_seg.set(true);
+            continue;
+        }
+
+        if (arg == global::experimental_cs.flag())
+        {
+            assert(!global::experimental_cs());
+            global::experimental_cs.set(true);
+            continue;
+        }
+
+        if (arg == global::pitm.no_flag())
+        {
+            assert(global::pitm());
+            global::pitm.set(false);
             continue;
         }
 

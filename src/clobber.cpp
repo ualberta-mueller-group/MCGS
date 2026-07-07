@@ -11,6 +11,8 @@
 #include <utility>
 #include <vector>
 #include "grid_hash.h"
+#include "global_options.h"
+#include "pitm_move_generator.h"
 #include "grid_location.h"
 #include "print_move_helpers.h"
 #include "throw_assert.h"
@@ -395,7 +397,12 @@ void clobber::_init_hash(local_hash& hash) const
 
 move_generator* clobber::create_move_generator(bw to_play) const
 {
-    return new clobber_move_generator(*this, to_play);
+    move_generator* mg = new clobber_move_generator(*this, to_play);
+
+    if (global::pitm())
+        return new pitm_move_generator(mg, to_play);
+
+    return mg;
 }
 
 void clobber::print(ostream& str) const
