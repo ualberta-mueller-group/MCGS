@@ -5,6 +5,7 @@
 #include "cli_options.h"
 #include "compare_databases.h"
 #include "global_options.h"
+#include "init_component_cache.h"
 #include "init_database.h"
 #include "init_grid_hash_mask.h"
 #include "init_hashing.h"
@@ -49,6 +50,7 @@ void mcgs_init_2(const cli_options& opts)
     mcgs_init::init_serialization();
     mcgs_init::init_random();
     mcgs_init::init_hashing();
+    mcgs_init::init_component_caches();
     mcgs_init::init_solver_stats();
     mcgs_init::init_sumgame(global::tt_sumgame_idx_bits());
     mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits());

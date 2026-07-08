@@ -43,6 +43,9 @@ int main(int argc, char** argv)
     //test_seg_replacer_stuff();
     //return 0;
 
+    //test_component_cache_stuff();
+    //return 0;
+
     if (opts.db_dump_file_name.has_value())
     {
         THROW_ASSERT(global::use_db(),
