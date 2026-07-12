@@ -16,6 +16,7 @@
 #include "file_parser_ast.h"
 #include "game.h"
 #include "get_winning_moves.h"
+#include "global_database.h"
 #include "global_options.h"
 #include "impartial_sumgame.h"
 #include "search_graph_debug.h"
@@ -379,14 +380,15 @@ void test_case_thermograph::_run_impl(unsigned long long timeout)
 {
     // Test setup
     vector<game*>& games = _games;
+    sumgame sum(BLACK);
+
+    thermograph_builder_no_db& builder =
+        thermograph_builder_no_db::get_global_instance();
 
     if (global::clear_tt())
-    {
-        // TODO
-    }
+        builder.clear();
 
-    sumgame sum(BLACK);
-    thermograph_builder_no_db builder;
+    const database* db = global::use_db() ? &get_global_database() : nullptr;
 
     // Initialize stopwatch/timeout helpers
     stopwatch sw;
@@ -395,7 +397,8 @@ void test_case_thermograph::_run_impl(unsigned long long timeout)
     sw.start();
 
     sum.add(games);
-    const shared_ptr<ThGraph> graph = builder.build_thermograph(sum);
+    const shared_ptr<const ThGraph> graph =
+        builder.build_thermograph_with_timeout(sum, timeout, db);
     sum.pop(games);
 
     // End test
@@ -404,7 +407,10 @@ void test_case_thermograph::_run_impl(unsigned long long timeout)
     // Report results
     assert(_csv_row.has_pre_test_fields());
 
-    const optional<string> result_string = thermograph_string(*graph);
+    optional<string> result_string;
+    if (graph)
+        result_string = thermograph_string(*graph);
+
     const optional<string>& expected_string = _csv_row.expected_result;
 
     const test_case_status_enum status =
