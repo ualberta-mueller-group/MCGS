@@ -30,6 +30,7 @@ public:
     void visit(const fp_expr_command_solve_bw& expr) override;
     void visit(const fp_expr_command_solve_n& expr) override;
     void visit(const fp_expr_command_winning_moves& expr) override;
+    void visit(const fp_expr_command_thermograph& expr) override;
 
 protected:
     struct visitor_context

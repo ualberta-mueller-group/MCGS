@@ -249,6 +249,30 @@ const std::optional<std::vector<std::string>>& fp_expr_command_winning_moves::
     return _expected_winning_moves;
 }
 
+//////////////////////////////////////////////////
+// fp_expr_command_thermograph methods
+
+fp_expr_command_thermograph::fp_expr_command_thermograph(int line_no)
+    : i_fp_expr_command(line_no, COMMAND_TYPE_THERMOGRAPH)
+{
+}
+
+fp_expr_command_thermograph::fp_expr_command_thermograph(int line_no,
+                                                         ThGraph graph)
+    : i_fp_expr_command(line_no, COMMAND_TYPE_THERMOGRAPH), _exp_graph(graph)
+{
+}
+
+void fp_expr_command_thermograph::accept(i_fp_visitor& visitor) const
+{
+    visitor.visit(*this);
+}
+
+const std::optional<ThGraph>& fp_expr_command_thermograph::get_exp_graph() const
+{
+    return _exp_graph;
+}
+
 //////////////////////////////////////// fp_chunk methods
 fp_chunk::fp_chunk()
 {

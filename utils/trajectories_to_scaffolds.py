@@ -165,7 +165,10 @@ def parse_cgsuite_thermograph(in_string):
 
 
 def print_frac(f, end=""):
-    print(str(f.numerator) + "/" + str(f.denominator), end=end)
+    if f.denominator == 1:
+        print(str(f.numerator), end=end)
+    else:
+        print(str(f.numerator) + "/" + str(f.denominator), end=end)
 
 def print_point(p, end=""):
     print("(", end="")
@@ -177,7 +180,7 @@ def print_point(p, end=""):
 def print_scaffold(sc, end=""):
     for i in range(len(sc)):
         if i > 0:
-            print(", ", end="")
+            print(" ", end="")
         print_point(sc[i])
     print("", end=end)
 

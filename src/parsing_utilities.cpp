@@ -119,9 +119,9 @@ bool get_player(const vector<string>& string_tokens, size_t& idx,
     return true;
 }
 
-bool get_fraction(const vector<string>& string_tokens, size_t& idx,
-                  vector<fraction>& fracs)
+optional<fraction> get_fraction(const vector<string>& string_tokens, size_t& idx)
 {
+    const size_t initial_idx = idx;
     const size_t N = string_tokens.size();
     if (!(idx < N))
         return false;
@@ -129,35 +129,30 @@ bool get_fraction(const vector<string>& string_tokens, size_t& idx,
     int top = 0;
     int bottom = 1;
 
-    auto make_fraction = [&]() -> bool
-    {
-        fracs.emplace_back(top, bottom);
-        return true;
-    };
-
     // must have 1st int
     if (!get_int(string_tokens, idx, top))
-        return false;
+        return {};
 
     if (!(idx < N))
-        return make_fraction();
+        return fraction(top, bottom);
 
     const string& second_token = string_tokens[idx];
 
     // Only continue if "/" next
     if (!is_slash(second_token))
-        return make_fraction();
+        return fraction(top, bottom);
 
     assert(is_slash(second_token));
     idx++; // consume "/"
 
     // Must have 2nd int after "/"
-    if (!(idx < N))
-        return false;
     if (!get_int(string_tokens, idx, bottom))
-        return false;
+    {
+        idx = initial_idx;
+        return {};
+    }
 
-    return make_fraction();
+    return fraction(top, bottom);
 }
 
 bool consume_optional_comma(const vector<string>& string_tokens, size_t& idx)
@@ -204,9 +199,13 @@ bool get_fraction_list(const string& line, vector<fraction>& fracs)
     while (i < N)
     {
         // must have fraction
-        if (!get_fraction(string_tokens, i, fracs))
-            return false;
+        optional<fraction> f = get_fraction(string_tokens, i);
 
+        if (f.has_value())
+            fracs.push_back(*f);
+        else
+            return false;
+        
         if (!consume_optional_comma(string_tokens, i))
             return false;
     }
@@ -323,4 +322,103 @@ bool get_run_command_list(const string& line,
     assert(i == N);
     assert(commands.size() > 0);
     return true;
+}
+
+optional<ThPoint> get_thpoint(const vector<string>& string_tokens, size_t& idx)
+{
+    const size_t initial_idx = idx;
+    const size_t N = string_tokens.size();
+
+    string thpoint_string;
+
+    bool ok = true;
+    bool has_left_bracket = false;
+    bool has_right_bracket = false;
+
+    while (idx < N)
+    {
+        if (!ok || has_right_bracket)
+            break;
+
+        const string& tok = string_tokens[idx];
+        idx++;
+
+        const size_t tok_size = tok.size();
+        for (size_t j = 0; j < tok_size; j++)
+        {
+            const char c = tok[j];
+
+            // Handle '('
+            if (!has_left_bracket)
+            {
+                if (c != '(')
+                {
+                    ok = false;
+                    break;
+                }
+
+                has_left_bracket = true;
+                continue;
+            }
+
+            // Handle ')'
+            if (c == ')')
+            {
+                assert(!has_right_bracket);
+
+                if (j + 1 != tok_size)
+                {
+                    ok = false;
+                    break;
+                }
+
+                has_right_bracket = true;
+                break;
+            }
+
+            thpoint_string.push_back(c);
+        }
+    }
+
+    if (!ok || !has_left_bracket || !has_right_bracket)
+    {
+        idx = initial_idx;
+        return {};
+    }
+
+    const vector<string> new_tokens = get_string_tokens(thpoint_string, {',', '/'});
+    size_t new_idx = 0;
+
+    optional<fraction> f1 = get_fraction(new_tokens, new_idx);
+    const bool got_comma = consume_mandatory_comma(new_tokens, new_idx);
+    optional<fraction> f2 = get_fraction(new_tokens, new_idx);
+
+    if (!f1.has_value() || !got_comma || !f2.has_value())
+    {
+        idx = initial_idx;
+        return {};
+    }
+
+    const ThValue val1(f1->top(), f1->bottom());
+    const ThValue val2(f2->top(), f2->bottom());
+
+    return ThPoint(val1, val2);
+}
+
+bool get_scaffold(const vector<string>& string_tokens, size_t& idx,
+                  vector<ThPoint>& scaffold_points)
+{
+    assert(scaffold_points.empty());
+
+    while (1)
+    {
+        const optional<ThPoint> point = get_thpoint(string_tokens, idx);
+
+        if (!point.has_value())
+            break;
+
+        scaffold_points.push_back(*point);
+    }
+
+    return !scaffold_points.empty();
 }

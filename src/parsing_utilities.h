@@ -8,6 +8,7 @@ Deprecated: struct run_command_t, function get_run_command(...),
 #include <string>
 #include <vector>
 #include <cstddef>
+#include "ThPoint.h"
 #include "fraction.h"
 #include "search_utils.h"
 #include "cgt_basics.h"
@@ -48,7 +49,6 @@ inline bool is_slash(const std::string& str)
     Not cause memory errors (i.e. when idx is past the range of string_tokens).
 
     NOTE: The following functions may increment "idx" even on failure:
-        get_fraction
         get_run_command
 
         TODO: Fix this later? OK for now
@@ -67,8 +67,8 @@ bool get_player(const std::vector<std::string>& string_tokens, size_t& idx,
                 ebw& player);
 
 // also matches ints
-bool get_fraction(const std::vector<std::string>& string_tokens, size_t& idx,
-                  std::vector<fraction>& fracs);
+std::optional<fraction> get_fraction(
+    const std::vector<std::string>& string_tokens, size_t& idx);
 
 // succeeds IFF no comma, or comma with input afterward
 bool consume_optional_comma(const std::vector<std::string>& string_tokens,
@@ -100,3 +100,20 @@ bool get_run_command(const std::vector<std::string>& string_tokens, size_t& idx,
 
 bool get_run_command_list(const std::string& line,
                           std::vector<run_command_t>& commands);
+
+/*
+    Consumes from `string_tokens` to reconstruct a single string with the
+    contents of a ThPoint. Partial tokens cannot be consumed:
+        "(5,", "4)" is OK
+        "(5,", "4)," is invalid (due to trailing comma)
+        "(5,", "4)", "," is OK
+*/
+std::optional<ThPoint> get_thpoint(
+    const std::vector<std::string>& string_tokens, size_t& idx);
+
+/*
+    Reads a space-separated list of ThPoints by repeatedly calling
+    `get_thpoint(...)`.
+*/
+bool get_scaffold(const std::vector<std::string>& string_tokens, size_t& idx,
+                  std::vector<ThPoint>& scaffold_points);

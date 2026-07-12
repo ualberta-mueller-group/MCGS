@@ -15,6 +15,8 @@ std::string command_type_to_string(command_type_enum command_type)
             return "Solve N";
         case COMMAND_TYPE_WINNING_MOVES:
             return "Winning Moves";
+        case COMMAND_TYPE_THERMOGRAPH:
+            return "Thermograph";
     }
 
     THROW_ASSERT(false);

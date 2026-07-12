@@ -1,10 +1,15 @@
 #include "test_case.h"
 
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <cassert>
 
+#include "SgBlackWhite.h"
+#include "ThGraph.h"
+#include "ThScaffold.h"
+#include "ThValue.h"
 #include "cgt_basics.h"
 #include "csv_row.h"
 #include "file_parser.h"
@@ -17,6 +22,7 @@
 #include "solver_stats.h"
 #include "stopwatch.h"
 #include "test_case_enums.h"
+#include "thermograph_builder_no_db.h"
 #include "throw_assert.h"
 #include "utilities.h"
 
@@ -313,6 +319,112 @@ void test_case_winning_moves::_run_impl(unsigned long long timeout)
 
             _csv_row.fill_post_test_fields_verbose(diff_string, duration_ms,
                                                    status);
+            break;
+        }
+    }
+}
+
+//////////////////////////////////////////////////
+// test_case_thermograph methods
+
+test_case_thermograph::test_case_thermograph(
+    fp_expr_command_thermograph expr, std::vector<game*> games,
+    std::vector<std::string> game_types)
+    : i_test_case(COMMAND_TYPE_THERMOGRAPH, games, game_types), _expr(expr)
+{
+    const optional<ThGraph>& exp_graph = _expr.get_exp_graph();
+
+    optional<string> expected_result_string;
+    if (exp_graph.has_value())
+        expected_result_string = thermograph_string(*exp_graph);
+
+    _csv_row.fill_pre_test_fields(_games, EMPTY, expected_result_string);
+}
+
+std::string test_case_thermograph::thermograph_string(
+    const ThGraph& graph)
+{
+    const ThScaffold* sc_left = graph.Sc(SG_BLACK);
+    const ThScaffold* sc_right = graph.Sc(SG_WHITE);
+    assert(sc_left != nullptr && sc_right != nullptr);
+
+    const std::string left_string = scaffold_string(*sc_left, true);
+    const std::string right_string = scaffold_string(*sc_right, false);
+
+    return left_string + " " + right_string;
+}
+
+std::string test_case_thermograph::scaffold_string(const ThScaffold& sc, bool for_left)
+{
+    std::stringstream str;
+
+    str << (for_left ? "L:" : "R:");
+
+    const int n_points = sc.NuPoints();
+    for (int i = 1; i <= n_points; i++)
+    {
+        const ThPoint* p = sc.NthPoint(i);
+        assert(p != nullptr);
+
+        const ThValue& val = p->Value();
+        const ThValue& temp = p->Temp();
+
+        str << " (" << val << ", " << temp << ")";
+    }
+
+    return str.str();
+}
+
+void test_case_thermograph::_run_impl(unsigned long long timeout)
+{
+    // Test setup
+    vector<game*>& games = _games;
+
+    if (global::clear_tt())
+    {
+        // TODO
+    }
+
+    sumgame sum(BLACK);
+    thermograph_builder_no_db builder;
+
+    // Initialize stopwatch/timeout helpers
+    stopwatch sw;
+    
+    // Start test
+    sw.start();
+
+    sum.add(games);
+    const shared_ptr<ThGraph> graph = builder.build_thermograph(sum);
+    sum.pop(games);
+
+    // End test
+    sw.stop();
+
+    // Report results
+    assert(_csv_row.has_pre_test_fields());
+
+    const optional<string> result_string = thermograph_string(*graph);
+    const optional<string>& expected_string = _csv_row.expected_result;
+
+    const test_case_status_enum status =
+        evaluate_test_case_status(result_string, expected_string);
+
+    const double duration_ms = sw.get_duration_ms();
+
+    switch (status)
+    {
+        case TEST_CASE_STATUS_TIMEOUT:
+        case TEST_CASE_STATUS_COMPLETED:
+        case TEST_CASE_STATUS_FAIL:
+        {
+            _csv_row.fill_post_test_fields(result_string, duration_ms);
+            break;
+        }
+
+        case TEST_CASE_STATUS_PASS:
+        {
+            _csv_row.fill_post_test_fields_verbose("OK", duration_ms, status);
             break;
         }
     }
