@@ -37,15 +37,15 @@ public:
 private:
     std::shared_ptr<ThGraph> _build_thermograph_from_options(
         sumgame& sum, const timeout_token& timeout_tok,
-        const database* db_nullable);
+        const database* db_nullable, uint64_t depth);
 
     std::shared_ptr<ThGraph> _get_thermograph_from_cache(
         sumgame& sum, const timeout_token& timeout_tok,
-        const database* db_nullable);
+        const database* db_nullable, uint64_t depth);
 
     std::vector<std::shared_ptr<ThGraph>> _get_option_graphs_for_player(
         sumgame& sum, bw player, const timeout_token& timeout_tok,
-        const database* db_nullable);
+        const database* db_nullable, uint64_t depth);
 
     std::unordered_map<hash_t, std::shared_ptr<ThGraph>> _therm_cache;
 };

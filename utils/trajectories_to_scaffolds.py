@@ -186,5 +186,9 @@ def print_scaffold(sc, end=""):
 
 ##################################################
 sc1, sc2 = parse_cgsuite_thermograph(cgs_thermograph)
+
+print("L: ", end="")
 print_scaffold(sc1, end="\n")
+
+print("R: ", end="")
 print_scaffold(sc2, end="\n")

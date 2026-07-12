@@ -1,3 +1,4 @@
+#include "solver_stats.h"
 #include "thermograph_builder_no_db.h"
 
 #include <memory>
@@ -39,8 +40,8 @@ shared_ptr<const ThGraph> thermograph_builder_no_db::
 
     timeout_token timeout_tok = src.get_timeout_token();
 
-    shared_ptr<const ThGraph> graph =
-        _get_thermograph_from_cache(sum, timeout_tok, db_nullable);
+    shared_ptr<const ThGraph> graph = _get_thermograph_from_cache(
+        sum, timeout_tok, db_nullable, INITIAL_SEARCH_DEPTH);
 
     assert(
         LOGICAL_IMPLIES(!timeout_tok.stop_requested(), graph.get() != nullptr));
@@ -60,7 +61,8 @@ thermograph_builder_no_db& thermograph_builder_no_db::get_global_instance()
 }
 
 shared_ptr<ThGraph> thermograph_builder_no_db::_build_thermograph_from_options(
-    sumgame& sum, const timeout_token& timeout_tok, const database* db_nullable)
+    sumgame& sum, const timeout_token& timeout_tok, const database* db_nullable,
+    uint64_t depth)
 {
     if (timeout_tok.stop_requested())
         return nullptr;
@@ -70,10 +72,10 @@ shared_ptr<ThGraph> thermograph_builder_no_db::_build_thermograph_from_options(
     vector<ThGraph*>& option_graphs_raw_b = option_graphs_raw[SG_BLACK];
     vector<ThGraph*>& option_graphs_raw_w = option_graphs_raw[SG_WHITE];
 
-    vector<shared_ptr<ThGraph>> option_graphs_b =
-        _get_option_graphs_for_player(sum, BLACK, timeout_tok, db_nullable);
-    vector<shared_ptr<ThGraph>> option_graphs_w =
-        _get_option_graphs_for_player(sum, WHITE, timeout_tok, db_nullable);
+    vector<shared_ptr<ThGraph>> option_graphs_b = _get_option_graphs_for_player(
+        sum, BLACK, timeout_tok, db_nullable, depth);
+    vector<shared_ptr<ThGraph>> option_graphs_w = _get_option_graphs_for_player(
+        sum, WHITE, timeout_tok, db_nullable, depth);
 
     if (timeout_tok.stop_requested())
         return nullptr;
@@ -99,30 +101,40 @@ shared_ptr<ThGraph> thermograph_builder_no_db::_build_thermograph_from_options(
 }
 
 shared_ptr<ThGraph> thermograph_builder_no_db::_get_thermograph_from_cache(
-    sumgame& sum, const timeout_token& timeout_tok, const database* db_nullable)
+    sumgame& sum, const timeout_token& timeout_tok, const database* db_nullable,
+    uint64_t depth)
 {
     if (timeout_tok.stop_requested())
         return nullptr;
+
+    stats::report_search_node(sum, EMPTY, depth);
 
     // Check non-DB cache. (It seems faster to check here first -- the database
     // is unchanging from our context)
     const hash_t hash = sum.get_global_hash_for_player(EMPTY);
     auto it = _therm_cache.find(hash);
 
-    if (it != _therm_cache.end())
+    const bool tt_hit = (it != _therm_cache.end());
+    stats::report_tt_access(tt_hit);
+
+    if (tt_hit)
         return it->second;
 
     // Check database
     if (db_nullable != nullptr)
     {
         const db_entry_partisan* entry = db_nullable->get_partisan_ptr(sum);
-        if (entry != nullptr && entry->thermograph)
+
+        const bool db_hit = entry != nullptr && entry->thermograph;
+        stats::report_db_access(db_hit);
+
+        if (db_hit)
             return entry->thermograph;
     }
 
     // Not found; build from options
     shared_ptr<ThGraph> graph =
-        _build_thermograph_from_options(sum, timeout_tok, db_nullable);
+        _build_thermograph_from_options(sum, timeout_tok, db_nullable, depth + 1);
 
     if (timeout_tok.stop_requested())
         return nullptr;
@@ -136,7 +148,7 @@ shared_ptr<ThGraph> thermograph_builder_no_db::_get_thermograph_from_cache(
 vector<shared_ptr<ThGraph>> thermograph_builder_no_db::
     _get_option_graphs_for_player(sumgame& sum, bw player,
                                   const timeout_token& timeout_tok,
-                                  const database* db_nullable)
+                                  const database* db_nullable, uint64_t depth)
 {
     vector<shared_ptr<ThGraph>> option_graphs;
 
@@ -164,7 +176,7 @@ vector<shared_ptr<ThGraph>> thermograph_builder_no_db::
         sum.play_sum(sm, player);
 
         shared_ptr<ThGraph> option_graph =
-            _get_thermograph_from_cache(sum, timeout_tok, db_nullable);
+            _get_thermograph_from_cache(sum, timeout_tok, db_nullable, depth);
 
         sum.undo_move();
 
