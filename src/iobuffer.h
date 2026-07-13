@@ -44,6 +44,18 @@ public:
     virtual ~i_ibuffer() {}
 
     virtual uint8_t read_u8() = 0;
+    virtual void read_bytes(void* dst, size_t n_bytes) = 0;
+
+    void read_integral_array(uint8_t* dst, size_t n_elements);
+    void read_integral_array(uint16_t* dst, size_t n_elements);
+    void read_integral_array(uint32_t* dst, size_t n_elements);
+    void read_integral_array(uint64_t* dst, size_t n_elements);
+    void read_integral_array(int8_t* dst, size_t n_elements);
+    void read_integral_array(int16_t* dst, size_t n_elements);
+    void read_integral_array(int32_t* dst, size_t n_elements);
+    void read_integral_array(int64_t* dst, size_t n_elements);
+
+
     uint16_t read_u16();
     uint32_t read_u32();
     uint64_t read_u64();
@@ -112,6 +124,7 @@ public:
     void close();
 
     uint8_t read_u8() override;
+    void read_bytes(void* dst, size_t n_bytes) override;
 
 private:
     static constexpr std::ifstream::openmode OPEN_MODE = std::ifstream::binary;
@@ -145,6 +158,7 @@ public:
     memory_ibuffer(const std::vector<uint8_t>& data_vec);
 
     uint8_t read_u8() override;
+    void read_bytes(void* dst, size_t n_bytes) override;
 
 private:
     const std::vector<uint8_t>& _data_vec;
@@ -275,6 +289,11 @@ inline uint8_t file_ibuffer::read_u8()
     return byte;
 }
 
+inline void file_ibuffer::read_bytes(void* dst, size_t n_bytes)
+{
+    _fs.read((char*) dst, n_bytes);
+}
+
 //////////////////////////////////////// file_obuffer methods
 inline file_obuffer::file_obuffer(const std::string& file_name)
     : _fs(file_name, OPEN_MODE)
@@ -316,6 +335,12 @@ inline uint8_t memory_ibuffer::read_u8()
 {
     THROW_ASSERT(_idx < _data_vec.size());
     return _data_vec[_idx++];
+}
+
+inline void memory_ibuffer::read_bytes(void* dst, size_t n_bytes)
+{
+#warning TODO implement me!
+    assert(false);
 }
 
 ////////////////////////////////////////////////// memory_obuffer methods

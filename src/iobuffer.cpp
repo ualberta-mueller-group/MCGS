@@ -110,12 +110,66 @@ void write_integral_array_impl(const Int_T* src, size_t n_elements, i_obuffer& o
         os.write_bytes(buffer_u8, n_batch_bytes);
         idx += n_batch_elements;
     }
+}
 
+template <class Int_T>
+void read_integral_array_impl(Int_T* dst, size_t n_elements, i_ibuffer& is)
+{
+    static_assert(std::is_integral_v<Int_T> && sizeof(Int_T) > 1);
+
+    if (dst == nullptr)
+    {
+        assert(n_elements == 0);
+        return;
+    }
+
+    is.read_bytes(dst, n_elements * sizeof(Int_T));
+    std::transform(dst, dst + n_elements, dst, network_to_host<Int_T>);
 }
 
 } // namespace
 
 ////////////////////////////////////////////////// i_ibuffer methods
+void i_ibuffer::read_integral_array(uint8_t* dst, size_t n_elements)
+{
+    read_bytes(dst, n_elements);
+}
+
+void i_ibuffer::read_integral_array(uint16_t* dst, size_t n_elements)
+{
+    read_integral_array_impl(dst, n_elements, *this);
+}
+
+void i_ibuffer::read_integral_array(uint32_t* dst, size_t n_elements)
+{
+    read_integral_array_impl(dst, n_elements, *this);
+}
+
+void i_ibuffer::read_integral_array(uint64_t* dst, size_t n_elements)
+{
+    read_integral_array_impl(dst, n_elements, *this);
+}
+
+void i_ibuffer::read_integral_array(int8_t* dst, size_t n_elements)
+{
+    read_bytes(dst, n_elements);
+}
+
+void i_ibuffer::read_integral_array(int16_t* dst, size_t n_elements)
+{
+    read_integral_array_impl(dst, n_elements, *this);
+}
+
+void i_ibuffer::read_integral_array(int32_t* dst, size_t n_elements)
+{
+    read_integral_array_impl(dst, n_elements, *this);
+}
+
+void i_ibuffer::read_integral_array(int64_t* dst, size_t n_elements)
+{
+    read_integral_array_impl(dst, n_elements, *this);
+}
+
 uint16_t i_ibuffer::read_u16()
 {
     return __read<uint16_t>();

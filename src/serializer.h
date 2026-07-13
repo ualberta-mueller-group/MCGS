@@ -338,12 +338,19 @@ struct serializer<std::vector<T>>
     inline static std::vector<T> load(i_ibuffer& is, serializer_ctx* ctx)
     {
         std::vector<T> vec;
-
         const uint64_t size = is.read_u64();
-        vec.reserve(size);
 
-        for (uint64_t i = 0; i < size; i++)
-            vec.emplace_back(serializer<T_NoCV>::load(is, ctx));
+        if constexpr (std::is_integral_v<T> && !std::is_enum_v<T>)
+        {
+            vec.resize(size);
+            is.read_integral_array(static_cast<T_NoCV*>(vec.data()), size);
+        }
+        else
+        {
+            vec.reserve(size);
+            for (uint64_t i = 0; i < size; i++)
+                vec.emplace_back(serializer<T_NoCV>::load(is, ctx));
+        }
 
         return vec;
     }
