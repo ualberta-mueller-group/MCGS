@@ -58,7 +58,6 @@ public:
     };
 
     ttable(size_t index_bits, size_t entry_bools);
-    ~ttable();
 
     // no copy
     ttable(const ttable& rhs) = delete;
@@ -83,8 +82,11 @@ public:
 private:
     friend serializer<ttable<Entry>>;
 
+    // Doesn't allocate/initialize anything. used by serializer to avoid
+    // unnecessary allocations
+    ttable();
+
     void _move_impl(ttable<Entry>&& rhs);
-    void _release_on_move();
 
     inline hash_t _extract_index(hash_t hash) const;
     inline hash_t _extract_tag(hash_t hash) const;
@@ -113,16 +115,13 @@ private:
 
     size_t _n_entries;
 
-    Entry* _entries_arr;
-    size_t _entries_arr_size;
+    std::vector<Entry> _entries_vec;
 
     size_t _bytes_per_tag;
-    uint8_t* _tags_arr;
-    size_t _tags_arr_size;
+    std::vector<uint8_t> _tags_vec;
 
     size_t _bools_per_entry;
-    uint8_t* _bools_arr;
-    size_t _bools_arr_size;
+    std::vector<uint8_t> _bools_vec;
 };
 
 ////////////////////////////////////////////////// ttable<Entry> implementation
@@ -140,10 +139,11 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
 
     //// Initialize numeric variables
     // entries
+    size_t entries_vec_size;
     if constexpr (_ENTRY_EMPTY)
-        _entries_arr_size = 1;
+        entries_vec_size = 1;
     else
-        _entries_arr_size = _n_entries;
+        entries_vec_size = _n_entries;
 
     // tags
     const size_t byte_bits = size_in_bits<uint8_t>();
@@ -151,10 +151,10 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     const size_t partial_bytes_per_tag = (_n_tag_bits % byte_bits) != 0;
     _bytes_per_tag = full_bytes_per_tag + partial_bytes_per_tag;
 
-    _tags_arr_size = _n_entries * _bytes_per_tag;
+    size_t tags_vec_size = _n_entries * _bytes_per_tag;
 
-    THROW_ASSERT((_n_entries == (_tags_arr_size / _bytes_per_tag)) &&   //
-                     (_bytes_per_tag == (_tags_arr_size / _n_entries)), //
+    THROW_ASSERT((_n_entries == (tags_vec_size / _bytes_per_tag)) &&   //
+                     (_bytes_per_tag == (tags_vec_size / _n_entries)), //
                  "ttable too large!");
 
     // bools
@@ -166,7 +166,7 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
                          (_bools_per_entry == (total_bools / _n_entries))), //
                  "ttable has too many packed bools!");
 
-    _bools_arr_size = 1 + (total_bools / size_in_bits<uint8_t>());
+    size_t bools_vec_size = 1 + (total_bools / size_in_bits<uint8_t>());
 
 
     //// Estimate memory cost
@@ -174,9 +174,9 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     if (global::print_ttable_size())
     {
         uint64_t byte_count = 0;
-        byte_count += _entries_arr_size * sizeof(Entry);
-        byte_count += _tags_arr_size * sizeof(uint8_t);
-        byte_count += _bools_arr_size * sizeof(uint8_t);
+        byte_count += entries_vec_size * sizeof(Entry);
+        byte_count += tags_vec_size * sizeof(uint8_t);
+        byte_count += bools_vec_size * sizeof(uint8_t);
         double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
         std::cout << "Estimated table size: " << byte_count_formatted;
         std::cout << " MiB" << std::endl;
@@ -186,35 +186,12 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
     }
 
     //// Initialize arrays
-    _entries_arr = new Entry[_entries_arr_size];
-    for (size_t i = 0; i < _entries_arr_size; i++)
-        _entries_arr[i] = Entry();
-    /* TODO: above loop could maybe be optimized using some type traits to
-       optionally remove it. It's there to reduce page faults during
-       search (by ensuring all pages of the array have been written to).
+    _entries_vec.resize(entries_vec_size, Entry());
 
-       std::is_trivially_default_constructible_v<T> doesn't seem quite right
-       for this...
+    _tags_vec.resize(tags_vec_size, 0);
+    _bools_vec.resize(bools_vec_size, 0);
 
-       This is probably unimportant
-    */
-
-    _tags_arr = new uint8_t[_tags_arr_size];
-    _bools_arr = new uint8_t[_bools_arr_size];
-    _clear_tags_and_bools();
-}
-
-template <class Entry>
-ttable<Entry>::~ttable()
-{
-    if (_entries_arr != nullptr)
-        delete[] _entries_arr;
-
-    if (_tags_arr != nullptr)
-        delete[] _tags_arr;
-
-    if (_bools_arr != nullptr)
-        delete[] _bools_arr;
+    //_clear_tags_and_bools();
 }
 
 template <class Entry>
@@ -288,28 +265,18 @@ bool ttable<Entry>::operator==(const ttable& rhs) const
 	if (_n_entries != rhs._n_entries)
 		return false;
 
-	//_entries_arr
-	if (_entries_arr_size != rhs._entries_arr_size)
+	if (_entries_vec != rhs._entries_vec)
 		return false;
-    if (!std::equal(_entries_arr, _entries_arr + _entries_arr_size,
-                    rhs._entries_arr))
-        return false;
 
-    if (_bytes_per_tag != rhs._bytes_per_tag)
+	if (_bytes_per_tag != rhs._bytes_per_tag)
 		return false;
-	//_tags_arr
-	if (_tags_arr_size != rhs._tags_arr_size)
+	if (_tags_vec != rhs._tags_vec)
 		return false;
-    if (!std::equal(_tags_arr, _tags_arr + _tags_arr_size, rhs._tags_arr))
-        return false;
 
-    if (_bools_per_entry != rhs._bools_per_entry)
+	if (_bools_per_entry != rhs._bools_per_entry)
 		return false;
-	//_bools_arr
-	if (_bools_arr_size != rhs._bools_arr_size)
+	if (_bools_vec != rhs._bools_vec)
 		return false;
-    if (!std::equal(_bools_arr, _bools_arr + _bools_arr_size, rhs._bools_arr))
-        return false;
 
     return true;
 }
@@ -320,34 +287,27 @@ bool ttable<Entry>::operator!=(const ttable& rhs) const
     return !(*this == rhs);
 }
 
+// private constructor
 template <class Entry>
-void ttable<Entry>::_move_impl(ttable<Entry>&& rhs)
+ttable<Entry>::ttable()
 {
-	_n_index_bits = rhs._n_index_bits;
-	_n_tag_bits = rhs._n_tag_bits;
-
-	_n_entries = rhs._n_entries;
-
-	_entries_arr = rhs._entries_arr;
-	_entries_arr_size = rhs._entries_arr_size;
-
-	_bytes_per_tag = rhs._bytes_per_tag;
-	_tags_arr = rhs._tags_arr;
-	_tags_arr_size = rhs._tags_arr_size;
-
-	_bools_per_entry = rhs._bools_per_entry;
-	_bools_arr = rhs._bools_arr;
-	_bools_arr_size = rhs._bools_arr_size;
-
-    rhs._release_on_move();
 }
 
 template <class Entry>
-void ttable<Entry>::_release_on_move()
+void ttable<Entry>::_move_impl(ttable<Entry>&& rhs)
 {
-    _entries_arr = nullptr;
-    _tags_arr = nullptr;
-    _bools_arr = nullptr;
+	_n_index_bits = std::move(rhs._n_index_bits);
+	_n_tag_bits = std::move(rhs._n_tag_bits);
+
+	_n_entries = std::move(rhs._n_entries);
+
+	_entries_vec = std::move(rhs._entries_vec);
+
+	_bytes_per_tag = std::move(rhs._bytes_per_tag);
+	_tags_vec = std::move(rhs._tags_vec);
+
+	_bools_per_entry = std::move(rhs._bools_per_entry);
+	_bools_vec = std::move(rhs._bools_vec);
 }
 
 template <class Entry>
@@ -390,7 +350,7 @@ inline void ttable<Entry>::_get_bool_indices(hash_t entry_idx, size_t bool_idx,
     bools_arr_idx = global_bit_idx / size_in_bits<uint8_t>();
     element_bit_no = global_bit_idx % size_in_bits<uint8_t>();
 
-    assert(bools_arr_idx < _bools_arr_size);
+    assert(bools_arr_idx < _bools_vec.size());
     assert(element_bit_no < size_in_bits<uint8_t>());
 }
 
@@ -404,8 +364,8 @@ bool ttable<Entry>::_get_bool(hash_t entry_idx, size_t bool_idx) const
     size_t element_bit_no;
     _get_bool_indices(entry_idx, bool_idx, bools_arr_idx, element_bit_no);
 
-    assert(bools_arr_idx < _bools_arr_size);
-    const uint8_t& element = _bools_arr[bools_arr_idx];
+    assert(bools_arr_idx < _bools_vec.size());
+    const uint8_t& element = _bools_vec[bools_arr_idx];
     return (element >> element_bit_no) & 0x1;
 }
 
@@ -422,8 +382,8 @@ void ttable<Entry>::_set_bool(hash_t entry_idx, size_t bool_idx, bool new_val)
     const uint8_t bit_mask = ((uint8_t) 1) << element_bit_no;
     const uint8_t inv_bit_mask = ~bit_mask;
 
-    assert(bools_arr_idx < _bools_arr_size);
-    uint8_t& element = _bools_arr[bools_arr_idx];
+    assert(bools_arr_idx < _bools_vec.size());
+    uint8_t& element = _bools_vec[bools_arr_idx];
 
     if (new_val)
         element |= bit_mask; // set bit
@@ -443,7 +403,7 @@ hash_t ttable<Entry>::_get_tag(hash_t entry_idx) const
     for (size_t i = 0; i < _bytes_per_tag; i++)
     {
         const size_t idx = tag_start + i;
-        const uint8_t& tag_byte = _tags_arr[idx];
+        const uint8_t& tag_byte = _tags_vec[idx];
 
         tag |= ((hash_t) tag_byte) << (i * size_in_bits<uint8_t>());
     }
@@ -464,15 +424,15 @@ void ttable<Entry>::_set_tag(hash_t entry_idx, hash_t tag)
             (tag >> (i * size_in_bits<uint8_t>())) & ((uint8_t) -1);
 
         const size_t idx = tag_start + i;
-        _tags_arr[idx] = byte;
+        _tags_vec[idx] = byte;
     }
 }
 
 template <class Entry>
 inline void ttable<Entry>::_clear_tags_and_bools()
 {
-    assert(_tags_arr != nullptr);
-    std::fill_n(_tags_arr, _tags_arr_size, 0);
+    assert(!_tags_vec.empty());
+    std::fill(_tags_vec.begin(), _tags_vec.end(), 0);
 
     _clear_bools();
 }
@@ -480,8 +440,8 @@ inline void ttable<Entry>::_clear_tags_and_bools()
 template <class Entry>
 inline void ttable<Entry>::_clear_bools()
 {
-    assert(_bools_arr != nullptr);
-    std::fill_n(_bools_arr, _bools_arr_size, 0);
+    assert(!_bools_vec.empty());
+    std::fill(_bools_vec.begin(), _bools_vec.end(), 0);
 }
 
 template <class Entry>
@@ -490,9 +450,9 @@ inline Entry* ttable<Entry>::_get_entry_ptr(hash_t entry_idx)
     assert(entry_idx < _n_entries);
 
     if constexpr (_ENTRY_EMPTY)
-        return &_entries_arr[0];
+        return &_entries_vec[0];
 
-    return &_entries_arr[entry_idx];
+    return &_entries_vec[entry_idx];
 }
 
 template <class Entry>

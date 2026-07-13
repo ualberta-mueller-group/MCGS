@@ -1,3 +1,4 @@
+
 #include "transposition_serializer.h"
 
 #include <iostream>
@@ -11,121 +12,16 @@
 using namespace std;
 
 //////////////////////////////////////////////////
-
-/*
-    TODO ttable should really use vectors instead of raw pointers...
-    This will require a private ttable constructor that doesn't initialize
-    the vectors.
-*/
-template <class Entry>
-struct serializer<ttable<Entry>>
-{
-    using ttable_t = ttable<Entry>;
-
-    static_assert(                                                     //
-        std::is_same_v<                                                //
-            uint8_t,                                                   //
-            std::remove_reference_t<decltype(ttable_t::_tags_arr[0])>> //
-    );                                                                 //
-
-    static_assert(                                                      //
-        std::is_same_v<                                                 //
-            uint8_t,                                                    //
-            std::remove_reference_t<decltype(ttable_t::_bools_arr[0])>> //
-    );                                                                  //
-
-    static void save(i_obuffer& os, const ttable_t& tt, serializer_ctx* ctx)
-    {
-        const size_t n_index_bits = tt.n_index_bits();
-        const size_t n_entry_bools = tt.n_entry_bools();
-
-        // Save constructor parameters
-        os.write_u64(n_index_bits);
-        os.write_u64(n_entry_bools);
-
-        // Save entries
-        os.write_u64(tt._entries_arr_size);
-
-        for (size_t i = 0; i < tt._entries_arr_size; i++)
-            serializer<Entry>::save(os, tt._entries_arr[i], ctx);
-
-        // Save tags
-        os.write_u64(tt._tags_arr_size);
-        for (size_t i = 0; i < tt._tags_arr_size; i++)
-            os.write_u8(tt._tags_arr[i]);
-
-        // Save bools
-        os.write_u64(tt._bools_arr_size);
-        for (size_t i = 0; i < tt._bools_arr_size; i++)
-            os.write_u8(tt._bools_arr[i]);
-    }
-
-    static ttable_t load(i_ibuffer& is, serializer_ctx* ctx)
-    {
-        const size_t n_index_bits = integral_cast_checked<size_t>(is.read_u64());
-        const size_t n_entry_bools = integral_cast_checked<size_t>(is.read_u64());
-        ttable_t tt(n_index_bits, n_entry_bools);
-
-        _load_impl(is, tt, ctx);
-
-        return tt;
-    }
-
-    static ttable_t* load_ptr(i_ibuffer& is, serializer_ctx* ctx)
-    {
-        const size_t n_index_bits = integral_cast_checked<size_t>(is.read_u64());
-        const size_t n_entry_bools = integral_cast_checked<size_t>(is.read_u64());
-        ttable_t* tt = new ttable_t(n_index_bits, n_entry_bools);
-
-        _load_impl(is, *tt, ctx);
-
-        return tt;
-    }
-
-private:
-    static void _load_impl(i_ibuffer& is, ttable_t& tt, serializer_ctx* ctx)
-    {
-        // Load entries
-        const size_t entries_arr_size =
-            integral_cast_checked<size_t>(is.read_u64());
-
-        if (entries_arr_size != tt._entries_arr_size)
-            std::abort();
-
-        for (size_t i = 0; i < tt._entries_arr_size; i++)
-            tt._entries_arr[i] = serializer<Entry>::load(is, ctx);
-
-        // Load tags
-        const size_t tags_arr_size = integral_cast_checked<size_t>(is.read_u64());
-
-        if (tags_arr_size != tt._tags_arr_size)
-            std::abort();
-
-        for (size_t i = 0; i < tt._tags_arr_size; i++)
-            tt._tags_arr[i] = is.read_u8();
-
-        // Save bools
-        const size_t bools_arr_size = integral_cast_checked<size_t>(is.read_u64());
-
-        if (bools_arr_size != tt._bools_arr_size)
-            std::abort();
-
-        for (size_t i = 0; i < tt._bools_arr_size; i++)
-            tt._bools_arr[i] = is.read_u8();
-    }
-
-};
-
 struct entry_struct
 {
     entry_struct() : x(0), y(0) {}
 
-    bool operator==(const entry_struct& rhs)
+    bool operator==(const entry_struct& rhs) const
     {
         return x == rhs.x && y == rhs.y;
     }
 
-    bool operator!=(const entry_struct& rhs)
+    bool operator!=(const entry_struct& rhs) const
     {
         return !(*this == rhs);
     }
@@ -153,6 +49,68 @@ struct serializer<entry_struct>
         return val;
     }
 };
+
+
+/*
+    TODO ttable should really use vectors instead of raw pointers...
+    This will require a private ttable constructor that doesn't initialize
+    the vectors.
+*/
+template <class Entry>
+struct serializer<ttable<Entry>>
+{
+    using ttable_t = ttable<Entry>;
+
+    static void save(i_obuffer& os, const ttable_t& tt, serializer_ctx* ctx)
+    {
+        os.write_u64(tt._n_index_bits);
+        os.write_u64(tt._n_tag_bits);
+
+        os.write_u64(tt._n_entries);
+
+        serializer_save(os, tt._entries_vec, ctx);
+
+        os.write_u64(tt._bytes_per_tag);
+        serializer_save(os, tt._tags_vec, ctx);
+
+        os.write_u64(tt._bools_per_entry);
+        serializer_save(os, tt._bools_vec, ctx);
+    }
+
+    static ttable_t load(i_ibuffer& is, serializer_ctx* ctx)
+    {
+        ttable_t tt;
+        _load_impl(is, tt, ctx);
+        return tt;
+    }
+
+    static ttable_t* load_ptr(i_ibuffer& is, serializer_ctx* ctx)
+    {
+        ttable_t* tt = new ttable_t();
+        _load_impl(is, *tt, ctx);
+        return tt;
+    }
+
+private:
+    static void _load_impl(i_ibuffer& is, ttable_t& tt, serializer_ctx* ctx)
+    {
+        tt._n_index_bits = is.read_u64();
+        tt._n_tag_bits = is.read_u64();
+
+        tt._n_entries = is.read_u64();
+
+        serializer_load(is, tt._entries_vec, ctx);
+
+        tt._bytes_per_tag = is.read_u64();
+        serializer_load(is, tt._tags_vec, ctx);
+
+        tt._bools_per_entry = is.read_u64();
+        serializer_load(is, tt._bools_vec, ctx);
+    }
+
+};
+
+
 
 
 //////////////////////////////////////////////////

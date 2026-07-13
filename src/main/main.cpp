@@ -41,8 +41,8 @@ int main(int argc, char** argv)
 
     mcgs_init_2(opts);
 
-    test_tt_serializer_stuff();
-    return 0;
+    //test_tt_serializer_stuff();
+    //return 0;
 
     //test_seg_replacer_stuff();
     //return 0;
