@@ -8,6 +8,7 @@
 */
 #pragma once
 
+#include "exit_signal.h"
 #include <cassert>
 #include <atomic>
 #include <optional>
@@ -81,7 +82,8 @@ inline timeout_token::timeout_token(std::atomic<bool>* should_stop)
 
 inline bool timeout_token::stop_requested() const
 {
-    return _should_stop->load(std::memory_order_relaxed);
+    return exit_signal::mcgs_should_stop() ||
+           _should_stop->load(std::memory_order_relaxed);
 }
 
 ////////////////////////////////////////////////// timeout_source methods
@@ -104,7 +106,8 @@ inline timeout_source::~timeout_source()
 
 inline bool timeout_source::stop_requested() const
 {
-    return _should_stop->load(std::memory_order_relaxed);
+    return exit_signal::mcgs_should_stop() ||
+           _should_stop->load(std::memory_order_relaxed);
 }
 
 inline bool timeout_source::timeout_running() const
