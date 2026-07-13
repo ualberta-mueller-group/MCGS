@@ -13,6 +13,7 @@
 */
 #pragma once
 #include <climits>
+#include <cstdlib>
 #include <limits>
 #include <string>
 #include <type_traits>
@@ -59,6 +60,9 @@ public:
 
     template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
     T __read();
+
+protected:
+    static void _on_bad_read();
 };
 
 ////////////////////////////////////////////////// interface i_obuffer
@@ -84,6 +88,9 @@ public:
 
     template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
     void __write(const T& val);
+
+protected:
+    static void _on_bad_write();
 };
 
 ////////////////////////////////////////////////// class file_ibuffer
@@ -245,6 +252,16 @@ inline void file_ibuffer::close()
     assert(!_fs.is_open());
 }
 
+inline uint8_t file_ibuffer::read_u8()
+{
+    const uint8_t byte = _fs.get();
+
+    if (!_fs) [[unlikely]]
+        i_ibuffer::_on_bad_read();
+
+    return byte;
+}
+
 //////////////////////////////////////// file_obuffer methods
 inline file_obuffer::file_obuffer(const std::string& file_name)
     : _fs(file_name, OPEN_MODE)
@@ -257,6 +274,14 @@ inline void file_obuffer::close()
     assert(_fs.is_open());
     _fs.close();
     assert(!_fs.is_open());
+}
+
+inline void file_obuffer::write_u8(const uint8_t& val)
+{
+    _fs.put(val);
+
+    if (!_fs) [[unlikely]]
+        i_obuffer::_on_bad_write();
 }
 
 ////////////////////////////////////////////////// memory_ibuffer methods

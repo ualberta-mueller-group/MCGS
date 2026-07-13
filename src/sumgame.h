@@ -36,7 +36,6 @@ class seg_replacer;
 typedef std::vector<std::optional<ThValue>> temperature_vec_t;
 typedef std::vector<std::shared_ptr<const db_dom_moves_t>> dom_object_vec_t;
 
-
 struct ttable_sumgame_entry
 {
 };
@@ -217,8 +216,13 @@ public:
     */
     std::optional<sumgame_move> get_winning_or_random_move(bw for_player) const;
 
-    // called by mcgs_init_all()
-    static void init_sumgame(size_t index_bits);
+    // Called by `mcgs_init_all()`. If the file name is not empty, the number
+    // of index bits is ignored, and `global::tt_sumgame_idx_bits` is modified
+    // based on the loaded file.
+    static void init_sumgame(size_t index_bits,
+                             const std::string& ttable_load_file_name);
+
+    static void save_ttable(const std::string& ttable_save_file_name);
 
     // Called by derived classes of i_test_case, in their _run_impl() methods
     static void clear_ttable();

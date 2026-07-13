@@ -265,8 +265,11 @@ bool ttable<Entry>::operator==(const ttable& rhs) const
 	if (_n_entries != rhs._n_entries)
 		return false;
 
-	if (_entries_vec != rhs._entries_vec)
-		return false;
+    if constexpr (!ttable::_ENTRY_EMPTY)
+    {
+        if (_entries_vec != rhs._entries_vec)
+            return false;
+    }
 
 	if (_bytes_per_tag != rhs._bytes_per_tag)
 		return false;

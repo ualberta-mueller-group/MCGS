@@ -157,6 +157,15 @@ void print_help_message(const string& exec_name)
                "Create and populate a new database file. See README for "
                "details on config string syntax.");
 
+    print_flag("--tt-sumgame-load <file name>",
+               "Load partisan transposition table from specified file. "
+               "Overrides --tt-sumgame-idx-bits if specified.");
+
+    print_flag(
+        "--tt-sumgame-save <file name>",
+        "On (normal) exit, write partisan transposition table to specified "
+        "file. TODO add signal handlers for when the user kills the process.");
+
     print_flag(global::impartial_algorithm_mex.flag(),
                "Use Mex search algorithm for impartial games. NOTE: doesn't "
                "use the database during search.");
@@ -873,6 +882,29 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == "--tt-sumgame-load")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: no file name given for --tt-sumgame-load");
+
+            opts.tt_sumgame_load_file_name = arg_next;
+            continue;
+        }
+
+        if (arg == "--tt-sumgame-save")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: no file name given for --tt-sumgame-save");
+
+            opts.tt_sumgame_save_file_name = arg_next;
+            continue;
+        }
 
         // if (arg == global::play_split.no_flag())
         //{

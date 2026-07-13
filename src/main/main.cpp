@@ -2,8 +2,11 @@
 // main.cpp - main loop of MCGS
 //---------------------------------------------------------------------------
 
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <type_traits>
 
 #include "cli_options.h"
 #include "database.h"
@@ -11,29 +14,79 @@
 #include "file_parser.h"
 #include "autotests.h"
 #include "global_database.h"
+#include "iobuffer.h"
 #include "print_moves.h"
 #include "search_graph_debug.h"
 #include "mcgs_init.h"
 #include "global_options.h"
+#include "stopwatch.h"
 #include "throw_assert.h"
 
 #include "gen_experiments.h"
 #include "basic_player.h"
-#include "transposition_serializer.h"
 #include "utils_for_main.h"
 #include "warn_on_exit.h"
 #include "seg_replacer.h"
 
 using namespace std;
 
+namespace {
+
+void test_io_stuff()
+{
+    vector<uint8_t> vals;
+
+    const uint64_t size = uint64_t(1) * 1024 * 1024 * 256;
+    vals.reserve(size);
+
+    for (uint64_t i = 0; i < size; i++)
+        vals.push_back(rand());
+
+    stopwatch sw;
+
+    // Write
+    cout << "fwrite" << endl;
+    sw.reset();
+    sw.start();
+
+    FILE* f_out = fopen("large.bin", "w");
+    fwrite(vals.data(), 1, size, f_out);
+    fclose(f_out);
+
+    sw.stop();
+
+    cout << "fwrite took " << (sw.get_duration_ms() / 1000.0) << " seconds"
+         << endl;
+
+    // Write2
+    cout << "serializer" << endl;
+    sw.reset();
+    sw.start();
+
+    file_obuffer f("large2.bin");
+    serializer<vector<uint8_t>>::save(f, vals, nullptr);
+    f.close();
+
+    sw.stop();
+
+    cout << "serializer took " << (sw.get_duration_ms() / 1000.0) << " seconds"
+         << endl;
+
+    // Read
+
+}
+
+} // namespace
+
 ////////////////////////////////////////////////// main function
-int main(int argc, char** argv)
+static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional)
 {
     THROW_ASSERT(argc >= 1);
     mcgs_init_1(argv[0]);
     warn_on_exit print_warn;
 
-    cli_options opts = parse_args(argc, (const char**) argv, false);
+    opts_optional.emplace(parse_args(argc, (const char**) argv, false));
+    cli_options& opts = *opts_optional;
 
     // i.e. ./MCGS --help
     if (opts.should_exit)
@@ -41,7 +94,7 @@ int main(int argc, char** argv)
 
     mcgs_init_2(opts);
 
-    //test_tt_serializer_stuff();
+    //test_io_stuff();
     //return 0;
 
     //test_seg_replacer_stuff();
@@ -139,4 +192,20 @@ int main(int argc, char** argv)
         sgraph::annotate_graphs(*opts.search_graph_verify_dir);
 
     return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+    optional<cli_options> opts;
+    const int status = main_impl(argc, argv, opts);
+    assert(opts.has_value());
+
+    if (status != 0)
+        return status;
+
+    if (!opts->tt_sumgame_save_file_name.empty())
+        sumgame::save_ttable(opts->tt_sumgame_save_file_name);
+
+    return status;
 }

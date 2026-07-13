@@ -41,6 +41,12 @@ int64_t i_ibuffer::read_i64()
     return __read<int64_t>();
 }
 
+void i_ibuffer::_on_bad_read()
+{
+    std::cerr << "Bad read from ibuffer!" << std::endl;
+    std::abort();
+}
+
 ////////////////////////////////////////////////// i_obuffer methods
 void i_obuffer::write_u16(const uint16_t& val)
 {
@@ -77,6 +83,12 @@ void i_obuffer::write_i64(const int64_t& val)
     __write<int64_t>(val);
 }
 
+void i_obuffer::_on_bad_write()
+{
+    std::cerr << "Bad write to obuffer!" << std::endl;
+    std::abort();
+}
+
 ////////////////////////////////////////////////// file_ibuffer methods
 file_ibuffer::file_ibuffer(const std::string& file_name) : _fs(file_name, OPEN_MODE)
 {
@@ -86,31 +98,4 @@ file_ibuffer::file_ibuffer(const std::string& file_name) : _fs(file_name, OPEN_M
     THROW_ASSERT(_fs.is_open(),
                  "Failed to open input file \"" + file_name + "\"!");
 }
-
-uint8_t file_ibuffer::read_u8()
-{
-    bool stream_ok = static_cast<bool>(_fs);
-
-    // Don't use extraction operator (control codes mess up the data)
-    uint8_t byte;
-    _fs.read((char*) &byte, 1);
-
-    stream_ok &= static_cast<bool>(_fs);
-    THROW_ASSERT(stream_ok);
-
-    return byte;
-}
-
-////////////////////////////////////////////////// file_obuffer methods
-void file_obuffer::write_u8(const uint8_t& val)
-{
-    bool stream_ok = static_cast<bool>(_fs);
-
-    // Don't use insertion operator (control codes mess up the data)
-    _fs.write((const char*) &val, 1);
-
-    stream_ok &= static_cast<bool>(_fs);
-    THROW_ASSERT(stream_ok);
-}
-
 

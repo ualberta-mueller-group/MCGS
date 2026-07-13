@@ -16,6 +16,7 @@
 
 #include "sumgame.h"
 #include "database.h"
+#include "iobuffer.h"
 #include "seg_replacer.h"
 #include "throw_assert.h"
 #include "bounds.h"
@@ -40,6 +41,7 @@
 #include "sumgame_change_record.h"
 #include "sumgame_undo_stack_unwinder.h"
 #include "impartial_game_wrapper.h"
+#include "transposition_serializer.h"
 #include "utilities.h"
 #include "ThGraph.h"
 #include "ThValue.h"
@@ -1080,7 +1082,8 @@ optional<sumgame_move> sumgame::get_winning_or_random_move(
     return moves[choice];
 }
 
-void sumgame::init_sumgame(size_t index_bits)
+void sumgame::init_sumgame(size_t index_bits,
+                           const string& ttable_load_file_name)
 {
     assert(basic_cgt_type_set.empty());
     basic_cgt_type_set.insert(game_type<dyadic_rational>());
@@ -1094,7 +1097,35 @@ void sumgame::init_sumgame(size_t index_bits)
         return;
 
     assert(_tt.get() == nullptr); // Not already initialized
-    _tt.reset(new ttable_sumgame(index_bits, 1));
+
+    if (ttable_load_file_name.empty())
+        _tt.reset(new ttable_sumgame(index_bits, 1));
+    else
+    {
+        cout << "Loading partisan ttable \"" << ttable_load_file_name;
+        cout << "\"..." << flush;
+
+        file_ibuffer is(ttable_load_file_name);
+        _tt.reset(serializer<ttable_sumgame*>::load(is, nullptr));
+
+        const size_t new_index_bits = _tt->n_index_bits();
+        global::tt_sumgame_idx_bits.set(new_index_bits);
+
+        cout << " DONE (has " << new_index_bits << " index bits)." << endl;
+    }
+}
+
+void sumgame::save_ttable(const std::string& ttable_save_file_name)
+{
+    THROW_ASSERT(_tt.get() != nullptr);
+
+    cout << "Saving partisan ttable \"" << ttable_save_file_name << "\"..."
+         << flush;
+
+    file_obuffer os(ttable_save_file_name);
+    serializer<ttable_sumgame*>::save(os, _tt.get(), nullptr);
+
+    cout << " OK" << endl;
 }
 
 void sumgame::clear_ttable()
