@@ -1,9 +1,119 @@
 #include "iobuffer.h"
 
+#include <algorithm>
 #include <cstdint>
+#include <execution>
 #include <filesystem>
+#include <memory>
+#include <new>
 #include <string>
+#include <type_traits>
+#include "safe_arithmetic.h"
 #include "throw_assert.h"
+#include "utilities.h"
+
+namespace {
+
+template <size_t n_bytes, size_t alignment>
+struct aligned_array
+{
+    aligned_array()
+    {
+        _data = new (std::align_val_t(alignment)) uint8_t[n_bytes];
+    }
+
+    ~aligned_array()
+    {
+        ::operator delete[] (_data, std::align_val_t(alignment));
+    }
+
+    operator const uint8_t*() const
+    {
+        return _data;
+    }
+
+    operator uint8_t*() { return _data; }
+
+    inline static constexpr size_t N_BYTES = n_bytes;
+
+private:
+    uint8_t* _data;
+};
+
+aligned_array<size_t(1) * 1024 * 1024, sizeof(intmax_t)> data_buffer;
+
+
+template <class Int_T>
+Int_T host_to_network(const Int_T val_host)
+{
+    static_assert(std::is_integral_v<Int_T>);
+
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using Int_Unsigned_T = std::make_unsigned_t<Int_T>;
+    const Int_Unsigned_T val_host_unsigned = static_cast<Int_Unsigned_T>(val_host);
+
+    Int_T val_network(0);
+    uint8_t* val_network_bytes = reinterpret_cast<uint8_t*>(&val_network);
+
+    for (size_t i = 0; i < sizeof(Int_T); i++)
+        val_network_bytes[i] = static_cast<uint8_t>(val_host_unsigned >> (i * 8));
+
+    return val_network;
+}
+
+template <class Int_T>
+Int_T network_to_host(const Int_T val_network)
+{
+    static_assert(std::is_integral_v<Int_T>);
+
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    using Int_Unsigned_T = std::make_unsigned_t<Int_T>;
+
+    const uint8_t* val_network_bytes = reinterpret_cast<const uint8_t*>(&val_network);
+
+    Int_Unsigned_T val_host(0);
+
+    for (size_t i = 0; i < sizeof(Int_T); i++)
+        val_host |= (static_cast<Int_Unsigned_T>(val_network_bytes[i]) << (i * 8));
+
+    return static_cast<Int_T>(val_host);
+}
+
+template <class Int_T>
+void write_integral_array_impl(const Int_T* src, size_t n_elements, i_obuffer& os)
+{
+    static_assert(std::is_integral_v<Int_T> && sizeof(Int_T) > 1);
+
+    constexpr size_t BUFFER_SIZE = data_buffer.N_BYTES;
+    constexpr size_t MAX_ELEMENTS_PER_BATCH = BUFFER_SIZE / sizeof(Int_T);
+    static_assert(MAX_ELEMENTS_PER_BATCH > 0);
+
+    if (src == nullptr)
+    {
+        assert(n_elements == 0);
+        return;
+    }
+
+    uint8_t* buffer_u8 = data_buffer;
+    Int_T* buffer_int_t = reinterpret_cast<Int_T*>(buffer_u8);
+
+    size_t idx = 0;
+    while (idx < n_elements)
+    {
+        const size_t n_batch_elements =
+            std::min(MAX_ELEMENTS_PER_BATCH, n_elements - idx);
+        const size_t n_batch_bytes = n_batch_elements * sizeof(Int_T);
+
+        std::transform(src + idx, src + idx + n_batch_elements, buffer_int_t,
+                       host_to_network<Int_T>);
+
+        os.write_bytes(buffer_u8, n_batch_bytes);
+        idx += n_batch_elements;
+    }
+
+}
+
+} // namespace
 
 ////////////////////////////////////////////////// i_ibuffer methods
 uint16_t i_ibuffer::read_u16()
@@ -48,6 +158,46 @@ void i_ibuffer::_on_bad_read()
 }
 
 ////////////////////////////////////////////////// i_obuffer methods
+void i_obuffer::write_integral_array(const uint8_t* src, size_t n_elements)
+{
+    write_bytes(src, n_elements);
+}
+
+void i_obuffer::write_integral_array(const uint16_t* src, size_t n_elements)
+{
+    write_integral_array_impl(src, n_elements, *this);
+}
+
+void i_obuffer::write_integral_array(const uint32_t* src, size_t n_elements)
+{
+    write_integral_array_impl(src, n_elements, *this);
+}
+
+void i_obuffer::write_integral_array(const uint64_t* src, size_t n_elements)
+{
+    write_integral_array_impl(src, n_elements, *this);
+}
+
+void i_obuffer::write_integral_array(const int8_t* src, size_t n_elements)
+{
+    write_bytes(src, n_elements);
+}
+
+void i_obuffer::write_integral_array(const int16_t* src, size_t n_elements)
+{
+    write_integral_array_impl(src, n_elements, *this);
+}
+
+void i_obuffer::write_integral_array(const int32_t* src, size_t n_elements)
+{
+    write_integral_array_impl(src, n_elements, *this);
+}
+
+void i_obuffer::write_integral_array(const int64_t* src, size_t n_elements)
+{
+    write_integral_array_impl(src, n_elements, *this);
+}
+
 void i_obuffer::write_u16(const uint16_t& val)
 {
     __write<uint16_t>(val);

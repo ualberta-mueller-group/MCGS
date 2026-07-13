@@ -324,8 +324,15 @@ struct serializer<std::vector<T>>
         const size_t size = val.size();
         os.write_u64(size);
 
-        for (size_t i = 0; i < size; i++)
-            serializer<T_NoCV>::save(os, val[i], ctx);
+        if constexpr (std::is_integral_v<T> && !std::is_enum_v<T>)
+        {
+            os.write_integral_array(static_cast<const T_NoCV*>(val.data()), size);
+        }
+        else
+        {
+            for (size_t i = 0; i < size; i++)
+                serializer<T_NoCV>::save(os, val[i], ctx);
+        }
     }
 
     inline static std::vector<T> load(i_ibuffer& is, serializer_ctx* ctx)

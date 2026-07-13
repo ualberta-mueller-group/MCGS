@@ -72,6 +72,17 @@ public:
     virtual ~i_obuffer() {}
 
     virtual void write_u8(const uint8_t& val) = 0;
+    virtual void write_bytes(const void* src, size_t n_bytes) = 0;
+
+    void write_integral_array(const uint8_t* src, size_t n_elements);
+    void write_integral_array(const uint16_t* src, size_t n_elements);
+    void write_integral_array(const uint32_t* src, size_t n_elements);
+    void write_integral_array(const uint64_t* src, size_t n_elements);
+    void write_integral_array(const int8_t* src, size_t n_elements);
+    void write_integral_array(const int16_t* src, size_t n_elements);
+    void write_integral_array(const int32_t* src, size_t n_elements);
+    void write_integral_array(const int64_t* src, size_t n_elements);
+
     void write_u16(const uint16_t& val);
     void write_u32(const uint32_t& val);
     void write_u64(const uint64_t& val);
@@ -116,6 +127,7 @@ public:
     inline void close();
 
     void write_u8(const uint8_t& val) override;
+    void write_bytes(const void* src, size_t n_bytes) override;
 
 private:
     static constexpr std::ofstream::openmode OPEN_MODE = //
@@ -144,6 +156,7 @@ class memory_obuffer: public i_obuffer
 {
 public:
     void write_u8(const uint8_t& val) override;
+    void write_bytes(const void* src, size_t n_bytes) override;
 
     const std::vector<uint8_t>& get_data() const;
     std::vector<uint8_t>& get_data();
@@ -284,6 +297,15 @@ inline void file_obuffer::write_u8(const uint8_t& val)
         i_obuffer::_on_bad_write();
 }
 
+inline void file_obuffer::write_bytes(const void* src, size_t n_bytes)
+{
+    // TODO illegal cast?
+    _fs.write((const char*) src, n_bytes);
+
+    if (!_fs) [[unlikely]]
+        i_obuffer::_on_bad_write();
+}
+
 ////////////////////////////////////////////////// memory_ibuffer methods
 inline memory_ibuffer::memory_ibuffer(const std::vector<uint8_t>& data_vec)
     : _data_vec(data_vec), _idx(0)
@@ -300,6 +322,12 @@ inline uint8_t memory_ibuffer::read_u8()
 inline void memory_obuffer::write_u8(const uint8_t& val)
 {
     _data_vec.push_back(val);
+}
+
+inline void memory_obuffer::write_bytes(const void* src, size_t n_bytes)
+{
+#warning TODO implement me!
+    assert(false);
 }
 
 inline const std::vector<uint8_t>& memory_obuffer::get_data() const
