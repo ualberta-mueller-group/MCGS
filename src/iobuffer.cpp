@@ -35,6 +35,7 @@ struct aligned_array
     operator uint8_t*() { return _data; }
 
     inline static constexpr size_t N_BYTES = n_bytes;
+    inline static constexpr size_t ALIGNMENT = alignment;
 
 private:
     uint8_t* _data;
@@ -87,6 +88,8 @@ void write_integral_array_impl(const Int_T* src, size_t n_elements, i_obuffer& o
     constexpr size_t BUFFER_SIZE = data_buffer.N_BYTES;
     constexpr size_t MAX_ELEMENTS_PER_BATCH = BUFFER_SIZE / sizeof(Int_T);
     static_assert(MAX_ELEMENTS_PER_BATCH > 0);
+
+    static_assert(data_buffer.ALIGNMENT % std::alignment_of_v<Int_T> == 0);
 
     if (src == nullptr)
     {
