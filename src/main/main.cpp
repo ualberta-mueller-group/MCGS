@@ -19,6 +19,7 @@
 
 #include "gen_experiments.h"
 #include "basic_player.h"
+#include "transposition_serializer.h"
 #include "utils_for_main.h"
 #include "warn_on_exit.h"
 #include "seg_replacer.h"
@@ -39,6 +40,9 @@ int main(int argc, char** argv)
         return 0;
 
     mcgs_init_2(opts);
+
+    test_tt_serializer_stuff();
+    return 0;
 
     //test_seg_replacer_stuff();
     //return 0;
