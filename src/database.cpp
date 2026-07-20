@@ -279,7 +279,7 @@ void db_entry_partisan::save_sum(const vector<game*>& games)
     memory_obuffer os;
     serializer<vector<game*>>::save(os, games, nullptr);
 
-    serialized_sum = std::move(os.get_data());
+    serialized_sum = os.release_data();
 }
 
 vector<game*> db_entry_partisan::load_sum() const

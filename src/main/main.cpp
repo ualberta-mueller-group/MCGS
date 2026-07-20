@@ -20,6 +20,7 @@
 #include "mcgs_init.h"
 #include "global_options.h"
 #include "stopwatch.h"
+#include "test_serialization_stuff.h"
 #include "throw_assert.h"
 
 #include "gen_experiments.h"
@@ -29,54 +30,6 @@
 #include "seg_replacer.h"
 
 using namespace std;
-
-namespace {
-
-void test_io_stuff()
-{
-    vector<uint8_t> vals;
-
-    const uint64_t size = uint64_t(1) * 1024 * 1024 * 256;
-    vals.reserve(size);
-
-    for (uint64_t i = 0; i < size; i++)
-        vals.push_back(rand());
-
-    stopwatch sw;
-
-    // Write
-    cout << "fwrite" << endl;
-    sw.reset();
-    sw.start();
-
-    FILE* f_out = fopen("large.bin", "w");
-    fwrite(vals.data(), 1, size, f_out);
-    fclose(f_out);
-
-    sw.stop();
-
-    cout << "fwrite took " << (sw.get_duration_ms() / 1000.0) << " seconds"
-         << endl;
-
-    // Write2
-    cout << "serializer" << endl;
-    sw.reset();
-    sw.start();
-
-    file_obuffer f("large2.bin");
-    serializer<vector<uint8_t>>::save(f, vals, nullptr);
-    f.close();
-
-    sw.stop();
-
-    cout << "serializer took " << (sw.get_duration_ms() / 1000.0) << " seconds"
-         << endl;
-
-    // Read
-
-}
-
-} // namespace
 
 ////////////////////////////////////////////////// main function
 static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional)
@@ -93,6 +46,9 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
         return 0;
 
     mcgs_init_2(opts);
+
+    test_serialization_stuff();
+    return 0;
 
     //test_io_stuff();
     //return 0;

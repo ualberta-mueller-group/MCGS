@@ -193,6 +193,27 @@ struct serializer<T*,
 };
 
 //////////////////////////////////////// integral types
+//template <class T>
+//struct serializer<
+//    T,
+//    std::enable_if_t<
+//        std::is_integral_v<T> && !std::is_same_v<T, bool>,
+//        void
+//    >
+//>
+//{
+//    inline static void save(i_obuffer& os, const T& val, serializer_ctx* ctx)
+//    {
+//        os.__write<T>(val);
+//    }
+//
+//    inline static T load(i_ibuffer& is, serializer_ctx* ctx)
+//    {
+//        return is.__read<T>();
+//    }
+//};
+
+
 template <class T>
 struct serializer<
     T,
@@ -202,16 +223,52 @@ struct serializer<
     >
 >
 {
-    inline static void save(i_obuffer& os, const T& val, serializer_ctx* ctx)
+    static void save(i_obuffer& os, const T val, serializer_ctx* ctx)
     {
-        os.__write<T>(val);
+        if constexpr (std::is_same_v<T, int8_t>)
+            os.write_i8(val);
+        else if constexpr (std::is_same_v<T, int16_t>)
+            os.write_i16(val);
+        else if constexpr (std::is_same_v<T, int32_t>)
+            os.write_i32(val);
+        else if constexpr (std::is_same_v<T, int64_t>)
+            os.write_i64(val);
+        else if constexpr (std::is_same_v<T, uint8_t>)
+            os.write_u8(val);
+        else if constexpr (std::is_same_v<T, uint16_t>)
+            os.write_u16(val);
+        else if constexpr (std::is_same_v<T, uint32_t>)
+            os.write_u32(val);
+        else if constexpr (std::is_same_v<T, uint64_t>)
+            os.write_u64(val);
+        else
+            static_assert(false);
     }
 
     inline static T load(i_ibuffer& is, serializer_ctx* ctx)
     {
-        return is.__read<T>();
+        if constexpr (std::is_same_v<T, int8_t>)
+            return is.read_i8();
+        else if constexpr (std::is_same_v<T, int16_t>)
+            return is.read_i16();
+        else if constexpr (std::is_same_v<T, int32_t>)
+            return is.read_i32();
+        else if constexpr (std::is_same_v<T, int64_t>)
+            return is.read_i64();
+        else if constexpr (std::is_same_v<T, uint8_t>)
+            return is.read_u8();
+        else if constexpr (std::is_same_v<T, uint16_t>)
+            return is.read_u16();
+        else if constexpr (std::is_same_v<T, uint32_t>)
+            return is.read_u32();
+        else if constexpr (std::is_same_v<T, uint64_t>)
+            return is.read_u64();
+        else
+            static_assert(false);
     }
 };
+
+
 
 //////////////////////////////////////// bool
 template <>
@@ -324,10 +381,8 @@ struct serializer<std::vector<T>>
         const size_t size = val.size();
         os.write_u64(size);
 
-        if constexpr (std::is_integral_v<T> && !std::is_enum_v<T>)
-        {
-            os.write_integral_array(static_cast<const T_NoCV*>(val.data()), size);
-        }
+        if constexpr (std::is_same_v<uint8_t, T_NoCV>)
+            os.write_bytes_raw(val.data(), size);
         else
         {
             for (size_t i = 0; i < size; i++)
@@ -340,10 +395,10 @@ struct serializer<std::vector<T>>
         std::vector<T> vec;
         const uint64_t size = is.read_u64();
 
-        if constexpr (std::is_integral_v<T> && !std::is_enum_v<T>)
+        if constexpr (std::is_same_v<uint8_t, T_NoCV>)
         {
             vec.resize(size);
-            is.read_integral_array(static_cast<T_NoCV*>(vec.data()), size);
+            is.read_bytes_raw(vec.data(), size);
         }
         else
         {
