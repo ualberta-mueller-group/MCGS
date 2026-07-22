@@ -593,6 +593,17 @@ i_fp_expr_command* get_fp_expr_run_command_thermograph(
         throw parser_exception(why, FAILED_CASE_COMMAND);
     }
 
+    // Append points at temperature=1 above masts
+    assert(!left_scaffold.empty() && !right_scaffold.empty());
+    {
+        const ThPoint& left_top = left_scaffold.back();
+        left_scaffold.emplace_back(left_top.Value(), left_top.Temp() + ThValue(1));
+
+        const ThPoint& right_top = right_scaffold.back();
+        right_scaffold.emplace_back(right_top.Value(), right_top.Temp() + ThValue(1));
+    }
+
+
     // Construct thermograph
     ThScaffold sc_left;
     for (const ThPoint& p : left_scaffold)

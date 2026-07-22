@@ -1,4 +1,5 @@
-# Converts CGSuite thermograph strings to MCGS/cgt_lib scaffolds.
+# Converts CGSuite thermograph strings to MCGS/cgt_lib scaffolds. Omits point
+# at temperature=1 above mast.
 # Example usage:
 # python3 cgs_thermograph_to_scaffolds.py "Thermograph(-5,[],[0],-5,[],[0])"
 
@@ -126,7 +127,10 @@ def get_scaffold(trajectory):
     t_my = t_ys[0]
 
     # Start Y=1 above mast, work downward to Y=-1
-    points = [(t_mx, t_my + 1), (t_mx, t_my)]
+    #points = [(t_mx, t_my + 1), (t_mx, t_my)]
+
+    # Start Y=0 above mast, work downward to Y=-1
+    points = [(t_mx, t_my)]
 
     for i in range(1, len(t_ys)):
         last_x, last_y = points[-1]

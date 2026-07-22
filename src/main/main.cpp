@@ -47,8 +47,8 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
 
     mcgs_init_2(opts);
 
-    test_serialization_stuff();
-    return 0;
+    //test_serialization_stuff();
+    //return 0;
 
     //test_io_stuff();
     //return 0;

@@ -362,7 +362,9 @@ std::string test_case_thermograph::scaffold_string(const ThScaffold& sc, bool fo
     str << (for_left ? "L:" : "R:");
 
     const int n_points = sc.NuPoints();
-    for (int i = 1; i <= n_points; i++)
+
+    // Note: "<" instead of "<=" to skip extraneous last point at t=1 above mast
+    for (int i = 1; i < n_points; i++)
     {
         const ThPoint* p = sc.NthPoint(i);
         assert(p != nullptr);
