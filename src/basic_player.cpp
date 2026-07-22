@@ -18,6 +18,7 @@
 #include <memory>
 #include <exception>
 
+#include "game.h"
 #include "string_to_int.h"
 #include "throw_assert.h"
 #include "cgt_basics.h"
@@ -285,6 +286,82 @@ optional<int> get_choice(const vector<T>&& options)
     return get_choice(options);
 }
 
+/*
+    Get a choice of move from the user, in the `game::print_move` format
+    (possibly with subgame index prefixes).
+
+    Returns nullptr IFF EOF. Throws on error.
+
+    Must not call with empty map!
+*/
+optional<size_t> get_move_choice(const vector<pair<string, sumgame_move>>& moves)
+{
+    assert(!moves.empty());
+
+    const string prompt_string = "Choose move (or \"?\" to list moves): ";
+
+    if (str_log)
+        *str_log << prompt_string << flush;
+
+    // Only print moves to the log file once
+    bool listed_moves_in_log = false;
+
+    string user_input;
+    while (true)
+    {
+        cout << prompt_string << flush;
+        user_input.clear();
+
+        THROW_ASSERT(!cin.bad());
+        getline(cin, user_input);
+        THROW_ASSERT(!cin.bad());
+
+        if (cin.eof())
+            return {};
+
+        if (user_input == "?")
+        {
+            string moves_string = "Available moves:";
+
+            for (const pair<string, sumgame_move>& move_pair : moves)
+                moves_string += " " + move_pair.first;
+
+            cout << moves_string << endl;
+
+            if (!listed_moves_in_log && str_log)
+            {
+                listed_moves_in_log = true;
+                *str_log << user_input << '\n';
+                *str_log << moves_string << endl;
+            }
+
+            continue;
+        }
+
+        optional<size_t> result;
+
+        const size_t n_moves = moves.size();
+        for (size_t i = 0; i < n_moves; i++)
+        {
+            if (moves[i].first == user_input)
+            {
+                result = i;
+                break;
+            }
+        }
+
+        if (!result.has_value())
+            continue;
+
+        if (str_log)
+            *str_log << user_input << endl;
+        str_both << endl;
+        flush_str_both();
+
+        return result;
+    }
+}
+
 // Clear screen and draw top bar
 void new_screen()
 {
@@ -419,102 +496,73 @@ optional<sumgame_move> get_mcgs_move(sumgame& sum, bw player)
     return sum.get_winning_or_random_move(player);
 }
 
-// Get subgame and move choices
 player_move get_player_move(sumgame& sum, bw player)
 {
     assert(is_black_white(player));
     assert_restore_sumgame ars(sum);
 
-    // Find all subgames which have moves for to_play
-    vector<game*> available_games;
-    vector<string> available_games_strings;
-    map<int, int> choice_idx_to_sumgame_idx;
+    vector<pair<string, sumgame_move>> sum_moves;
+    unordered_set<string> move_strings;
 
+    // Generate moves
+
+    const bool include_prefix = sum.num_active_games() > 1;
+    // Subgame index excluding inactive games
+    int subgame_idx_local = 0;
+
+    // Disable PITM
+    const bool restore_pitm = global::pitm();
+    global::pitm.set(false);
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
     {
-        int choice_idx = 0;
+        const game* g = sum.subgame_const(i);
+        assert(g != nullptr);
 
-        const int n_games = sum.num_total_games();
-        for (int i = 0; i < n_games; i++)
+        if (!g->is_active())
+            continue;
+
+        unique_ptr<move_generator> gen(g->create_move_generator(player));
+
+        const string prefix_string = to_string(subgame_idx_local) + ":";
+
+        for (; *gen; ++(*gen))
         {
-            game* g = sum.subgame(i);
+            const ::move m = gen->gen_move();
+            stringstream string_str;
+            g->print_move(string_str, m, player);
 
-            if (!g->is_active() || !g->has_moves_for(player))
-                continue;
+            string move_string;
+            if (include_prefix)
+                move_string = prefix_string + string_str.str();
+            else
+                move_string = string_str.str();
 
-            available_games.push_back(g);
-
-            stringstream str;
-            str << *g;
-            available_games_strings.emplace_back(str.str());
-
-            choice_idx_to_sumgame_idx[choice_idx] = i;
-            choice_idx++;
+            // Is this a unique move?
+            const auto inserted = move_strings.insert(move_string);
+            if (inserted.second)
+                sum_moves.emplace_back(move_string, sumgame_move(i, m));
         }
 
-        assert(available_games.size() == available_games_strings.size());
-        assert(available_games.size() == choice_idx_to_sumgame_idx.size());
+        subgame_idx_local++;
     }
+
+    // Restore PITM
+    global::pitm.set(restore_pitm);
 
     // No subgames have moves
-    if (available_games.empty())
+    if (sum_moves.empty())
         return player_move({});
 
-    // Get the subgame choice
-    str_both << "Choose a subgame to move on:" << endl;
-    str_both.flush();
-    optional<int> game_choice_idx = get_choice(available_games_strings);
-
-    if (!game_choice_idx.has_value())
-        return player_move::eof();
-
-    // Find all moves within the subgame
-    game* chosen_game = available_games[game_choice_idx.value()];
-
-    int sumgame_idx = -1;
-    vector<::move> moves;
-    vector<string> moves_strings;
-
-    {
-        // Get sumgame idx of chosen subgame
-        auto it = choice_idx_to_sumgame_idx.find(game_choice_idx.value());
-        assert(it != choice_idx_to_sumgame_idx.end());
-        sumgame_idx = it->second;
-
-        // Generate options
-        unique_ptr<move_generator> gen(
-            chosen_game->create_move_generator(player));
-        while (*gen)
-        {
-            assert_restore_game arg(*chosen_game);
-
-            moves.emplace_back(gen->gen_move());
-            ++(*gen);
-
-            const ::move& m = moves.back();
-
-            // Play, print, undo
-            chosen_game->play(m, player);
-            stringstream str;
-            str << *chosen_game;
-            chosen_game->undo_move();
-
-            moves_strings.push_back(str.str());
-        }
-    }
-
-    assert(!moves.empty());
-    assert(moves.size() == moves_strings.size());
-
-    str_both << "Choose a move within the subgame:" << endl;
-    flush_str_both();
-    optional<int> move_choice = get_choice(moves_strings);
+    // Get choice
+    optional<size_t> move_choice = get_move_choice(sum_moves);
 
     if (!move_choice.has_value())
         return player_move::eof();
 
-    const ::move& chosen_move = moves[move_choice.value()];
-
-    return player_move(sumgame_move(sumgame_idx, chosen_move));
+    const sumgame_move& sm = sum_moves[*move_choice].second;
+    return player_move(sm);
 }
 
 // To choose player color and first player
