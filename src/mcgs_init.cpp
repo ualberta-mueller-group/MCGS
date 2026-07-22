@@ -78,7 +78,6 @@ void mcgs_init_2(const cli_options& opts)
     mcgs_init::init_database(opts.db_file_name, init_type,
                              opts.db_config_string);
 
-    exit_signal::init_signal_handler();
 }
 
 void mcgs_init_2()

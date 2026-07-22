@@ -19,6 +19,7 @@ inline void request_mcgs_exit()
     __exit_signal_impl::_should_stop = true;
 }
 
-void init_signal_handler();
+void enable_handlers();
+bool handlers_are_enabled();
 
 } // namespace exit_signal

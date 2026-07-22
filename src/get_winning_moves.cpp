@@ -141,6 +141,9 @@ optional<vector<string>> get_winning_moves_impl(
 //////////////////////////////////////////////////
 vector<string> get_winning_moves(sumgame& sum, ebw player)
 {
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
     optional<vector<string>> result =
         get_winning_moves_with_timeout(sum, player, 0);
 

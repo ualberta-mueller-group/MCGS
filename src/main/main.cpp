@@ -11,6 +11,7 @@
 #include "cli_options.h"
 #include "database.h"
 #include "convert_to_ctl.h"
+#include "exit_signal.h"
 #include "file_parser.h"
 #include "autotests.h"
 #include "global_database.h"
@@ -89,6 +90,7 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
         }
         else
         {
+            exit_signal::enable_handlers();
             run_autotests(opts.test_directory, opts.outfile_name,
                           opts.test_timeout, opts.test_filter_type);
         }
@@ -104,7 +106,8 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
                 break;
             case PRINT_MOVES_ACTION_WINNING:
             {
-                print_winning_moves_by_chunk(cout, opts.parser);
+                exit_signal::enable_handlers();
+                print_winning_moves_by_chunk_interruptible(cout, opts.parser);
                 return 0;
             }
             case PRINT_MOVES_ACTION_SUBGAME:
@@ -141,7 +144,10 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
             convert_tests_to_ctl_format(opts.parser, *opts.lib_ctl_output_dir,
                                         opts.test_filter_type);
         else
+        {
+            exit_signal::enable_handlers();
             run_tests_from_main(opts.parser, opts, opts.test_filter_type);
+        }
     }
 
     if (opts.search_graph_verify_dir.has_value())

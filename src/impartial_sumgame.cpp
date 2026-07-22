@@ -93,6 +93,9 @@ int search_impartial_sumgame_cancellable(const sumgame& s,
 
 int search_impartial_sumgame(const sumgame& s)
 {
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
     timeout_source src;
     timeout_token timeout_tok = src.get_timeout_token();
     src.start_timeout(0);

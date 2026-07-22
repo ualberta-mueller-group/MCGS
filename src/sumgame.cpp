@@ -16,6 +16,7 @@
 
 #include "sumgame.h"
 #include "database.h"
+#include "exit_signal.h"
 #include "iobuffer.h"
 #include "seg_replacer.h"
 #include "throw_assert.h"
@@ -394,6 +395,9 @@ void sumgame::print_sorted(ostream& str) const
 // plus sumgame simplification
 bool sumgame::solve() const
 {
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
     // No assert_restore_sumgame; downstream function will do it
     sumgame& sum = const_cast<sumgame&>(*this);
 
@@ -405,6 +409,9 @@ bool sumgame::solve() const
 
 bool sumgame::solve_with_ttable(shared_ptr<ttable_sumgame> temp_ttable)
 {
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
     swap(temp_ttable, _tt);
     const bool result = solve();
     swap(temp_ttable, _tt);
@@ -413,6 +420,9 @@ bool sumgame::solve_with_ttable(shared_ptr<ttable_sumgame> temp_ttable)
 
 bool sumgame::solve_with_games(game* g) const
 {
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
     assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
@@ -428,6 +438,9 @@ bool sumgame::solve_with_games(game* g) const
 
 bool sumgame::solve_with_games(const vector<game*>& games) const
 {
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
     assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 

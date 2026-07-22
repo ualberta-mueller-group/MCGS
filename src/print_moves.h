@@ -29,7 +29,8 @@ std::vector<std::string> get_subgame_moves(const game* g, bw player);
 std::vector<std::string> get_subgame_options(const game* g, bw player);
 
 ////////////////////////////////////////////////// Print moves
-void print_winning_moves_for_player(std::ostream& os, sumgame& sum, ebw player);
+void print_winning_moves_for_player_interruptible(std::ostream& os,
+                                                  sumgame& sum, ebw player);
 void print_sum_moves_for_player(std::ostream& os, const sumgame& sum,
                                 bw player);
 
@@ -37,8 +38,8 @@ void print_subgame_moves_for_player(std::ostream& os, const game* g, bw player,
                                     bool as_options);
 
 ////////////////////////////////////////////////// Print moves by input chunk
-void print_winning_moves_by_chunk(std::ostream& os,
-                                  std::shared_ptr<file_parser> parser);
+void print_winning_moves_by_chunk_interruptible(
+    std::ostream& os, std::shared_ptr<file_parser> parser);
 
 void print_sum_moves_by_chunk(std::ostream& os,
                               std::shared_ptr<file_parser> parser);
