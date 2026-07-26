@@ -58,7 +58,8 @@ void mcgs_init_2(const cli_options& opts)
     mcgs_init::init_sumgame(global::tt_sumgame_idx_bits(),
                             opts.tt_sumgame_load_file_name);
 
-    mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits());
+    mcgs_init::init_impartial_sumgame(global::tt_imp_sumgame_idx_bits(),
+                                      opts.tt_imp_sumgame_load_file_name);
 
     mcgs_init::init_lemoine_viennot_hashtable();
 

@@ -110,8 +110,8 @@ public:
     template <class Enum_T>
     void write_enum(const Enum_T& val);
 
-    template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
-    void __write(const T& val);
+    //template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
+    //void __write(const T& val);
 
     // For very large writes. Must flush previously buffered data
     virtual void write_bytes_raw(const void* src, size_t n_bytes) = 0;
@@ -468,12 +468,12 @@ void i_obuffer::write_enum(const Enum_T& val)
     write_u8(val_casted);
 }
 
-template <class T>
-inline void i_obuffer::__write(const T& val)
-{
-    static_assert(std::is_integral_v<T>);
-    return __fmt_write<T>(*this, val);
-}
+//template <class T>
+//inline void i_obuffer::__write(const T& val)
+//{
+//    static_assert(std::is_integral_v<T>);
+//    return __fmt_write<T>(*this, val);
+//}
 
 inline size_t i_obuffer::_remaining_buffer_capacity() const
 {
@@ -592,9 +592,11 @@ inline file_obuffer::file_obuffer(const std::string& file_name)
     //assert(_fs.is_open());
 
     _file = fopen(file_name.c_str(), "wb");
-    setvbuf(_file, nullptr, _IONBF, 0);
-
     assert(_file != nullptr);
+
+    const int buf_status = setvbuf(_file, nullptr, _IONBF, 0);
+    assert(buf_status == 0);
+
 }
 
 inline file_obuffer::~file_obuffer()

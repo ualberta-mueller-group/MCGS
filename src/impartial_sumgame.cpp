@@ -2,6 +2,7 @@
 // Implementation of impartial sumgame search
 //---------------------------------------------------------------------------
 #include "impartial_sumgame.h"
+#include "iobuffer.h"
 #include "timeout_token.h"
 #include "utilities.h"
 
@@ -19,13 +20,16 @@
 #include "solver_stats.h"
 #include "throw_assert.h"
 #include "sumgame.h"
+#include "transposition_serializer.h"
+
+using namespace std;
 
 namespace {
 // mcgs_init::init_impartial_sumgame() and 
 // mcgs_init::init_lemoine_viennot_hashtable() 
 // must be called first
-std::optional<impartial_tt> tt_optional;
-std::optional<lemoine_viennot::lv_bool_tt> lv_tt_optional;
+optional<impartial_tt> tt_optional;
+optional<lemoine_viennot::lv_bool_tt> lv_tt_optional;
 
 int search_impartial(impartial_game* ig, const timeout_token& timeout_tok, uint64_t depth)
 {
@@ -43,7 +47,7 @@ int search_impartial(impartial_game* ig, const timeout_token& timeout_tok, uint6
 
         const int result =
             lemoine_viennot::search_impartial_game(*ig, lv_tt, timeout_tok, depth);
-        // stats::print_global_stats(std::cout);
+        // stats::print_global_stats(cout);
         return result;
     }
 }
@@ -99,7 +103,7 @@ int search_impartial_sumgame(const sumgame& s)
     timeout_source src;
     timeout_token timeout_tok = src.get_timeout_token();
     src.start_timeout(0);
-    const std::optional<int> result_opt =
+    const optional<int> result_opt =
         search_impartial_sumgame_with_timeout_token(s, timeout_tok,
                                                     INITIAL_SEARCH_DEPTH);
 
@@ -108,7 +112,7 @@ int search_impartial_sumgame(const sumgame& s)
     return *result_opt;
 }
 
-std::optional<int> search_impartial_sumgame_with_timeout_token(
+optional<int> search_impartial_sumgame_with_timeout_token(
     const sumgame& s, const timeout_token& timeout_tok, uint64_t depth)
 {
     assert_restore_sumgame ars(s);
@@ -128,7 +132,7 @@ std::optional<int> search_impartial_sumgame_with_timeout_token(
     return result;
 }
 
-std::optional<int> search_impartial_sumgame_with_timeout(
+optional<int> search_impartial_sumgame_with_timeout(
     const sumgame& s, unsigned long long timeout)
 {
     assert_restore_sumgame ars(s);
@@ -141,24 +145,94 @@ std::optional<int> search_impartial_sumgame_with_timeout(
                                                        INITIAL_SEARCH_DEPTH);
 }
 
-void init_impartial_sumgame_ttable(size_t idx_bits)
+void init_impartial_sumgame_ttable(size_t idx_bits,
+                                   const string& ttable_load_file_name)
 {
     THROW_ASSERT(idx_bits > 0);
 
-    if (global::impartial_algorithm_mex.get())
+    if (ttable_load_file_name.empty())
     {
-        assert(!tt_optional.has_value());
-        if (global::print_ttable_size())
-            std::cout << "Mex-TT ";
-        tt_optional.emplace(idx_bits, 0);
+        if (global::impartial_algorithm_mex.get())
+        {
+            assert(!tt_optional.has_value());
+            if (global::print_ttable_size())
+                cout << "Mex-TT ";
+            tt_optional.emplace(idx_bits, 0);
+        }
+        else
+        {
+            assert(!lv_tt_optional.has_value());
+            if (global::print_ttable_size())
+                cout << "LV-TT ";
+            lv_tt_optional.emplace(idx_bits, 0);
+        }
     }
     else
     {
-        assert(!lv_tt_optional.has_value());
-        if (global::print_ttable_size())
-            std::cout << "LV-TT ";
-        lv_tt_optional.emplace(idx_bits, 0);
+        cout << "Loading impartial ttable \"" << ttable_load_file_name
+             << "\"..." << flush;
+
+        file_ibuffer is(ttable_load_file_name);
+        const bool ttable_is_mex = is.read_bool();
+
+        if (ttable_is_mex != global::impartial_algorithm_mex()) [[unlikely]]
+        {
+            const string file_algorithm = ttable_is_mex ? "Mex" : "LV";
+            const string runtime_algorithm =
+                global::impartial_algorithm_mex() ? "Mex" : "LV";
+
+            throw logic_error(
+                "Attempted to load impartial ttable from file, and got "
+                "algorithm mismatch. Runtime algorithm: " +
+                runtime_algorithm + " File algorithm: " + file_algorithm);
+        }
+
+        size_t new_idx_bits;
+
+        if (ttable_is_mex)
+        {
+            tt_optional.emplace(serializer<impartial_tt>::load(is, nullptr));
+            new_idx_bits = tt_optional->n_index_bits();
+        }
+        else
+        {
+            lv_tt_optional.emplace(
+                serializer<lemoine_viennot::lv_bool_tt>::load(is, nullptr));
+
+            new_idx_bits = lv_tt_optional->n_index_bits();
+        }
+
+        global::tt_imp_sumgame_idx_bits.set(new_idx_bits);
+        cout << " DONE (has " << new_idx_bits << " index bits)." << endl;
     }
+}
+
+void save_impartial_sumgame_ttable(const string& ttable_save_file_name)
+{
+    cout << "Saving impartial ttable \"" << ttable_save_file_name << "\"..."
+         << flush;
+
+    file_obuffer os(ttable_save_file_name);
+
+    if (global::impartial_algorithm_mex())
+    {
+        assert(tt_optional.has_value());
+
+        os.write_bool(true);
+        serializer<impartial_tt>::save(os, *tt_optional, nullptr);
+    }
+    else
+    {
+        assert(lv_tt_optional.has_value());
+
+        os.write_bool(false);
+        serializer<lemoine_viennot::lv_bool_tt>::save(os, *lv_tt_optional,
+                                                      nullptr);
+    }
+
+    os.close();
+
+    cout << " OK " << endl;
 }
 
 void clear_impartial_sumgame_ttable()

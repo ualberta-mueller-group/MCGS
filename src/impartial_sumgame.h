@@ -31,6 +31,10 @@ std::optional<int> search_impartial_sumgame_with_timeout_token(
 std::optional<int> search_impartial_sumgame_with_timeout(
     const sumgame& s, unsigned long long timeout);
 
-void init_impartial_sumgame_ttable(size_t idx_bits);
+void init_impartial_sumgame_ttable(size_t idx_bits,
+                                   const std::string& ttable_load_file_name);
+
+
+void save_impartial_sumgame_ttable(const std::string& ttable_save_file_name);
 
 void clear_impartial_sumgame_ttable();

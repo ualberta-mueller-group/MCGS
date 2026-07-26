@@ -8,6 +8,8 @@
 
 #include "hashing.h"
 #include "game.h"
+#include "iobuffer.h"
+#include "serializer.h"
 #include "throw_assert.h"
 #include "transposition.h"
 #include "impartial_game.h"
@@ -31,19 +33,40 @@ struct lv_bool_entry
 };
 
 typedef ttable<lv_bool_entry> lv_bool_tt;
+
+} // namespace lemoine_viennot
+
+template <>
+struct serializer<lemoine_viennot::lv_bool_entry>
+{
+    static void save(i_obuffer& os, const lemoine_viennot::lv_bool_entry& entry,
+                     serializer_ctx* ctx)
+    {
+        os.write_bool(entry.value);
+    }
+
+    static lemoine_viennot::lv_bool_entry load(i_ibuffer& is,
+                                               serializer_ctx* ctx)
+    {
+        return lemoine_viennot::lv_bool_entry(is.read_bool());
+    }
+};
+
+namespace lemoine_viennot {
 //---------------------------------------------------------------------------
 // Transposition table - nimber for impartial game
 //---------------------------------------------------------------------------
-struct lv_nimber_entry
-{
-    int nim_value;
+//struct lv_nimber_entry
+//{
+//    int nim_value;
+//
+//    lv_nimber_entry() : nim_value(-1) {}
+//
+//    lv_nimber_entry(int v) : nim_value(v) {}
+//};
+//
+//typedef ttable<lv_nimber_entry> lv_nimber_tt;
 
-    lv_nimber_entry() : nim_value(-1) {}
-
-    lv_nimber_entry(int v) : nim_value(v) {}
-};
-
-typedef ttable<lv_nimber_entry> lv_nimber_tt;
 //---------------------------------------------------------------------------
 // Table of hash codes for nimbers
 //---------------------------------------------------------------------------

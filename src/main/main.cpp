@@ -15,6 +15,7 @@
 #include "file_parser.h"
 #include "autotests.h"
 #include "global_database.h"
+#include "impartial_sumgame.h"
 #include "iobuffer.h"
 #include "print_moves.h"
 #include "search_graph_debug.h"
@@ -168,6 +169,9 @@ int main(int argc, char** argv)
 
     if (!opts->tt_sumgame_save_file_name.empty())
         sumgame::save_ttable(opts->tt_sumgame_save_file_name);
+
+    if (!opts->tt_imp_sumgame_save_file_name.empty())
+        save_impartial_sumgame_ttable(opts->tt_imp_sumgame_save_file_name);
 
     return status;
 }

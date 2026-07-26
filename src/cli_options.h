@@ -62,6 +62,8 @@ struct cli_options
 
     std::string tt_sumgame_load_file_name;
     std::string tt_sumgame_save_file_name;
+    std::string tt_imp_sumgame_load_file_name;
+    std::string tt_imp_sumgame_save_file_name;
 
     test_filter_enum test_filter_type;
 

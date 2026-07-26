@@ -12,6 +12,9 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "integral_conversion.h"
+#include "iobuffer.h"
+#include "serializer.h"
 #include "transposition.h"
 #include "timeout_token.h"
 
@@ -25,6 +28,25 @@ struct impartial_ttable_entry
     impartial_ttable_entry() : nim_value(0) {}
 
     impartial_ttable_entry(int v) : nim_value(v) {}
+};
+
+template <>
+struct serializer<impartial_ttable_entry>
+{
+    static void save(i_obuffer& os, const impartial_ttable_entry& entry,
+                     serializer_ctx* ctx)
+    {
+        const int32_t nim_value_32 =
+            integral_cast_checked<int32_t>(entry.nim_value);
+
+        os.write_i32(nim_value_32);
+    }
+
+    static impartial_ttable_entry load(i_ibuffer& is, serializer_ctx* ctx)
+    {
+        const int nim_value = integral_cast_checked<int>(is.read_i32());
+        return impartial_ttable_entry(nim_value);
+    }
 };
 
 typedef ttable<impartial_ttable_entry> impartial_tt;
