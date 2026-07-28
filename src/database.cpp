@@ -47,6 +47,76 @@
 
 using namespace std;
 
+////////////////////////////////////////////////// Enums, options struct
+string db_gen_stop_after_enum_to_string(db_gen_stop_after_enum stop_after)
+{
+    switch (stop_after)
+    {
+
+        case DB_GEN_STOP_AFTER_OUTCOME_CLASS:
+            return "outcome_class";
+        case DB_GEN_STOP_AFTER_BOUNDS:
+            return "bounds";
+        case DB_GEN_STOP_AFTER_DOMINATED_MOVES:
+            return "dominated_moves";
+        case DB_GEN_STOP_AFTER_SEG:
+            return "seg";
+    }
+
+    assert(false);
+}
+
+optional<db_gen_stop_after_enum> string_to_db_gen_stop_after_enum(
+    const string& stop_after_str)
+{
+    if (stop_after_str == "outcome_class")
+        return DB_GEN_STOP_AFTER_OUTCOME_CLASS;
+    if (stop_after_str == "bounds")
+        return DB_GEN_STOP_AFTER_BOUNDS;
+    if (stop_after_str == "dominated_moves")
+        return DB_GEN_STOP_AFTER_DOMINATED_MOVES;
+    if (stop_after_str == "seg")
+        return DB_GEN_STOP_AFTER_SEG;
+
+    return {};
+}
+
+string db_gen_size_score_enum_to_string(db_gen_size_score_enum size_score)
+{
+    switch (size_score)
+    {
+        case DB_GEN_SIZE_SCORE_MAX_LOCAL_OPTIONS:
+            return "max_local_options";
+        case DB_GEN_SIZE_SCORE_BOARD_SIZE:
+            return "board_size";
+        case DB_GEN_SIZE_SCORE_TREE_HEIGHT:
+            return "tree_height";
+        case DB_GEN_SIZE_SCORE_STONE_COUNT:
+            return "stone_count";
+        case DB_GEN_SIZE_SCORE_EMPTY_COUNT:
+            return "empty_count";
+    }
+
+    assert(false);
+}
+
+optional<db_gen_size_score_enum> string_to_db_gen_size_score_enum(
+    const string& size_score_str)
+{
+    if (size_score_str == "max_local_options")
+        return DB_GEN_SIZE_SCORE_MAX_LOCAL_OPTIONS;
+    if (size_score_str == "board_size")
+        return DB_GEN_SIZE_SCORE_BOARD_SIZE;
+    if (size_score_str == "tree_height")
+        return DB_GEN_SIZE_SCORE_TREE_HEIGHT;
+    if (size_score_str == "stone_count")
+        return DB_GEN_SIZE_SCORE_STONE_COUNT;
+    if (size_score_str == "empty_count")
+        return DB_GEN_SIZE_SCORE_EMPTY_COUNT;
+
+    return {};
+}
+
 ////////////////////////////////////////////////// db_entry_partisan methods
 
 // Defines order in seg_replacer 3+ subgame pass

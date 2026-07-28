@@ -70,31 +70,96 @@ i_db_game_generator* create_sheep_gen(const config_map& config)
     return new gridlike_db_game_generator<sheep, GRIDLIKE_TYPE_GRID>(gg);
 }
 
-// bool is true IFF the game is impartial
-unordered_map<string, std::pair<create_game_gen_fn_t, bool>> create_gen_funcs;
+struct db_game_gen_registration_t
+{
+    db_game_gen_registration_t(create_game_gen_fn_t func, bool is_impartial,
+                           db_gen_size_score_enum size_score)
+        : func(func), is_impartial(is_impartial), size_score(size_score)
+    {
+    }
+
+    create_game_gen_fn_t func;
+    bool is_impartial;
+    // Game-specific default size_score. Can override in DB config string
+    db_gen_size_score_enum size_score;
+};
+
+unordered_map<string, db_game_gen_registration_t> db_game_gen_registrations;
 
 void register_games(database& db);
 
-
-void register_create_game_gen_fn(const string& name, bool is_impartial, create_game_gen_fn_t& fn)
+void register_db_game_gen(const string& name, bool is_impartial,
+                          db_gen_size_score_enum default_size_score,
+                          create_game_gen_fn_t& fn)
 {
     THROW_ASSERT(
         name.size() > 0,
-        "Attempted to register create_game_gen_fn_t for game with blank name!");
+        "Attempted to register DB game generator for game with blank name!");
 
-    auto inserted = create_gen_funcs.emplace(name, std::make_pair(fn, is_impartial));
+    const auto inserted = db_game_gen_registrations.emplace(
+        name, db_game_gen_registration_t(fn, is_impartial, default_size_score));
 
     THROW_ASSERT(inserted.second,
-                 "create_game_gen_fn_t registered twice for game \"" + name +
+                 "DB game generator registered twice for game \"" + name +
                      "\"!");
 
     if (!is_impartial)
-        register_create_game_gen_fn("impartial " + name, true, fn);
+        register_db_game_gen("impartial " + name, true, default_size_score, fn);
 }
 
-void register_create_game_gen_fn(const string& name, bool is_impartial, create_game_gen_fn_t&& fn)
+void register_db_game_gen(const string& name, bool is_impartial,
+                          db_gen_size_score_enum default_size_score,
+                          create_game_gen_fn_t&& fn)
 {
-    register_create_game_gen_fn(name, is_impartial, fn);
+    register_db_game_gen(name, is_impartial, default_size_score, fn);
+}
+
+pair<unique_ptr<i_db_game_generator>, db_gen_options_t>
+create_generator_and_options(const db_game_gen_registration_t& reg,
+                             const string& game_config_string)
+{
+    pair<unique_ptr<i_db_game_generator>, db_gen_options_t> p;
+    unique_ptr<i_db_game_generator>& gen = p.first;
+    db_gen_options_t& opts = p.second;
+
+    config_map config(game_config_string);
+
+    // Make generator
+    gen.reset(reg.func(config));
+
+    // Apply game-specific default DB gen options
+    opts.size_score = reg.size_score;
+
+    // Apply override DB gen options
+    const string* size_score_str = config.get_string_nullable("size_score");
+    if (size_score_str != nullptr)
+    {
+        optional<db_gen_size_score_enum> size_score_enum =
+            string_to_db_gen_size_score_enum(*size_score_str);
+
+        THROW_ASSERT(size_score_enum.has_value(),
+                     "Invalid value for size_score in DB config string: \"" +
+                         *size_score_str + "\"");
+
+        opts.size_score = *size_score_enum;
+    }
+
+    const string* stop_after_str = config.get_string_nullable("stop_after");
+    if (stop_after_str != nullptr)
+    {
+        optional<db_gen_stop_after_enum> stop_after_enum =
+            string_to_db_gen_stop_after_enum(*stop_after_str);
+
+        THROW_ASSERT(stop_after_enum.has_value(),
+                     "Invalid value for stop_after in DB config string: \"" +
+                         *stop_after_str + "\"");
+
+        opts.stop_after = *stop_after_enum;
+    }
+
+    config.check_unused_keys();
+
+    return p;
 }
 
 void fill_database(database& db, const string& db_config_string, bool dry_run)
@@ -111,40 +176,33 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
             const string& game_name = config_pair.first;
             const string& game_config = config_pair.second;
 
-            auto create_fn_pair_it = create_gen_funcs.find(game_name);
-
+            const auto reg_iter = db_game_gen_registrations.find(game_name);
 
             THROW_ASSERT(
-                create_fn_pair_it != create_gen_funcs.end(),
+                reg_iter != db_game_gen_registrations.end(),
                 "Error: DB config references game \"" + game_name +
-                    "\" which has no registered create_game_gen_fn_t!");
+                    "\" which has no registered DB game generator!");
 
             THROW_ASSERT(game_names.insert(game_name).second,
                          "Error: DB config references game \"" + game_name +
                              "\" twice!");
 
-            pair<create_game_gen_fn_t, bool>& fn_pair = create_fn_pair_it->second;
-            create_game_gen_fn_t& fn = fn_pair.first;
-            const bool is_impartial = fn_pair.second;
+            const db_game_gen_registration_t& reg = reg_iter->second;
 
-            unique_ptr<i_db_game_generator> gen1(nullptr);
+            pair<unique_ptr<i_db_game_generator>, db_gen_options_t>
+                gen_and_opts = create_generator_and_options(reg, game_config);
 
-            {
-                config_map config(game_config);
-                gen1.reset(fn(config));
-                config.check_unused_keys();
-            }
+            unique_ptr<i_db_game_generator>& gen = gen_and_opts.first;
+            const db_gen_options_t& opts = gen_and_opts.second;
 
-            THROW_ASSERT((bool) gen1);
+            THROW_ASSERT(gen.get() != nullptr);
 
             if (!dry_run)
             {
-                if (is_impartial)
-                    db.generate_entries_impartial(*gen1);
+                if (reg.is_impartial)
+                    db.generate_entries_impartial(*gen);
                 else
-                {
-                    db.generate_entries_partisan(*gen1);
-                }
+                    db.generate_entries_partisan(*gen);
 
                 db.refine_partisan_links();
                 delete_equivalence_classes();
@@ -343,7 +401,7 @@ namespace {
 
 void register_games(database& db)
 {
-    assert(create_gen_funcs.empty());
+    assert(db_game_gen_registrations.empty());
 
     /*
         Types used to query the database must be registered. The order matters:
@@ -384,62 +442,70 @@ void register_games(database& db)
         If your game is impartial: this argument should be true
     */
 
+    constexpr db_gen_size_score_enum DEFAULT_SIZE_SCORE_ENUM =
+        DB_GEN_SIZE_SCORE_MAX_LOCAL_OPTIONS;
+
     // clobber_1xn
-    register_create_game_gen_fn(
-        "clobber_1xn", false,
+    register_db_game_gen(
+        "clobber_1xn", false, DEFAULT_SIZE_SCORE_ENUM,
         get_gridlike_create_game_gen_fn<clobber_1xn, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE}, true, EMPTY));
 
     // nogo_1xn
-    register_create_game_gen_fn(
-        "nogo_1xn", false,
+    register_db_game_gen(
+        "nogo_1xn", false, DEFAULT_SIZE_SCORE_ENUM,
         get_gridlike_create_game_gen_fn<nogo_1xn, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE}, false, EMPTY));
 
     // elephants
-    register_create_game_gen_fn(
-        "elephants", false,
+    register_db_game_gen(
+        "elephants", false, DEFAULT_SIZE_SCORE_ENUM,
         get_gridlike_create_game_gen_fn<elephants, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE, EMPTY}));
 
     // clobber
-    register_create_game_gen_fn(
-        "clobber", false, get_gridlike_create_game_gen_fn<clobber, GRIDLIKE_TYPE_GRID>(
-                       {BLACK, WHITE}, true, EMPTY));
+    register_db_game_gen(
+        "clobber", false, DEFAULT_SIZE_SCORE_ENUM,
+        get_gridlike_create_game_gen_fn<clobber, GRIDLIKE_TYPE_GRID>(
+            {BLACK, WHITE}, true, EMPTY));
 
     // nogo
-    register_create_game_gen_fn(
-        "nogo", false, get_gridlike_create_game_gen_fn<nogo, GRIDLIKE_TYPE_GRID>(
-                    {BLACK, WHITE}, false, EMPTY));
+    register_db_game_gen(
+        "nogo", false, DEFAULT_SIZE_SCORE_ENUM,
+        get_gridlike_create_game_gen_fn<nogo, GRIDLIKE_TYPE_GRID>(
+            {BLACK, WHITE}, false, EMPTY));
 
     // domineering
-    register_create_game_gen_fn(
-        "domineering", false,
+    register_db_game_gen(
+        "domineering", false, DEFAULT_SIZE_SCORE_ENUM,
         get_gridlike_create_game_gen_fn<domineering, GRIDLIKE_TYPE_GRID>(
             {EMPTY}, true, BORDER));
 
     // amazons
-    register_create_game_gen_fn(
-        "amazons", false, get_gridlike_create_game_gen_fn<amazons, GRIDLIKE_TYPE_GRID>(
-                       {BORDER, BLACK, WHITE}, false, EMPTY));
+    register_db_game_gen(
+        "amazons", false, DEFAULT_SIZE_SCORE_ENUM,
+        get_gridlike_create_game_gen_fn<amazons, GRIDLIKE_TYPE_GRID>(
+            {BORDER, BLACK, WHITE}, false, EMPTY));
 
     // fission
-    register_create_game_gen_fn(
-        "fission", false, get_gridlike_create_game_gen_fn<fission, GRIDLIKE_TYPE_GRID>(
-                       {BORDER, BLACK}, false, EMPTY));
+    register_db_game_gen(
+        "fission", false, DEFAULT_SIZE_SCORE_ENUM,
+        get_gridlike_create_game_gen_fn<fission, GRIDLIKE_TYPE_GRID>(
+            {BORDER, BLACK}, false, EMPTY));
 
     // toppling_dominoes
-    register_create_game_gen_fn(
-        "toppling_dominoes", false,
+    register_db_game_gen(
+        "toppling_dominoes", false, DEFAULT_SIZE_SCORE_ENUM,
         get_gridlike_create_game_gen_fn<toppling_dominoes, GRIDLIKE_TYPE_STRIP>(
             {BLACK, WHITE}, true, BORDER));
 
     // sheep
-    register_create_game_gen_fn("sheep", false, create_sheep_gen);
+    register_db_game_gen("sheep", false, DEFAULT_SIZE_SCORE_ENUM,
+                         create_sheep_gen);
 
     // cannibal_clobber
-    register_create_game_gen_fn(
-        "cannibal_clobber", false,
+    register_db_game_gen(
+        "cannibal_clobber", false, DEFAULT_SIZE_SCORE_ENUM,
         get_gridlike_create_game_gen_fn<cannibal_clobber, GRIDLIKE_TYPE_GRID>(
             {BLACK, WHITE}, true, EMPTY));
 }
