@@ -20,13 +20,14 @@ using namespace std;
 
 ////////////////////////////////////////////////// helpers
 namespace {
-shared_ptr<ThGraph> get_thermograph_from_db(database& db, sumgame& sum, bool silent)
+shared_ptr<ThGraph> get_thermograph_from_db(database& db, sumgame& sum,
+                                            const db_gen_options_t& gen_opts)
 {
     const db_entry_partisan* entry = db.get_partisan_ptr(sum);
 
     if (entry == nullptr)
     {
-        db.generate_single_partisan_entry(sum, silent);
+        db.generate_single_partisan_entry(sum, gen_opts);
         entry = db.get_partisan_ptr(sum);
     }
     
@@ -37,8 +38,8 @@ shared_ptr<ThGraph> get_thermograph_from_db(database& db, sumgame& sum, bool sil
     return graph;
 }
 
-vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum,
-                                                  bw player, bool silent)
+vector<shared_ptr<ThGraph>> get_option_graphs_for(
+    database& db, sumgame& sum, bw player, const db_gen_options_t& gen_opts)
 {
     assert_restore_sumgame ars(sum);
     assert(is_black_white(player));
@@ -79,13 +80,13 @@ vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum,
 
                 assert(sum2.num_total_games() == 0);
                 sum2.add(gi);
-                db.generate_single_partisan_entry(sum2, silent);
+                db.generate_single_partisan_entry(sum2, gen_opts);
                 sum2.pop(gi);
             }
         }
 
         shared_ptr<ThGraph> option_graph =
-            get_thermograph_from_db(db, sum, silent);
+            get_thermograph_from_db(db, sum, gen_opts);
 
         sum.undo_move();
 
@@ -100,7 +101,8 @@ vector<shared_ptr<ThGraph>> get_option_graphs_for(database& db, sumgame& sum,
 } // namespace
 
 //////////////////////////////////////////////////
-ThGraph* db_make_thermograph(database& db, sumgame& sum, bool silent)
+ThGraph* db_make_thermograph(database& db, sumgame& sum,
+                             const db_gen_options_t& gen_opts)
 {
 
     // Generate options
@@ -109,9 +111,9 @@ ThGraph* db_make_thermograph(database& db, sumgame& sum, bool silent)
     vector<ThGraph*>& option_graphs_raw_w = option_graphs_raw[SG_WHITE];
 
     vector<shared_ptr<ThGraph>> option_graphs_b =
-        get_option_graphs_for(db, sum, BLACK, silent);
+        get_option_graphs_for(db, sum, BLACK, gen_opts);
     vector<shared_ptr<ThGraph>> option_graphs_w =
-        get_option_graphs_for(db, sum, WHITE, silent);
+        get_option_graphs_for(db, sum, WHITE, gen_opts);
 
     for (const shared_ptr<ThGraph>& option_shared : option_graphs_b)
     {

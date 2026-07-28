@@ -1,7 +1,6 @@
 #include "db_make_simplest_equal_game.h"
 
 #include <algorithm>
-#include <filesystem>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -10,13 +9,11 @@
 #include "cgt_basics.h"
 #include "clobber_1xn.h"
 #include "db_link_t.h"
-#include "all_game_headers.h"
 #include "game.h"
-#include "global_options.h"
 #include "grid.h"
 #include "hashing.h"
+#include "integral_conversion.h"
 #include "safe_arithmetic.h"
-#include "size_score_enum.h"
 #include "strip.h"
 #include "sumgame.h"
 #include "database.h"
@@ -31,6 +28,19 @@ uint64_t db_n_links_refined = 0;
 
 namespace {
 ////////////////////////////////////////////////// Helper types
+bool size_scores_compatible(const db_entry_partisan& entry1,
+                            const db_entry_partisan& entry2)
+{
+    if (entry1.size_score_type == entry2.size_score_type)
+        return true;
+
+    if ((entry1.is_trivially_zero() && entry1.size_score == 0) ||
+        (entry2.is_trivially_zero() && entry2.size_score == 0))
+        return true;
+
+    return false;
+}
+
 typedef hash_t seg_map_idx_t;
 
 class link_compare
@@ -81,7 +91,10 @@ relation link_compare::compare(const db_link_t& link1,
     if (entry1->complexity != entry2->complexity)
         return entry1->complexity < entry2->complexity ? REL_LESS : REL_GREATER;
 
-    return entry1->compare_size_score(*entry2);
+    if (entry1->size_score != entry2->size_score)
+        return entry1->size_score < entry2->size_score ? REL_LESS : REL_GREATER;
+
+    return REL_EQUAL;
 }
 
 bool link_compare::operator()(const db_link_t& link1,
@@ -181,9 +194,7 @@ db_link_t equivalence_class::get_best_link_for_game(db_link_t game_link,
         if (game_entry->complexity < linked_entry->complexity)
             return game_link;
 
-        //if (game_entry->size_score > linked_entry->size_score)
-        //if (game_entry->compare_size_score(*linked_entry) == REL_GREATER)
-        if (game_entry->size_score_allows_replacement_by(*linked_entry))
+        if (game_entry->size_score > linked_entry->size_score)
             return link;
     }
 
@@ -197,8 +208,6 @@ unordered_map<hash_t, size_t> global_hash_to_seg_vec_idx;
 ////////////////////////////////////////////////// Helper functions
 seg_map_idx_t make_seg_map_index(const db_entry_partisan& entry)
 {
-#warning TODO do equal games always have the same thermographs?
-
     THROW_ASSERT(                       //
         entry.thermograph &&            //
         entry.bounds_data &&            //
@@ -226,44 +235,9 @@ seg_map_idx_t make_seg_map_index(const db_entry_partisan& entry)
     return h.get_value();
 }
 
-uint64_t ss_tree_height(sumgame& sum, db_entry_partisan& entry, database& db)
-{
-    assert_restore_sumgame ars(sum);
-    restore_sumgame_player restore(sum);
-
-    uint64_t max_child_score = 0;
-    bool has_moves = false;
-
-    constexpr array<bw, 2> COLORS = {BLACK, WHITE};
-    for (const bw color : COLORS)
-    {
-        sum.set_to_play(color);
-        unique_ptr<sumgame_move_generator> gen(
-            sum.create_sum_move_generator(color));
-
-        has_moves |= *gen;
-
-        for (; *gen; ++(*gen))
-        {
-            const sumgame_move sm = gen->gen_sum_move();
-
-            assert(sum.to_play() == color);
-            sum.play_sum(sm, color);
-
-            const db_entry_partisan* child_entry = db.get_partisan_ptr(sum);
-            THROW_ASSERT(child_entry != nullptr && child_entry->dominated_moves);
-
-            max_child_score = max(max_child_score, child_entry->ss_tree_height);
-
-            sum.undo_move();
-        }
-    }
-
-    return max_child_score + has_moves;
-}
-
 uint64_t ss_max_local_options(sumgame& sum, db_entry_partisan& entry, database& db)
 {
+    assert(entry.size_score_type == DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS);
     assert_restore_sumgame ars(sum);
     restore_sumgame_player restore(sum);
 
@@ -287,7 +261,11 @@ uint64_t ss_max_local_options(sumgame& sum, db_entry_partisan& entry, database& 
             sum.play_sum(sm, color);
 
             db_entry_partisan* child_entry = db.get_partisan_ptr(sum);
-            largest = max(largest, child_entry->ss_max_local_options);
+            THROW_ASSERT(child_entry != nullptr &&
+                         child_entry->dominated_moves &&
+                         size_scores_compatible(entry, *child_entry));
+
+            largest = max(largest, child_entry->size_score);
 
             sum.undo_move();
         }
@@ -296,28 +274,112 @@ uint64_t ss_max_local_options(sumgame& sum, db_entry_partisan& entry, database& 
     return max(largest, n_local);
 }
 
-uint64_t count_color(const game* g, int color, bool invert)
+uint64_t ss_board_size(sumgame& sum, db_entry_partisan& entry, database& db)
 {
+    assert(entry.size_score_type == DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE);
     uint64_t total = 0;
 
+    bool add_ok = true;
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        const game* g = sum.subgame(i);
+        if (!g->is_active())
+            continue;
+
+        const strip* g_strip = dynamic_cast<const strip*>(g);
+        if (g_strip != nullptr)
+        {
+            const uint64_t strip_size =
+                integral_cast_checked<uint64_t>(g_strip->size());
+
+            add_ok &= safe_add(total, strip_size);
+            continue;
+        }
+
+        const grid* g_grid = dynamic_cast<const grid*>(g);
+        if (g_grid != nullptr)
+        {
+            const int_pair shape = g_grid->shape();
+            const uint64_t n_rows = integral_cast_checked<uint64_t>(shape.first);
+            const uint64_t n_cols = integral_cast_checked<uint64_t>(shape.second);
+
+            const uint64_t area = n_rows * n_cols;
+            add_ok &= safe_add(total, area);
+            continue;
+        }
+
+        THROW_ASSERT(false);
+    }
+
+    THROW_ASSERT(add_ok);
+    return total;
+}
+
+uint64_t ss_tree_height(sumgame& sum, db_entry_partisan& entry, database& db)
+{
+    assert(entry.size_score_type == DB_GEN_SIZE_SCORE_TYPE_TREE_HEIGHT);
+    assert_restore_sumgame ars(sum);
+    restore_sumgame_player restore(sum);
+
+    uint64_t max_child_score = 0;
+    bool has_moves = false;
+
+    constexpr array<bw, 2> COLORS = {BLACK, WHITE};
+    for (const bw color : COLORS)
+    {
+        sum.set_to_play(color);
+        unique_ptr<sumgame_move_generator> gen(
+            sum.create_sum_move_generator(color));
+
+        has_moves |= *gen;
+
+        for (; *gen; ++(*gen))
+        {
+            const sumgame_move sm = gen->gen_sum_move();
+
+            assert(sum.to_play() == color);
+            sum.play_sum(sm, color);
+
+            const db_entry_partisan* child_entry = db.get_partisan_ptr(sum);
+            THROW_ASSERT(child_entry != nullptr &&
+                         child_entry->dominated_moves &&
+                         size_scores_compatible(entry, *child_entry));
+
+            max_child_score = max(max_child_score, child_entry->size_score);
+
+            sum.undo_move();
+        }
+    }
+
+    THROW_ASSERT(add_is_safe(max_child_score, static_cast<uint64_t>(has_moves)));
+    return max_child_score + has_moves;
+}
+
+uint64_t count_stones_or_empties(const game* g_strip_or_grid, bool stones)
+{
     const vector<int>* board = nullptr;
 
-    const strip* g_strip = dynamic_cast<const strip*>(g);
+    const strip* g_strip = dynamic_cast<const strip*>(g_strip_or_grid);
     if (g_strip != nullptr)
         board = &g_strip->board_const();
+    else
+    {
+        const grid* g_grid = dynamic_cast<const grid*>(g_strip_or_grid);
+        if (g_grid != nullptr)
+            board = &g_grid->board_const();
+    }
 
-    const grid* g_grid = dynamic_cast<const grid*>(g);
-    if (g_grid != nullptr)
-        board = &g_grid->board_const();
+    THROW_ASSERT(board != nullptr);
 
-    assert(board != nullptr);
-
+    uint64_t total = 0;
     for (const int tile : *board)
     {
-        if (invert)
-            total += (tile != color);
-        else
-            total += (tile == color);
+        THROW_ASSERT(is_valid_color(tile));
+
+        const bool is_empty = (tile == EMPTY);
+        total += (is_empty == !stones);
     }
 
     return total;
@@ -330,101 +392,41 @@ uint64_t ss_stone_count(sumgame& sum, db_entry_partisan& entry, database& db)
     const int n_games = sum.num_total_games();
     for (int i = 0; i < n_games; i++)
     {
-        game* g = sum.subgame(i);
+        const game* g = sum.subgame_const(i);
         if (!g->is_active())
             continue;
 
-        const game_type_t gt = g->game_type();
+        const uint64_t game_stone_count = count_stones_or_empties(g, true);
 
-        if (gt == game_type<clobber_1xn>() || gt == game_type<clobber>())
-        {
-            total += count_color(g, EMPTY, true);
-            continue;
-        }
-
-        if (gt == game_type<domineering>() || //
-            gt == game_type<elephants>() ||   //
-            gt == game_type<nogo_1xn>() ||    //
-            gt == game_type<amazons>()        //
-        )
-
-        {
-            total += count_color(g, EMPTY, false);
-            continue;
-        }
-
-        assert(false);
+        const bool ok = safe_add(total, game_stone_count);
+        THROW_ASSERT(ok);
     }
 
     return total;
 }
 
-uint64_t ss_board_size(sumgame& sum, db_entry_partisan& entry, database& db)
+uint64_t ss_empty_count(sumgame& sum, db_entry_partisan& entry, database& db)
 {
     uint64_t total = 0;
 
     const int n_games = sum.num_total_games();
     for (int i = 0; i < n_games; i++)
     {
-        game* g = sum.subgame(i);
+        const game* g = sum.subgame_const(i);
         if (!g->is_active())
             continue;
 
-        strip* g_strip = dynamic_cast<strip*>(g);
-        if (g_strip != nullptr)
-        {
-            total += g_strip->size();
-            continue;
-        }
+        const uint64_t game_empty_count = count_stones_or_empties(g, false);
 
-        grid* g_grid = dynamic_cast<grid*>(g);
-        if (g_grid != nullptr)
-        {
-            const int_pair shape = g_grid->shape();
-            total += shape.first * shape.second;
-            continue;
-        }
-
-        THROW_ASSERT(false);
+        const bool ok = safe_add(total, game_empty_count);
+        THROW_ASSERT(ok);
     }
 
     return total;
 }
 
-uint64_t ss_node_count_naive(sumgame& sum, db_entry_partisan& entry, database& db)
-{
-    assert_restore_sumgame ars(sum);
-    restore_sumgame_player restore(sum);
-
-    uint64_t total = 1;
-    bool add_ok = true;
-
-    constexpr array<bw, 2> COLORS = {BLACK, WHITE};
-    for (const bw color : COLORS)
-    {
-        sum.set_to_play(color);
-        unique_ptr<sumgame_move_generator> gen(
-            sum.create_sum_move_generator(color));
-
-        for (; *gen; ++(*gen))
-        {
-            const sumgame_move sm = gen->gen_sum_move();
-            sum.play_sum(sm, color);
-
-            db_entry_partisan* child_entry = db.get_partisan_ptr(sum);
-            THROW_ASSERT(child_entry != nullptr);
-
-            add_ok &= safe_add(total, child_entry->ss_node_count);
-
-            sum.undo_move();
-        }
-    }
-
-    THROW_ASSERT(add_ok);
-    return total;
-}
-
-optional<size_t> find_sum_equivalence_class(sumgame& sum, const vector<equivalence_class>& classes, database& db)
+optional<size_t> find_sum_equivalence_class(
+    sumgame& sum, const vector<equivalence_class>& classes, database& db)
 {
     assert_restore_sumgame ars(sum);
     restore_sumgame_player restore(sum);
@@ -491,15 +493,42 @@ const equivalence_class* get_previous_equivalence_class(
 
 ////////////////////////////////////////////////// Exported functions
 void db_make_simplest_equal_game(sumgame& sum, db_entry_partisan& entry,
-                                 database& db)
+                                 const db_gen_options_t& gen_opts, database& db)
 {
-    entry.ss_board_size = ss_board_size(sum, entry, db);
-    //entry.ss_node_count = ss_node_count_naive(sum, entry, db);
-    entry.ss_stone_count = ss_stone_count(sum, entry, db);
-    entry.ss_tree_height = ss_tree_height(sum, entry, db);
-    entry.ss_max_local_options = ss_max_local_options(sum, entry, db);
 
-    //db.report_size_score(entry.disk_game_type, entry.size_score);
+    assert(entry.size_score == 0);
+    entry.size_score_type = gen_opts.size_score_type;
+
+    switch (entry.size_score_type)
+    {
+        case DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS:
+        {
+            entry.size_score = ss_max_local_options(sum, entry, db);
+            break;
+        }
+        case DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE:
+        {
+            entry.size_score = ss_board_size(sum, entry, db);
+            break;
+        }
+        case DB_GEN_SIZE_SCORE_TYPE_TREE_HEIGHT:
+        {
+            entry.size_score = ss_tree_height(sum, entry, db);
+            break;
+        }
+        case DB_GEN_SIZE_SCORE_TYPE_STONE_COUNT:
+        {
+            entry.size_score = ss_stone_count(sum, entry, db);
+            break;
+        }
+        case DB_GEN_SIZE_SCORE_TYPE_EMPTY_COUNT:
+        {
+            entry.size_score = ss_empty_count(sum, entry, db);
+            break;
+        }
+    }
+
+    db.report_size_score(entry.disk_game_type, entry.size_score);
 
     // Find equivalence class
     const seg_map_idx_t seg_map_idx = make_seg_map_index(entry);

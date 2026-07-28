@@ -22,7 +22,6 @@
 #include "global_options.h"
 #include "hashing.h"
 #include "impartial_game.h"
-#include "size_score_enum.h"
 #include "sumgame.h"
 #include "thermograph_cache.h"
 #include "type_mapper.h"
@@ -50,29 +49,34 @@ std::string db_gen_stop_after_enum_to_string(db_gen_stop_after_enum stop_after);
 std::optional<db_gen_stop_after_enum> string_to_db_gen_stop_after_enum(
     const std::string& stop_after_str);
 
-enum db_gen_size_score_enum
+enum db_gen_size_score_type
 {
-    DB_GEN_SIZE_SCORE_MAX_LOCAL_OPTIONS = 0,
-    DB_GEN_SIZE_SCORE_BOARD_SIZE,
-    DB_GEN_SIZE_SCORE_TREE_HEIGHT,
-    DB_GEN_SIZE_SCORE_STONE_COUNT,
-    DB_GEN_SIZE_SCORE_EMPTY_COUNT,
+    DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS = 0,
+    DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE,
+    DB_GEN_SIZE_SCORE_TYPE_TREE_HEIGHT,
+    DB_GEN_SIZE_SCORE_TYPE_STONE_COUNT,
+    DB_GEN_SIZE_SCORE_TYPE_EMPTY_COUNT,
 };
 
-std::string db_gen_size_score_enum_to_string(db_gen_size_score_enum size_score);
-std::optional<db_gen_size_score_enum> string_to_db_gen_size_score_enum(
-    const std::string& size_score_str);
+inline constexpr db_gen_size_score_type DEFAULT_DB_GEN_SIZE_SCORE_TYPE =
+    DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS;
+
+std::string db_gen_size_score_type_to_string(db_gen_size_score_type size_score_type);
+std::optional<db_gen_size_score_type> string_to_db_gen_size_score_type(
+    const std::string& size_score_type_str);
 
 struct db_gen_options_t
 {
     db_gen_options_t()
-        : stop_after(DB_GEN_STOP_AFTER_SEG),
-          size_score(DB_GEN_SIZE_SCORE_MAX_LOCAL_OPTIONS)
+        : silent(false),
+          stop_after(DB_GEN_STOP_AFTER_SEG),
+          size_score_type(DEFAULT_DB_GEN_SIZE_SCORE_TYPE)
     {
     }
 
+    bool silent;
     db_gen_stop_after_enum stop_after;
-    db_gen_size_score_enum size_score;
+    db_gen_size_score_type size_score_type;
 };
 
 ////////////////////////////////////////////////// struct db_entry_partisan
@@ -82,10 +86,8 @@ struct db_entry_partisan
         : disk_game_type(0),
           outcome(outcome_class::U),
           complexity(0),
-          ss_board_size(0),
-          ss_node_count(0),
-          ss_stone_count(0),
-          ss_tree_height(0)
+          size_score_type(DEFAULT_DB_GEN_SIZE_SCORE_TYPE),
+          size_score(0)
     {
     }
 
@@ -101,9 +103,10 @@ struct db_entry_partisan
     void save_sum(const std::vector<game*>& games);
     std::vector<game*> load_sum() const;
 
-    uint64_t get_size_score() const;
-    relation compare_size_score(const db_entry_partisan& rhs) const;
-    bool size_score_allows_replacement_by(const db_entry_partisan& rhs) const;
+    bool is_trivially_zero() const
+    {
+        return subgame_links.empty();
+    }
 
 #ifdef DB_INCLUDE_STRINGS
     std::string sum_string;
@@ -114,11 +117,8 @@ struct db_entry_partisan
     std::shared_ptr<ThGraph> thermograph;
     std::shared_ptr<game_bounds> bounds_data;
     uint64_t complexity;
-    uint64_t ss_board_size;
-    uint64_t ss_node_count;
-    uint64_t ss_stone_count;
-    uint64_t ss_tree_height;
-    uint64_t ss_max_local_options;
+    db_gen_size_score_type size_score_type;
+    uint64_t size_score;
     std::shared_ptr<db_dom_moves_t> dominated_moves;
     std::vector<uint8_t> serialized_sum;
     db_link_t simplest_equal_entry;
@@ -131,7 +131,6 @@ inline bool db_entry_partisan::operator!=(const db_entry_partisan& other) const
 {
     return !(*this == other);
 }
-
 
 ////////////////////////////////////////////////// struct db_entry_impartial
 struct db_entry_impartial
@@ -238,12 +237,14 @@ public:
     void set_impartial(const game& g, const db_entry_impartial& entry);
 
     /*
-        Entry generation functions. When `silent` is true, info is not
-        printed to stdout.
+        Entry generation functions. When `silent` or `gen_opts.silent` is true,
+        info is not printed to stdout.
     */
     void generate_entries_partisan(i_db_game_generator& gen,
-                                   bool silent = false);
-    void generate_single_partisan_entry(sumgame& sum, bool silent);
+                                   const db_gen_options_t& gen_opts);
+
+    void generate_single_partisan_entry(sumgame& sum,
+                                        const db_gen_options_t& gen_opts);
 
     void generate_entries_impartial(i_db_game_generator& gen,
                                     bool silent = false);
@@ -253,8 +254,8 @@ public:
     /*
         Misc data lookup.
     */
-    //void report_size_score(game_type_t disk_type, uint64_t size_score);
-    //uint64_t get_max_size_score(game_type_t disk_type) const;
+    void report_size_score(game_type_t disk_type, uint64_t size_score);
+    uint64_t get_max_size_score(game_type_t disk_type) const;
 
     /*
         Misc utility functions.

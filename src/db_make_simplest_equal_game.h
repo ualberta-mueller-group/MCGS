@@ -6,6 +6,7 @@
 extern uint64_t db_n_links_refined;
 
 void db_make_simplest_equal_game(sumgame& sum, db_entry_partisan& entry,
+                                 const db_gen_options_t& gen_opts,
                                  database& db);
 
 void db_refine_simplest_equal_game(

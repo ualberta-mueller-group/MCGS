@@ -1,6 +1,5 @@
 #include "database.h"
 
-#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include <optional>
@@ -26,7 +25,6 @@
 #include "game.h"
 #include "impartial_sumgame.h"
 #include "impartial_game.h"
-#include "size_score_enum.h"
 #include "sumgame.h"
 #include "iobuffer.h"
 #include "db_game_generator.h"
@@ -81,113 +79,43 @@ optional<db_gen_stop_after_enum> string_to_db_gen_stop_after_enum(
     return {};
 }
 
-string db_gen_size_score_enum_to_string(db_gen_size_score_enum size_score)
+string db_gen_size_score_type_to_string(db_gen_size_score_type size_score_type)
 {
-    switch (size_score)
+    switch (size_score_type)
     {
-        case DB_GEN_SIZE_SCORE_MAX_LOCAL_OPTIONS:
+        case DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS:
             return "max_local_options";
-        case DB_GEN_SIZE_SCORE_BOARD_SIZE:
+        case DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE:
             return "board_size";
-        case DB_GEN_SIZE_SCORE_TREE_HEIGHT:
+        case DB_GEN_SIZE_SCORE_TYPE_TREE_HEIGHT:
             return "tree_height";
-        case DB_GEN_SIZE_SCORE_STONE_COUNT:
+        case DB_GEN_SIZE_SCORE_TYPE_STONE_COUNT:
             return "stone_count";
-        case DB_GEN_SIZE_SCORE_EMPTY_COUNT:
+        case DB_GEN_SIZE_SCORE_TYPE_EMPTY_COUNT:
             return "empty_count";
     }
 
     assert(false);
 }
 
-optional<db_gen_size_score_enum> string_to_db_gen_size_score_enum(
-    const string& size_score_str)
+optional<db_gen_size_score_type> string_to_db_gen_size_score_type(
+    const string& size_score_type_str)
 {
-    if (size_score_str == "max_local_options")
-        return DB_GEN_SIZE_SCORE_MAX_LOCAL_OPTIONS;
-    if (size_score_str == "board_size")
-        return DB_GEN_SIZE_SCORE_BOARD_SIZE;
-    if (size_score_str == "tree_height")
-        return DB_GEN_SIZE_SCORE_TREE_HEIGHT;
-    if (size_score_str == "stone_count")
-        return DB_GEN_SIZE_SCORE_STONE_COUNT;
-    if (size_score_str == "empty_count")
-        return DB_GEN_SIZE_SCORE_EMPTY_COUNT;
+    if (size_score_type_str == "max_local_options")
+        return DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS;
+    if (size_score_type_str == "board_size")
+        return DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE;
+    if (size_score_type_str == "tree_height")
+        return DB_GEN_SIZE_SCORE_TYPE_TREE_HEIGHT;
+    if (size_score_type_str == "stone_count")
+        return DB_GEN_SIZE_SCORE_TYPE_STONE_COUNT;
+    if (size_score_type_str == "empty_count")
+        return DB_GEN_SIZE_SCORE_TYPE_EMPTY_COUNT;
 
     return {};
 }
 
 ////////////////////////////////////////////////// db_entry_partisan methods
-
-// Defines order in seg_replacer 3+ subgame pass
-uint64_t db_entry_partisan::get_size_score() const
-{
-    switch (static_cast<size_score_enum>(global::size_score()))
-    {
-        case SIZE_SCORE_NONE:
-            assert(false);
-        case SIZE_SCORE_PAIR:
-            return ss_stone_count;
-        case SIZE_SCORE_BOARD_SIZE:
-            return ss_board_size;
-        case SIZE_SCORE_NODE_COUNT:
-            assert(false);
-            //return ss_node_count;
-        case SIZE_SCORE_STONE_COUNT:
-            return ss_stone_count;
-        case SIZE_SCORE_TREE_HEIGHT:
-            return ss_tree_height;
-        case SIZE_SCORE_MAX_LOCAL_OPTIONS:
-            return ss_max_local_options;
-    }
-
-    assert(false);
-}
-
-// Influences order inside equivalence class
-relation db_entry_partisan::compare_size_score(
-    const db_entry_partisan& rhs) const
-{
-    assert(global::size_score() != SIZE_SCORE_NONE);
-
-    if (global::size_score() != SIZE_SCORE_PAIR)
-    {
-        const uint64_t score1 = get_size_score();
-        const uint64_t score2 = rhs.get_size_score();
-
-        if (score1 != score2)
-            return score1 < score2 ? REL_LESS : REL_GREATER;
-
-        return REL_EQUAL;
-    }
-
-    if (ss_stone_count != rhs.ss_stone_count)
-        return ss_stone_count < rhs.ss_stone_count ? REL_LESS : REL_GREATER;
-
-    if (ss_board_size != rhs.ss_board_size)
-        return ss_board_size < rhs.ss_board_size ? REL_LESS : REL_GREATER;
-
-    return REL_EQUAL;
-}
-
-bool db_entry_partisan::size_score_allows_replacement_by(
-    const db_entry_partisan& rhs) const
-{
-    assert(global::size_score() != SIZE_SCORE_NONE);
-
-    if (global::size_score() != SIZE_SCORE_PAIR)
-        return get_size_score() > rhs.get_size_score();
-
-    if (ss_stone_count < rhs.ss_stone_count)
-        return true;
-
-    if (ss_board_size < rhs.ss_board_size)
-        return true;
-
-    return false;
-}
-
-
 bool db_entry_partisan::operator==(const db_entry_partisan& other) const
 {
     // Note confusing use of `shared_ptr::operator bool()` in this function
@@ -601,7 +529,8 @@ void database::set_impartial(const game& g, const db_entry_impartial& entry)
     THROW_ASSERT(inserted_entry_iterator.second); // not already found
 }
 
-void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
+void database::generate_entries_partisan(i_db_game_generator& gen,
+                                         const db_gen_options_t& gen_opts)
 {
     sumgame sum1(BLACK);
     sumgame sum2(BLACK);
@@ -630,20 +559,21 @@ void database::generate_entries_partisan(i_db_game_generator& gen, bool silent)
             assert(sum2.num_total_games() == 0);
             sum2.add(gi);
 
-            generate_single_partisan_entry(sum2, silent);
+            generate_single_partisan_entry(sum2, gen_opts);
 
             sum2.pop(gi);
         }
 
         if (n_active >= 2)
-            generate_single_partisan_entry(sum1, silent);
+            generate_single_partisan_entry(sum1, gen_opts);
 
         sum1.undo_split_and_normalize();
         sum1.pop(g.get());
     }
 }
 
-void database::generate_single_partisan_entry(sumgame& sum, bool silent)
+void database::generate_single_partisan_entry(sumgame& sum,
+                                              const db_gen_options_t& gen_opts)
 {
     db_entry_partisan* entry = get_or_allocate_partisan_ptr(sum);
     assert(entry != nullptr);
@@ -661,7 +591,8 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
     assert_restore_sumgame ars(sum);
     const bw restore_player = sum.to_play();
 
-    const bool print_game = !silent && ((_n_entries_generated % 128) == 0);
+    const bool print_game =
+        !gen_opts.silent && ((_n_entries_generated % 128) == 0);
 
     if (print_game)
     {
@@ -687,7 +618,7 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
 
     // Thermograph
     {
-        ThGraph* graph = db_make_thermograph(*this, sum, silent);
+        ThGraph* graph = db_make_thermograph(*this, sum, gen_opts);
         graph->Check();
 
         assert(!entry->thermograph); // Ensure we don't generate the entry twice
@@ -715,7 +646,7 @@ void database::generate_single_partisan_entry(sumgame& sum, bool silent)
     assert(entry->dominated_moves);
 
     // Size score, simplest equal entry
-    db_make_simplest_equal_game(sum, *entry, *this);
+    db_make_simplest_equal_game(sum, *entry, gen_opts, *this);
 
     sum.set_to_play(restore_player);
 
@@ -786,24 +717,24 @@ void database::refine_partisan_links()
     cout << ")" << endl;
 }
 
-//void database::report_size_score(game_type_t disk_type, uint64_t size_score)
-//{
-//    assert(disk_type > 0);
-//    if (disk_type >= _max_size_scores.size())
-//        _max_size_scores.resize(disk_type + 1, 0);
-//
-//    uint64_t& max_score = _max_size_scores[disk_type];
-//    max_score = max(max_score, size_score);
-//}
-//
-//uint64_t database::get_max_size_score(game_type_t disk_type) const
-//{
-//    assert(disk_type > 0);
-//    if (disk_type >= _max_size_scores.size())
-//        return 0;
-//
-//    return _max_size_scores[disk_type];
-//}
+void database::report_size_score(game_type_t disk_type, uint64_t size_score)
+{
+    assert(disk_type > 0);
+    if (disk_type >= _max_size_scores.size())
+        _max_size_scores.resize(disk_type + 1, 0);
+
+    uint64_t& max_score = _max_size_scores[disk_type];
+    max_score = max(max_score, size_score);
+}
+
+uint64_t database::get_max_size_score(game_type_t disk_type) const
+{
+    assert(disk_type > 0);
+    if (disk_type >= _max_size_scores.size())
+        return 0;
+
+    return _max_size_scores[disk_type];
+}
 
 void database::clear()
 {

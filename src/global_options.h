@@ -162,7 +162,6 @@ extern global_option<size_t> tt_imp_sumgame_idx_bits;
 extern global_option<bool> use_db;
 extern global_option<bool> use_seg;
 extern global_option<bool> clear_tt;
-extern global_option<int> size_score;
 extern global_option<bool> pitm;
 extern global_option<bool> local_cs4;
 extern global_option<bool> single_seg;

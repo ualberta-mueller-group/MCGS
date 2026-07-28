@@ -83,8 +83,8 @@ bool temp_db_game_t::compare(const temp_db_game_t& tg1, const temp_db_game_t& tg
     if (!tg2.is_valid())
         return true;
 
-    const uint64_t size_score1 = tg1.entry_ptr->second.get_size_score();
-    const uint64_t size_score2 = tg2.entry_ptr->second.get_size_score();
+    const uint64_t size_score1 = tg1.entry_ptr->second.size_score;
+    const uint64_t size_score2 = tg2.entry_ptr->second.size_score;
 
     return size_score1 < size_score2;
 
