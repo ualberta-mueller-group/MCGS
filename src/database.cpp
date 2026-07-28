@@ -2,8 +2,10 @@
 
 #include <cassert>
 #include <fstream>
+#include <functional>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <memory>
@@ -12,6 +14,8 @@
 #include "db_link_t.h"
 #include "db_make_simplest_equal_game.h"
 #include "db_make_subgame_links.h"
+#include "call_func_on_destruction.h"
+#include "dominated_moves.h"
 #include "global_options.h"
 #include "serializer.h"
 #include "serializer_lib_therm.h" // IWYU pragma: keep
@@ -67,6 +71,7 @@ string db_gen_stop_after_enum_to_string(db_gen_stop_after_enum stop_after)
 optional<db_gen_stop_after_enum> string_to_db_gen_stop_after_enum(
     const string& stop_after_str)
 {
+
     if (stop_after_str == "outcome_class")
         return DB_GEN_STOP_AFTER_OUTCOME_CLASS;
     if (stop_after_str == "bounds")
@@ -83,6 +88,8 @@ string db_gen_size_score_type_to_string(db_gen_size_score_type size_score_type)
 {
     switch (size_score_type)
     {
+        case DB_GEN_SIZE_SCORE_TYPE_NONE:
+            return "none";
         case DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS:
             return "max_local_options";
         case DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE:
@@ -101,6 +108,8 @@ string db_gen_size_score_type_to_string(db_gen_size_score_type size_score_type)
 optional<db_gen_size_score_type> string_to_db_gen_size_score_type(
     const string& size_score_type_str)
 {
+    if (size_score_type_str == "none")
+        return DB_GEN_SIZE_SCORE_TYPE_NONE;
     if (size_score_type_str == "max_local_options")
         return DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS;
     if (size_score_type_str == "board_size")
@@ -594,6 +603,14 @@ void database::generate_single_partisan_entry(sumgame& sum,
     const bool print_game =
         !gen_opts.silent && ((_n_entries_generated % 128) == 0);
 
+    call_func_on_destruction print_and_restore([&]() -> void
+    {
+        if (print_game)
+            cout << " DONE" << endl;
+
+        sum.set_to_play(restore_player);
+    });
+
     if (print_game)
     {
         cout << "Game # " << _n_entries_generated << ": ";
@@ -637,21 +654,27 @@ void database::generate_single_partisan_entry(sumgame& sum,
     entry->outcome = db_make_outcome_class(*this, *entry);
     assert(entry->outcome != outcome_class::U);
 
+    if (gen_opts.stop_after == DB_GEN_STOP_AFTER_OUTCOME_CLASS)
+        return;
+
     // Bounds
     entry->bounds_data = db_make_bounds(*this, sum, *entry);
     assert(entry->bounds_data && entry->bounds_data->both_valid());
+
+    if (gen_opts.stop_after == DB_GEN_STOP_AFTER_BOUNDS)
+        return;
 
     // Dominated moves, complexity
     db_make_dominated_moves(sum, *entry, *this);
     assert(entry->dominated_moves);
 
+    if (gen_opts.stop_after == DB_GEN_STOP_AFTER_DOMINATED_MOVES)
+        return;
+
     // Size score, simplest equal entry
     db_make_simplest_equal_game(sum, *entry, gen_opts, *this);
 
-    sum.set_to_play(restore_player);
-
-    if (print_game)
-        cout << " DONE" << endl;
+    assert(gen_opts.stop_after == DB_GEN_STOP_AFTER_SEG);
 }
 
 void database::generate_entries_impartial(i_db_game_generator& gen, bool silent)

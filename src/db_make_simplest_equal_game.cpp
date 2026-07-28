@@ -501,6 +501,11 @@ void db_make_simplest_equal_game(sumgame& sum, db_entry_partisan& entry,
 
     switch (entry.size_score_type)
     {
+        case DB_GEN_SIZE_SCORE_TYPE_NONE:
+        {
+            THROW_ASSERT(false, "Invalid size score type: " +
+                    db_gen_size_score_type_to_string(entry.size_score_type));
+        }
         case DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS:
         {
             entry.size_score = ss_max_local_options(sum, entry, db);
@@ -563,6 +568,9 @@ void db_make_simplest_equal_game(sumgame& sum, db_entry_partisan& entry,
 void db_refine_simplest_equal_game(
     pair<const hash_t, db_entry_partisan>& entry_pair, database& db)
 {
+    if (entry_pair.second.size_score_type == DB_GEN_SIZE_SCORE_TYPE_NONE)
+        return;
+
     const equivalence_class* eq_class =
         get_previous_equivalence_class(entry_pair.first, entry_pair.second);
 

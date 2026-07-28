@@ -129,19 +129,21 @@ create_generator_and_options(const db_game_gen_registration_t& reg,
 
     // Apply game-specific default DB gen options
     opts.size_score_type = reg.size_score_type;
+    THROW_ASSERT(opts.size_score_type != DB_GEN_SIZE_SCORE_TYPE_NONE);
 
     // Apply override DB gen options
     const string* size_score_type_str = config.get_string_nullable("size_score");
     if (size_score_type_str != nullptr)
     {
-        optional<db_gen_size_score_type> size_score_enum =
+        optional<db_gen_size_score_type> size_score_type =
             string_to_db_gen_size_score_type(*size_score_type_str);
 
-        THROW_ASSERT(size_score_enum.has_value(),
+        THROW_ASSERT(size_score_type.has_value() &&
+                         *size_score_type != DB_GEN_SIZE_SCORE_TYPE_NONE,
                      "Invalid value for size_score in DB config string: \"" +
                          *size_score_type_str + "\"");
 
-        opts.size_score_type = *size_score_enum;
+        opts.size_score_type = *size_score_type;
     }
 
     const string* stop_after_str = config.get_string_nullable("stop_after");

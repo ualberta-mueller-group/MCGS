@@ -51,7 +51,8 @@ std::optional<db_gen_stop_after_enum> string_to_db_gen_stop_after_enum(
 
 enum db_gen_size_score_type
 {
-    DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS = 0,
+    DB_GEN_SIZE_SCORE_TYPE_NONE = 0,
+    DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS,
     DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE,
     DB_GEN_SIZE_SCORE_TYPE_TREE_HEIGHT,
     DB_GEN_SIZE_SCORE_TYPE_STONE_COUNT,
@@ -86,7 +87,7 @@ struct db_entry_partisan
         : disk_game_type(0),
           outcome(outcome_class::U),
           complexity(0),
-          size_score_type(DEFAULT_DB_GEN_SIZE_SCORE_TYPE),
+          size_score_type(DB_GEN_SIZE_SCORE_TYPE_NONE),
           size_score(0)
     {
     }
