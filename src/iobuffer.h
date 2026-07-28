@@ -80,7 +80,7 @@ protected:
     void _read_from_buffer(void* dst, size_t n_bytes);
     virtual void _preload_bytes(size_t n_bytes) = 0;
 
-    uint8_t* _buffer;
+    const uint8_t* _buffer;
     size_t _buffer_idx;
     size_t _buffer_size;
 
@@ -148,6 +148,7 @@ protected:
 
 private:
     size_t _remaining_file_bytes;
+    uint8_t* _physical_buffer;
 
     inline static constexpr size_t _BUFFER_SIZE =
         size_t(1) * 1024 * 1024; // 1 MiB
@@ -195,6 +196,7 @@ class memory_ibuffer: public i_ibuffer
 {
 public:
     memory_ibuffer(const std::vector<uint8_t>& data_vec);
+    ~memory_ibuffer();
 
     void read_bytes_raw(void* dst, size_t n_bytes) override;
 
@@ -203,7 +205,6 @@ protected:
 
 private:
     const std::vector<uint8_t>& _data_vec;
-    size_t _idx;
 };
 
 ////////////////////////////////////////////////// class memory_obuffer
@@ -501,7 +502,8 @@ inline void i_obuffer::_write_to_buffer(const void* src, size_t n_bytes)
 inline file_ibuffer::file_ibuffer(const std::string& file_name)
 {
     // Allocate buffer
-    _buffer = new uint8_t[_BUFFER_SIZE];
+    _physical_buffer = new uint8_t[_BUFFER_SIZE];
+    _buffer = _physical_buffer;
     _buffer_idx = 0;
     _buffer_size = 0;
 
@@ -540,10 +542,11 @@ inline file_ibuffer::~file_ibuffer()
 
 inline void file_ibuffer::close()
 {
-    if (_buffer != nullptr)
+    if (_physical_buffer != nullptr)
     {
-        delete[] _buffer;
+        delete[] _physical_buffer;
 
+        _physical_buffer = nullptr;
         _buffer = nullptr;
         _buffer_idx = 0;
         _buffer_size = 0;
@@ -564,7 +567,7 @@ inline void file_ibuffer::_preload_bytes(size_t n_bytes)
     const size_t n_unread = _remaining_unread_bytes();
 
     if (n_unread > 0)
-        std::memmove(_buffer, _buffer + _buffer_idx, n_unread);
+        std::memmove(_physical_buffer, _physical_buffer + _buffer_idx, n_unread);
 
     // Read data from file
     const size_t remaining_capacity = _BUFFER_SIZE - n_unread;
@@ -572,7 +575,8 @@ inline void file_ibuffer::_preload_bytes(size_t n_bytes)
     const size_t bytes_wanted = std::min(remaining_capacity, _remaining_file_bytes);
 
     const size_t bytes_got =
-        fread((char*) _buffer + n_unread, 1, bytes_wanted, _file);
+        fread(reinterpret_cast<char*>(_physical_buffer + n_unread), 1,
+              bytes_wanted, _file);
 
     _remaining_file_bytes -= bytes_got;
 
@@ -645,8 +649,18 @@ inline void file_obuffer::_reserve_capacity(size_t n_bytes)
 
 ////////////////////////////////////////////////// memory_ibuffer methods
 inline memory_ibuffer::memory_ibuffer(const std::vector<uint8_t>& data_vec)
-    : _data_vec(data_vec), _idx(0)
+    : _data_vec(data_vec)
 {
+    _buffer = data_vec.data();
+    _buffer_idx = 0;
+    _buffer_size = data_vec.size();
+}
+
+inline memory_ibuffer::~memory_ibuffer()
+{
+    _buffer = nullptr;
+    _buffer_idx = 0;
+    _buffer_size = 0;
 }
 
 inline void memory_ibuffer::_preload_bytes(size_t n_bytes)

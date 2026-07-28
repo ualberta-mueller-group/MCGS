@@ -33,6 +33,15 @@
 
 using namespace std;
 
+namespace {
+
+bool test_misc_stuff()
+{
+    return false;
+}
+
+} // namespace
+
 ////////////////////////////////////////////////// main function
 static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional)
 {
@@ -48,6 +57,9 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
         return 0;
 
     mcgs_init_2(opts);
+
+    if (test_misc_stuff())
+        return 0;
 
     //test_serialization_stuff();
     //return 0;

@@ -27,7 +27,10 @@ void file_ibuffer::read_bytes_raw(void* dst, size_t n_bytes)
 
     if (read1_len != 0)
     {
-        std::memcpy(dst, (const char*) _buffer + _buffer_idx, read1_len);
+        std::memcpy(
+            dst, reinterpret_cast<const char*>(_physical_buffer + _buffer_idx),
+            read1_len);
+
         _buffer_idx += read1_len;
     }
 
@@ -50,7 +53,9 @@ void file_ibuffer::read_bytes_raw(void* dst, size_t n_bytes)
         _preload_bytes(read2_len);
         assert(_remaining_unread_bytes() >= read2_len && _buffer_idx == 0);
 
-        std::memcpy((char*) dst + read1_len, _buffer + _buffer_idx, read2_len);
+        std::memcpy((char*) dst + read1_len, _physical_buffer + _buffer_idx,
+                    read2_len);
+
         _buffer_idx += read2_len;
     }
 }
