@@ -647,3 +647,24 @@ void reinitialize_equivalence_classes(database& db)
     global_hash_to_seg_vec_idx[hash] = class_idx;
     eq_class->insert_link(zero_link, db);
 }
+
+void assert_equivalence_classes_have_zero_entry(database& db)
+{
+    sumgame sum(BLACK);
+
+    const db_link_t zero_link = db.get_partisan_link(sum);
+
+    const pair<const hash_t, db_entry_partisan>* entry_ptr =
+        zero_link.get_as_pointer();
+
+    assert(entry_ptr != nullptr);
+
+    const hash_t hash = entry_ptr->first;
+    const db_entry_partisan& entry = entry_ptr->second;
+
+    const equivalence_class* eq_class = get_previous_equivalence_class(hash, entry);
+    assert(eq_class != nullptr && !eq_class->is_empty());
+
+    const db_link_t best_link = eq_class->get_best_link_for_game(zero_link, db);
+    assert(best_link.equal_as_pointers(zero_link));
+}

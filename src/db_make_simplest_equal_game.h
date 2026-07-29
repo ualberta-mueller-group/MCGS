@@ -14,3 +14,4 @@ void db_refine_simplest_equal_game(
 
 void delete_equivalence_classes();
 void reinitialize_equivalence_classes(database& db);
+void assert_equivalence_classes_have_zero_entry(database& db);

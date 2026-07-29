@@ -218,6 +218,9 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
             {
                 reinitialize_equivalence_classes(db);
 
+
+                assert_equivalence_classes_have_zero_entry(db);
+
                 if (reg.is_impartial)
                     db.generate_entries_impartial(*gen);
                 else
