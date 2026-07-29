@@ -75,6 +75,16 @@ struct db_gen_options_t
     {
     }
 
+    db_gen_options_t(bool silent, db_gen_stop_after_enum stop_after,
+                     db_gen_size_score_type size_score_type
+
+                     )
+        : silent(silent),
+          stop_after(stop_after),
+          size_score_type(size_score_type)
+    {
+    }
+
     bool silent;
     db_gen_stop_after_enum stop_after;
     db_gen_size_score_type size_score_type;

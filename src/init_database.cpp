@@ -164,10 +164,25 @@ create_generator_and_options(const db_game_gen_registration_t& reg,
     return p;
 }
 
+void populate_with_zero_game(database& db)
+{
+
+    db_gen_options_t opts(true, DB_GEN_STOP_AFTER_SEG,
+                          DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS);
+
+    sumgame sum(BLACK);
+    db.generate_single_partisan_entry(sum, opts);
+    delete_equivalence_classes();
+}
+
 void fill_database(database& db, const string& db_config_string, bool dry_run)
 {
     vector<pair<string, string>> config_pairs =
         mcgs_init::split_db_config_string_by_game_name(db_config_string);
+
+    if (!dry_run)
+        populate_with_zero_game(db);
+
 
     // Validate config pairs
     {
@@ -201,6 +216,8 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
 
             if (!dry_run)
             {
+                reinitialize_equivalence_classes(db);
+
                 if (reg.is_impartial)
                     db.generate_entries_impartial(*gen);
                 else

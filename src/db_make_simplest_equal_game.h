@@ -13,3 +13,4 @@ void db_refine_simplest_equal_game(
     std::pair<const hash_t, db_entry_partisan>& entry_pair, database& db);
 
 void delete_equivalence_classes();
+void reinitialize_equivalence_classes(database& db);

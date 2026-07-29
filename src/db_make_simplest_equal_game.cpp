@@ -260,7 +260,14 @@ uint64_t ss_max_local_options(sumgame& sum, db_entry_partisan& entry, database& 
 
             sum.play_sum(sm, color);
 
-            db_entry_partisan* child_entry = db.get_partisan_ptr(sum);
+            //db_entry_partisan* child_entry = db.get_partisan_ptr(sum);
+            pair<const hash_t, db_entry_partisan>* child_entry_pair = db.get_partisan_ptr_pair(sum);
+
+            THROW_ASSERT(child_entry_pair != nullptr);
+            const db_entry_partisan* child_entry = &child_entry_pair->second;
+
+            THROW_ASSERT(child_entry != nullptr);
+
             THROW_ASSERT(child_entry != nullptr &&
                          child_entry->dominated_moves &&
                          size_scores_compatible(entry, *child_entry));
@@ -608,3 +615,35 @@ void delete_equivalence_classes()
     global_hash_to_seg_vec_idx.clear();
 }
 
+void reinitialize_equivalence_classes(database& db)
+{
+    assert(seg_map.empty() && global_hash_to_seg_vec_idx.empty());
+
+    // Get existing zero entry
+    sumgame sum(BLACK);
+    const db_link_t zero_link = db.get_partisan_link(sum);
+    const pair<const hash_t, db_entry_partisan>* pair_ptr =
+        zero_link.get_as_pointer();
+
+    THROW_ASSERT(
+        pair_ptr != nullptr &&                                          //
+        pair_ptr->second.is_trivially_zero() &&                         //
+        pair_ptr->second.size_score_type != DB_GEN_SIZE_SCORE_TYPE_NONE //
+    );
+
+    const hash_t hash = pair_ptr->first;
+    const db_entry_partisan& entry = pair_ptr->second;
+
+    // Make equivalence class
+    const seg_map_idx_t seg_map_idx = make_seg_map_index(entry);
+    vector<equivalence_class>& eq_classes = seg_map[seg_map_idx];
+
+    assert(eq_classes.empty());
+
+    equivalence_class* eq_class = &eq_classes.emplace_back();
+    const size_t class_idx = eq_classes.size() - 1;
+
+    // Save class index
+    global_hash_to_seg_vec_idx[hash] = class_idx;
+    eq_class->insert_link(zero_link, db);
+}
