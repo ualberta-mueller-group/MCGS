@@ -150,24 +150,20 @@ void init_impartial_sumgame_ttable(size_t idx_bits,
 {
     THROW_ASSERT(idx_bits > 0);
 
-    if (ttable_load_file_name.empty())
+    if (ttable_load_file_name.empty()) // Don't load from file
     {
         if (global::impartial_algorithm_mex.get())
         {
             assert(!tt_optional.has_value());
-            if (global::print_ttable_size())
-                cout << "Mex-TT ";
             tt_optional.emplace(idx_bits, 0);
         }
         else
         {
             assert(!lv_tt_optional.has_value());
-            if (global::print_ttable_size())
-                cout << "LV-TT ";
             lv_tt_optional.emplace(idx_bits, 0);
         }
     }
-    else
+    else // Load from file
     {
         cout << "Loading impartial ttable \"" << ttable_load_file_name
              << "\"..." << flush;
@@ -204,6 +200,26 @@ void init_impartial_sumgame_ttable(size_t idx_bits,
 
         global::tt_imp_sumgame_idx_bits.set(new_idx_bits);
         cout << " DONE (has " << new_idx_bits << " index bits)." << endl;
+    }
+
+    // Print size
+    if (global::print_ttable_size())
+    {
+        cout << (global::impartial_algorithm_mex() ? "Mex" : "LV");
+        cout << " ttable size estimate: ";
+
+        if (global::impartial_algorithm_mex())
+        {
+            assert(tt_optional.has_value());
+            tt_optional->print_size_estimate(cout);
+        }
+        else
+        {
+            assert(lv_tt_optional.has_value());
+            lv_tt_optional->print_size_estimate(cout);
+        }
+
+        cout << endl;
     }
 }
 

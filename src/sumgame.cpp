@@ -1149,6 +1149,14 @@ void sumgame::init_sumgame(size_t index_bits,
 
         cout << " DONE (has " << new_index_bits << " index bits)." << endl;
     }
+
+    if (global::print_ttable_size())
+    {
+        cout << "Partisan ttable size estimate: ";
+        assert(_tt);
+        _tt->print_size_estimate(cout);
+        cout << endl;
+    }
 }
 
 void sumgame::save_ttable(const std::string& ttable_save_file_name)

@@ -79,6 +79,9 @@ public:
     size_t n_index_bits() const;
     size_t n_entry_bools() const;
 
+    uint64_t get_size_estimate() const;
+    void print_size_estimate(std::ostream& os) const;
+
 private:
     friend serializer<ttable<Entry>>;
 
@@ -167,23 +170,6 @@ ttable<Entry>::ttable(size_t index_bits, size_t n_packed_bools)
                  "ttable has too many packed bools!");
 
     size_t bools_vec_size = 1 + (total_bools / size_in_bits<uint8_t>());
-
-
-    //// Estimate memory cost
-    // TODO: DEBUG PRINTING
-    if (global::print_ttable_size())
-    {
-        uint64_t byte_count = 0;
-        byte_count += entries_vec_size * sizeof(Entry);
-        byte_count += tags_vec_size * sizeof(uint8_t);
-        byte_count += bools_vec_size * sizeof(uint8_t);
-        double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
-        std::cout << "Estimated table size: " << byte_count_formatted;
-        std::cout << " MiB" << std::endl;
-
-        // std::cout << "Estimated table size: " << byte_count;
-        // std::cout << " B" << std::endl;
-    }
 
     //// Initialize arrays
     _entries_vec.resize(entries_vec_size, Entry());
@@ -324,6 +310,25 @@ inline size_t ttable<Entry>::n_entry_bools() const
 {
     assert(_bools_per_entry > 0);
     return _bools_per_entry - 1; // -1 due to valid bit
+}
+
+template <class Entry>
+inline uint64_t ttable<Entry>::get_size_estimate() const
+{
+    uint64_t byte_count = 0;
+    byte_count += _entries_vec.size() * sizeof(_entries_vec[0]);
+    byte_count += _tags_vec.size() * sizeof(_tags_vec[0]);
+    byte_count += _bools_vec.size() * sizeof(_bools_vec[0]);
+    return byte_count;
+}
+
+template <class Entry>
+inline void ttable<Entry>::print_size_estimate(std::ostream& os) const
+{
+    const uint64_t byte_count = get_size_estimate();
+    const double byte_count_formatted = ((double) byte_count) / (1024.0 * 1024.0);
+
+    os << byte_count_formatted << " MiB";
 }
 
 template <class Entry>
