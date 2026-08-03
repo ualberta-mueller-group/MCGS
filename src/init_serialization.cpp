@@ -23,18 +23,3 @@ void init_serialization()
 
 } // namespace mcgs_init
 
-    //// Serialization
-    //void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
-    //static dyn_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
-
-//void amazons::save_impl(i_obuffer& os, serializer_ctx* ctx) const
-//{
-//    save_board(os, board_const(), shape(), ctx);
-//}
-//
-//dyn_serializable* amazons::load_impl(i_ibuffer& is, serializer_ctx* ctx)
-//{
-//    pair<vector<int>, int_pair> board_pair = load_board(is, ctx);
-//    return new amazons(board_pair.first, board_pair.second);
-//}
-
