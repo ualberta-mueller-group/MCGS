@@ -54,7 +54,7 @@ There are 5 types of 'things' that appear in input:
                 {version 1.7}
             A special command which must be present at the very start of a file,
             but may be omited from input read from stdin or passed as a
-            command line argument to MCGS. The current version is 1.6.
+            command line argument to MCGS. The current version is 1.7.
 
             Partisan solve command:
                 {<Player> <Expected result>}
@@ -86,6 +86,17 @@ There are 5 types of 'things' that appear in input:
                 is a diff between the generated and expected moves. This may
                 read 'OK', or label unexpected but generated moves as 'Extra',
                 and expected but not generated moves as 'Missing'.
+
+            Thermograph command:
+                {thermograph <Scaffolds>}
+            <Scaffolds> may be omitted, or be the Left and Right scaffolds of
+                the thermograph. A scaffold begins with 'L: ' or 'R: ', and
+                then contains space-separated points (whose coordinates are
+                rational values), in order of increasing temperature. The 1st
+                coordinate is the 'value' (X axis) and the 2nd coordinate is
+                the 'temperature' (Y axis). The 1st point always has a
+                temperature of -1, and the last point (which may be the 1st
+                point) is where the mast begins.
 
             Examples follow:
 
@@ -136,6 +147,16 @@ There are 5 types of 'things' that appear in input:
                 {winning moves B 1-2, winning moves N 1-2}
             Note: the 1st command uses partisan search, and the 2nd command
             uses impartial search.
+
+            Find the thermograph of a sum, without specifying an expected
+            result:
+                {thermograph}
+
+            Find the thermograph of a sum, while specifying an expected result:
+                {thermograph L: (0, -1) R: (0, -1)}
+            OR:
+                {thermograph L: (1, -1) (-1/2, 1) R: (-1, -1) (-1, 1/2) (-1/2, 1)}
+
 
 
             As of MCGS v1.5, a command block may have 0 or more commands (with
