@@ -162,5 +162,5 @@ inline move_generator* impartial_game_wrapper::_create_move_generator_impl()
 inline move_generator* impartial_game_wrapper::_create_move_generator_impl(
     bw ignore_to_play) const
 {
-    return create_move_generator();
+    return _create_move_generator_impl();
 }
