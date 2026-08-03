@@ -1,7 +1,5 @@
 #include "exit_signal.h"
 
-#include <cstring>
-#include <iostream>
 #include <csignal>
 
 namespace {
@@ -9,12 +7,10 @@ bool initialized = false;
 
 extern "C" void signal_handler(int signal)
 {
-    if (!exit_signal::mcgs_should_stop())
-    {
-        std::cerr << "Received signal \"" << strsignal(signal)
-                  << "\". Attempting safe shutdown..." << std::endl;
-    }
-
+    /*
+        NOTE: We can't print a message here -- called functions must be
+        async-signal-safe!
+    */
     exit_signal::request_mcgs_exit();
 }
 } // namespace

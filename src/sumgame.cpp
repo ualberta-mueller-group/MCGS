@@ -19,6 +19,7 @@
 #include "exit_signal.h"
 #include "iobuffer.h"
 #include "seg_replacer.h"
+#include "sumgame_helpers.h"
 #include "throw_assert.h"
 #include "bounds.h"
 #include "db_move_generator.h"
@@ -1050,17 +1051,23 @@ void sumgame::undo_seg_pass()
     _change_record_stack.pop_back();
 }
 
-optional<sumgame_move> sumgame::get_winning_or_random_move(
+mcgs_player_move sumgame::get_winning_or_random_move(
     bw for_player) const
 {
-    assert(is_black_white(for_player));
     assert_restore_sumgame ars(*this);
+    assert(is_black_white(for_player));
 
-    const bw prev_player = to_play();
+    mcgs_player_move pm;
+
+    CHECK_EXIT_SIGNAL_1(
+        pm.status = MCGS_PLAYER_MOVE_STATUS_SHOULD_EXIT;
+        return pm;
+    );
 
     sumgame& sum = const_cast<sumgame&>(*this);
-    sum.set_to_play(for_player);
+    restore_sumgame_player restore_player(sum);
 
+    sum.set_to_play(for_player);
     unique_ptr<sumgame_move_generator> gen(
         sum.create_sum_move_generator(for_player));
 
@@ -1075,24 +1082,40 @@ optional<sumgame_move> sumgame::get_winning_or_random_move(
         assert(sum.to_play() == for_player);
         sum.play_sum(sm, for_player);
         assert(sum.to_play() == ::opponent(for_player));
-        bool opp_loss = !sum.solve();
+        const optional<solve_result> result = sum.solve_with_timeout(0);
         sum.undo_move();
+
+        CHECK_EXIT_SIGNAL_1({
+            assert(!pm.sm.has_value());
+            pm.status = MCGS_PLAYER_MOVE_STATUS_SHOULD_EXIT;
+            return pm;
+        });
+
+        THROW_ASSERT(result.has_value());
+
+        const bool opp_loss = !result->win;
 
         if (opp_loss)
         {
-            sum.set_to_play(prev_player);
-            return sm;
+            pm.sm = sm;
+            pm.status = MCGS_PLAYER_MOVE_STATUS_OK;
+            return pm;
         }
     }
 
-    sum.set_to_play(prev_player);
-
     if (moves.empty())
-        return {};
+    {
+        assert(!pm.sm.has_value());
+        pm.status = MCGS_PLAYER_MOVE_STATUS_NO_MOVES;
+        return pm;
+    }
 
     // TODO: random_generator should work for arbitrary types...
     const uint32_t choice = get_global_rng().get_u32(0, moves.size() - 1);
-    return moves[choice];
+
+    pm.sm = moves[choice];
+    pm.status = MCGS_PLAYER_MOVE_STATUS_OK;
+    return pm;
 }
 
 void sumgame::init_sumgame(size_t index_bits,

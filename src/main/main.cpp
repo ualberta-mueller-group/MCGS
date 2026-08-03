@@ -33,15 +33,6 @@
 
 using namespace std;
 
-namespace {
-
-bool test_misc_stuff()
-{
-    return false;
-}
-
-} // namespace
-
 ////////////////////////////////////////////////// main function
 static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional)
 {
@@ -57,21 +48,12 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
         return 0;
 
     mcgs_init_2(opts);
-
-    if (test_misc_stuff())
-        return 0;
+    exit_signal::enable_handlers();
 
     //test_serialization_stuff();
-    //return 0;
-
     //test_io_stuff();
-    //return 0;
-
     //test_seg_replacer_stuff();
-    //return 0;
-
     //test_component_cache_stuff();
-    //return 0;
 
     if (opts.db_dump_file_name.has_value())
     {
@@ -103,7 +85,6 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
         }
         else
         {
-            exit_signal::enable_handlers();
             run_autotests(opts.test_directory, opts.outfile_name,
                           opts.test_timeout, opts.test_filter_type);
         }
@@ -119,7 +100,6 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
                 break;
             case PRINT_MOVES_ACTION_WINNING:
             {
-                exit_signal::enable_handlers();
                 print_winning_moves_by_chunk_interruptible(cout, opts.parser);
                 return 0;
             }
@@ -158,7 +138,6 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
                                         opts.test_filter_type);
         else
         {
-            exit_signal::enable_handlers();
             run_tests_from_main(opts.parser, opts, opts.test_filter_type);
         }
     }

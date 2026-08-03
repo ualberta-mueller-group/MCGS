@@ -77,6 +77,24 @@ inline bool sumgame_move::operator!=(const sumgame_move& rhs) const
     return !(*this == rhs);
 }
 
+
+////////////////////////////////////////////////// struct mcgs_player_move
+enum mcgs_player_move_status_enum
+{
+    // A valid move was returned
+    MCGS_PLAYER_MOVE_STATUS_OK = 0,
+    // No valid move was returned, because the sum has no moves
+    MCGS_PLAYER_MOVE_STATUS_NO_MOVES,
+    // No valid move was returned, because the program should exit
+    MCGS_PLAYER_MOVE_STATUS_SHOULD_EXIT,
+};
+
+struct mcgs_player_move
+{
+    mcgs_player_move_status_enum status;
+    std::optional<sumgame_move> sm;
+};
+
 ////////////////////////////////////////////////// struct play_record
 struct play_record
 {
@@ -214,7 +232,7 @@ public:
     /*
         Utilities and static functions.
     */
-    std::optional<sumgame_move> get_winning_or_random_move(bw for_player) const;
+    mcgs_player_move get_winning_or_random_move(bw for_player) const;
 
     // Called by `mcgs_init_all()`. If the file name is not empty, the number
     // of index bits is ignored, and `global::tt_sumgame_idx_bits` is modified

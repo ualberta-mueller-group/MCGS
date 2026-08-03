@@ -488,7 +488,17 @@ void handle_node_input(ofstream& outfile, sumgame& sum, node_input_t& node_input
     assert(sum.num_total_games() == 0);
     make_sum_from_node_input(sum, node_input);
 
-    const bool result = sum.solve();
+    //const bool result = sum.solve();
+    const optional<solve_result> result_opt = sum.solve_with_timeout(0);
+
+    CHECK_EXIT_SIGNAL_1({
+        cleanup_sum(sum);
+        return;
+    });
+
+    THROW_ASSERT(result_opt.has_value());
+    const bool result = result_opt->win;
+
     const search_node_type_t new_node_type = get_new_node_type(node_input.node_type, result);
     const string& color = node_type_to_color(new_node_type);
 
@@ -527,6 +537,8 @@ void annotate_single(const filesystem::path& path, sumgame& sum)
     string line;
     while (getline(infile, line))
     {
+        CHECK_EXIT_SIGNAL_0();
+
         optional<node_input_t> node_input = parse_node_input(line);
         if (node_input.has_value())
         {
@@ -695,6 +707,8 @@ void end(bool success)
 
 void annotate_graphs(const string& input_dir)
 {
+    CHECK_EXIT_SIGNAL_0();
+
     THROW_ASSERT(!is_recording());
     graph_dir.reset(); // don't generate more graphs as we verify them
 
@@ -702,6 +716,8 @@ void annotate_graphs(const string& input_dir)
 
     for (file_iterator_alphabetical iter(input_dir); iter; ++iter)
     {
+        CHECK_EXIT_SIGNAL_0();
+
         const filesystem::directory_entry& entry = iter.gen_entry();
 
         if (!entry.is_regular_file())

@@ -23,3 +23,17 @@ void enable_handlers();
 bool handlers_are_enabled();
 
 } // namespace exit_signal
+
+#define CHECK_EXIT_SIGNAL_0()                                                  \
+    do                                                                         \
+    {                                                                          \
+        if (exit_signal::mcgs_should_stop())                                   \
+            return;                                                            \
+    } while (0)
+
+#define CHECK_EXIT_SIGNAL_1(expr)                                              \
+    if (exit_signal::mcgs_should_stop())                                       \
+    {                                                                          \
+        expr                                                                   \
+    }                                                                          \
+    static_assert(true)

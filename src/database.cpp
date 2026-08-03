@@ -346,11 +346,14 @@ void database::load(const string& filename)
 
 void database::dump_to_stream(ostream& os) const
 {
+    CHECK_EXIT_SIGNAL_0();
     os << _mapper << '\n';
 
     for (const pair<const hash_t, db_entry_partisan>& entry_pair :
          _terminal_partisan)
     {
+        CHECK_EXIT_SIGNAL_0();
+
         os << "Hash: `";
         os << entry_pair.first;
         os << "` ";
@@ -365,6 +368,8 @@ void database::dump_to_stream(ostream& os) const
         for (const pair<const hash_t, db_entry_impartial>& entry_pair :
              terminal_layer.second)
         {
+            CHECK_EXIT_SIGNAL_0();
+
             os << "Hash: `";
             os << entry_pair.first;
             os << "` ";
@@ -378,6 +383,8 @@ void database::dump_to_stream(ostream& os) const
 
 void database::dump_to_file(const string& out_filename) const
 {
+    CHECK_EXIT_SIGNAL_0();
+
     ofstream of(out_filename);
     THROW_ASSERT(of.is_open());
 

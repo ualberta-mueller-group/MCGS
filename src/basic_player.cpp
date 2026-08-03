@@ -18,6 +18,7 @@
 #include <memory>
 #include <exception>
 
+#include "exit_signal.h"
 #include "game.h"
 #include "string_to_int.h"
 #include "throw_assert.h"
@@ -212,6 +213,10 @@ ostream& set_color(ostream& os, color_enum color)
 template <class T>
 optional<int> get_choice(const vector<T>& options)
 {
+    CHECK_EXIT_SIGNAL_1({
+        return {};
+    });
+
     assert(!options.empty());
 
     // Print and count choices
@@ -252,6 +257,10 @@ optional<int> get_choice(const vector<T>& options)
         THROW_ASSERT(!cin.bad());
         getline(cin, user_input);
         THROW_ASSERT(!cin.bad());
+
+        CHECK_EXIT_SIGNAL_1({
+            return {};
+        });
 
         if (cin.eof())
             return {};
@@ -296,6 +305,10 @@ optional<int> get_choice(const vector<T>&& options)
 */
 optional<size_t> get_move_choice(const vector<pair<string, sumgame_move>>& moves)
 {
+    CHECK_EXIT_SIGNAL_1({
+        return {};
+    });
+
     assert(!moves.empty());
 
     const string prompt_string = "Choose move (or \"?\" to list moves): ";
@@ -315,6 +328,10 @@ optional<size_t> get_move_choice(const vector<pair<string, sumgame_move>>& moves
         THROW_ASSERT(!cin.bad());
         getline(cin, user_input);
         THROW_ASSERT(!cin.bad());
+
+        CHECK_EXIT_SIGNAL_1({
+            return {};
+        });
 
         if (cin.eof())
             return {};
@@ -488,7 +505,7 @@ bool has_moves_for(const sumgame& sum, bw player)
 }
 
 // Winning move or random move. Otherwise no moves exist
-optional<sumgame_move> get_mcgs_move(sumgame& sum, bw player)
+mcgs_player_move get_mcgs_move(sumgame& sum, bw player)
 {
     assert(is_black_white(player));
     assert_restore_sumgame ars(sum);
@@ -741,12 +758,24 @@ bool play_single(sumgame& sum)
 
     auto get_move = [&]() -> optional<sumgame_move>
     {
-        optional<sumgame_move> move_opt;
-
         if (current_player == mcgs_color)
         {
-            move_opt = get_mcgs_move(sum, mcgs_color);
-            assert(move_opt.has_value());
+            const mcgs_player_move mcgs_move = get_mcgs_move(sum, mcgs_color);
+            switch (mcgs_move.status)
+            {
+                case MCGS_PLAYER_MOVE_STATUS_OK:
+                {
+                    assert(mcgs_move.sm.has_value());
+                    return mcgs_move.sm;
+                }
+                case MCGS_PLAYER_MOVE_STATUS_NO_MOVES:
+                    // Should be handled elsewhere
+                    assert(false);
+                case MCGS_PLAYER_MOVE_STATUS_SHOULD_EXIT:
+                    return {};
+            }
+
+            assert(false);
         }
         else
         {
@@ -756,11 +785,9 @@ bool play_single(sumgame& sum)
             if (pm.status == PLAYER_MOVE_EOF)
                 return {};
 
-            move_opt = pm.sum_move;
-            assert(move_opt.has_value());
+            assert(pm.sum_move.has_value());
+            return pm.sum_move;
         }
-
-        return move_opt;
     };
 
 
@@ -828,7 +855,7 @@ bool play_single(sumgame& sum)
             UNDO_MACRO();
     }
 
-    if (cin.eof())
+    if (cin.eof() || exit_signal::mcgs_should_stop())
     {
         str_both << "Aborting..." << endl;
         flush_str_both();
@@ -862,6 +889,10 @@ void play_games(file_parser& parser, const string& log_name)
 
     while (parser.parse_chunk())
     {
+        CHECK_EXIT_SIGNAL_1({
+            break;
+        });
+
         assert(sum.num_total_games() == 0);
         vector<game*> games = parser.get_games();
 
@@ -877,6 +908,10 @@ void play_games(file_parser& parser, const string& log_name)
         {
             assert_restore_sumgame ars(sum);
             play = play_single(sum) && !cin.eof();
+
+            CHECK_EXIT_SIGNAL_1({
+                play = false;
+            });
         }
 
         sum.pop(games);

@@ -199,6 +199,7 @@ void print_subgame_moves_for_player(ostream& os, const game* g, bw player,
 void print_winning_moves_by_chunk_interruptible(ostream& os,
                                                 shared_ptr<file_parser> parser)
 {
+    CHECK_EXIT_SIGNAL_0();
     assert(parser.get() != nullptr);
 
     sumgame sum(BLACK);
@@ -207,6 +208,8 @@ void print_winning_moves_by_chunk_interruptible(ostream& os,
 
     while (parser->parse_chunk())
     {
+        CHECK_EXIT_SIGNAL_0();
+
         if (!first_case)
             os << endl;
         first_case = false;
@@ -242,12 +245,15 @@ void print_subgame_moves_by_chunk(ostream& os,
                                   std::shared_ptr<file_parser> parser,
                                   bool as_options)
 {
+    CHECK_EXIT_SIGNAL_0();
     assert(parser.get() != nullptr);
 
     bool first_case = true;
 
     while (parser->parse_chunk())
     {
+        CHECK_EXIT_SIGNAL_0();
+
         if (!first_case)
             os << endl;
         first_case = false;
@@ -260,6 +266,8 @@ void print_subgame_moves_by_chunk(ostream& os,
         const size_t n_games = games.size();
         for (size_t subgame_idx = 0; subgame_idx < n_games; subgame_idx++)
         {
+            CHECK_EXIT_SIGNAL_1(break;);
+
             os << endl;
 
             const game* g = games[subgame_idx];
@@ -276,6 +284,7 @@ void print_subgame_moves_by_chunk(ostream& os,
 
 void print_sum_moves_by_chunk(ostream& os, std::shared_ptr<file_parser> parser)
 {
+    CHECK_EXIT_SIGNAL_0();
     assert(parser.get() != nullptr);
 
     bool first_case = true;
@@ -284,6 +293,8 @@ void print_sum_moves_by_chunk(ostream& os, std::shared_ptr<file_parser> parser)
 
     while (parser->parse_chunk())
     {
+        CHECK_EXIT_SIGNAL_0();
+
         if (!first_case)
             os << endl;
         first_case = false;
