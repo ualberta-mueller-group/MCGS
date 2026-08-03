@@ -28,7 +28,6 @@ public:
     void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
     static dyn_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
 
-    move_generator* create_move_generator(bw to_play) const override;
 
     void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
@@ -36,9 +35,10 @@ public:
     game* clone() const override;
 
 
-    static constexpr int MAX_HERD = 50;
+    inline static constexpr int MAX_HERD = 50;
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     split_result _split_impl() const override;
 
 private:

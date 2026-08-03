@@ -27,6 +27,7 @@ public:
     static dyn_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     split_result _split_impl() const override;
 
     void _normalize_impl() override;
@@ -37,7 +38,6 @@ private:
     std::vector<std::vector<int>> _normalize_boards;
 
 public:
-    move_generator* create_move_generator(bw to_play) const override;
 
     void print(std::ostream& str) const override
     {

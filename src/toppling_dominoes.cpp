@@ -147,10 +147,6 @@ dyn_serializable* toppling_dominoes::load_impl(i_ibuffer& is,
     return new toppling_dominoes(board);
 }
 
-move_generator* toppling_dominoes::create_move_generator(bw to_play) const
-{
-    return new toppling_dominoes_move_generator(*this, to_play);
-}
 
 void toppling_dominoes::print(ostream& str) const
 {
@@ -212,6 +208,11 @@ const vector<int> toppling_dominoes::current_dominoes() const
         dominoes.push_back(get_domino_at(i));
 
     return dominoes;
+}
+
+move_generator* toppling_dominoes::_create_move_generator_impl(bw to_play) const
+{
+    return new toppling_dominoes_move_generator(*this, to_play);
 }
 
 pair<int, int> toppling_dominoes::_move_to_bounds(::move m, bw to_play) const

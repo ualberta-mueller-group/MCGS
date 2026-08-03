@@ -13,7 +13,6 @@
 #include "cgt_move.h"
 #include "print_move_helpers.h"
 #include "strip.h"
-#include "pitm_move_generator.h"
 #include "global_options.h"
 #include "iobuffer.h"
 #include "throw_assert.h"
@@ -330,6 +329,11 @@ dyn_serializable* elephants::load_impl(i_ibuffer& is, serializer_ctx* ctx)
     return new elephants(load_board(is, ctx));
 }
 
+move_generator* elephants::_create_move_generator_impl(bw to_play) const
+{
+    return new elephants_move_generator(*this, to_play);
+}
+
 // Two types of splits: O\.*X, and XO
 split_result elephants::_split_impl() const
 {
@@ -439,15 +443,6 @@ void elephants::_undo_normalize_impl()
     _normalize_boards.pop_back();
 }
 
-move_generator* elephants::create_move_generator(bw to_play) const
-{
-    move_generator* mg = new elephants_move_generator(*this, to_play);
-
-    if (global::pitm())
-        return new pitm_move_generator(mg, to_play);
-
-    return mg;
-}
 
 void elephants::print_move(std::ostream& str, const move& m, ebw to_play) const
 {

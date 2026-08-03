@@ -143,11 +143,6 @@ void gen_king_dirt::undo_move()
     _params_stack.pop_back();
 }
 
-move_generator* gen_king_dirt::create_move_generator(bw to_play) const
-{
-    return new gen_king_dirt_move_generator(*this, to_play);
-}
-
 void gen_king_dirt::print(ostream& str) const
 {
     str << "gen_king_dirt<";
@@ -757,6 +752,11 @@ split_result gen_king_dirt::_split_without_unplaced_stones() const
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
+
+move_generator* gen_king_dirt::_create_move_generator_impl(bw to_play) const
+{
+    return new gen_king_dirt_move_generator(*this, to_play);
+}
 
 void gen_king_dirt::_init_hash(local_hash& hash) const
 {

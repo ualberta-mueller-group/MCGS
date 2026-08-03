@@ -10,6 +10,25 @@
 #include "cgt_move.h"
 #include "integral_conversion.h"
 
+//---------------------------------------------------------------------------
+namespace {
+class nimber_move_generator : public move_generator
+{
+public:
+    nimber_move_generator(const nimber& game);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    const nimber& _game;
+    int _current_number;
+};
+
+} // namespace
+
+//---------------------------------------------------------------------------
+
 void nimber::play(const move& m, bw to_play)
 {
     impartial_game::play(m, to_play);
@@ -35,12 +54,27 @@ void nimber::print(std::ostream& str) const
     str << "nimber:*" << _value;
 }
 
+void nimber::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_empty_black_white(to_play));
+
+    const int number = integral_cast_checked<int>(cgt_move::move1_get_part_1(m));
+    assert(number > 0 && number <= _value);
+
+    str << '*' << (_value - number);
+}
+
 int nimber::nim_sum(const std::vector<int>& values)
 {
     int sum = 0;
     for (int heap : values)
         sum ^= heap;
     return sum;
+}
+
+move_generator* nimber::_create_move_generator_impl() const
+{
+    return new nimber_move_generator(*this);
 }
 
 void nimber::_init_hash(local_hash& hash) const
@@ -63,19 +97,8 @@ relation nimber::_order_impl(const game* rhs) const
 }
 
 //---------------------------------------------------------------------------
-namespace {
-class nimber_move_generator : public move_generator
-{
-public:
-    nimber_move_generator(const nimber& game);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
 
-private:
-    const nimber& _game;
-    int _current_number;
-};
+namespace {
 
 nimber_move_generator::nimber_move_generator(const nimber& game)
     : move_generator(BLACK), _game(game), _current_number(1)
@@ -99,21 +122,6 @@ move nimber_move_generator::gen_move() const
 }
 } // namespace
 
-//---------------------------------------------------------------------------
-move_generator* nimber::create_move_generator() const
-{
-    return new nimber_move_generator(*this);
-}
-
-void nimber::print_move(std::ostream& str, const move& m, ebw to_play) const
-{
-    assert(is_empty_black_white(to_play));
-
-    const int number = integral_cast_checked<int>(cgt_move::move1_get_part_1(m));
-    assert(number > 0 && number <= _value);
-
-    str << '*' << (_value - number);
-}
 
 
 //---------------------------------------------------------------------------

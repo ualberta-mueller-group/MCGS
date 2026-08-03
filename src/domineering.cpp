@@ -10,7 +10,6 @@
 #include <cstddef>
 
 #include "cgt_basics.h"
-#include "pitm_move_generator.h"
 #include "global_options.h"
 #include "print_move_helpers.h"
 #include "cgt_move.h"
@@ -204,15 +203,6 @@ dyn_serializable* domineering::load_impl(i_ibuffer& is, serializer_ctx* ctx)
     return new domineering(board_pair.first, board_pair.second);
 }
 
-move_generator* domineering::create_move_generator(bw to_play) const
-{
-    move_generator* mg = new domineering_move_generator(*this, to_play);
-
-    if (global::pitm())
-        return new pitm_move_generator(mg, to_play);
-
-    return mg;
-}
 
 game* domineering::inverse() const
 {
@@ -281,10 +271,13 @@ void domineering::print_move(std::ostream& str, const ::move& m, ebw to_play) co
     print_move4_as_coords(str, m, shape());
 }
 
+move_generator* domineering::_create_move_generator_impl(bw to_play) const
+{
+    return new domineering_move_generator(*this, to_play);
+}
+
 ////////////////////////////////////////////////// split
-
 // Find all 4-connected components with at least 2 spaces
-
 split_result domineering::_split_impl() const
 {
     if (size() == 0)

@@ -28,7 +28,6 @@ public:
     void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
     static dyn_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
 
-    move_generator* create_move_generator(bw to_play) const override;
 
     void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
@@ -44,6 +43,8 @@ public:
 
 protected:
     friend class toppling_dominoes_move_generator;
+
+    move_generator* _create_move_generator_impl(bw to_play) const override;
 
     void _flip();
     int _idx_virtual_to_real(int idx_virtual) const;

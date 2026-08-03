@@ -216,10 +216,6 @@ dyn_serializable* fission::load_impl(i_ibuffer& is, serializer_ctx* ctx)
     return new fission(board_pair.first, board_pair.second);
 }
 
-move_generator* fission::create_move_generator(bw to_play) const
-{
-    return new fission_move_generator(*this, to_play);
-}
 
 void fission::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
@@ -272,6 +268,11 @@ game* fission::clone() const
     coord1 = grid_hash::get_inverse_transformed_coords(grid_shape, coord1, ori);
 
     return cgt_move::move2_create_from_coords(coord1);
+}
+
+move_generator* fission::_create_move_generator_impl(bw to_play) const
+{
+    return new fission_move_generator(*this, to_play);
 }
 
 void fission::_init_hash(local_hash& hash) const

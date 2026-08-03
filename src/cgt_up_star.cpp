@@ -8,6 +8,26 @@
 #include <cassert>
 #include <ostream>
 
+////////////////////////////////////////////////// Move generator
+namespace {
+class up_star_move_generator : public move_generator
+{
+public:
+    up_star_move_generator(const up_star& game, bw to_play);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    int _compute_num_moves(const up_star& game, bw to_play) const;
+
+    const up_star& _game;
+    const int _num_moves;
+    int _num_generated;
+};
+
+} // namespace
+
 //////////////////////////////////////// helper functions
 namespace {
 inline bool is_same_player(int ups, bw to_play)
@@ -87,6 +107,27 @@ void up_star::print(std::ostream& str) const
         str << '*';
 }
 
+void up_star::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_black_white(to_play));
+
+    const int delta_v = cgt_move::move2_get_part_1(m);
+    const bool flip_star = static_cast<bool>(cgt_move::move2_get_part_2(m));
+
+    const int new_ups = _value + delta_v;
+    const bool new_star = flip_star ? !_star : _star;
+
+    str << new_ups;
+    if (new_star)
+        str << '*';
+}
+
+move_generator* up_star::_create_move_generator_impl(bw to_play) const
+{
+    return new up_star_move_generator(*this, to_play);
+}
+
+
 void up_star::_init_hash(local_hash& hash) const
 {
     hash.toggle_value(0, _value);
@@ -116,21 +157,6 @@ relation up_star::_order_impl(const game* rhs) const
 //---------------------------------------------------------------------------
 
 namespace {
-class up_star_move_generator : public move_generator
-{
-public:
-    up_star_move_generator(const up_star& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    int _compute_num_moves(const up_star& game, bw to_play) const;
-
-    const up_star& _game;
-    const int _num_moves;
-    int _num_generated;
-};
 
 up_star_move_generator::up_star_move_generator(const up_star& game, bw to_play)
     : move_generator(to_play),
@@ -194,24 +220,6 @@ move up_star_move_generator::gen_move() const
 } // namespace
 
 //---------------------------------------------------------------------------
-move_generator* up_star::create_move_generator(bw to_play) const
-{
-    return new up_star_move_generator(*this, to_play);
-}
 
-void up_star::print_move(std::ostream& str, const move& m, ebw to_play) const
-{
-    assert(is_black_white(to_play));
-
-    const int delta_v = cgt_move::move2_get_part_1(m);
-    const bool flip_star = static_cast<bool>(cgt_move::move2_get_part_2(m));
-
-    const int new_ups = _value + delta_v;
-    const bool new_star = flip_star ? !_star : _star;
-
-    str << new_ups;
-    if (new_star)
-        str << '*';
-}
 
 //---------------------------------------------------------------------------

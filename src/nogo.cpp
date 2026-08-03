@@ -18,6 +18,29 @@
 #include "game.h"
 #include "grid.h"
 
+////////////////////////////////////////////////// Move generator
+namespace {
+class nogo_move_generator : public move_generator
+{
+public:
+    nogo_move_generator(const nogo& game, bw to_play);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    void _find_next_move();
+    bool _is_legal();
+
+    const nogo& _game;
+    grid_location _current; // current stone location to test
+};
+
+} // namespace
+
+
+////////////////////////////////////////////////// Helpers
+
 namespace {
 // Remove extra rows and columns of BORDER
 nogo_board shrink_board(const nogo_board& board)
@@ -268,6 +291,11 @@ bool nogo::is_legal() const
             return false;
     }
     return true;
+}
+
+move_generator* nogo::_create_move_generator_impl(bw to_play) const
+{
+    return new nogo_move_generator(*this, to_play);
 }
 
 void nogo::_init_hash(local_hash& hash) const
@@ -661,22 +689,8 @@ std::vector<nogo_board> split_by_nogo::split(const nogo_board& board)
 
 //---------------------------------------------------------------------------
 
+
 namespace {
-class nogo_move_generator : public move_generator
-{
-public:
-    nogo_move_generator(const nogo& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    void _find_next_move();
-    bool _is_legal();
-
-    const nogo& _game;
-    grid_location _current; // current stone location to test
-};
 
 inline nogo_move_generator::nogo_move_generator(const nogo& game, bw to_play)
     : move_generator(to_play), _game(game), _current(game.shape(), int_pair(0, 0))
@@ -721,10 +735,6 @@ move nogo_move_generator::gen_move() const
 
 //---------------------------------------------------------------------------
 
-move_generator* nogo::create_move_generator(bw to_play) const
-{
-    return new nogo_move_generator(*this, to_play);
-}
 
 //---------------------------------------------------------------------------
 

@@ -208,10 +208,6 @@ dyn_serializable* sheep::load_impl(i_ibuffer& is, serializer_ctx* ctx)
     return new sheep(board_pair.first, board_pair.second);
 }
 
-move_generator* sheep::create_move_generator(bw to_play) const
-{
-    return new sheep_move_generator(*this, to_play);
-}
 
 void sheep::print(ostream& str) const
 {
@@ -262,6 +258,11 @@ game* sheep::inverse() const
 game* sheep::clone() const
 {
     return new sheep(board_const(), shape());
+}
+
+move_generator* sheep::_create_move_generator_impl(bw to_play) const
+{
+    return new sheep_move_generator(*this, to_play);
 }
 
 ////////////////////////////////////////////////// split

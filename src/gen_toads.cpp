@@ -175,10 +175,6 @@ void gen_toads::undo_move()
     replace(end_idx, EMPTY);
 }
 
-move_generator* gen_toads::create_move_generator(bw to_play) const
-{
-    return new gen_toads_move_generator(*this, to_play);
-}
 
 void gen_toads::print(ostream& str) const
 {
@@ -226,6 +222,11 @@ const std::vector<int> gen_toads::get_params() const
 //{
 //    assert(false);
 //}
+
+move_generator* gen_toads::_create_move_generator_impl(bw to_play) const
+{
+    return new gen_toads_move_generator(*this, to_play);
+}
 
 void gen_toads::_init_hash(local_hash& hash) const
 {

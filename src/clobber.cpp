@@ -12,7 +12,6 @@
 #include <vector>
 #include "grid_hash.h"
 #include "global_options.h"
-#include "pitm_move_generator.h"
 #include "grid_location.h"
 #include "print_move_helpers.h"
 #include "throw_assert.h"
@@ -246,6 +245,11 @@ bool trim_game(vector<int>& board_dst, int_pair& shape_dst,
 
 } // namespace
 
+move_generator* clobber::_create_move_generator_impl(bw to_play) const
+{
+    return new clobber_move_generator(*this, to_play);
+}
+
 split_result clobber::_split_impl() const
 {
     if (size() == 0)
@@ -395,15 +399,6 @@ void clobber::_init_hash(local_hash& hash) const
     hash.__set_value(_gh.get_value());
 }
 
-move_generator* clobber::create_move_generator(bw to_play) const
-{
-    move_generator* mg = new clobber_move_generator(*this, to_play);
-
-    if (global::pitm())
-        return new pitm_move_generator(mg, to_play);
-
-    return mg;
-}
 
 void clobber::print(ostream& str) const
 {

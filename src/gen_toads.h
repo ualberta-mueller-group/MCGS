@@ -39,7 +39,6 @@ public:
 
     void play(const move& m, bw to_play) override;
     void undo_move() override;
-    move_generator* create_move_generator(bw to_play) const override;
     void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
     game* inverse() const override;
@@ -54,6 +53,8 @@ public:
     bool get_friendly_jump() const;
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
+
     /*
        TODO how to do this?
     */

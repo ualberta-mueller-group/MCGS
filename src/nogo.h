@@ -40,9 +40,9 @@ public:
     std::vector<int> immortal() const { return _immortal; }
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     void _init_hash(local_hash& hash) const override;
     split_result _split_impl() const override;
-
 
 public:
     game* inverse() const override;
@@ -51,7 +51,6 @@ public:
     move encode_grid_move_to_db(const move& m) const override;
     move decode_grid_move_from_db(const move& m) const override;
 
-    move_generator* create_move_generator(bw to_play) const override;
 
     void print(std::ostream& str) const override
     {

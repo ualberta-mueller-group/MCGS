@@ -72,13 +72,19 @@ public:
 
     // Impartial game interface
     virtual void play(const move& m);
-    virtual move_generator* create_move_generator() const = 0;
+
+    move_generator* create_move_generator(
+        move_generator_type_enum move_generator_type =
+            MOVE_GENERATOR_TYPE_AUTO) const;
 
     // These functions needed by game class interface
     // They also make it possible to include an
     // impartial game in any (possibly partisan) sum
     void play(const move& m, bw to_play) override;
-    move_generator* create_move_generator(bw ignore_to_play) const override;
+protected:
+    move_generator* _create_move_generator_impl(bw ignore_to_play) const override;
+    virtual move_generator* _create_move_generator_impl() const = 0;
+public:
 
     bool is_impartial() const override final;
 
@@ -140,8 +146,18 @@ inline void impartial_game::play(const move& m, bw to_play)
     impartial_game::play(m);
 }
 
+/*
+    Call `game.h`'s implementation to avoid duplicating code
+*/
 inline move_generator* impartial_game::create_move_generator(
+    move_generator_type_enum move_generator_type) const
+{
+    return game::create_move_generator(BLACK, move_generator_type);
+}
+
+inline move_generator* impartial_game::_create_move_generator_impl(
     bw ignore_to_play) const
 {
-    return create_move_generator();
+    return _create_move_generator_impl();
 }
+

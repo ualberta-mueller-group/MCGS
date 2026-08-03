@@ -30,8 +30,6 @@ public:
     game* inverse() const override;
     game* clone() const override;
 
-    move_generator* create_move_generator(bw to_play) const override;
-
     void print(std::ostream& str) const override
     {
         str << "clobber_1xn:" << board_as_string();
@@ -44,6 +42,7 @@ public:
     static std::string xxo(int n);
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     split_result _split_impl() const override;
 
     void _normalize_impl() override;
