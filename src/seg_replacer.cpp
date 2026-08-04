@@ -601,20 +601,12 @@ hash_t seg_replacer::get_selection_hash()
         temp_db_game_t& sel_tg = (*_current_container)[sel_idx];
         assert(sel_tg.is_valid());
         db_entry_partisan& entry = sel_tg.entry_ptr->second;
-        assert(entry.subgame_hashes.size() == 1);
-        _selection_hashes[i] = entry.subgame_hashes.back();
+        const hash_t hash = sel_tg.entry_ptr->first;
+        assert(entry.subgame_links.size() == 1);
+        _selection_hashes[i] = hash;
     }
 
-    std::sort(_selection_hashes.begin(), _selection_hashes.end(),
-              global_hash::hash_compare_fn);
-
-    _gh.reset();
-    _gh.set_to_play(EMPTY);
-
-    for (size_t i = 0; i < selection_size; i++)
-        _gh.add_hash(i, _selection_hashes[i]);
-
-    const hash_t computed_hash = _gh.get_value();
+    const hash_t computed_hash = _gh.get_db_hash_value(_selection_hashes);
 
     //assert(computed_hash == expected_hash);
     return computed_hash;

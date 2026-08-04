@@ -206,6 +206,8 @@ public:
                                  bool invalidate_game_hashes = false);
 
     hash_t get_db_hash_value(const std::vector<game*>& games);
+    // NOTE: Re-orders hashes
+    hash_t get_db_hash_value(std::vector<hash_t>& hashes);
 
     static bool hash_compare_fn(hash_t hash1, hash_t hash2);
 

@@ -278,41 +278,43 @@ hash_t global_hash::get_global_hash_value(const game* g, ebw to_play,
 
 hash_t global_hash::get_db_hash_value(const std::vector<game*>& games)
 {
-    std::vector<game*> active_games;
+    vector<hash_t> active_hashes;
 
     const size_t n_games = games.size();
     for (size_t i = 0; i < n_games; i++)
     {
-        game* g = games[i];
+        const game* g = games[i];
 
         if (!g->is_active())
             continue;
 
-        active_games.push_back(g);
+        active_hashes.push_back(g->get_local_hash());
     }
 
-    const size_t n_active_games = active_games.size();
+    return get_db_hash_value(active_hashes);
+}
 
-    if (n_active_games == 1)
-        return active_games.back()->get_local_hash();
+hash_t global_hash::get_db_hash_value(std::vector<hash_t>& hashes)
+{
+    const size_t n_hashes = hashes.size();
 
-    auto compare_fn = [](const game* g1, const game* g2) -> bool
+    if (n_hashes == 1)
+        return hashes.back();
+
+    auto compare_fn = [](const hash_t hash1, const hash_t hash2) -> bool
     {
-        const hash_t hash1 = g1->get_local_hash();
-        const hash_t hash2 = g2->get_local_hash();
         return hash1 < hash2;
     };
 
-    std::sort(active_games.begin(), active_games.end(), compare_fn);
+    std::sort(hashes.begin(), hashes.end(), compare_fn);
 
     reset();
     set_to_play(EMPTY);
 
-    for (size_t i = 0; i < n_active_games; i++)
+    for (size_t i = 0; i < n_hashes; i++)
     {
-        game* g = active_games[i];
-        assert(g->is_active());
-        add_subgame(i, g);
+        const hash_t h = hashes[i];
+        add_hash(i, h);
     }
 
     return get_value();

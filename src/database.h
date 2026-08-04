@@ -134,7 +134,6 @@ struct db_entry_partisan
     std::vector<uint8_t> serialized_sum;
     db_link_t simplest_equal_entry;
     std::vector<db_link_t> subgame_links;
-    std::vector<hash_t> subgame_hashes; // TODO delete me at some point!
 };
 
 //////////////////////////////////////// db_entry_partisan methods

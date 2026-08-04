@@ -55,7 +55,6 @@ struct serializer<db_entry_partisan>
         serializer_save(os, entry.serialized_sum, ctx);
         serializer_save(os, entry.simplest_equal_entry, ctx);
         serializer_save(os, entry.subgame_links, ctx);
-        serializer_save(os, entry.subgame_hashes, ctx);
     }
 
     inline static db_entry_partisan load(i_ibuffer& is, serializer_ctx* ctx)
@@ -76,7 +75,6 @@ struct serializer<db_entry_partisan>
         serializer_load(is, entry.serialized_sum, ctx);
         serializer_load(is, entry.simplest_equal_entry, ctx);
         serializer_load(is, entry.subgame_links, ctx);
-        serializer_load(is, entry.subgame_hashes, ctx);
 
         return entry;
     }
