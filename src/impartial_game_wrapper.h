@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <ostream>
+#include <cassert>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
 #include "impartial_game.h"
-#include <ostream>
-#include <cassert>
+#include "global_options.h"
 
 //---------------------------------------------------------------------------
 class impartial_game_wrapper : public impartial_game

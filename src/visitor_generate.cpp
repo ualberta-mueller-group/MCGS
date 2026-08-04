@@ -23,6 +23,7 @@
 #include "test_case_enums.h"
 #include "thermograph_helpers.h"
 #include "utilities.h"
+#include "ThGraph.h"
 
 using namespace std;
 

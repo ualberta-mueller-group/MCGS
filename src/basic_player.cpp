@@ -8,15 +8,16 @@
 #include <filesystem>
 #include <ios>
 #include <string>
-#include <map>
 #include <iostream>
 #include <cassert>
 #include <sstream>
 #include <fstream>
 #include <optional>
+#include <utility>
 #include <vector>
 #include <memory>
 #include <exception>
+#include <unordered_set>
 
 #include "exit_signal.h"
 #include "game.h"

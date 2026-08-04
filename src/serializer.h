@@ -93,7 +93,10 @@
 #include <utility>
 #include <memory>
 
+// IWYU pragma: begin_exports
 #include "iobuffer.h"
+// IWYU pragma: end_exports
+
 #include "custom_traits.h"
 
 /*

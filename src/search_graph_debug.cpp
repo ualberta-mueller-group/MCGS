@@ -22,6 +22,7 @@
 #include "cgt_up_star.h"
 #include "file_iterator.h"
 #include "string_to_int.h"
+#include "exit_signal.h"
 #include "sumgame.h"
 #include "throw_assert.h"
 #include "utilities.h"

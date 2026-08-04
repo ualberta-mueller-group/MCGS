@@ -14,6 +14,7 @@
 #include <string>
 
 #include "ThScaffold.h"
+#include "ThGraph.h"
 #include "game.h"
 #include "file_parser_ast.h"
 #include "csv_row.h"

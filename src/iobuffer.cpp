@@ -1,18 +1,7 @@
 #include "iobuffer.h"
 
-#include <algorithm>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
-#include <execution>
-#include <filesystem>
-#include <memory>
-#include <new>
-#include <string>
-#include <type_traits>
-#include "safe_arithmetic.h"
-#include "throw_assert.h"
-#include "utilities.h"
+#include <iostream>
+#include <cstdlib>
 
 namespace {
 } // namespace

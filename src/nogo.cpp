@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <cassert>
+#include <utility>
 #include <ostream>
 
 #include "cgt_move.h"

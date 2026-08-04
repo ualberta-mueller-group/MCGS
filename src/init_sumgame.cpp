@@ -1,6 +1,8 @@
 #include "init_sumgame.h"
 
 #include <cstddef>
+#include <string>
+
 #include "sumgame.h"
 
 namespace mcgs_init {

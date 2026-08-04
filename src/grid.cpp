@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <utility>
 #include <vector>
+#include <cstdint>
+
 #include "cgt_basics.h"
 #include "grid_location.h"
 #include "integral_conversion.h"

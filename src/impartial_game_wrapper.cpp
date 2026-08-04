@@ -12,7 +12,6 @@
 #include "cgt_move.h"
 #include "cgt_nimber.h"
 #include "game.h"
-#include "global_options.h"
 #include "utilities.h"
 
 

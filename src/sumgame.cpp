@@ -43,7 +43,7 @@
 #include "sumgame_change_record.h"
 #include "sumgame_undo_stack_unwinder.h"
 #include "impartial_game_wrapper.h"
-#include "transposition_serializer.h"
+#include "transposition_serializer.h" // IWYU pragma: keep
 #include "utilities.h"
 #include "ThGraph.h"
 #include "ThValue.h"

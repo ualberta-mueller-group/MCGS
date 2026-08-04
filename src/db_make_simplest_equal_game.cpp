@@ -2,10 +2,17 @@
 
 #include <algorithm>
 #include <memory>
+#include <vector>
 #include <type_traits>
 #include <utility>
+#include <cassert>
+#include <unordered_map>
+#include <array>
+#include <cstddef>
+#include <optional>
 
 #include "bounds.h"
+#include "ThGraph.h"
 #include "cgt_basics.h"
 #include "clobber_1xn.h"
 #include "db_link_t.h"
@@ -20,7 +27,6 @@
 #include "sumgame_helpers.h"
 #include "thermograph_helpers.h"
 #include "throw_assert.h"
-#include "type_table.h"
 
 using namespace std;
 

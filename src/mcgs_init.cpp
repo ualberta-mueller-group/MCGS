@@ -1,11 +1,10 @@
 #include "mcgs_init.h"
 
 #include <cassert>
-#include <cstdlib>
+
 #include "cgt_basics.h"
 #include "cli_options.h"
 #include "compare_databases.h"
-#include "exit_signal.h"
 #include "global_options.h"
 #include "init_database.h"
 #include "init_grid_hash_mask.h"

@@ -19,6 +19,7 @@
 // IWYU pragma: end_exports
 
 #include <cstddef>
+#include <string>
 #include <cstdint>
 #include "timeout_token.h"
 

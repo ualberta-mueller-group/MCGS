@@ -15,8 +15,11 @@
 
 #include <vector>
 #include <cstdint>
+#include <cassert>
+#include <cstddef>
 
 #include "grid_location.h"
+#include "int_pair.h"
 
 #define COMPONENT_CACHE_ROWS 4
 #define COMPONENT_CACHE_COLS 4

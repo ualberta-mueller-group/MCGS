@@ -12,7 +12,9 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <unordered_map>
+#include <vector>
 
 #include "bounds.h"
 #include "cgt_basics.h"
@@ -26,9 +28,12 @@
 #include "thermograph_cache.h"
 #include "type_mapper.h"
 #include "type_table.h"
-#include "db_link_t.h"
-
 #include "ThGraph.h"
+
+// IWYU pragma: begin_exports
+#include "db_link_t.h"
+// IWYU pragma: end_exports
+
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
     db.register_type(#game_class_name, game_type<game_class_name>())

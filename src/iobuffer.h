@@ -12,27 +12,22 @@
 
 */
 #pragma once
-#include <climits>
-#include <complex>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <endian.h>
 #include <limits>
 #include <string>
 #include <type_traits>
 #include <cassert>
-#include <fstream>
 #include <cstdint>
-#include <iostream>
 #include <vector>
+#include <algorithm>
+#include <utility>
 
-#include <sys/types.h>
+#include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include "byte_order.h"
-#include "integral_conversion.h"
 #include "throw_assert.h"
 
 /*

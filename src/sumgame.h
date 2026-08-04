@@ -12,6 +12,7 @@
 #include <utility>
 #include <ostream>
 #include <cassert>
+#include <string>
 
 #include "alternating_move_game.h"
 #include "game.h"

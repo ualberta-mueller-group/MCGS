@@ -8,7 +8,9 @@
 #include <optional>
 #include <vector>
 #include <cassert>
+
 #include "cgt_basics.h"
+#include "ThGraph.h"
 #include "game.h"
 #include "test_case_enums.h"
 #include "throw_assert.h"

@@ -10,6 +10,7 @@
 #include <cassert>
 #include <iostream>
 #include <cstdint>
+#include <stdexcept>
 
 #include "alternating_move_game.h"
 #include "cgt_nimber.h"
@@ -21,6 +22,7 @@
 #include "throw_assert.h"
 #include "sumgame.h"
 #include "transposition_serializer.h"
+#include "exit_signal.h"
 
 using namespace std;
 

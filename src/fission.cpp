@@ -4,6 +4,7 @@
 #include <string>
 #include <cassert>
 #include <ostream>
+#include <utility>
 
 #include "cgt_basics.h"
 #include "cgt_move.h"

@@ -1,7 +1,11 @@
 #pragma once
 
+#include <cstdint>
+#include <utility>
+
 #include "sumgame.h"
 #include "database.h"
+#include "hashing.h"
 
 extern uint64_t db_n_links_refined;
 

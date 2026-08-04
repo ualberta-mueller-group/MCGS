@@ -17,6 +17,7 @@
 #include "throw_assert.h"
 #include "hashing.h"
 #include "file_iterator.h"
+#include "exit_signal.h"
 
 //////////////////////////////////////////////////
 using namespace std;

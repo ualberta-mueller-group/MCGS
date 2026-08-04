@@ -5,7 +5,6 @@
 
 #include <cassert>
 #include <cstdlib>
-#include <limits>
 #include <vector>
 #include <utility>
 #include <cstdint>

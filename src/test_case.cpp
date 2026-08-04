@@ -5,11 +5,13 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <memory>
 
 #include "SgBlackWhite.h"
 #include "ThGraph.h"
 #include "ThScaffold.h"
 #include "ThValue.h"
+#include "ThPoint.h"
 #include "cgt_basics.h"
 #include "csv_row.h"
 #include "file_parser.h"

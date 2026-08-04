@@ -2,17 +2,21 @@
 
 #include <cassert>
 #include <fstream>
-#include <functional>
+#include <vector>
 #include <optional>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <algorithm>
+#include <cstdint>
 #include <utility>
+#include <cstddef>
 #include <memory>
 #include <iostream>
 
 #include "db_link_t.h"
 #include "db_make_simplest_equal_game.h"
+#include "exit_signal.h"
 #include "db_make_subgame_links.h"
 #include "call_func_on_destruction.h"
 #include "dominated_moves.h"

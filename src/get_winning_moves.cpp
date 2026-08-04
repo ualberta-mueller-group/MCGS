@@ -20,6 +20,7 @@
 #include "throw_assert.h"
 #include "utilities.h"
 #include "print_moves.h"
+#include "exit_signal.h"
 
 using namespace std;
 

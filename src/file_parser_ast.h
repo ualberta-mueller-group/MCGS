@@ -7,7 +7,6 @@
 #pragma once
 
 #include "ThGraph.h"
-#include "ThPoint.h"
 #include "cgt_basics.h"
 #include <string>
 #include <vector>

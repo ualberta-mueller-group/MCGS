@@ -15,11 +15,12 @@
 #include <type_traits>
 #include <optional>
 #include <iostream>
+#include <vector>
+#include <utility>
 
 #include "utilities.h"
 #include "hashing.h"
 #include "throw_assert.h"
-#include "global_options.h"
 #include "serializer.h"
 
 

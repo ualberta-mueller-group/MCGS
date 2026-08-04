@@ -18,6 +18,8 @@
 
 #include "ThGraph.h"
 #include "ThPoint.h"
+#include "ThScaffold.h"
+#include "ThValue.h"
 #include "cgt_basics.h"
 #include "gen_king_dirt.h"
 #include "test_case_enums.h"

@@ -2,7 +2,6 @@
 
 #include <cctype>
 #include <filesystem>
-#include <functional>
 #include <unordered_set>
 #include <optional>
 #include <memory>
@@ -16,6 +15,7 @@
 
 #include "config_map.h"
 #include "database.h"
+#include "sumgame.h"
 #include "db_game_generator.h"
 #include "db_make_simplest_equal_game.h"
 #include "global_database.h"

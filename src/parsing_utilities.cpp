@@ -12,6 +12,8 @@
 #include "utilities.h"
 #include "fraction.h"
 #include "string_to_int.h"
+#include "ThPoint.h"
+#include "ThValue.h"
 
 using namespace std;
 

@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <cstddef>
-#include <endian.h>
 #include <type_traits>
 
 template <class Int_T>

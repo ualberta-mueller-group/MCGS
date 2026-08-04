@@ -8,6 +8,8 @@ Deprecated: struct run_command_t, function get_run_command(...),
 #include <string>
 #include <vector>
 #include <cstddef>
+#include <optional>
+
 #include "ThPoint.h"
 #include "fraction.h"
 #include "search_utils.h"

@@ -1,5 +1,8 @@
 #include "init_impartial_sumgame.h"
+
 #include <cstddef>
+#include <string>
+
 #include "throw_assert.h"
 #include "impartial_sumgame.h"
 

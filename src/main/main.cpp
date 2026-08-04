@@ -2,11 +2,9 @@
 // main.cpp - main loop of MCGS
 //---------------------------------------------------------------------------
 
-#include <cstdio>
-#include <cstdlib>
 #include <iostream>
 #include <memory>
-#include <type_traits>
+#include <cassert>
 
 #include "cli_options.h"
 #include "database.h"
@@ -16,19 +14,16 @@
 #include "autotests.h"
 #include "global_database.h"
 #include "impartial_sumgame.h"
-#include "iobuffer.h"
 #include "print_moves.h"
 #include "search_graph_debug.h"
 #include "mcgs_init.h"
 #include "global_options.h"
-#include "stopwatch.h"
 #include "throw_assert.h"
 
 #include "gen_experiments.h"
 #include "basic_player.h"
 #include "utils_for_main.h"
 #include "warn_on_exit.h"
-#include "seg_replacer.h"
 
 using namespace std;
 

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "cgt_basics.h"
+#include "ThGraph.h"
 #include "file_parser_ast.h"
 #include "test_case_enums.h"
 #include "thermograph_helpers.h"

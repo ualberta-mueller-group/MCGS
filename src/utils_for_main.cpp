@@ -15,6 +15,7 @@
 #include "test_filter.h"
 #include "utilities.h"
 #include "file_parser.h"
+#include "exit_signal.h"
 
 using namespace std;
 

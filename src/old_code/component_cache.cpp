@@ -6,26 +6,26 @@
 */
 
 #include "component_cache.h"
-#include "grid_generator.h"
-#include "grid_hash_orientation.h"
-#include "grid_location.h"
-#include "grid_mask.h"
-#include "integral_conversion.h"
-#include "safe_arithmetic.h"
-#include "stopwatch.h"
-#include "throw_assert.h"
-#include "utilities.h"
 
 #include <algorithm>
 #include <climits>
 #include <cstdlib>
+#include <cassert>
 #include <cstring>
 #include <iostream>
-#include <memory>
 #include <tuple>
-#include <type_traits>
 #include <vector>
 #include <cstdint>
+
+#include "grid_hash_orientation.h"
+#include "grid_location.h"
+#include "grid_mask.h"
+#include "integral_conversion.h"
+#include "stopwatch.h"
+#include "throw_assert.h"
+#include "utilities.h"
+#include "int_pair.h"
+
 
 using namespace std;
 

@@ -1,7 +1,12 @@
 #include "db_make_subgame_links.h"
 
+#include <cassert>
+#include <utility>
+
 #include "sumgame.h"
 #include "database.h"
+#include "game.h"
+#include "throw_assert.h"
 
 using namespace std;
 

@@ -1,8 +1,12 @@
 #pragma once
 
+#include <utility>
+
 #include "serializer.h"
 #include "iobuffer.h"
 #include "database.h"
+#include "db_link_t.h"
+#include "hashing.h"
 #include "serializer_lib_therm.h" // IWYU pragma: keep
 #include "game_bounds_serializer.h" // IWYU pragma: keep
 

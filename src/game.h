@@ -17,6 +17,8 @@
 #include "poly_serializable.h"
 #include "hashing.h"
 #include "type_table.h"
+#include "iobuffer.h"
+#include "serializer.h"
 // IWYU pragma: end_exports
 
 

@@ -1,5 +1,13 @@
-
 #include "seg_replacer.h"
+
+#include <algorithm>
+#include <utility>
+#include <cassert>
+#include <cstdint>
+#include <vector>
+#include <cstddef>
+#include <iostream>
+#include <memory>
 
 #include "bounds.h"
 #include "db_link_t.h"
@@ -9,7 +17,6 @@
 #include "database.h"
 #include "type_table.h"
 #include "clobber_1xn.h"
-#include <algorithm>
 
 using sumgame_impl::change_record;
 using namespace std;

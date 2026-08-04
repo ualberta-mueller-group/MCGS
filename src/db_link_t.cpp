@@ -1,8 +1,11 @@
 #include "db_link_t.h"
+
+#include <utility>
+
 #include "database.h" // IWYU pragma: keep
+#include "hashing.h"
 
 using namespace std;
-
 
 bool db_link_t::is_equal(const db_link_t& other) const
 {
