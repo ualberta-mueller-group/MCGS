@@ -37,9 +37,7 @@
 #include "database.h"
 #include "dominated_moves.h"
 #include "global_database.h"
-#include "global_options.h"
 #include "safe_arithmetic.h"
-#include "solver_stats.h"
 #include "sumgame.h"
 #include "game.h"
 #include "throw_assert.h"
@@ -561,59 +559,59 @@ void make_dominated_moves_for(sumgame& sum1, sumgame& sum2, bw player,
         warn_on_exit::on_db_dom_moves_complexity_overflow();
 }
 
-uint64_t make_local_cs4(const sumgame& sum, db_entry_partisan& entry, database& db)
-{
-    uint64_t total = 0;
-    vector<game*> active_games;
+//uint64_t make_local_cs4(const sumgame& sum, db_entry_partisan& entry, database& db)
+//{
+//    uint64_t total = 0;
+//    vector<game*> active_games;
+//
+//    const int n_games = sum.num_total_games();
+//    for (int i = 0; i < n_games; i++)
+//    {
+//        game* g = sum.subgame(i);
+//        if (g->is_active())
+//            active_games.push_back(g);
+//    }
+//
+//    if (active_games.size() == 1)
+//    {
+//        // Single subgame
+//        total = entry.complexity;
+//    }
+//    else
+//    {
+//        bool add_ok = true;
+//
+//        // Multiple subgames
+//        for (game* g : active_games)
+//        {
+//            db_entry_partisan* child_entry = db.get_partisan_ptr(*g);
+//            THROW_ASSERT(child_entry != nullptr && child_entry->dominated_moves);
+//
+//            add_ok &= safe_add(total, child_entry->complexity);
+//        }
+//
+//        THROW_ASSERT(add_ok);
+//    }
+//
+//    return total;
+//}
 
-    const int n_games = sum.num_total_games();
-    for (int i = 0; i < n_games; i++)
-    {
-        game* g = sum.subgame(i);
-        if (g->is_active())
-            active_games.push_back(g);
-    }
-
-    if (active_games.size() == 1)
-    {
-        // Single subgame
-        total = entry.complexity;
-    }
-    else
-    {
-        bool add_ok = true;
-
-        // Multiple subgames
-        for (game* g : active_games)
-        {
-            db_entry_partisan* child_entry = db.get_partisan_ptr(*g);
-            THROW_ASSERT(child_entry != nullptr && child_entry->dominated_moves);
-
-            add_ok &= safe_add(total, child_entry->complexity);
-        }
-
-        THROW_ASSERT(add_ok);
-    }
-
-    return total;
-}
-
-uint64_t make_experimental_cs(sumgame& sum, db_entry_partisan& entry, database& db)
-{
-    static shared_ptr<ttable_sumgame> tt_temp(new ttable_sumgame(2, 1));
-
-    global::use_seg.set(false);
-    sumgame::use_npos = false;
-
-    tt_temp->clear();
-    stats::reset_global_stats();
-    sum.solve_with_ttable(tt_temp);
-
-    global::use_seg.set(true);
-    sumgame::use_npos = true;
-
-    return stats::get_global_stats().search_node_count;
-}
+//uint64_t make_experimental_cs(sumgame& sum, db_entry_partisan& entry, database& db)
+//{
+//    static shared_ptr<ttable_sumgame> tt_temp(new ttable_sumgame(2, 1));
+//
+//    global::use_seg.set(false);
+//    sumgame::use_npos = false;
+//
+//    tt_temp->clear();
+//    stats::reset_global_stats();
+//    sum.solve_with_ttable(tt_temp);
+//
+//    global::use_seg.set(true);
+//    sumgame::use_npos = true;
+//
+//    return stats::get_global_stats().search_node_count;
+//}
 
 } // namespace
 
@@ -677,13 +675,13 @@ void db_make_dominated_moves(const sumgame& sum, db_entry_partisan& entry, datab
 
     entry.complexity = complexity_b + complexity_w;
 
-    assert(!(global::local_cs4() && global::experimental_cs()));
+    //assert(!(global::local_cs4() && global::experimental_cs()));
 
-    if (global::local_cs4())
-        entry.complexity = make_local_cs4(clone1, entry, db);
+    //if (global::local_cs4())
+    //    entry.complexity = make_local_cs4(clone1, entry, db);
 
-    if (global::experimental_cs())
-        entry.complexity = make_experimental_cs(clone1, entry, db);
+    //if (global::experimental_cs())
+    //    entry.complexity = make_experimental_cs(clone1, entry, db);
 
     cleanup_sumgame(clone1);
     cleanup_sumgame(clone2);

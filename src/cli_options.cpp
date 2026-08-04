@@ -82,9 +82,11 @@ void print_help_message(const string& exec_name)
 
     print_flag("--play-log <file name>", "When specified, --play-mcgs "
                                          "logs the game to the specified file.");
-    
+
     print_flag("--stdin",
-               "Read input from stdin. Causes [input string] to be ignored.");
+               "Read input from stdin. Causes [input string] to be ignored. "
+               "NOTE: parser errors will cause --tt-sumgame-save and "
+               "--tt-imp-sumgame-save to be ignored.");
 
     cout << "Sum-level flags:" << endl;
     cout << endl;
@@ -100,7 +102,8 @@ void print_help_message(const string& exec_name)
     print_flag("--play-mcgs",
                "Play each sum in the input against MCGS. Both the user's "
                "color (BLACK/WHITE), and the first player to move, are chosen "
-               "interatively by the user at runtime.");
+               "interactively by the user at runtime. To exit, press Ctrl-d "
+               "and Ctrl-c");
 
     print_flag(
         "--print-winning-moves",
@@ -147,6 +150,8 @@ void print_help_message(const string& exec_name)
     print_flag(global::use_seg.no_flag(),
                "Disable SEG replacement during partisan search.");
 
+    print_flag(global::single_seg.flag(), "Only replace single subgames.");
+
     print_flag("--db-file-load <file name>",
                "Load database file. If unspecified, checks for `" +
                    path_relative_to_cwd(get_default_db_path()).string() +
@@ -156,23 +161,33 @@ void print_help_message(const string& exec_name)
                "Create and populate a new database file. See README for "
                "details on config string syntax.");
 
+    print_flag(
+        global::pitm.no_flag(),
+        "Disable \"play in the middle\" heuristic. By default, each subgame's "
+        "moves are exhaustively generated, and moves nearer to the middle of "
+        "this list are played first. NOTE: Affects generated database file, as "
+        "in some cases non-dominated moves are stored in a DB entry in the "
+        "order they're generated in. Searches using such entries may play back "
+        "moves in this order.");
+
     print_flag("--tt-sumgame-load <file name>",
                "Load partisan transposition table from specified file. "
                "Overrides --tt-sumgame-idx-bits if specified.");
 
     print_flag(
         "--tt-sumgame-save <file name>",
-        "On (normal) exit, write partisan transposition table to specified "
-        "file. TODO add signal handlers for when the user kills the process.");
+        "On normal exit (or Ctrl-c/Ctrl-d after DB initialization has "
+        "completed), write partisan transposition table to specified "
+        "file.");
 
     print_flag("--tt-imp-sumgame-load <file name>",
                "Load impartial transposition table from specified file. "
                "Overrides --tt-imp-sumgame-idx-bits if specified.");
 
-    print_flag(
-        "--tt-imp-sumgame-save <file name>",
-        "On (normal) exit, write impartial transposition table to specified "
-        "file. TODO add signal handlers for when the user kills the process.");
+    print_flag("--tt-imp-sumgame-save <file name>",
+               "On normal exit (or Ctrl-c/Ctrl-d after DB initialization has "
+               "completed), write impartial transposition table to specified "
+               "file.");
 
     print_flag(global::impartial_algorithm_mex.flag(),
                "Use Mex search algorithm for impartial games. NOTE: doesn't "
@@ -217,16 +232,7 @@ void print_help_message(const string& exec_name)
                "Clear ttable between test runs. Default: " +
                    global::clear_tt.get_default_str() + ".");
 
-    print_flag(global::local_cs4.flag(), "Don't use sum-level info to compute CS4.");
 
-    print_flag(global::single_seg.flag(), "Only replace single subgames.");
-
-
-    print_flag(global::experimental_cs.flag(), "Estimate CS as runtime cost.");
-
-    // TODO
-    print_flag(global::pitm.no_flag(), "Disable play in the middle for games "
-                                       "which support it.");
 
     print_flag(global::count_sums.flag(),
                "Count unique sums found during "
@@ -658,34 +664,6 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
-        if (arg == global::local_cs4.flag())
-        {
-            assert(!global::local_cs4());
-            global::local_cs4.set(true);
-            continue;
-        }
-
-        if (arg == global::single_seg.flag())
-        {
-            assert(!global::single_seg());
-            global::single_seg.set(true);
-            continue;
-        }
-
-        if (arg == global::experimental_cs.flag())
-        {
-            assert(!global::experimental_cs());
-            global::experimental_cs.set(true);
-            continue;
-        }
-
-        if (arg == global::pitm.no_flag())
-        {
-            assert(global::pitm());
-            global::pitm.set(false);
-            continue;
-        }
-
         if (arg == global::count_sums.flag())
         {
             global::count_sums.set(true);
@@ -799,6 +777,13 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == global::single_seg.flag())
+        {
+            assert(!global::single_seg());
+            global::single_seg.set(true);
+            continue;
+        }
+
         if (arg == "--db-file-load")
         {
             arg_idx++;
@@ -840,6 +825,13 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             opts.db_file_name = arg_next;
             opts.db_config_string = args[arg_idx_config_string];
 
+            continue;
+        }
+
+        if (arg == global::pitm.no_flag())
+        {
+            assert(global::pitm());
+            global::pitm.set(false);
             continue;
         }
 
