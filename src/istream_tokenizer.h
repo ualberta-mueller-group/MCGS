@@ -63,5 +63,3 @@ inline istream_tokenizer::token_t::token_t(const std::string& token_string,
 {
 }
 
-//////////////////////////////////////////////////
-void test_istream_tokenizer();

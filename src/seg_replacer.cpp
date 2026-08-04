@@ -679,33 +679,3 @@ void seg_replacer_replace_all(seg_replacer* replacer, sumgame& sum,
     replacer->reset(&sum, &cr, &db);
     replacer->replace_all();
 }
-
-void test_seg_replacer_stuff()
-{
-    cout << "Testing SEG replacer" << endl;
-    sumgame sum(BLACK);
-
-    gridlike_db_game_generator<clobber_1xn, GRIDLIKE_TYPE_STRIP> gen(
-        new grid_generator({1, 15}, {EMPTY, BLACK, WHITE}, true));
-
-    seg_replacer replacer;
-
-    while (gen)
-    {
-        game* g = gen.gen_game();
-        ++gen;
-        //cout << "TESTING: " << *g << endl;
-
-        sum.add(g);
-        sum.split_and_normalize();
-
-        sum.seg_pass(&replacer);
-        sum.undo_seg_pass();
-
-        sum.undo_split_and_normalize();
-        sum.pop(g);
-
-        delete g;
-    }
-}
-

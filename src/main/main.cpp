@@ -22,7 +22,6 @@
 #include "mcgs_init.h"
 #include "global_options.h"
 #include "stopwatch.h"
-#include "test_serialization_stuff.h"
 #include "throw_assert.h"
 
 #include "gen_experiments.h"
@@ -49,11 +48,6 @@ static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional
 
     mcgs_init_2(opts);
     exit_signal::enable_handlers();
-
-    //test_serialization_stuff();
-    //test_io_stuff();
-    //test_seg_replacer_stuff();
-    //test_component_cache_stuff();
 
     if (opts.db_dump_file_name.has_value())
     {

@@ -1,3 +1,16 @@
+/*
+    This file is unused. Its intended purpose is to increase node rates for
+    grid games by allowing split functions to terminate early, by quickly
+    proving that a move could not have split the board into more components.
+
+    Class component_cache generates all 4 or 8 connected boolean grids, and
+    determines whether each grid is exactly 1 connected component.
+
+    It can be queried using an arbitrary window of a grid game (so long as
+    the window fits within the generated size).
+
+    Some unit tests are at the bottom of the .cpp file.
+*/
 #pragma once
 
 #include <vector>

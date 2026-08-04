@@ -174,20 +174,3 @@ bool istream_tokenizer::_get_token_from_stream(string& token)
     return false;
 }
 
-
-//////////////////////////////////////////////////
-void test_istream_tokenizer()
-{
-    ifstream* fs = new ifstream("test.test");
-    istream_tokenizer tk(fs, true);
-
-    string token;
-    while (tk.get_token(token))
-    {
-        cout << "|" << tk.line_start() << "-";
-        cout << tk.line_end() << " ";
-        cout << tk.is_whitespace() << "|";
-        cout << "\"" << token << "\"" << endl;
-    }
-}
-
