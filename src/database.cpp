@@ -239,7 +239,7 @@ void db_entry_partisan::print(ostream& os, const database& db,
 
     // Simplest equal entry
     os << " SEG hash: `";
-    if (simplest_equal_entry.get_as_pointer() == nullptr)
+    if (simplest_equal_entry.is_nullptr())
         os << "nullptr";
     else
         os << simplest_equal_entry.get_as_pointer()->first;

@@ -27,6 +27,7 @@ public:
     std::pair<const hash_t, db_entry_partisan>* get_as_pointer() const;
 
     bool equal_as_pointers(const db_link_t& other) const;
+    bool is_nullptr() const;
 
 private:
     friend serializer<db_link_t>;
@@ -66,5 +67,10 @@ inline hash_t db_link_t::get_as_hash() const
 inline std::pair<const hash_t, db_entry_partisan>* db_link_t::get_as_pointer() const
 {
     return _hash_or_pointer.as_pointer;
+}
+
+inline bool db_link_t::is_nullptr() const
+{
+    return _hash_or_pointer.as_pointer == nullptr;
 }
 

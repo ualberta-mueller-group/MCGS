@@ -588,9 +588,9 @@ void db_refine_simplest_equal_game(
     const db_link_t stored_link = entry_pair.second.simplest_equal_entry;
     const db_link_t best_link = eq_class->get_best_link_for_game(sum_link, db);
 
-    assert(sum_link.get_as_pointer() != nullptr);
-    assert(stored_link.get_as_pointer() != nullptr);
-    assert(best_link.get_as_pointer() != nullptr);
+    assert(!sum_link.is_nullptr());
+    assert(!stored_link.is_nullptr());
+    assert(!best_link.is_nullptr());
 
     if (!stored_link.equal_as_pointers(best_link))
         db_n_links_refined++;
