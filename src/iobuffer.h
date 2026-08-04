@@ -69,10 +69,7 @@ public:
     template <class Enum_T>
     Enum_T read_enum();
 
-    template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
-    T __read();
-
-    virtual void read_bytes_raw(void* dst, size_t n_bytes) = 0;
+    //virtual void read_bytes_raw(void* dst, size_t n_bytes) = 0;
 
 protected:
     size_t _remaining_unread_bytes() const;
@@ -110,11 +107,8 @@ public:
     template <class Enum_T>
     void write_enum(const Enum_T& val);
 
-    //template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
-    //void __write(const T& val);
-
     // For very large writes. Must flush previously buffered data
-    virtual void write_bytes_raw(const void* src, size_t n_bytes) = 0;
+    //virtual void write_bytes_raw(const void* src, size_t n_bytes) = 0;
 
     virtual void flush() = 0;
 
@@ -141,7 +135,7 @@ public:
 
     void close();
 
-    void read_bytes_raw(void* dst, size_t n_bytes) override;
+    //void read_bytes_raw(void* dst, size_t n_bytes) override;
 
 protected:
     void _preload_bytes(size_t n_bytes) override;
@@ -169,7 +163,7 @@ public:
 
     void close();
 
-    void write_bytes_raw(const void* src, size_t n_bytes) override;
+    //void write_bytes_raw(const void* src, size_t n_bytes) override;
     void flush() override;
 
 protected:
@@ -198,7 +192,7 @@ public:
     memory_ibuffer(const std::vector<uint8_t>& data_vec);
     ~memory_ibuffer();
 
-    void read_bytes_raw(void* dst, size_t n_bytes) override;
+    //void read_bytes_raw(void* dst, size_t n_bytes) override;
 
 protected:
     void _preload_bytes(size_t n_bytes) override;
@@ -217,7 +211,7 @@ public:
     std::vector<uint8_t> release_data();
 
     void flush() override;
-    void write_bytes_raw(const void* src, size_t n_bytes) override;
+    //void write_bytes_raw(const void* src, size_t n_bytes) override;
 
 protected:
     void _reserve_capacity(size_t n_bytes) override;
@@ -227,51 +221,6 @@ private:
 
     inline static constexpr size_t _INITIAL_BUFFER_SIZE = size_t(64);
 };
-
-////////////////////////////////////////////////// fmt_read/fmt_write templates
-template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
-T __fmt_read(i_ibuffer& is)
-{
-    static_assert(CHAR_BIT == 8); // 8 bits per byte
-    static_assert(std::is_integral_v<T>);
-    assert(false);
-
-    constexpr unsigned int SIZE = sizeof(T);
-
-    T val(0);
-    uint8_t byte;
-
-    for (unsigned int i = 0; i < SIZE; i++)
-    {
-        byte = is.read_u8();
-
-        const T byte_longer = byte;
-        val |= (byte_longer << (i * 8));
-    }
-
-    return val;
-}
-
-// Pass T by value, not reference (avoid size mismatch)
-template <class T> // NOLINTNEXTLINE(readability-identifier-naming)
-void __fmt_write(i_obuffer& os, T val)
-{
-    static_assert(CHAR_BIT == 8); // 8 bits per byte
-    static_assert(std::is_integral_v<T>);
-    assert(false);
-
-    // NOLINTNEXTLINE(readability-identifier-naming)
-    using T_Unsigned = std::make_unsigned_t<T>;
-    const T_Unsigned& val_uns = reinterpret_cast<const T_Unsigned&>(val);
-
-    constexpr unsigned int SIZE = sizeof(T);
-
-    for (unsigned int i = 0; i < SIZE; i++)
-    {
-        const uint8_t byte = (uint8_t) (val_uns >> (i * 8));
-        os.write_u8(byte);
-    }
-}
 
 //////////////////////////////////////// i_ibuffer methods
 inline i_ibuffer::i_ibuffer():
@@ -354,13 +303,6 @@ inline Enum_T i_ibuffer::read_enum()
     static_assert(std::is_enum_v<Enum_T>);
     const uint8_t value = read_u8();
     return static_cast<Enum_T>(value);
-}
-
-template <class T>
-inline T i_ibuffer::__read()
-{
-    static_assert(std::is_integral_v<T>);
-    return __fmt_read<T>(*this);
 }
 
 inline size_t i_ibuffer::_remaining_unread_bytes() const
@@ -468,13 +410,6 @@ void i_obuffer::write_enum(const Enum_T& val)
     const uint8_t val_casted = static_cast<uint8_t>(val);
     write_u8(val_casted);
 }
-
-//template <class T>
-//inline void i_obuffer::__write(const T& val)
-//{
-//    static_assert(std::is_integral_v<T>);
-//    return __fmt_write<T>(*this, val);
-//}
 
 inline size_t i_obuffer::_remaining_buffer_capacity() const
 {

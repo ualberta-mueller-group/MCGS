@@ -193,27 +193,6 @@ struct serializer<T*,
 };
 
 //////////////////////////////////////// integral types
-//template <class T>
-//struct serializer<
-//    T,
-//    std::enable_if_t<
-//        std::is_integral_v<T> && !std::is_same_v<T, bool>,
-//        void
-//    >
-//>
-//{
-//    inline static void save(i_obuffer& os, const T& val, serializer_ctx* ctx)
-//    {
-//        os.__write<T>(val);
-//    }
-//
-//    inline static T load(i_ibuffer& is, serializer_ctx* ctx)
-//    {
-//        return is.__read<T>();
-//    }
-//};
-
-
 template <class T>
 struct serializer<
     T,
@@ -381,9 +360,9 @@ struct serializer<std::vector<T>>
         const size_t size = val.size();
         os.write_u64(size);
 
-        if constexpr (std::is_same_v<uint8_t, T_NoCV>)
-            os.write_bytes_raw(val.data(), size);
-        else
+        //if constexpr (std::is_same_v<uint8_t, T_NoCV>)
+        //    os.write_bytes_raw(val.data(), size);
+        //else
         {
             for (size_t i = 0; i < size; i++)
                 serializer<T_NoCV>::save(os, val[i], ctx);
@@ -395,12 +374,12 @@ struct serializer<std::vector<T>>
         std::vector<T> vec;
         const uint64_t size = is.read_u64();
 
-        if constexpr (std::is_same_v<uint8_t, T_NoCV>)
-        {
-            vec.resize(size);
-            is.read_bytes_raw(vec.data(), size);
-        }
-        else
+        //if constexpr (std::is_same_v<uint8_t, T_NoCV>)
+        //{
+        //    vec.resize(size);
+        //    is.read_bytes_raw(vec.data(), size);
+        //}
+        //else
         {
             vec.reserve(size);
             for (uint64_t i = 0; i < size; i++)
