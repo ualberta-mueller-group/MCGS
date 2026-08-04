@@ -121,7 +121,7 @@ void check_entry_contents(sumgame& sum, const db_entry_partisan* entry, thermogr
 
     // Thermograph
     assert(entry->thermograph.get() != nullptr);
-    shared_ptr<ThGraph> graph_nodb = thermograph_builder.build_thermograph(sum);
+    shared_ptr<const ThGraph> graph_nodb = thermograph_builder.build_thermograph(sum);
     assert(*graph_nodb == *entry->thermograph);
 
     // Bounds
@@ -173,7 +173,9 @@ void test_generate_impl(database& db, i_db_game_generator* gen_generate,
         delete g;
     }
 
-    db.generate_entries_partisan(*gen_generate, true);
+    db_gen_options_t gen_options;
+    gen_options.silent = true;
+    db.generate_entries_partisan(*gen_generate, gen_options);
 
     thermograph_builder_no_db thermograph_builder;
     while (*gen_validate)

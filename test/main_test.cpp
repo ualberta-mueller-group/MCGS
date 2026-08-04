@@ -129,7 +129,9 @@ int main(int argc, const char** argv)
 
     global::silence_warnings.set(true);
     global::use_db.set(false);
+    global::pitm.set(false);
     mcgs_init_2();
+
 
     if (RUN_OVERRIDE_TESTS)
     {
@@ -218,6 +220,7 @@ int main(int argc, const char** argv)
     RUN_TEST(gen_toads_test_all());
     RUN_TEST(sheep_test_all());
     RUN_TEST(gen_king_dirt_test_all());
+
 
     RUN_TEST(normalize_test_all());
     RUN_TEST(split_test_all());
