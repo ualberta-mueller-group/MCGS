@@ -92,12 +92,11 @@ std::string strip::board_as_string() const
 void strip::save_board(i_obuffer& os, const std::vector<int>& board,
                         serializer_ctx* ctx)
 {
-#warning TODO review size assumptions here (esp. the i8)!
     const size_t size = board.size();
     os.write_u64(size);
 
     for (const int val : board)
-        os.write_i8(integral_cast_unsafe<int8_t>(val));
+        os.write_i16(integral_cast_checked<int16_t>(val));
 }
 
 std::vector<int> strip::load_board(i_ibuffer& is, serializer_ctx* ctx)
@@ -107,8 +106,10 @@ std::vector<int> strip::load_board(i_ibuffer& is, serializer_ctx* ctx)
     const uint64_t size = is.read_u64();
     board.reserve(size);
 
+    static_assert(sizeof(int) >= sizeof(int16_t));
+
     for (uint64_t i = 0; i < size; i++)
-        board.push_back(is.read_i8());
+        board.push_back(is.read_i16());
 
     return board;
 }

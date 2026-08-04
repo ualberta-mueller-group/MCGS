@@ -592,19 +592,18 @@ void db_refine_simplest_equal_game(
     assert(!stored_link.is_nullptr());
     assert(!best_link.is_nullptr());
 
-    if (!stored_link.equal_as_pointers(best_link))
+    if (!stored_link.is_equal(best_link))
         db_n_links_refined++;
 
-    if (sum_link.equal_as_pointers(best_link))
+    if (sum_link.is_equal(best_link))
     {
         // Link shouldn't get worse
-        THROW_ASSERT(sum_link.equal_as_pointers(stored_link));
+        THROW_ASSERT(sum_link.is_equal(stored_link));
     }
     else
     {
         link_compare cmp(db);
-#warning TODO re-enable this?
-        //THROW_ASSERT(cmp.compare(best_link, stored_link) != REL_GREATER);
+        assert(cmp.compare(best_link, stored_link) != REL_GREATER);
         entry_pair.second.simplest_equal_entry = best_link;
     }
 }
@@ -666,5 +665,5 @@ void assert_equivalence_classes_have_zero_entry(database& db)
     assert(eq_class != nullptr && !eq_class->is_empty());
 
     const db_link_t best_link = eq_class->get_best_link_for_game(zero_link, db);
-    assert(best_link.equal_as_pointers(zero_link));
+    assert(best_link.is_equal(zero_link));
 }

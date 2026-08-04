@@ -160,9 +160,12 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
     if (complexity != other.complexity)
         return false;
 
-    //// Size score
-    //if (size_score != other.size_score)
-    //    return false;
+    // Size score
+    if (size_score_type != other.size_score_type)
+        return false;
+
+    if (size_score != other.size_score)
+        return false;
 
     // Dominated moves
     if ((bool) dominated_moves != (bool) other.dominated_moves)
@@ -176,11 +179,22 @@ bool db_entry_partisan::operator==(const db_entry_partisan& other) const
         return false;
 
     // Link
-    if (!simplest_equal_entry.equal_as_pointers(other.simplest_equal_entry))
+    if (!simplest_equal_entry.is_equal(other.simplest_equal_entry))
         return false;
 
     // Subgame links
-#warning TODO implement me!
+    if (subgame_links.size() != other.subgame_links.size())
+        return false;
+
+    const size_t n_subgame_links = subgame_links.size();
+    for (size_t i = 0; i < n_subgame_links; i++)
+    {
+        const db_link_t& link1 = subgame_links[i];
+        const db_link_t& link2 = other.subgame_links[i];
+
+        if (!link1.is_equal(link2))
+            return false;
+    }
 
     return true;
 }
@@ -221,8 +235,11 @@ void db_entry_partisan::print(ostream& os, const database& db,
     // Complexity
     os << " Complexity: `" << complexity << "`";
 
-    //// Size score
-    //os << " Size score: `" << size_score << "`";
+    // Size score
+    os << " Size score type: `"
+       << db_gen_size_score_type_to_string(size_score_type) << "`";
+
+    os << " Size score: `" << size_score << "`";
 
     // Dominated moves
     os << " Dominated moves: `";
@@ -235,7 +252,7 @@ void db_entry_partisan::print(ostream& os, const database& db,
     os << "`";
 
     // Serialized sum
-    os << " Serialized sum: " << serialized_sum.size() << " bytes";
+    os << " Serialized sum (bytes): " << serialized_sum.size() << " bytes";
 
     // Simplest equal entry
     os << " SEG hash: `";
@@ -246,7 +263,21 @@ void db_entry_partisan::print(ostream& os, const database& db,
     os << "`";
 
     // Subgame links
-#warning TODO implement me!
+    os << " Subgame hashes: `";
+
+    const size_t n_subgame_links = subgame_links.size();
+    for (size_t i = 0; i < n_subgame_links; i++)
+    {
+        if (i > 0)
+            os << ", ";
+
+        const db_link_t& link = subgame_links[i];
+        if (link.is_nullptr())
+            os << "nullptr";
+        else
+            os << link.get_as_pointer()->first;
+    }
+    os << "`";
     
     // Newline
     if (print_endl)
@@ -1121,7 +1152,6 @@ pair<const hash_t, db_entry_partisan>* database::_get_or_allocate_partisan_impl(
 
     const hash_t hash = get_db_hash(g);
 
-#warning TODO ensure this doesn't default construct when already present!!!
     auto entry_iterator = _terminal_partisan.try_emplace(hash);
 
     pair<const hash_t, db_entry_partisan>& p = *entry_iterator.first;
@@ -1134,8 +1164,9 @@ ostream& operator<<(ostream& os, const database& db)
     const unordered_map<game_type_t, string>& disk_type_to_name_map =
         db._mapper.get_disk_type_to_name_map();
 
-#warning TODO printing partisan DB stuff!
     //os << "# of Partisan game types: " << db._tree_partisan.size() << '\n';
+
+    os << "# of Partisan games: " << db._terminal_partisan.size() << '\n';
     os << "# of Impartial game types: " << db._tree_impartial.size() << '\n';
 
     //for (const pair<const game_type_t, database::terminal_layer_partisan_t>& p :
@@ -1152,6 +1183,7 @@ ostream& operator<<(ostream& os, const database& db)
     //    os << "\tGame type: \"" << game_name << "\" ";
     //    os << "Count: " << layer.size() << '\n';
     //}
+
 
     for (const pair<const game_type_t, database::terminal_layer_impartial_t>& p :
          db._tree_impartial)

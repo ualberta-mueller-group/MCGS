@@ -26,7 +26,7 @@ public:
     hash_t get_as_hash() const;
     std::pair<const hash_t, db_entry_partisan>* get_as_pointer() const;
 
-    bool equal_as_pointers(const db_link_t& other) const;
+    bool is_equal(const db_link_t& other) const;
     bool is_nullptr() const;
 
 private:

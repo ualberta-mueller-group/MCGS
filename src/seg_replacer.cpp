@@ -4,8 +4,6 @@
 #include "bounds.h"
 #include "db_link_t.h"
 #include "global_options.h"
-#include "grid_generator.h"
-#include "gridlike_db_game_generator.h"
 #include "safe_arithmetic.h"
 #include "sumgame_change_record.h"
 #include "database.h"
@@ -70,7 +68,7 @@ void temp_db_game_t::release()
     entry_ptr = nullptr;
 }
 
-hash_t temp_db_game_t::get_hash() const
+[[maybe_unused]] hash_t temp_db_game_t::get_hash() const
 {
     return entry_ptr->first;
 }
@@ -534,7 +532,7 @@ bool seg_replacer::try_add_to_selection(size_t sel_idx)
     if (!tg.is_valid())
         return false;
 
-    db_entry_partisan& entry = tg.entry_ptr->second;
+    //db_entry_partisan& entry = tg.entry_ptr->second;
 
     //if (_size_score_sum + entry.size_score > _max_size_score)
     //    return false;
@@ -548,10 +546,10 @@ void seg_replacer::pop_selection()
 {
     assert(!_selection_indices.empty());
 
-    const size_t sel_idx = _selection_indices.back();
+    //const size_t sel_idx = _selection_indices.back();
     _selection_indices.pop_back();
 
-    temp_db_game_t& tg = (*_current_container)[sel_idx];
+    //temp_db_game_t& tg = (*_current_container)[sel_idx];
 
     //_size_score_sum -= tg.entry_ptr->second.size_score;
 }

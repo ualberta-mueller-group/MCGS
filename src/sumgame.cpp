@@ -679,7 +679,8 @@ optional<solve_result> sumgame::db_lookup_pass(temperature_vec_t& temperatures,
                     const game_bounds& bounds = *entry->bounds_data;
                     const bound_scale scale = bounds.get_scale();
 
-#warning TODO review this assumption
+//#warning TODO review this assumption in final proofreading pass!
+
                     //THROW_ASSERT(bounds.get_lower_relation() == REL_LESS &&
                     //             bounds.get_upper_relation() == REL_GREATER);
 

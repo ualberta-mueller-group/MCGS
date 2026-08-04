@@ -3,7 +3,8 @@
 
 using namespace std;
 
-bool db_link_t::equal_as_pointers(const db_link_t& other) const
+
+bool db_link_t::is_equal(const db_link_t& other) const
 {
     const pair<const hash_t, db_entry_partisan>* ptr1 = get_as_pointer();
     const pair<const hash_t, db_entry_partisan>* ptr2 = other.get_as_pointer();
@@ -19,5 +20,4 @@ bool db_link_t::equal_as_pointers(const db_link_t& other) const
 
     return hash1 == hash2;
 }
-
 

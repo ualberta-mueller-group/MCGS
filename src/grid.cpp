@@ -157,17 +157,16 @@ const vector<int>& grid::board_const() const
 void grid::save_board(i_obuffer& os, const vector<int>& board, int_pair shape,
                       serializer_ctx* ctx)
 {
-#warning TODO review size assumptions here (esp. the i8)!
-    assert(board.size() == shape.first * shape.second && //
-           shape.first >= 0 &&                           //
-           shape.second >= 0                             //
+    assert(board.size() == static_cast<size_t>(shape.first * shape.second) && //
+           shape.first >= 0 &&                                                //
+           shape.second >= 0                                                  //
     );
 
-    os.write_i32(integral_cast_unsafe<int32_t>(shape.first));
-    os.write_i32(integral_cast_unsafe<int32_t>(shape.second));
+    os.write_i32(integral_cast_checked<int32_t>(shape.first));
+    os.write_i32(integral_cast_checked<int32_t>(shape.second));
 
     for (const int val : board)
-        os.write_i8(integral_cast_unsafe<int8_t>(val));
+        os.write_i16(integral_cast_checked<int16_t>(val));
 }
 
 pair<vector<int>, int_pair> grid::load_board(i_ibuffer& is, serializer_ctx* ctx)
@@ -177,14 +176,17 @@ pair<vector<int>, int_pair> grid::load_board(i_ibuffer& is, serializer_ctx* ctx)
     int& n_rows = result.second.first;
     int& n_cols = result.second.second;
 
-    n_rows = integral_cast_unsafe<int>(is.read_i32());
-    n_cols = integral_cast_unsafe<int>(is.read_i32());
+    n_rows = integral_cast_checked<int>(is.read_i32());
+    n_cols = integral_cast_checked<int>(is.read_i32());
 
     const int64_t size =
         static_cast<int64_t>(n_rows) * static_cast<int64_t>(n_cols);
 
+    board.reserve(static_cast<size_t>(size));
+
+    static_assert(sizeof(int) >= sizeof(int16_t));
     for (int64_t i = 0; i < size; i++)
-        board.push_back(is.read_i8());
+        board.push_back(is.read_i16());
 
     return result;
 }
