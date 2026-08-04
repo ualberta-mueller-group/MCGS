@@ -278,9 +278,8 @@ public:
 
     void update_metadata_string(const std::string& config_string);
 
-    static hash_t get_db_hash(const game& g, global_hash& gh);
+    static hash_t get_db_hash(const game& g);
     static hash_t get_db_hash(const sumgame& sum);
-    hash_t get_db_hash(const game& g) const;
 
     void assert_links_equal();
 
@@ -360,5 +359,13 @@ private:
 std::ostream& operator<<(std::ostream& os, const database& db);
 
 ////////////////////////////////////////////////// database methods
+inline hash_t database::get_db_hash(const game& g)
+{
+    return g.get_local_hash();
+}
 
+inline hash_t database::get_db_hash(const sumgame& sum)
+{
+    return sum.get_db_hash();
+}
 

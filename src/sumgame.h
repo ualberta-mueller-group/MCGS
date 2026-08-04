@@ -179,6 +179,8 @@ public:
     hash_t get_global_hash_for_player(
         ebw for_player, bool invalidate_game_hashes = false) const;
 
+    hash_t get_db_hash() const;
+
     /*
         Printing.
 
@@ -475,6 +477,11 @@ inline hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 {
     return _sumgame_hash.get_global_hash_value(subgames(), to_play(),
                                                invalidate_game_hashes);
+}
+
+inline hash_t sumgame::get_db_hash() const
+{
+    return _sumgame_hash.get_db_hash_value(subgames());
 }
 
 inline hash_t sumgame::get_global_hash_for_player(ebw for_player,

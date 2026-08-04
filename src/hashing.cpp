@@ -276,6 +276,48 @@ hash_t global_hash::get_global_hash_value(const game* g, ebw to_play,
     return get_value();
 }
 
+hash_t global_hash::get_db_hash_value(const std::vector<game*>& games)
+{
+    std::vector<game*> active_games;
+
+    const size_t n_games = games.size();
+    for (size_t i = 0; i < n_games; i++)
+    {
+        game* g = games[i];
+
+        if (!g->is_active())
+            continue;
+
+        active_games.push_back(g);
+    }
+
+    const size_t n_active_games = active_games.size();
+
+    if (n_active_games == 1)
+        return active_games.back()->get_local_hash();
+
+    auto compare_fn = [](const game* g1, const game* g2) -> bool
+    {
+        const hash_t hash1 = g1->get_local_hash();
+        const hash_t hash2 = g2->get_local_hash();
+        return hash1 < hash2;
+    };
+
+    std::sort(active_games.begin(), active_games.end(), compare_fn);
+
+    reset();
+    set_to_play(EMPTY);
+
+    for (size_t i = 0; i < n_active_games; i++)
+    {
+        game* g = active_games[i];
+        assert(g->is_active());
+        add_subgame(i, g);
+    }
+
+    return get_value();
+}
+
 void global_hash::_resize_if_out_of_range(size_t subgame_idx)
 {
     assert(_subgame_hashes.size() == _subgame_valid_mask.size());

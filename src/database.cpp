@@ -818,21 +818,6 @@ void database::update_metadata_string(const string& config_string)
     _metadata_string += "DB config string: \"" + config_string + "\"";
 }
 
-hash_t database::get_db_hash(const game& g, global_hash& gh)
-{
-    return gh.get_global_hash_value(&g, EMPTY);
-}
-
-hash_t database::get_db_hash(const sumgame& sum)
-{
-    return sum.get_global_hash_for_player(EMPTY);
-}
-
-hash_t database::get_db_hash(const game& g) const
-{
-    global_hash& gh = _get_global_hash();
-    return get_db_hash(g, gh);
-}
 
 #define PRINT_FRAC(val1, val2)                                                 \
     do                                                                         \
