@@ -119,9 +119,7 @@ INIT_GLOBAL_WITH_SUMMARY(use_seg, bool, true);
 
 INIT_GLOBAL_WITH_SUMMARY(clear_tt, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(pitm, bool, true);
-INIT_GLOBAL_WITH_SUMMARY(local_cs4, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(single_seg, bool, false);
-INIT_GLOBAL_WITH_SUMMARY(experimental_cs, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(count_sums, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(experiment_seed, uint64_t, 0);
 INIT_GLOBAL_WITH_SUMMARY(impartial_algorithm_mex, bool, false);
