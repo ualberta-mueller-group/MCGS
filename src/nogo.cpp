@@ -237,7 +237,7 @@ void nogo::save_impl(i_obuffer& os, serializer_ctx* ctx) const
     save_board(os, _immortal, shape(), ctx);
 }
 
-dyn_serializable* nogo::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+poly_serializable* nogo::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 {
     std::pair<std::vector<int>, int_pair> board_pair = load_board(is, ctx);
     std::pair<std::vector<int>, int_pair> immortal_pair = load_board(is, ctx);

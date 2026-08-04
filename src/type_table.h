@@ -8,7 +8,7 @@
 #include <typeinfo>
 
 ////////////////////////////////////////////////// typedefs
-typedef uint32_t dyn_serializable_id_t;
+typedef uint32_t poly_serializable_id_t;
 typedef uint32_t game_type_t;
 
 ////////////////////////////////////////////////// struct type_table_t
@@ -27,9 +27,9 @@ struct type_table_t
 public:
     type_table_t();
 
-    // dyn_serializable_id methods
-    dyn_serializable_id_t dyn_serializable_id();
-    dyn_serializable_id_t& dyn_serializable_id_ref();
+    // poly_serializable_id methods
+    poly_serializable_id_t poly_serializable_id();
+    poly_serializable_id_t& poly_serializable_id_ref();
 
     // game_type methods
     game_type_t game_type();
@@ -52,7 +52,7 @@ public:
     static void set_initialized();
 
 private:
-    dyn_serializable_id_t _sid;
+    poly_serializable_id_t _sid;
     game_type_t _game_type;
     unsigned int _grid_hash_mask;
 
@@ -89,12 +89,12 @@ inline type_table_t::type_table_t() : _sid(0), _game_type(0), _grid_hash_mask(0)
 {
 }
 
-inline dyn_serializable_id_t type_table_t::dyn_serializable_id()
+inline poly_serializable_id_t type_table_t::poly_serializable_id()
 {
     return _sid;
 }
 
-inline dyn_serializable_id_t& type_table_t::dyn_serializable_id_ref()
+inline poly_serializable_id_t& type_table_t::poly_serializable_id_ref()
 {
     return _sid;
 }

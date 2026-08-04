@@ -36,21 +36,21 @@
     not an error). This is used for integer types.
 
     Polymorphic types T should:
-    1. Derive from interface dyn_serializable (dynamic_serializable.h)
+    1. Derive from interface poly_serializable (poly_serializable.h)
     2. Define:
         Method: void T::save_impl(i_obuffer&) const
-        Function: static dyn_serializable* T::load_impl(i_ibuffer&)
-    3. Call register_dyn_serializable<T>() during mcgs_init_all()
+        Function: static poly_serializable* T::load_impl(i_ibuffer&)
+    3. Call register_poly_serializable<T>() during mcgs_init_all()
 
     Polymorphic type save usage example:
         game* some_game_ptr = new clobber("XO");
         // All 3 valid:
-        serializer<dyn_serializable*>::save(some_obuffer, some_game_ptr);
+        serializer<poly_serializable*>::save(some_obuffer, some_game_ptr);
         serializer<game*>::save(some_obuffer, some_game_ptr);
         serializer<clobber*>::save(some_obuffer, some_game_ptr);
 
     After any of the above, all of the below are valid (remember to use delete):
-        serializer<dyn_serializable*>::load(some_ibuffer);
+        serializer<poly_serializable*>::load(some_ibuffer);
         serializer<game*>::load(some_ibuffer);
         serializer<clobber*>::load(some_ibuffer);
 
@@ -113,7 +113,7 @@
         time?
 */
 
-class dyn_serializable;
+class poly_serializable;
 
 struct serializer_ctx
 {
@@ -173,7 +173,7 @@ inline void serializer_save(i_obuffer& os, const T& val,
 template <class T>
 struct serializer<T*,
     std::enable_if_t<
-        !std::is_base_of_v<dyn_serializable, T>,
+        !std::is_base_of_v<poly_serializable, T>,
         void
     >
 >

@@ -161,7 +161,7 @@ void cannibal_clobber::save_impl(i_obuffer& os, serializer_ctx* ctx) const
     save_board(os, board_const(), shape(), ctx);
 }
 
-dyn_serializable* cannibal_clobber::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+poly_serializable* cannibal_clobber::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 {
     pair<vector<int>, int_pair> board_pair = load_board(is, ctx);
     return new cannibal_clobber(board_pair.first, board_pair.second);

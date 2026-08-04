@@ -324,7 +324,7 @@ void elephants::save_impl(i_obuffer& os, serializer_ctx* ctx) const
     save_board(os, board_const(), ctx);
 }
 
-dyn_serializable* elephants::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+poly_serializable* elephants::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 {
     return new elephants(load_board(is, ctx));
 }

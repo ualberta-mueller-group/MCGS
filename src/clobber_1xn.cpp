@@ -178,7 +178,7 @@ void clobber_1xn::save_impl(i_obuffer& os, serializer_ctx* ctx) const
     save_board(os, board_const(), ctx);
 }
 
-dyn_serializable* clobber_1xn::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+poly_serializable* clobber_1xn::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 {
     return new clobber_1xn(load_board(is, ctx));
 }

@@ -23,7 +23,7 @@ public:
 
     // Serialization
     void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
-    static dyn_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
+    static poly_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
 
     bool is_move(const int& from, const int& to, bw to_play) const;
 

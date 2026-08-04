@@ -133,7 +133,7 @@ void toppling_dominoes::save_impl(i_obuffer& os,
     }
 }
 
-dyn_serializable* toppling_dominoes::load_impl(i_ibuffer& is,
+poly_serializable* toppling_dominoes::load_impl(i_ibuffer& is,
                                                serializer_ctx* ctx)
 {
     vector<int> board;

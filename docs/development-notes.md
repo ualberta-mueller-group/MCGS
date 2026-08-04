@@ -26,7 +26,7 @@ This document includes more detailed information than `README.md`, including des
 - [Time: Measuring Time, and Respecting Timeouts (`stopwatch.h`, `timeout_token.h`)](#time-measuring-time-and-respecting-timeouts-stopwatchh-timeout_tokenh)
 - [Bounds (`bounds.h` and `bounds_finder.h`)](#bounds-boundsh-and-bounds_finderh)
 - [File Parser and Internals](#file-parser-and-internals)
-- [Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)](#serialization-iobufferh-serializerh-dynamic_serializableh)
+- [Serialization (`iobuffer.h`, `serializer.h`, `poly_serializable.h`)](#serialization-iobufferh-serializerh-dynamic_serializableh)
 - [Unused `game::_order_impl` Method](#unused-game_order_impl-method)
 - [Outstanding Issues](#outstanding-issues)
 - [Design Choices and Remaining Uglinesses](#design-choices-and-remaining-uglinesses)
@@ -1320,7 +1320,7 @@ Both examples give the same `type_table_t` -- the unique table corresponding to
 Also defines runtime-allocated type integers (`uint32_t`), included as fields
 of the `type_table_t` struct:
 - `game_type_t`, integer with unique value for each `game` class
-- `dyn_serializable_id_t`, integer with unique value for each serializable
+- `poly_serializable_id_t`, integer with unique value for each serializable
     polymorphic type which has been registered with the serialization system.
     Ignore this for now as it is unused (but implemented)
 - And an `unsigned int` grid hash mask
@@ -1329,7 +1329,7 @@ of the `type_table_t` struct:
 
 Allocation of each `type_table_t` is done in this file, but
 allocation/assignment of these integral values is done elsewhere, i.e.
-`game.cpp`, `dynamic_serializable.cpp`, and `init_grid_hash_mask.cpp`:
+`game.cpp`, `poly_serializable.cpp`, and `init_grid_hash_mask.cpp`:
 
 - `game.h`/`game.cpp`
     - Defines method `game_type_t game::game_type() const`
@@ -1753,7 +1753,7 @@ EXAMPLES:
       - Throw a `parser_exception` if the text does match your command, but has
         some error.
 
-# Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)
+# Serialization (`iobuffer.h`, `serializer.h`, `poly_serializable.h`)
 The serialization code detailed here is used by the database. This section
 mostly describes implementation details not currently important for users.
 
@@ -1861,11 +1861,11 @@ This code is implemented but unused. This section can (and should?) be
 ignored for now.
 
 To make your polymorphic type `T` serializable:
-1. Inherit from interface class `dyn_serializable` (`dynamic_serializable.h`)
+1. Inherit from interface class `poly_serializable` (`poly_serializable.h`)
 2. Define:
     - Method `void T::save_impl(obuffer&) const`
-    - Function `static dyn_serializable* T::load_impl(ibuffer&)`
-3. Call `register_dyn_serializable<T>()` in `init_serialization.cpp`
+    - Function `static poly_serializable* T::load_impl(ibuffer&)`
+3. Call `register_poly_serializable<T>()` in `init_serialization.cpp`
     - If not registered, your polymorphic type can't be saved/loaded. This
         will cause run time exceptions when saving/loading `T`
     - A compile time error is raised if a registered type doesn't implement
@@ -1875,23 +1875,23 @@ Polymorphic type save usage example:
 ```
 game* some_game_ptr = new clobber("XO");
 // All 3 valid:
-serializer<dyn_serializable*>::save(some_obuffer, some_game_ptr);
+serializer<poly_serializable*>::save(some_obuffer, some_game_ptr);
 serializer<game*>::save(some_obuffer, some_game_ptr);
 serializer<clobber*>::save(some_obuffer, some_game_ptr);
 ```
 
 Load usage example (remember to use keyword `delete` to clean up):
 ```
-serializer<dyn_serializable*>::load(some_ibuffer);
+serializer<poly_serializable*>::load(some_ibuffer);
 serializer<game*>::load(some_ibuffer);
 serializer<clobber*>::load(some_ibuffer);
 ```
 
-A `serializer` template is defined in `dynamic_serializable.h` for all pointer
-types derived from `dyn_serializable`. It calls your `save_impl` method and
+A `serializer` template is defined in `poly_serializable.h` for all pointer
+types derived from `poly_serializable`. It calls your `save_impl` method and
 `load_impl` function using some run time type information (see RTTI section).
 
-Each registered polymorphic type has a unique `dyn_serializable_id_t` (a
+Each registered polymorphic type has a unique `poly_serializable_id_t` (a
 unique run time allocated integer similar to a `game_type_t`). This specifies
 an index into an array of function pointers (for `load_impl` functions). This
 value is written/read from file when saving/loading polymorphic types.

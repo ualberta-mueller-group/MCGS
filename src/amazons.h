@@ -25,7 +25,7 @@ public:
 
     // Serialization
     void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
-    static dyn_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
+    static poly_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
 
     void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
