@@ -864,9 +864,13 @@ void database::update_metadata_string(const string& config_string)
             cout << " (" << val1 / static_cast<double>(val2) << ")";           \
     } while (0)
 
-void database::assert_links_equal()
+void database::assert_links_equal(bool silent)
 {
-    cout << "Disabling `global::use_seg` for validation pass..." << endl;
+    if (!silent)
+        cout << "Disabling `global::use_seg` for validation pass..." << endl;
+
+    const bool restore_use_seg = global::use_seg();
+
     global::use_seg.set(false);
     sumgame sum(BLACK);
 
@@ -943,22 +947,26 @@ void database::assert_links_equal()
 
     }
 
-    cout << "Serialized sums and entry links OK" << endl;
+    if (!silent)
+    {
+        cout << "Serialized sums and entry links OK" << endl;
 
-    PRINT_FRAC(n_entries_with_links, _terminal_partisan.size());
-    cout << " entries with links" << endl;
+        PRINT_FRAC(n_entries_with_links, _terminal_partisan.size());
+        cout << " entries with links" << endl;
 
-    PRINT_FRAC(n_singles_with_links, n_singles);
-    cout << " singles with links" << endl;
+        PRINT_FRAC(n_singles_with_links, n_singles);
+        cout << " singles with links" << endl;
 
-    PRINT_FRAC(n_sums_with_links, n_sums);
-    cout << " sums with links" << endl;
+        PRINT_FRAC(n_sums_with_links, n_sums);
+        cout << " sums with links" << endl;
 
-    PRINT_FRAC(n_non0_with_link_differing_types, n_non0_with_link);
-    cout << " # non0 w/ link and differing type / # non0 w/ link" << endl;
-
+        PRINT_FRAC(n_non0_with_link_differing_types, n_non0_with_link);
+        cout << " # non0 w/ link and differing type / # non0 w/ link" << endl;
+    }
 
     assert(sum.num_total_games() == 0);
+
+    global::use_seg.set(restore_use_seg);
 }
 
 void database::register_type(const string& type_name,

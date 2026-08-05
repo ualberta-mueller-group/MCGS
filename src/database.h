@@ -305,7 +305,7 @@ public:
     static hash_t get_db_hash(const game& g);
     static hash_t get_db_hash(const sumgame& sum);
 
-    void assert_links_equal();
+    void assert_links_equal(bool silent);
 
     /*
         Game-type-related functions.

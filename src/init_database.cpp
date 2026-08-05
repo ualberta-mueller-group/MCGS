@@ -237,7 +237,7 @@ void fill_database(database& db, const string& db_config_string, bool dry_run)
     {
         db.update_metadata_string(db_config_string);
 
-        db.assert_links_equal();
+        db.assert_links_equal(false);
     }
 }
 

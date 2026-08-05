@@ -13,6 +13,7 @@
 #include "cgt_basics.h"
 #include "clobber_1xn.h"
 #include "db_game_generator.h"
+#include "db_link_t.h"
 #include "dominated_moves.h"
 #include "game.h"
 #include "grid_generator.h"
@@ -130,7 +131,9 @@ void check_dom_obj(sumgame& sum, const db_dom_moves_t& dom_obj)
     }
 }
 
-void check_entry_contents(sumgame& sum, const db_entry_partisan* entry, thermograph_builder_no_db& thermograph_builder)
+void check_entry_contents(sumgame& sum,
+                          const db_entry_partisan* entry,
+                          thermograph_builder_no_db& thermograph_builder)
 {
     assert(entry != nullptr);
 
@@ -161,6 +164,45 @@ void check_entry_contents(sumgame& sum, const db_entry_partisan* entry, thermogr
     assert(entry->dominated_moves.get() != nullptr);
     const db_dom_moves_t& dom_obj = *entry->dominated_moves;
     check_dom_obj(sum, dom_obj);
+
+    // serialized_sum and subgame_links
+    vector<hash_t> subgame_hashes;
+    vector<hash_t> deserialized_subgame_hashes;
+    vector<hash_t> linked_entry_hashes;
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        game* g = sum.subgame(i);
+        if (!g->is_active())
+            continue;
+        subgame_hashes.push_back(g->get_local_hash());
+    }
+
+    {
+        vector<game*> deserialized_games = entry->load_sum();
+        for (game* g : deserialized_games)
+        {
+            deserialized_subgame_hashes.push_back(g->get_local_hash());
+            delete g;
+        }
+    }
+
+    for (const db_link_t& link : entry->subgame_links)
+    {
+        assert(!link.is_nullptr());
+        linked_entry_hashes.push_back(link.get_as_pointer()->first);
+    }
+
+    std::sort(subgame_hashes.begin(), subgame_hashes.end(),
+              std::less<hash_t>());
+    std::sort(linked_entry_hashes.begin(), linked_entry_hashes.end(),
+              std::less<hash_t>());
+    std::sort(deserialized_subgame_hashes.begin(),
+              deserialized_subgame_hashes.end(), std::less<hash_t>());
+
+    assert(subgame_hashes == deserialized_subgame_hashes);
+    assert(deserialized_subgame_hashes == linked_entry_hashes);
 
 }
 
@@ -218,6 +260,7 @@ void test_generate_impl(database& db, i_db_game_generator* gen_generate,
         sum.pop(g);
         delete g;
     }
+    db.assert_links_equal(true);
 
     delete gen_generate;
     delete gen_generate_copy;
