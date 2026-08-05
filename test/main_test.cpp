@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "integral_conversion_test.h"
-#define RUN_OVERRIDE_TESTS true
+#define RUN_OVERRIDE_TESTS false
 #define SHOW_TEST_CALLS true
 
 
@@ -99,7 +99,7 @@ namespace {
 
 void override_tests()
 {
-    RUN_TEST(pitm_test_all());
+    //RUN_TEST(pitm_test_all());
     //RUN_TEST(database_test_all(false));
 }
 

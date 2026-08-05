@@ -50,6 +50,16 @@ enum db_gen_stop_after_enum
     DB_GEN_STOP_AFTER_SEG,
 };
 
+inline constexpr std::array<db_gen_stop_after_enum, 4> DB_GEN_STOP_AFTER_ENUM_ALL
+{
+    DB_GEN_STOP_AFTER_OUTCOME_CLASS,
+    DB_GEN_STOP_AFTER_BOUNDS,
+    DB_GEN_STOP_AFTER_DOMINATED_MOVES,
+    DB_GEN_STOP_AFTER_SEG,
+};
+
+
+
 std::string db_gen_stop_after_enum_to_string(db_gen_stop_after_enum stop_after);
 std::optional<db_gen_stop_after_enum> string_to_db_gen_stop_after_enum(
     const std::string& stop_after_str);
@@ -63,6 +73,16 @@ enum db_gen_size_score_type
     DB_GEN_SIZE_SCORE_TYPE_STONE_COUNT,
     DB_GEN_SIZE_SCORE_TYPE_EMPTY_COUNT,
 };
+
+inline constexpr std::array<db_gen_size_score_type, 6>
+    DB_GEN_SIZE_SCORE_TYPE_ENUM_ALL {
+        DB_GEN_SIZE_SCORE_TYPE_NONE,
+        DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS,
+        DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE,
+        DB_GEN_SIZE_SCORE_TYPE_TREE_HEIGHT,
+        DB_GEN_SIZE_SCORE_TYPE_STONE_COUNT,
+        DB_GEN_SIZE_SCORE_TYPE_EMPTY_COUNT,
+    };
 
 inline constexpr db_gen_size_score_type DEFAULT_DB_GEN_SIZE_SCORE_TYPE =
     DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS;

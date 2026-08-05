@@ -7,6 +7,7 @@
 #include <set>
 #include <cassert>
 #include <vector>
+#include <utility>
 
 #include "bounds.h"
 #include "cgt_basics.h"
@@ -25,7 +26,22 @@
 #include "ThGraph.h"
 #include "utilities.h"
 
+template <>
+struct std::hash<std::pair<uint64_t, uint64_t>>
+{
+    size_t operator()(const std::pair<uint64_t, uint64_t>& p) const noexcept
+    {
+        return p.first ^ p.second;
+    }
+};
+
+
+namespace {
+
+} // namespace
+
 using namespace std;
+
 
 ////////////////////////////////////////////////// Helpers
 namespace {
@@ -510,13 +526,99 @@ void test_generate(bool extra_tests)
     }
 }
 
+void test_generate_options_stop_after()
+{
+    for (const db_gen_stop_after_enum stop_after : DB_GEN_STOP_AFTER_ENUM_ALL)
+    {
+        database db;
+        db.__register_built_in_types();
+        DATABASE_REGISTER_TYPE(db, domineering);
+        assert(db.empty());
+
+        db_gen_options_t opts;
+        opts.silent = true;
+        opts.stop_after = stop_after;
+
+        i_db_game_generator* gen = make_domineering_generator(3, 3);
+        db.generate_entries_partisan(*gen, opts);
+        delete gen;
+
+        domineering g("..|..");
+        const db_entry_partisan* entry = db.get_partisan_ptr(g);
+        assert(entry != nullptr);
+
+        // Fields that must be present
+        assert(entry->disk_game_type != 0);
+        assert(entry->outcome != outcome_class::U);
+        assert(entry->thermograph);
+        assert(entry->serialized_sum.size() > 0);
+        assert(entry->subgame_links.size() == 1);
+        assert(&(entry->subgame_links.back().get_as_pointer()->second) == entry);
+
+        // Bounds
+        const bool expect_bounds = stop_after >= DB_GEN_STOP_AFTER_BOUNDS;
+        assert(expect_bounds == (bool) entry->bounds_data);
+
+        // Dominated moves
+        const bool expect_dom = stop_after >= DB_GEN_STOP_AFTER_DOMINATED_MOVES;
+        assert(expect_dom == (entry->complexity > 0));
+        assert(expect_dom == (bool) entry->dominated_moves);
+
+        // SEG
+        const bool expect_seg = stop_after >= DB_GEN_STOP_AFTER_SEG;
+        assert(expect_seg ==
+               (entry->size_score_type != DB_GEN_SIZE_SCORE_TYPE_NONE));
+        assert(expect_seg == (entry->size_score > 0));
+        assert(expect_seg == !entry->simplest_equal_entry.is_nullptr());
+    }
+
+}
+
+void test_generate_options_size_score()
+{
+    unordered_set<pair<uint64_t, uint64_t>> size_score_and_complexity_set;
+
+    for (const db_gen_size_score_type size_score_type : DB_GEN_SIZE_SCORE_TYPE_ENUM_ALL)
+    {
+        if (size_score_type == DB_GEN_SIZE_SCORE_TYPE_NONE)
+            continue;
+
+        database db;
+        db.__register_built_in_types();
+        DATABASE_REGISTER_TYPE(db, domineering);
+        assert(db.empty());
+
+        db_gen_options_t opts;
+        opts.silent = true;
+        opts.size_score_type = size_score_type;
+
+        i_db_game_generator* gen = make_domineering_generator(3, 3);
+        db.generate_entries_partisan(*gen, opts);
+        delete gen;
+
+        domineering g("...|.##|...");
+        const db_entry_partisan* entry = db.get_partisan_ptr(g);
+        assert(entry != nullptr);
+
+        assert(entry->size_score_type == size_score_type);
+
+        const auto inserted = size_score_and_complexity_set.emplace(
+            entry->size_score, entry->complexity);
+
+        assert(inserted.second);
+    }
+
+
+}
+
 } // namespace
 
 void database_test_all(bool extra_tests)
 {
-
     test_db_hash();
     test_basic();
     test_query_game_and_sum();
     test_generate(extra_tests);
+    test_generate_options_stop_after();
+    test_generate_options_size_score();
 }

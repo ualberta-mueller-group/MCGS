@@ -621,6 +621,8 @@ void database::generate_entries_partisan(i_db_game_generator& gen,
         sum1.undo_split_and_normalize();
         sum1.pop(g.get());
     }
+
+    delete_equivalence_classes();
 }
 
 void database::generate_single_partisan_entry(sumgame& sum,
