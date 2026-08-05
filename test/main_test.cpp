@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 
 #include "integral_conversion_test.h"
-#define RUN_OVERRIDE_TESTS false
+#define RUN_OVERRIDE_TESTS true
 #define SHOW_TEST_CALLS true
 
 
@@ -99,6 +99,7 @@ namespace {
 
 void override_tests()
 {
+    RUN_TEST(database_test_all(false));
 }
 
 void print_flag(const string& flag_string, const string& flag_description)

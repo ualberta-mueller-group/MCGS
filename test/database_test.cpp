@@ -1,6 +1,8 @@
 #include "database_test.h"
 
+#include <cstring>
 #include <memory>
+#include <sstream>
 #include <unordered_set>
 #include <set>
 #include <cassert>
@@ -214,6 +216,15 @@ i_db_game_generator* make_clobber_1xn_generator(int max_len)
     return new gridlike_db_game_generator<clobber_1xn, GRIDLIKE_TYPE_STRIP>(gg);
 }
 
+i_db_game_generator* make_nogo_1xn_generator(int max_len)
+{
+    grid_generator* gg =
+        new grid_generator(int_pair(1, max_len), {EMPTY, BLACK, WHITE}, true);
+
+    return new gridlike_db_game_generator<nogo_1xn, GRIDLIKE_TYPE_STRIP>(gg);
+}
+
+
 i_db_game_generator* make_domineering_generator(int max_r, int max_c)
 {
     grid_generator* gg =
@@ -222,7 +233,125 @@ i_db_game_generator* make_domineering_generator(int max_r, int max_c)
     return new gridlike_db_game_generator<domineering, GRIDLIKE_TYPE_GRID>(gg);
 }
 
+
+void test_db_hash_impl(i_db_game_generator& gen,
+                       unordered_map<hash_t, string>& game_hashes)
+{
+    sumgame sum(BLACK);
+    sumgame sum_single(BLACK);
+    global_hash gh;
+
+    auto check_no_hash_collision = [&](const sumgame& sum,
+                                       hash_t db_hash) -> void
+    {
+        stringstream strstr;
+        sum.print_sorted(strstr);
+        const string sum_string = strstr.str();
+
+        const auto inserted = game_hashes.try_emplace(db_hash, sum_string);
+
+        // No hash collision
+        assert(inserted.second || inserted.first->second == sum_string);
+    };
+
+    vector<game*> active_games;
+    vector<hash_t> active_hashes;
+
+    vector<game*> active_game_single;
+    vector<hash_t> active_hash_single;
+
+    while (gen)
+    {
+        active_games.clear();
+        active_hashes.clear();
+
+        game* g = gen.gen_game();
+        ++(gen);
+
+        assert(sum.num_total_games() == 0);
+        sum.add(g);
+        sum.split_and_normalize();
+
+        const int n_games = sum.num_total_games();
+        for (int i = 0; i < n_games; i++)
+        {
+            game* g = sum.subgame(i);
+            if (!g->is_active())
+                continue;
+
+            active_games.push_back(g);
+            active_hashes.push_back(g->get_local_hash());
+        }
+
+        const hash_t sum_hash1 = sum.get_db_hash();
+        const hash_t sum_hash2 = database::get_db_hash(sum);
+        const hash_t sum_hash3 = gh.get_db_hash_value(active_games);
+        const hash_t sum_hash4 = gh.get_db_hash_value(active_hashes);
+
+        assert(sum_hash1 == sum_hash2 && //
+               sum_hash2 == sum_hash3 && //
+               sum_hash3 == sum_hash4    //
+        );
+
+        check_no_hash_collision(sum, sum_hash1);
+
+        for (int i = 0; i < n_games; i++)
+        {
+            game* g = sum.subgame(i);
+            if (!g->is_active())
+                continue;
+
+            active_game_single.clear();
+            active_hash_single.clear();
+            assert(sum_single.num_total_games() == 0);
+
+            active_game_single.push_back(g);
+            active_hash_single.push_back(g->get_local_hash());
+            sum_single.add(g);
+
+            const hash_t single_hash1 = g->get_local_hash();
+            const hash_t single_hash2 = sum_single.get_db_hash();
+            const hash_t single_hash3 = database::get_db_hash(sum_single);
+            const hash_t single_hash4 = database::get_db_hash(*g);
+            const hash_t single_hash5 = gh.get_db_hash_value(active_game_single);
+            const hash_t single_hash6 = gh.get_db_hash_value(active_hash_single);
+
+            assert(single_hash1 == single_hash2 && //
+                   single_hash2 == single_hash3 && //
+                   single_hash3 == single_hash4 && //
+                   single_hash4 == single_hash5 && //
+                   single_hash5 == single_hash6    //
+            );
+
+            check_no_hash_collision(sum_single, single_hash1);
+
+            sum_single.pop(g);
+        }
+
+        sum.undo_split_and_normalize();
+        sum.pop(g);
+
+        delete g;
+    }
+}
+
 ////////////////////////////////////////////////// Main test functions
+void test_db_hash()
+{
+    unordered_map<hash_t, string> db_hash_to_sum_string;
+
+    vector<i_db_game_generator*> generators
+    {
+        make_clobber_1xn_generator(7),
+        make_nogo_1xn_generator(7),
+    };
+
+    for (i_db_game_generator* gen : generators)
+    {
+        test_db_hash_impl(*gen, db_hash_to_sum_string);
+        delete gen;
+    }
+}
 
 // set/get, clear, empty
 void test_basic()
@@ -385,6 +514,8 @@ void test_generate(bool extra_tests)
 
 void database_test_all(bool extra_tests)
 {
+
+    test_db_hash();
     test_basic();
     test_query_game_and_sum();
     test_generate(extra_tests);
