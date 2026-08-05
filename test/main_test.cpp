@@ -91,7 +91,7 @@ static stopwatch sw;
 #include "throw_assert.h"
 #include "toppling_dominoes_test.h"
 #include "utilities_test.h"
-#include "winning_moves_test.h"
+#include "pitm_test.h"
 
 using namespace std;
 
@@ -99,7 +99,8 @@ namespace {
 
 void override_tests()
 {
-    RUN_TEST(database_test_all(false));
+    RUN_TEST(pitm_test_all());
+    //RUN_TEST(database_test_all(false));
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
@@ -249,7 +250,7 @@ int main(int argc, const char** argv)
 
     RUN_TEST(thermograph_helpers_test_all(do_extra_tests));
     RUN_TEST(database_test_all(do_extra_tests));
-    RUN_TEST(test_winning_moves());
+    RUN_TEST(pitm_test_all());
 
     cout << "SUCCESS" << endl;
     return 0;

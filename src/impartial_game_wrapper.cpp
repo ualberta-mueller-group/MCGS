@@ -196,8 +196,8 @@ ig_wrapper_move_generator::ig_wrapper_move_generator(
     : move_generator(BLACK),
       _game(wrapper.wrapped_game()),
       _color(BLACK),
-      _mg_black(_game->create_move_generator(BLACK)),
-      _mg_white(_game->create_move_generator(WHITE)),
+      _mg_black(_game->create_move_generator(BLACK, MOVE_GENERATOR_TYPE_BASIC)),
+      _mg_white(_game->create_move_generator(WHITE, MOVE_GENERATOR_TYPE_BASIC)),
       _generator(nullptr)
 {
     _generator = _mg_black;
@@ -295,8 +295,8 @@ ig_wrapper_alternating_move_generator::ig_wrapper_alternating_move_generator(
     const impartial_game_wrapper& wrapper)
     : move_generator(BLACK),
       _game(*wrapper.wrapped_game()),
-      _mg_current(_game.create_move_generator(BLACK)),
-      _mg_next(_game.create_move_generator(WHITE))
+      _mg_current(_game.create_move_generator(BLACK, MOVE_GENERATOR_TYPE_BASIC)),
+      _mg_next(_game.create_move_generator(WHITE, MOVE_GENERATOR_TYPE_BASIC))
 {
     _next_move(true);
 }
