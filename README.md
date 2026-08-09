@@ -194,6 +194,7 @@ a sum game `G` (for more details see (TODO DEV NOTES)):
 - `board_size` (only defined for `strip`/`grid` games): the sum of each `strip`/`grid` game's dimensions.
 - `stone_count` (only defined for `strip`/`grid` games containing colors): the sum of each `strip`/`grid` game's non-`EMPTY` spaces.
 - `empty_count` (only defined for `strip`/`grid` games containing colors): the sum of each `strip`/`grid` game's `EMPTY` spaces.
+Note: Every game type individually has a default `size_score` value (though all are currently set to `max_local_options`).
 
 The command line option `--print-db-info` can be specified to print database
 info for the loaded database file. This includes the date created, number of
