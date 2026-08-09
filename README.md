@@ -1,4 +1,4 @@
-# MCGS V1.6
+# MCGS V1.7
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
@@ -14,7 +14,7 @@ search optimizations.
 Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of results so far are available from the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
 
 ### Sections
-- [Version 1.6 Additions](#version-16-additions)
+- [Version 1.7 Additions](#version-17-additions)
 - [Building MCGS](#building-mcgs)
 - [Using MCGS](#using-mcgs)
 - [Using the Database](#using-the-database)
@@ -28,52 +28,44 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
     - [Hashing-Related Hooks](#hashing-related-hooks)
     - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
-### Version 1.6 Additions
+### Version 1.7 Additions
 #### Important Notes
-- A CMake build has replaced the old makefile build. The project now also depends on a git submodule. See `README.md` for new build instructions.
-- All games must implement the new `game::clone()` function. Partisan games must implement 2 new functions to have correct DB entries. See [development-notes.md (Adding A Game To the Database)](docs/development-notes.md#adding-a-game-to-the-database).
-
-#### Bug Fixes
-- Fixed a bug where `switch_game::inverse()` could trigger an `assert`. In an unmodified copy of MCGS this couldn't actually happen in practice.
-- Fixed minor create-table.py HTML bug in summary pane: time conversion from ms to days/hours/minutes/seconds/ms showed incorrect (truncated) converted times.
-- Fixed a bug where data was needlessly copied during saving/loading of the database (resulting in higher memory usage during save/load, and longer startup times).
-
+- Database files from version 1.6 are incompatible with version 1.7.
+- The virtual `create_move_generator` function of the `game` and `impartial_game` classes has been renamed to `_create_move_generator_impl`.
+  - If you've implemented your own game class, you should apply this change to it when updating to version 1.7.
+  - NOTE: A new non-virtual `create_move_generator` function has been added to the `game` and `impartial_game` classes.
 #### New Features
-- `move` is now `int64_t` (instead of `int` which is likely 32 bits).
-  - Games can now be constructed with much larger boards as a result.
-- The database has several new fields for partisan games
-  - Lower/upper bounds on value (in terms of multiples of up/down, or `1/8`).
-  - Thermograph.
-  - A set of dominated (or nondominated) moves.
-  - Complexity score. 
-- New games (see `input/info.test`)
-  - `cannibal_clobber`
-  - `gen_king_dirt` (also has CGSuite implementation, see `utils/CGSuite/GenKingDirt.cgs`).
-- New results in the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
-- New optimizations
-  - Impartial wrapper games generate moves by alternating between the moves of `BLACK` and `WHITE`.
-    - Use `--no-imp-wrapper-alternate-color` to revert this (will generate all `BLACK` moves followed by all `WHITE` moves).
-  - For partisan search algorithms (all of these rely on partisan DB entries):
-    - Play moves in subgames in order of decreasing temperature. Subgames without thermographs (those without partisan DB entries) come last.
-    - Use bounds to solve sums.
-    - Prune dominated moves within single subgames.
-    - Replace games which are equal to their bounds, with the equivalent `dyadic_rational` or `up_star`.
-- Input language version `1.5` --> `1.6`.
-- New CLI options
-  - `--dump-db` dumps contents of the loaded database into a human readable text format.
-    - Use with CMake option `-DDB_INCLUDE_STRINGS=1` (to include human readable games in DB entries).
-  - `--test-filter` skips test cases which are incompatible with a specified external CGT project i.e. [SEGClobber](https://github.com/tfolkersen/SEGClobber).
-  - `--convert-to-ctl` exports test cases to a format readable by the [CGT Testing Library](https://github.com/ualberta-mueller-group/cgt_testing_library).
-    - Aids in comparison of MCGS to other CGT projects.
-    - Can use with `--test-filter`.
-  - `--search-graph-print` and `--search-graph-verify` are experimental debugging tools for visualizing search nodes visited by partisan search algorithms. Use a tool like Graphviz or Gephi to view the data.
-- Code cleaned up, new utilities added
-  - `thermograph_builder_no_db.h`: builds the thermograph of a game outside of database generation.
-  - `thermograph_helpers.h`: derives various data from a thermograph.
-  - `sumgame_helpers.h`: sumgame comparisons.
-  - `integral_conversion.h`: casting of integral types with runtime safety checks.
-  - `serializer.h`: implements more STL container types, and less verbose `serializer_save()` and `serializer_load()` functions.
-  - `utilities.h`: has new generic helper functions.
+- New "simplest equal game" (SEG) optimization for partisan minimax search.
+  - During partisan database creation, DB entries are populated with links to the DB entries of simpler-but-equal sums (of 0 or more subgames), according to both a "complexity score" and "size score" (when possible).
+  - During partisan minimax search, these links are used to replace sums of subgames with simpler-but-equal sums to simplify the search space.
+  - See (TODO README) for more details, including instructions for implementing functions necessary to support SEG replacement for your game class.
+- New options have been added to the database config string (`stop_after` and `size_score`). See (TODO README) for more details.
+  - `stop_after` allows partisan database entry fields to be omitted (allowing the user to create a database with contents similar to older versions of MCGS).
+  - `size_score` is a configurable constraint, governing which DB entries may be linked to by other DB entries.
+- Play in the middle (PITM) heuristic is enabled for all games by default. Disable with `--no-pitm` CLI option.
+  - When PITM is enabled, your game's move generator exhaustively generates all of its moves, and moves nearer to the middle of this resulting list are played first.
+- `--play-mcgs` CLI option now prompts users to choose moves by typing them according to the `game::print_move` format (i.e. by entering grid coordinates), rather than by selecting them from a list of moves.
+- Transposition tables (both partisan and impartial) can be saved and loaded to/from file.
+  - See `./MCGS -h` for details, in particular see documentation for CLI options `--tt-sumgame-load`, `--tt-sumgame-save`, `--tt-imp-sumgame-load`, and `--tt-imp-sumgame-save`.
+- The program will now gracefully exit when the user presses Ctrl-c (or upon receiving signals `SIGINT` or `SIGTERM`), assuming initialization (including DB load/creation) has completed.
+  - This can be used in conjunction with aforementioned CLI options to save/load transposition tables. This allows the user to abort long running searches while saving some progress.
+  - If the program is waiting for user input (i.e. the user is to choose a move for `--play-mcgs`), you may also need to press Ctrl-d.
+- New input language version `1.6` -> `1.7`.
+- Added new command type to `.test` files (thermograph test). See [input/info.test](input/info.test).
+
+#### Major Code Additions
+- `game::create_move_generator` and `impartial_game::create_move_generator` are no longer virtual functions. `game::_create_move_generator_impl` and `impartial_game::_create_move_generator_impl` are new virtual functions.
+  - Game classes should implement the virtual `_create_move_generator_impl` functions by simply creating and returning their move generator (as before).
+  - The non-virtual `create_move_generator` functions call the virtual ones, and then either immediately return the resulting move generator, or wrap the resulting move generator with a `pitm_move_generator` which implements the PITM heuristic.
+- `class ibuffer` and `class obuffer` are now abstract types.
+  - See (TODO DEV NOTES) for more details.
+  - `class i_ibuffer` and `class i_obuffer` are interface classes for input and output streams respectively.
+  - `class file_ibuffer` and `class file_obuffer` are non-abstract classes implementing these interfaces, and correspond to the old `ibuffer` and `obuffer` respectively.
+  - `class memory_ibuffer` and `class memory_obuffer` are non-abstract classes implementing these interfaces, and are used to deserialize/serialize `game`s out of/into partisan database entries.
+- Changes to timeout semantics (see (TODO DEV NOTES) for more details):
+  - Search functions lacking a timeout parameter (i.e. `sumgame::solve`) should not be called after the `mcgs_init` functions complete.
+  - Search functions with a timeout parameter (i.e. `sumgame::solve_with_timeout` or `sumgame::solve_with_timeout_token`) will now timeout when the user presses Ctrl-c (even if a timeout of 0 was specified).
+
 
 ### Building MCGS
 First download this repository, and enter its directory. Either download from the
