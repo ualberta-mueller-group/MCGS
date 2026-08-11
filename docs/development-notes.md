@@ -20,13 +20,15 @@ This document includes more detailed information than `README.md`, including des
 - [Database File Portability](#database-file-portability)
 - [Database (`database.h`, `global_database.h`)](#database-databaseh-global_databaseh)
 - [Adding A Game To the Database](#adding-a-game-to-the-database)
+- [Simplest Equal Game](#simplest-equal-game)
 - [Safe Arithmetic Functions (`safe_arithmetic.h`)](#safe-arithmetic-functions-safe_arithmetich)
 - [RTTI - Run-time type information (`type_table.h`)](#rtti---run-time-type-information-type_tableh)
 - [Sumgame Simplification (cgt_game_simplification.h)](#sumgame-simplification-cgt_game_simplificationh)
 - [Time: Measuring Time, and Respecting Timeouts (`stopwatch.h`, `timeout_token.h`)](#time-measuring-time-and-respecting-timeouts-stopwatchh-timeout_tokenh)
+- [Graceful Exit (`exit_signal.h`)](#graceful-exit-exit_signalh)
 - [Bounds (`bounds.h` and `bounds_finder.h`)](#bounds-boundsh-and-bounds_finderh)
 - [File Parser and Internals](#file-parser-and-internals)
-- [Serialization (`iobuffer.h`, `serializer.h`, `poly_serializable.h`)](#serialization-iobufferh-serializerh-dynamic_serializableh)
+- [Serialization (`iobuffer.h`, `serializer.h`, `poly_serializable.h`)](#serialization-iobufferh-serializerh-poly_serializableh)
 - [Unused `game::_order_impl` Method](#unused-game_order_impl-method)
 - [Outstanding Issues](#outstanding-issues)
 - [Design Choices and Remaining Uglinesses](#design-choices-and-remaining-uglinesses)
@@ -1092,12 +1094,11 @@ class but is ineffective (though it currently prints warnings if the runtime
 `database.h` defines the `database` class, and two database entry structs. The
 struct `db_entry_partisan` is used to store data for partisan games,
 and the struct `db_entry_impartial` is used to store nim values for impartial
-games. The database is not used by `MCGS_test` (CLI option `--no-use-db` is
+games. The database is not used in most of `MCGS_test` (CLI option `--no-use-db` is
 implied).
 
-- The database stores data for sums, but only single subgames are queried outside
-    of DB generation. Sums are needed to compute thermographs.
-
+- The database stores data for sums, and as of version 1.7, sums of games are
+  queried for SEG replacement
 - `get_impartial()` takes a single game as an argument. Returns an
     `optional<db_entry_impartial>`.
 - `set_impartial()` takes a single game, and `db_entry_impartial` entry as
@@ -1112,12 +1113,28 @@ implied).
 - A global instance of `database` is accessible through
     `database& get_global_database()` (`global_database.h`), after
     `mcgs_init_all()` completes.
-- `database` has its own sumgame that it uses to solve outcome classes
 - The data is stored in two separate "trees", one tree for partisan games, the
     other for impartial games
-    - Each tree is two layers of `std::unordered_map`. The first indexed by
+    - The partisan tree consists of only one layer, and is queried using a
+      special "DB hash" (according to the function `database::get_db_hash`)
+    - The impartial tree has two layers of `std::unordered_map`. The first indexed by
         game type (`game_type_t`), the second is indexed by local
         hash (`hash_t`), yielding an entry struct
+
+- The DB hash is like the global hash used in partisan minimax search (and is
+  even computed by the `global_hash` class), but there are two differences:
+    - No color (i.e. `to_play`) contributes to the resulting hash.
+    - When there's exactly one subgame, the DB hash is defined as that
+      subgame's local hash.
+        - This does not apply to the case where there are 0 subgames.
+        - This fact is used by `seg_replacer.cpp` when querying a selection of
+          2 or more games for SEG replacement.
+        - This saves memory. The database uses `std::unordered_map`, and a DB
+          lookup results in a `const std::pair<const hash_t,
+          db_entry_partisan>*` as a result. The `hash_t` in this pair is the DB
+          hash, so defining it to be the local hash for entries of single
+          subgames eliminates the need to store an additional `hash_t` inside
+          of the `db_entry_partisan`.
 
 ## Database Generation
 Several types are used for database generation:
@@ -1156,18 +1173,23 @@ in v1.6). This also ensures that subgames which are only produced by `split()`
 and not the game generator (i.e. for nogo) will have DB entries.
 
 
-## New database in Version 1.6
+## Partisan Entry Fields
 Partisan entry fields are computed in this order:
 - Thermograph
     - Thermograph generation will generate DB entries for child nodes which are not in the DB
 - Outcome (derived from thermograph)
 - Bounds
-    - The theromgraph is used to determine whether a game is small but not 0.
+    - The thermograph is used to determine whether a game is small but not 0.
         - If so, `bounds_finder.h` does binary search to find the game's bounds
             along `BOUND_SCALE_UP`.
         - Otherwise bounds along `BOUND_SCALE_DYADIC_RATIONAL` are read from
             the thermograph
 - Dominated moves
+- Simplest equal game link
+
+NOTE: There are more fields than these. See `struct db_entry_partisan` in
+`database.h` for more details (in particular the comments by the struct's
+members).
 
 # Adding A Game To the Database
 IMPORTANT: If your game uses `grid_hash` or otherwise maps games with different

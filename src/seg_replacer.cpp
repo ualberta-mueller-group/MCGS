@@ -215,6 +215,10 @@ void seg_replacer::replace_all()
         if (entry_ptr == nullptr)
             continue;
 
+        // TODO review this
+        if (entry_ptr->second.simplest_equal_entry.is_nullptr())
+            continue;
+
         insert_temp_game(temp_db_game_t(g, entry_ptr));
     }
 
@@ -498,9 +502,9 @@ void seg_replacer::insert_temp_game(temp_db_game_t temp_game)
     const game_type_t disk_type = temp_game.entry_ptr->second.disk_game_type;
     vector<temp_db_game_t>& container = get_or_create_container(disk_type);
 
-    if (container.size() >= 200)
-        cout << "WARNING: container size " << container.size() << endl;
-    assert(container.size() < 1000);
+    //if (container.size() >= 200)
+    //    cout << "WARNING: container size " << container.size() << endl;
+    //assert(container.size() < 1000);
 
     container.push_back(temp_game);
     _active_container_mask[disk_type] = true;

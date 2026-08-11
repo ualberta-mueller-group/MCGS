@@ -148,17 +148,21 @@ struct db_entry_partisan
     std::string sum_string;
 #endif
 
-    game_type_t disk_game_type;
-    outcome_class outcome;
-    std::shared_ptr<ThGraph> thermograph;
-    std::shared_ptr<game_bounds> bounds_data;
-    uint64_t complexity;
-    db_gen_size_score_type size_score_type;
-    uint64_t size_score;
-    std::shared_ptr<db_dom_moves_t> dominated_moves;
-    std::vector<uint8_t> serialized_sum;
-    db_link_t simplest_equal_entry;
-    std::vector<db_link_t> subgame_links;
+    /*
+        Comments on each line below indicate the minimum `stop_after` value
+        required for each field to be present.
+    */
+    game_type_t disk_game_type; // outcome_class
+    outcome_class outcome; // outcome_class
+    std::shared_ptr<ThGraph> thermograph; // outcome_class
+    std::shared_ptr<game_bounds> bounds_data; // bounds
+    uint64_t complexity; // dominated_moves
+    db_gen_size_score_type size_score_type; // seg
+    uint64_t size_score; // seg
+    std::shared_ptr<db_dom_moves_t> dominated_moves; // dominated_moves
+    std::vector<uint8_t> serialized_sum; // seg
+    db_link_t simplest_equal_entry; // seg
+    std::vector<db_link_t> subgame_links; // seg
 };
 
 //////////////////////////////////////// db_entry_partisan methods

@@ -663,11 +663,14 @@ void database::generate_single_partisan_entry(sumgame& sum,
     }
     _n_entries_generated++;
 
-    // Serialized sum
-    entry->save_sum(sum);
+    if (gen_opts.stop_after == DB_GEN_STOP_AFTER_SEG)
+    {
+        // Serialized sum
+        entry->save_sum(sum);
 
-    // Subgame links
-    db_make_subgame_links(sum, *entry, *this);
+        // Subgame links
+        db_make_subgame_links(sum, *entry, *this);
+    }
 
     // Disk game type
     {
@@ -890,6 +893,9 @@ void database::assert_links_equal(bool silent)
     {
         const hash_t entry_hash = entry_pair.first;
         const db_entry_partisan& entry = entry_pair.second;
+
+        if (entry.simplest_equal_entry.is_nullptr())
+            continue;
 
         assert(sum.num_total_games() == 0);
 

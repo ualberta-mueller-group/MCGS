@@ -105,8 +105,6 @@ public:
     // For very large writes. Must flush previously buffered data
     //virtual void write_bytes_raw(const void* src, size_t n_bytes) = 0;
 
-    virtual void flush() = 0;
-
 protected:
     size_t _remaining_buffer_capacity() const;
     void _ensure_buffer_capacity(size_t n_bytes);
@@ -159,7 +157,7 @@ public:
     void close();
 
     //void write_bytes_raw(const void* src, size_t n_bytes) override;
-    void flush() override;
+    void flush();
 
 protected:
     void _reserve_capacity(size_t n_bytes) override;
@@ -205,7 +203,6 @@ public:
 
     std::vector<uint8_t> release_data();
 
-    void flush() override;
     //void write_bytes_raw(const void* src, size_t n_bytes) override;
 
 protected:
@@ -230,10 +227,9 @@ inline i_ibuffer::~i_ibuffer()
 
 inline uint8_t i_ibuffer::read_u8()
 {
-    _ensure_unread_bytes(sizeof(uint8_t));
-    const uint8_t val = _buffer[_buffer_idx];
-    _buffer_idx++;
-    return val;
+    uint8_t val;
+    _read_from_buffer(&val, sizeof(uint8_t));
+    return disk_to_host_u8(val);
 }
 
 inline uint16_t i_ibuffer::read_u16()
@@ -259,10 +255,9 @@ inline uint64_t i_ibuffer::read_u64()
 
 inline int8_t i_ibuffer::read_i8()
 {
-    _ensure_unread_bytes(sizeof(int8_t));
-    const int8_t val = _buffer[_buffer_idx];
-    _buffer_idx++;
-    return val;
+    int8_t val;
+    _read_from_buffer(&val, sizeof(int8_t));
+    return disk_to_host_i8(val);
 }
 
 inline int16_t i_ibuffer::read_i16()
@@ -337,11 +332,8 @@ inline i_obuffer::~i_obuffer()
 
 inline void i_obuffer::write_u8(uint8_t val)
 {
-    //_ensure_buffer_capacity(sizeof(uint8_t));
-    if (_buffer_fill == _buffer_size)
-        flush();
-    _buffer[_buffer_fill] = val;
-    _buffer_fill++;
+    val = host_to_disk_u8(val);
+    _write_to_buffer(&val, sizeof(uint8_t));
 }
 
 inline void i_obuffer::write_u16(uint16_t val)
@@ -364,9 +356,8 @@ inline void i_obuffer::write_u64(uint64_t val)
 
 inline void i_obuffer::write_i8(int8_t val)
 {
-    _ensure_buffer_capacity(sizeof(int8_t));
-    _buffer[_buffer_fill] = val;
-    _buffer_fill++;
+    val = host_to_disk_i8(val);
+    _write_to_buffer(&val, sizeof(int8_t));
 }
 
 inline void i_obuffer::write_i16(int16_t val)
@@ -581,9 +572,9 @@ inline void file_obuffer::_reserve_capacity(size_t n_bytes)
 inline memory_ibuffer::memory_ibuffer(const std::vector<uint8_t>& data_vec)
     : _data_vec(data_vec)
 {
-    _buffer = data_vec.data();
+    _buffer = _data_vec.data();
     _buffer_idx = 0;
-    _buffer_size = data_vec.size();
+    _buffer_size = _data_vec.size();
 }
 
 inline memory_ibuffer::~memory_ibuffer()
@@ -624,10 +615,6 @@ inline std::vector<uint8_t> memory_obuffer::release_data()
     _buffer_size = _INITIAL_BUFFER_SIZE;
 
     return data;
-}
-
-inline void memory_obuffer::flush()
-{
 }
 
 inline void memory_obuffer::_reserve_capacity(size_t n_bytes)
