@@ -24,48 +24,48 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
   - [Implementing a New Game](#implementing-a-new-game)
   - [Implementing Game-Specific Optimizations](#implementing-game-specific-optimizations)
     - [Splitting Into Subgames](#splitting-into-subgames-subgame_split)
-    - [Simplifying Sums of Games](#simplifying-sums-of-games-simplify_basic_cgt)
+    - [Simplifying Sums of Basic Games](#simplifying-sums-of-basic-games-simplify_basic_cgt)
     - [Hashing-Related Hooks](#hashing-related-hooks)
     - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
 ### Version 1.7 Additions
 - NOTE: Database files from version 1.6 are incompatible with version 1.7!
+
 #### New Features
 - New "simplest equal game" (SEG) optimization for partisan minimax search.
-  - During partisan database creation, DB entries are populated with links to the DB entries of simpler-but-equal sums (of 0 or more subgames), according to both a "complexity score" and "size score" (when possible).
-  - During partisan minimax search, these links are used to replace sums of subgames with simpler-but-equal sums to simplify the search space.
-  - See (TODO README) for more details, including instructions for implementing functions necessary to support SEG replacement for your game class.
-- New options have been added to the database config string (`stop_after` and `size_score`). See (TODO README) for more details.
-  - `stop_after` allows partisan database entry fields to be omitted (allowing the user to create a database with contents similar to older versions of MCGS).
-  - `size_score` is a configurable constraint, governing which DB entries may be linked to by other DB entries.
-- Play in the middle (PITM) heuristic is enabled for all games by default. Disable with `--no-pitm` CLI option.
-  - When PITM is enabled, your game's move generator exhaustively generates all of its moves, and moves nearer to the middle of this resulting list are played first.
-- `--play-mcgs` CLI option now prompts users to choose moves by typing them according to the `game::print_move` format (i.e. by entering grid coordinates), rather than by selecting them from a list of moves.
-- Transposition tables (both partisan and impartial) can be saved and loaded to/from file.
+  - Partisan DB entries now have links to DB entries of simpler-but-equal sums.
+  - During partisan minimax search, these links are used to replace sums with simpler sums.
+  - These links are determined according to 2 formulas: a fixed "complexity score", and a configurable "size score".      
+  - For technical details, see [development-notes.md (Simplest Equal Game)](docs/development-notes.md#simplest-equal-game).
+- New options are supported for database generation, detailed in [Using the Database](#using-the-database).
+  - `size_score` lets users choose a non-default size score formula.
+  - `stop_after` allows omission of some partisan DB entry fields. May speed up DB generation dramatically (at the cost of runtime search performance).
+- Play in the middle (PITM) heuristic is now enabled for all games by default. Disable with `--no-pitm` CLI option.
+  - When enabled, each move generator exhaustively generates all of its moves, and moves closer to the middle of this resulting list are played first.
+- `--play-mcgs` UI now prompts users to choose moves by typing them according to the `game::print_move` format (i.e. by entering grid coordinates), rather than by selecting moves from a list.
+- Transposition tables (both partisan and impartial) can be saved to/loaded from files.
   - See `./MCGS -h` for details, in particular see documentation for CLI options `--tt-sumgame-load`, `--tt-sumgame-save`, `--tt-imp-sumgame-load`, and `--tt-imp-sumgame-save`.
-- The program will now gracefully exit when the user presses Ctrl-c (or upon receiving signals `SIGINT` or `SIGTERM`), assuming initialization (including DB load/creation) has completed.
-  - This can be used in conjunction with aforementioned CLI options to save/load transposition tables. This allows the user to abort long running searches while saving some progress.
-  - If the program is waiting for user input (i.e. the user is to choose a move for `--play-mcgs`), you may also need to press Ctrl-d.
+- MCGS will now gracefully exit when the user presses Ctrl-c (or upon receiving signals `SIGINT` or `SIGTERM`), assuming initialization (including DB load/generation) has completed.
+  - This can be used in conjunction with aforementioned CLI options for saving/loading of transposition tables. This allows the user to abort long running searches while saving some progress.
+  - If MCGS is waiting for user input (i.e. the user is to choose a move for `--play-mcgs`), you may also need to press Ctrl-d.
 - New input language version `1.6` -> `1.7`.
 - Added new command type to `.test` files (thermograph test). See [input/info.test](input/info.test).
 
 #### Major Code Additions
-- `game::create_move_generator` and `impartial_game::create_move_generator` are no longer virtual functions. `game::_create_move_generator_impl` and `impartial_game::_create_move_generator_impl` are new virtual functions.
+- The old virtual `create_move_generator` functions of the `game` and `impartial_game` classes have been renamed to `_create_move_generator_impl`. New non-virtual `create_move_generator` functions have been added.
   - Game classes should implement the virtual `_create_move_generator_impl` functions by simply creating and returning their move generator (as before).
   - The non-virtual `create_move_generator` functions call the virtual ones, and then either immediately return the resulting move generator, or wrap the resulting move generator with a `pitm_move_generator` which implements the PITM heuristic.
-- `class ibuffer` and `class obuffer` are now abstract types.
-  - See (TODO DEV NOTES) for more details.
+- `class ibuffer` and `class obuffer` are now abstract types. See [development-notes.md (Serialization)](docs/development-notes.md#serialization-iobufferh-serializerh-poly_serializableh).
   - `class i_ibuffer` and `class i_obuffer` are interface classes for input and output streams respectively.
   - `class file_ibuffer` and `class file_obuffer` are non-abstract classes implementing these interfaces, and correspond to the old `ibuffer` and `obuffer` respectively.
   - `class memory_ibuffer` and `class memory_obuffer` are non-abstract classes implementing these interfaces, and are used to deserialize/serialize `game`s out of/into partisan database entries.
-- Changes to timeout semantics (see (TODO DEV NOTES) for more details):
+- Changes to timeout semantics. See [development-notes.md (Graceful Exit)](docs/development-notes.md#graceful-exit-exit_signalh).
   - Search functions lacking a timeout parameter (i.e. `sumgame::solve`) should not be called after the `mcgs_init` functions complete.
   - Search functions with a timeout parameter (i.e. `sumgame::solve_with_timeout` or `sumgame::solve_with_timeout_token`) will now timeout when the user presses Ctrl-c (even if a timeout of 0 was specified).
 
-#### Updating Your Game Class From Version 1.7
-If you've implemented your own game class, below are steps to update it from version 1.6 to version 1.7:
+#### Updating Your Game Class From Version 1.6
+Either follow the instructions in [development-notes.md (Adding A Game To the Database)](docs/development-notes.md#adding-a-game-to-the-database) again, or make the following changes:
 - Rename your game's `create_move_generator` function to `_create_move_generator_impl`.
-  - NOTE: A new non-virtual `create_move_generator` function has been added to the `game` and `impartial_game` classes.
 - In `init_database.cpp`, the `register_create_game_gen_fn` function has been renamed to `register_db_game_gen`, and has an additional parameter.
   - You can set this parameter to `DEFAULT_DB_GEN_SIZE_SCORE_TYPE`.
 - If your game is partisan:
@@ -124,7 +124,7 @@ For a full description of input syntax, including game-specific input syntax,
 see [input/info.test](input/info.test).
 
 ### Using the Database
-NOTE: Database files from previous versions are not compatible with version 1.6.
+NOTE: Database files from previous versions are not compatible with version 1.7.
 
 The database is loaded from `database.bin` automatically on startup if it
 exists and `--no-use-db` is not specified. MCGS first searches for it in the same
@@ -142,7 +142,7 @@ Example:
 ```
 This creates the file `database.bin` and populates it with Clobber games whose
 dimensions are at most 3x3, and linear NoGo games whose lengths are at most 8.
-The database contains single subgames which are normalized and do not split
+The database contains sums of subgames which are normalized and do not split
 into more subgames.
 
 Games currently supported by the database:
@@ -174,26 +174,27 @@ number of black and white sheep respectively. i.e. for `max_sheep = 1,2;`,
 all `sheep` games having at most 1 black sheep, and at most 2 white sheep, will
 be generated.
 
-The `stop_after` parameter is optional, and determines which data fields should
-be present in partisan database entries. Some data fields are expensive to compute,
+The `stop_after` parameter is optional, and if present indicates that some partisan
+data fields should be omitted. Some fields are expensive to compute,
 and omitting fields may make it feasible to generate larger databases. Below are
 valid values for `stop_after`, and the approximate data that is included in a
-partisan database entry as a result (see (TODO DEV NOTES) for a more precise breakdown):
+partisan database entry as a result (comments in the definition of
+`struct db_entry_partisan` in `database.h` offer more detail):
 - `outcome_class`: outcome class and thermograph.
 - `bounds`: all above fields, plus lower/upper bounds.
-- `dominated_moves`: all above fields, plus dominated/non-dominated moves, and complexity score (TODO DEV NOTES).
-- `seg` (the default if unspecified): all above fields, plus simplest equal game links, and size score.
+- `dominated_moves`: all above fields, plus dominated/non-dominated moves.
+- `seg` (the default if unspecified): all above fields, plus simplest equal game links.
 
 The `size_score` parameter is optional, and determines which formula to use for
 computing the "size score" of a sum. Only has an effect if SEG links are computed
 for partisan database entries (i.e. if `stop_after` is `seg` or left unspecified).
 Below are valid values for `size_score`, and a rough explanation of each formula for
-a sum game `G` (for more details see (TODO DEV NOTES)):
-- `max_local_options` (current default for all games): The max between the count of `G`'s immediate options (for `BLACK` or `WHITE`), and the size score of each such option.
+a sum game `G`:
+- `max_local_options` (current default for all games): The max between the count of `G`'s immediate options (of both `BLACK` and `WHITE`), and the size score of each such option.
 - `tree_height`: the height of the game tree of `G`, considering options for both `BLACK` and `WHITE` at each node.
 - `board_size` (only defined for `strip`/`grid` games): the sum of each `strip`/`grid` game's dimensions.
-- `stone_count` (only defined for `strip`/`grid` games containing colors): the sum of each `strip`/`grid` game's non-`EMPTY` spaces.
-- `empty_count` (only defined for `strip`/`grid` games containing colors): the sum of each `strip`/`grid` game's `EMPTY` spaces.
+- `stone_count` (only defined for `strip`/`grid` games containing colors): the sum of the count of each `strip`/`grid` game's non-`EMPTY` spaces.
+- `empty_count` (only defined for `strip`/`grid` games containing colors): the sum of the count of each `strip`/`grid` game's `EMPTY` spaces.
 Note: Every game type individually has a default `size_score` value (though all are currently set to `max_local_options`).
 
 The command line option `--print-db-info` can be specified to print database
