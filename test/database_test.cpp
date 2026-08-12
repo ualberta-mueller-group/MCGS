@@ -1,13 +1,18 @@
 #include "database_test.h"
 
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <sstream>
 #include <unordered_set>
 #include <set>
+#include <cstdint>
+#include <string>
 #include <cassert>
+#include <unordered_map>
 #include <vector>
 #include <utility>
+#include <algorithm>
 
 #include "bounds.h"
 #include "cgt_basics.h"
@@ -26,6 +31,7 @@
 #include "thermograph_builder_no_db.h"
 #include "ThGraph.h"
 #include "utilities.h"
+
 
 template <>
 struct std::hash<std::pair<uint64_t, uint64_t>>

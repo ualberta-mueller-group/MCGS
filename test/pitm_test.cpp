@@ -1,6 +1,8 @@
 #include "pitm_test.h"
 
 #include <vector>
+#include <array>
+#include <cassert>
 
 #include "global_options.h"
 #include "game.h"
