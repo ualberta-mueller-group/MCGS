@@ -12,6 +12,7 @@
 
 #include "cgt_move.h"
 #include "integral_conversion.h"
+#include "global_options.h"
 #include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "iobuffer.h"
@@ -22,6 +23,28 @@
 
 using std::string, std::pair, std::unique_ptr;
 using std::vector;
+
+//////////////////////////////////////// helper functions
+namespace {
+class nogo_1xn_move_generator : public move_generator
+{
+public:
+    nogo_1xn_move_generator(const nogo_1xn& game, bw to_play);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    int _at(int p) const { return _game.at(p); }
+
+    bool _is_legal(int p) const;
+    void _find_next_move();
+
+    const nogo_1xn& _game;
+    int _current; // current stone location to test
+
+};
+} // namespace
 
 //////////////////////////////////////// helper functions
 namespace {
@@ -148,14 +171,19 @@ void nogo_1xn::undo_move()
     replace(to, EMPTY);
 }
 
-void nogo_1xn::save_impl(obuffer& os) const
+void nogo_1xn::save_impl(i_obuffer& os, serializer_ctx* ctx) const
 {
-    _save_board(os, board_const());
+    save_board(os, board_const(), ctx);
 }
 
-dyn_serializable* nogo_1xn::load_impl(ibuffer& is)
+poly_serializable* nogo_1xn::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 {
-    return new nogo_1xn(_load_board(is));
+    return new nogo_1xn(load_board(is, ctx));
+}
+
+move_generator* nogo_1xn::_create_move_generator_impl(bw to_play) const
+{
+    return new nogo_1xn_move_generator(*this, to_play);
 }
 
 /*
@@ -268,24 +296,8 @@ std::ostream& operator<<(std::ostream& out, const nogo_1xn& g)
 }
 
 //////////////////////////////////////// nogo_1xn_move_generator
+
 namespace {
-class nogo_1xn_move_generator : public move_generator
-{
-public:
-    nogo_1xn_move_generator(const nogo_1xn& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    int _at(int p) const { return _game.at(p); }
-
-    bool _is_legal(int p) const;
-    void _find_next_move();
-
-    const nogo_1xn& _game;
-    int _current; // current stone location to test
-};
 
 inline nogo_1xn_move_generator::nogo_1xn_move_generator(const nogo_1xn& game,
                                                         bw to_play)
@@ -362,9 +374,5 @@ move nogo_1xn_move_generator::gen_move() const
 
 //---------------------------------------------------------------------------
 
-move_generator* nogo_1xn::create_move_generator(bw to_play) const
-{
-    return new nogo_1xn_move_generator(*this, to_play);
-}
 
 //---------------------------------------------------------------------------

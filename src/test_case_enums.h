@@ -15,6 +15,7 @@ enum command_type_enum
     COMMAND_TYPE_SOLVE_BW = 0,
     COMMAND_TYPE_SOLVE_N,
     COMMAND_TYPE_WINNING_MOVES,
+    COMMAND_TYPE_THERMOGRAPH,
 };
 
 enum minimax_outcome_enum

@@ -113,10 +113,13 @@ INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 26);
 //INIT_GLOBAL_WITH_SUMMARY(tt_sumgame_idx_bits, size_t, 28);     // ~1312 MiB
 //INIT_GLOBAL_WITH_SUMMARY(tt_imp_sumgame_idx_bits, size_t, 27); // ~1152 MiB
 INIT_GLOBAL_WITH_SUMMARY(use_db, bool, true);
+INIT_GLOBAL_WITH_SUMMARY(use_seg, bool, true);
 #endif
 
 
 INIT_GLOBAL_WITH_SUMMARY(clear_tt, bool, false);
+INIT_GLOBAL_WITH_SUMMARY(pitm, bool, true);
+INIT_GLOBAL_WITH_SUMMARY(single_seg, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(count_sums, bool, false);
 INIT_GLOBAL_WITH_SUMMARY(experiment_seed, uint64_t, 0);
 INIT_GLOBAL_WITH_SUMMARY(impartial_algorithm_mex, bool, false);

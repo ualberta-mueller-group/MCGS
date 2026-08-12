@@ -7,6 +7,24 @@
 #include <cassert>
 #include <ostream>
 
+//---------------------------------------------------------------------------
+namespace {
+class integer_move_generator : public move_generator
+{
+public:
+    integer_move_generator(const integer_game& game, bw to_play);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    bool _has_move;
+};
+
+} // namespace
+
+//---------------------------------------------------------------------------
+
 void integer_game::play(const move& m, bw to_play)
 {
     game::play(INTEGER_MOVE_CODE, to_play);
@@ -59,6 +77,17 @@ void integer_game::print(std::ostream& str) const
     str << "integer:" << _value;
 }
 
+void integer_game::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_black_white(to_play));
+    str << "INT";
+}
+
+move_generator* integer_game::_create_move_generator_impl(bw to_play) const
+{
+    return new integer_move_generator(*this, to_play);
+}
+
 void integer_game::_init_hash(local_hash& hash) const
 {
     hash.toggle_value(0, _value);
@@ -81,18 +110,6 @@ relation integer_game::_order_impl(const game* rhs) const
 //---------------------------------------------------------------------------
 
 namespace {
-class integer_move_generator : public move_generator
-{
-public:
-    integer_move_generator(const integer_game& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    bool _has_move;
-};
-
 integer_move_generator::integer_move_generator(const integer_game& game,
                                                bw to_play)
     : move_generator(to_play), _has_move(true)
@@ -124,14 +141,6 @@ move integer_move_generator::gen_move() const
 
 //---------------------------------------------------------------------------
 
-move_generator* integer_game::create_move_generator(bw to_play) const
-{
-    return new integer_move_generator(*this, to_play);
-}
 
-void integer_game::print_move(std::ostream& str, const move& m, ebw to_play) const
-{
-    assert(is_black_white(to_play));
-    str << "INT";
-}
+
 

@@ -25,27 +25,18 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 # Remaining Issues from previous versions
 
-## Issue management
-- There are five issues on github in https://github.com/ualberta-mueller-group/MCGS/issues - started June 2025, never updated. Close those?
-- How should we manage issues? In this document?
 
 ## Remaining Issues from V1.5
-- try to alternate black/white moves in impartial generator
 - try storing both nimbers and boolean values in tt
 - get rid of `_nim_value` in impartial game object, just use tt?
-- use database for impartial solvers
-    - test performance
 
 ## Remaining Issues from V1.4
 - transposition table
     - Replacement policy?
+    - currently overwrite.
 - performance testing
     - How close to our special purpose solvers?
 - database
-    - design remaining DB features
-    - plan remaining DB implementation steps
-    - "Hierarchical hash buckets" default case?
-    - DB diff tool?
     - Add "DB lookup" command to input language?
 - gather other solvers into one repository
     - SBHSolver needs some slight modification
@@ -71,65 +62,36 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - More complete results page
     - also summarise in new slides
     - clobber results
-    - clobber\_1xn results
+    - `clobber\_1xn` results
     - nogo results
-    - nogo\_1xn results
+    - `nogo\_1xn` results
     - other new games without any published results
     - compare MCGS with dedicated solvers? What is the gap?
 
 ## Version 1.6 tasks
-- Merge `v1.6-develop` and `v1.6-thermograph` branches (including recent
-    unpushed changes)
 - Code cleanup
-    - clang-tidy errors
-    - Major "todo"s in code
-    - Delete unused code
     - Move `sumgame_move_generator` code into its own file. Clean up the logic
-    - Serializers:
-        - Move each serializer template into its own header
-        - On error, call std::abort instead of `THROW_ASSERT/assert`
-        - Add `load_ptr` functions to serializer templates where sensible
-    - HTML: make "main" vs "comparison" file distinction more clear (at the top
-        of the HTML file)
 
-- Unit tests
-    - `db_make_XYZ(...)` functions, where `XYZ` is one of the new partisan data
-        fields (thermograph, bounds, dominated moves)
-    - Encoding/decoding grid moves to/from the DB
-    - `sumgame`, `sumgame_move_generator`, `db_move_generator`: usage of new
-        DB features
-    - Others
-- Documentation/release
-
-### Version 1.6 "other"
-- sort test cases (semi-)automatically by difficulty
-    - Taylor to experiment
-- keep the separate "dbg" and "opt" builds, or preferably these plus a few more
-
-## Version 1.7: integrate thermograph DB in solving algorithms
+## Version 1.7: simplest equal game (SEG), integrate thermograph DB in solving algorithms
 
 ### Version 1.7 database improvements
 - simplest equal game (SEG) replacement - Game substitution
         - add SEG entry to db
         - can we do it in a game-independent way?
-- use of database in search
+- efficient use of database in search
     - what do we have now?
     - how to use it more/better?
+    - cost of creating new subgame is higher than in SEGClobber
 
-### Version 1.7 use of thermographs
-- compute TG
-- store TG in TT and DB
-- use bounds from TG for solving hot games
+### Version 1.7 use of thermographs in search
+- use in boolean solver. How exactly?
+- store TG in TT
+- use bounds from TG for solving hot games, considering toplay, as in Amazons paper.
 - Compare with Amazons solver
 - Add/integrate thermograph computation
     - make it optional/separate from boolean solver?
-    - use in boolean solver. How exactly?
-    - Try with Amazons where we have another solver that already uses it to compare with
+    - e.g. not useful for all-small games such as clobber
     
-### Version 1.7 improve move ordering
-- Work on move ordering
-- See section on this topic below
-
 ### Version 1.7 "other tasks"
 - review and update MCGS - A User's Guide (in Google slides)
 - use the new instrumentation tools
@@ -138,17 +100,49 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - Serialisation for polymorphic types already mostly implemented (though is unused)
     - Need to solve similar type remapping problem as with `game_type_t` in the database.
     - Solve in a similar way by initializing all IDs on startup?
+- sort test cases (semi-)automatically by difficulty
+    - some scaffolding exists
+    - Taylor to experiment
+- keep the separate `build_dbg` and `build_opt` builds, or preferably these plus a few more (sanitiser?, debug=0)
+
+### Version 1.7 or 1.8 improve move ordering
+- Work on move ordering
+- See section on this topic below
+- TG-related ordering in 1.7, other in 1.8?
+
+### Version 1.8 games on graphs
+- implement col, snort
+- check if some grid games can be implemented in a "generic graph" way,
+  i.e. call only generic neighbors of node, graph traversal functions, nothing grid-specific?
 
 ## Version 1.8: cleanup and performance improvement
-- No big new features
+- No big new features?
 - Focus on performance testing, tuning, code review and cleanup
 - Do some of the game-specific optimisations in this list?
+
+## Version 1.9
+- Final big features before version 2
+
+## Version 2
+- Timeline: late 2026, while Taylor is still full-time on this
+- Goal: efficient, versatile solver that can generate state of the art 
+    results in many combinatorial games, and easily support new games
+    
+## Beyond Version 2
+- Search heuristics
+    - Iterative deepening approach from Clobber solver?
+    - Heuristic functions?
+        - Opponent's number of moves (as in Clobber solver)?
+- Computational cost model
+    - Can help determine when it may be beneficial to compute bounds, or other information,
+    during search
 
 # New Features
 
 ## Big Future Directions - Ideas
 
 ### Support games on Graphs
+- for 1.7 or 1.8
 - Preliminary work by Prem with Claude
     - status?
     - T: I've briefly looked at the code and so far mostly have minor complaints:
@@ -171,7 +165,7 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
         - tradeoffs depending on which graph functions are bottlenecks
         - Maybe n will be small enough in practice so that n^2 does not matter.
         - Adj. lists have an advantage in finding all neighbors of a node
-- full support for graph games requirements:
+- Full support for graph games requirements:
     - base class
     - sample graph games
         - which? What results are there to compare with?
@@ -193,12 +187,15 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - could have improved symmetry detection?
 
 ### abstract game class to construct arbitrary games from text
+- Version 1.8 or 1.9? Should be in version 2
 - Example: {1|*}
+- `cgt_game` class - define game by left+right options, read from string
 - Use example: test if game G is equal to a given canonical form C
 - given G as game, and C as text
 - search if G-C = 0
 
 ### Extract, store, verify proofs
+- Version 1.9. Should be in version 2
 - Extract from TT
 - Store on file
 - Verify (without hashing, or with new set of hash codes)
@@ -218,27 +215,35 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
             - find better-or-equal move in real game
 
 ### Other core search algorithms - PNS, df-pn, EWS
-- what does it take to "swap out" the main search engine?
+- Maybe too much for version 2?
+    - Postpone?
+    - Do some prep work only?
+    - Prep: 
+        - what does it take to "swap out" the main search engine?
+        - abstract search interface?
 
 ## Implement more games
 - Col, Snort
-- Cannibal clobber. It is like Clobber but you can also eat your own stones. But you can only move with your own pieces.
-    - impartial Cannibal Clobber would be one of the simplest possible games. The color of stones does not matter anymore, and winning boils down to the parity of the number of isolated stones at the end. What kind of nimbers do occur? Can the outcome be related to graph properties?
+    - first test cases for graphs, Version 1.7 or 1.8
 
 ## Port more CGT algorithms to MCGS
+- After version 2?
 - Locally informed...(code from Mueller and Li paper)
 - Amazons solver? Compare after we have thermographs?
 - Kao's mean and temperature search
-    - 2022 student project for the simple case, single move option
+    - 2026 Prem's new code
+    - Buggy, do not use: 2022 student project for the simple case, single move option
 
 ## User interface and API
+- When?
 - Python interface to MCGS?
 - Develop interface to Kyle's Javascript UI?
 - Interface for new databases? I.e. view confusion interval, thermograph
 - Look into `ludii.games` - can it interface with MCGS?
 
 ## Use a proper unit testing framework?
-- Easier to change this now rather than later
+- When?
+    - Easier to change this now rather than later
 - Could possibly show code coverage and number of tests run
 - Possible option: MinUnit `https://github.com/siu/minunit`
 - Possible option: GoogleTest `https://google.github.io/googletest`
@@ -256,43 +261,30 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
     - regularly compile MCGS with AddressSanitizer to check for memory errors
 - Taylor build on Mac?
 
-## github
-- private branches to a public github repo.
-    - seems complex, not needed currently
-    - `https://stackoverflow.com/questions/7983204/having-a-private-branch-of-a-public-repo-on-github`
-        - approach: have a private copy of the repo 
-        - cross-push from one to the other. 
-        - It seems a bit complicated and easy to mess up
+## General design questions
+- Scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
+- Make board implementations (char, int, bitset, list?) separate from game classes, with common interface - allow composition of different board implementations with game mechanics
+- `rule_set` class as in CGSuite?
+- Should `zero` be its own type??
+- Should we have "type info" for each game type, 
+  such as is splittable, is impartial, etc. Right now some 
+  of this information is expressed through inheritance, 
+  but e.g. splittable cannot easily be done that way.
+    - Why splittable? See note on `alternating_move_game`.
+      There are three cases: 
+        1. games that never split, such as nimber, integer
+        2. Games that must split, e.g. kayles
+        3. Games that work without split, but are probably 
+           less efficient. Nogo, Clobber?
 
 ## Unresolved Code Issues
-- Consider alternatives to `move` being an int?
-    - Pass around pointers to heap-allocated moves, whose actual types
-    are defined by each game?
-    - Have an interface type for storing "to play"
 - Some code comments should be split between the code and `development-notes.md`
 - Ugly/confusing `std::optional` usage
     - i.e. `split_result()` vs `split_result(vector<game*>())`, 1st has no value, 2nd has a value
     - Try to make this both clearer AND less verbose
 - "Result" refers to `solve()` function's return value, but "Outcome" is still used in a few places (mostly variable names)
-- Rename `x_1xn` to `x_strip` ?
+- Rename `x_1xn` to `x_strip` or `strip_x`?
 - Rename `x_game` to `game_x`? E.g. `integer_game` to `game_integer` ?
-
-# Other TODO, Unsorted
-
-### Use bounds on subgames from db
-- add upper and lower bounds, use LS and RS from thermographs, considering toplay, as in Amazons paper.
-
-
-### Ownership of games in `sumgame`
-- Decide and document semantics of game-in-sumgame. 
-- Current status: the caller who adds a game g to a sum s 
-  owns g. New games that are created by `split()` are owned by s.
-- One suggestion: The sumgame becomes the owner. Make this explicit e.g. with `unique_ptr`. 
-- Another alternative: always copy the game
-- Possible bug: can we have multiple references to the same subgame in a sum? Probably not a good idea, then we should guard against that. 
-    - Example `sumgame s; game g; s.add(&g); s.add(&g);`
-        - currently there is an `assert` protecting against adding twice
-    - Write test cases and documentation for these.
 
 
 # Testing
@@ -372,8 +364,8 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
         - Could add `random_game()` function to game class?
             - Size parameter? `random_game(size)`
     - Use other solvers to validate results with "adapter" functions/scripts
-        - `clobber_1xn`: Taylor Clobber solver
-        - `nogo_1xn`: Henry NoGo solver
+        - done? `clobber_1xn`: Taylor Clobber solver
+        - done? `nogo_1xn`: Henry NoGo solver
         - `elephants`: CGSuite
         - simple games (`integer_game, dyadic_rational, switch_game, up_star`): CGSuite
         - Small sums of these: CGSuite
@@ -385,14 +377,18 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 
 ### Impartial Test cases
 - Finish restructure
-    - still a few impartial game tests outside the new impartial directory, e.g. random boards
+    - still a few impartial game tests outside the `MCGS/input/impartial` directory, e.g. random boards
     - make structure inside and outside of `autotests` match
 - Add more tests - impartial other games, e.g. elephants, new games, amazons
 
-## Performance Testing
+## Performance Testing, Program Evaluation and Benchmarks
+- Evaluate/compare program versions
+    - Define standard test sets, run them after each major change
+    - Number of problems solved as function of time - standard in planning literature, nice robust measure if we have a good test set.
+    - Taylor: separate the data by game type in some way, to see if specific games are more affected by changes
+
 - More tests, more results, also put on website
-- Extend easy impartial games if we have more than 7 bits per coordinate on a grid
-- Maybe run on other machines - fire-creek
+- Maybe run on other machines - `fire-creek`
 - Performance profiling for older solvers, and MCGS
     - Quick and dirty method just to get intuition and some basic data
     - Good to know how much time is spent doing transposition table lookups, DB lookups, etc, before designing these
@@ -400,11 +396,11 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
 - re-run tests with `complexity_score` and/or `play in the middle` on, decide on default settings
 
 ### Other programs to test against
-- Glop
+- `Glop`
     - the main web page still works: `https://sprouts.tuxfamily.org/wiki/doku.php?id=home`
-    - the download did not: `http://download.tuxfamily.org/sprouts/glop-2.2.tar.bz2` 
+    - the download does not: `http://download.tuxfamily.org/sprouts/glop-2.2.tar.bz2` 
         - just sits there and does nothing.
-        - internet search also failed
+        - internet search for code base also failed
 
 ## Command-line interface CLI for testing and experiments
 - Improve MCGS CLI args
@@ -421,37 +417,10 @@ Suggestions from audience of talk given at CGTC, or from MCGS users
         - confusion interval on number and other scales
         - is it infinitesimal?
         - compute and print its TG
+- improve output
+    - print improvement: `up_star:0* → *`, suppress 0 up
+    - `up_star`:-1 → 1 down? In html can use uparrow and downarrow, &uarr; &darr
 
-## Publications and Talks
-- Grab a CGT online seminar spot to talk about MCGS and give a demo
-- Update the Version 1.0 talk to cover everything up to now
-    - publish on website
-
-## Beyond Version 2
-- Search heuristics
-    - Iterative deepening approach from Clobber solver?
-    - Heuristic functions?
-        - Opponent's number of moves (as in Clobber solver)?
-- Computational cost model
-    - Can help determine when it may be beneficial to compute bounds, or other information,
-    during search
-
-## General design questions
-- Scaling experiments, scaling test suites, e.g. scale size, scale number of subgames
-- Make board implementations (char, int, bitset, list?) separate from game classes, with common interface - allow composition of different board implementations with game mechanics
-- `cgt_game` class - define game by left+right options, read from string
-- `rule_set` class as in CGSuite?
-- Should zero be its own type??
-- Should we have "type info" for each game type, 
-  such as is splittable, is impartial, etc. Right now some 
-  of this information is expressed through inheritance, 
-  but e.g. splittable cannot easily be done that way.
-    - Why splittable? See note on `alternating_move_game`.
-      There are three cases: 
-        1. games that never split, such as nimber, integer
-        2. Games that must split, e.g. kayles
-        3. Games that work without split, but are probably 
-           less efficient. Nogo, Clobber?
 
 # Search
 - debug/release build have node count differences (low priority)
@@ -577,11 +546,6 @@ most important solved positions (closest to the root, most work) in a persistent
     - `ttable` and `random_table` would need some synchronization
 - Can we use PEWS (parallel EWS) as a solver engine? What would it take to interface with it?
 
-# Program Evaluation and Benchmarks
-- Evaluate/compare program versions
-    - Define standard test sets, run them after each major change
-    - Number of problems solved as function of time - standard in planning literature, nice robust measure if we have a good test set.
-    - Taylor: separate the data by game type in some way, to see if specific games are more affected by changes
 
 # Databases
 - What can be reused from previous solvers? What's game-specific?
@@ -636,21 +600,12 @@ most important solved positions (closest to the root, most work) in a persistent
         - Maybe the `grid_generator` constructor can accept some optional function pointers to allow such behavior on a per-game basis
 
 - DB types are hardware/system-dependent
-    - Actually make DB file game_type_t assignments not matter?
+    - Actually make DB file `game_type_t` assignments not matter?
     - Translate local hashes upon loading the file by XORing out the 
       disk type, and XORing in the run time type
     - `impartial_game_wrapper` games all having the same type is problematic
        for this (AND problematic for the error checking added in 
        1.4 release)
-
-
-# Misc. Small Todo Items
-
-## improve output
-- print improvement: `up_star:0* → *`, suppress 0 up
-- `up_star`:-1 → 1 down? In html can use uparrow and downarrow, &uarr; &darr
-- missing hours in html output conversion?
-    - Total time: 22,372,154 ms ＝ 52s, 154ms
 
 # Impartial games
 - improved lookup, avoid redundant lookups for LV
@@ -658,7 +613,7 @@ most important solved positions (closest to the root, most work) in a persistent
     - inefficient if we need the nimber
     - can we combine all known results for G in one entry (bitmap?), lookup the nimber if it has been computed?
 
-- re-test complexity_score
+- re-test `complexity_score`
     - make it the default for impartial games if it works better
 
 ## Impartial game Algorithms
@@ -680,6 +635,7 @@ most important solved positions (closest to the root, most work) in a persistent
 ## Impartial games performance measurement
 - measure number of splits?
 - How much more effective with DB?
+- Extend easy impartial games tests+results now that we have more than 7 bits per coordinate on a grid
 
 
 ## Impartial Search
@@ -689,7 +645,7 @@ most important solved positions (closest to the root, most work) in a persistent
     - Test tradeoffs
 
 ### Impartial Search Statistics
-- stats for search depth in LV
+- done? stats for search depth in LV
 - add stats for total number of subgames, or number of subgames added by split?
 - add stats for play/undo move
 
@@ -697,17 +653,18 @@ most important solved positions (closest to the root, most work) in a persistent
 
 ## Abstract game (text input)
 - `abstract_game` or `game_abstract` or `cgt_game`cclass
-- make abstract game from string e.g. "{ 5|| 3 | 2}"
+- make abstract game from string e.g. `{5 || 3 | 2}`
 - move generator to move to left or right substring?
     - or convert into an internal representation when reading?
 - make tests that (sum) games are equal to an `abstract_game`
-    
-## Create Game from Options
 - Create game from options GL, GR
-- Example: test canonical values such as 1|* in Sheep tests
-- functions to implement:
-    - `make_game(Gl,Gr)` single option
-    - `make_game(GL,GR)` sets of options
+    - Example: test canonical values such as 1|* in Sheep tests
+    - functions to implement:
+        - `make_game(Gl,Gr)` single option
+        - `make_game(GL,GR)` sets of options
+    - options could be any `game`
+        - either `abstract_game` constructed from string...
+        - or other existing games
 
 ## Amazons
 - Amazons solver for MCGS
@@ -728,20 +685,17 @@ most important solved positions (closest to the root, most work) in a persistent
         - Step 1: build DB of territories, check contents for defectiveness
 - Variations on the "superherd" idea
     - Superherd = can move sheep around for free later, just before move. Just keep one global pool of movable sheep
-    - Super sheep = Battle sheep with superhero rule. When is outcome(supersheep(G)) = outcome(battlesheep(G))?
+    - Super sheep = Battle sheep with superherd rule. When is outcome(supersheep(G)) = outcome(battlesheep(G))?
 - what exactly is Churong doing and why is her "restricted supersheep" approach valid? Read her code?
     - Iterative deepening on number of sheep used?
     - Recognizes when extra sheep don't help?
 
 ## Clobber
-- Can we do Clobber 6x6?
-    - try some 6x6, estimate the solution time
+- Ongoing effort for Clobber 6x6. 
+    - See `MCGS/docs/6x6clobber.html` and `MCGS/input/clobber/clobber-6x6-games`
+    - tried some 6x6 openings, solution time after 3-5 moves
     - try again after improving DB - replace by SEG
-    - Try some openings, see how far back we can go.
-- avoid most floodfills for split()?
-- Where to get high quality games? 
-    - Just start with random games?
-    - 2022 student project?
+- avoid most floodfills for `split()`?
 - Avoid the slow test for split in many cases
     - 3x3 (or 3x4?) split-nosplit pattern, where we move a stone out from the center, e.g. a no-split from
 ```
@@ -758,15 +712,21 @@ O.O
 ```
 
 ## 1xn Clobber
-- Study bounds for G = (xo)^n. 0 < G < up?
+- Study bounds for `G = (xo)^n`. 0 < G < up?
 - compare SEGClobber with MCGS
 
 ## Cram/Domineering
 - fill in single squares to simplify/normalise
     - Do it after move even if no split happens
     - T: The split function will fill in unusable empty points, but does not return a value when there is exactly one subgame and its bounding box is not smaller than the original game. This means single empty points aren't always filled in (grid games typically do normalization in the split functions)
+    - Do we need a `normalise` separate from `split`?
 
 # Documentation and Publication
+## MCGS Overview Talk
+- Update the Version 1.0 talk to cover everything up to now
+    - publish on MCGS website
+    - Grab a CGT online seminar spot to talk about MCGS and give a demo
+
 ## Web page
 - add to `results.html` page
     - add more partisan game results
@@ -791,8 +751,29 @@ O.O
     - solving results
     - timeline and venue for next paper?
 
-# `cgt_lib` Subrepository
-- `cgt_lib` is a submodule on the v1.6-thermograph branch
-- The `cgt_lib` repo is private
-    - users will need access once branch is merged into v1.6-develop
+# Older Ideas - Rejected or on Hold
+- Consider alternatives to `move` being an int?
+    - Pass around pointers to heap-allocated moves, whose actual types
+    are defined by each game?
+    - Have an interface type for storing `to_play`
 
+## Code maintenance - github
+- private branches to a public github repo.
+    - seems complex, not needed currently
+    - `https://stackoverflow.com/questions/7983204/having-a-private-branch-of-a-public-repo-on-github`
+        - approach: have a private copy of the repo 
+        - cross-push from one to the other. 
+        - It seems a bit complicated and easy to mess up
+
+## Ownership of games in `sumgame`
+- Decide and document semantics of game-in-sumgame. 
+- Current status: 
+    - the caller who adds a game g to a sum s 
+  owns g. 
+    - New games that are created by `split()` are owned by s.
+- One suggestion: The sumgame becomes the owner. Make this explicit e.g. with `unique_ptr`. 
+- Another alternative: always copy the game
+- Possible bug: can we have multiple references to the same subgame in a sum? Probably not a good idea, then we should guard against that. 
+    - Example `sumgame s; game g; s.add(&g); s.add(&g);`
+        - currently there is an `assert` protecting against adding twice
+    - Write test cases and documentation for these.

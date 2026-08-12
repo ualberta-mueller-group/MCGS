@@ -31,7 +31,6 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
-    move_generator* create_move_generator(bw to_play) const override;
 
     void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
@@ -51,6 +50,7 @@ public:
     const std::vector<int>& get_params() const;
 
 protected:
+
     void _play_place_stone(const int_pair& place_coords, bw to_play);
     void _play_slide_stone(const int_pair& from_coords,
                           const int_pair& to_coords, bw to_play);
@@ -63,7 +63,7 @@ protected:
     split_result _split_with_unplaced_stones() const;
     split_result _split_without_unplaced_stones() const;
 
-
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     void _init_hash(local_hash& hash) const override;
 
     void _init_params(const std::vector<int>& params);

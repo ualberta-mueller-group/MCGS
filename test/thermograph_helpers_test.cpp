@@ -42,7 +42,7 @@ void test_bound_helper_imprecision_impl(
 
     sum.add(game_vec);
 
-    shared_ptr<ThGraph> graph;
+    shared_ptr<const ThGraph> graph;
     {
         assert_restore_sumgame ars(sum);
         graph = therm_builder.build_thermograph(sum);
@@ -82,7 +82,7 @@ void test_hash_helper()
     grid_generator gen({3, 3}, {BLACK, WHITE}, true, EMPTY, false,
                        grid_hash_mask<clobber>());
 
-    unordered_map<hash_t, shared_ptr<ThGraph>> hash_to_graph;
+    unordered_map<hash_t, shared_ptr<const ThGraph>> hash_to_graph;
 
     uint64_t n_games = 0;
     while (gen)
@@ -95,7 +95,7 @@ void test_hash_helper()
         n_games++;
         ++gen;
 
-        shared_ptr<ThGraph> graph;
+        shared_ptr<const ThGraph> graph;
         {
             assert_restore_sumgame ars(sum);
             graph = thgraph_builder.build_thermograph(sum);
@@ -197,7 +197,7 @@ void test_basic_helpers()
         assert(sum.num_total_games() == 0);
         sum.add(g);
 
-        shared_ptr<ThGraph> graph;
+        shared_ptr<const ThGraph> graph;
         {
             assert_restore_sumgame ars(sum);
             graph = thgraph_builder.build_thermograph(sum);
@@ -252,7 +252,7 @@ void test_bound_helpers()
         const game_bounds& exp_bounds = *exp_bounds_vec.back();
         assert(exp_bounds.both_valid());
 
-        shared_ptr<ThGraph> graph;
+        shared_ptr<const ThGraph> graph;
         {
             assert_restore_sumgame ars(sum);
             graph = thgraph_builder.build_thermograph(sum);

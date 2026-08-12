@@ -156,6 +156,17 @@ void cannibal_clobber::undo_move()
     replace(to_point, target_color);
 }
 
+void cannibal_clobber::save_impl(i_obuffer& os, serializer_ctx* ctx) const
+{
+    save_board(os, board_const(), shape(), ctx);
+}
+
+poly_serializable* cannibal_clobber::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    pair<vector<int>, int_pair> board_pair = load_board(is, ctx);
+    return new cannibal_clobber(board_pair.first, board_pair.second);
+}
+
 bool cannibal_clobber::is_move(const int& from, const int& to, bw to_play) const
 {
     assert(is_black_white(to_play));
@@ -237,6 +248,11 @@ bool trim_game(vector<int>& board_dst, int_pair& shape_dst,
 }
 
 } // namespace
+
+move_generator* cannibal_clobber::_create_move_generator_impl(bw to_play) const
+{
+    return new cannibal_clobber_move_generator(*this, to_play);
+}
 
 split_result cannibal_clobber::_split_impl() const
 {
@@ -382,10 +398,6 @@ void cannibal_clobber::_init_hash(local_hash& hash) const
     hash.__set_value(_gh.get_value());
 }
 
-move_generator* cannibal_clobber::create_move_generator(bw to_play) const
-{
-    return new cannibal_clobber_move_generator(*this, to_play);
-}
 
 void cannibal_clobber::print(ostream& str) const
 {

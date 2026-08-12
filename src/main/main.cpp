@@ -4,13 +4,16 @@
 
 #include <iostream>
 #include <memory>
+#include <cassert>
 
 #include "cli_options.h"
 #include "database.h"
 #include "convert_to_ctl.h"
+#include "exit_signal.h"
 #include "file_parser.h"
 #include "autotests.h"
 #include "global_database.h"
+#include "impartial_sumgame.h"
 #include "print_moves.h"
 #include "search_graph_debug.h"
 #include "mcgs_init.h"
@@ -25,19 +28,21 @@
 using namespace std;
 
 ////////////////////////////////////////////////// main function
-int main(int argc, char** argv)
+static int main_impl(int argc, char** argv, optional<cli_options>& opts_optional)
 {
     THROW_ASSERT(argc >= 1);
     mcgs_init_1(argv[0]);
     warn_on_exit print_warn;
 
-    cli_options opts = parse_args(argc, (const char**) argv, false);
+    opts_optional.emplace(parse_args(argc, (const char**) argv, false));
+    cli_options& opts = *opts_optional;
 
     // i.e. ./MCGS --help
     if (opts.should_exit)
         return 0;
 
     mcgs_init_2(opts);
+    exit_signal::enable_handlers();
 
     if (opts.db_dump_file_name.has_value())
     {
@@ -84,7 +89,7 @@ int main(int argc, char** argv)
                 break;
             case PRINT_MOVES_ACTION_WINNING:
             {
-                print_winning_moves_by_chunk(cout, opts.parser);
+                print_winning_moves_by_chunk_interruptible(cout, opts.parser);
                 return 0;
             }
             case PRINT_MOVES_ACTION_SUBGAME:
@@ -121,11 +126,32 @@ int main(int argc, char** argv)
             convert_tests_to_ctl_format(opts.parser, *opts.lib_ctl_output_dir,
                                         opts.test_filter_type);
         else
+        {
             run_tests_from_main(opts.parser, opts, opts.test_filter_type);
+        }
     }
 
     if (opts.search_graph_verify_dir.has_value())
         sgraph::annotate_graphs(*opts.search_graph_verify_dir);
 
     return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+    optional<cli_options> opts;
+    const int status = main_impl(argc, argv, opts);
+    assert(opts.has_value());
+
+    if (status != 0)
+        return status;
+
+    if (!opts->tt_sumgame_save_file_name.empty())
+        sumgame::save_ttable(opts->tt_sumgame_save_file_name);
+
+    if (!opts->tt_imp_sumgame_save_file_name.empty())
+        save_impartial_sumgame_ttable(opts->tt_imp_sumgame_save_file_name);
+
+    return status;
 }

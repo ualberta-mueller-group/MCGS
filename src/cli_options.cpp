@@ -82,9 +82,11 @@ void print_help_message(const string& exec_name)
 
     print_flag("--play-log <file name>", "When specified, --play-mcgs "
                                          "logs the game to the specified file.");
-    
+
     print_flag("--stdin",
-               "Read input from stdin. Causes [input string] to be ignored.");
+               "Read input from stdin. Causes [input string] to be ignored. "
+               "NOTE: parser errors will cause --tt-sumgame-save and "
+               "--tt-imp-sumgame-save to be ignored.");
 
     cout << "Sum-level flags:" << endl;
     cout << endl;
@@ -100,7 +102,8 @@ void print_help_message(const string& exec_name)
     print_flag("--play-mcgs",
                "Play each sum in the input against MCGS. Both the user's "
                "color (BLACK/WHITE), and the first player to move, are chosen "
-               "interatively by the user at runtime.");
+               "interactively by the user at runtime. To exit, press Ctrl-d "
+               "and Ctrl-c");
 
     print_flag(
         "--print-winning-moves",
@@ -144,6 +147,11 @@ void print_help_message(const string& exec_name)
 
     print_flag(global::use_db.no_flag(), "Disable database usage.");
 
+    print_flag(global::use_seg.no_flag(),
+               "Disable SEG replacement during partisan search.");
+
+    print_flag(global::single_seg.flag(), "Only replace single subgames.");
+
     print_flag("--db-file-load <file name>",
                "Load database file. If unspecified, checks for `" +
                    path_relative_to_cwd(get_default_db_path()).string() +
@@ -152,6 +160,34 @@ void print_help_message(const string& exec_name)
     print_flag("--db-file-create <file name> <config string>",
                "Create and populate a new database file. See README for "
                "details on config string syntax.");
+
+    print_flag(
+        global::pitm.no_flag(),
+        "Disable \"play in the middle\" heuristic. By default, each subgame's "
+        "moves are exhaustively generated, and moves nearer to the middle of "
+        "this list are played first. NOTE: Affects generated database file, as "
+        "in some cases non-dominated moves are stored in a DB entry in the "
+        "order they're generated in. Searches using such entries may play back "
+        "moves in this order.");
+
+    print_flag("--tt-sumgame-load <file name>",
+               "Load partisan transposition table from specified file. "
+               "Overrides --tt-sumgame-idx-bits if specified.");
+
+    print_flag(
+        "--tt-sumgame-save <file name>",
+        "On normal exit (or Ctrl-c/Ctrl-d after DB initialization has "
+        "completed), write partisan transposition table to specified "
+        "file.");
+
+    print_flag("--tt-imp-sumgame-load <file name>",
+               "Load impartial transposition table from specified file. "
+               "Overrides --tt-imp-sumgame-idx-bits if specified.");
+
+    print_flag("--tt-imp-sumgame-save <file name>",
+               "On normal exit (or Ctrl-c/Ctrl-d after DB initialization has "
+               "completed), write impartial transposition table to specified "
+               "file.");
 
     print_flag(global::impartial_algorithm_mex.flag(),
                "Use Mex search algorithm for impartial games. NOTE: doesn't "
@@ -195,6 +231,8 @@ void print_help_message(const string& exec_name)
     print_flag(global::clear_tt.flag(),
                "Clear ttable between test runs. Default: " +
                    global::clear_tt.get_default_str() + ".");
+
+
 
     print_flag(global::count_sums.flag(),
                "Count unique sums found during "
@@ -733,6 +771,19 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == global::use_seg.no_flag())
+        {
+            global::use_seg.set(false);
+            continue;
+        }
+
+        if (arg == global::single_seg.flag())
+        {
+            assert(!global::single_seg());
+            global::single_seg.set(true);
+            continue;
+        }
+
         if (arg == "--db-file-load")
         {
             arg_idx++;
@@ -777,6 +828,60 @@ cli_options parse_args(int argc, const char** argv, bool silent)
             continue;
         }
 
+        if (arg == global::pitm.no_flag())
+        {
+            assert(global::pitm());
+            global::pitm.set(false);
+            continue;
+        }
+
+        if (arg == "--tt-sumgame-load")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: no file name given for --tt-sumgame-load");
+
+            opts.tt_sumgame_load_file_name = arg_next;
+            continue;
+        }
+
+        if (arg == "--tt-sumgame-save")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: no file name given for --tt-sumgame-save");
+
+            opts.tt_sumgame_save_file_name = arg_next;
+            continue;
+        }
+
+        if (arg == "--tt-imp-sumgame-load")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: no file name given for --tt-imp-sumgame-load");
+
+            opts.tt_imp_sumgame_load_file_name = arg_next;
+            continue;
+        }
+
+        if (arg == "--tt-imp-sumgame-save")
+        {
+            arg_idx++;
+
+            if (arg_next.empty())
+                throw cli_options_exception(
+                    "Error: no file name given for --tt-imp-sumgame-save");
+
+            opts.tt_imp_sumgame_save_file_name = arg_next;
+            continue;
+        }
 
         // if (arg == global::play_split.no_flag())
         //{

@@ -4,6 +4,7 @@
 #include <string>
 #include <cassert>
 #include <ostream>
+#include <utility>
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
@@ -205,10 +206,17 @@ void fission::undo_move()
     }
 }
 
-move_generator* fission::create_move_generator(bw to_play) const
+void fission::save_impl(i_obuffer& os, serializer_ctx* ctx) const
 {
-    return new fission_move_generator(*this, to_play);
+    save_board(os, board_const(), shape(), ctx);
 }
+
+poly_serializable* fission::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    pair<vector<int>, int_pair> board_pair = load_board(is, ctx);
+    return new fission(board_pair.first, board_pair.second);
+}
+
 
 void fission::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
@@ -261,6 +269,11 @@ game* fission::clone() const
     coord1 = grid_hash::get_inverse_transformed_coords(grid_shape, coord1, ori);
 
     return cgt_move::move2_create_from_coords(coord1);
+}
+
+move_generator* fission::_create_move_generator_impl(bw to_play) const
+{
+    return new fission_move_generator(*this, to_play);
 }
 
 void fission::_init_hash(local_hash& hash) const

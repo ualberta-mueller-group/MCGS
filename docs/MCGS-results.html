@@ -29,6 +29,7 @@ table, th, td {
 </li>
 <li><a href="#impartial">Impartial Games</a>
     <ul>
+    <li><a href="#impartial-amazons">Impartial Amazons</a></li>
     <li><a href="#impartial-clobber">Impartial Clobber</a></li>
     <li><a href="#impartial-nogo">Impartial NoGo</a></li>
     <li><a href="#cram">Cram = Impartial Domineering</a></li>
@@ -211,11 +212,22 @@ After thinking for ~43 hours, it determined that there are no winning moves from
 <h3><a name="cannibal_clobber"></a>Cannibal Clobber</h3>
 <p>
 Conjecture: Linear alternating Cannibal Clobber <code>(XO)<sup>n</sup></code> is in N for all n>0.
-MCGS verified this for all n &leq; 24.
+Verified with MCGS 0.7-develop, 2026-06-23, for all n &leq; 30 with a database up to 1x15.
+Test cases are in 
+<code>MCGS/input/cannibal_clobber/cannibal_clobber_1xn.test</code>
+and in
+<code>MCGS/input/cannibal_clobber/cannibal_clobber_1xn-hard.test</code>.
 </p>
 <p>
 Conjecture: Cannibal Clobber, checkerboard pattern on a nxm rectangle, n &leq; m is in N for all n m except n=2, m=3 is in P.
 MCGS verified for 2xm, m &leq; 11, 3xm, m &leq; 7, 4x4, 4x5.
+</p>
+<p>
+Conjecture: Cannibal Clobber <code>(XOO)<sup>n</sup></code> is in R for all n>0.
+Verified with MCGS 0.7-develop, 2026-06-23, for all n &leq; 23 with a database up to 1x15.
+Test cases are in 
+<code>MCGS/input/cannibal_clobber/cannibal_clobber_1xn_xoo.test</code>.
+
 </p>
 
 <h3><a name="nogo"></a>NoGo</h3>
@@ -298,7 +310,18 @@ References:
 
 
 <h2><a name="impartial"></a>Impartial Games</h2>
+<h3><a name="impartial-amazons"></a>Impartial Amazons</h3>
+<p>
+June 2026: Early results on impartial linear Amazons on a 1xn strip with one or two queens are not too interesting: The value of each tested board with n empty squares is *n. The first move can reduce the board to any value *i, 
+ i from 0 to n-1.
+Some test cases for n up to 10 with one and two queens are in 
+<code>MCGS/input/impartial/impartial-easy/impartial_amazons_1xn.test</code>.
+</p>
+
 <h3><a name="impartial-clobber"></a>Impartial Clobber</h3>
+<p>So far, we only report results for linear impartial clobber with repeating patterns.</p>
+<p>To do: try impartial clobber on a grid</p>
+
 <h4><a name="impartial-clobber-1xn"></a>Impartial Linear Clobber</h4>
 <p>Repeating impartial clobber patterns are "easy", in the sense
 that the number of possible/relevant new subgames is limited, when computing these positions for increasing size n. 

@@ -11,6 +11,25 @@
 #include <vector>
 using std::vector;
 
+//---------------------------------------------------------------------------
+namespace {
+class kayles_move_generator : public move_generator
+{
+public:
+    kayles_move_generator(const kayles& game);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    const kayles& _game;
+    int _smaller_number;
+    int _take; // Take 1 or 2 pebbles. 0 is a flag meaning no more moves
+};
+} // namespace
+
+//---------------------------------------------------------------------------
+
 // Encode triple (take, smaller, larger) as a move
 move kayles::encode(int take, int smaller, int larger)
 {
@@ -60,6 +79,17 @@ void kayles::print(std::ostream& str) const
     str << "kayles: " << _value;
 }
 
+void kayles::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_empty_black_white(to_play));
+
+    int take, smaller, larger;
+    _decode(m, take, smaller, larger);
+
+    str << take << '-' << smaller << '-' << larger;
+}
+
+
 void kayles::print_kayles_move(move m, std::ostream& str)
 {
     int take, smaller, larger;
@@ -80,6 +110,11 @@ game* kayles::clone() const
     kayles* g = new kayles(_value);
     g->_smaller_part = _smaller_part;
     return g;
+}
+
+move_generator* kayles::_create_move_generator_impl() const
+{
+    return new kayles_move_generator(*this);
 }
 
 relation kayles::_order_impl(const game* rhs) const
@@ -144,20 +179,8 @@ void kayles::set_solved(int nim_value)
 }
 
 //---------------------------------------------------------------------------
-namespace {
-class kayles_move_generator : public move_generator
-{
-public:
-    kayles_move_generator(const kayles& game);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
 
-private:
-    const kayles& _game;
-    int _smaller_number;
-    int _take; // Take 1 or 2 pebbles. 0 is a flag meaning no more moves
-};
+namespace {
 
 kayles_move_generator::kayles_move_generator(const kayles& game)
     : move_generator(BLACK), _game(game), _smaller_number(0), _take(1)
@@ -196,18 +219,5 @@ move kayles_move_generator::gen_move() const
 } // namespace
 
 //---------------------------------------------------------------------------
-move_generator* kayles::create_move_generator() const
-{
-    return new kayles_move_generator(*this);
-}
 
-void kayles::print_move(std::ostream& str, const move& m, ebw to_play) const
-{
-    assert(is_empty_black_white(to_play));
-
-    int take, smaller, larger;
-    _decode(m, take, smaller, larger);
-
-    str << take << '-' << smaller << '-' << larger;
-}
 

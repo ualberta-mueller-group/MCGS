@@ -16,6 +16,10 @@
 #include <utility>
 #include <ios>
 
+#include "ThGraph.h"
+#include "ThPoint.h"
+#include "ThScaffold.h"
+#include "ThValue.h"
 #include "cgt_basics.h"
 #include "gen_king_dirt.h"
 #include "test_case_enums.h"
@@ -513,6 +517,110 @@ i_fp_expr_command* get_fp_expr_run_command_winning_moves(const int line_number,
                                              expected_moves);
 }
 
+i_fp_expr_command* get_fp_expr_run_command_thermograph(
+    const int line_number, const vector<string>& string_tokens, size_t& idx)
+{
+    const size_t N = string_tokens.size();
+
+    if (!(idx < N))
+        return nullptr;
+
+    const string& thermograph_token = string_tokens[idx];
+    if (thermograph_token != "thermograph")
+        return nullptr;
+
+    idx++;
+
+    // Handle case where no expected value is given
+    if (!(idx < N) || is_comma(string_tokens[idx]))
+        return new fp_expr_command_thermograph(line_number);
+
+    // Both scaffolds must be present
+    vector<ThPoint> left_scaffold;
+    vector<ThPoint> right_scaffold;
+
+    // Left scaffold begin ("L:")
+    assert(idx < N);
+    const string& left_begin = string_tokens[idx];
+    idx++;
+
+    if (left_begin != "L:")
+    {
+        const string why =
+            file_parser::get_error_start(line_number) +
+            "thermograph command has invalid format (expected \"L:\", got \"" +
+            left_begin + "\" instead)";
+
+        throw parser_exception(why, FAILED_CASE_COMMAND);
+    }
+
+    // Get left scaffold
+    if (!get_scaffold(string_tokens, idx, left_scaffold))
+    {
+        const string why = file_parser::get_error_start(line_number) +
+                           "thermograph command missing/invalid left scaffold";
+
+        throw parser_exception(why, FAILED_CASE_COMMAND);
+    }
+
+    // Error if right scaffold missing
+    if (!(idx < N))
+    {
+        const string why = file_parser::get_error_start(line_number) +
+                           "thermograph command missing right scaffold";
+
+        throw parser_exception(why, FAILED_CASE_COMMAND);
+    }
+
+    // Right scaffold begin ("R:")
+    const string& right_begin = string_tokens[idx];
+    idx++;
+
+    if (right_begin != "R:")
+    {
+        const string why =
+            file_parser::get_error_start(line_number) +
+            "thermograph command has invalid format (expected \"R:\", got \"" +
+            right_begin + "\" instead)";
+
+        throw parser_exception(why, FAILED_CASE_COMMAND);
+    }
+
+    // Get right scaffold
+    if (!get_scaffold(string_tokens, idx, right_scaffold))
+    {
+        const string why = file_parser::get_error_start(line_number) +
+                           "thermograph command missing/invalid right scaffold";
+
+        throw parser_exception(why, FAILED_CASE_COMMAND);
+    }
+
+    // Append points at temperature=1 above masts
+    assert(!left_scaffold.empty() && !right_scaffold.empty());
+    {
+        const ThPoint& left_top = left_scaffold.back();
+        left_scaffold.emplace_back(left_top.Value(), left_top.Temp() + ThValue(1));
+
+        const ThPoint& right_top = right_scaffold.back();
+        right_scaffold.emplace_back(right_top.Value(), right_top.Temp() + ThValue(1));
+    }
+
+
+    // Construct thermograph
+    ThScaffold sc_left;
+    for (const ThPoint& p : left_scaffold)
+        sc_left.AppendPoint(p);
+
+    ThScaffold sc_right;
+    for (const ThPoint& p : right_scaffold)
+        sc_right.AppendPoint(p);
+
+    ThGraph graph(sc_left, sc_right);
+    graph.Check();
+    
+    return new fp_expr_command_thermograph(line_number, graph);
+}
+
 #ifdef CALL_PARSE_FN_MACRO
 #error Macro already defined
 #endif
@@ -540,6 +648,7 @@ bool get_fp_expr_run_command(const int line_number,
     CALL_PARSE_FN_MACRO(get_fp_expr_run_command_solve_bw);
     CALL_PARSE_FN_MACRO(get_fp_expr_run_command_solve_n);
     CALL_PARSE_FN_MACRO(get_fp_expr_run_command_winning_moves);
+    CALL_PARSE_FN_MACRO(get_fp_expr_run_command_thermograph);
 
     return false;
 }
@@ -661,7 +770,7 @@ bool file_parser::_parse_chunk_impl()
         }
 
         // Match command
-        if (_match("{", "}", "command", false))
+        if (_match("{", "}", "command", true))
         {
             if (_token.find("version") == 0)
             {

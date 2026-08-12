@@ -22,7 +22,10 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
-    move_generator* create_move_generator(bw to_play) const override;
+    // Serialization
+    void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
+    static poly_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
+
 
     void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
@@ -34,6 +37,7 @@ public:
     move decode_grid_move_from_db(const move& m) const override;
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     void _init_hash(local_hash& hash) const override;
 
     mutable grid_hash _gh;

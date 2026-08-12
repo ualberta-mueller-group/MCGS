@@ -30,15 +30,19 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
+    // Serialization
+    void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
+    static poly_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
+
     // checks that all stones have liberties
     bool is_legal() const;
 
     std::vector<int> immortal() const { return _immortal; }
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     void _init_hash(local_hash& hash) const override;
     split_result _split_impl() const override;
-
 
 public:
     game* inverse() const override;
@@ -47,7 +51,6 @@ public:
     move encode_grid_move_to_db(const move& m) const override;
     move decode_grid_move_from_db(const move& m) const override;
 
-    move_generator* create_move_generator(bw to_play) const override;
 
     void print(std::ostream& str) const override
     {

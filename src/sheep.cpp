@@ -197,10 +197,17 @@ void sheep::undo_move()
     replace_int(point_end, 0);
 }
 
-move_generator* sheep::create_move_generator(bw to_play) const
+void sheep::save_impl(i_obuffer& os, serializer_ctx* ctx) const
 {
-    return new sheep_move_generator(*this, to_play);
+    save_board(os, board_const(), shape(), ctx);
 }
+
+poly_serializable* sheep::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    pair<vector<int>, int_pair> board_pair = load_board(is, ctx);
+    return new sheep(board_pair.first, board_pair.second);
+}
+
 
 void sheep::print(ostream& str) const
 {
@@ -251,6 +258,11 @@ game* sheep::inverse() const
 game* sheep::clone() const
 {
     return new sheep(board_const(), shape());
+}
+
+move_generator* sheep::_create_move_generator_impl(bw to_play) const
+{
+    return new sheep_move_generator(*this, to_play);
 }
 
 ////////////////////////////////////////////////// split

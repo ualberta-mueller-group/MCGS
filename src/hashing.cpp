@@ -170,6 +170,30 @@ void global_hash::remove_subgame(size_t subgame_idx, const game* g)
     _subgame_hashes[subgame_idx] = 0;
 }
 
+void global_hash::add_hash(size_t subgame_idx, hash_t local_hash)
+{
+    _resize_if_out_of_range(subgame_idx);
+    assert(!_subgame_valid_mask[subgame_idx]);
+
+    hash_t modified_hash = _get_modified_hash(subgame_idx, local_hash);
+
+    _subgame_valid_mask[subgame_idx] = true;
+    _subgame_hashes[subgame_idx] = modified_hash;
+
+    _value ^= modified_hash;
+}
+
+void global_hash::remove_hash(size_t subgame_idx, hash_t local_hash)
+{
+    _resize_if_out_of_range(subgame_idx);
+    assert(_subgame_valid_mask[subgame_idx]);
+    assert(_subgame_hashes[subgame_idx] == _get_modified_hash(subgame_idx, local_hash));
+
+    _value ^= _subgame_hashes[subgame_idx];
+    _subgame_valid_mask[subgame_idx] = false;
+    _subgame_hashes[subgame_idx] = 0;
+}
+
 void global_hash::set_to_play(ebw new_to_play)
 {
     assert(is_empty_black_white(new_to_play));
@@ -252,6 +276,50 @@ hash_t global_hash::get_global_hash_value(const game* g, ebw to_play,
     return get_value();
 }
 
+hash_t global_hash::get_db_hash_value(const std::vector<game*>& games)
+{
+    vector<hash_t> active_hashes;
+
+    const size_t n_games = games.size();
+    for (size_t i = 0; i < n_games; i++)
+    {
+        const game* g = games[i];
+
+        if (!g->is_active())
+            continue;
+
+        active_hashes.push_back(g->get_local_hash());
+    }
+
+    return get_db_hash_value(active_hashes);
+}
+
+hash_t global_hash::get_db_hash_value(std::vector<hash_t>& hashes)
+{
+    const size_t n_hashes = hashes.size();
+
+    if (n_hashes == 1)
+        return hashes.back();
+
+    auto compare_fn = [](const hash_t hash1, const hash_t hash2) -> bool
+    {
+        return hash1 < hash2;
+    };
+
+    std::sort(hashes.begin(), hashes.end(), compare_fn);
+
+    reset();
+    set_to_play(EMPTY);
+
+    for (size_t i = 0; i < n_hashes; i++)
+    {
+        const hash_t h = hashes[i];
+        add_hash(i, h);
+    }
+
+    return get_value();
+}
+
 void global_hash::_resize_if_out_of_range(size_t subgame_idx)
 {
     assert(_subgame_hashes.size() == _subgame_valid_mask.size());
@@ -279,4 +347,10 @@ hash_t global_hash::_get_modified_hash(size_t subgame_idx, const game* g)
 
     random_table& rt = get_global_random_table(RANDOM_TABLE_MODIFIER);
     return rt.get_zobrist_val(subgame_idx, base_hash);
+}
+
+hash_t global_hash::_get_modified_hash(size_t subgame_idx, hash_t local_hash)
+{
+    random_table& rt = get_global_random_table(RANDOM_TABLE_MODIFIER);
+    return rt.get_zobrist_val(subgame_idx, local_hash);
 }

@@ -7,6 +7,7 @@
 
 #include "visitor_generate.h"
 
+#include <sstream>
 #include <string>
 #include <vector>
 #include <cassert>
@@ -20,7 +21,9 @@
 #include "file_parser_ast.h"
 #include "test_case.h"
 #include "test_case_enums.h"
+#include "thermograph_helpers.h"
 #include "utilities.h"
+#include "ThGraph.h"
 
 using namespace std;
 
@@ -255,3 +258,29 @@ void visitor_generate::visit(const fp_expr_command_winning_moves& expr)
     _ctx->result_test_case = new test_case_winning_moves(
         expr, std::move(_ctx->games), std::move(_ctx->game_types));
 }
+
+
+void visitor_generate::visit(const fp_expr_command_thermograph& expr)
+{
+    assert(_ctx.has_value() && !_ctx->result_test_case.has_value());
+
+    {
+        simple_text_hash& input_hash = _ctx->input_hash;
+        input_hash.update(command_type_to_string(expr.get_command_type()));
+
+        const optional<ThGraph>& graph_opt = expr.get_exp_graph();
+        if (graph_opt.has_value())
+        {
+            std::stringstream str;
+            print_thermograph(str, *graph_opt);
+            input_hash.update(str.str());
+        }
+        else
+            input_hash.update("???");
+
+    }
+
+    _ctx->result_test_case = new test_case_thermograph(
+        expr, std::move(_ctx->games), std::move(_ctx->game_types));
+}
+

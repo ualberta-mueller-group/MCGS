@@ -15,6 +15,23 @@
 using std::cout;
 using std::endl;
 
+//---------------------------------------------------------------------------
+namespace {
+class switch_move_generator : public move_generator
+{
+public:
+    switch_move_generator(const switch_game& game, bw to_play);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    bool _generated;
+};
+
+} // namespace
+
+//---------------------------------------------------------------------------
 void switch_game::play(const move& m, bw to_play)
 {
     game::play(m, to_play);
@@ -55,6 +72,15 @@ void switch_game::undo_move()
 
     _move_depth--;
 }
+
+move_generator* switch_game::_create_move_generator_impl(bw to_play) const
+{
+    if (is_rational())
+        return _rational_game->create_move_generator(to_play);
+    else
+        return new switch_move_generator(*this, to_play);
+}
+
 
 split_result switch_game::_split_impl() const
 {
@@ -182,6 +208,16 @@ void switch_game::print(std::ostream& str) const
     }
 }
 
+void switch_game::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_black_white(to_play));
+
+    if (is_rational())
+        _rational_game->print_move(str, m, to_play);
+    else
+        str << "SWITCH_" << (to_play == BLACK ? 'L' : 'R');
+}
+
 switch_kind switch_game::kind() const
 {
     if (is_rational())
@@ -226,19 +262,8 @@ switch_kind switch_game::_init_kind() const
 }
 
 //---------------------------------------------------------------------------
+
 namespace {
-class switch_move_generator : public move_generator
-{
-public:
-    switch_move_generator(const switch_game& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    bool _generated;
-};
-
 switch_move_generator::switch_move_generator(const switch_game& game,
                                              bw to_play)
     : move_generator(to_play), _generated(false)
@@ -263,23 +288,7 @@ move switch_move_generator::gen_move() const
 }
 } // namespace
 
-//---------------------------------------------------------------------------
-move_generator* switch_game::create_move_generator(bw to_play) const
-{
-    if (is_rational())
-        return _rational_game->create_move_generator(to_play);
-    else
-        return new switch_move_generator(*this, to_play);
-}
 
-void switch_game::print_move(std::ostream& str, const move& m, ebw to_play) const
-{
-    assert(is_black_white(to_play));
 
-    if (is_rational())
-        _rational_game->print_move(str, m, to_play);
-    else
-        str << "SWITCH_" << (to_play == BLACK ? 'L' : 'R');
-}
 
 //---------------------------------------------------------------------------

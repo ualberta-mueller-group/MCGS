@@ -15,6 +15,7 @@
 #include "test_filter.h"
 #include "utilities.h"
 #include "file_parser.h"
+#include "exit_signal.h"
 
 using namespace std;
 
@@ -66,16 +67,22 @@ void run_test_from_main(shared_ptr<i_test_case> test_case,
 void run_tests_from_main(std::shared_ptr<file_parser> parser,
                          const cli_options& opts, test_filter_enum filter_type)
 {
+    CHECK_EXIT_SIGNAL_0();
+
     bool first_case = true;
 
     uint64_t n_tests_filtered = 0;
 
     while (parser->parse_chunk())
     {
+        CHECK_EXIT_SIGNAL_0();
+
         const int n_test_cases = parser->n_test_cases();
 
         for (int test_number = 0; test_number < n_test_cases; test_number++)
         {
+            CHECK_EXIT_SIGNAL_0();
+
             std::shared_ptr<i_test_case> test_case =
                 parser->get_test_case(test_number);
 

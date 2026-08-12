@@ -11,6 +11,7 @@
 
 #include "cgt_move.h"
 #include "cgt_basics.h"
+#include "global_options.h"
 #include "impartial_game_wrapper.h"
 #include "clobber_1xn.h"
 #include "nogo_1xn.h"
@@ -24,18 +25,34 @@ namespace {
 std::vector<move> generate_moves(const impartial_game_wrapper& g,
                                  bool use_alternating_version)
 {
-    std::vector<move> moves;
+    std::vector<move> moves_direct;
+    std::vector<move> moves_indirect;
 
-    std::unique_ptr<move_generator> gen(
-        g.create_specific_move_generator(use_alternating_version));
+    std::unique_ptr<move_generator> gen_direct(
+        g.__create_specific_move_generator(use_alternating_version));
 
-    while (*gen)
+    const bool restore_flag = global::imp_wrapper_alternate_color();
+    global::imp_wrapper_alternate_color.set(use_alternating_version);
+
+    std::unique_ptr<move_generator> gen_indirect(
+        g.create_move_generator());
+
+    global::imp_wrapper_alternate_color.set(restore_flag);
+
+    while (*gen_direct)
     {
-        moves.push_back(gen->gen_move());
-        ++(*gen);
+        moves_direct.push_back(gen_direct->gen_move());
+        ++(*gen_direct);
     }
 
-    return moves;
+    while (*gen_indirect)
+    {
+        moves_indirect.push_back(gen_indirect->gen_move());
+        ++(*gen_indirect);
+    }
+
+    assert(moves_direct == moves_indirect);
+    return moves_direct;
 }
 
 void test_num_moves(const string& s, int num_moves)

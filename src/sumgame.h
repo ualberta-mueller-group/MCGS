@@ -12,6 +12,7 @@
 #include <utility>
 #include <ostream>
 #include <cassert>
+#include <string>
 
 #include "alternating_move_game.h"
 #include "game.h"
@@ -30,10 +31,11 @@ class sumgame_move_generator;
 
 class assert_restore_sumgame;
 
+class seg_replacer;
+
 ////////////////////////////////////////////////// Simple types
 typedef std::vector<std::optional<ThValue>> temperature_vec_t;
 typedef std::vector<std::shared_ptr<const db_dom_moves_t>> dom_object_vec_t;
-
 
 struct ttable_sumgame_entry
 {
@@ -50,6 +52,7 @@ enum sumgame_undo_code
     SUMGAME_UNDO_PRE_SOLVE_PASS,
     SUMGAME_UNDO_SPLIT_AND_NORMALIZE,
     SUMGAME_UNDO_DB_REPLACEMENT_PASS,
+    SUMGAME_UNDO_SEG_PASS,
 };
 
 ////////////////////////////////////////////////// struct sumgame_move
@@ -74,6 +77,24 @@ inline bool sumgame_move::operator!=(const sumgame_move& rhs) const
 {
     return !(*this == rhs);
 }
+
+
+////////////////////////////////////////////////// struct mcgs_player_move
+enum mcgs_player_move_status_enum
+{
+    // A valid move was returned
+    MCGS_PLAYER_MOVE_STATUS_OK = 0,
+    // No valid move was returned, because the sum has no moves
+    MCGS_PLAYER_MOVE_STATUS_NO_MOVES,
+    // No valid move was returned, because the program should exit
+    MCGS_PLAYER_MOVE_STATUS_SHOULD_EXIT,
+};
+
+struct mcgs_player_move
+{
+    mcgs_player_move_status_enum status;
+    std::optional<sumgame_move> sm;
+};
 
 ////////////////////////////////////////////////// struct play_record
 struct play_record
@@ -110,6 +131,8 @@ struct solve_result
 class sumgame : public alternating_move_game
 {
 public:
+    static bool use_npos;
+
     sumgame(bw color);
     virtual ~sumgame();
 
@@ -157,6 +180,8 @@ public:
     hash_t get_global_hash_for_player(
         ebw for_player, bool invalidate_game_hashes = false) const;
 
+    hash_t get_db_hash() const;
+
     /*
         Printing.
 
@@ -176,6 +201,8 @@ public:
         returned optional has no value.
     */
     bool solve() const override;
+
+    bool solve_with_ttable(std::shared_ptr<ttable_sumgame> temp_ttable);
 
     bool solve_with_games(game* g) const;
     bool solve_with_games(const std::vector<game*>& games) const;
@@ -202,13 +229,21 @@ public:
     void db_replacement_pass();
     void undo_db_replacement_pass();
 
+    void seg_pass(seg_replacer* replacer);
+    void undo_seg_pass();
+
     /*
         Utilities and static functions.
     */
-    std::optional<sumgame_move> get_winning_or_random_move(bw for_player) const;
+    mcgs_player_move get_winning_or_random_move(bw for_player) const;
 
-    // called by mcgs_init_all()
-    static void init_sumgame(size_t index_bits);
+    // Called by `mcgs_init_all()`. If the file name is not empty, the number
+    // of index bits is ignored, and `global::tt_sumgame_idx_bits` is modified
+    // based on the loaded file.
+    static void init_sumgame(size_t index_bits,
+                             const std::string& ttable_load_file_name);
+
+    static void save_ttable(const std::string& ttable_save_file_name);
 
     // Called by derived classes of i_test_case, in their _run_impl() methods
     static void clear_ttable();
@@ -263,6 +298,7 @@ private:
     std::optional<timeout_token> _timeout_tok;
     mutable bool _need_cgt_simplify;
     mutable global_hash _sumgame_hash;
+    mutable seg_replacer* _replacer;
 
     /*
         Persistent data. Has meaning outside of search.
@@ -359,7 +395,7 @@ public:
 
 ////////////////////////////////////////////////// sumgame methods
 inline sumgame::sumgame(bw color)
-    : alternating_move_game(color), _need_cgt_simplify(true)
+    : alternating_move_game(color), _need_cgt_simplify(true), _replacer(nullptr)
 {
 }
 
@@ -442,6 +478,11 @@ inline hash_t sumgame::get_global_hash(bool invalidate_game_hashes) const
 {
     return _sumgame_hash.get_global_hash_value(subgames(), to_play(),
                                                invalidate_game_hashes);
+}
+
+inline hash_t sumgame::get_db_hash() const
+{
+    return _sumgame_hash.get_db_hash_value(subgames());
 }
 
 inline hash_t sumgame::get_global_hash_for_player(ebw for_player,

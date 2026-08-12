@@ -12,11 +12,8 @@
 #include "cgt_move.h"
 #include "cgt_nimber.h"
 #include "game.h"
-#include "global_options.h"
-#include "pitm_move_generator.h"
 #include "utilities.h"
 
-const bool USE_PITM = false;
 
 move impartial_game_wrapper::encode_grid_move_to_db(const move& m) const
 {
@@ -199,15 +196,10 @@ ig_wrapper_move_generator::ig_wrapper_move_generator(
     : move_generator(BLACK),
       _game(wrapper.wrapped_game()),
       _color(BLACK),
-      _mg_black(_game->create_move_generator(BLACK)),
-      _mg_white(_game->create_move_generator(WHITE)),
+      _mg_black(_game->create_move_generator(BLACK, MOVE_GENERATOR_TYPE_BASIC)),
+      _mg_white(_game->create_move_generator(WHITE, MOVE_GENERATOR_TYPE_BASIC)),
       _generator(nullptr)
 {
-    if (USE_PITM)
-    {
-        _mg_black = new pitm_move_generator(_mg_black, BLACK);
-        _mg_white = new pitm_move_generator(_mg_white, WHITE);
-    }
     _generator = _mg_black;
     _next_move(true);
 }
@@ -303,15 +295,9 @@ ig_wrapper_alternating_move_generator::ig_wrapper_alternating_move_generator(
     const impartial_game_wrapper& wrapper)
     : move_generator(BLACK),
       _game(*wrapper.wrapped_game()),
-      _mg_current(_game.create_move_generator(BLACK)),
-      _mg_next(_game.create_move_generator(WHITE))
+      _mg_current(_game.create_move_generator(BLACK, MOVE_GENERATOR_TYPE_BASIC)),
+      _mg_next(_game.create_move_generator(WHITE, MOVE_GENERATOR_TYPE_BASIC))
 {
-    if (USE_PITM)
-    {
-        _mg_current = new pitm_move_generator(_mg_current, BLACK);
-        _mg_next = new pitm_move_generator(_mg_next, WHITE);
-    }
-
     _next_move(true);
 }
 
@@ -381,12 +367,8 @@ void ig_wrapper_alternating_move_generator::_next_move(bool init)
 } // namespace
 
 //---------------------------------------------------------------------------
-move_generator* impartial_game_wrapper::create_move_generator() const
-{
-    return create_specific_move_generator(global::imp_wrapper_alternate_color());
-}
 
-move_generator* impartial_game_wrapper::create_specific_move_generator(
+move_generator* impartial_game_wrapper::__create_specific_move_generator(
     bool use_alternating_version) const
 {
     if (use_alternating_version)

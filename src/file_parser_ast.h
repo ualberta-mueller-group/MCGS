@@ -6,6 +6,7 @@
 */
 #pragma once
 
+#include "ThGraph.h"
 #include "cgt_basics.h"
 #include <string>
 #include <vector>
@@ -28,6 +29,7 @@ class i_fp_expr_command; // interface for all commands inside of curly braces
 class fp_expr_command_solve_bw; // solve for BLACK or WHITE
 class fp_expr_command_solve_n; // solve nim value
 class fp_expr_command_winning_moves; // winning moves for EMPTY/BLACK/WHITE
+class fp_expr_command_thermograph; // thermograph
 
 /*
     Represents a "chunk" of input (within a CLI game string, or .test file, or
@@ -56,6 +58,7 @@ public:
     virtual void visit(const fp_expr_command_solve_bw& expr) = 0;
     virtual void visit(const fp_expr_command_solve_n& expr) = 0;
     virtual void visit(const fp_expr_command_winning_moves& expr) = 0;
+    virtual void visit(const fp_expr_command_thermograph& expr) = 0;
 
 private:
 };
@@ -202,6 +205,22 @@ public:
 private:
     const ebw _player;
     const std::optional<std::vector<std::string>> _expected_winning_moves;
+};
+
+//////////////////////////////////////////////////
+// class fp_expr_command_thermograph
+class fp_expr_command_thermograph : public i_fp_expr_command
+{
+public:
+    fp_expr_command_thermograph(int line_no);
+    fp_expr_command_thermograph(int line_no, ThGraph graph);
+
+    void accept(i_fp_visitor& visitor) const override;
+
+    const std::optional<ThGraph>& get_exp_graph() const;
+
+private:
+    const std::optional<ThGraph> _exp_graph;
 };
 
 //////////////////////////////////////// class fp_chunk

@@ -36,6 +36,7 @@
 #include "throw_assert.h"
 #include "type_table.h"
 #include "random.h"
+#include "exit_signal.h"
 
 using namespace std;
 
@@ -502,6 +503,7 @@ generated_game gen_large_clobber_1xn_subgames()
 void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
               int diagram_id, size_t min_x, size_t max_x)
 {
+    CHECK_EXIT_SIGNAL_0();
     THROW_ASSERT(histogram_file.has_value());
 
     // Variables
@@ -534,6 +536,7 @@ void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
     // Try "large" games
     for (uint64_t attempt = 0; attempt < max_attempts; attempt++)
     {
+        CHECK_EXIT_SIGNAL_0();
         generated_game gen_game = gen_func();
 
         if (!game_usable(gen_game))
@@ -555,6 +558,7 @@ void gen_impl(uint64_t max_attempts, uint64_t bucket_size, gen_func_t& gen_func,
 ////////////////////////////////////////////////// Main exported function
 void gen_experiments()
 {
+    CHECK_EXIT_SIGNAL_0();
 
     cerr << "WARNING: May not produce same input as used for the paper. "
             "Use the commit mentioned in the paper instead "
@@ -580,24 +584,28 @@ void gen_experiments()
              0, 13);
 
     next_diagram_id++;
+    CHECK_EXIT_SIGNAL_0();
 
     // nogo_1xn
     gen_impl(max_attempts, bucket_size, gen_large_nogo_1xn, next_diagram_id, 0,
              15);
 
     next_diagram_id++;
+    CHECK_EXIT_SIGNAL_0();
 
     // elephants (was 13)
     gen_impl(max_attempts, bucket_size, gen_large_elephants, next_diagram_id, 0,
              14);
 
     next_diagram_id++;
+    CHECK_EXIT_SIGNAL_0();
 
     // clobber
     gen_impl(max_attempts, bucket_size, gen_large_clobber, next_diagram_id, 7,
              20);
 
     next_diagram_id++;
+    CHECK_EXIT_SIGNAL_0();
 
     // clobber_1xn subgames
     gen_impl(max_attempts, bucket_size, gen_large_clobber_1xn_subgames,

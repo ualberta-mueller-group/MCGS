@@ -15,6 +15,7 @@
 #include "print_move_helpers.h"
 #include "grid_location.h"
 #include "bounding_box.h"
+#include "global_options.h"
 #include "throw_assert.h"
 
 namespace {
@@ -198,10 +199,17 @@ void amazons::undo_move()
     }
 }
 
-move_generator* amazons::create_move_generator(bw to_play) const
+void amazons::save_impl(i_obuffer& os, serializer_ctx* ctx) const
 {
-    return new amazons_move_generator(*this, to_play);
+    save_board(os, board_const(), shape(), ctx);
 }
+
+poly_serializable* amazons::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    pair<vector<int>, int_pair> board_pair = load_board(is, ctx);
+    return new amazons(board_pair.first, board_pair.second);
+}
+
 
 void amazons::print_move(std::ostream& str, const ::move& m, ebw to_play) const
 {
@@ -414,6 +422,11 @@ split_result amazons::_split_impl() const
     }
 
     return result;
+}
+
+move_generator* amazons::_create_move_generator_impl(bw to_play) const
+{
+    return new amazons_move_generator(*this, to_play);
 }
 
 void amazons::_init_hash(local_hash& hash) const

@@ -11,6 +11,8 @@
 
 #include "cgt_basics.h"
 #include "cgt_move.h"
+#include "global_options.h"
+#include "pitm_move_generator.h"
 #include "warn_default.h"
 #include "type_table.h"
 
@@ -75,6 +77,28 @@ bool game::has_moves_for(bw player) const
 bool game::has_moves() const
 {
     return has_moves_for(BLACK) || has_moves_for(WHITE);
+}
+
+move_generator* game::create_move_generator(
+    bw to_play, move_generator_type_enum move_generator_type) const
+{
+    move_generator* mg = _create_move_generator_impl(to_play);
+
+    switch (move_generator_type)
+    {
+        case MOVE_GENERATOR_TYPE_AUTO:
+        {
+            if (global::pitm())
+                mg = new pitm_move_generator(mg, to_play);
+            return mg;
+        }
+        case MOVE_GENERATOR_TYPE_BASIC:
+            return mg;
+        case MOVE_GENERATOR_TYPE_PITM:
+            return new pitm_move_generator(mg, to_play);
+    }
+
+    assert(false);
 }
 
 void game::play(const move& m, int to_play)

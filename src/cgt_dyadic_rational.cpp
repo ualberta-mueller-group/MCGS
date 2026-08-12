@@ -13,6 +13,24 @@
 #include "throw_assert.h"
 
 //---------------------------------------------------------------------------
+namespace {
+class dyadic_rational_move_generator : public move_generator
+{
+public:
+    dyadic_rational_move_generator(const dyadic_rational& game, bw to_play);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    const dyadic_rational& _game;
+    bool _has_move;
+};
+
+} // namespace
+
+
+//---------------------------------------------------------------------------
 void dyadic_rational::simplify()
 {
     assert(is_power_of_2(_q));
@@ -73,6 +91,11 @@ void dyadic_rational::undo_move()
     _q = q;
 }
 
+move_generator* dyadic_rational::_create_move_generator_impl(bw to_play) const
+{
+    return new dyadic_rational_move_generator(*this, to_play);
+}
+
 split_result dyadic_rational::_split_impl() const
 {
     if (_q != 1)
@@ -127,6 +150,14 @@ void dyadic_rational::print(std::ostream& str) const
     str << "dyadic_rational:" << _p << '/' << _q;
 }
 
+void dyadic_rational::print_move(std::ostream& str, const move& m, ebw to_play) const
+{
+    assert(is_black_white(to_play));
+    assert(p() != 0);
+
+    str << (to_play == BLACK ? "DEC" : "INC");
+}
+
 void dyadic_rational::_check_legal() const
 {
     THROW_ASSERT(_q > 0 && is_power_of_2(_q) && negate_is_safe(_p));
@@ -135,19 +166,6 @@ void dyadic_rational::_check_legal() const
 //---------------------------------------------------------------------------
 
 namespace {
-class dyadic_rational_move_generator : public move_generator
-{
-public:
-    dyadic_rational_move_generator(const dyadic_rational& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    const dyadic_rational& _game;
-    bool _has_move;
-};
-
 dyadic_rational_move_generator::dyadic_rational_move_generator(
     const dyadic_rational& game, bw to_play)
     : move_generator(to_play), _game(game), _has_move(true)
@@ -180,15 +198,5 @@ move dyadic_rational_move_generator::gen_move() const
 } // namespace
 
 //---------------------------------------------------------------------------
-move_generator* dyadic_rational::create_move_generator(bw to_play) const
-{
-    return new dyadic_rational_move_generator(*this, to_play);
-}
 
-void dyadic_rational::print_move(std::ostream& str, const move& m, ebw to_play) const
-{
-    assert(is_black_white(to_play));
-    assert(p() != 0);
 
-    str << (to_play == BLACK ? "DEC" : "INC");
-}

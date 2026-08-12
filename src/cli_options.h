@@ -60,6 +60,11 @@ struct cli_options
     std::optional<std::string> db_dump_file_name;
     std::optional<std::string> lib_ctl_output_dir;
 
+    std::string tt_sumgame_load_file_name;
+    std::string tt_sumgame_save_file_name;
+    std::string tt_imp_sumgame_load_file_name;
+    std::string tt_imp_sumgame_save_file_name;
+
     test_filter_enum test_filter_type;
 
     static constexpr const unsigned long long DEFAULT_TEST_TIMEOUT = 500;

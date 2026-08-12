@@ -12,6 +12,9 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "integral_conversion.h"
+#include "iobuffer.h"
+#include "serializer.h"
 #include "transposition.h"
 #include "timeout_token.h"
 
@@ -25,6 +28,25 @@ struct impartial_ttable_entry
     impartial_ttable_entry() : nim_value(0) {}
 
     impartial_ttable_entry(int v) : nim_value(v) {}
+};
+
+template <>
+struct serializer<impartial_ttable_entry>
+{
+    static void save(i_obuffer& os, const impartial_ttable_entry& entry,
+                     serializer_ctx* ctx)
+    {
+        const int32_t nim_value_32 =
+            integral_cast_checked<int32_t>(entry.nim_value);
+
+        os.write_i32(nim_value_32);
+    }
+
+    static impartial_ttable_entry load(i_ibuffer& is, serializer_ctx* ctx)
+    {
+        const int nim_value = integral_cast_checked<int>(is.read_i32());
+        return impartial_ttable_entry(nim_value);
+    }
 };
 
 typedef ttable<impartial_ttable_entry> impartial_tt;
@@ -50,13 +72,19 @@ public:
 
     // Impartial game interface
     virtual void play(const move& m);
-    virtual move_generator* create_move_generator() const = 0;
+
+    move_generator* create_move_generator(
+        move_generator_type_enum move_generator_type =
+            MOVE_GENERATOR_TYPE_AUTO) const;
 
     // These functions needed by game class interface
     // They also make it possible to include an
     // impartial game in any (possibly partisan) sum
     void play(const move& m, bw to_play) override;
-    move_generator* create_move_generator(bw ignore_to_play) const override;
+protected:
+    move_generator* _create_move_generator_impl(bw ignore_to_play) const override;
+    virtual move_generator* _create_move_generator_impl() const = 0;
+public:
 
     bool is_impartial() const override final;
 
@@ -118,8 +146,18 @@ inline void impartial_game::play(const move& m, bw to_play)
     impartial_game::play(m);
 }
 
+/*
+    Call `game.h`'s implementation to avoid duplicating code
+*/
 inline move_generator* impartial_game::create_move_generator(
+    move_generator_type_enum move_generator_type) const
+{
+    return game::create_move_generator(BLACK, move_generator_type);
+}
+
+inline move_generator* impartial_game::_create_move_generator_impl(
     bw ignore_to_play) const
 {
-    return create_move_generator();
+    return _create_move_generator_impl();
 }
+

@@ -1,4 +1,4 @@
-# MCGS V1.6
+# MCGS V1.7
 
 A **M**inimax-based **C**ombinatorial **G**ame **S**olver
 
@@ -14,7 +14,7 @@ search optimizations.
 Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of results so far are available from the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
 
 ### Sections
-- [Version 1.6 Additions](#version-16-additions)
+- [Version 1.7 Additions](#version-17-additions)
 - [Building MCGS](#building-mcgs)
 - [Using MCGS](#using-mcgs)
 - [Using the Database](#using-the-database)
@@ -24,56 +24,55 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
   - [Implementing a New Game](#implementing-a-new-game)
   - [Implementing Game-Specific Optimizations](#implementing-game-specific-optimizations)
     - [Splitting Into Subgames](#splitting-into-subgames-subgame_split)
-    - [Simplifying Sums of Games](#simplifying-sums-of-games-simplify_basic_cgt)
+    - [Simplifying Sums of Basic Games](#simplifying-sums-of-basic-games-simplify_basic_cgt)
     - [Hashing-Related Hooks](#hashing-related-hooks)
     - [Adding A Game To the Database](#adding-a-game-to-the-database)
 
-### Version 1.6 Additions
-#### Important Notes
-- A CMake build has replaced the old makefile build. The project now also depends on a git submodule. See `README.md` for new build instructions.
-- All games must implement the new `game::clone()` function. Partisan games must implement 2 new functions to have correct DB entries. See [development-notes.md (Adding A Game To the Database)](docs/development-notes.md#adding-a-game-to-the-database).
-
-#### Bug Fixes
-- Fixed a bug where `switch_game::inverse()` could trigger an `assert`. In an unmodified copy of MCGS this couldn't actually happen in practice.
-- Fixed minor create-table.py HTML bug in summary pane: time conversion from ms to days/hours/minutes/seconds/ms showed incorrect (truncated) converted times.
-- Fixed a bug where data was needlessly copied during saving/loading of the database (resulting in higher memory usage during save/load, and longer startup times).
+### Version 1.7 Additions
+- NOTE: Database files from version 1.6 are incompatible with version 1.7!
 
 #### New Features
-- `move` is now `int64_t` (instead of `int` which is likely 32 bits).
-  - Games can now be constructed with much larger boards as a result.
-- The database has several new fields for partisan games
-  - Lower/upper bounds on value (in terms of multiples of up/down, or `1/8`).
-  - Thermograph.
-  - A set of dominated (or nondominated) moves.
-  - Complexity score. 
-- New games (see `input/info.test`)
-  - `cannibal_clobber`
-  - `gen_king_dirt` (also has CGSuite implementation, see `utils/CGSuite/GenKingDirt.cgs`).
-- New results in the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
-- New optimizations
-  - Impartial wrapper games generate moves by alternating between the moves of `BLACK` and `WHITE`.
-    - Use `--no-imp-wrapper-alternate-color` to revert this (will generate all `BLACK` moves followed by all `WHITE` moves).
-  - For partisan search algorithms (all of these rely on partisan DB entries):
-    - Play moves in subgames in order of decreasing temperature. Subgames without thermographs (those without partisan DB entries) come last.
-    - Use bounds to solve sums.
-    - Prune dominated moves within single subgames.
-    - Replace games which are equal to their bounds, with the equivalent `dyadic_rational` or `up_star`.
-- Input language version `1.5` --> `1.6`.
-- New CLI options
-  - `--dump-db` dumps contents of the loaded database into a human readable text format.
-    - Use with CMake option `-DDB_INCLUDE_STRINGS=1` (to include human readable games in DB entries).
-  - `--test-filter` skips test cases which are incompatible with a specified external CGT project i.e. [SEGClobber](https://github.com/tfolkersen/SEGClobber).
-  - `--convert-to-ctl` exports test cases to a format readable by the [CGT Testing Library](https://github.com/ualberta-mueller-group/cgt_testing_library).
-    - Aids in comparison of MCGS to other CGT projects.
-    - Can use with `--test-filter`.
-  - `--search-graph-print` and `--search-graph-verify` are experimental debugging tools for visualizing search nodes visited by partisan search algorithms. Use a tool like Graphviz or Gephi to view the data.
-- Code cleaned up, new utilities added
-  - `thermograph_builder_no_db.h`: builds the thermograph of a game outside of database generation.
-  - `thermograph_helpers.h`: derives various data from a thermograph.
-  - `sumgame_helpers.h`: sumgame comparisons.
-  - `integral_conversion.h`: casting of integral types with runtime safety checks.
-  - `serializer.h`: implements more STL container types, and less verbose `serializer_save()` and `serializer_load()` functions.
-  - `utilities.h`: has new generic helper functions.
+- New "simplest equal game" (SEG) optimization for partisan minimax search.
+  - Partisan DB entries now have links to DB entries of simpler-but-equal sums.
+  - During partisan minimax search, these links are used to replace sums with simpler sums.
+  - These links are determined according to 2 formulas: a fixed "complexity score", and a configurable "size score".      
+  - For technical details, see [development-notes.md (Simplest Equal Game)](docs/development-notes.md#simplest-equal-game).
+- New options are supported for database generation, detailed in [Using the Database](#using-the-database).
+  - `size_score` lets users choose a non-default size score formula.
+  - `stop_after` allows omission of some partisan DB entry fields. May speed up DB generation dramatically (at the cost of runtime search performance).
+- Play in the middle (PITM) heuristic is now enabled for all games by default. Disable with `--no-pitm` CLI option.
+  - When enabled, each move generator exhaustively generates all of its moves, and moves closer to the middle of this resulting list are played first.
+- `--play-mcgs` UI now prompts users to choose moves by typing them according to the `game::print_move` format (i.e. by entering grid coordinates), rather than by selecting moves from a list.
+- Transposition tables (both partisan and impartial) can be saved to/loaded from files.
+  - See `./MCGS -h` for details, in particular see documentation for CLI options `--tt-sumgame-load`, `--tt-sumgame-save`, `--tt-imp-sumgame-load`, and `--tt-imp-sumgame-save`.
+- MCGS will now gracefully exit when the user presses Ctrl-c (or upon receiving signals `SIGINT` or `SIGTERM`), assuming initialization has completed (including DB load/generation).
+  - This can be used in conjunction with aforementioned CLI options for saving/loading of transposition tables. This allows the user to abort long running searches while saving some progress.
+  - If MCGS is waiting for user input (i.e. the user is to choose a move for `--play-mcgs`), you may also need to press Ctrl-d.
+- New input language version `1.6` -> `1.7`.
+- Added new command type to `.test` files (thermograph test). See [input/info.test](input/info.test).
+
+#### Major Code Additions
+- The old virtual `create_move_generator` functions of the `game` and `impartial_game` classes have been renamed to `_create_move_generator_impl`. New non-virtual `create_move_generator` functions have been added.
+  - Game classes should implement the virtual `_create_move_generator_impl` functions by simply creating and returning their move generator (as before).
+  - The non-virtual `create_move_generator` functions call the virtual ones, and then either immediately return the resulting move generator, or wrap the resulting move generator with a `pitm_move_generator` which implements the PITM heuristic.
+- `class ibuffer` and `class obuffer` are now abstract types. See [development-notes.md (Serialization)](docs/development-notes.md#serialization-iobufferh-serializerh-poly_serializableh).
+  - `class i_ibuffer` and `class i_obuffer` are interface classes for input and output streams respectively.
+  - `class file_ibuffer` and `class file_obuffer` are non-abstract classes implementing these interfaces, and correspond to the old `ibuffer` and `obuffer` respectively.
+  - `class memory_ibuffer` and `class memory_obuffer` are non-abstract classes implementing these interfaces, and are used to deserialize/serialize `game`s out of/into partisan database entries.
+- Changes to timeout semantics. See [development-notes.md (Graceful Exit)](docs/development-notes.md#graceful-exit-exit_signalh).
+  - Search functions lacking a timeout parameter (i.e. `sumgame::solve`) should not be called after the `mcgs_init` functions complete.
+  - Search functions with a timeout parameter (i.e. `sumgame::solve_with_timeout` or `sumgame::solve_with_timeout_token`) will now timeout when the user presses Ctrl-c (even if a timeout of 0 was specified).
+
+#### Updating Your Game Class From Version 1.6
+Either follow the instructions in [development-notes.md (Adding A Game To the Database)](docs/development-notes.md#adding-a-game-to-the-database) again, or make the following changes:
+- Rename your game's `create_move_generator` function to `_create_move_generator_impl`.
+- In `init_database.cpp`, the `register_create_game_gen_fn` function has been renamed to `register_db_game_gen`, and has an additional parameter.
+  - You can set this parameter to `DEFAULT_DB_GEN_SIZE_SCORE_TYPE`.
+- If your game is partisan, implement serialization to be able to use the SEG optimization:
+  - Register your game in `init_serialization.cpp`.
+  - Implement the `save_impl` and `load_impl` functions in your game class.
+    - See `toppling_dominoes.h` and `toppling_dominoes.cpp` for an example (or one of the `strip` or `grid` games if your game is derived from one of these).
+  - If you don't implement this, you must generate the database with the `stop_after=dominated_moves;` DB config option.
 
 ### Building MCGS
 First download this repository, and enter its directory. Either download from the
@@ -126,7 +125,7 @@ For a full description of input syntax, including game-specific input syntax,
 see [input/info.test](input/info.test).
 
 ### Using the Database
-NOTE: Database files from previous versions are not compatible with version 1.6.
+NOTE: Database files from previous versions are not compatible with version 1.7.
 
 The database is loaded from `database.bin` automatically on startup if it
 exists and `--no-use-db` is not specified. MCGS first searches for it in the same
@@ -136,7 +135,7 @@ not included in the repository and must be generated for specific games manually
 
 `./MCGS --db-file-create <file name> <DB config string>` is used to create the
 database. The config string specifies games to include in the database, and
-their maximum sizes.
+their maximum sizes, along with other properties.
 
 Example:
 ```
@@ -144,7 +143,7 @@ Example:
 ```
 This creates the file `database.bin` and populates it with Clobber games whose
 dimensions are at most 3x3, and linear NoGo games whose lengths are at most 8.
-The database contains single subgames which are normalized and do not split
+The database contains sums of subgames which are normalized and do not split
 into more subgames.
 
 Games currently supported by the database:
@@ -175,6 +174,30 @@ pair of non-negative integers. The elements of the pair indicate the maximum
 number of black and white sheep respectively. i.e. for `max_sheep = 1,2;`,
 all `sheep` games having at most 1 black sheep, and at most 2 white sheep, will
 be generated.
+
+The `stop_after` parameter is optional, and if present indicates that some partisan
+data fields should be omitted. Some fields are expensive to compute,
+and omitting fields may make it feasible to generate larger databases. Below are
+valid values for `stop_after`, and the approximate data that is included in a
+partisan database entry as a result (comments in the definition of
+`struct db_entry_partisan` in `database.h` offer more detail):
+- `outcome_class`: outcome class and thermograph.
+- `bounds`: all above fields, plus lower/upper bounds.
+- `dominated_moves`: all above fields, plus dominated/non-dominated moves.
+- `seg` (the default if unspecified): all above fields, plus simplest equal game links.
+
+The `size_score` parameter is optional, and determines which formula to use for
+computing the "size score" of a sum. Only has an effect if SEG links are computed
+for partisan database entries (i.e. if `stop_after` is `seg` or left unspecified).
+Below are valid values for `size_score`, and a rough explanation of each formula for
+a sum game `G`:
+- `max_local_options` (current default for all games): The max between the count of `G`'s immediate options (of both `BLACK` and `WHITE`), and the size score of each such option.
+- `tree_height`: the height of the game tree of `G`, considering options for both `BLACK` and `WHITE` at each node.
+- `board_size` (only defined for `strip`/`grid` games): the sum of each `strip`/`grid` game's dimensions.
+- `stone_count` (only defined for `strip`/`grid` games containing colors): the sum of the count of each `strip`/`grid` game's non-`EMPTY` spaces.
+- `empty_count` (only defined for `strip`/`grid` games containing colors): the sum of the count of each `strip`/`grid` game's `EMPTY` spaces.
+
+Note: Every game type individually has a default `size_score` value (though all are currently set to `max_local_options`).
 
 The command line option `--print-db-info` can be specified to print database
 info for the loaded database file. This includes the date created, number of
@@ -314,9 +337,9 @@ To implement a new game `x`:
 - Create 4 files: `x.h` and `x.cpp` to implement the game, and `test/x_test.h` and `test/x_test.cpp` to implement unit tests.
 - Define `class x` in `x.h`, derive from `game`, `strip` or `grid`.
     - Impartial games should instead derive from `impartial_game`
-- Each new game must implement several virtual methods: `play()`, `undo_move()`, `create_move_generator()`, `print()`, `inverse()`, `clone()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
+- Each new game must implement several virtual methods: `play()`, `undo_move()`, `_create_move_generator_impl()`, `print()`, `inverse()`, `clone()`, and `_init_hash()`. See comments in `game.h` for notes on important implementation details.
     - Impartial games have a slightly different set of methods to implement
-        - `create_move_generator()` doesn't take a color argument
+        - `_create_move_generator_impl()` doesn't take a color argument
         - Both `play` methods must be implemented: one with a color argument, and one without
         - See `cgt_nimber.h` and `cgt_nimber.cpp` for an example implementation
     - For notes on `_init_hash()`, see [development-notes.md (Adding Hashing to Games, subsection 1)](docs/development-notes.md#adding-hashing-to-games).
@@ -350,7 +373,7 @@ the game is either already impartial, or created as its impartial variant (i.e.
 time if subgames become smaller after splitting (i.e. break into boards with
 smaller dimensions), as smaller boards are more likely to be in the database.
 
-#### Simplifying Sums of Games (`simplify_basic_cgt`)
+#### Simplifying Sums of Basic Games (`simplify_basic_cgt`)
 Currently MCGS simplifies sums containing "basic" CGT games (`integer_game`,
 `dyadic_rational`, `up_star`, `switch_game`, and `nimber`), by summing together
 their values, resulting in fewer subgames. If your game's

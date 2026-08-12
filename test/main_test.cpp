@@ -91,7 +91,7 @@ static stopwatch sw;
 #include "throw_assert.h"
 #include "toppling_dominoes_test.h"
 #include "utilities_test.h"
-#include "winning_moves_test.h"
+#include "pitm_test.h"
 
 using namespace std;
 
@@ -129,7 +129,9 @@ int main(int argc, const char** argv)
 
     global::silence_warnings.set(true);
     global::use_db.set(false);
+    global::pitm.set(false);
     mcgs_init_2();
+
 
     if (RUN_OVERRIDE_TESTS)
     {
@@ -219,6 +221,7 @@ int main(int argc, const char** argv)
     RUN_TEST(sheep_test_all());
     RUN_TEST(gen_king_dirt_test_all());
 
+
     RUN_TEST(normalize_test_all());
     RUN_TEST(split_test_all());
     RUN_TEST(game_clone_test_all());
@@ -245,7 +248,7 @@ int main(int argc, const char** argv)
 
     RUN_TEST(thermograph_helpers_test_all(do_extra_tests));
     RUN_TEST(database_test_all(do_extra_tests));
-    RUN_TEST(test_winning_moves());
+    RUN_TEST(pitm_test_all());
 
     cout << "SUCCESS" << endl;
     return 0;

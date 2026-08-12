@@ -33,6 +33,8 @@ public:
     void undo_move() override;
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
+
     split_result _split_impl() const override;
 
     void _init_hash(local_hash& hash) const override;
@@ -43,15 +45,15 @@ public:
     game* inverse() const override;
     game* clone() const override;
 
-    move_generator* create_move_generator(bw to_play) const override;
+    void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
+
     void simplify();
 
     int p() const { return _p; }
 
     int q() const { return _q; }
 
-    void print(std::ostream& str) const override;
 
 private:
     void _check_legal() const;

@@ -14,22 +14,30 @@
 // IWYU pragma: begin_exports
 #include "cgt_basics.h"
 #include "cgt_move.h"
-#include "dynamic_serializable.h"
+#include "poly_serializable.h"
 #include "hashing.h"
 #include "type_table.h"
+#include "iobuffer.h"
+#include "serializer.h"
 // IWYU pragma: end_exports
 
 
 
 
 //---------------------------------------------------------------------------
+enum move_generator_type_enum
+{
+    MOVE_GENERATOR_TYPE_AUTO = 0,
+    MOVE_GENERATOR_TYPE_BASIC,
+    MOVE_GENERATOR_TYPE_PITM,
+};
 
 class move_generator;
 class game;
 //---------------------------------------------------------------------------
 typedef std::optional<std::vector<game*>> split_result;
 
-class game : public dyn_serializable
+class game : public poly_serializable
 {
 public:
     game();
@@ -43,6 +51,10 @@ public:
     bool has_moves() const;
     int num_moves_played() const;
     int undo_stack_size() const;
+
+    move_generator* create_move_generator(
+        bw to_play, move_generator_type_enum move_generator_type =
+                        MOVE_GENERATOR_TYPE_AUTO) const;
 
     virtual void play(const move& m, bw to_play);
     virtual void undo_move();
@@ -94,6 +106,8 @@ public:
     virtual move decode_grid_move_from_db(const move& m) const;
 
 protected:
+    virtual move_generator* _create_move_generator_impl(bw to_play) const = 0;
+
     /*
         Return list of games to replace current game. Empty list means game is
        0. No value means split didn't occur. See std::optional. The games within
@@ -139,9 +153,8 @@ protected:
 public:
     /* A measure of how complicated this (sub-)game is */
     virtual int complexity_score() const;
-    
-    virtual move_generator* create_move_generator(bw to_play) const = 0;
 
+    
     /*
         Print a string representation for a game. This should include a name
             to differentiate the game from other types of games.

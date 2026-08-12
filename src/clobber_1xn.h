@@ -24,13 +24,11 @@ public:
     void undo_move() override;
 
     // Serialization
-    void save_impl(obuffer& os) const override;
-    static dyn_serializable* load_impl(ibuffer& is);
+    void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
+    static poly_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
 
     game* inverse() const override;
     game* clone() const override;
-
-    move_generator* create_move_generator(bw to_play) const override;
 
     void print(std::ostream& str) const override
     {
@@ -44,6 +42,7 @@ public:
     static std::string xxo(int n);
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     split_result _split_impl() const override;
 
     void _normalize_impl() override;

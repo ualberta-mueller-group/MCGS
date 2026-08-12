@@ -20,13 +20,13 @@
 template <>
 struct serializer<ThValue>
 {
-    inline static void save(obuffer& os, const ThValue& value, serializer_ctx* ctx)
+    inline static void save(i_obuffer& os, const ThValue& value, serializer_ctx* ctx)
     {
         os.write_i32(value.P());
         os.write_i32(value.Q());
     }
 
-    inline static ThValue load(ibuffer& is, serializer_ctx* ctx)
+    inline static ThValue load(i_ibuffer& is, serializer_ctx* ctx)
     {
         const int32_t p = is.read_i32();
         const int32_t q = is.read_i32();
@@ -34,7 +34,7 @@ struct serializer<ThValue>
         return ThValue(p, q);
     }
 
-    inline static ThValue* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    inline static ThValue* load_ptr(i_ibuffer& is, serializer_ctx* ctx)
     {
         const int32_t p = is.read_i32();
         const int32_t q = is.read_i32();
@@ -47,7 +47,7 @@ struct serializer<ThValue>
 template <>
 struct serializer<ThPoint>
 {
-    inline static void save(obuffer& os, const ThPoint& point, serializer_ctx* ctx)
+    inline static void save(i_obuffer& os, const ThPoint& point, serializer_ctx* ctx)
     {
         const ThValue& value = point.Value();
         const ThValue& temp = point.Temp();
@@ -56,7 +56,7 @@ struct serializer<ThPoint>
         serializer<ThValue>::save(os, temp, ctx);
     }
 
-    inline static ThPoint load(ibuffer& is, serializer_ctx* ctx)
+    inline static ThPoint load(i_ibuffer& is, serializer_ctx* ctx)
     {
         const ThValue value = serializer<ThValue>::load(is, ctx);
         const ThValue temp = serializer<ThValue>::load(is, ctx);
@@ -64,7 +64,7 @@ struct serializer<ThPoint>
         return ThPoint(value, temp);
     }
 
-    inline static ThPoint* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    inline static ThPoint* load_ptr(i_ibuffer& is, serializer_ctx* ctx)
     {
         const ThValue value = serializer<ThValue>::load(is, ctx);
         const ThValue temp = serializer<ThValue>::load(is, ctx);
@@ -76,7 +76,7 @@ struct serializer<ThPoint>
 template <>
 struct serializer<ThScaffold>
 {
-    inline static void save(obuffer& os, const ThScaffold& sc, serializer_ctx* ctx)
+    inline static void save(i_obuffer& os, const ThScaffold& sc, serializer_ctx* ctx)
     {
         const int32_t n_points = sc.NuPoints();
         os.write_i32(n_points);
@@ -90,7 +90,7 @@ struct serializer<ThScaffold>
         }
     }
 
-    inline static ThScaffold load(ibuffer& is, serializer_ctx* ctx)
+    inline static ThScaffold load(i_ibuffer& is, serializer_ctx* ctx)
     {
         ThScaffold sc;
 
@@ -102,7 +102,7 @@ struct serializer<ThScaffold>
         return sc;
     }
 
-    inline static ThScaffold* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    inline static ThScaffold* load_ptr(i_ibuffer& is, serializer_ctx* ctx)
     {
         ThScaffold* sc = new ThScaffold();
 
@@ -118,7 +118,7 @@ struct serializer<ThScaffold>
 template <>
 struct serializer<ThGraph>
 {
-    inline static void save(obuffer& os, const ThGraph& graph, serializer_ctx* ctx)
+    inline static void save(i_obuffer& os, const ThGraph& graph, serializer_ctx* ctx)
     {
         const ThScaffold* sc_black = graph.Sc(SG_BLACK);
         const ThScaffold* sc_white = graph.Sc(SG_WHITE);
@@ -128,7 +128,7 @@ struct serializer<ThGraph>
         serializer<ThScaffold>::save(os, *sc_white, ctx);
     }
 
-    inline static ThGraph load(ibuffer& is, serializer_ctx* ctx)
+    inline static ThGraph load(i_ibuffer& is, serializer_ctx* ctx)
     {
         const ThScaffold sc_black = serializer<ThScaffold>::load(is, ctx);
         const ThScaffold sc_white = serializer<ThScaffold>::load(is, ctx);
@@ -136,7 +136,7 @@ struct serializer<ThGraph>
         return ThGraph(sc_black, sc_white);
     }
 
-    inline static ThGraph* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    inline static ThGraph* load_ptr(i_ibuffer& is, serializer_ctx* ctx)
     {
         const ThScaffold sc_black = serializer<ThScaffold>::load(is, ctx);
         const ThScaffold sc_white = serializer<ThScaffold>::load(is, ctx);
@@ -148,7 +148,7 @@ struct serializer<ThGraph>
 template <>
 struct serializer<std::shared_ptr<ThGraph>>
 {
-    inline static void save(obuffer& os, const std::shared_ptr<ThGraph>& ptr,
+    inline static void save(i_obuffer& os, const std::shared_ptr<ThGraph>& ptr,
                             serializer_ctx* ctx)
     {
         thermograph_cache* cache = get_thermograph_cache(ctx);
@@ -162,7 +162,7 @@ struct serializer<std::shared_ptr<ThGraph>>
         }
     }
 
-    inline static std::shared_ptr<ThGraph> load(ibuffer& is,
+    inline static std::shared_ptr<ThGraph> load(i_ibuffer& is,
                                                 serializer_ctx* ctx)
     {
         thermograph_cache* cache = get_thermograph_cache(ctx);
@@ -194,13 +194,13 @@ struct serializer<std::shared_ptr<ThGraph>>
 template <>
 struct serializer<thermograph_cache>
 {
-    inline static void save(obuffer& os, const thermograph_cache& cache, serializer_ctx* ctx)
+    inline static void save(i_obuffer& os, const thermograph_cache& cache, serializer_ctx* ctx)
     {
         serializer_save(os, cache._graphs, ctx);
         serializer_save(os, cache._hash_to_graph_id, ctx);
     }
 
-    inline static thermograph_cache load(ibuffer& is, serializer_ctx* ctx)
+    inline static thermograph_cache load(i_ibuffer& is, serializer_ctx* ctx)
     {
         thermograph_cache cache;
         serializer_load(is, cache._graphs, ctx);
@@ -208,7 +208,7 @@ struct serializer<thermograph_cache>
         return cache;
     }
 
-    inline static thermograph_cache* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    inline static thermograph_cache* load_ptr(i_ibuffer& is, serializer_ctx* ctx)
     {
         thermograph_cache* cache = new thermograph_cache();
         serializer_load(is, cache->_graphs, ctx);

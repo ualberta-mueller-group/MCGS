@@ -37,6 +37,9 @@ public:
 
     std::optional<int> get_int(const std::string& key) const;
 
+    // May return nullptr
+    const std::string* get_string_nullable(const std::string& key) const;
+
 private:
     struct value_t
     {

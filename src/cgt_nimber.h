@@ -22,7 +22,6 @@ public:
 
     // Impartial game interface
     void play(const move& m) override;
-    move_generator* create_move_generator() const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
 
     // value() is updated as *this changes during search
@@ -41,6 +40,7 @@ public:
     static void add_nimber(int& sum, int nimber);
 
 protected:
+    move_generator* _create_move_generator_impl() const override;
     void _init_hash(local_hash& hash) const override;
 
     relation _order_impl(const game* rhs) const override;

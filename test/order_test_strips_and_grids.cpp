@@ -36,14 +36,14 @@ public:
     void undo_move() override { assert(false); }
 
 protected:
-    void _init_hash(local_hash& hash) const override { assert(false); }
-
-public:
-    move_generator* create_move_generator(bw to_play) const override
+    move_generator* _create_move_generator_impl(bw to_play) const override
     {
         assert(false);
     }
 
+    void _init_hash(local_hash& hash) const override { assert(false); }
+
+public:
     void print(std::ostream& str) const override { str << "dummy_game"; }
 
     game* inverse() const override { assert(false); }

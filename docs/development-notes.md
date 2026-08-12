@@ -20,13 +20,15 @@ This document includes more detailed information than `README.md`, including des
 - [Database File Portability](#database-file-portability)
 - [Database (`database.h`, `global_database.h`)](#database-databaseh-global_databaseh)
 - [Adding A Game To the Database](#adding-a-game-to-the-database)
+- [Simplest Equal Game](#simplest-equal-game)
 - [Safe Arithmetic Functions (`safe_arithmetic.h`)](#safe-arithmetic-functions-safe_arithmetich)
 - [RTTI - Run-time type information (`type_table.h`)](#rtti---run-time-type-information-type_tableh)
 - [Sumgame Simplification (cgt_game_simplification.h)](#sumgame-simplification-cgt_game_simplificationh)
 - [Time: Measuring Time, and Respecting Timeouts (`stopwatch.h`, `timeout_token.h`)](#time-measuring-time-and-respecting-timeouts-stopwatchh-timeout_tokenh)
+- [Graceful Exit (`exit_signal.h`)](#graceful-exit-exit_signalh)
 - [Bounds (`bounds.h` and `bounds_finder.h`)](#bounds-boundsh-and-bounds_finderh)
 - [File Parser and Internals](#file-parser-and-internals)
-- [Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)](#serialization-iobufferh-serializerh-dynamic_serializableh)
+- [Serialization (`iobuffer.h`, `serializer.h`, `poly_serializable.h`)](#serialization-iobufferh-serializerh-poly_serializableh)
 - [Unused `game::_order_impl` Method](#unused-game_order_impl-method)
 - [Outstanding Issues](#outstanding-issues)
 - [Design Choices and Remaining Uglinesses](#design-choices-and-remaining-uglinesses)
@@ -72,7 +74,7 @@ emcmake cmake -B build
     - `sumgame::_solve_impl`
         - `private` method implements most of the search algorithm
         - Runs until it either completes, or times out
-        - A timeout of 0 means infinite time
+        - A timeout of 0 means infinite time (unless the user presses Ctrl-c).
         - All public `solve` methods within `sumgame` (see below) are implemented in terms of this method
     - `sumgame::solve_with_timeout`
         - Calls `_solve_impl` with a timeout
@@ -106,8 +108,9 @@ it must be restored before the end of `solve` in any case, including timeout or 
 
 ## Sumgame's Usage Of the Database
 The database stores information for sums of games. Partisan games in the
-database have outcome classes, bounds, thermographs, complexity scores, and
-dominated (or nondominated) moves, while impartial games have nim values.
+database have outcome classes, bounds, thermographs, complexity scores,
+dominated (or nondominated) moves, and simplest equal game links,
+while impartial games have nim values.
 `sumgame` uses this data, from the global database object
 (`get_global_database()` in `global_database.h`), during solving, to simplify
 search and even terminate search early in some cases.
@@ -117,6 +120,9 @@ search and even terminate search early in some cases.
       combines all nimbers using nim addition
     - Replaces partisan games with their bounds (when equal). The substituted
         games have type of `dyadic_rational` or `up_star`
+      
+- `sumgame::seg_pass()` is called next
+    - See [Simplest Equal Game](#simplest-equal-game) for details
 
 - `sumgame::simplify_basic()` is called next
     - Combines "basic" CGT games i.e. integers, rationals, nimbers, etc
@@ -1092,12 +1098,11 @@ class but is ineffective (though it currently prints warnings if the runtime
 `database.h` defines the `database` class, and two database entry structs. The
 struct `db_entry_partisan` is used to store data for partisan games,
 and the struct `db_entry_impartial` is used to store nim values for impartial
-games. The database is not used by `MCGS_test` (CLI option `--no-use-db` is
+games. The database is not used in most of `MCGS_test` (CLI option `--no-use-db` is
 implied).
 
-- The database stores data for sums, but only single subgames are queried outside
-    of DB generation. Sums are needed to compute thermographs.
-
+- The database stores data for sums, and as of version 1.7, sums of games are
+  queried for SEG replacement
 - `get_impartial()` takes a single game as an argument. Returns an
     `optional<db_entry_impartial>`.
 - `set_impartial()` takes a single game, and `db_entry_impartial` entry as
@@ -1107,17 +1112,34 @@ implied).
     may be `nullptr` as well (i.e. during the DB generation process).
     - The `get_or_allocate_partisan_ptr()` versions will create a DB entry (with
         `nullptr` fields) if not present
+  - `get_partisan_ptr_pair()` variants return a `pair<const hash_t, db_entry_partisan>*`
 
 - `save` and `load` methods save/load the entire database to/from a file
 - A global instance of `database` is accessible through
     `database& get_global_database()` (`global_database.h`), after
     `mcgs_init_all()` completes.
-- `database` has its own sumgame that it uses to solve outcome classes
 - The data is stored in two separate "trees", one tree for partisan games, the
     other for impartial games
-    - Each tree is two layers of `std::unordered_map`. The first indexed by
+    - The partisan tree consists of only one layer, and is queried using a
+      special "DB hash" (according to the function `database::get_db_hash`)
+    - The impartial tree has two layers of `std::unordered_map`. The first indexed by
         game type (`game_type_t`), the second is indexed by local
         hash (`hash_t`), yielding an entry struct
+
+- The DB hash is like the global hash used in partisan minimax search (and is
+  even computed by the `global_hash` class), but there are two differences:
+    - No color (i.e. `to_play`) contributes to the resulting hash.
+    - When there's exactly one subgame, the DB hash is defined as that
+      subgame's local hash.
+        - This does not apply to the case where there are 0 subgames.
+        - This fact is used by `seg_replacer.cpp` when querying a selection of
+          2 or more games for SEG replacement.
+        - This saves memory. The database uses `std::unordered_map`, and a DB
+          lookup results in a `const std::pair<const hash_t,
+          db_entry_partisan>*` as a result. The `hash_t` in this pair is the DB
+          hash, so defining it to be the local hash for entries of single
+          subgames eliminates the need to store an additional `hash_t` inside
+          of the `db_entry_partisan`.
 
 ## Database Generation
 Several types are used for database generation:
@@ -1156,42 +1178,48 @@ in v1.6). This also ensures that subgames which are only produced by `split()`
 and not the game generator (i.e. for nogo) will have DB entries.
 
 
-## New database in Version 1.6
+## Partisan Entry Fields
 Partisan entry fields are computed in this order:
 - Thermograph
     - Thermograph generation will generate DB entries for child nodes which are not in the DB
 - Outcome (derived from thermograph)
 - Bounds
-    - The theromgraph is used to determine whether a game is small but not 0.
+    - The thermograph is used to determine whether a game is small but not 0.
         - If so, `bounds_finder.h` does binary search to find the game's bounds
             along `BOUND_SCALE_UP`.
         - Otherwise bounds along `BOUND_SCALE_DYADIC_RATIONAL` are read from
             the thermograph
 - Dominated moves
+- Simplest equal game link
+
+NOTE: There are more fields than these. See `struct db_entry_partisan` in
+`database.h` for more details (in particular the comments by the struct's
+members).
 
 # Adding A Game To the Database
 IMPORTANT: If your game uses `grid_hash` or otherwise maps games with different
 boards to the same hash value, you must implement the following functions
 (see `game.h` for more details):
-- `move game::encode_grid_move_to_db(const move& m) const;`
-- `move game::decode_grid_move_from_db(const move& m) const;`
+- `move game::encode_grid_move_to_db(const move& m) const`
+- `move game::decode_grid_move_from_db(const move& m) const`
 
-If your game is a grid game, first set its grid hash mask in
-`init_grid_hash_mask.cpp`. If your grid game does not use the `grid_hash` class,
-set this value to `GRID_HASH_ACTIVE_MASK_IDENTITY`. This value can later be
-accessed by calling `grid_hash_mask<Game_T>()`, and is stored inside of the game
-class's runtime type info struct (`type_table_t`).
-
-1. In `init_database.cpp`, in the `register_games` function, use the
-    `DATABASE_REGISTER_TYPE` macro to make the database aware of your game's
-    `game_type_t` value.
-
+1. If your game is a grid game, first set its grid hash mask in
+   `init_grid_hash_mask.cpp`. If your grid game does not use the `grid_hash`
+   class, set this value to `GRID_HASH_ACTIVE_MASK_IDENTITY`. This value can
+   later be accessed by calling `grid_hash_mask<Game_T>()`, and is stored
+   inside of the game class's runtime type info struct (`type_table_t`).
+2. In `init_database.cpp`, in the `register_games` function, use the
+   `DATABASE_REGISTER_TYPE` macro to make the database aware of your game's
+   `game_type_t` value.
     - IMPORTANT: write the game class name as it appears, with nothing extra,
-        i.e. `clobber` and not `some_namespace::clobber`, because the game name text
-        is used to identify `game_type_t`s on disk
-2. In the same `register_games` function, call `register_create_game_gen_fn` to
-   register a function which will create a `i_db_game_generator` for your game.
+      i.e. `clobber` and not `some_namespace::clobber`, because the game name
+      text is used to identify `game_type_t`s on disk.
+3. In the same `register_games` function, call `register_db_game_gen` to
+register a function which will create a `i_db_game_generator` for your game.
    - The game name string should probably match the one used for ".test" files.
+   - The `default_size_score_type` argument can be set to
+     `DEFAULT_DB_GEN_SIZE_SCORE_TYPE` for now. See the README for details on the
+     `size_score` DB config option.
    - The registered function should have a signature of `i_db_game_generator*
      (const config_map&)`, or be of type
      `std::function<i_db_game_generator*(const config_map&)>`
@@ -1206,15 +1234,41 @@ class's runtime type info struct (`type_table_t`).
      immediate child positions in the search tree (those reachable by 1 move)
      will have been previously generated. This is not a hard requirement, but
      will speed up database generation
+    - This ordering is less important as of version 1.6.
    - Implementing methods `game::_normalize_impl` and
      `game::_undo_normalize_impl` for your game may reduce the size of the
      database, and the time required to generate it
-   - Impartial games can be added to the database, and database generation
-     will compute their nim values.
+   - Impartial games can be added to the database, and database generation will
+     compute their nim values.
       - When a partisan game's generator function is registered, its impartial
         wrapper variant is also automatically registered.
       - If your game class is already impartial, indicate so in the arguments
-        passed to `register_create_game_gen_fn`
+        passed to `register_db_game_gen`
+4. Implement serialization for your game.
+    - This step is required to use SEG replacement. Otherwise you can specify
+      `stop_after=dominated_moves;` in the database config string (when using
+      `--db-file-create`).
+    - Register your game in `init_serialization.cpp`.
+    - The `game` class already inherits from `class poly_serializable`, an
+      abstract class used for serialization of polymorphic types. You must
+      implement 2 functions:
+        - `void YourGameType::save_impl(i_obuffer& os, serializer_ctx* ctx) const override;`
+        - `static poly_serializable* YourGameType::load_impl(i_ibuffer& is, serializer_ctx* ctx);`
+        - `i_ibuffer` and `i_obuffer` are abstract types defining the interface
+          of MCGS's custom input/output stream types respectively.
+            - They provide methods to read/write fixed-width integers from/to a
+              stream.
+            - You must use these methods to save/load the state of your game
+              (either by calling them directly, or through `serializer`
+              templates, or through the `strip`/`grid` helper functions).
+        - The `serializer_ctx` argument must be present, but you can assume
+          that it will always be `nullptr` and ignore it.
+        - See `toppling_dominoes.h` and `toppling_dominoes.cpp` for general
+          case examples.
+        - If your game is derived from `strip` or `grid`, there are helper
+          functions:
+            - See `clobber_1xn.h`/`clobber_1xn.cpp` for a `strip` example.
+            - See `clobber.h`/`clobber.cpp` for a `grid` example.
 
 Recompile, then re-run MCGS with `--db-file-create` (see the README for
 examples). Now `sumgame`'s "solve" methods will use the database entries of
@@ -1240,6 +1294,129 @@ each pair ends with a mandatory ';' character.
   conversion attempted. Used to catch typos in the database config string. This
   is called automatically during database initialization.
 
+# Simplest Equal Game
+During database creation, partisan DB entries acquire links to
+simpler-but-equal DB entries when possible, assuming the `stop_after` database
+config option doesn't indicate that such links should be omitted (in which case
+this entire section doesn't apply). During partisan minimax search, these links
+are used to replace sums of subgames with simpler-but-equal sums.
+
+Each sum in the database has both a complexity score and a size score. The
+complexity score tries to quantify the runtime cost to solve a sum, by counting
+nodes in its game tree following non-dominated options, and the size score aims
+to quantify some property of the game tree which is non-increasing after a move
+is played (this is used to prevent cycles which would otherwise result from
+replacing games with other games).
+
+A database config string may specify multiple generators, i.e.
+`[clobber_1xn] max_dims=12; [clobber] max_dims=3,3;`
+
+An entry for a sum `S1` will link to a sum `S2`'s entry when all following conditions are met:
+- `S1` and `S2` are created by the same generator
+- `S1` and `S2` are equal
+- `size_score(S1) > size_score(S2)`
+- `complexity_score(S1) >= complexity_score(S2)`
+- `S2` is the first generated sum in its equivalence class with a size score `size_score(S2)` and complexity score `complexity_score(S2)`
+- `S2` is the sum with the minimal complexity score satisfying all of the above
+
+If no such `S2` distinct from `S1` exists, `S1`'s entry will link to itself.
+
+Links are assigned twice, first when a sum's database entry is generated (which
+happens after all of its child options' entries are completely generated), and
+second after all games from the generator have been exhausted. The
+aforementioned conditions apply at each of these two times.
+
+NOTE: The trivially 0 sumgame (a sum with no subgames) is always implicitly
+generated before any games from the generator are considered.
+
+## Complexity Score
+Notation:
+- `CS(S)`: the complexity score of a sumgame `S`.
+- `ND(S, P)`: the non-dominated option set of a sumgame `S` for player `P`.
+    - Contains all of player `P`'s options in `S` which are non-dominated. If two or more options are equal, only a single option with minimal `CS` is in this set (it does not matter which one).
+
+The `CS` of the trivially 0 game (the sumgame with no subgames) is defined as `0`.
+
+Then for a sum `S`, `CS(S) := (sum of (1 + CS(O_BLACK)) for option O_BLACK in ND(S, BLACK)) + (sum of (1 + CS(O_WHITE)) for option O_WHITE in ND(S, WHITE))`
+
+## Size Score
+Size score is detailed in the README.
+
+## Implementation Details
+- Complexity score is computed by `db_make_dominated_moves(...)` (in
+  `db_make_dominated_moves.h`).
+- Size score is computed in `db_make_simplest_equal_game(...)` (in
+  `db_make_simplest_equal_game.h`)
+- `class equivalence_class` is local to file `db_make_simplest_equal_game.cpp`,
+  and stores DB entry links (`db_link_t`).
+    - All links in an equivalence class have the same CGT value, and point to
+      entries resulting from the same generator.
+    - It stores a representative (a link to the entry with lowest complexity
+      score).
+    - When a link is inserted into an equivalence class but another
+      pre-existing member link has the same pair `(complexity score, size
+      score)`, only the pre-existing link remains.
+    - The equivalence class of a sum is found by taking a hash of the sum's
+      thermograph and bounds data, then comparing the sum (by playing the
+      difference game) to the representative in each `equivalence_class`
+      that shares this hash.
+- The `fill_database` function in `init_database.cpp` manages
+  `equivalence_classes` (though they reside in memory according to
+  `db_make_simplest_equal_game.cpp`).
+    - Before any generator is used, the trivially 0 sumgame's partisan DB entry
+      is generated, with all fields present.
+    - Before a generator is used, the trivially 0 game is inserted into the appropriate
+      equivalence class.
+    - After a generator is exhausted, all equivalence classes are deleted.
+    - These steps ensure that:
+        - The trivially 0 entry may be the target of a link, and has all fields.
+        - Entries may not link to entries having incompatible size scores.
+
+## `class seg_replacer` (`seg_replacer.h`)
+`class seg_replacer` handles replacement of simplest equal games. Currently it
+is used through an opaque pointer created by function `seg_replacer_new`, and
+must be deleted by function `seg_replacer_delete`.
+
+- Tries to replace single subgames, then all pairs of subgames, then groups of
+  3+ subgames fitting inside a sliding window.
+  - CLI option `--single-seg` can limit this to single subgames.
+- First, all single partisan subgames are looked up in the database. Those
+  having DB entries with non-`nullptr` links (including self links) are
+  candidates for replacement.
+  - Candidates are stored in separate "containers" (vectors), according to
+    their `game_type_t`s.
+  - Each replacement attempt considers a sum of subgames from the same
+    container.
+  - A replacement attempt follows several steps:
+    - The DB entry of the selection is searched for in the DB.
+    - If present, the sum is replaced by its bounds (if equal to them).
+    - Otherwise the SEG link of the entry is followed.
+    - If the SEG link exists and links to a different DB entry, each subgame
+      link inside the resulting entry is followed.
+      - Each subgame is either replaced by its bounds (if equal), or its link
+        is inserted as a new candidate into its proper container.
+    - Games which are replaced have their links erased from the containers.
+- After this process finishes, a new `dyadic_rational` and `up_star` are added
+  to the `sumgame` (if their resulting sums from bound-replaced subgames are
+  non-zero), and subgames in the containers are deserialized and added into the
+  `sumgame.`
+  - Candidates inserted during the initial DB lookup pass whose links
+    weren't erased don't get deserialized as they are already part of the
+    `sumgame`.
+- The 3+ pass uses a sliding window rather than trying all groups of 3+
+  subgames.
+    - The 3+ pass is immediately preceded by a single sorting of the
+      candidates of each container in increasing order of their size scores.
+    - The window is filled up by iteratively adding games from the same
+      container, to the current selection.
+    - Once at least 3 subgames are in the window, replacements are attempted.
+    - The window is considered overfull if a replacement fails due to the
+      selection not having a DB entry. At this point the selection is cleared,
+      and candidates are added to the window immediately continuing after the
+      last candidate selected.
+    - TODO if we had only additive size scores i.e. board_size, window
+      overfullness could be determined by adding/subtracting a size score total
+      as games are added to or removed from the selection.
 
 # Safe Arithmetic Functions (`safe_arithmetic.h`)
 This section uses the term "wrapping" to mean either underflow or overflow.
@@ -1320,7 +1497,7 @@ Both examples give the same `type_table_t` -- the unique table corresponding to
 Also defines runtime-allocated type integers (`uint32_t`), included as fields
 of the `type_table_t` struct:
 - `game_type_t`, integer with unique value for each `game` class
-- `dyn_serializable_id_t`, integer with unique value for each serializable
+- `poly_serializable_id_t`, integer with unique value for each serializable
     polymorphic type which has been registered with the serialization system.
     Ignore this for now as it is unused (but implemented)
 - And an `unsigned int` grid hash mask
@@ -1329,7 +1506,7 @@ of the `type_table_t` struct:
 
 Allocation of each `type_table_t` is done in this file, but
 allocation/assignment of these integral values is done elsewhere, i.e.
-`game.cpp`, `dynamic_serializable.cpp`, and `init_grid_hash_mask.cpp`:
+`game.cpp`, `poly_serializable.cpp`, and `init_grid_hash_mask.cpp`:
 
 - `game.h`/`game.cpp`
     - Defines method `game_type_t game::game_type() const`
@@ -1472,21 +1649,21 @@ std::optional<int> fibonacci(const timeout_token& tok, int n)
 }
 ```
 
-- `timeout_token timeout_source::get_timeout_token()` creates a `timeout_token`,
-  valid only for the lifetime of the `timeout_source`.
-- Poll the shared timeout state using the method
-  `bool timeout_token::stop_requested() const`.
+- `timeout_token timeout_source::get_timeout_token()` creates a
+  `timeout_token`, valid only for the lifetime of the `timeout_source`.
+- Poll the shared timeout state using the method `bool timeout_token::stop_requested() const`.
   - The `timeout_source` also has this method, but it should not be passed to
     the called function.
 - `void timeout_source::start_timeout(unsigned long long timeout_ms)` starts a
   timeout with the specified duration, in milliseconds.  Subsequent calls to
   `stop_requested()` will return `false`. A duration of `0` means the timeout
-  never ends. When the timeout ends, `stop_requested()` will return true.
+  never ends (unless the user presses Ctrl-c after all mcgs_init functions have
+  returned). When the timeout ends, `stop_requested()` will return true.
 - `void timeout_source::cancel_timeout()` stops the timeout. `stop_requested()`
-    will subsequently return `true`. Called by the destructor if necessary.
+  will subsequently return `true`. Called by the destructor if necessary.
 - The `timeout_source` may not be copied or moved.
-- The `timeout_token` may be passed around by the consuming function, either
-  by value or by reference.
+- The `timeout_token` may be passed around by the consuming function, either by
+  value or by reference.
 
 Starting a (non-zero) timeout spawns a thread, owned by the `timeout_source`.
 The thread blocks for the specified duration (or until the timeout is
@@ -1497,8 +1674,30 @@ the timeout.
 NOTE:
 - This implementation is several orders of magnitude faster than using
   `std::chrono` to poll the current time, as this would involve system calls.
-- In the WebAssembly build, no thread is spawned, and timeouts never expire.
+- In the WebAssembly build, no thread is spawned, and a timeout of 0 is always
+  assumed.
 
+# Graceful Exit (`exit_signal.h`)
+In the `MCGS` executable, after all mcgs_init functions have returned (which
+includes loading or creation of the database if applicable), signal handlers
+are registered to catch signals `SIGINT` and `SIGTERM`. When one of these
+signals is received (i.e. the user presses Ctrl-c), all current and future
+`timeout_source`s and `timeout_token`s will report that their timeout has
+expired (even if timeouts are started with a duration of 0, which otherwise
+denotes infinite time).
+
+Search functions which don't take a timeout as an argument (either in
+milliseconds or a `timeout_token`), should NEVER be called once these signal
+handlers are registered (such functions should have a line like
+`assert(!exit_signal::handlers_are_enabled())`. For example `sumgame::solve`
+which returns a `bool`.
+
+The file `exit_signal.h` provides two macros which are useful in polling
+whether or not one of these signals has been received (i.e. when reading one or
+several ".test" files, to avoid reading and executing many test cases which
+will immediately timeout).
+- `CHECK_EXIT_SIGNAL_0()`: If an exit signal was received, `return`.
+- `CHECK_EXIT_SIGNAL_1(expr)`: If an exit signal was received do `expr`.
 
 # Bounds (`bounds.h` and `bounds_finder.h`)
 Defines functions and types used for finding lower and upper bounds of games.
@@ -1753,75 +1952,109 @@ EXAMPLES:
       - Throw a `parser_exception` if the text does match your command, but has
         some error.
 
-# Serialization (`iobuffer.h`, `serializer.h`, `dynamic_serializable.h`)
-The serialization code detailed here is used by the database. This section
-mostly describes implementation details not currently important for users.
+# Serialization (`iobuffer.h`, `serializer.h`, `poly_serializable.h`)
+The serialization code detailed here is used by the database.
 
-Serialization of polymorphic types is implemented but unused.
+## Custom Stream Class (`iobuffer.h`)
+- Abstract classes `i_ibuffer` and `i_obuffer` define the interfaces for MCGS's
+  custom input/output stream classes respectively.
+    - The base classes provide functions to read/write fixed-width integer
+      types from/to a buffer that is primarily managed by the subclass.
+        - i.e. `uint16_t i_ibuffer::read_u16()`
+        - i.e. `void i_obuffer::write_u16(uint16_t val)`
+        - This should result in better performance than standard library stream
+          implementations, as this avoids virtual function calls, and allows
+          for a lot of inlining.
+    - Classes `file_ibuffer` and `file_obuffer` implement these interfaces, and
+      interact with files on disk.
+        - Files are opened in an unbuffered mode using C functions, and a 1 MiB
+          buffer is implemented by these classes.
+    - Classes `memory_ibuffer` and `memory_obuffer` implement these interfaces,
+      and read from/write to a `vector<uint8_t>` in memory.
+        - This is used for deserialization/serialization of games from/to
+          partisan database entries, as part of SEG replacement.
 
-## I/O Abstraction Class
-Classes `ibuffer` and `obuffer` (`iobuffer.h`) interact with files.
+Details of `i_ibuffer`:
+- Member fields:
+    - `_buffer`: pointer to data to be read.
+    - `_buffer_idx`: current position in the buffer.
+    - `_buffer_size`: size of the data currently in the buffer.
+- The subclass constructor should initialize all of these fields (and `_buffer`
+  should not be `nullptr`).
+- The subclass destructor should clean up all of these fields (and then assign
+  `0` or `nullptr` to them).
+- The subclass must implement the `_preload_bytes` function. It is called by
+  the base class when there is not enough data to read from the buffer.
+    - It should modify the aforementioned fields by loading more data (and
+      possibly using `std::memmove` on the existing unread data).
 
-- `ibuffer` is a wrapper of `std::ifstream`, `obuffer` is a wrapper
-    of `std::ofstream`
-- Constructors accept file names
-    - Files are in binary format
-    - `obuffer` truncates the file upon opening it (like deleting and opening
-        a new file)
-- Define methods for reading/writing fixed-width integers
-    - i.e. `uint8_t ibuffer::read_u8()`
-    - i.e. `void obuffer::write_i32(const int32_t&)`
-    - TODO: How to handle floating point? Assume IEEE?
+Details of `i_obuffer`:
+- Member fields:
+    - `_buffer`: pointer to buffer to write data to.
+    - `_buffer_fill`: current amount of data in the buffer.
+    - `_buffer_size`: maximum amount of data the buffer can hold.
+- The subclass constructor should initialize all of these fields (and `_buffer`
+  should not be `nullptr`).
+- The subclass destructor should flush any buffered data (if applicable), clean
+  up any resources, and then assign `0` or `nullptr` to these fields.
+- The subclass must implement the `_reserve_capacity` function, which is called
+  when there's not enough space in the buffer for a write.
+    - It should modify the aforementioned fields, by ensuring there's enough
+      space for data to be written (and possibly flushing buffered data).
+
+- TODO: How to handle floating point? Assume IEEE?
 - A step toward enforcing machine-independent binary files
     - Avoids endianness problems. The read/write methods enforce a fixed byte
-        order on disk
+      order on disk (using functions from `byte_order.h`).
+        - These functions typically compile to 0 or 1 instructions on a 64 bit
+          machine (either the machine is little endian, otherwise there is
+          likely a single instruction to reverse the byte order).
     - TODO: However, non fixed width integer types are still a problem...
     - In C++ it is not possible to distinguish between "C" integer types and
-        their fixed width equivalents, i.e. `int` and `int32_t`. Maybe write a
-        clang-tidy check?
+      their fixed width equivalents, i.e. `int` and `int32_t`. Maybe write a
+      clang-tidy check?
     - Possible solution: encode integer widths into the file format. Before
-        reading an int from a file, first read the expected width. If the width
-        doesn't match the width of the `read` method, throw.
-
+      reading an int from a file, first read the expected width. If the width
+      doesn't match the width of the `read` method, throw.
         - Run time safety but no compile time safety
-    - Currently expose `T ibuffer::__read<T>()`
-        and `void obuffer::__write<T>(const T&)` (integral types `T`)
-        in the public interface. Prefixed by `__` because they're only
-        a (temporary?) hack that shouldn't be called directly
 
 ## Non-polymorphic Type Serialization
 Template struct `serializer<T, Enable = void>` defines the interface for
 serialization of both non-polymorphic and polymorphic types. This subsection
 talks about non-polymorphic types.
 
-- For a type `T`, `serializer<T>` should define two static functions:
-    - `inline static void save(obuffer&, const T&)`
-    - `inline static T load(ibuffer& is)`
+- For a type `T`, `serializer<T>` should define 2-3 static functions:
+    - `inline static void save(i_obuffer&, const T&, serializer_ctx*)`
+    - `inline static T load(i_ibuffer&, serializer_ctx*)`
+    - And/or `inline static T* load_ptr(i_ibuffer&, serializer_ctx*)`
+    - `serializer_ctx` will almost always be `nullptr`. It exists for special
+      cases where serializer structs need additional context (i.e.
+      `serializer<shared_ptr<ThGraph>>` has different behavior depending on
+      whether it is given a pointer to a `thermograph_cache`).
     - These functions should recursively use the `serializer` template where
-        necessary. See example implementation for `vector` below
+      necessary. See example implementation for `vector` below.
 - The default-valued `Enable` template argument is there to allow conditional
-    template specialization using SFINAE (substitution failure is not an
-    error), and can usually be ignored
-
-    - This is used to define the template for all integer types
+  template specialization using SFINAE (substitution failure is not an error),
+  and can usually be ignored.
+    - This is used to define the template for all integer types.
 - Instantiating the template for a type that doesn't define it will trigger
-    a static assert
+    a static assert.
 - `serializer.h` defines the template for several standard library types. See
-    `serializer.h` comment
+  comment at the top of the `serializer.h` file.
 
 Example usage:
 ```
 // Loading
-vector<int32_t> vec = serializer<vector<int32_t>>::load(some_ibuffer);
+vector<int32_t> vec = serializer<vector<int32_t>>::load(some_ibuffer, nullptr);
 
 // Saving
-serializer<vector<int32_t>>::save(some_obuffer, some_vec);
+serializer<vector<int32_t>>::save(some_obuffer, some_vec, nullptr);
 
 // Also works for integral types:
-serializer<int32_t>::save(some_obuffer, some_i32);
+serializer<int32_t>::save(some_obuffer, some_i32, nullptr);
 
 // Avoid using non fixed width types! This creates non-portable code:
-serializer<int>::save(some_obuffer, some_int);
+serializer<int>::save(some_obuffer, some_int, nullptr);
 ```
 
 Example implementation for `vector`:
@@ -1829,16 +2062,20 @@ Example implementation for `vector`:
 template <class T>
 struct serializer<std::vector<T>>
 {
-    inline static void save(obuffer& os, const std::vector<T>& val)
+    // Strip const/volatile qualifiers from T
+    using T_NoCV = std::remove_cv_t<T>;
+
+    static void save(i_obuffer& os, const std::vector<T>& val, serializer_ctx* ctx)
     {
         const size_t size = val.size();
         os.write_u64(size);
 
         for (size_t i = 0; i < size; i++)
-            serializer<T>::save(os, val[i]); // recursive use of template
+            // Recursive use of template
+            serializer<T_NoCV>::save(os, val[i], ctx);
     }
 
-    inline static std::vector<T> load(ibuffer& is)
+    static std::vector<T> load(i_ibuffer& is, serializer_ctx* ctx)
     {
         std::vector<T> vec;
 
@@ -1846,7 +2083,8 @@ struct serializer<std::vector<T>>
         vec.reserve(size);
 
         for (uint64_t i = 0; i < size; i++)
-            vec.emplace_back(serializer<T>::load(is)); // recursive use here too
+            // Recursive use here too
+            vec.emplace_back(serializer<T_NoCV>::load(is, ctx));
 
         return vec;
     }
@@ -1856,42 +2094,39 @@ struct serializer<std::vector<T>>
 This structure allows serialization of complicated types, i.e.
 `serializer<vector<pair<int32_t, int16_t>>>::save(...)`
 
-## Polymorphic Type Serialization (Unused, and may change)
-This code is implemented but unused. This section can (and should?) be
-ignored for now.
-
+## Polymorphic Type Serialization
 To make your polymorphic type `T` serializable:
-1. Inherit from interface class `dyn_serializable` (`dynamic_serializable.h`)
+1. Inherit from interface class `poly_serializable` (`poly_serializable.h`)
 2. Define:
-    - Method `void T::save_impl(obuffer&) const`
-    - Function `static dyn_serializable* T::load_impl(ibuffer&)`
-3. Call `register_dyn_serializable<T>()` in `init_serialization.cpp`
+    - Method `void T::save_impl(i_obuffer&, serializer_ctx*) const override`
+    - Function `static poly_serializable* T::load_impl(i_ibuffer&, serializer_ctx*)`
+3. Call `register_poly_serializable<T>()` in `init_serialization.cpp`
     - If not registered, your polymorphic type can't be saved/loaded. This
-        will cause run time exceptions when saving/loading `T`
+        will cause run time exceptions when saving/loading `T`.
     - A compile time error is raised if a registered type doesn't implement
-        these functions with the correct signatures
+        these functions with the correct signatures.
 
 Polymorphic type save usage example:
 ```
 game* some_game_ptr = new clobber("XO");
 // All 3 valid:
-serializer<dyn_serializable*>::save(some_obuffer, some_game_ptr);
-serializer<game*>::save(some_obuffer, some_game_ptr);
-serializer<clobber*>::save(some_obuffer, some_game_ptr);
+serializer<poly_serializable*>::save(some_obuffer, some_game_ptr, nullptr);
+serializer<game*>::save(some_obuffer, some_game_ptr, nullptr);
+serializer<clobber*>::save(some_obuffer, some_game_ptr, nullptr);
 ```
 
 Load usage example (remember to use keyword `delete` to clean up):
 ```
-serializer<dyn_serializable*>::load(some_ibuffer);
-serializer<game*>::load(some_ibuffer);
-serializer<clobber*>::load(some_ibuffer);
+poly_serializable* g1 = serializer<poly_serializable*>::load(some_ibuffer, nullptr);
+game* g2 = serializer<game*>::load(some_ibuffer, nullptr);
+clobber* g3 = serializer<clobber*>::load(some_ibuffer, nullptr);
 ```
 
-A `serializer` template is defined in `dynamic_serializable.h` for all pointer
-types derived from `dyn_serializable`. It calls your `save_impl` method and
+A `serializer` template is defined in `poly_serializable.h` for all pointer
+types derived from `poly_serializable`. It calls your `save_impl` method and
 `load_impl` function using some run time type information (see RTTI section).
 
-Each registered polymorphic type has a unique `dyn_serializable_id_t` (a
+Each registered polymorphic type has a unique `poly_serializable_id_t` (a
 unique run time allocated integer similar to a `game_type_t`). This specifies
 an index into an array of function pointers (for `load_impl` functions). This
 value is written/read from file when saving/loading polymorphic types.
@@ -2341,6 +2576,52 @@ indicates that all `.test` files are still valid.
     - `search_utils.h`
     - `parsing_utilities.h`
 
+## Version 1.6 Additions
+### Important Notes
+- A CMake build has replaced the old makefile build. The project now also depends on a git submodule. See `README.md` for new build instructions.
+- All games must implement the new `game::clone()` function. Partisan games must implement 2 new functions to have correct DB entries. See [development-notes.md (Adding A Game To the Database)](docs/development-notes.md#adding-a-game-to-the-database).
+
+### Bug Fixes
+- Fixed a bug where `switch_game::inverse()` could trigger an `assert`. In an unmodified copy of MCGS this couldn't actually happen in practice.
+- Fixed minor create-table.py HTML bug in summary pane: time conversion from ms to days/hours/minutes/seconds/ms showed incorrect (truncated) converted times.
+- Fixed a bug where data was needlessly copied during saving/loading of the database (resulting in higher memory usage during save/load, and longer startup times).
+
+### New Features
+- `move` is now `int64_t` (instead of `int` which is likely 32 bits).
+  - Games can now be constructed with much larger boards as a result.
+- The database has several new fields for partisan games
+  - Lower/upper bounds on value (in terms of multiples of up/down, or `1/8`).
+  - Thermograph.
+  - A set of dominated (or nondominated) moves.
+  - Complexity score. 
+- New games (see `input/info.test`)
+  - `cannibal_clobber`
+  - `gen_king_dirt` (also has CGSuite implementation, see `utils/CGSuite/GenKingDirt.cgs`).
+- New results in the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
+- New optimizations
+  - Impartial wrapper games generate moves by alternating between the moves of `BLACK` and `WHITE`.
+    - Use `--no-imp-wrapper-alternate-color` to revert this (will generate all `BLACK` moves followed by all `WHITE` moves).
+  - For partisan search algorithms (all of these rely on partisan DB entries):
+    - Play moves in subgames in order of decreasing temperature. Subgames without thermographs (those without partisan DB entries) come last.
+    - Use bounds to solve sums.
+    - Prune dominated moves within single subgames.
+    - Replace games which are equal to their bounds, with the equivalent `dyadic_rational` or `up_star`.
+- Input language version `1.5` --> `1.6`.
+- New CLI options
+  - `--dump-db` dumps contents of the loaded database into a human readable text format.
+    - Use with CMake option `-DDB_INCLUDE_STRINGS=1` (to include human readable games in DB entries).
+  - `--test-filter` skips test cases which are incompatible with a specified external CGT project i.e. [SEGClobber](https://github.com/tfolkersen/SEGClobber).
+  - `--convert-to-ctl` exports test cases to a format readable by the [CGT Testing Library](https://github.com/ualberta-mueller-group/cgt_testing_library).
+    - Aids in comparison of MCGS to other CGT projects.
+    - Can use with `--test-filter`.
+  - `--search-graph-print` and `--search-graph-verify` are experimental debugging tools for visualizing search nodes visited by partisan search algorithms. Use a tool like Graphviz or Gephi to view the data.
+- Code cleaned up, new utilities added
+  - `thermograph_builder_no_db.h`: builds the thermograph of a game outside of database generation.
+  - `thermograph_helpers.h`: derives various data from a thermograph.
+  - `sumgame_helpers.h`: sumgame comparisons.
+  - `integral_conversion.h`: casting of integral types with runtime safety checks.
+  - `serializer.h`: implements more STL container types, and less verbose `serializer_save()` and `serializer_load()` functions.
+  - `utilities.h`: has new generic helper functions.
 
 ## After Version 1.4 (Future)
 - Improve database

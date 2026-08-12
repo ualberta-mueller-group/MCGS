@@ -13,6 +13,8 @@
 #include <optional>
 #include <string>
 
+#include "ThScaffold.h"
+#include "ThGraph.h"
 #include "game.h"
 #include "file_parser_ast.h"
 #include "csv_row.h"
@@ -92,4 +94,21 @@ protected:
     void _run_impl(unsigned long long timeout) override;
 
     const fp_expr_command_winning_moves _expr;
+};
+
+////////////////////////////////////////////////// class test_case_thermograph
+class test_case_thermograph : public i_test_case
+{
+public:
+    test_case_thermograph(fp_expr_command_thermograph expr,
+                          std::vector<game*> games,
+                          std::vector<std::string> game_types);
+
+    static std::string thermograph_string(const ThGraph& graph);
+    static std::string scaffold_string(const ThScaffold& sc, bool for_left);
+
+protected:
+    void _run_impl(unsigned long long timeout) override;
+
+    const fp_expr_command_thermograph _expr;
 };

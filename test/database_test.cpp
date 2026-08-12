@@ -1,15 +1,24 @@
 #include "database_test.h"
 
+#include <cstring>
+#include <functional>
 #include <memory>
+#include <sstream>
 #include <unordered_set>
 #include <set>
+#include <cstdint>
+#include <string>
 #include <cassert>
+#include <unordered_map>
 #include <vector>
+#include <utility>
+#include <algorithm>
 
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "clobber_1xn.h"
 #include "db_game_generator.h"
+#include "db_link_t.h"
 #include "dominated_moves.h"
 #include "game.h"
 #include "grid_generator.h"
@@ -23,7 +32,23 @@
 #include "ThGraph.h"
 #include "utilities.h"
 
+
+template <>
+struct std::hash<std::pair<uint64_t, uint64_t>>
+{
+    size_t operator()(const std::pair<uint64_t, uint64_t>& p) const noexcept
+    {
+        return p.first ^ p.second;
+    }
+};
+
+
+namespace {
+
+} // namespace
+
 using namespace std;
+
 
 ////////////////////////////////////////////////// Helpers
 namespace {
@@ -112,7 +137,9 @@ void check_dom_obj(sumgame& sum, const db_dom_moves_t& dom_obj)
     }
 }
 
-void check_entry_contents(sumgame& sum, const db_entry_partisan* entry, thermograph_builder_no_db& thermograph_builder)
+void check_entry_contents(sumgame& sum,
+                          const db_entry_partisan* entry,
+                          thermograph_builder_no_db& thermograph_builder)
 {
     assert(entry != nullptr);
 
@@ -121,7 +148,7 @@ void check_entry_contents(sumgame& sum, const db_entry_partisan* entry, thermogr
 
     // Thermograph
     assert(entry->thermograph.get() != nullptr);
-    shared_ptr<ThGraph> graph_nodb = thermograph_builder.build_thermograph(sum);
+    shared_ptr<const ThGraph> graph_nodb = thermograph_builder.build_thermograph(sum);
     assert(*graph_nodb == *entry->thermograph);
 
     // Bounds
@@ -143,6 +170,45 @@ void check_entry_contents(sumgame& sum, const db_entry_partisan* entry, thermogr
     assert(entry->dominated_moves.get() != nullptr);
     const db_dom_moves_t& dom_obj = *entry->dominated_moves;
     check_dom_obj(sum, dom_obj);
+
+    // serialized_sum and subgame_links
+    vector<hash_t> subgame_hashes;
+    vector<hash_t> deserialized_subgame_hashes;
+    vector<hash_t> linked_entry_hashes;
+
+    const int n_games = sum.num_total_games();
+    for (int i = 0; i < n_games; i++)
+    {
+        game* g = sum.subgame(i);
+        if (!g->is_active())
+            continue;
+        subgame_hashes.push_back(g->get_local_hash());
+    }
+
+    {
+        vector<game*> deserialized_games = entry->load_sum();
+        for (game* g : deserialized_games)
+        {
+            deserialized_subgame_hashes.push_back(g->get_local_hash());
+            delete g;
+        }
+    }
+
+    for (const db_link_t& link : entry->subgame_links)
+    {
+        assert(!link.is_nullptr());
+        linked_entry_hashes.push_back(link.get_as_pointer()->first);
+    }
+
+    std::sort(subgame_hashes.begin(), subgame_hashes.end(),
+              std::less<hash_t>());
+    std::sort(linked_entry_hashes.begin(), linked_entry_hashes.end(),
+              std::less<hash_t>());
+    std::sort(deserialized_subgame_hashes.begin(),
+              deserialized_subgame_hashes.end(), std::less<hash_t>());
+
+    assert(subgame_hashes == deserialized_subgame_hashes);
+    assert(deserialized_subgame_hashes == linked_entry_hashes);
 
 }
 
@@ -173,7 +239,9 @@ void test_generate_impl(database& db, i_db_game_generator* gen_generate,
         delete g;
     }
 
-    db.generate_entries_partisan(*gen_generate, true);
+    db_gen_options_t gen_options;
+    gen_options.silent = true;
+    db.generate_entries_partisan(*gen_generate, gen_options);
 
     thermograph_builder_no_db thermograph_builder;
     while (*gen_validate)
@@ -198,6 +266,7 @@ void test_generate_impl(database& db, i_db_game_generator* gen_generate,
         sum.pop(g);
         delete g;
     }
+    db.assert_links_equal(true);
 
     delete gen_generate;
     delete gen_generate_copy;
@@ -212,6 +281,15 @@ i_db_game_generator* make_clobber_1xn_generator(int max_len)
     return new gridlike_db_game_generator<clobber_1xn, GRIDLIKE_TYPE_STRIP>(gg);
 }
 
+i_db_game_generator* make_nogo_1xn_generator(int max_len)
+{
+    grid_generator* gg =
+        new grid_generator(int_pair(1, max_len), {EMPTY, BLACK, WHITE}, true);
+
+    return new gridlike_db_game_generator<nogo_1xn, GRIDLIKE_TYPE_STRIP>(gg);
+}
+
+
 i_db_game_generator* make_domineering_generator(int max_r, int max_c)
 {
     grid_generator* gg =
@@ -220,7 +298,125 @@ i_db_game_generator* make_domineering_generator(int max_r, int max_c)
     return new gridlike_db_game_generator<domineering, GRIDLIKE_TYPE_GRID>(gg);
 }
 
+
+void test_db_hash_impl(i_db_game_generator& gen,
+                       unordered_map<hash_t, string>& game_hashes)
+{
+    sumgame sum(BLACK);
+    sumgame sum_single(BLACK);
+    global_hash gh;
+
+    auto check_no_hash_collision = [&](const sumgame& sum,
+                                       hash_t db_hash) -> void
+    {
+        stringstream strstr;
+        sum.print_sorted(strstr);
+        const string sum_string = strstr.str();
+
+        const auto inserted = game_hashes.try_emplace(db_hash, sum_string);
+
+        // No hash collision
+        assert(inserted.second || inserted.first->second == sum_string);
+    };
+
+    vector<game*> active_games;
+    vector<hash_t> active_hashes;
+
+    vector<game*> active_game_single;
+    vector<hash_t> active_hash_single;
+
+    while (gen)
+    {
+        active_games.clear();
+        active_hashes.clear();
+
+        game* g = gen.gen_game();
+        ++(gen);
+
+        assert(sum.num_total_games() == 0);
+        sum.add(g);
+        sum.split_and_normalize();
+
+        const int n_games = sum.num_total_games();
+        for (int i = 0; i < n_games; i++)
+        {
+            game* g = sum.subgame(i);
+            if (!g->is_active())
+                continue;
+
+            active_games.push_back(g);
+            active_hashes.push_back(g->get_local_hash());
+        }
+
+        const hash_t sum_hash1 = sum.get_db_hash();
+        const hash_t sum_hash2 = database::get_db_hash(sum);
+        const hash_t sum_hash3 = gh.get_db_hash_value(active_games);
+        const hash_t sum_hash4 = gh.get_db_hash_value(active_hashes);
+
+        assert(sum_hash1 == sum_hash2 && //
+               sum_hash2 == sum_hash3 && //
+               sum_hash3 == sum_hash4    //
+        );
+
+        check_no_hash_collision(sum, sum_hash1);
+
+        for (int i = 0; i < n_games; i++)
+        {
+            game* g = sum.subgame(i);
+            if (!g->is_active())
+                continue;
+
+            active_game_single.clear();
+            active_hash_single.clear();
+            assert(sum_single.num_total_games() == 0);
+
+            active_game_single.push_back(g);
+            active_hash_single.push_back(g->get_local_hash());
+            sum_single.add(g);
+
+            const hash_t single_hash1 = g->get_local_hash();
+            const hash_t single_hash2 = sum_single.get_db_hash();
+            const hash_t single_hash3 = database::get_db_hash(sum_single);
+            const hash_t single_hash4 = database::get_db_hash(*g);
+            const hash_t single_hash5 = gh.get_db_hash_value(active_game_single);
+            const hash_t single_hash6 = gh.get_db_hash_value(active_hash_single);
+
+            assert(single_hash1 == single_hash2 && //
+                   single_hash2 == single_hash3 && //
+                   single_hash3 == single_hash4 && //
+                   single_hash4 == single_hash5 && //
+                   single_hash5 == single_hash6    //
+            );
+
+            check_no_hash_collision(sum_single, single_hash1);
+
+            sum_single.pop(g);
+        }
+
+        sum.undo_split_and_normalize();
+        sum.pop(g);
+
+        delete g;
+    }
+}
+
 ////////////////////////////////////////////////// Main test functions
+void test_db_hash()
+{
+    unordered_map<hash_t, string> db_hash_to_sum_string;
+
+    vector<i_db_game_generator*> generators
+    {
+        make_clobber_1xn_generator(7),
+        make_nogo_1xn_generator(7),
+    };
+
+    for (i_db_game_generator* gen : generators)
+    {
+        test_db_hash_impl(*gen, db_hash_to_sum_string);
+        delete gen;
+    }
+}
 
 // set/get, clear, empty
 void test_basic()
@@ -379,11 +575,102 @@ void test_generate(bool extra_tests)
     }
 }
 
+void test_generate_options_stop_after()
+{
+    for (const db_gen_stop_after_enum stop_after : DB_GEN_STOP_AFTER_ENUM_ALL)
+    {
+        database db;
+        db.__register_built_in_types();
+        DATABASE_REGISTER_TYPE(db, domineering);
+        assert(db.empty());
+
+        db_gen_options_t opts;
+        opts.silent = true;
+        opts.stop_after = stop_after;
+
+        i_db_game_generator* gen = make_domineering_generator(3, 3);
+        db.generate_entries_partisan(*gen, opts);
+        delete gen;
+
+        domineering g("..|..");
+        const db_entry_partisan* entry = db.get_partisan_ptr(g);
+        assert(entry != nullptr);
+
+        // Fields that must be present
+        assert(entry->disk_game_type != 0);
+        assert(entry->outcome != outcome_class::U);
+        assert(entry->thermograph);
+
+        // Bounds
+        const bool expect_bounds = stop_after >= DB_GEN_STOP_AFTER_BOUNDS;
+        assert(expect_bounds == (bool) entry->bounds_data);
+
+        // Dominated moves
+        const bool expect_dom = stop_after >= DB_GEN_STOP_AFTER_DOMINATED_MOVES;
+        assert(expect_dom == (entry->complexity > 0));
+        assert(expect_dom == (bool) entry->dominated_moves);
+
+        // SEG
+        const bool expect_seg = stop_after >= DB_GEN_STOP_AFTER_SEG;
+        assert(expect_seg ==
+               (entry->size_score_type != DB_GEN_SIZE_SCORE_TYPE_NONE));
+        assert(expect_seg == (entry->size_score > 0));
+        assert(expect_seg == !entry->simplest_equal_entry.is_nullptr());
+
+
+        assert(expect_seg == (entry->serialized_sum.size() > 0));
+        assert(expect_seg == (entry->subgame_links.size() == 1));
+        if (!entry->subgame_links.empty())
+            assert(&(entry->subgame_links.back().get_as_pointer()->second) == entry);
+    }
+
+}
+
+void test_generate_options_size_score()
+{
+    unordered_set<pair<uint64_t, uint64_t>> size_score_and_complexity_set;
+
+    for (const db_gen_size_score_type size_score_type : DB_GEN_SIZE_SCORE_TYPE_ENUM_ALL)
+    {
+        if (size_score_type == DB_GEN_SIZE_SCORE_TYPE_NONE)
+            continue;
+
+        database db;
+        db.__register_built_in_types();
+        DATABASE_REGISTER_TYPE(db, domineering);
+        assert(db.empty());
+
+        db_gen_options_t opts;
+        opts.silent = true;
+        opts.size_score_type = size_score_type;
+
+        i_db_game_generator* gen = make_domineering_generator(3, 3);
+        db.generate_entries_partisan(*gen, opts);
+        delete gen;
+
+        domineering g("...|.##|...");
+        const db_entry_partisan* entry = db.get_partisan_ptr(g);
+        assert(entry != nullptr);
+
+        assert(entry->size_score_type == size_score_type);
+
+        const auto inserted = size_score_and_complexity_set.emplace(
+            entry->size_score, entry->complexity);
+
+        assert(inserted.second);
+    }
+
+
+}
+
 } // namespace
 
 void database_test_all(bool extra_tests)
 {
+    test_db_hash();
     test_basic();
     test_query_game_and_sum();
     test_generate(extra_tests);
+    test_generate_options_stop_after();
+    test_generate_options_size_score();
 }

@@ -16,6 +16,7 @@
 
 #include "cgt_basics.h"
 #include "clobber_1xn.h"
+#include "exit_signal.h"
 #include "file_parser_ast.h"
 #include "test_filter.h"
 #include "game.h"
@@ -230,6 +231,8 @@ void convert_tests_to_ctl_format(shared_ptr<file_parser> fp,
                                  const string& output_dir_name,
                                  test_filter_enum filter_type)
 {
+    CHECK_EXIT_SIGNAL_0();
+
     THROW_ASSERT(output_dir_is_valid(output_dir_name),
                  "Output path \"" + output_dir_name +
                      "\" exists and is not an empty directory!");
@@ -244,10 +247,14 @@ void convert_tests_to_ctl_format(shared_ptr<file_parser> fp,
     // Iterate over tests
     while (fp->parse_chunk())
     {
+        CHECK_EXIT_SIGNAL_0();
+
         const int n_chunk_tests = fp->n_test_cases();
 
         for (int i = 0; i < n_chunk_tests; i++)
         {
+            CHECK_EXIT_SIGNAL_0();
+
             std::shared_ptr<i_test_case> test_case = fp->get_test_case(i);
 
             if (!test_filter_permits_test_case(filter_type, *test_case))
@@ -290,6 +297,8 @@ void convert_tests_to_ctl_format(const string& test_directory,
                                  const string& output_dir_name,
                                  test_filter_enum filter_type)
 {
+    CHECK_EXIT_SIGNAL_0();
+
     THROW_ASSERT(!test_directory.empty() && !output_dir_name.empty());
     THROW_ASSERT(std::filesystem::is_directory(test_directory));
 
@@ -302,6 +311,8 @@ void convert_tests_to_ctl_format(const string& test_directory,
 
     for (test_file_iterator iter(test_directory); iter; ++iter)
     {
+        CHECK_EXIT_SIGNAL_0();
+
         const std::filesystem::directory_entry& entry = iter.gen_entry();
         const std::filesystem::path& file_path = entry.path();
         assert(entry.is_regular_file() && file_path.extension() == ".test");
@@ -317,10 +328,14 @@ void convert_tests_to_ctl_format(const string& test_directory,
 
         while (fp->parse_chunk())
         {
+            CHECK_EXIT_SIGNAL_0();
+
             const int n_chunk_tests = fp->n_test_cases();
 
             for (int i = 0; i < n_chunk_tests; i++)
             {
+                CHECK_EXIT_SIGNAL_0();
+
                 shared_ptr<i_test_case> test_case = fp->get_test_case(i);
 
                 if (!test_filter_permits_test_case(filter_type, *test_case))

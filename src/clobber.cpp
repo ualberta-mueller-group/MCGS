@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 #include "grid_hash.h"
+#include "global_options.h"
 #include "grid_location.h"
 #include "print_move_helpers.h"
 #include "throw_assert.h"
@@ -149,6 +150,17 @@ void clobber::undo_move()
     replace(to_point, opp);
 }
 
+void clobber::save_impl(i_obuffer& os, serializer_ctx* ctx) const
+{
+    save_board(os, board_const(), shape(), ctx);
+}
+
+poly_serializable* clobber::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    pair<vector<int>, int_pair> board_pair = load_board(is, ctx);
+    return new clobber(board_pair.first, board_pair.second);
+}
+
 bool clobber::is_move(const int& from, const int& to, bw to_play) const
 {
     assert(is_black_white(to_play));
@@ -232,6 +244,11 @@ bool trim_game(vector<int>& board_dst, int_pair& shape_dst,
 }
 
 } // namespace
+
+move_generator* clobber::_create_move_generator_impl(bw to_play) const
+{
+    return new clobber_move_generator(*this, to_play);
+}
 
 split_result clobber::_split_impl() const
 {
@@ -382,10 +399,6 @@ void clobber::_init_hash(local_hash& hash) const
     hash.__set_value(_gh.get_value());
 }
 
-move_generator* clobber::create_move_generator(bw to_play) const
-{
-    return new clobber_move_generator(*this, to_play);
-}
 
 void clobber::print(ostream& str) const
 {

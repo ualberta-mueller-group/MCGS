@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <ostream>
+#include <cassert>
+
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
 #include "impartial_game.h"
-#include <ostream>
-#include <cassert>
+#include "global_options.h"
 
 //---------------------------------------------------------------------------
 class impartial_game_wrapper : public impartial_game
@@ -30,20 +32,26 @@ public:
     int complexity_score() const override;
     void play(const move& m) override;
     void undo_move() override;
-    move_generator* create_move_generator() const override;
-    move_generator* create_specific_move_generator(
+
+
+public:
+    /*
+        This function is exposed in the public interface for testing purposes.
+    */
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    move_generator* __create_specific_move_generator(
         bool use_alternating_version) const;
+
     void print_move(std::ostream& str, const move& m,
                     ebw to_play_ignore) const override;
     void print_move(std::ostream& str, const move& m) const;
 
     void print(std::ostream& str) const override;
 
-    // These functions needed by game class interface
-    // They also make it possible to include any
-    // impartial game in any possibly (partisan) sum
+    // Needed by game class interface
     void play(const move& m, bw ignore_to_play) override;
-    move_generator* create_move_generator(bw ignore_to_play) const override;
+
+public:
 
     game* wrapped_game() const { return _game; }
 
@@ -55,6 +63,9 @@ public:
 
 
 protected:
+    move_generator* _create_move_generator_impl() const override;
+    move_generator* _create_move_generator_impl(bw ignore_to_play) const override;
+
     split_result _split_impl() const override; // See note in .cpp file
     void _init_hash(local_hash& hash) const override;
 
@@ -143,8 +154,15 @@ inline void impartial_game_wrapper::undo_move()
     impartial_game::undo_move();
 }
 
-inline move_generator* impartial_game_wrapper::create_move_generator(
+inline move_generator* impartial_game_wrapper::_create_move_generator_impl()
+    const
+{
+    return __create_specific_move_generator(
+        global::imp_wrapper_alternate_color());
+}
+
+inline move_generator* impartial_game_wrapper::_create_move_generator_impl(
     bw ignore_to_play) const
 {
-    return create_move_generator();
+    return _create_move_generator_impl();
 }

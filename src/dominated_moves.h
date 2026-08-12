@@ -136,7 +136,7 @@ inline bool db_dom_moves_t::operator!=(const db_dom_moves_t& rhs) const
 template <>
 struct serializer<db_dom_moves_t>
 {
-    inline static void save(obuffer& os, const db_dom_moves_t& dom,
+    inline static void save(i_obuffer& os, const db_dom_moves_t& dom,
                             serializer_ctx* ctx)
     {
         os.write_enum(dom._kind);
@@ -146,7 +146,7 @@ struct serializer<db_dom_moves_t>
                                                         ctx);
     }
 
-    inline static db_dom_moves_t load(ibuffer& is, serializer_ctx* ctx)
+    inline static db_dom_moves_t load(i_ibuffer& is, serializer_ctx* ctx)
     {
         db_dom_moves_t dom;
 
@@ -159,7 +159,7 @@ struct serializer<db_dom_moves_t>
         return dom;
     }
 
-    inline static db_dom_moves_t* load_ptr(ibuffer& is, serializer_ctx* ctx)
+    inline static db_dom_moves_t* load_ptr(i_ibuffer& is, serializer_ctx* ctx)
     {
         db_dom_moves_t* dom = new db_dom_moves_t();
 

@@ -2,6 +2,7 @@
 // Sum of combinatorial games and solving algorithms
 //---------------------------------------------------------------------------
 #include <algorithm>
+#include <ostream>
 #include <utility>
 #include <optional>
 #include <ctime>
@@ -14,6 +15,11 @@
 #include <cstdint>
 
 #include "sumgame.h"
+#include "database.h"
+#include "exit_signal.h"
+#include "iobuffer.h"
+#include "seg_replacer.h"
+#include "sumgame_helpers.h"
 #include "throw_assert.h"
 #include "bounds.h"
 #include "db_move_generator.h"
@@ -37,6 +43,7 @@
 #include "sumgame_change_record.h"
 #include "sumgame_undo_stack_unwinder.h"
 #include "impartial_game_wrapper.h"
+#include "transposition_serializer.h" // IWYU pragma: keep
 #include "utilities.h"
 #include "ThGraph.h"
 #include "ThValue.h"
@@ -46,7 +53,9 @@ constexpr bool PRINT_SUBGAMES = false;
 using namespace sumgame_impl;
 using namespace std;
 
+bool sumgame::use_npos = true;
 shared_ptr<ttable_sumgame> sumgame::_tt(nullptr);
+
 
 
 ////////////////////////////////////////////////// Helpers
@@ -123,7 +132,7 @@ ebw analyze_outcome_count_vector(const vector<unsigned int>& counts,
 
     const bool no_negative = counts[negative_class] == 0;
 
-    if (one_n && no_negative)
+    if (one_n && no_negative && sumgame::use_npos)
         return player;
 
     return EMPTY;
@@ -387,6 +396,9 @@ void sumgame::print_sorted(ostream& str) const
 // plus sumgame simplification
 bool sumgame::solve() const
 {
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
     // No assert_restore_sumgame; downstream function will do it
     sumgame& sum = const_cast<sumgame&>(*this);
 
@@ -396,8 +408,22 @@ bool sumgame::solve() const
     return result.value().win;
 }
 
+bool sumgame::solve_with_ttable(shared_ptr<ttable_sumgame> temp_ttable)
+{
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
+    swap(temp_ttable, _tt);
+    const bool result = solve();
+    swap(temp_ttable, _tt);
+    return result;
+}
+
 bool sumgame::solve_with_games(game* g) const
 {
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
     assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
@@ -413,6 +439,9 @@ bool sumgame::solve_with_games(game* g) const
 
 bool sumgame::solve_with_games(const vector<game*>& games) const
 {
+    // Not interruptible
+    assert(!exit_signal::handlers_are_enabled());
+
     assert_restore_sumgame ars(*this);
     sumgame& sum = const_cast<sumgame&>(*this);
 
@@ -461,7 +490,13 @@ optional<solve_result> sumgame::solve_with_timeout_token(
 
     _need_cgt_simplify = true;
 
+    assert(_replacer == nullptr);
+    _replacer = seg_replacer_new();
+
     optional<solve_result> result = sum._solve_impl(depth);
+
+    seg_replacer_delete(_replacer);
+    _replacer = nullptr;
 
     sum._undo_pre_solve_pass();
 
@@ -644,8 +679,12 @@ optional<solve_result> sumgame::db_lookup_pass(temperature_vec_t& temperatures,
                     const game_bounds& bounds = *entry->bounds_data;
                     const bound_scale scale = bounds.get_scale();
 
-                    THROW_ASSERT(bounds.get_lower_relation() == REL_LESS &&
-                                 bounds.get_upper_relation() == REL_GREATER);
+
+                    if (!(bounds.get_lower_relation() == REL_LESS &&
+                          bounds.get_upper_relation() == REL_GREATER))
+                    {
+                        bounds_valid = false;
+                    }
 
                     switch (scale)
                     {
@@ -868,6 +907,9 @@ void sumgame::db_replacement_pass()
         }
         else
         {
+            if (global::use_seg())
+                continue;
+
             // sg is partisan
             const db_entry_partisan* entry = db.get_partisan_ptr(*sg);
             stats::report_db_access(entry != nullptr);
@@ -875,20 +917,42 @@ void sumgame::db_replacement_pass()
             if (entry == nullptr)
                 continue;
 
-            if (!entry->bounds_data)
-                continue;
+            if (entry->bounds_data)
+            {
+                const game_bounds& bounds = *entry->bounds_data;
 
-            const game_bounds& bounds = *entry->bounds_data;
+                if (bounds.is_equal())
+                {
+                    game* sg_replacement = get_scale_game(bounds.get_lower(), bounds.get_scale());
+                    add(sg_replacement);
+                    cr.added_games.push_back(sg_replacement);
 
-            if (!bounds.is_equal())
-                continue;
+                    sg->set_active(false);
+                    cr.deactivated_games.push_back(sg);
+                    continue;
+                }
+            }
 
-            game* sg_replacement = get_scale_game(bounds.get_lower(), bounds.get_scale());
-            add(sg_replacement);
-            cr.added_games.push_back(sg_replacement);
+            //if (global::use_seg())
+            //{
+            //    const db_entry_partisan* linked_entry = db.get_partisan_ptr(entry->simplest_equal_entry);
+            //    if (linked_entry == nullptr || linked_entry == entry)
+            //        continue;
 
-            sg->set_active(false);
-            cr.deactivated_games.push_back(sg);
+            //    sg->set_active(false);
+            //    cr.deactivated_games.push_back(sg);
+
+            //    vector<game*> linked_games = linked_entry->load_sum();
+            //    for (game* g : linked_games)
+            //    {
+            //        assert(g->is_active());
+            //        add(g);
+            //        cr.added_games.push_back(g);
+            //    }
+
+            //    continue;
+            //}
+
         }
     }
 
@@ -939,17 +1003,61 @@ void sumgame::undo_db_replacement_pass()
     _change_record_stack.pop_back();
 }
 
-optional<sumgame_move> sumgame::get_winning_or_random_move(
+void sumgame::seg_pass(seg_replacer* replacer)
+{
+    _push_undo_code(SUMGAME_UNDO_SEG_PASS);
+    if (!global::use_db() || !global::use_seg())
+        return;
+
+    database& db = get_global_database();
+    sumgame_impl::change_record& cr = _change_record_stack.emplace_back();
+
+    seg_replacer_replace_all(replacer, *this, cr, db);
+}
+
+void sumgame::undo_seg_pass()
+{
+    _pop_undo_code(SUMGAME_UNDO_SEG_PASS);
+    if (!global::use_db() || !global::use_seg())
+        return;
+
+    sumgame_impl::change_record& cr = _change_record_stack.back();
+
+    pop(cr.added_games);
+    for (game* g : cr.added_games)
+    {
+        assert(g->is_active());
+        delete g;
+    }
+    cr.added_games.clear();
+
+    for (game* g : cr.deactivated_games)
+    {
+        assert(!g->is_active());
+        g->set_active(true);
+    }
+    cr.deactivated_games.clear();
+
+    _change_record_stack.pop_back();
+}
+
+mcgs_player_move sumgame::get_winning_or_random_move(
     bw for_player) const
 {
-    assert(is_black_white(for_player));
     assert_restore_sumgame ars(*this);
+    assert(is_black_white(for_player));
 
-    const bw prev_player = to_play();
+    mcgs_player_move pm;
+
+    CHECK_EXIT_SIGNAL_1(
+        pm.status = MCGS_PLAYER_MOVE_STATUS_SHOULD_EXIT;
+        return pm;
+    );
 
     sumgame& sum = const_cast<sumgame&>(*this);
-    sum.set_to_play(for_player);
+    restore_sumgame_player restore_player(sum);
 
+    sum.set_to_play(for_player);
     unique_ptr<sumgame_move_generator> gen(
         sum.create_sum_move_generator(for_player));
 
@@ -964,27 +1072,44 @@ optional<sumgame_move> sumgame::get_winning_or_random_move(
         assert(sum.to_play() == for_player);
         sum.play_sum(sm, for_player);
         assert(sum.to_play() == ::opponent(for_player));
-        bool opp_loss = !sum.solve();
+        const optional<solve_result> result = sum.solve_with_timeout(0);
         sum.undo_move();
+
+        CHECK_EXIT_SIGNAL_1({
+            assert(!pm.sm.has_value());
+            pm.status = MCGS_PLAYER_MOVE_STATUS_SHOULD_EXIT;
+            return pm;
+        });
+
+        THROW_ASSERT(result.has_value());
+
+        const bool opp_loss = !result->win;
 
         if (opp_loss)
         {
-            sum.set_to_play(prev_player);
-            return sm;
+            pm.sm = sm;
+            pm.status = MCGS_PLAYER_MOVE_STATUS_OK;
+            return pm;
         }
     }
 
-    sum.set_to_play(prev_player);
-
     if (moves.empty())
-        return {};
+    {
+        assert(!pm.sm.has_value());
+        pm.status = MCGS_PLAYER_MOVE_STATUS_NO_MOVES;
+        return pm;
+    }
 
     // TODO: random_generator should work for arbitrary types...
     const uint32_t choice = get_global_rng().get_u32(0, moves.size() - 1);
-    return moves[choice];
+
+    pm.sm = moves[choice];
+    pm.status = MCGS_PLAYER_MOVE_STATUS_OK;
+    return pm;
 }
 
-void sumgame::init_sumgame(size_t index_bits)
+void sumgame::init_sumgame(size_t index_bits,
+                           const string& ttable_load_file_name)
 {
     assert(basic_cgt_type_set.empty());
     basic_cgt_type_set.insert(game_type<dyadic_rational>());
@@ -998,7 +1123,43 @@ void sumgame::init_sumgame(size_t index_bits)
         return;
 
     assert(_tt.get() == nullptr); // Not already initialized
-    _tt.reset(new ttable_sumgame(index_bits, 1));
+
+    if (ttable_load_file_name.empty())
+        _tt.reset(new ttable_sumgame(index_bits, 1));
+    else
+    {
+        cout << "Loading partisan ttable \"" << ttable_load_file_name;
+        cout << "\"..." << flush;
+
+        file_ibuffer is(ttable_load_file_name);
+        _tt.reset(serializer<ttable_sumgame*>::load(is, nullptr));
+
+        const size_t new_index_bits = _tt->n_index_bits();
+        global::tt_sumgame_idx_bits.set(new_index_bits);
+
+        cout << " DONE (has " << new_index_bits << " index bits)." << endl;
+    }
+
+    if (global::print_ttable_size())
+    {
+        cout << "Partisan ttable size estimate: ";
+        assert(_tt);
+        _tt->print_size_estimate(cout);
+        cout << endl;
+    }
+}
+
+void sumgame::save_ttable(const std::string& ttable_save_file_name)
+{
+    THROW_ASSERT(_tt.get() != nullptr);
+
+    cout << "Saving partisan ttable \"" << ttable_save_file_name << "\"..."
+         << flush;
+
+    file_obuffer os(ttable_save_file_name);
+    serializer<ttable_sumgame*>::save(os, _tt.get(), nullptr);
+
+    cout << " OK" << endl;
 }
 
 void sumgame::clear_ttable()
@@ -1116,6 +1277,7 @@ optional<solve_result> sumgame::_solve_impl(uint64_t depth)
 
     {
         db_replacement_pass();
+        seg_pass(_replacer);
         simplify_basic();
 
         optional<solve_result> result =

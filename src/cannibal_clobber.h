@@ -21,9 +21,14 @@ public:
     void play(const move& m, bw to_play) override;
     void undo_move() override;
 
+    // Serialization
+    void save_impl(i_obuffer& os, serializer_ctx* ctx) const override;
+    static poly_serializable* load_impl(i_ibuffer& is, serializer_ctx* ctx);
+
     bool is_move(const int& from, const int& to, bw to_play) const;
 
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     split_result _split_impl() const override;
 
     void _init_hash(local_hash& hash) const override;
@@ -31,7 +36,6 @@ protected:
     mutable grid_hash _gh;
 
 public:
-    move_generator* create_move_generator(bw to_play) const override;
     void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
     game* inverse() const override; // caller takes ownership

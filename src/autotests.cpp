@@ -17,6 +17,7 @@
 #include "throw_assert.h"
 #include "hashing.h"
 #include "file_iterator.h"
+#include "exit_signal.h"
 
 //////////////////////////////////////////////////
 using namespace std;
@@ -30,6 +31,7 @@ void run_autotests(const string& root_test_directory,
                    const string& outfile_name, unsigned long long test_timeout,
                    test_filter_enum filter_type)
 {
+    CHECK_EXIT_SIGNAL_0();
     THROW_ASSERT(root_test_directory.size() > 0);
 
     uint64_t n_tests_filtered = 0;
@@ -51,6 +53,8 @@ void run_autotests(const string& root_test_directory,
     // iterate over all files in root test directory
     for (file_iterator_alphabetical iter(root_test_directory); iter; ++iter)
     {
+        CHECK_EXIT_SIGNAL_0();
+
         const filesystem::directory_entry& entry = iter.gen_entry();
         assert(!entry.is_directory());
 
@@ -80,9 +84,13 @@ void run_autotests(const string& root_test_directory,
 
         while (parser->parse_chunk())
         {
+            CHECK_EXIT_SIGNAL_0();
+
             const int n_chunk_tests = parser->n_test_cases();
             for (int chunk_test_idx = 0; chunk_test_idx < n_chunk_tests; chunk_test_idx++)
             {
+                CHECK_EXIT_SIGNAL_0();
+
                 cout << file_name << " " << file_test_idx << endl;
                 shared_ptr<i_test_case> test_case = parser->get_test_case(chunk_test_idx);
 

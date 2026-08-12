@@ -12,6 +12,7 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "global_options.h"
 #include "print_move_helpers.h"
 #include "strip.h"
 #include "throw_assert.h"
@@ -19,6 +20,31 @@
 #include "iobuffer.h"
 
 using std::string, std::pair, std::vector;
+
+//////////////////////////////////////////////////
+
+namespace {
+class clobber_1xn_move_generator : public move_generator
+{
+public:
+    clobber_1xn_move_generator(const clobber_1xn& game, bw to_play);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    int _at(int p) const { return _game.at(p); }
+
+    bool _is_move(int p, int dir) const;
+    bool _has_move(int p) const;
+    void _find_next_move();
+
+    const clobber_1xn& _game;
+    int _current; // current stone location to test
+    int _dir;     // +-1
+};
+
+} // namespace
 
 //////////////////////////////////////////////////
 
@@ -147,14 +173,19 @@ void clobber_1xn::undo_move()
     replace(to, opponent(player));
 }
 
-void clobber_1xn::save_impl(obuffer& os) const
+void clobber_1xn::save_impl(i_obuffer& os, serializer_ctx* ctx) const
 {
-    _save_board(os, board_const());
+    save_board(os, board_const(), ctx);
 }
 
-dyn_serializable* clobber_1xn::load_impl(ibuffer& is)
+poly_serializable* clobber_1xn::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 {
-    return new clobber_1xn(_load_board(is));
+    return new clobber_1xn(load_board(is, ctx));
+}
+
+move_generator* clobber_1xn::_create_move_generator_impl(bw to_play) const
+{
+    return new clobber_1xn_move_generator(*this, to_play);
 }
 
 split_result clobber_1xn::_split_impl() const
@@ -289,26 +320,8 @@ string clobber_1xn::xxo(int n)
 
 //---------------------------------------------------------------------------
 
+
 namespace {
-class clobber_1xn_move_generator : public move_generator
-{
-public:
-    clobber_1xn_move_generator(const clobber_1xn& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    int _at(int p) const { return _game.at(p); }
-
-    bool _is_move(int p, int dir) const;
-    bool _has_move(int p) const;
-    void _find_next_move();
-
-    const clobber_1xn& _game;
-    int _current; // current stone location to test
-    int _dir;     // +-1
-};
 
 inline clobber_1xn_move_generator::clobber_1xn_move_generator(
     const clobber_1xn& game, bw to_play)
@@ -378,12 +391,5 @@ move clobber_1xn_move_generator::gen_move() const
     return cgt_move::move2_create(_current, _current + _dir);
 }
 } // namespace
-
-//---------------------------------------------------------------------------
-
-move_generator* clobber_1xn::create_move_generator(bw to_play) const
-{
-    return new clobber_1xn_move_generator(*this, to_play);
-}
 
 //---------------------------------------------------------------------------

@@ -60,6 +60,12 @@ public:
     std::string board_as_number_string() const;
     const std::vector<int>& board_const() const;
 
+    static void save_board(i_obuffer& os, const std::vector<int>& board,
+                           int_pair shape, serializer_ctx* ctx);
+
+    static std::pair<std::vector<int>, int_pair> load_board(
+        i_ibuffer& is, serializer_ctx* ctx);
+
     bool coord_in_bounds(const int_pair& coord) const;
 
     std::vector<int> board() const;

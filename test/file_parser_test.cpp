@@ -176,8 +176,8 @@ void e2e_test8()
 
 void e2e_test9()
 {
-    assert_throw_status_file("fail_match4.test", true, FAILED_MATCH);
-    assert_throw_status_string("fail_match4.test", true, FAILED_MATCH);
+    assert_throw_status_file("fail_match4.test", true, FAILED_CASE_COMMAND);
+    assert_throw_status_string("fail_match4.test", true, FAILED_CASE_COMMAND);
 }
 
 ///// invalid commands

@@ -12,31 +12,121 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <array>
+#include <utility>
 #include <unordered_map>
+#include <vector>
 
 #include "bounds.h"
 #include "cgt_basics.h"
 #include "db_game_generator.h"
 #include "dominated_moves.h"
 #include "game.h"
+#include "global_options.h"
 #include "hashing.h"
 #include "impartial_game.h"
 #include "sumgame.h"
 #include "thermograph_cache.h"
 #include "type_mapper.h"
 #include "type_table.h"
-
 #include "ThGraph.h"
+
+// IWYU pragma: begin_exports
+#include "db_link_t.h"
+// IWYU pragma: end_exports
+
 
 #define DATABASE_REGISTER_TYPE(db, game_class_name)                            \
     db.register_type(#game_class_name, game_type<game_class_name>())
 
+
 class database;
+
+////////////////////////////////////////////////// Enums, options struct
+enum db_gen_stop_after_enum
+{
+    DB_GEN_STOP_AFTER_OUTCOME_CLASS = 0,
+    DB_GEN_STOP_AFTER_BOUNDS,
+    DB_GEN_STOP_AFTER_DOMINATED_MOVES,
+    DB_GEN_STOP_AFTER_SEG,
+};
+
+inline constexpr std::array<db_gen_stop_after_enum, 4> DB_GEN_STOP_AFTER_ENUM_ALL
+{
+    DB_GEN_STOP_AFTER_OUTCOME_CLASS,
+    DB_GEN_STOP_AFTER_BOUNDS,
+    DB_GEN_STOP_AFTER_DOMINATED_MOVES,
+    DB_GEN_STOP_AFTER_SEG,
+};
+
+
+
+std::string db_gen_stop_after_enum_to_string(db_gen_stop_after_enum stop_after);
+std::optional<db_gen_stop_after_enum> string_to_db_gen_stop_after_enum(
+    const std::string& stop_after_str);
+
+enum db_gen_size_score_type
+{
+    DB_GEN_SIZE_SCORE_TYPE_NONE = 0,
+    DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS,
+    DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE,
+    DB_GEN_SIZE_SCORE_TYPE_TREE_HEIGHT,
+    DB_GEN_SIZE_SCORE_TYPE_STONE_COUNT,
+    DB_GEN_SIZE_SCORE_TYPE_EMPTY_COUNT,
+};
+
+inline constexpr std::array<db_gen_size_score_type, 6>
+    DB_GEN_SIZE_SCORE_TYPE_ENUM_ALL {
+        DB_GEN_SIZE_SCORE_TYPE_NONE,
+        DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS,
+        DB_GEN_SIZE_SCORE_TYPE_BOARD_SIZE,
+        DB_GEN_SIZE_SCORE_TYPE_TREE_HEIGHT,
+        DB_GEN_SIZE_SCORE_TYPE_STONE_COUNT,
+        DB_GEN_SIZE_SCORE_TYPE_EMPTY_COUNT,
+    };
+
+inline constexpr db_gen_size_score_type DEFAULT_DB_GEN_SIZE_SCORE_TYPE =
+    DB_GEN_SIZE_SCORE_TYPE_MAX_LOCAL_OPTIONS;
+
+std::string db_gen_size_score_type_to_string(db_gen_size_score_type size_score_type);
+std::optional<db_gen_size_score_type> string_to_db_gen_size_score_type(
+    const std::string& size_score_type_str);
+
+struct db_gen_options_t
+{
+    db_gen_options_t()
+        : silent(false),
+          stop_after(DB_GEN_STOP_AFTER_SEG),
+          size_score_type(DEFAULT_DB_GEN_SIZE_SCORE_TYPE)
+    {
+    }
+
+    db_gen_options_t(bool silent, db_gen_stop_after_enum stop_after,
+                     db_gen_size_score_type size_score_type
+
+                     )
+        : silent(silent),
+          stop_after(stop_after),
+          size_score_type(size_score_type)
+    {
+    }
+
+    bool silent;
+    db_gen_stop_after_enum stop_after;
+    db_gen_size_score_type size_score_type;
+};
 
 ////////////////////////////////////////////////// struct db_entry_partisan
 struct db_entry_partisan
 {
-    inline db_entry_partisan() : outcome(outcome_class::U), complexity(0) {}
+    db_entry_partisan()
+        : disk_game_type(0),
+          outcome(outcome_class::U),
+          complexity(0),
+          size_score_type(DB_GEN_SIZE_SCORE_TYPE_NONE),
+          size_score(0)
+    {
+    }
 
     bool operator==(const db_entry_partisan& other) const;
     bool operator!=(const db_entry_partisan& other) const;
@@ -44,15 +134,36 @@ struct db_entry_partisan
     void print(std::ostream& os, const database& db,
                bool print_endl = false) const;
 
+    void save_sum(const sumgame& sum);
+    void load_sum(sumgame& sum) const;
+
+    void save_sum(const std::vector<game*>& games);
+    std::vector<game*> load_sum() const;
+
+    bool is_trivially_zero() const
+    {
+        return subgame_links.empty();
+    }
+
 #ifdef DB_INCLUDE_STRINGS
     std::string sum_string;
 #endif
 
-    outcome_class outcome;
-    std::shared_ptr<ThGraph> thermograph;
-    std::shared_ptr<game_bounds> bounds_data;
-    uint64_t complexity;
-    std::shared_ptr<db_dom_moves_t> dominated_moves;
+    /*
+        Comments on each line below indicate the minimum `stop_after` value
+        required for each field to be present.
+    */
+    game_type_t disk_game_type; // outcome_class
+    outcome_class outcome; // outcome_class
+    std::shared_ptr<ThGraph> thermograph; // outcome_class
+    std::shared_ptr<game_bounds> bounds_data; // bounds
+    uint64_t complexity; // dominated_moves
+    db_gen_size_score_type size_score_type; // seg
+    uint64_t size_score; // seg
+    std::shared_ptr<db_dom_moves_t> dominated_moves; // dominated_moves
+    std::vector<uint8_t> serialized_sum; // seg
+    db_link_t simplest_equal_entry; // seg
+    std::vector<db_link_t> subgame_links; // seg
 };
 
 //////////////////////////////////////// db_entry_partisan methods
@@ -142,6 +253,23 @@ public:
     db_entry_partisan* get_partisan_ptr(const sumgame& sum);
     db_entry_partisan* get_or_allocate_partisan_ptr(const sumgame& sum);
 
+    db_entry_partisan* get_partisan_ptr(const db_link_t& link);
+
+    std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
+        const sumgame& sum);
+
+    std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
+        const game& g);
+
+    std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
+        hash_t hash);
+
+    std::pair<const hash_t, db_entry_partisan>* get_partisan_ptr_pair(
+        const db_link_t& link);
+
+    db_link_t get_partisan_link(const sumgame& sum);
+    db_link_t get_partisan_link(std::pair<const hash_t, db_entry_partisan>* ptr);
+
     /*
         Impartial lookup functions.
     */
@@ -149,15 +277,25 @@ public:
     void set_impartial(const game& g, const db_entry_impartial& entry);
 
     /*
-        Entry generation functions. When `silent` is true, info is not
-        printed to stdout.
+        Entry generation functions. When `silent` or `gen_opts.silent` is true,
+        info is not printed to stdout.
     */
     void generate_entries_partisan(i_db_game_generator& gen,
-                                   bool silent = false);
-    void generate_single_partisan_entry(sumgame& sum, bool silent);
+                                   const db_gen_options_t& gen_opts);
+
+    void generate_single_partisan_entry(sumgame& sum,
+                                        const db_gen_options_t& gen_opts);
 
     void generate_entries_impartial(i_db_game_generator& gen,
                                     bool silent = false);
+
+    void refine_partisan_links();
+
+    /*
+        Misc data lookup.
+    */
+    void report_size_score(game_type_t disk_type, uint64_t size_score);
+    uint64_t get_max_size_score(game_type_t disk_type) const;
 
     /*
         Misc utility functions.
@@ -169,9 +307,10 @@ public:
 
     void update_metadata_string(const std::string& config_string);
 
-    static hash_t get_db_hash(const game& g, global_hash& gh);
+    static hash_t get_db_hash(const game& g);
     static hash_t get_db_hash(const sumgame& sum);
-    hash_t get_db_hash(const game& g) const;
+
+    void assert_links_equal(bool silent);
 
     /*
         Game-type-related functions.
@@ -196,7 +335,6 @@ private:
     typedef DB_MAP_T<hash_t, db_entry_impartial> terminal_layer_impartial_t;
 
     // Trees
-    typedef DB_MAP_T<game_type_t, terminal_layer_partisan_t> tree_partisan_t;
     typedef DB_MAP_T<game_type_t, terminal_layer_impartial_t> tree_impartial_t;
 
     friend std::ostream& operator<<(std::ostream& os, const database& db);
@@ -210,6 +348,9 @@ private:
 
     void _generate_single_impartial_entry(impartial_game* ig, bool silent);
 
+    void _convert_link_single(db_link_t& link);
+    void _convert_links_to_pointers();
+
     static game_type_t _get_sum_db_type(const sumgame& sum);
     static game_type_t _get_game_db_type(const game& g);
 
@@ -219,10 +360,12 @@ private:
         Lookup implementations.
     */
     template <class Game_Or_Sum_T>
-    db_entry_partisan* _get_partisan_impl(const Game_Or_Sum_T& g) const;
+    std::pair<const hash_t, db_entry_partisan>* _get_partisan_impl(
+        const Game_Or_Sum_T& g) const;
 
     template <class Game_Or_Sum_T>
-    db_entry_partisan* _get_or_allocate_partisan_impl(const Game_Or_Sum_T& g);
+    std::pair<const hash_t, db_entry_partisan>* _get_or_allocate_partisan_impl(
+        const Game_Or_Sum_T& g);
 
     /*
         "Runtime-only" data that isn't stored on disk.
@@ -237,12 +380,21 @@ private:
     std::string _metadata_string;
     type_mapper _mapper;
     std::unique_ptr<thermograph_cache> _graph_cache;
-    tree_partisan_t _tree_partisan;
+    std::vector<uint64_t> _max_size_scores;
+    terminal_layer_partisan_t _terminal_partisan;
     tree_impartial_t _tree_impartial;
 };
 
 std::ostream& operator<<(std::ostream& os, const database& db);
 
 ////////////////////////////////////////////////// database methods
+inline hash_t database::get_db_hash(const game& g)
+{
+    return g.get_local_hash();
+}
 
+inline hash_t database::get_db_hash(const sumgame& sum)
+{
+    return sum.get_db_hash();
+}
 

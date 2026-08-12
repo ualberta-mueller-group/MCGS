@@ -62,6 +62,12 @@ sumgame::undo_stack_unwinder::~undo_stack_unwinder()
                 _sum.undo_db_replacement_pass();
                 continue;
             }
+
+            case SUMGAME_UNDO_SEG_PASS:
+            {
+                _sum.undo_seg_pass();
+                continue;
+            }
         }
     }
 

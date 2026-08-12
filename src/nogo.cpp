@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <cassert>
+#include <utility>
 #include <ostream>
 
 #include "cgt_move.h"
@@ -17,6 +18,29 @@
 #include "cgt_basics.h"
 #include "game.h"
 #include "grid.h"
+
+////////////////////////////////////////////////// Move generator
+namespace {
+class nogo_move_generator : public move_generator
+{
+public:
+    nogo_move_generator(const nogo& game, bw to_play);
+    void operator++() override;
+    operator bool() const override;
+    move gen_move() const override;
+
+private:
+    void _find_next_move();
+    bool _is_legal();
+
+    const nogo& _game;
+    grid_location _current; // current stone location to test
+};
+
+} // namespace
+
+
+////////////////////////////////////////////////// Helpers
 
 namespace {
 // Remove extra rows and columns of BORDER
@@ -206,6 +230,26 @@ void nogo::undo_move()
     _immortal[to_point] = _immortal_copy[to_point];
 }
 
+void nogo::save_impl(i_obuffer& os, serializer_ctx* ctx) const
+{
+    assert(_immortal.size() == board_const().size());
+
+    save_board(os, board_const(), shape(), ctx);
+    save_board(os, _immortal, shape(), ctx);
+}
+
+poly_serializable* nogo::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    std::pair<std::vector<int>, int_pair> board_pair = load_board(is, ctx);
+    std::pair<std::vector<int>, int_pair> immortal_pair = load_board(is, ctx);
+
+    const std::vector<int>& board = board_pair.first;
+    const int_pair& shape = board_pair.second;
+    const std::vector<int>& immortal = immortal_pair.first;
+
+    return new nogo(board, immortal, shape);
+}
+
 bool nogo::is_legal() const
 {
     const int N = size();
@@ -248,6 +292,11 @@ bool nogo::is_legal() const
             return false;
     }
     return true;
+}
+
+move_generator* nogo::_create_move_generator_impl(bw to_play) const
+{
+    return new nogo_move_generator(*this, to_play);
 }
 
 void nogo::_init_hash(local_hash& hash) const
@@ -641,22 +690,8 @@ std::vector<nogo_board> split_by_nogo::split(const nogo_board& board)
 
 //---------------------------------------------------------------------------
 
+
 namespace {
-class nogo_move_generator : public move_generator
-{
-public:
-    nogo_move_generator(const nogo& game, bw to_play);
-    void operator++() override;
-    operator bool() const override;
-    move gen_move() const override;
-
-private:
-    void _find_next_move();
-    bool _is_legal();
-
-    const nogo& _game;
-    grid_location _current; // current stone location to test
-};
 
 inline nogo_move_generator::nogo_move_generator(const nogo& game, bw to_play)
     : move_generator(to_play), _game(game), _current(game.shape(), int_pair(0, 0))
@@ -701,10 +736,6 @@ move nogo_move_generator::gen_move() const
 
 //---------------------------------------------------------------------------
 
-move_generator* nogo::create_move_generator(bw to_play) const
-{
-    return new nogo_move_generator(*this, to_play);
-}
 
 //---------------------------------------------------------------------------
 

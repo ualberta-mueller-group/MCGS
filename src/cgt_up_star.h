@@ -27,16 +27,15 @@ public:
     game* inverse() const override;
     game* clone() const override;
 
-    move_generator* create_move_generator(bw to_play) const override;
+    void print(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
 
     int num_ups() const { return _value; }
 
     bool has_star() const { return _star; }
 
-    void print(std::ostream& str) const override;
-
 protected:
+    move_generator* _create_move_generator_impl(bw to_play) const override;
     void _init_hash(local_hash& hash) const override;
 
     relation _order_impl(const game* rhs) const override;

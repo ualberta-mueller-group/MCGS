@@ -13,6 +13,7 @@
 #include "cgt_move.h"
 #include "print_move_helpers.h"
 #include "strip.h"
+#include "global_options.h"
 #include "iobuffer.h"
 #include "throw_assert.h"
 #include "utilities.h"
@@ -318,14 +319,19 @@ void elephants::undo_move()
     remove_stone(to);
 }
 
-void elephants::save_impl(obuffer& os) const
+void elephants::save_impl(i_obuffer& os, serializer_ctx* ctx) const
 {
-    _save_board(os, board_const());
+    save_board(os, board_const(), ctx);
 }
 
-dyn_serializable* elephants::load_impl(ibuffer& is)
+poly_serializable* elephants::load_impl(i_ibuffer& is, serializer_ctx* ctx)
 {
-    return new elephants(_load_board(is));
+    return new elephants(load_board(is, ctx));
+}
+
+move_generator* elephants::_create_move_generator_impl(bw to_play) const
+{
+    return new elephants_move_generator(*this, to_play);
 }
 
 // Two types of splits: O\.*X, and XO
@@ -437,10 +443,6 @@ void elephants::_undo_normalize_impl()
     _normalize_boards.pop_back();
 }
 
-move_generator* elephants::create_move_generator(bw to_play) const
-{
-    return new elephants_move_generator(*this, to_play);
-}
 
 void elephants::print_move(std::ostream& str, const move& m, ebw to_play) const
 {

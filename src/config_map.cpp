@@ -202,6 +202,12 @@ optional<int> config_map::get_int(const string& key) const
     return str_to_i_opt(*val_string);
 }
 
+const string* config_map::get_string_nullable(const string& key) const
+{
+    const string* val_string = _get_value_string(key);
+    return val_string;
+}
+
 ostream& operator<<(ostream& os, const config_map& config)
 {
     for (const pair<const string, config_map::value_t>& p :

@@ -10,10 +10,11 @@
 #include <cstddef>
 
 #include "cgt_basics.h"
+#include "global_options.h"
+#include "print_move_helpers.h"
 #include "cgt_move.h"
 #include "game.h"
 #include "grid.h"
-#include "print_move_helpers.h"
 #include "throw_assert.h"
 #include "grid_location.h"
 #include "grid_hash.h"
@@ -191,10 +192,17 @@ void domineering::undo_move()
     replace(point2, EMPTY);
 }
 
-move_generator* domineering::create_move_generator(bw to_play) const
+void domineering::save_impl(i_obuffer& os, serializer_ctx* ctx) const
 {
-    return new domineering_move_generator(*this, to_play);
+    save_board(os, board_const(), shape(), ctx);
 }
+
+poly_serializable* domineering::load_impl(i_ibuffer& is, serializer_ctx* ctx)
+{
+    pair<vector<int>, int_pair> board_pair = load_board(is, ctx);
+    return new domineering(board_pair.first, board_pair.second);
+}
+
 
 game* domineering::inverse() const
 {
@@ -263,10 +271,13 @@ void domineering::print_move(std::ostream& str, const ::move& m, ebw to_play) co
     print_move4_as_coords(str, m, shape());
 }
 
+move_generator* domineering::_create_move_generator_impl(bw to_play) const
+{
+    return new domineering_move_generator(*this, to_play);
+}
+
 ////////////////////////////////////////////////// split
-
 // Find all 4-connected components with at least 2 spaces
-
 split_result domineering::_split_impl() const
 {
     if (size() == 0)
