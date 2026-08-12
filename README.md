@@ -45,7 +45,7 @@ Beyond the documentation in `MCGS/docs`, some talks, a paper and a summary of re
 - `--play-mcgs` UI now prompts users to choose moves by typing them according to the `game::print_move` format (i.e. by entering grid coordinates), rather than by selecting moves from a list.
 - Transposition tables (both partisan and impartial) can be saved to/loaded from files.
   - See `./MCGS -h` for details, in particular see documentation for CLI options `--tt-sumgame-load`, `--tt-sumgame-save`, `--tt-imp-sumgame-load`, and `--tt-imp-sumgame-save`.
-- MCGS will now gracefully exit when the user presses Ctrl-c (or upon receiving signals `SIGINT` or `SIGTERM`), assuming initialization (including DB load/generation) has completed.
+- MCGS will now gracefully exit when the user presses Ctrl-c (or upon receiving signals `SIGINT` or `SIGTERM`), assuming initialization has completed (including DB load/generation).
   - This can be used in conjunction with aforementioned CLI options for saving/loading of transposition tables. This allows the user to abort long running searches while saving some progress.
   - If MCGS is waiting for user input (i.e. the user is to choose a move for `--play-mcgs`), you may also need to press Ctrl-d.
 - New input language version `1.6` -> `1.7`.
@@ -68,10 +68,11 @@ Either follow the instructions in [development-notes.md (Adding A Game To the Da
 - Rename your game's `create_move_generator` function to `_create_move_generator_impl`.
 - In `init_database.cpp`, the `register_create_game_gen_fn` function has been renamed to `register_db_game_gen`, and has an additional parameter.
   - You can set this parameter to `DEFAULT_DB_GEN_SIZE_SCORE_TYPE`.
-- If your game is partisan:
+- If your game is partisan, implement serialization to be able to use the SEG optimization:
   - Register your game in `init_serialization.cpp`.
   - Implement the `save_impl` and `load_impl` functions in your game class.
     - See `toppling_dominoes.h` and `toppling_dominoes.cpp` for an example (or one of the `strip` or `grid` games if your game is derived from one of these).
+  - If you don't implement this, you must generate the database with the `stop_after=dominated_moves;` DB config option.
 
 ### Building MCGS
 First download this repository, and enter its directory. Either download from the
@@ -195,6 +196,7 @@ a sum game `G`:
 - `board_size` (only defined for `strip`/`grid` games): the sum of each `strip`/`grid` game's dimensions.
 - `stone_count` (only defined for `strip`/`grid` games containing colors): the sum of the count of each `strip`/`grid` game's non-`EMPTY` spaces.
 - `empty_count` (only defined for `strip`/`grid` games containing colors): the sum of the count of each `strip`/`grid` game's `EMPTY` spaces.
+
 Note: Every game type individually has a default `size_score` value (though all are currently set to `max_local_options`).
 
 The command line option `--print-db-info` can be specified to print database
