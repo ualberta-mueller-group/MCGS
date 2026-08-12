@@ -1290,10 +1290,6 @@ each pair ends with a mandatory ';' character.
   is called automatically during database initialization.
 
 # Simplest Equal Game
-The next subsection provides an overview of the simplest equal game
-optimization. The remaining subsections cover details which can be skipped.
-
-## Overview
 During database creation, partisan DB entries acquire links to
 simpler-but-equal DB entries when possible, assuming the `stop_after` database
 config option doesn't indicate that such links should be omitted (in which case
