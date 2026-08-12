@@ -99,8 +99,6 @@ namespace {
 
 void override_tests()
 {
-    //RUN_TEST(pitm_test_all());
-    RUN_TEST(database_test_all(false));
 }
 
 void print_flag(const string& flag_string, const string& flag_description)
