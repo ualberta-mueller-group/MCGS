@@ -600,9 +600,6 @@ void test_generate_options_stop_after()
         assert(entry->disk_game_type != 0);
         assert(entry->outcome != outcome_class::U);
         assert(entry->thermograph);
-        assert(entry->serialized_sum.size() > 0);
-        assert(entry->subgame_links.size() == 1);
-        assert(&(entry->subgame_links.back().get_as_pointer()->second) == entry);
 
         // Bounds
         const bool expect_bounds = stop_after >= DB_GEN_STOP_AFTER_BOUNDS;
@@ -619,6 +616,12 @@ void test_generate_options_stop_after()
                (entry->size_score_type != DB_GEN_SIZE_SCORE_TYPE_NONE));
         assert(expect_seg == (entry->size_score > 0));
         assert(expect_seg == !entry->simplest_equal_entry.is_nullptr());
+
+
+        assert(expect_seg == (entry->serialized_sum.size() > 0));
+        assert(expect_seg == (entry->subgame_links.size() == 1));
+        if (!entry->subgame_links.empty())
+            assert(&(entry->subgame_links.back().get_as_pointer()->second) == entry);
     }
 
 }
