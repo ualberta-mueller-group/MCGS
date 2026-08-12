@@ -1315,7 +1315,7 @@ An entry for a sum `S1` will link to a sum `S2`'s entry when all following condi
 - `S1` and `S2` are created by the same generator
 - `S1` and `S2` are equal
 - `size_score(S1) > size_score(S2)`
-- `complexity_score(S1) > complexity_score(S2)`
+- `complexity_score(S1) >= complexity_score(S2)`
 - `S2` is the first generated sum in its equivalence class with a size score `size_score(S2)` and complexity score `complexity_score(S2)`
 - `S2` is the sum with the minimal complexity score satisfying all of the above
 

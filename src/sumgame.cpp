@@ -679,19 +679,12 @@ optional<solve_result> sumgame::db_lookup_pass(temperature_vec_t& temperatures,
                     const game_bounds& bounds = *entry->bounds_data;
                     const bound_scale scale = bounds.get_scale();
 
-//#warning TODO review this assumption in final proofreading pass!
-
-                    //THROW_ASSERT(bounds.get_lower_relation() == REL_LESS &&
-                    //             bounds.get_upper_relation() == REL_GREATER);
 
                     if (!(bounds.get_lower_relation() == REL_LESS &&
                           bounds.get_upper_relation() == REL_GREATER))
                     {
                         bounds_valid = false;
                     }
-
-                    //THROW_ASSERT(bounds.get_lower_relation() == REL_LESS &&
-                    //             bounds.get_upper_relation() == REL_GREATER);
 
                     switch (scale)
                     {
@@ -1010,10 +1003,6 @@ void sumgame::undo_db_replacement_pass()
     _change_record_stack.pop_back();
 }
 
-/*
-    TODO this needs to report stats and fully respect global options! Bounds
-    lookup needs to be done even when `--no-use-seg` is specified!
-*/
 void sumgame::seg_pass(seg_replacer* replacer)
 {
     _push_undo_code(SUMGAME_UNDO_SEG_PASS);

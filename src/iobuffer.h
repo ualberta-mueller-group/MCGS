@@ -297,13 +297,13 @@ inline Enum_T i_ibuffer::read_enum()
 
 inline size_t i_ibuffer::_remaining_unread_bytes() const
 {
+    assert(_buffer_idx <= _buffer_size);
     return _buffer_size - _buffer_idx;
 }
 
 inline void i_ibuffer::_ensure_unread_bytes(size_t n_bytes)
 {
     assert(_buffer != nullptr);
-    assert(_buffer_idx <= _buffer_size);
 
     if (_remaining_unread_bytes() >= n_bytes) [[likely]]
         return;
@@ -399,11 +399,14 @@ void i_obuffer::write_enum(const Enum_T& val)
 
 inline size_t i_obuffer::_remaining_buffer_capacity() const
 {
+    assert(_buffer_fill <= _buffer_size);
     return _buffer_size - _buffer_fill;
 }
 
 inline void i_obuffer::_ensure_buffer_capacity(size_t n_bytes)
 {
+    assert(_buffer != nullptr);
+
     if (_remaining_buffer_capacity() >= n_bytes) [[likely]]
         return;
 
@@ -556,7 +559,7 @@ inline void file_obuffer::close()
 
 inline void file_obuffer::flush()
 {
-    assert(_buffer != nullptr);
+    assert(_buffer != nullptr && _file != nullptr);
 
     //_fs.write((const char*) _buffer, _buffer_fill);
     fwrite((const char*) _buffer, 1, _buffer_fill, _file);

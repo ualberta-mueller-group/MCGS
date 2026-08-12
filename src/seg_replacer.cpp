@@ -13,6 +13,7 @@
 #include "db_link_t.h"
 #include "global_options.h"
 #include "safe_arithmetic.h"
+#include "solver_stats.h"
 #include "sumgame_change_record.h"
 #include "database.h"
 #include "type_table.h"
@@ -134,7 +135,7 @@ public:
     */
     bool try_add_to_selection(size_t sel_idx);
     void pop_selection();
-    void reverse_selection();
+    //void reverse_selection();
 
     hash_t get_selection_hash();
     db_pair_t* get_selection_entry();
@@ -212,10 +213,20 @@ void seg_replacer::replace_all()
             continue;
 
         db_pair_t* entry_ptr = _db->get_partisan_ptr_pair(*g);
+        stats::report_db_access(entry_ptr != nullptr);
+
         if (entry_ptr == nullptr)
             continue;
 
-        // TODO review this
+        // Try to replace with bounds
+        if (replace_with_bounds(entry_ptr))
+        {
+            g->set_active(false);
+            _cr->deactivated_games.push_back(g);
+            continue;
+        }
+
+        // Otherwise check if it has SEG data
         if (entry_ptr->second.simplest_equal_entry.is_nullptr())
             continue;
 
@@ -431,6 +442,7 @@ void seg_replacer::inflate_games()
 
 bool seg_replacer::replace_with_bounds(db_pair_t* entry_ptr)
 {
+    assert(entry_ptr != nullptr);
     const shared_ptr<game_bounds>& bounds = entry_ptr->second.bounds_data;
 
     if (!bounds || !bounds->is_equal())
@@ -460,6 +472,8 @@ bool seg_replacer::replace_with_bounds(db_pair_t* entry_ptr)
 
 bool seg_replacer::replace_with_seg(db_pair_t* entry_ptr)
 {
+    assert(entry_ptr != nullptr);
+
     db_link_t seg_link = entry_ptr->second.simplest_equal_entry;
     db_pair_t* seg_entry_pair = seg_link.get_as_pointer();
 
@@ -471,6 +485,7 @@ bool seg_replacer::replace_with_seg(db_pair_t* entry_ptr)
     for (db_link_t seg_subgame_link : seg_entry.subgame_links)
     {
         db_pair_t* seg_subgame_entry_pair = seg_subgame_link.get_as_pointer();
+        assert(seg_subgame_entry_pair != nullptr);
 
         if (replace_with_bounds(seg_subgame_entry_pair))
             continue;
@@ -565,12 +580,11 @@ void seg_replacer::pop_selection()
     //_size_score_sum -= tg.entry_ptr->second.size_score;
 }
 
-void seg_replacer::reverse_selection()
-{
-    std::reverse(_selection_indices.begin(), _selection_indices.end());
-}
+//void seg_replacer::reverse_selection()
+//{
+//    std::reverse(_selection_indices.begin(), _selection_indices.end());
+//}
 
-// TODO move some parts into global_hash
 hash_t seg_replacer::get_selection_hash()
 {
     // Find expected combined hash
@@ -632,7 +646,10 @@ db_pair_t* seg_replacer::get_selection_entry()
     }
 
     const hash_t selection_hash = get_selection_hash();
-    return _db->get_partisan_ptr_pair(selection_hash);
+
+    db_pair_t* entry = _db->get_partisan_ptr_pair(selection_hash);
+    stats::report_db_access(entry != nullptr);
+    return entry;
 }
 
 void seg_replacer::clear_selection()
