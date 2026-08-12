@@ -74,7 +74,7 @@ emcmake cmake -B build
     - `sumgame::_solve_impl`
         - `private` method implements most of the search algorithm
         - Runs until it either completes, or times out
-        - A timeout of 0 means infinite time
+        - A timeout of 0 means infinite time (unless the user presses Ctrl-c).
         - All public `solve` methods within `sumgame` (see below) are implemented in terms of this method
     - `sumgame::solve_with_timeout`
         - Calls `_solve_impl` with a timeout
@@ -108,8 +108,9 @@ it must be restored before the end of `solve` in any case, including timeout or 
 
 ## Sumgame's Usage Of the Database
 The database stores information for sums of games. Partisan games in the
-database have outcome classes, bounds, thermographs, complexity scores, and
-dominated (or nondominated) moves, while impartial games have nim values.
+database have outcome classes, bounds, thermographs, complexity scores,
+dominated (or nondominated) moves, and simplest equal game links,
+while impartial games have nim values.
 `sumgame` uses this data, from the global database object
 (`get_global_database()` in `global_database.h`), during solving, to simplify
 search and even terminate search early in some cases.
@@ -119,6 +120,9 @@ search and even terminate search early in some cases.
       combines all nimbers using nim addition
     - Replaces partisan games with their bounds (when equal). The substituted
         games have type of `dyadic_rational` or `up_star`
+      
+- `sumgame::seg_pass()` is called next
+    - See [Simplest Equal Game](#simplest-equal-game) for details
 
 - `sumgame::simplify_basic()` is called next
     - Combines "basic" CGT games i.e. integers, rationals, nimbers, etc
@@ -1108,6 +1112,7 @@ implied).
     may be `nullptr` as well (i.e. during the DB generation process).
     - The `get_or_allocate_partisan_ptr()` versions will create a DB entry (with
         `nullptr` fields) if not present
+  - `get_partisan_ptr_pair()` variants return a `pair<const hash_t, db_entry_partisan>*`
 
 - `save` and `load` methods save/load the entire database to/from a file
 - A global instance of `database` is accessible through
@@ -1213,8 +1218,8 @@ boards to the same hash value, you must implement the following functions
 register a function which will create a `i_db_game_generator` for your game.
    - The game name string should probably match the one used for ".test" files.
    - The `default_size_score_type` argument can be set to
-     `DEFAULT_DB_GEN_SIZE_SCORE_TYPE` for now. More info on this in the
-     simplest equal game section later.
+     `DEFAULT_DB_GEN_SIZE_SCORE_TYPE` for now. See the README for details on the
+     `size_score` DB config option.
    - The registered function should have a signature of `i_db_game_generator*
      (const config_map&)`, or be of type
      `std::function<i_db_game_generator*(const config_map&)>`
@@ -1332,7 +1337,7 @@ Notation:
 
 The `CS` of the trivially 0 game (the sumgame with no subgames) is defined as `0`.
 
-Then for a sum `S`, `CS(S) := (sum over (1 + CS(O_BLACK)) for option O_BLACK in ND(S, BLACK)) + (sum over (1 + CS(O_WHITE)) for option O_WHITE in ND(S, WHITE))`
+Then for a sum `S`, `CS(S) := (sum of (1 + CS(O_BLACK)) for option O_BLACK in ND(S, BLACK)) + (sum of (1 + CS(O_WHITE)) for option O_WHITE in ND(S, WHITE))`
 
 ## Size Score
 Size score is detailed in the README.
@@ -1344,21 +1349,25 @@ Size score is detailed in the README.
   `db_make_simplest_equal_game.h`)
 - `class equivalence_class` is local to file `db_make_simplest_equal_game.cpp`,
   and stores DB entry links (`db_link_t`).
-    - All links in an equivalence class have the same CGT value.
+    - All links in an equivalence class have the same CGT value, and point to
+      entries resulting from the same generator.
     - It stores a representative (a link to the entry with lowest complexity
-      score), and links to DB entries belonging to the same equivalence class,
-      which come from the current generator.
-        - When a link is inserted into an equivalence class but another
-          pre-existing member link has the same pair `(complexity score, size
-          score)`, only the pre-existing link remains.
+      score).
+    - When a link is inserted into an equivalence class but another
+      pre-existing member link has the same pair `(complexity score, size
+      score)`, only the pre-existing link remains.
+    - The equivalence class of a sum is found by taking a hash of the sum's
+      thermograph and bounds data, then comparing the sum (by playing the
+      difference game) to the representative in each `equivalence_class`
+      that shares this hash.
 - The `fill_database` function in `init_database.cpp` manages
   `equivalence_classes` (though they reside in memory according to
   `db_make_simplest_equal_game.cpp`).
     - Before any generator is used, the trivially 0 sumgame's partisan DB entry
       is generated, with all fields present.
-    - Before each generator is used, the trivially 0 game is inserted into its
+    - Before a generator is used, the trivially 0 game is inserted into the appropriate
       equivalence class.
-    - After each generator is exhausted, all equivalence classes are deleted.
+    - After a generator is exhausted, all equivalence classes are deleted.
     - These steps ensure that:
         - The trivially 0 entry may be the target of a link, and has all fields.
         - Entries may not link to entries having incompatible size scores.
@@ -1372,7 +1381,8 @@ must be deleted by function `seg_replacer_delete`.
   3+ subgames fitting inside a sliding window.
   - CLI option `--single-seg` can limit this to single subgames.
 - First, all single partisan subgames are looked up in the database. Those
-  having DB entries are candidates for replacement.
+  having DB entries with non-`nullptr` links (including self links) are
+  candidates for replacement.
   - Candidates are stored in separate "containers" (vectors), according to
     their `game_type_t`s.
   - Each replacement attempt considers a sum of subgames from the same
@@ -1395,7 +1405,7 @@ must be deleted by function `seg_replacer_delete`.
     `sumgame`.
 - The 3+ pass uses a sliding window rather than trying all groups of 3+
   subgames.
-    - The 3+ pass is immediately preceeded by a single sorting of the
+    - The 3+ pass is immediately preceded by a single sorting of the
       candidates of each container in increasing order of their size scores.
     - The window is filled up by iteratively adding games from the same
       container, to the current selection.
@@ -2566,6 +2576,52 @@ indicates that all `.test` files are still valid.
     - `search_utils.h`
     - `parsing_utilities.h`
 
+## Version 1.6 Additions
+### Important Notes
+- A CMake build has replaced the old makefile build. The project now also depends on a git submodule. See `README.md` for new build instructions.
+- All games must implement the new `game::clone()` function. Partisan games must implement 2 new functions to have correct DB entries. See [development-notes.md (Adding A Game To the Database)](docs/development-notes.md#adding-a-game-to-the-database).
+
+### Bug Fixes
+- Fixed a bug where `switch_game::inverse()` could trigger an `assert`. In an unmodified copy of MCGS this couldn't actually happen in practice.
+- Fixed minor create-table.py HTML bug in summary pane: time conversion from ms to days/hours/minutes/seconds/ms showed incorrect (truncated) converted times.
+- Fixed a bug where data was needlessly copied during saving/loading of the database (resulting in higher memory usage during save/load, and longer startup times).
+
+### New Features
+- `move` is now `int64_t` (instead of `int` which is likely 32 bits).
+  - Games can now be constructed with much larger boards as a result.
+- The database has several new fields for partisan games
+  - Lower/upper bounds on value (in terms of multiples of up/down, or `1/8`).
+  - Thermograph.
+  - A set of dominated (or nondominated) moves.
+  - Complexity score. 
+- New games (see `input/info.test`)
+  - `cannibal_clobber`
+  - `gen_king_dirt` (also has CGSuite implementation, see `utils/CGSuite/GenKingDirt.cgs`).
+- New results in the [MCGS web page](https://ualberta-mueller-group.github.io/MCGS).
+- New optimizations
+  - Impartial wrapper games generate moves by alternating between the moves of `BLACK` and `WHITE`.
+    - Use `--no-imp-wrapper-alternate-color` to revert this (will generate all `BLACK` moves followed by all `WHITE` moves).
+  - For partisan search algorithms (all of these rely on partisan DB entries):
+    - Play moves in subgames in order of decreasing temperature. Subgames without thermographs (those without partisan DB entries) come last.
+    - Use bounds to solve sums.
+    - Prune dominated moves within single subgames.
+    - Replace games which are equal to their bounds, with the equivalent `dyadic_rational` or `up_star`.
+- Input language version `1.5` --> `1.6`.
+- New CLI options
+  - `--dump-db` dumps contents of the loaded database into a human readable text format.
+    - Use with CMake option `-DDB_INCLUDE_STRINGS=1` (to include human readable games in DB entries).
+  - `--test-filter` skips test cases which are incompatible with a specified external CGT project i.e. [SEGClobber](https://github.com/tfolkersen/SEGClobber).
+  - `--convert-to-ctl` exports test cases to a format readable by the [CGT Testing Library](https://github.com/ualberta-mueller-group/cgt_testing_library).
+    - Aids in comparison of MCGS to other CGT projects.
+    - Can use with `--test-filter`.
+  - `--search-graph-print` and `--search-graph-verify` are experimental debugging tools for visualizing search nodes visited by partisan search algorithms. Use a tool like Graphviz or Gephi to view the data.
+- Code cleaned up, new utilities added
+  - `thermograph_builder_no_db.h`: builds the thermograph of a game outside of database generation.
+  - `thermograph_helpers.h`: derives various data from a thermograph.
+  - `sumgame_helpers.h`: sumgame comparisons.
+  - `integral_conversion.h`: casting of integral types with runtime safety checks.
+  - `serializer.h`: implements more STL container types, and less verbose `serializer_save()` and `serializer_load()` functions.
+  - `utilities.h`: has new generic helper functions.
 
 ## After Version 1.4 (Future)
 - Improve database
