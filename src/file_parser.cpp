@@ -21,6 +21,7 @@
 #include "ThScaffold.h"
 #include "ThValue.h"
 #include "cgt_basics.h"
+#include "cgt_environment.h"
 #include "gen_king_dirt.h"
 #include "test_case_enums.h"
 #include "all_game_headers.h"
@@ -323,7 +324,7 @@ bool file_parser::_match(const string& open, const string& close,
 {
     assert(_token.size() > 0);
 
-    string token_copy = _token;
+    const string token_copy = _token;
 
     match_state state = _get_enclosed(open, close, allow_inner);
     assert(match_state_conclusive(state));
@@ -817,6 +818,19 @@ bool file_parser::_parse_chunk_impl()
         {
             THROW_ASSERT(_chunk.has_value());
             _chunk->add_content_expr(new fp_expr_comment(_line_number, _token));
+            continue;
+        }
+
+        // CGT environment
+        if (_match("@>", "<@", "cgt_environment", true))
+        {
+            THROW_ASSERT(_chunk.has_value());
+
+            cgt_environment env = parse_cgt_environment(_token);
+            _chunk->add_content_expr(new fp_expr_cgt_environment(_line_number, env));
+
+            //test_cgt_environment(_token);
+
             continue;
         }
 

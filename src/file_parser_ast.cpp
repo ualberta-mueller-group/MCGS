@@ -37,6 +37,12 @@ i_fp_expr_content::i_fp_expr_content(int line_no)
 {
 }
 
+//////////////////////////////////////// i_fp_expr_game_base methods
+i_fp_expr_game_base::i_fp_expr_game_base(int line_no)
+    : i_fp_expr_content(line_no)
+{
+}
+
 //////////////////////////////////////// i_fp_expr_command methods
 i_fp_expr_command::i_fp_expr_command(int line_no, command_type_enum command_type)
     : i_fp_expr(line_no),
@@ -69,7 +75,7 @@ const std::string& fp_expr_title::get_title() const
 //////////////////////////////////////// fp_expr_game methods
 fp_expr_game::fp_expr_game(int line_no, const std::string& game_token,
                            bool is_bracketed)
-    : i_fp_expr_content(line_no),
+    : i_fp_expr_game_base(line_no),
       _game_token(game_token),
       _is_bracketed(is_bracketed)
 {
@@ -91,6 +97,24 @@ bool fp_expr_game::is_bracketed() const
 {
     return _is_bracketed;
 }
+
+
+//////////////////////////////////////// fp_expr_cgt_environment methods
+fp_expr_cgt_environment::fp_expr_cgt_environment(int line_no, cgt_environment env)
+    : i_fp_expr_game_base(line_no), _env(env)
+{
+}
+
+void fp_expr_cgt_environment::accept(i_fp_visitor& visitor) const
+{
+    visitor.visit(*this);
+}
+
+const cgt_environment& fp_expr_cgt_environment::get_cgt_environment() const
+{
+    return _env;
+}
+
 
 
 //////////////////////////////////////// fp_expr_comment methods

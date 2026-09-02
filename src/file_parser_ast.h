@@ -13,6 +13,7 @@
 #include <memory>
 #include <cassert>
 #include <optional>
+#include "cgt_environment.h"
 #include "test_case_enums.h"
 
 ////////////////////////////////////////////////// forward declarations
@@ -21,8 +22,10 @@ class i_fp_visitor; // interface for visitors to fp_chunk (a chunk of input)
 class i_fp_expr; // interface for all input expressions
 
 class i_fp_expr_content; // interface for all non-command expressions
+class i_fp_expr_game_base;
 class fp_expr_title; // game title i.e. "[clobber]"
 class fp_expr_game; // game token, i.e. "XXO" or "(1, 2)"
+class fp_expr_cgt_environment; // cgt_environment i.e. "cgt:1 + 2:cgt"
 class fp_expr_comment; // comment (possibly prefixed by "_", "#0", "#1", or "#2")
 
 class i_fp_expr_command; // interface for all commands inside of curly braces
@@ -54,6 +57,7 @@ public:
 
     virtual void visit(const fp_expr_title& expr) = 0;
     virtual void visit(const fp_expr_game& expr) = 0;
+    virtual void visit(const fp_expr_cgt_environment& expr) = 0;
     virtual void visit(const fp_expr_comment& expr) = 0;
     virtual void visit(const fp_expr_command_solve_bw& expr) = 0;
     virtual void visit(const fp_expr_command_solve_n& expr) = 0;
@@ -87,6 +91,13 @@ public:
 private:
 };
 
+//////////////////////////////////////// interface i_fp_expr_game_base
+class i_fp_expr_game_base: public i_fp_expr_content
+{
+public:
+    i_fp_expr_game_base(int line_no);
+};
+
 //////////////////////////////////////// interface i_fp_expr_command
 class i_fp_expr_command: public i_fp_expr
 {
@@ -114,7 +125,7 @@ private:
 };
 
 //////////////////////////////////////// class fp_expr_game
-class fp_expr_game: public i_fp_expr_content
+class fp_expr_game: public i_fp_expr_game_base
 {
 public:
     fp_expr_game(int line_no, const std::string& game_token, bool is_bracketed);
@@ -128,6 +139,19 @@ private:
     const bool _is_bracketed;
 };
 
+//////////////////////////////////////// class fp_expr_cgt_environment
+class fp_expr_cgt_environment: public i_fp_expr_game_base
+{
+public:
+    fp_expr_cgt_environment(int line_no, cgt_environment env);
+    void accept(i_fp_visitor& visitor) const override;
+
+    const cgt_environment& get_cgt_environment() const;
+
+private:
+    cgt_environment _env;
+
+};
 
 //////////////////////////////////////// class fp_expr_comment
 enum fp_expr_comment_type

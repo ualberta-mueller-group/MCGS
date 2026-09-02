@@ -4,6 +4,8 @@ import pathlib
 import datetime
 import hashlib
 
+csv.field_size_limit(sys.maxsize)
+
 ######################################## Warnings
 # Track warnings already printed
 warned_dict = {

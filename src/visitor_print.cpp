@@ -53,6 +53,12 @@ void visitor_print::visit(const fp_expr_game& expr)
     cout << expr.get_game_token() << "``" << endl;
 }
 
+void visitor_print::visit(const fp_expr_cgt_environment& expr)
+{
+    cout << "|CGT_ENV L" << expr.get_line_no() << "|";
+    cout << endl;
+}
+
 void visitor_print::visit(const fp_expr_comment& expr)
 {
     cout << "|COMMENT L" << expr.get_line_no() << "| ";

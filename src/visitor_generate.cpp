@@ -158,6 +158,18 @@ void visitor_generate::visit(const fp_expr_game& expr)
     _ctx->game_types.emplace_back(title_token);
 }
 
+void visitor_generate::visit(const fp_expr_cgt_environment& expr)
+{
+    assert(_ctx.has_value());
+
+#warning TODO remove this hash?
+    //_ctx->input_hash.update(title_token + game_token);
+
+    game* g = expr.get_cgt_environment().make_game();
+    _ctx->games.emplace_back(g);
+    _ctx->game_types.emplace_back("game_sum");
+}
+
 void visitor_generate::visit(const fp_expr_comment& expr)
 {
     assert(_ctx.has_value());

@@ -1,0 +1,110 @@
+{version 1.7}
+[nogo_1xn]
+
+
+/* 1 empty */
+.
+
+    @>
+-{|}
+    <@
+
+    {B loss, W loss}
+
+
+/* 2 empties */
+..
+
+    @>
+-{| || |}
+    <@
+
+    {B loss, W loss}
+
+
+/* 3 empties */
+...
+
+    @>
+-{1 | -1}
+    <@
+
+    {B loss, W loss}
+
+
+/* 4 empties */
+....
+
+    @>
+-0
+    <@
+
+    {B loss, W loss}
+
+
+/* 5 empties */
+.....
+
+    @>
+-*
+    <@
+
+    {B loss, W loss}
+
+
+/* 6 empties */
+......
+
+    @>
+-{1 | -1}
+    <@
+
+    {B loss, W loss}
+
+
+/* 7 empties */
+.......
+
+    @>
+-{1* | -(1*)}
+    <@
+
+    {B loss, W loss}
+
+
+/* 8 empties */
+........
+
+    @>
+-*
+    <@
+
+    {B loss, W loss}
+
+
+/* 9 empties */
+.........
+
+    @>
+-{{2*|0,{1|-1}},{2|1||1*|*}|-({2*|0,{1|-1}}),-({2|1||1*|*})}
+    <@
+
+    {B loss, W loss}
+
+
+/* 10 empties */
+..........
+
+    @>
+{1* | -(1*)}
+    <@
+
+    {B loss, W loss}
+
+/* 11 empties */
+...........
+
+    @>
+    <@
+
+    {B loss, W loss}

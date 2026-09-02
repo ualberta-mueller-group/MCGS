@@ -15,6 +15,7 @@ public:
 
     void visit(const fp_expr_title& expr) override;
     void visit(const fp_expr_game& expr) override;
+    void visit(const fp_expr_cgt_environment& expr) override;
     void visit(const fp_expr_comment& expr) override;
     void visit(const fp_expr_command_solve_bw& expr) override;
     void visit(const fp_expr_command_solve_n& expr) override;
