@@ -22,29 +22,29 @@
 //////////////////////////////////////////////////
 
 //////////////////////////////////////// i_fp_expr methods
-i_fp_expr::i_fp_expr(int line_no) : _line_no(line_no)
+i_fp_expr::i_fp_expr(size_t line_no) : _line_no(line_no)
 {
 }
 
-int i_fp_expr::get_line_no() const
+size_t i_fp_expr::get_line_no() const
 {
     return _line_no;
 }
 
 //////////////////////////////////////// i_fp_expr_content methods
-i_fp_expr_content::i_fp_expr_content(int line_no)
+i_fp_expr_content::i_fp_expr_content(size_t line_no)
     : i_fp_expr(line_no)
 {
 }
 
 //////////////////////////////////////// i_fp_expr_game_base methods
-i_fp_expr_game_base::i_fp_expr_game_base(int line_no)
+i_fp_expr_game_base::i_fp_expr_game_base(size_t line_no)
     : i_fp_expr_content(line_no)
 {
 }
 
 //////////////////////////////////////// i_fp_expr_command methods
-i_fp_expr_command::i_fp_expr_command(int line_no, command_type_enum command_type)
+i_fp_expr_command::i_fp_expr_command(size_t line_no, command_type_enum command_type)
     : i_fp_expr(line_no),
       _command_type(command_type)
 {
@@ -56,7 +56,7 @@ command_type_enum i_fp_expr_command::get_command_type() const
 }
 
 //////////////////////////////////////// fp_expr_title methods
-fp_expr_title::fp_expr_title(int line_no, const std::string& title)
+fp_expr_title::fp_expr_title(size_t line_no, const std::string& title)
     : i_fp_expr_content(line_no),
       _title(title)
 {
@@ -73,7 +73,7 @@ const std::string& fp_expr_title::get_title() const
 }
 
 //////////////////////////////////////// fp_expr_game methods
-fp_expr_game::fp_expr_game(int line_no, const std::string& game_token,
+fp_expr_game::fp_expr_game(size_t line_no, const std::string& game_token,
                            bool is_bracketed)
     : i_fp_expr_game_base(line_no),
       _game_token(game_token),
@@ -100,7 +100,7 @@ bool fp_expr_game::is_bracketed() const
 
 
 //////////////////////////////////////// fp_expr_cgt_environment methods
-fp_expr_cgt_environment::fp_expr_cgt_environment(int line_no, cgt_environment env)
+fp_expr_cgt_environment::fp_expr_cgt_environment(size_t line_no, cgt_environment env)
     : i_fp_expr_game_base(line_no), _env(env)
 {
 }
@@ -118,7 +118,7 @@ const cgt_environment& fp_expr_cgt_environment::get_cgt_environment() const
 
 
 //////////////////////////////////////// fp_expr_comment methods
-fp_expr_comment::fp_expr_comment(int line_no,
+fp_expr_comment::fp_expr_comment(size_t line_no,
                                         const std::string& comment_string)
     : i_fp_expr_content(line_no),
       _comment(comment_string)
@@ -204,7 +204,7 @@ int fp_expr_comment::get_number() const
 }
 
 //////////////////////////////////////// fp_expr_command_solve_bw methods
-fp_expr_command_solve_bw::fp_expr_command_solve_bw(int line_no, bw player,
+fp_expr_command_solve_bw::fp_expr_command_solve_bw(size_t line_no, bw player,
                          minimax_outcome_enum expected_outcome)
     : i_fp_expr_command(line_no, COMMAND_TYPE_SOLVE_BW),
       _player(player),
@@ -230,7 +230,7 @@ minimax_outcome_enum fp_expr_command_solve_bw::get_expected_outcome() const
 
 //////////////////////////////////////// fp_expr_command_solve_n methods
 fp_expr_command_solve_n::fp_expr_command_solve_n(
-    int line_no, const std::optional<int>& expected_nim_value)
+    size_t line_no, const std::optional<int>& expected_nim_value)
     : i_fp_expr_command(line_no, COMMAND_TYPE_SOLVE_N),
       _expected_nim_value(expected_nim_value)
 {
@@ -251,7 +251,7 @@ const std::optional<int>& fp_expr_command_solve_n::
 // fp_expr_command_winning_moves methods
 
 fp_expr_command_winning_moves::fp_expr_command_winning_moves(
-    int line_no, ebw player,
+    size_t line_no, ebw player,
     std::optional<std::vector<std::string>> expected_winning_moves)
     : i_fp_expr_command(line_no, COMMAND_TYPE_WINNING_MOVES),
       _player(player),
@@ -278,12 +278,12 @@ const std::optional<std::vector<std::string>>& fp_expr_command_winning_moves::
 //////////////////////////////////////////////////
 // fp_expr_command_thermograph methods
 
-fp_expr_command_thermograph::fp_expr_command_thermograph(int line_no)
+fp_expr_command_thermograph::fp_expr_command_thermograph(size_t line_no)
     : i_fp_expr_command(line_no, COMMAND_TYPE_THERMOGRAPH)
 {
 }
 
-fp_expr_command_thermograph::fp_expr_command_thermograph(int line_no,
+fp_expr_command_thermograph::fp_expr_command_thermograph(size_t line_no,
                                                          ThGraph graph)
     : i_fp_expr_command(line_no, COMMAND_TYPE_THERMOGRAPH), _exp_graph(graph)
 {

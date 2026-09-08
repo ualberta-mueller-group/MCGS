@@ -95,7 +95,7 @@ private:
     std::string _get_error_start();
 
 public:
-    static std::string get_error_start(int line_number);
+    static std::string get_error_start(size_t line_number);
 
 public:
     // Prevent accidental memory bugs
@@ -121,7 +121,7 @@ public:
 
 
     void print_ast() const;
-    static game* construct_game(const std::string& title, int line_number,
+    static game* construct_game(const std::string& title, size_t line_number,
                                 const std::string& game_token);
 
     // static constructor functions
@@ -157,8 +157,8 @@ private:
 
     // data for current token
     std::string _section_title;
-    int _line_number;
-    int _column_number;
+    size_t _line_number;
+    size_t _column_number;
     std::string _token;
 
     bool _warned_wrong_version;

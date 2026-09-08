@@ -75,25 +75,25 @@ bool istream_tokenizer::is_whitespace() const
     return _is_whitespace;
 }
 
-int istream_tokenizer::line_start() const
+size_t istream_tokenizer::line_start() const
 {
     assert(_line_start > 0);
     return _line_start;
 }
 
-int istream_tokenizer::line_end() const
+size_t istream_tokenizer::line_end() const
 {
     assert(_line_end > 0);
     return _line_end;
 }
 
-int istream_tokenizer::column_start() const
+size_t istream_tokenizer::column_start() const
 {
     assert(_column_start > 0);
     return _column_start;
 }
 
-int istream_tokenizer::column_end() const
+size_t istream_tokenizer::column_end() const
 {
     assert(_column_end > 0);
     return _column_end;
@@ -138,21 +138,21 @@ bool istream_tokenizer::_get_token_from_stream(string& token)
     token.clear();
 
     // Initialize line start/end
-    int line_start_new = _line_end;
+    size_t line_start_new = _line_end;
     if (line_start_new == 0)
         line_start_new = 1;
 
-    int line_end_new = line_start_new;
+    size_t line_end_new = line_start_new;
 
     // Initialize column start/end
-    int column_start_new = _column_end;
+    size_t column_start_new = _column_end;
     if (column_start_new == 0)
         column_start_new = 1;
 
-    int column_end_new = column_start_new;
+    size_t column_end_new = column_start_new;
 
     // read from stream until isspace flips
-    int advance_lines = 0;
+    size_t advance_lines = 0;
 
     optional<bool> token_is_space;
 

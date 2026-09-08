@@ -71,22 +71,22 @@ private:
 class i_fp_expr
 {
 public:
-    i_fp_expr(int line_no);
+    i_fp_expr(size_t line_no);
     virtual ~i_fp_expr() {}
 
     virtual void accept(i_fp_visitor& visitor) const = 0;
 
-    int get_line_no() const;
+    size_t get_line_no() const;
 
 private:
-    const int _line_no;
+    const size_t _line_no;
 };
 
 //////////////////////////////////////// interface i_fp_expr_content
 class i_fp_expr_content: public i_fp_expr
 {
 public:
-    i_fp_expr_content(int line_no);
+    i_fp_expr_content(size_t line_no);
 
 private:
 };
@@ -95,14 +95,14 @@ private:
 class i_fp_expr_game_base: public i_fp_expr_content
 {
 public:
-    i_fp_expr_game_base(int line_no);
+    i_fp_expr_game_base(size_t line_no);
 };
 
 //////////////////////////////////////// interface i_fp_expr_command
 class i_fp_expr_command: public i_fp_expr
 {
 public:
-    i_fp_expr_command(int line_no, command_type_enum command_type);
+    i_fp_expr_command(size_t line_no, command_type_enum command_type);
 
     command_type_enum get_command_type() const;
 
@@ -115,7 +115,7 @@ private:
 class fp_expr_title: public i_fp_expr_content
 {
 public:
-    fp_expr_title(int line_no, const std::string& title);
+    fp_expr_title(size_t line_no, const std::string& title);
     void accept(i_fp_visitor& visitor) const override;
 
     const std::string& get_title() const;
@@ -128,7 +128,7 @@ private:
 class fp_expr_game: public i_fp_expr_game_base
 {
 public:
-    fp_expr_game(int line_no, const std::string& game_token, bool is_bracketed);
+    fp_expr_game(size_t line_no, const std::string& game_token, bool is_bracketed);
     void accept(i_fp_visitor& visitor) const override;
 
     const std::string& get_game_token() const;
@@ -143,7 +143,7 @@ private:
 class fp_expr_cgt_environment: public i_fp_expr_game_base
 {
 public:
-    fp_expr_cgt_environment(int line_no, cgt_environment env);
+    fp_expr_cgt_environment(size_t line_no, cgt_environment env);
     void accept(i_fp_visitor& visitor) const override;
 
     const cgt_environment& get_cgt_environment() const;
@@ -164,7 +164,7 @@ enum fp_expr_comment_type
 class fp_expr_comment: public i_fp_expr_content
 {
 public:
-    fp_expr_comment(int line_no, const std::string& comment_string);
+    fp_expr_comment(size_t line_no, const std::string& comment_string);
     void accept(i_fp_visitor& visitor) const override;
 
     const std::string& get_comment() const;
@@ -182,7 +182,7 @@ private:
 class fp_expr_command_solve_bw: public i_fp_expr_command
 {
 public:
-    fp_expr_command_solve_bw(int line_no, bw player,
+    fp_expr_command_solve_bw(size_t line_no, bw player,
                              minimax_outcome_enum expected_outcome);
 
     void accept(i_fp_visitor& visitor) const override;
@@ -200,7 +200,7 @@ private:
 class fp_expr_command_solve_n: public i_fp_expr_command
 {
 public:
-    fp_expr_command_solve_n(int line_no, const std::optional<int>& expected_nim_value);
+    fp_expr_command_solve_n(size_t line_no, const std::optional<int>& expected_nim_value);
 
     void accept(i_fp_visitor& visitor) const override;
 
@@ -217,7 +217,7 @@ class fp_expr_command_winning_moves: public i_fp_expr_command
 {
 public:
     fp_expr_command_winning_moves(
-        int line_no, ebw player,
+        size_t line_no, ebw player,
         std::optional<std::vector<std::string>> expected_winning_moves);
 
     void accept(i_fp_visitor& visitor) const override;
@@ -236,8 +236,8 @@ private:
 class fp_expr_command_thermograph : public i_fp_expr_command
 {
 public:
-    fp_expr_command_thermograph(int line_no);
-    fp_expr_command_thermograph(int line_no, ThGraph graph);
+    fp_expr_command_thermograph(size_t line_no);
+    fp_expr_command_thermograph(size_t line_no, ThGraph graph);
 
     void accept(i_fp_visitor& visitor) const override;
 

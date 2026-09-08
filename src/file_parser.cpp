@@ -358,7 +358,7 @@ bool file_parser::_match(const string& open, const string& close,
 }
 
 namespace {
-i_fp_expr_command* get_fp_expr_run_command_solve_bw(const int line_number,
+i_fp_expr_command* get_fp_expr_run_command_solve_bw(const size_t line_number,
                                       const vector<string>& string_tokens,
                                       size_t& idx)
 {
@@ -407,7 +407,7 @@ i_fp_expr_command* get_fp_expr_run_command_solve_bw(const int line_number,
     return new fp_expr_command_solve_bw(line_number, player, expected_outcome);
 }
 
-i_fp_expr_command* get_fp_expr_run_command_solve_n(const int line_number,
+i_fp_expr_command* get_fp_expr_run_command_solve_n(const size_t line_number,
                                      const vector<string>& string_tokens,
                                      size_t& idx)
 {
@@ -446,7 +446,7 @@ i_fp_expr_command* get_fp_expr_run_command_solve_n(const int line_number,
     return new fp_expr_command_solve_n(line_number, expected_nimber);
 }
 
-i_fp_expr_command* get_fp_expr_run_command_winning_moves(const int line_number,
+i_fp_expr_command* get_fp_expr_run_command_winning_moves(const size_t line_number,
                                      const vector<string>& string_tokens,
                                      size_t& idx)
 {
@@ -520,7 +520,7 @@ i_fp_expr_command* get_fp_expr_run_command_winning_moves(const int line_number,
 }
 
 i_fp_expr_command* get_fp_expr_run_command_thermograph(
-    const int line_number, const vector<string>& string_tokens, size_t& idx)
+    const size_t line_number, const vector<string>& string_tokens, size_t& idx)
 {
     const size_t N = string_tokens.size();
 
@@ -637,7 +637,7 @@ i_fp_expr_command* get_fp_expr_run_command_thermograph(
     idx = idx_start; \
     static_assert(true)
 
-bool get_fp_expr_run_command(const int line_number,
+bool get_fp_expr_run_command(const size_t line_number,
                              const vector<string>& string_tokens, size_t& idx,
                              fp_chunk& chunk)
 {
@@ -693,7 +693,7 @@ string file_parser::_get_error_start()
     return get_error_start(_line_number);
 }
 
-string file_parser::get_error_start(int line_number)
+string file_parser::get_error_start(size_t line_number)
 {
     return "Parser error on line " + to_string(line_number) + ": ";
 }
@@ -894,7 +894,7 @@ void file_parser::print_ast() const
     visitor.visit_chunk(_chunk.value());
 }
 
-game* file_parser::construct_game(const std::string& title, int line_number,
+game* file_parser::construct_game(const std::string& title, size_t line_number,
                                    const std::string& game_token)
 {
     if (title.size() == 0)

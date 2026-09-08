@@ -1888,7 +1888,7 @@ EXAMPLE: `class fp_expr_command_solve_bw` (`file_parser_ast.h` and `.cpp`)
         - NOTE: this string appears in the `.csv` output
 2. In `file_parser_ast.h`:
     - Declare `class fp_expr_command_YOUR_COMMAND: public i_fp_expr_command`
-    - Your constructor should take an `int line_number`
+    - Your constructor should take a `size_t line_number`
         - The line number and `command_type_enum` should be passed to the
           `i_fp_expr_command` constructor
     - Implement `void accept(i_fp_visitor& visitor) const override;` as:

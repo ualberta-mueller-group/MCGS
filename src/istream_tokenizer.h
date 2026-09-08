@@ -21,10 +21,10 @@ public:
     bool get_token(std::string& token);
 
     bool is_whitespace() const;
-    int line_start() const;
-    int line_end() const;
-    int column_start() const;
-    int column_end() const;
+    size_t line_start() const;
+    size_t line_end() const;
+    size_t column_start() const;
+    size_t column_end() const;
 
     void consume();
     void rewind();
@@ -32,14 +32,15 @@ public:
     struct token_t
     {
         token_t(const std::string& token_string, bool is_whitespace,
-                int line_start, int line_end, int column_start, int column_end);
+                size_t line_start, size_t line_end, size_t column_start,
+                size_t column_end);
 
         std::string token_string;
         bool is_whitespace;
-        int line_start;
-        int line_end;
-        int column_start;
-        int column_end;
+        size_t line_start;
+        size_t line_end;
+        size_t column_start;
+        size_t column_end;
     };
 
 private:
@@ -50,10 +51,10 @@ private:
     bool _delete_stream;
 
     bool _is_whitespace;
-    int _line_start;
-    int _line_end;
-    int _column_start;
-    int _column_end;
+    size_t _line_start;
+    size_t _line_end;
+    size_t _column_start;
+    size_t _column_end;
 
     std::vector<token_t> _token_buffer;
     size_t _token_idx;
@@ -61,9 +62,9 @@ private:
 
 ////////////////////////////////////////////////// istream_tokenizer::token_t methods
 inline istream_tokenizer::token_t::token_t(const std::string& token_string,
-                                           bool is_whitespace, int line_start,
-                                           int line_end, int column_start,
-                                           int column_end)
+                                           bool is_whitespace, size_t line_start,
+                                           size_t line_end, size_t column_start,
+                                           size_t column_end)
     : token_string(token_string),
       is_whitespace(is_whitespace),
       line_start(line_start),
