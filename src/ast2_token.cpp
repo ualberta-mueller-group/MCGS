@@ -48,10 +48,18 @@ string token_type_to_string(token_type_enum type)
 ////////////////////////////////////////////////// struct ast2_token
 ostream& operator<<(ostream& os, const ast2_token& tok)
 {
-    os << "Type:" << token_type_to_string(tok.type);
-    os << " ";
     os << "\"" << tok.str << "\"";
     os << " ";
+
+    os << "L:" << tok.line_no;
+    os << " ";
+
+    os << "C:" << tok.column_no;
+    os << " ";
+
+    os << "Type:" << token_type_to_string(tok.type);
+    os << " ";
+
     os << "#:" << tok.num;
 
     return os;

@@ -27,16 +27,17 @@ std::string token_type_to_string(token_type_enum type);
 ////////////////////////////////////////////////// struct ast2_token
 struct ast2_token
 {
-    ast2_token(token_type_enum type, std::string str) : type(type), str(str), num(0) {}
-
-    ast2_token(token_type_enum type, std::string str, int64_t num)
-        : type(type), str(str), num(num)
+    ast2_token(token_type_enum type, std::string str, int64_t num,
+               size_t line_no, size_t column_no)
+        : type(type), str(str), num(num), line_no(line_no), column_no(column_no)
     {
     }
 
     token_type_enum type;
     std::string str;
     int64_t num;
+    size_t line_no;
+    size_t column_no;
 };
 
 std::ostream& operator<<(std::ostream& os, const ast2_token& tok);

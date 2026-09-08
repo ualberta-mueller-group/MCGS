@@ -9,6 +9,7 @@
 
 #include <cctype>
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <sys/types.h>
@@ -51,8 +52,60 @@ shared_ptr<ast2_sum> parse_ast_sum(const ast2_token_scope& tokens, size_t& idx);
 
 ////////////////////////////////////////////////// Helper functions
 
-//////////////////////////////////////// Lexer functions
-optional<token_type_enum> get_token_type_simple_char(char c)
+class ast2_lexer
+{
+public:
+    [[nodiscard]] vector<ast2_token>&& get_tokens(const string* env_string,
+                                                  size_t line_no,
+                                                  size_t column_no);
+
+private:
+    static optional<token_type_enum> _get_token_type_simple_char(char c);
+
+    void _advance(size_t n_chars);
+    ast2_token _make_token(token_type_enum token_type, size_t n_chars, int64_t num);
+    ast2_token _make_token(token_type_enum token_type, size_t n_chars);
+
+    void _env_string_to_tokens();
+
+    optional<ast2_token> _get_token_simple_char();
+    optional<ast2_token> _get_token_int();
+    optional<ast2_token> _get_token_up_down();
+    optional<ast2_token> _get_token_bar();
+    optional<ast2_token> _get_token_identifier();
+    optional<ast2_token> _get_token_exp_game_contents();
+
+    // String between "cgt:" and ":cgt" in .test file
+    const string* _env_string;
+
+    // String index of next char to consume
+    size_t _idx;
+    // 1-indexed line/column of next char to consume
+    size_t _line_no;
+    size_t _column_no;
+
+    // Resulting tokens
+    vector<ast2_token> _tokens;
+};
+
+[[nodiscard]] vector<ast2_token>&& ast2_lexer::get_tokens(
+    const string* env_string, size_t line_no, size_t column_no)
+{
+    assert(env_string != nullptr);
+
+    _tokens.clear();
+
+    _env_string = env_string;
+    _idx = 0;
+    _line_no = line_no;
+    _column_no = column_no;
+
+    _env_string_to_tokens();
+
+    return std::move(_tokens);
+}
+
+optional<token_type_enum> ast2_lexer::_get_token_type_simple_char(char c)
 {
     switch (c)
     {
@@ -81,34 +134,113 @@ optional<token_type_enum> get_token_type_simple_char(char c)
     return {};
 }
 
-optional<ast2_token> get_token_simple_char(const vector<ast2_token>& tokens,
-                                           const string& env_string,
-                                           size_t& idx)
+void ast2_lexer::_advance(size_t n_chars)
 {
-    if (idx >= env_string.size())
+    assert(_idx + n_chars <= _env_string->size());
+
+    for (size_t i = 0; i < n_chars; i++)
+    {
+        const char c = (*_env_string)[_idx++];
+
+        if (is_newline(c))
+        {
+            _line_no++;
+            _column_no = 1;
+        }
+        else
+            _column_no++;
+    }
+}
+
+ast2_token ast2_lexer::_make_token(token_type_enum token_type, size_t n_chars,
+                                   int64_t num)
+{
+    assert(_idx + n_chars <= _env_string->size());
+
+    ast2_token tok(token_type, _env_string->substr(_idx, n_chars), num, _line_no,
+                   _column_no);
+
+    _advance(n_chars);
+
+    return tok;
+}
+
+ast2_token ast2_lexer::_make_token(token_type_enum token_type, size_t n_chars)
+{
+    return _make_token(token_type, n_chars, 0);
+}
+
+#if defined(CALL_GET_TOKEN_FN)
+#error Macro already defined!
+#else
+#define CALL_GET_TOKEN_FN(fn)                                                  \
+    assert(!tok);                                                              \
+    tok = fn();                                                                \
+    if (tok)                                                                   \
+    {                                                                          \
+        _tokens.emplace_back(*tok);                                            \
+        continue;                                                              \
+    }                                                                          \
+    static_assert(true)
+#endif
+
+void ast2_lexer::_env_string_to_tokens()
+{
+    assert(_idx == 0);
+
+    const size_t env_string_size = _env_string->size();
+    while (_idx < env_string_size)
+    {
+        const char c = (*_env_string)[_idx];
+
+        // Consume whitespace
+        if (isspace(c))
+        {
+            _advance(1);
+            continue;
+        }
+
+        // Get token
+        optional<ast2_token> tok;
+
+        CALL_GET_TOKEN_FN(_get_token_exp_game_contents);
+        CALL_GET_TOKEN_FN(_get_token_simple_char);
+        CALL_GET_TOKEN_FN(_get_token_int);
+        CALL_GET_TOKEN_FN(_get_token_up_down);
+        CALL_GET_TOKEN_FN(_get_token_bar);
+        CALL_GET_TOKEN_FN(_get_token_identifier);
+
+        THROW_ASSERT(false,
+                     "Lexer error in CGT environment: unmatched text at L" +
+                         to_string(_line_no) + " C" + to_string(_column_no));
+    }
+
+}
+
+optional<ast2_token> ast2_lexer::_get_token_simple_char()
+{
+    if (_idx >= _env_string->size())
         return {};
 
-    const char c = env_string[idx];
-    const optional<token_type_enum> type_opt = get_token_type_simple_char(c);
+    const char c = (*_env_string)[_idx];
+    const optional<token_type_enum> type_opt = _get_token_type_simple_char(c);
 
     if (!type_opt)
         return {};
 
-    idx++;
-    return ast2_token(*type_opt, string(1, c));
+    return _make_token(*type_opt, 1);
 }
 
-optional<ast2_token> get_token_int(const vector<ast2_token>& tokens,
-                                   const string& env_string, size_t& idx)
+optional<ast2_token> ast2_lexer::_get_token_int()
 {
-    const size_t env_string_size = env_string.size();
-    if (idx >= env_string_size)
+    const size_t env_string_size = _env_string->size();
+    if (_idx >= env_string_size)
         return {};
 
     size_t n_digits = 0;
-    for (size_t i = idx; i < env_string_size; i++)
+    for (size_t i = _idx; i < env_string_size; i++)
     {
-        const char c = env_string[i];
+        const char c = (*_env_string)[i];
 
         if (isdigit(c))
             n_digits++;
@@ -119,29 +251,28 @@ optional<ast2_token> get_token_int(const vector<ast2_token>& tokens,
     if (n_digits == 0)
         return {};
 
-    const string num_string = env_string.substr(idx, n_digits);
-    const int64_t num_int = str_to_ll(num_string);
-    THROW_ASSERT(negate_is_safe(num_int));
+    ast2_token tok = _make_token(TOKEN_TYPE_INT, n_digits);
+    tok.num = str_to_ll(tok.str);
 
-    idx += n_digits;
-    return ast2_token(TOKEN_TYPE_INT, num_string, num_int);
+    THROW_ASSERT(negate_is_safe(tok.num));
+
+    return tok;
 }
 
-optional<ast2_token> get_token_up_down(const vector<ast2_token>& tokens,
-                                       const string& env_string, size_t& idx)
+optional<ast2_token> ast2_lexer::_get_token_up_down()
 {
-    const size_t env_string_size = env_string.size();
-    if (idx >= env_string_size)
+    const size_t env_string_size = _env_string->size();
+    if (_idx >= env_string_size)
         return {};
 
-    const char c_first = env_string[idx];
+    const char c_first = (*_env_string)[_idx];
     if (!(c_first == '^' || c_first == 'v'))
         return {};
 
     size_t arrow_count = 0;
-    for (size_t i = idx; i < env_string_size; i++)
+    for (size_t i = _idx; i < env_string_size; i++)
     {
-        const char c = env_string[i];
+        const char c = (*_env_string)[i];
 
         if (c == c_first)
             arrow_count++;
@@ -151,28 +282,24 @@ optional<ast2_token> get_token_up_down(const vector<ast2_token>& tokens,
 
     assert(arrow_count > 0);
 
-    const string num_string = env_string.substr(idx, arrow_count);
-
     int64_t num_int = integral_cast_checked<int64_t>(arrow_count);
     THROW_ASSERT(negate_is_safe(num_int));
     if (c_first == 'v')
         num_int = -num_int;
 
-    idx += arrow_count;
-    return ast2_token(TOKEN_TYPE_UP_DOWN, num_string, num_int);
+    return _make_token(TOKEN_TYPE_UP_DOWN, arrow_count, num_int);
 }
 
-optional<ast2_token> get_token_bar(const vector<ast2_token>& tokens,
-                                   const string& env_string, size_t& idx)
+optional<ast2_token> ast2_lexer::_get_token_bar()
 {
-    const size_t env_string_size = env_string.size();
-    if (idx >= env_string_size)
+    const size_t env_string_size = _env_string->size();
+    if (_idx >= env_string_size)
         return {};
 
     size_t bar_count = 0;
-    for (size_t i = idx; i < env_string_size; i++)
+    for (size_t i = _idx; i < env_string_size; i++)
     {
-        const char c = env_string[i];
+        const char c = (*_env_string)[i];
         if (c == '|')
             bar_count++;
         else
@@ -182,25 +309,21 @@ optional<ast2_token> get_token_bar(const vector<ast2_token>& tokens,
     if (bar_count == 0)
         return {};
 
-    const string bar_string = env_string.substr(idx, bar_count);
-    const int64_t bar_num = integral_cast_checked<int64_t>(bar_count);
-
-    idx += bar_count;
-    return ast2_token(TOKEN_TYPE_BAR, bar_string, bar_num);
+    return _make_token(TOKEN_TYPE_BAR, bar_count,
+                       integral_cast_checked<int64_t>(bar_count));
 }
 
-optional<ast2_token> get_token_identifier(const vector<ast2_token>& tokens,
-                                          const string& env_string, size_t& idx)
+optional<ast2_token> ast2_lexer::_get_token_identifier()
 {
-    const size_t env_string_size = env_string.size();
+    const size_t env_string_size = _env_string->size();
 
-    if (idx >= env_string_size || isdigit(env_string[idx]))
+    if (_idx >= env_string_size || isdigit((*_env_string)[_idx]))
         return {};
 
     size_t ident_size = 0;
-    for (size_t i = idx; i < env_string_size; i++)
+    for (size_t i = _idx; i < env_string_size; i++)
     {
-        const char c = env_string[i];
+        const char c = (*_env_string)[i];
         if (c == '_' || isalpha(c) || isdigit(c))
             ident_size++;
         else
@@ -210,32 +333,28 @@ optional<ast2_token> get_token_identifier(const vector<ast2_token>& tokens,
     if (ident_size == 0)
         return {};
 
-    const string ident_string = env_string.substr(idx, ident_size);
-    idx += ident_size;
-
-    return ast2_token(TOKEN_TYPE_IDENT, ident_string);
+    return _make_token(TOKEN_TYPE_IDENT, ident_size);
 }
 
-optional<ast2_token> get_token_exp_game_contents(
-    const vector<ast2_token>& tokens, const string& env_string, size_t& idx)
+optional<ast2_token> ast2_lexer::_get_token_exp_game_contents()
 {
-    const size_t env_string_size = env_string.size();
-    if (idx >= env_string_size || env_string[idx] != '(')
+    const size_t env_string_size = _env_string->size();
+    if (_idx >= env_string_size || (*_env_string)[_idx] != '(')
         return {};
 
-    const size_t tokens_size = tokens.size();
-    if (!(tokens_size >= 2 &&                                 //
-          tokens[tokens_size - 2].type == TOKEN_TYPE_IDENT && //
-          tokens[tokens_size - 1].type == TOKEN_TYPE_COLON)   //
+    const size_t tokens_size = _tokens.size();
+    if (!(tokens_size >= 2 &&                                  //
+          _tokens[tokens_size - 2].type == TOKEN_TYPE_IDENT && //
+          _tokens[tokens_size - 1].type == TOKEN_TYPE_COLON)   //
     )
         return {};
 
     size_t size_including_brackets = 0;
     int bracket_stack_size = 0;
 
-    for (size_t i = idx; i < env_string_size; i++)
+    for (size_t i = _idx; i < env_string_size; i++)
     {
-        const char c = env_string[i];
+        const char c = (*_env_string)[i];
 
         if (c == '(')
             bracket_stack_size++;
@@ -251,68 +370,19 @@ optional<ast2_token> get_token_exp_game_contents(
     if (size_including_brackets < 2 || bracket_stack_size != 0)
         return {};
 
-    assert(bracket_stack_size == 0 &&                           //
-           env_string[idx] == '(' &&                            //
-           env_string[idx + size_including_brackets - 1] == ')' //
+    assert(bracket_stack_size == 0 &&                                //
+           (*_env_string)[_idx] == '(' &&                            //
+           (*_env_string)[_idx + size_including_brackets - 1] == ')' //
     );
 
-    const string contents_string =
-        env_string.substr(idx + 1, size_including_brackets - 2);
-    idx += size_including_brackets;
+    _advance(1);
+    ast2_token tok =
+        _make_token(TOKEN_TYPE_EXP_GAME_CONTENTS, size_including_brackets - 2);
+    _advance(1);
 
-    return ast2_token(TOKEN_TYPE_EXP_GAME_CONTENTS, contents_string);
+    return tok;
 }
 
-#if defined(CALL_GET_TOKEN_FN)
-#error Macro already defined!
-#else
-#define CALL_GET_TOKEN_FN(fn)                                                  \
-    assert(!tok);                                                              \
-    tok = fn(tokens, env_string, i);                                           \
-    if (tok)                                                                   \
-    {                                                                          \
-        tokens.emplace_back(*tok);                                             \
-        continue;                                                              \
-    }                                                                          \
-    static_assert(true)
-#endif
-
-vector<ast2_token> env_string_to_tokens(const string& env_string)
-{
-    vector<ast2_token> tokens;
-
-    const size_t env_string_size = env_string.size();
-    for (size_t i = 0; i < env_string_size; )
-    {
-        const char c = env_string[i];
-
-        // Consume whitespace
-        if (isspace(c))
-        {
-            i++;
-            continue;
-        }
-
-        // Get token
-        optional<ast2_token> tok;
-
-        CALL_GET_TOKEN_FN(get_token_exp_game_contents);
-        CALL_GET_TOKEN_FN(get_token_simple_char);
-        CALL_GET_TOKEN_FN(get_token_int);
-        CALL_GET_TOKEN_FN(get_token_up_down);
-        CALL_GET_TOKEN_FN(get_token_bar);
-        CALL_GET_TOKEN_FN(get_token_identifier);
-
-        cerr << "[" << endl;
-        for (const ast2_token& t : tokens)
-            cerr << "\t" << t << endl;
-        cerr << "]" << endl;
-
-        THROW_ASSERT(false, "Lexer error in CGT environment (unmatched text)");
-    }
-
-    return tokens;
-}
 
 //////////////////////////////////////// Parser functions
 const ast2_token* get_nth_token(const ast2_token_scope& tscope, size_t idx)
@@ -807,7 +877,9 @@ void test_cgt_environment(const string& env_string, size_t line_start, size_t co
 
     cout << endl;
 
-    const vector<ast2_token> tokens = env_string_to_tokens(env_string);
+    ast2_lexer lexer;
+    const vector<ast2_token> tokens =
+        lexer.get_tokens(&env_string, line_start, column_start);
 
     cout << "Token stream (after lexer rules):" << endl;
     cout << "[" << endl;
@@ -838,7 +910,9 @@ void test_cgt_environment(const string& env_string, size_t line_start, size_t co
 
 cgt_environment parse_cgt_environment(const string& env_string, size_t line_start, size_t column_start)
 {
-    const vector<ast2_token> tokens = env_string_to_tokens(env_string);
+    ast2_lexer lexer;
+    const vector<ast2_token> tokens =
+        lexer.get_tokens(&env_string, line_start, column_start);
 
     const ast2_token_scope ts(&tokens);
     size_t idx = 0;
