@@ -23,6 +23,8 @@ istream_tokenizer::istream_tokenizer(istream* stream_ptr, bool delete_stream)
       _delete_stream(delete_stream),
       _line_start(0),
       _line_end(0),
+      _column_start(0),
+      _column_end(0),
       _token_idx(0)
 {
 }
@@ -44,6 +46,8 @@ bool istream_tokenizer::get_token(string& token)
 
         _line_start = t.line_start;
         _line_end = t.line_end;
+        _column_start = t.column_start;
+        _column_end = t.column_end;
         _is_whitespace = t.is_whitespace;
         token = t.token_string;
 
@@ -53,7 +57,9 @@ bool istream_tokenizer::get_token(string& token)
     // get token from stream
     if (_get_token_from_stream(token))
     {
-        _token_buffer.emplace_back(token, _is_whitespace, _line_start, _line_end);
+        _token_buffer.emplace_back(token, _is_whitespace, _line_start,
+                                   _line_end, _column_start, _column_end);
+
         _token_idx++;
 
         assert(_token_idx == _token_buffer.size());
@@ -79,6 +85,18 @@ int istream_tokenizer::line_end() const
 {
     assert(_line_end > 0);
     return _line_end;
+}
+
+int istream_tokenizer::column_start() const
+{
+    assert(_column_start > 0);
+    return _column_start;
+}
+
+int istream_tokenizer::column_end() const
+{
+    assert(_column_end > 0);
+    return _column_end;
 }
 
 void istream_tokenizer::consume()
@@ -119,11 +137,19 @@ bool istream_tokenizer::_get_token_from_stream(string& token)
     assert(_stream_ptr != nullptr);
     token.clear();
 
+    // Initialize line start/end
     int line_start_new = _line_end;
     if (line_start_new == 0)
         line_start_new = 1;
 
     int line_end_new = line_start_new;
+
+    // Initialize column start/end
+    int column_start_new = _column_end;
+    if (column_start_new == 0)
+        column_start_new = 1;
+
+    int column_end_new = column_start_new;
 
     // read from stream until isspace flips
     int advance_lines = 0;
@@ -153,10 +179,16 @@ bool istream_tokenizer::_get_token_from_stream(string& token)
         const char c2 = _stream_ptr->get();
         THROW_ASSERT(!(_stream_ptr->bad() && !_stream_ptr->eof()));
         assert(c == c2);
+
+        column_end_new++;
         
         token.push_back(c);
         if (is_newline(c))
+        {
+            column_end_new = 1;
             advance_lines++;
+        }
+
     }
 
     line_end_new = line_start_new + advance_lines;
@@ -168,6 +200,8 @@ bool istream_tokenizer::_get_token_from_stream(string& token)
 
         _line_start = line_start_new;
         _line_end = line_end_new;
+        _column_start = column_start_new;
+        _column_end = column_end_new;
 
         return true;
     }

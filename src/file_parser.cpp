@@ -143,6 +143,7 @@ file_parser::file_parser(istream* stream, bool delete_stream,
       _do_version_check(do_version_check),
       _section_title(""),
       _line_number(0),
+      _column_number(0),
       _token(""),
       _warned_wrong_version(false),
       _input_state(FILE_PARSER_STATE_BEGIN)
@@ -746,6 +747,7 @@ bool file_parser::_parse_chunk_impl()
     while (_tokenizer.get_token(_token))
     {
         _line_number = _tokenizer.line_start();
+        _column_number = _tokenizer.column_start();
         _tokenizer.consume();
 
         if (_tokenizer.is_whitespace())

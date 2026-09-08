@@ -158,6 +158,7 @@ private:
     // data for current token
     std::string _section_title;
     int _line_number;
+    int _column_number;
     std::string _token;
 
     bool _warned_wrong_version;
