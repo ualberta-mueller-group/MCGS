@@ -822,7 +822,7 @@ bool file_parser::_parse_chunk_impl()
         }
 
         // CGT environment
-        if (_match("@>", "<@", "cgt_environment", true))
+        if (_match("cgt:", ":cgt", "cgt_environment", true))
         {
             THROW_ASSERT(_chunk.has_value());
 

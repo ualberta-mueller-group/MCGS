@@ -44,6 +44,7 @@ bool istream_tokenizer::get_token(string& token)
 
         _line_start = t.line_start;
         _line_end = t.line_end;
+        _is_whitespace = t.is_whitespace;
         token = t.token_string;
 
         return true;

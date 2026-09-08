@@ -5,9 +5,9 @@
 /* 1 empty */
 .
 
-    @>
+    cgt:
 -{|}
-    <@
+    :cgt
 
     {B loss, W loss}
 
@@ -15,9 +15,9 @@
 /* 2 empties */
 ..
 
-    @>
+    cgt:
 -{| || |}
-    <@
+    :cgt
 
     {B loss, W loss}
 
@@ -25,9 +25,9 @@
 /* 3 empties */
 ...
 
-    @>
+    cgt:
 -{1 | -1}
-    <@
+    :cgt
 
     {B loss, W loss}
 
@@ -35,9 +35,9 @@
 /* 4 empties */
 ....
 
-    @>
+    cgt:
 -0
-    <@
+    :cgt
 
     {B loss, W loss}
 
@@ -45,9 +45,9 @@
 /* 5 empties */
 .....
 
-    @>
+    cgt:
 -*
-    <@
+    :cgt
 
     {B loss, W loss}
 
@@ -55,9 +55,9 @@
 /* 6 empties */
 ......
 
-    @>
+    cgt:
 -{1 | -1}
-    <@
+    :cgt
 
     {B loss, W loss}
 
@@ -65,9 +65,9 @@
 /* 7 empties */
 .......
 
-    @>
+    cgt:
 -{1* | -(1*)}
-    <@
+    :cgt
 
     {B loss, W loss}
 
@@ -75,9 +75,9 @@
 /* 8 empties */
 ........
 
-    @>
+    cgt:
 -*
-    <@
+    :cgt
 
     {B loss, W loss}
 
@@ -85,9 +85,9 @@
 /* 9 empties */
 .........
 
-    @>
+    cgt:
 -{{2*|0,{1|-1}},{2|1||1*|*}|-({2*|0,{1|-1}}),-({2|1||1*|*})}
-    <@
+    :cgt
 
     {B loss, W loss}
 
@@ -95,8 +95,8 @@
 /* 10 empties */
 ..........
 
-    @>
+    cgt:
 {1* | -(1*)}
-    <@
+    :cgt
 
     {B loss, W loss}
