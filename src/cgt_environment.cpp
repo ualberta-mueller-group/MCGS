@@ -211,8 +211,8 @@ void ast2_lexer::_env_string_to_tokens()
         CALL_GET_TOKEN_FN(_get_token_identifier);
 
         THROW_ASSERT(false,
-                     "Lexer error in CGT environment: unmatched text at L" +
-                         to_string(_line_no) + " C" + to_string(_column_no));
+                     "Lexer error in CGT environment: unmatched text at line " +
+                         to_string(_line_no) + " col " + to_string(_column_no));
     }
 
 }
