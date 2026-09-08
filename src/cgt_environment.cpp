@@ -797,9 +797,12 @@ game* cgt_environment::make_game() const
     return _sum_node->make_game_sum(false);
 }
 
-void test_cgt_environment(const string& env_string)
+void test_cgt_environment(const string& env_string, size_t line_start, size_t column_start)
 {
-    cout << "Input string:" << endl;
+    cout << "Input string (";
+    cout << "L" << line_start << " C" << column_start;
+    cout << "):" << endl;
+
     cout << "`" << env_string << "`" << endl;
 
     cout << endl;
@@ -833,7 +836,7 @@ void test_cgt_environment(const string& env_string)
     THROW_ASSERT(idx == tokens.size(), "Parsing incomplete!");
 }
 
-cgt_environment parse_cgt_environment(const string& env_string)
+cgt_environment parse_cgt_environment(const string& env_string, size_t line_start, size_t column_start)
 {
     const vector<ast2_token> tokens = env_string_to_tokens(env_string);
 

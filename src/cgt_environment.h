@@ -15,6 +15,6 @@ private:
     const std::shared_ptr<const ast2_sum> _sum_node;
 };
 
-void test_cgt_environment(const std::string& env_string);
-cgt_environment parse_cgt_environment(const std::string& env_string);
+void test_cgt_environment(const std::string& env_string, size_t line_start, size_t column_start);
+cgt_environment parse_cgt_environment(const std::string& env_string, size_t line_start, size_t column_start);
 

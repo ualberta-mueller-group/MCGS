@@ -828,10 +828,13 @@ bool file_parser::_parse_chunk_impl()
         {
             THROW_ASSERT(_chunk.has_value());
 
-            cgt_environment env = parse_cgt_environment(_token);
+            // `+4` is length of "cgt:"
+            const size_t env_col = _column_number + 4;
+
+            cgt_environment env = parse_cgt_environment(_token, _line_number, env_col);
             _chunk->add_content_expr(new fp_expr_cgt_environment(_line_number, env));
 
-            //test_cgt_environment(_token);
+            test_cgt_environment(_token, _line_number, env_col);
 
             continue;
         }
