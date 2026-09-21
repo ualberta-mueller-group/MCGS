@@ -10,16 +10,18 @@ string token_type_to_string(token_type_enum type)
 {
     switch (type)
     {
+        case TOKEN_TYPE_PLUSMINUS:
+            return "PLUSMINUS";
         case TOKEN_TYPE_PLUS:
             return "PLUS";
         case TOKEN_TYPE_MINUS:
             return "MINUS";
-        case TOKEN_TYPE_COMMA:
-            return "COMMA";
-        case TOKEN_TYPE_SLASH:
-            return "SLASH";
         case TOKEN_TYPE_STAR:
             return "STAR";
+        case TOKEN_TYPE_SLASH:
+            return "SLASH";
+        case TOKEN_TYPE_COMMA:
+            return "COMMA";
         case TOKEN_TYPE_BAR:
             return "BAR";
         case TOKEN_TYPE_LBRACK:
@@ -66,34 +68,15 @@ ostream& operator<<(ostream& os, const ast2_token& tok)
 }
 
 ////////////////////////////////////////////////// struct ast2_token_scope
-ast2_token_scope::ast2_token_scope(const vector<ast2_token>* tokens)
-    : tokens(tokens), start(0), end(tokens->size())
+ast2_token_scope::ast2_token_scope(size_t start, size_t end)
+    : start(start), end(end)
 {
-    // TODO initialization will already have dereferenced `tokens` by this point
-    assert(tokens != nullptr);
+    assert(start <= end);
 }
 
 ast2_token_scope ast2_token_scope::cut(size_t new_start, size_t new_end) const
 {
     assert(new_start >= start);
     assert(new_end <= end);
-    return ast2_token_scope(tokens, new_start, new_end);
+    return ast2_token_scope(new_start, new_end);
 }
-
-bool ast2_token_scope::idx_inside_scope(size_t idx) const
-{
-    return (start <= idx && idx < end);
-}
-
-bool ast2_token_scope::idx_outside_scope(size_t idx) const
-{
-    return !idx_inside_scope(idx);
-}
-
-ast2_token_scope::ast2_token_scope(const vector<ast2_token>* tokens, size_t new_start,
-                         size_t new_end)
-    : tokens(tokens), start(new_start), end(new_end)
-{
-}
-
-

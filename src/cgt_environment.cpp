@@ -2,6 +2,8 @@
 #include "integral_conversion.h"
 #include "n_bit_int.h"
 #include "safe_arithmetic.h"
+#include "search_graph_debug.h"
+#include "sign_enum.h"
 #include "string_to_int.h"
 #include "throw_assert.h"
 #include "utilities.h"
@@ -13,6 +15,8 @@
 #include <iostream>
 #include <sstream>
 #include <sys/types.h>
+#include <type_traits>
+#include <unistd.h>
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -30,25 +34,43 @@
 
 using namespace std;
 
+
+template <class... Ts>
+static bool ptr_variant_non_null(const std::variant<Ts...>& ptr_variant)
+{
+    return std::visit([](const auto& ptr) -> bool
+    {
+        return static_cast<bool>(ptr);
+    }, ptr_variant);
+}
+
+template <class... Ts>
+static bool ptr_variant_null(const std::variant<Ts...>& ptr_variant)
+{
+    return std::visit([](const auto& ptr) -> bool
+    {
+        return !static_cast<bool>(ptr);
+    }, ptr_variant);
+}
+
 namespace {
-////////////////////////////////////////////////// Declarations
-shared_ptr<ast2_bracket_sum> parse_ast_bracket_sum(
-    const ast2_token_scope& tokens, size_t& idx);
 
-shared_ptr<i_ast2_option_set> parse_option_set(const ast2_token_scope& tokens,
-                                               size_t& idx);
+class print_rule
+{
+public:
+    print_rule(const string& name)
+    {
+        //cout << "+++ " << name << endl;
+    }
 
-shared_ptr<ast2_unbraced_cgt_game> parse_unbraced_cgt_game(
-    const ast2_token_scope& tokens, size_t& idx);
+    ~print_rule()
+    {
+        //cout << "--- " << name << endl;
+    }
 
-shared_ptr<ast2_braced_cgt_game> parse_ast_braced_cgt_game(
-    const ast2_token_scope& tokens, size_t& idx);
+    //string name;
+};
 
-shared_ptr<ast2_explicit_game> parse_ast_explicit_game(
-    const ast2_token_scope& tokens, size_t& idx);
-
-
-shared_ptr<ast2_sum> parse_ast_sum(const ast2_token_scope& tokens, size_t& idx);
 
 ////////////////////////////////////////////////// Helper functions
 
@@ -68,6 +90,7 @@ private:
 
     void _env_string_to_tokens();
 
+    optional<ast2_token> _get_token_plusminus();
     optional<ast2_token> _get_token_simple_char();
     optional<ast2_token> _get_token_int();
     optional<ast2_token> _get_token_up_down();
@@ -187,6 +210,7 @@ ast2_token ast2_lexer::_make_token(token_type_enum token_type, size_t n_chars)
 void ast2_lexer::_env_string_to_tokens()
 {
     assert(_idx == 0);
+    assert(_env_string != nullptr);
 
     const size_t env_string_size = _env_string->size();
     while (_idx < env_string_size)
@@ -203,6 +227,7 @@ void ast2_lexer::_env_string_to_tokens()
         // Get token
         optional<ast2_token> tok;
 
+        CALL_GET_TOKEN_FN(_get_token_plusminus);
         CALL_GET_TOKEN_FN(_get_token_exp_game_contents);
         CALL_GET_TOKEN_FN(_get_token_simple_char);
         CALL_GET_TOKEN_FN(_get_token_int);
@@ -212,9 +237,24 @@ void ast2_lexer::_env_string_to_tokens()
 
         THROW_ASSERT(false,
                      "Lexer error in CGT environment: unmatched text at line " +
-                         to_string(_line_no) + " col " + to_string(_column_no));
+                         to_string(_line_no) + " col " + to_string(_column_no) +
+                         " beginning with char: '" + string(1, c) + "'");
     }
 
+}
+
+optional<ast2_token> ast2_lexer::_get_token_plusminus()
+{
+    if (_idx + 1 >= _env_string->size())
+        return {};
+
+    const char c1 = (*_env_string)[_idx];
+    const char c2 = (*_env_string)[_idx + 1];
+
+    if (!(c1 == '+' && c2 == '-'))
+        return {};
+
+    return _make_token(TOKEN_TYPE_PLUSMINUS, 2);
 }
 
 optional<ast2_token> ast2_lexer::_get_token_simple_char()
@@ -383,19 +423,189 @@ optional<ast2_token> ast2_lexer::_get_token_exp_game_contents()
     return tok;
 }
 
-
 //////////////////////////////////////// Parser functions
-const ast2_token* get_nth_token(const ast2_token_scope& tscope, size_t idx)
+enum ast2_rule_enum
 {
-    if (!(idx >= tscope.start && idx < tscope.end))
-        return nullptr;
-    return &(*tscope.tokens)[idx];
+    AST2_RULE_NONE = 0,
+    AST2_RULE_INTEGER,
+    AST2_RULE_RATIONAL,
+    AST2_RULE_UP,
+    AST2_RULE_NIMBER,
+    AST2_RULE_RATIONAL_UP_NIMBER,
+    AST2_RULE_EXPLICIT_GAME,
+    AST2_RULE_ATOMIC_GAME,
+    AST2_RULE_PLUSMINUS_GAME,
+    AST2_RULE_QUALIFIED_GAME,
+    AST2_RULE_SUM,
+    AST2_RULE_BRACKET_SUM,
+    AST2_RULE_OPTION_LIST,
+    AST2_RULE_BRACED_OPTION_LIST,
+    AST2_RULE_UNBRACED_CGT_GAME,
+    AST2_RULE_BRACED_CGT_GAME,
+};
+
+string ast2_rule_enum_to_string(ast2_rule_enum rule_type)
+{
+    switch (rule_type)
+    {
+        case AST2_RULE_NONE:
+            return "NONE";
+        case AST2_RULE_INTEGER:
+            return "integer";
+        case AST2_RULE_RATIONAL:
+            return "rational";
+        case AST2_RULE_UP:
+            return "up";
+        case AST2_RULE_NIMBER:
+            return "nimber";
+        case AST2_RULE_RATIONAL_UP_NIMBER:
+            return "rational_up_nimber";
+        case AST2_RULE_EXPLICIT_GAME:
+            return "explicit_game";
+        case AST2_RULE_ATOMIC_GAME:
+            return "atomic_game";
+        case AST2_RULE_PLUSMINUS_GAME:
+            return "plusminus_game";
+        case AST2_RULE_QUALIFIED_GAME:
+            return "qualified_game";
+        case AST2_RULE_SUM:
+            return "sum";
+        case AST2_RULE_BRACKET_SUM:
+            return "bracket_sum";
+        case AST2_RULE_OPTION_LIST:
+            return "option_list";
+        case AST2_RULE_BRACED_OPTION_LIST:
+            return "braced_option_list";
+        case AST2_RULE_UNBRACED_CGT_GAME:
+            return "unbraced_cgt_game";
+        case AST2_RULE_BRACED_CGT_GAME:
+            return "braced_cgt_game";
+    }
+
+    assert(false);
 }
 
-shared_ptr<ast2_integer> parse_ast_integer(const ast2_token_scope& tokens,
-                                           size_t& idx, bool at_least_0)
+class ast2_parser
 {
-    const ast2_token* tok1 = get_nth_token(tokens, idx);
+public:
+    unique_ptr<ast2_sum> parse(const vector<ast2_token>* tokens);
+
+private:
+    const ast2_token* _get_token(size_t idx) const;
+    void _mark_consumed(size_t idx, ast2_rule_enum rule_type);
+
+    const ast2_token_scope _get_active_scope() const;
+    void _push_scope(ast2_token_scope scope);
+    void _pop_scope();
+
+    // Parse basic games
+    unique_ptr<ast2_integer> _parse_ast2_integer(bool at_least_0);
+    unique_ptr<ast2_rational> _parse_ast2_rational();
+    unique_ptr<ast2_up> _parse_ast2_up();
+    unique_ptr<ast2_nimber> _parse_ast2_nimber();
+    unique_ptr<ast2_rational_up_nimber> _parse_ast2_rational_up_nimber();
+    unique_ptr<ast2_explicit_game> _parse_ast2_explicit_game();
+
+    // Parse composite games
+    unique_ptr<ast2_atomic_game> _parse_ast2_atomic_game();
+    unique_ptr<ast2_plusminus_game> _parse_ast2_plusminus_game();
+    unique_ptr<ast2_qualified_game> _parse_ast2_qualified_game();
+
+    // Parse CGT games
+    unique_ptr<ast2_sum> _parse_ast2_sum();
+    unique_ptr<ast2_bracket_sum> _parse_ast2_bracket_sum();
+    unique_ptr<ast2_option_list> _parse_ast2_option_list();
+    unique_ptr<ast2_braced_option_list> _parse_ast2_braced_option_list();
+    unique_ptr<ast2_unbraced_cgt_game> _parse_ast2_unbraced_cgt_game();
+    unique_ptr<ast2_braced_cgt_game> _parse_ast2_braced_cgt_game();
+
+    // Data
+    const vector<ast2_token>* _tokens;
+    size_t _idx;
+
+    vector<ast2_token_scope> _scope_stack;
+
+    pair<size_t, ast2_rule_enum> _deepest_parse;
+};
+
+unique_ptr<ast2_sum> ast2_parser::parse(const vector<ast2_token>* tokens)
+{
+    assert(tokens != nullptr);
+
+    _tokens = tokens;
+    _idx = 0;
+
+    _scope_stack.clear();
+    _push_scope(ast2_token_scope(0, tokens->size()));
+
+    _deepest_parse = {0, AST2_RULE_NONE};
+
+    unique_ptr<ast2_sum> result = _parse_ast2_sum();
+
+    assert(_scope_stack.size() == 1);
+
+    // Error check
+    const size_t n_consumed = _deepest_parse.first;
+    if (n_consumed < tokens->size())
+    {
+        stringstream str;
+        str << "CGT environment parser error! Last token consumed: ";
+
+        if (n_consumed == 0)
+            str << "None!";
+        else
+        {
+            str << "Rule: " << ast2_rule_enum_to_string(_deepest_parse.second);
+            str << " ";
+            str << (*_tokens)[n_consumed - 1];
+        }
+
+        THROW_ASSERT(false, str.str());
+    }
+
+    return result;
+}
+
+const ast2_token* ast2_parser::_get_token(size_t idx) const
+{
+    const ast2_token_scope& scope = _get_active_scope();
+
+    if (scope.start <= idx && idx < scope.end)
+        return &((*_tokens)[idx]);
+
+    return nullptr;
+}
+
+void ast2_parser::_mark_consumed(size_t idx, ast2_rule_enum rule_type)
+{
+    idx += 1;
+    if (idx > _deepest_parse.first)
+        _deepest_parse = {idx, rule_type};
+}
+
+const ast2_token_scope ast2_parser::_get_active_scope() const
+{
+    assert(!_scope_stack.empty());
+    return _scope_stack.back();
+}
+
+void ast2_parser::_push_scope(ast2_token_scope scope)
+{
+    _scope_stack.push_back(scope);
+}
+
+void ast2_parser::_pop_scope()
+{
+    assert(!_scope_stack.empty());
+    _scope_stack.pop_back();
+}
+
+// Parse basic games
+unique_ptr<ast2_integer> ast2_parser::_parse_ast2_integer(bool at_least_0)
+{
+    print_rule pr("Integer");
+
+    const ast2_token* tok1 = _get_token(_idx);
     if (!tok1)
         return nullptr;
 
@@ -407,18 +617,23 @@ shared_ptr<ast2_integer> parse_ast_integer(const ast2_token_scope& tokens,
         if (at_least_0)
             return nullptr;
 
+        _mark_consumed(_idx, AST2_RULE_INTEGER);
         is_negative = true;
-        const ast2_token* tok2 = get_nth_token(tokens, idx + 1);
+
+        const ast2_token* tok2 = _get_token(_idx + 1);
 
         if (!tok2 || tok2->type != TOKEN_TYPE_INT)
             return nullptr;
 
+        _mark_consumed(_idx + 1, AST2_RULE_INTEGER);
         abs_value = tok2->num;
     }
     else
     {
         if (tok1->type != TOKEN_TYPE_INT)
             return nullptr;
+
+        _mark_consumed(_idx, AST2_RULE_INTEGER);
         abs_value = tok1->num;
     }
 
@@ -427,332 +642,440 @@ shared_ptr<ast2_integer> parse_ast_integer(const ast2_token_scope& tokens,
     if (is_negative)
         abs_value = -abs_value;
 
-    idx += (1 + is_negative);
-    return make_shared<ast2_integer>(abs_value);
+    _idx += (1 + is_negative);
+    return make_unique<ast2_integer>(abs_value);
 }
 
-shared_ptr<ast2_rational> parse_ast_rational(const ast2_token_scope& tokens,
-                                             size_t& idx)
+unique_ptr<ast2_rational> ast2_parser::_parse_ast2_rational()
 {
-    shared_ptr<ast2_integer> top = parse_ast_integer(tokens, idx, false);
+    print_rule pr("Rational");
+
+    unique_ptr<ast2_integer> top = _parse_ast2_integer(false);
     if (!top)
         return nullptr;
 
-    const size_t idx_after_top = idx;
+    const size_t idx_after_top = _idx;
 
     const int64_t top_value = top->value;
     int64_t bottom_value = 1;
 
-    const ast2_token* tok_slash = get_nth_token(tokens, idx);
+    const ast2_token* tok_slash = _get_token(_idx);
     if (tok_slash && tok_slash->type == TOKEN_TYPE_SLASH)
     {
-        idx++;
-        shared_ptr<ast2_integer> bottom = parse_ast_integer(tokens, idx, false);
+        _mark_consumed(_idx, AST2_RULE_RATIONAL);
+        _idx++;
+        unique_ptr<ast2_integer> bottom = _parse_ast2_integer(false);
 
         if (bottom)
             bottom_value = bottom->value;
         else
-            idx = idx_after_top;
+            _idx = idx_after_top;
     }
 
-    return make_shared<ast2_rational>(top_value, bottom_value);
+    return make_unique<ast2_rational>(top_value, bottom_value);
 }
 
-shared_ptr<ast2_up> parse_ast_up(const ast2_token_scope& tokens, size_t& idx)
+unique_ptr<ast2_up> ast2_parser::_parse_ast2_up()
 {
-    const ast2_token* tok1 = get_nth_token(tokens, idx);
+    print_rule pr("Up");
+
+    const ast2_token* tok1 = _get_token(_idx);
     if (!tok1 || tok1->type != TOKEN_TYPE_UP_DOWN)
         return nullptr;
-    idx++;
+    _mark_consumed(_idx, AST2_RULE_UP);
+    _idx++;
 
     const int64_t arrow_value = tok1->num;
+    THROW_ASSERT(negate_is_safe(arrow_value));
     assert(arrow_value != 0);
 
-    if (abs(arrow_value) > 1)
-        return make_shared<ast2_up>(arrow_value);
+    if (arrow_value != 1 && arrow_value != -1)
+        return make_unique<ast2_up>(arrow_value);
 
-    shared_ptr<ast2_integer> int_suffix = parse_ast_integer(tokens, idx, true);
+    unique_ptr<ast2_integer> int_suffix = _parse_ast2_integer(true);
     if (int_suffix)
     {
         int64_t final_value = int_suffix->value;
+        THROW_ASSERT(negate_is_safe(final_value));
+
         if (arrow_value == -1)
             final_value = -final_value;
 
-        return make_shared<ast2_up>(final_value);
+        return make_unique<ast2_up>(final_value);
     }
 
-    return make_shared<ast2_up>(arrow_value);
+    return make_unique<ast2_up>(arrow_value);
 }
 
-shared_ptr<ast2_nimber> parse_ast_nimber(const ast2_token_scope& tokens,
-                                         size_t& idx)
+unique_ptr<ast2_nimber> ast2_parser::_parse_ast2_nimber()
 {
-    const ast2_token* tok1 = get_nth_token(tokens, idx);
+    print_rule pr("Nimber");
+
+    const ast2_token* tok1 = _get_token(_idx);
     if (!tok1 || tok1->type != TOKEN_TYPE_STAR)
         return nullptr;
-    idx++;
+    _mark_consumed(_idx, AST2_RULE_NIMBER);
+    _idx++;
 
-    shared_ptr<ast2_integer> int_suffix = parse_ast_integer(tokens, idx, true);
+    unique_ptr<ast2_integer> int_suffix = _parse_ast2_integer(true);
     if (int_suffix)
     {
         const int64_t nim_value = int_suffix->value;
         THROW_ASSERT(nim_value >= 0);
-        return make_shared<ast2_nimber>(nim_value);
+
+        return make_unique<ast2_nimber>(nim_value);
     }
 
-    return make_shared<ast2_nimber>(1);
+    return make_unique<ast2_nimber>(1);
 }
 
-shared_ptr<ast2_rational_up_nimber> parse_ast_rational_up_nimber(
-    const ast2_token_scope& tokens, size_t& idx)
+unique_ptr<ast2_rational_up_nimber> ast2_parser::_parse_ast2_rational_up_nimber()
 {
-    shared_ptr<ast2_rational> rational = parse_ast_rational(tokens, idx);
-    shared_ptr<ast2_up> up = parse_ast_up(tokens, idx);
-    shared_ptr<ast2_nimber> nimber = parse_ast_nimber(tokens, idx);
+    print_rule pr("Rational_up_nimber");
+
+    unique_ptr<ast2_rational> rational = _parse_ast2_rational();
+    unique_ptr<ast2_up> up = _parse_ast2_up();
+    unique_ptr<ast2_nimber> nimber = _parse_ast2_nimber();
 
     if (!(rational || up || nimber))
         return nullptr;
 
-    return make_shared<ast2_rational_up_nimber>(rational, up, nimber);
+    return make_unique<ast2_rational_up_nimber>(
+        std::move(rational), std::move(up), std::move(nimber));
 }
 
-shared_ptr<ast2_game> parse_ast_game(const ast2_token_scope& tokens, size_t& idx)
+unique_ptr<ast2_explicit_game> ast2_parser::_parse_ast2_explicit_game()
 {
-    const size_t idx_start = idx;
+    print_rule pr("Explicit game");
 
-    // MINUS? (bracket_sum|braced_cgt_game|explicit_game)
-    const ast2_token* tok1 = get_nth_token(tokens, idx);
-    if (!tok1)
+    const ast2_token* tok1 = _get_token(_idx);
+    const ast2_token* tok2 = _get_token(_idx + 1);
+    const ast2_token* tok3 = _get_token(_idx + 2);
+
+    if (tok1 && tok1->type == TOKEN_TYPE_IDENT)
+        _mark_consumed(_idx, AST2_RULE_EXPLICIT_GAME);
+    else
         return nullptr;
 
-    const bool unary_minus = tok1->type == TOKEN_TYPE_MINUS;
-    bool actually_minus = unary_minus;
+    if (tok2 && tok2->type == TOKEN_TYPE_COLON)
+        _mark_consumed(_idx + 1, AST2_RULE_EXPLICIT_GAME);
+    else
+        return nullptr;
 
-    if (unary_minus)
-        idx++;
-
-    shared_ptr<i_ast2_atomic_game> atom;
-
-    if (!atom)
-        atom = parse_ast_bracket_sum(tokens, idx);
-    if (!atom)
-        atom = parse_ast_braced_cgt_game(tokens, idx);
-    if (!atom)
-        atom = parse_ast_explicit_game(tokens, idx);
-
-    // rational_up_nimber
-    if (!atom)
-    {
-        // Rewind unary minus
-        idx = idx_start;
-        actually_minus = false;
-        atom = parse_ast_rational_up_nimber(tokens, idx);
-    }
+    if (tok3 && tok3->type == TOKEN_TYPE_EXP_GAME_CONTENTS)
+        _mark_consumed(_idx + 2, AST2_RULE_EXPLICIT_GAME);
+    else
+        return nullptr;
 
 
-    // MINUS? rational_up_nimber
-    if (!atom && unary_minus)
-    {
-        idx = idx_start + 1;
-        actually_minus = true;
-        atom = parse_ast_rational_up_nimber(tokens, idx);
-    }
+    const string& game_title = tok1->str;
+    const string& game_contents = tok3->str;
 
-    const sign_enum sign_type = actually_minus ? SIGN_NEGATIVE : SIGN_POSITIVE;
-    return make_shared<ast2_game>(sign_type, atom);
+    _idx += 3;
+    return make_unique<ast2_explicit_game>(game_title, game_contents);
 }
 
-shared_ptr<ast2_sum> parse_ast_sum(const ast2_token_scope& tokens, size_t& idx)
+// Parse composite games
+unique_ptr<ast2_atomic_game> ast2_parser::_parse_ast2_atomic_game()
 {
-    const size_t idx_start = idx;
+    print_rule pr("Atomic game");
 
-    static vector<size_t> cycle_stack;
+    ast2_atomic_game::variant_t ptr_variant;
 
-    for (const size_t i : cycle_stack)
-        if (idx == i)
+    ptr_variant = _parse_ast2_rational_up_nimber();
+    if (ptr_variant_non_null(ptr_variant))
+        return make_unique<ast2_atomic_game>(std::move(ptr_variant));
+
+    ptr_variant = _parse_ast2_bracket_sum();
+    if (ptr_variant_non_null(ptr_variant))
+        return make_unique<ast2_atomic_game>(std::move(ptr_variant));
+
+    ptr_variant = _parse_ast2_braced_cgt_game();
+    if (ptr_variant_non_null(ptr_variant))
+        return make_unique<ast2_atomic_game>(std::move(ptr_variant));
+
+    ptr_variant = _parse_ast2_explicit_game();
+    if (ptr_variant_non_null(ptr_variant))
+        return make_unique<ast2_atomic_game>(std::move(ptr_variant));
+
+    return nullptr;
+}
+
+unique_ptr<ast2_plusminus_game> ast2_parser::_parse_ast2_plusminus_game()
+{
+    print_rule pr("Plusminus game");
+
+    const size_t idx_start = _idx;
+
+    const ast2_token* tok1 = _get_token(_idx);
+    if (!(tok1 && tok1->type == TOKEN_TYPE_PLUSMINUS))
+        return nullptr;
+
+    _mark_consumed(_idx, AST2_RULE_PLUSMINUS_GAME);
+    _idx++;
+
+    ast2_plusminus_game::variant_t ptr_variant;
+
+    ptr_variant = _parse_ast2_atomic_game();
+    if (ptr_variant_non_null(ptr_variant))
+        return make_unique<ast2_plusminus_game>(std::move(ptr_variant));
+
+    ptr_variant = _parse_ast2_braced_option_list();
+    if (ptr_variant_non_null(ptr_variant))
+        return make_unique<ast2_plusminus_game>(std::move(ptr_variant));
+
+    _idx = idx_start;
+    return nullptr;
+}
+
+unique_ptr<ast2_qualified_game> ast2_parser::_parse_ast2_qualified_game()
+{
+    print_rule pr("Qualified game");
+
+    const size_t idx_start = _idx;
+
+    ast2_qualified_game::variant_t ptr_variant;
+    sign_enum unary_sign = SIGN_POSITIVE;
+
+    ptr_variant = _parse_ast2_plusminus_game();
+
+    if (ptr_variant_null(ptr_variant))
+        ptr_variant = _parse_ast2_atomic_game();
+
+    if (ptr_variant_null(ptr_variant))
+    {
+        const ast2_token* tok1 = _get_token(_idx);
+
+        if (!tok1)
             return nullptr;
 
-    cycle_stack.push_back(idx);
-
-    vector<pair<sign_enum, shared_ptr<ast2_game>>> operands;
-
-    while (1)
-    {
-        const size_t idx_checkpoint = idx;
-        optional<sign_enum> sign_type;
-
-        if (operands.empty())
-            sign_type = SIGN_POSITIVE;
+        if (tok1->type == TOKEN_TYPE_PLUS)
+            unary_sign = SIGN_POSITIVE;
+        else if (tok1->type == TOKEN_TYPE_MINUS)
+            unary_sign = SIGN_NEGATIVE;
         else
-        {
-            const ast2_token* tok1 = get_nth_token(tokens, idx);
-            idx++;
+            return nullptr;
 
-            if (tok1 && tok1->type == TOKEN_TYPE_PLUS)
-                sign_type = SIGN_POSITIVE;
-            else if (tok1 && tok1->type==TOKEN_TYPE_MINUS)
-                sign_type = SIGN_NEGATIVE;
-        }
+        _mark_consumed(_idx, AST2_RULE_QUALIFIED_GAME);
+        _idx++;
 
-        if (sign_type)
-        {
-            shared_ptr<ast2_game> game_operand = parse_ast_game(tokens, idx);
-            if (game_operand)
-            {
-                operands.emplace_back(*sign_type, game_operand);
-                continue;
-            }
-        }
-
-        idx = idx_checkpoint;
-        break;
+        ptr_variant = _parse_ast2_atomic_game();
     }
 
-    cycle_stack.pop_back();
-
-    if (idx == idx_start && tokens.idx_inside_scope(idx))
+    if (ptr_variant_null(ptr_variant))
+    {
+        _idx = idx_start;
         return nullptr;
+    }
 
-    return make_shared<ast2_sum>(operands);
+    return std::visit([&](auto& ptr) -> unique_ptr<ast2_qualified_game>
+    {
+        THROW_ASSERT(ptr);
+        using element_t = std::decay_t<decltype(*ptr)>;
+
+        if constexpr (std::is_same_v<element_t, ast2_plusminus_game>)
+            return make_unique<ast2_qualified_game>(std::move(ptr));
+        else
+            return make_unique<ast2_qualified_game>(std::move(ptr), unary_sign);
+
+    }, ptr_variant);
 }
 
-shared_ptr<ast2_bracket_sum> parse_ast_bracket_sum(const ast2_token_scope& tokens,
-                                                   size_t& idx)
+// Parse CGT games
+unique_ptr<ast2_sum> ast2_parser::_parse_ast2_sum()
 {
-    const size_t idx_start = idx;
+    print_rule pr("Sum");
+
+    const size_t idx_start = _idx;
+    vector<pair<sign_enum, ast2_sum::variant_t>> summands;
+
+    // Empty?
+    if (!_get_token(_idx))
+        return make_unique<ast2_sum>(std::move(summands));
+
+    // 1st summand
+    ast2_sum::variant_t summand_variant = _parse_ast2_qualified_game();
+
+    if (ptr_variant_null(summand_variant))
+        return nullptr;
+
+    summands.emplace_back(SIGN_POSITIVE, std::move(summand_variant));
+
+    // Tail
+    while (1)
+    {
+        const size_t idx_checkpoint = _idx;
+
+        // Try plusminus game
+        summand_variant = _parse_ast2_plusminus_game();
+
+        if (ptr_variant_non_null(summand_variant))
+        {
+            summands.emplace_back(SIGN_POSITIVE, std::move(summand_variant));
+            continue;
+        }
+
+        // Get binary op
+        sign_enum binary_sign;
+
+        const ast2_token* tok1 = _get_token(_idx);
+        if (tok1 && tok1->type == TOKEN_TYPE_PLUS)
+            binary_sign = SIGN_POSITIVE;
+        else if (tok1 && tok1->type == TOKEN_TYPE_MINUS)
+            binary_sign = SIGN_NEGATIVE;
+        else
+            break;
+
+        _mark_consumed(_idx, AST2_RULE_SUM);
+        _idx++;
+
+        summand_variant = _parse_ast2_qualified_game();
+
+        if (ptr_variant_non_null(summand_variant))
+            summands.emplace_back(binary_sign, std::move(summand_variant));
+        else
+        {
+            _idx = idx_checkpoint;
+            break;
+        }
+    }
+
+    assert(ptr_variant_null(summand_variant));
+    return make_unique<ast2_sum>(std::move(summands));
+}
+
+unique_ptr<ast2_bracket_sum> ast2_parser::_parse_ast2_bracket_sum()
+{
+    print_rule pr("Bracket sum");
+
+    const size_t idx_start = _idx;
 
     // '('
-    const ast2_token* tok1 = get_nth_token(tokens, idx);
+    const ast2_token* tok1 = _get_token(_idx);
     if (!(tok1 && tok1->type == TOKEN_TYPE_LBRACK))
         return nullptr;
-    idx++;
+    _mark_consumed(_idx, AST2_RULE_BRACKET_SUM);
+    _idx++;
 
     // Sum
-    shared_ptr<ast2_sum> s = parse_ast_sum(tokens, idx);
+    unique_ptr<ast2_sum> s = _parse_ast2_sum();
     if (!s)
     {
-        idx = idx_start;
+        _idx = idx_start;
         return nullptr;
     }
 
     // ')'
-    const ast2_token* tok2 = get_nth_token(tokens, idx);
+    const ast2_token* tok2 = _get_token(_idx);
     if (!(tok2 && tok2->type == TOKEN_TYPE_RBRACK))
     {
-        idx = idx_start;
+        _idx = idx_start;
         return nullptr;
     }
-    idx++;
+    _mark_consumed(_idx, AST2_RULE_BRACKET_SUM);
+    _idx++;
 
-    // OK
-    return make_shared<ast2_bracket_sum>(s);
+    return make_unique<ast2_bracket_sum>(std::move(s));
 }
 
-shared_ptr<ast2_game_list> parse_ast_game_list(const ast2_token_scope& tokens,
-                                               size_t& idx)
+unique_ptr<ast2_option_list> ast2_parser::_parse_ast2_option_list()
 {
-    vector<shared_ptr<ast2_sum>> games;
+    print_rule pr("Option list");
 
-    bool first = true;
+    const size_t idx_start = _idx;
+    vector<unique_ptr<ast2_sum>> option_nodes;
+
+    // Empty alternative
+    if (!_get_token(_idx))
+        return make_unique<ast2_option_list>(std::move(option_nodes));
+
+    // Initial option
+    unique_ptr<ast2_sum> option = _parse_ast2_sum();
+    if (!option)
+        return nullptr;
+
+    option_nodes.emplace_back(std::move(option));
 
     while (1)
     {
-        const size_t idx_checkpoint = idx;
+        const size_t idx_checkpoint = _idx;
+        const ast2_token* tok1 = _get_token(_idx);
 
-        // Require comma?
-        if (!first)
-        {
-            const ast2_token* tok1 = get_nth_token(tokens, idx);
-            if (!(tok1 && tok1->type == TOKEN_TYPE_COMMA))
-                break;
-            idx++;
-        }
-
-        shared_ptr<ast2_sum> g = parse_ast_sum(tokens, idx);
-
-        if (!g)
-        {
-            idx = idx_checkpoint;
+        if (!(tok1 && tok1->type == TOKEN_TYPE_COMMA))
             break;
-        }
-        first = false;
 
-        if (g->operands.empty())
-            g.reset();
-        else
-            games.emplace_back(g);
+        _mark_consumed(_idx, AST2_RULE_OPTION_LIST);
+        _idx++;
+
+        option = _parse_ast2_sum();
+        if (option)
+        {
+            option_nodes.emplace_back(std::move(option));
+            continue;
+        }
+
+        _idx = idx_checkpoint;
+        break;
     }
 
-    return make_shared<ast2_game_list>(games);
+    assert(!option);
+    return make_unique<ast2_option_list>(std::move(option_nodes));
 }
 
-shared_ptr<ast2_braced_cgt_game> parse_ast_braced_cgt_game(
-    const ast2_token_scope& tokens, size_t& idx)
+unique_ptr<ast2_braced_option_list> ast2_parser::_parse_ast2_braced_option_list()
 {
-    const size_t idx_start = idx;
+    print_rule pr("Braced option list");
 
-    // Opening brace
-    const ast2_token* tok1 = get_nth_token(tokens, idx);
+    const size_t idx_start = _idx;
+
+    // '{'
+    const ast2_token* tok1 = _get_token(_idx);
     if (!(tok1 && tok1->type == TOKEN_TYPE_LBRACE))
         return nullptr;
+    _mark_consumed(_idx, AST2_RULE_BRACED_OPTION_LIST);
+    _idx++;
 
-    // Find closing brace that defines the end of our scope
-    size_t brace_stack_size = 1;
-    size_t idx_closing_brace;
-
-    for (size_t i = idx + 1; ; i++)
+    // Options
+    unique_ptr<ast2_option_list> option_list = _parse_ast2_option_list();
+    if (!option_list)
     {
-        const ast2_token* tok2 = get_nth_token(tokens, i);
-        if (!tok2)
-            return nullptr;
-
-        if (tok2->type == TOKEN_TYPE_LBRACE)
-            brace_stack_size++;
-        if (tok2->type == TOKEN_TYPE_RBRACE)
-            brace_stack_size--;
-
-        if (brace_stack_size == 0)
-        {
-            idx_closing_brace = i;
-            break;
-        }
+        _idx = idx_start;
+        return nullptr;
     }
 
-    const ast2_token_scope new_scope = tokens.cut(idx + 1, idx_closing_brace);
-    idx++;
+    // '}'
+    const ast2_token* tok2 = _get_token(_idx);
+    if (!(tok2 && tok2->type == TOKEN_TYPE_RBRACE))
+    {
+        _idx = idx_start;
+        return nullptr;
+    }
 
-    shared_ptr<ast2_unbraced_cgt_game> unbraced =
-        parse_unbraced_cgt_game(new_scope, idx);
+    _mark_consumed(_idx, AST2_RULE_BRACED_OPTION_LIST);
+    _idx++;
 
-    const bool consumed_all = !new_scope.idx_inside_scope(idx);
-    idx++;
-
-    if (unbraced && consumed_all)
-        return make_shared<ast2_braced_cgt_game>(unbraced);
-
-    idx = idx_start;
-    return nullptr;
+    return make_unique<ast2_braced_option_list>(std::move(option_list));
 }
 
-
-shared_ptr<ast2_unbraced_cgt_game> parse_unbraced_cgt_game(
-    const ast2_token_scope& tokens, size_t& idx)
+unique_ptr<ast2_unbraced_cgt_game> ast2_parser::_parse_ast2_unbraced_cgt_game()
 {
-    const size_t idx_start = idx;
+    print_rule pr("Unbraced CGT game");
+
+    const size_t idx_start = _idx;
 
     // Find largest bar in our current scope
     optional<size_t> max_bar_idx;
     int64_t max_bar_size = -1;
     bool max_bar_unique = true;
 
-    int brace_stack_size = 0;
+    size_t brace_stack_size = 0;
 
     auto update_max_bar = [&](const ast2_token* tok_bar, size_t i) -> void
     {
-        assert(tok_bar &&                             //
-               tok_bar->type == TOKEN_TYPE_BAR &&     //
-               get_nth_token(tokens, i) == tok_bar && //
-               brace_stack_size == 0                  //
+        assert(tok_bar &&                         //
+               tok_bar->type == TOKEN_TYPE_BAR && //
+               _get_token(i) == tok_bar &&        //
+               brace_stack_size == 0              //
         );
 
         const int64_t tok_bar_size = tok_bar->num;
@@ -769,19 +1092,22 @@ shared_ptr<ast2_unbraced_cgt_game> parse_unbraced_cgt_game(
         }
     };
 
-    for (size_t i = idx; ; i++)
+    for (size_t i = _idx; ; i++)
     {
-        const ast2_token* tok = get_nth_token(tokens, i);
+        const ast2_token* tok = _get_token(i);
         if (tok == nullptr)
             break;
 
         if (tok->type == TOKEN_TYPE_LBRACE)
             brace_stack_size++;
         if (tok->type == TOKEN_TYPE_RBRACE)
-            brace_stack_size--;
+        {
+            // No underflow
+            if (brace_stack_size == 0)
+                return nullptr;
 
-        if (brace_stack_size < 0)
-            return nullptr;
+            brace_stack_size--;
+        }
 
         if (brace_stack_size == 0 && tok->type == TOKEN_TYPE_BAR)
             update_max_bar(tok, i);
@@ -790,67 +1116,602 @@ shared_ptr<ast2_unbraced_cgt_game> parse_unbraced_cgt_game(
     if (!(max_bar_idx.has_value() && max_bar_unique))
         return nullptr;
 
-    size_t idx_left = idx;
+    // Compute left and right scopes
+    const ast2_token_scope current_scope = _get_active_scope();
+
+    size_t idx_left = _idx;
     const size_t idx_left_end = *max_bar_idx;
-    const ast2_token_scope scope_left = tokens.cut(idx_left, idx_left_end);
+    const ast2_token_scope left_scope = current_scope.cut(idx_left, idx_left_end);
 
     size_t idx_right = *max_bar_idx + 1;
-    const size_t idx_right_end = tokens.end;
-    const ast2_token_scope scope_right = tokens.cut(idx_right, idx_right_end);
+    const size_t idx_right_end = current_scope.end;
+    const ast2_token_scope right_scope = current_scope.cut(idx_right, idx_right_end);
 
-    shared_ptr<i_ast2_option_set> left_set =
-        parse_option_set(scope_left, idx_left);
+    using variant_t = ast2_unbraced_cgt_game::variant_t;
 
-    if (!(left_set && scope_left.idx_outside_scope(idx_left)))
+    // Get left set
+    _push_scope(left_scope);
+
+    variant_t left_set = _parse_ast2_unbraced_cgt_game();
+    if (ptr_variant_null(left_set))
+        left_set = _parse_ast2_option_list();
+
+    const bool left_ok =
+        ptr_variant_non_null(left_set) && _get_token(_idx) == nullptr;
+
+    _pop_scope();
+
+    if (!left_ok)
+    {
+        _idx = idx_start;
         return nullptr;
+    }
 
-    shared_ptr<i_ast2_option_set> right_set =
-        parse_option_set(scope_right, idx_right);
 
-    if (!(right_set && scope_right.idx_outside_scope(idx_right)))
+    // Consume bar
+    assert(_idx == *max_bar_idx);
+    _mark_consumed(_idx, AST2_RULE_UNBRACED_CGT_GAME);
+    _idx++;
+
+    // Get right set
+    _push_scope(right_scope);
+
+    variant_t right_set = _parse_ast2_unbraced_cgt_game();
+    if (ptr_variant_null(right_set))
+        right_set = _parse_ast2_option_list();
+
+    const bool right_ok =
+        ptr_variant_non_null(right_set) && (_get_token(_idx) == nullptr);
+    _pop_scope();
+
+    if (!right_ok)
+    {
+        _idx = idx_start;
         return nullptr;
+    }
 
-    idx = idx_right;
-    return make_shared<ast2_unbraced_cgt_game>(left_set, right_set);
+    return make_unique<ast2_unbraced_cgt_game>(std::move(left_set),
+                                               std::move(right_set));
 }
 
-
-shared_ptr<i_ast2_option_set> parse_option_set(const ast2_token_scope& tokens,
-                                               size_t& idx)
+unique_ptr<ast2_braced_cgt_game> ast2_parser::_parse_ast2_braced_cgt_game()
 {
-    shared_ptr<ast2_unbraced_cgt_game> unbraced =
-        parse_unbraced_cgt_game(tokens, idx);
+    print_rule pr("Braced CGT game");
 
-    if (unbraced)
-        return unbraced;
+    const size_t idx_start = _idx;
 
-    shared_ptr<ast2_game_list> games = parse_ast_game_list(tokens, idx);
-
-    if (games)
-        return games;
-
-    return nullptr;
-}
-
-shared_ptr<ast2_explicit_game> parse_ast_explicit_game(
-    const ast2_token_scope& tokens, size_t& idx)
-{
-    const ast2_token* tok1 = get_nth_token(tokens, idx);
-    const ast2_token* tok2 = get_nth_token(tokens, idx + 1);
-    const ast2_token* tok3 = get_nth_token(tokens, idx + 2);
-
-    if (!(tok1 && tok1->type == TOKEN_TYPE_IDENT &&          //
-          tok2 && tok2->type == TOKEN_TYPE_COLON &&          //
-          tok3 && tok3->type == TOKEN_TYPE_EXP_GAME_CONTENTS //
-          ))
+    // Opening brace
+    const ast2_token* tok1 = _get_token(_idx);
+    if (!(tok1 && tok1->type == TOKEN_TYPE_LBRACE))
         return nullptr;
 
-    const string& game_title = tok1->str;
-    const string& game_contents = tok3->str;
+    _mark_consumed(_idx, AST2_RULE_BRACED_CGT_GAME);
+    _idx++;
 
-    idx += 3;
-    return make_shared<ast2_explicit_game>(game_title, game_contents);
+    // Find closing brace that defines the end of our scope
+    size_t brace_stack_size = 1;
+    size_t idx_closing_brace;
+
+    for (size_t i = _idx; ; i++)
+    {
+        const ast2_token* tok2 = _get_token(i);
+        if (!tok2)
+        {
+            _idx = idx_start;
+            return nullptr;
+        }
+
+        if (tok2->type == TOKEN_TYPE_LBRACE)
+            brace_stack_size++;
+        if (tok2->type == TOKEN_TYPE_RBRACE)
+            brace_stack_size--;
+
+        if (brace_stack_size == 0)
+        {
+            idx_closing_brace = i;
+            break;
+        }
+    }
+
+    // Don't mark closing brace consumed yet!
+
+    const ast2_token_scope current_scope = _get_active_scope();
+    const ast2_token_scope new_scope = current_scope.cut(_idx, idx_closing_brace);
+
+    _push_scope(new_scope);
+    unique_ptr<ast2_unbraced_cgt_game> unbraced = _parse_ast2_unbraced_cgt_game();
+
+    // Consumed all?
+    assert(LOGICAL_IMPLIES(unbraced, _get_token(_idx) == nullptr));
+    _pop_scope();
+
+    if (!unbraced)
+    {
+        _idx = idx_start;
+        return nullptr;
+    }
+
+    assert(_idx == idx_closing_brace);
+    _mark_consumed(idx_closing_brace, AST2_RULE_BRACED_CGT_GAME);
+    _idx++;
+
+    return make_unique<ast2_braced_cgt_game>(std::move(unbraced));
 }
+
+////////////////////////////////////////////////// Parsing functions
+//shared_ptr<ast2_integer> ast2_parser::_parse_ast_integer(bool at_least_0)
+//{
+//    const ast2_token* tok1 = _get_token(_idx);
+//    if (!tok1)
+//        return nullptr;
+//
+//    int64_t abs_value;
+//    bool is_negative = false;
+//
+//    if (tok1->type == TOKEN_TYPE_MINUS)
+//    {
+//        if (at_least_0)
+//            return nullptr;
+//
+//        _mark_consumed(_idx, AST2_RULE_INTEGER);
+//        is_negative = true;
+//
+//        const ast2_token* tok2 = _get_token(_idx + 1);
+//
+//        if (!tok2 || tok2->type != TOKEN_TYPE_INT)
+//            return nullptr;
+//
+//        _mark_consumed(_idx + 1, AST2_RULE_INTEGER);
+//        abs_value = tok1->num;
+//    }
+//    else
+//    {
+//        if (tok1->type != TOKEN_TYPE_INT)
+//            return nullptr;
+//
+//        _mark_consumed(_idx, AST2_RULE_INTEGER);
+//        abs_value = tok1->num;
+//    }
+//
+//    THROW_ASSERT(abs_value >= 0 && negate_is_safe(abs_value));
+//
+//    if (is_negative)
+//        abs_value = -abs_value;
+//
+//    _idx += (1 + is_negative);
+//    return make_shared<ast2_integer>(abs_value);
+//}
+//
+//shared_ptr<ast2_rational> ast2_parser::_parse_ast_rational()
+//{
+//    shared_ptr<ast2_integer> top = _parse_ast_integer(false);
+//    if (!top)
+//        return nullptr;
+//
+//    const size_t idx_after_top = _idx;
+//
+//    const int64_t top_value = top->value;
+//    int64_t bottom_value = 1;
+//
+//    const ast2_token* tok_slash = _get_token(_idx);
+//    if (tok_slash && tok_slash->type == TOKEN_TYPE_SLASH)
+//    {
+//        _mark_consumed(_idx, AST2_RULE_RATIONAL);
+//        _idx++;
+//        shared_ptr<ast2_integer> bottom = _parse_ast_integer(false);
+//
+//        if (bottom)
+//            bottom_value = bottom->value;
+//        else
+//            _idx = idx_after_top;
+//    }
+//
+//    return make_shared<ast2_rational>(top_value, bottom_value);
+//}
+//
+//shared_ptr<ast2_up> ast2_parser::_parse_ast_up()
+//{
+//    const ast2_token* tok1 = _get_token(_idx);
+//    if (!tok1 || tok1->type != TOKEN_TYPE_UP_DOWN)
+//        return nullptr;
+//    _mark_consumed(_idx, AST2_RULE_UP);
+//    _idx++;
+//
+//    const int64_t arrow_value = tok1->num;
+//    assert(arrow_value != 0);
+//
+//    if (abs(arrow_value) > 1)
+//        return make_shared<ast2_up>(arrow_value);
+//
+//    shared_ptr<ast2_integer> int_suffix = _parse_ast_integer(true);
+//    if (int_suffix)
+//    {
+//        int64_t final_value = int_suffix->value;
+//        if (arrow_value == -1)
+//            final_value = -final_value;
+//
+//        return make_shared<ast2_up>(final_value);
+//    }
+//
+//    return make_shared<ast2_up>(arrow_value);
+//}
+//
+//shared_ptr<ast2_nimber> ast2_parser::_parse_ast_nimber()
+//{
+//    const ast2_token* tok1 = _get_token(_idx);
+//    if (!tok1 || tok1->type != TOKEN_TYPE_STAR)
+//        return nullptr;
+//    _mark_consumed(_idx, AST2_RULE_NIMBER);
+//    _idx++;
+//
+//    shared_ptr<ast2_integer> int_suffix = _parse_ast_integer(true);
+//    if (int_suffix)
+//    {
+//        const int64_t nim_value = int_suffix->value;
+//        THROW_ASSERT(nim_value >= 0);
+//
+//        return make_shared<ast2_nimber>(nim_value);
+//    }
+//
+//    return make_shared<ast2_nimber>(1);
+//}
+//
+//shared_ptr<ast2_rational_up_nimber> ast2_parser::_parse_ast_rational_up_nimber()
+//{
+//    shared_ptr<ast2_rational> rational = _parse_ast_rational();
+//    shared_ptr<ast2_up> up = _parse_ast_up();
+//    shared_ptr<ast2_nimber> nimber = _parse_ast_nimber();
+//
+//    if (!(rational || up || nimber))
+//        return nullptr;
+//
+//    return make_shared<ast2_rational_up_nimber>(rational, up, nimber);
+//}
+//
+//shared_ptr<ast2_game> ast2_parser::_parse_ast_game()
+//{
+//    const size_t idx_start = _idx;
+//
+//    // MINUS? (bracket_sum|braced_cgt_game|explicit_game)
+//    const ast2_token* tok1 = _get_token(_idx);
+//    if (!tok1)
+//        return nullptr;
+//
+//    const bool unary_minus = tok1->type == TOKEN_TYPE_MINUS;
+//    bool actually_minus = unary_minus;
+//
+//    if (unary_minus)
+//    {
+//        _mark_consumed(_idx, AST2_RULE_GAME);
+//        _idx++;
+//    }
+//
+//    shared_ptr<i_ast2_atomic_game> atom;
+//
+//    if (!atom)
+//        atom = _parse_ast_bracket_sum();
+//    if (!atom)
+//        atom = _parse_ast_braced_cgt_game();
+//    if (!atom)
+//        atom = _parse_ast_explicit_game();
+//
+//    // rational_up_nimber
+//    if (!atom)
+//    {
+//        // Rewind unary minus
+//        _idx = idx_start;
+//        actually_minus = false;
+//        atom = _parse_ast_rational_up_nimber();
+//    }
+//
+//
+//    // MINUS? rational_up_nimber
+//    if (!atom && unary_minus)
+//    {
+//        _idx = idx_start + 1;
+//        actually_minus = true;
+//        atom = _parse_ast_rational_up_nimber();
+//    }
+//
+//    const sign_enum sign_type = actually_minus ? SIGN_NEGATIVE : SIGN_POSITIVE;
+//    return make_shared<ast2_game>(sign_type, atom);
+//}
+//
+//shared_ptr<ast2_sum> ast2_parser::_parse_ast_sum()
+//{
+//    const size_t idx_start = _idx;
+//
+//    static vector<size_t> cycle_stack;
+//
+//    for (const size_t i : cycle_stack)
+//        if (_idx == i)
+//            return nullptr;
+//
+//    cycle_stack.push_back(_idx);
+//
+//    vector<pair<sign_enum, shared_ptr<ast2_game>>> operands;
+//
+//    while (1)
+//    {
+//        const size_t idx_checkpoint = _idx;
+//        optional<sign_enum> sign_type;
+//
+//        if (operands.empty())
+//            sign_type = SIGN_POSITIVE;
+//        else
+//        {
+//            const ast2_token* tok1 = _get_token(_idx);
+//
+//            if (tok1 && tok1->type == TOKEN_TYPE_PLUS)
+//                sign_type = SIGN_POSITIVE;
+//            else if (tok1 && tok1->type == TOKEN_TYPE_MINUS)
+//                sign_type = SIGN_NEGATIVE;
+//
+//            if (sign_type)
+//            {
+//                _mark_consumed(_idx, AST2_RULE_SUM);
+//                _idx++;
+//            }
+//        }
+//
+//        if (sign_type)
+//        {
+//            shared_ptr<ast2_game> game_operand = _parse_ast_game();
+//            if (game_operand)
+//            {
+//                operands.emplace_back(*sign_type, game_operand);
+//                continue;
+//            }
+//        }
+//
+//        _idx = idx_checkpoint;
+//        break;
+//    }
+//
+//    cycle_stack.pop_back();
+//
+//    if (_idx == idx_start && _get_token(_idx) != nullptr)
+//        return nullptr;
+//
+//    return make_shared<ast2_sum>(operands);
+//}
+//
+//shared_ptr<ast2_bracket_sum> ast2_parser::_parse_ast_bracket_sum()
+//{
+//    const size_t idx_start = _idx;
+//
+//    // '('
+//    const ast2_token* tok1 = _get_token(_idx);
+//    if (!(tok1 && tok1->type == TOKEN_TYPE_LBRACK))
+//        return nullptr;
+//    _mark_consumed(_idx, AST2_RULE_BRACKET_SUM);
+//    _idx++;
+//
+//    // Sum
+//    shared_ptr<ast2_sum> s = _parse_ast_sum();
+//    if (!s)
+//    {
+//        _idx = idx_start;
+//        return nullptr;
+//    }
+//
+//    // ')'
+//    const ast2_token* tok2 = _get_token(_idx);
+//    if (!(tok2 && tok2->type == TOKEN_TYPE_RBRACK))
+//    {
+//        _idx = idx_start;
+//        return nullptr;
+//    }
+//    _mark_consumed(_idx, AST2_RULE_BRACKET_SUM);
+//    _idx++;
+//
+//    // OK
+//    return make_shared<ast2_bracket_sum>(s);
+//}
+//
+//shared_ptr<ast2_game_list> parse_ast_game_list(const ast2_token_scope& tokens,
+//                                               size_t& idx)
+//{
+//    vector<shared_ptr<ast2_sum>> games;
+//
+//    bool first = true;
+//
+//    while (1)
+//    {
+//        const size_t idx_checkpoint = idx;
+//
+//        // Require comma?
+//        if (!first)
+//        {
+//            const ast2_token* tok1 = get_nth_token(tokens, idx);
+//            if (!(tok1 && tok1->type == TOKEN_TYPE_COMMA))
+//                break;
+//            idx++;
+//        }
+//
+//        shared_ptr<ast2_sum> g = parse_ast_sum(tokens, idx);
+//
+//        if (!g)
+//        {
+//            idx = idx_checkpoint;
+//            break;
+//        }
+//        first = false;
+//
+//        if (g->operands.empty())
+//            g.reset();
+//        else
+//            games.emplace_back(g);
+//    }
+//
+//    return make_shared<ast2_game_list>(games);
+//}
+//
+//shared_ptr<ast2_braced_cgt_game> parse_ast_braced_cgt_game(
+//    const ast2_token_scope& tokens, size_t& idx)
+//{
+//    const size_t idx_start = idx;
+//
+//    // Opening brace
+//    const ast2_token* tok1 = get_nth_token(tokens, idx);
+//    if (!(tok1 && tok1->type == TOKEN_TYPE_LBRACE))
+//        return nullptr;
+//
+//    // Find closing brace that defines the end of our scope
+//    size_t brace_stack_size = 1;
+//    size_t idx_closing_brace;
+//
+//    for (size_t i = idx + 1; ; i++)
+//    {
+//        const ast2_token* tok2 = get_nth_token(tokens, i);
+//        if (!tok2)
+//            return nullptr;
+//
+//        if (tok2->type == TOKEN_TYPE_LBRACE)
+//            brace_stack_size++;
+//        if (tok2->type == TOKEN_TYPE_RBRACE)
+//            brace_stack_size--;
+//
+//        if (brace_stack_size == 0)
+//        {
+//            idx_closing_brace = i;
+//            break;
+//        }
+//    }
+//
+//    const ast2_token_scope new_scope = tokens.cut(idx + 1, idx_closing_brace);
+//    idx++;
+//
+//    shared_ptr<ast2_unbraced_cgt_game> unbraced =
+//        parse_unbraced_cgt_game(new_scope, idx);
+//
+//    const bool consumed_all = !new_scope.idx_inside_scope(idx);
+//    idx++;
+//
+//    if (unbraced && consumed_all)
+//        return make_shared<ast2_braced_cgt_game>(unbraced);
+//
+//    idx = idx_start;
+//    return nullptr;
+//}
+//
+//
+//shared_ptr<ast2_unbraced_cgt_game> parse_unbraced_cgt_game(
+//    const ast2_token_scope& tokens, size_t& idx)
+//{
+//    const size_t idx_start = idx;
+//
+//    // Find largest bar in our current scope
+//    optional<size_t> max_bar_idx;
+//    int64_t max_bar_size = -1;
+//    bool max_bar_unique = true;
+//
+//    int brace_stack_size = 0;
+//
+//    auto update_max_bar = [&](const ast2_token* tok_bar, size_t i) -> void
+//    {
+//        assert(tok_bar &&                             //
+//               tok_bar->type == TOKEN_TYPE_BAR &&     //
+//               get_nth_token(tokens, i) == tok_bar && //
+//               brace_stack_size == 0                  //
+//        );
+//
+//        const int64_t tok_bar_size = tok_bar->num;
+//        assert(tok_bar_size > 0);
+//
+//        if (tok_bar_size == max_bar_size)
+//            max_bar_unique = false;
+//
+//        if (tok_bar_size > max_bar_size)
+//        {
+//            max_bar_idx = i;
+//            max_bar_size = tok_bar_size;
+//            max_bar_unique = true;
+//        }
+//    };
+//
+//    for (size_t i = idx; ; i++)
+//    {
+//        const ast2_token* tok = get_nth_token(tokens, i);
+//        if (tok == nullptr)
+//            break;
+//
+//        if (tok->type == TOKEN_TYPE_LBRACE)
+//            brace_stack_size++;
+//        if (tok->type == TOKEN_TYPE_RBRACE)
+//            brace_stack_size--;
+//
+//        if (brace_stack_size < 0)
+//            return nullptr;
+//
+//        if (brace_stack_size == 0 && tok->type == TOKEN_TYPE_BAR)
+//            update_max_bar(tok, i);
+//    }
+//
+//    if (!(max_bar_idx.has_value() && max_bar_unique))
+//        return nullptr;
+//
+//    size_t idx_left = idx;
+//    const size_t idx_left_end = *max_bar_idx;
+//    const ast2_token_scope scope_left = tokens.cut(idx_left, idx_left_end);
+//
+//    size_t idx_right = *max_bar_idx + 1;
+//    const size_t idx_right_end = tokens.end;
+//    const ast2_token_scope scope_right = tokens.cut(idx_right, idx_right_end);
+//
+//    shared_ptr<i_ast2_option_set> left_set =
+//        parse_option_set(scope_left, idx_left);
+//
+//    if (!(left_set && scope_left.idx_outside_scope(idx_left)))
+//        return nullptr;
+//
+//    shared_ptr<i_ast2_option_set> right_set =
+//        parse_option_set(scope_right, idx_right);
+//
+//    if (!(right_set && scope_right.idx_outside_scope(idx_right)))
+//        return nullptr;
+//
+//    idx = idx_right;
+//    return make_shared<ast2_unbraced_cgt_game>(left_set, right_set);
+//}
+//
+//
+//shared_ptr<i_ast2_option_set> parse_option_set(const ast2_token_scope& tokens,
+//                                               size_t& idx)
+//{
+//    shared_ptr<ast2_unbraced_cgt_game> unbraced =
+//        parse_unbraced_cgt_game(tokens, idx);
+//
+//    if (unbraced)
+//        return unbraced;
+//
+//    shared_ptr<ast2_game_list> games = parse_ast_game_list(tokens, idx);
+//
+//    if (games)
+//        return games;
+//
+//    return nullptr;
+//}
+//
+//shared_ptr<ast2_explicit_game> parse_ast_explicit_game(
+//    const ast2_token_scope& tokens, size_t& idx)
+//{
+//    const ast2_token* tok1 = get_nth_token(tokens, idx);
+//    const ast2_token* tok2 = get_nth_token(tokens, idx + 1);
+//    const ast2_token* tok3 = get_nth_token(tokens, idx + 2);
+//
+//    if (!(tok1 && tok1->type == TOKEN_TYPE_IDENT &&          //
+//          tok2 && tok2->type == TOKEN_TYPE_COLON &&          //
+//          tok3 && tok3->type == TOKEN_TYPE_EXP_GAME_CONTENTS //
+//          ))
+//        return nullptr;
+//
+//    const string& game_title = tok1->str;
+//    const string& game_contents = tok3->str;
+//
+//    idx += 3;
+//    return make_shared<ast2_explicit_game>(game_title, game_contents);
+//}
 
 } // namespace
 
@@ -864,7 +1725,7 @@ cgt_environment::cgt_environment(shared_ptr<const ast2_sum> sum_node)
 game* cgt_environment::make_game() const
 {
     THROW_ASSERT(_sum_node);
-    return _sum_node->make_game_sum(false);
+    return _sum_node->make_game(false);
 }
 
 void test_cgt_environment(const string& env_string, size_t line_start, size_t column_start)
@@ -889,9 +1750,10 @@ void test_cgt_environment(const string& env_string, size_t line_start, size_t co
 
     cout << endl;
 
-    const ast2_token_scope ts(&tokens);
-    size_t idx = 0;
-    shared_ptr<ast2_sum> s = parse_ast_sum(ts, idx);
+    //const ast2_token_scope ts(0, tokens.size());
+    //size_t idx = 0;
+    ast2_parser parser;
+    unique_ptr<ast2_sum> s = parser.parse(&tokens);
 
     cout << "Parse tree:" << endl;
     assert(s);
@@ -905,7 +1767,7 @@ void test_cgt_environment(const string& env_string, size_t line_start, size_t co
     s->print_graph(graph);
     graph.print_to_file(file_name, env_string);
 
-    THROW_ASSERT(idx == tokens.size(), "Parsing incomplete!");
+    //THROW_ASSERT(idx == tokens.size(), "Parsing incomplete!");
 }
 
 cgt_environment parse_cgt_environment(const string& env_string, size_t line_start, size_t column_start)
@@ -914,10 +1776,9 @@ cgt_environment parse_cgt_environment(const string& env_string, size_t line_star
     const vector<ast2_token> tokens =
         lexer.get_tokens(&env_string, line_start, column_start);
 
-    const ast2_token_scope ts(&tokens);
-    size_t idx = 0;
-    shared_ptr<ast2_sum> s = parse_ast_sum(ts, idx);
+    ast2_parser parser;
+    unique_ptr<ast2_sum> sum = parser.parse(&tokens);
 
-    return cgt_environment(s);
+    return cgt_environment(shared_ptr<const ast2_sum>(sum.release()));
 }
 

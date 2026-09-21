@@ -10,172 +10,279 @@
 
 class game;
 
-//////////////////////////////////////// struct i_ast2_node
-struct i_ast2_node
+////////////////////////////////////////////////// Node interfaces
+class i_ast2_node
 {
+public:
     virtual ~i_ast2_node() {}
     virtual void print(std::ostream& os, uint64_t depth) const = 0;
     virtual void print_graph(generic_graph_printer& graph) const = 0;
 };
 
-//////////////////////////////////////// struct i_ast2_atomic_game
-struct i_ast2_atomic_game: public i_ast2_node
+class i_ast2_game: public i_ast2_node
 {
-    virtual game* make_atomic_game(bool negate) const = 0;
+public:
+    virtual game* make_game(bool negate) const = 0;
 };
 
-//////////////////////////////////////// struct i_ast2_option_set
-struct i_ast2_option_set: public i_ast2_node
+class i_ast2_game_list: public i_ast2_node
 {
-    virtual std::vector<game*> make_option_set(bool negate) const = 0;
+public:
+    virtual std::vector<game*> make_game_list(bool negate) const = 0;
 };
 
-//////////////////////////////////////// struct ast2_explicit_game
-struct ast2_explicit_game: public i_ast2_atomic_game
+////////////////////////////////////////////////// Node type declarations
+class ast2_integer;
+class ast2_rational;
+class ast2_up;
+class ast2_nimber;
+class ast2_rational_up_nimber;
+class ast2_explicit_game;
+class ast2_atomic_game;
+class ast2_plusminus_game;
+class ast2_qualified_game;
+class ast2_sum;
+class ast2_bracket_sum;
+class ast2_option_list;
+class ast2_braced_option_list;
+class ast2_unbraced_cgt_game;
+class ast2_braced_cgt_game;
+
+////////////////////////////////////////////////// Basic games
+class ast2_integer : public i_ast2_node
 {
-    ast2_explicit_game(std::string game_title, std::string game_contents);
+public:
+    ast2_integer(int64_t value);
 
-    void print(std::ostream& os, uint64_t depth) const override;
-    void print_graph(generic_graph_printer& graph) const override;
-
-    game* make_atomic_game(bool negate) const override;
-
-    std::string game_title;
-    std::string game_contents;
-};
-
-//////////////////////////////////////// struct ast2_integer
-struct ast2_integer: public i_ast2_node
-{
-    ast2_integer(int64_t value): value(value) {};
     void print(std::ostream& os, uint64_t depth) const override;
     void print_graph(generic_graph_printer& graph) const override;
 
     int64_t value;
 };
 
-//////////////////////////////////////// struct ast2_rational
-struct ast2_rational: public i_ast2_node
+class ast2_rational: public i_ast2_game
 {
+public:
     ast2_rational(int64_t top, int64_t bottom);
+
     void print(std::ostream& os, uint64_t depth) const override;
     void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
 
     int64_t top;
     int64_t bottom;
 };
 
-//////////////////////////////////////// struct ast2_up
-struct ast2_up: public i_ast2_node
+class ast2_up: public i_ast2_game
 {
-    ast2_up(int64_t up_value): up_value(up_value) {}
+public:
+    ast2_up(int64_t up_value);
+
     void print(std::ostream& os, uint64_t depth) const override;
     void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
 
     int64_t up_value;
 };
 
-//////////////////////////////////////// struct ast2_nimber
-struct ast2_nimber: public i_ast2_node
+class ast2_nimber: public i_ast2_game
 {
+public:
     ast2_nimber(int64_t nim_value);
+
     void print(std::ostream& os, uint64_t depth) const override;
     void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
 
     int64_t nim_value;
 };
 
-//////////////////////////////////////// struct ast2_rational_up_nimber
-struct ast2_rational_up_nimber: public i_ast2_atomic_game
+class ast2_rational_up_nimber: public i_ast2_game
 {
-    ast2_rational_up_nimber(std::shared_ptr<ast2_rational> rational,
-                            std::shared_ptr<ast2_up> up,
-                            std::shared_ptr<ast2_nimber> nimber);
+public:
+    ast2_rational_up_nimber(std::unique_ptr<ast2_rational> rational,
+                            std::unique_ptr<ast2_up> up,
+                            std::unique_ptr<ast2_nimber> nimber);
 
     void print(std::ostream& os, uint64_t depth) const override;
     void print_graph(generic_graph_printer& graph) const override;
 
-    game* make_atomic_game(bool negate) const override;
+    game* make_game(bool negate) const override;
 
-    std::shared_ptr<ast2_rational> rational;
-    std::shared_ptr<ast2_up> up;
-    std::shared_ptr<ast2_nimber> nimber;
+    std::unique_ptr<ast2_rational> rational;
+    std::unique_ptr<ast2_up> up;
+    std::unique_ptr<ast2_nimber> nimber;
 };
 
-//////////////////////////////////////// struct ast2_game
-struct ast2_game: public i_ast2_node
+class ast2_explicit_game: public i_ast2_game
 {
-    ast2_game(sign_enum sign_type, std::shared_ptr<i_ast2_atomic_game> atomic_game);
-    void print(std::ostream& os, uint64_t depth) const override;
-    void print_graph(generic_graph_printer& graph) const override;
-
-    game* make_game(bool negate) const;
-
-    sign_enum sign_type;
-    std::shared_ptr<i_ast2_atomic_game> atomic_game;
-};
-
-//////////////////////////////////////// struct ast2_sum
-struct ast2_sum: public i_ast2_node
-{
-    ast2_sum(std::vector<std::pair<sign_enum, std::shared_ptr<ast2_game>>> operands);
-    void print(std::ostream& os, uint64_t depth) const override;
-    void print_graph(generic_graph_printer& graph) const override;
-
-    game* make_game_sum(bool negate) const;
-
-    std::vector<std::pair<sign_enum, std::shared_ptr<ast2_game>>> operands;
-};
-
-//////////////////////////////////////// struct ast2_bracket_sum
-struct ast2_bracket_sum: public i_ast2_atomic_game
-{
-    ast2_bracket_sum(std::shared_ptr<ast2_sum> sum);
-    void print(std::ostream& os, uint64_t depth) const override;
-    void print_graph(generic_graph_printer& graph) const override;
-
-    game* make_atomic_game(bool negate) const override;
-
-    std::shared_ptr<ast2_sum> sum;
-};
-
-//////////////////////////////////////// struct ast2_game_list
-struct ast2_game_list: public i_ast2_option_set
-{
-    ast2_game_list(std::vector<std::shared_ptr<ast2_sum>> game_list);
-    void print(std::ostream& os, uint64_t depth) const override;
-    void print_graph(generic_graph_printer& graph) const override;
-
-    std::vector<game*> make_option_set(bool negate) const override;
-
-    std::vector<std::shared_ptr<ast2_sum>> game_list;
-};
-
-//////////////////////////////////////// struct ast2_unbraced_cgt_game
-struct ast2_unbraced_cgt_game: public i_ast2_option_set
-{
-    ast2_unbraced_cgt_game(std::shared_ptr<i_ast2_option_set> left_set,
-                         std::shared_ptr<i_ast2_option_set> right_set);
+public:
+    ast2_explicit_game(std::string game_title, std::string game_contents);
 
     void print(std::ostream& os, uint64_t depth) const override;
     void print_graph(generic_graph_printer& graph) const override;
 
-    cgt_game* make_cgt_game(bool negate) const;
-    std::vector<game*> make_option_set(bool negate) const override;
+    game* make_game(bool negate) const override;
 
-    std::shared_ptr<i_ast2_option_set> left_set;
-    std::shared_ptr<i_ast2_option_set> right_set;
+    std::string game_title;
+    std::string game_contents;
 };
 
-//////////////////////////////////////// struct ast2_braced_cgt_game
-struct ast2_braced_cgt_game: public i_ast2_atomic_game
+////////////////////////////////////////////////// Composite games
+class ast2_atomic_game: public i_ast2_game
 {
-    ast2_braced_cgt_game(std::shared_ptr<ast2_unbraced_cgt_game> unbraced_cgt);
+public:
+    using variant_t =                                 //
+        std::variant<                                 //
+            std::unique_ptr<ast2_rational_up_nimber>, //
+            std::unique_ptr<ast2_bracket_sum>,        //
+            std::unique_ptr<ast2_braced_cgt_game>,    //
+            std::unique_ptr<ast2_explicit_game>>;     //
+
+    ast2_atomic_game(variant_t node_ptr_variant);
+
     void print(std::ostream& os, uint64_t depth) const override;
     void print_graph(generic_graph_printer& graph) const override;
 
-    game* make_atomic_game(bool negate) const override;
+    game* make_game(bool negate) const override;
 
-    std::shared_ptr<ast2_unbraced_cgt_game> unbraced_cgt;
+    variant_t node_ptr_variant;
 };
 
+class ast2_plusminus_game: public i_ast2_game
+{
+public:
+    using variant_t =                                  //
+        std::variant<                                  //
+            std::unique_ptr<ast2_atomic_game>,         //
+            std::unique_ptr<ast2_braced_option_list>>; //
+
+    ast2_plusminus_game(variant_t node_ptr_variant);
+
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
+
+    variant_t node_ptr_variant;
+};
+
+class ast2_qualified_game: public i_ast2_game
+{
+public:
+    using variant_t =                              //
+        std::variant<                              //
+            std::unique_ptr<ast2_atomic_game>,     //
+            std::unique_ptr<ast2_plusminus_game>>; //
+
+    ast2_qualified_game(std::unique_ptr<ast2_atomic_game> atomic_game,
+                        sign_enum unary_sign);
+    ast2_qualified_game(std::unique_ptr<ast2_plusminus_game> plusminus_game);
+
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
+
+    variant_t node_ptr_variant;
+    sign_enum unary_sign;
+};
+
+////////////////////////////////////////////////// CGT games
+class ast2_sum: public i_ast2_game
+{
+public:
+    using variant_t =                              //
+        std::variant<                              //
+            std::unique_ptr<ast2_qualified_game>,  //
+            std::unique_ptr<ast2_plusminus_game>>; //
+
+    ast2_sum(std::vector<std::pair<sign_enum, variant_t>> summands);
+
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
+
+    std::vector<std::pair<sign_enum, variant_t>> summands;
+};
+
+class ast2_bracket_sum: public i_ast2_game
+{
+public:
+    ast2_bracket_sum(std::unique_ptr<ast2_sum> sum);
+
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
+
+    std::unique_ptr<ast2_sum> sum;
+};
+
+class ast2_option_list: public i_ast2_game_list
+{
+public:
+    ast2_option_list(std::vector<std::unique_ptr<ast2_sum>> option_nodes);
+
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    std::vector<game*> make_game_list(bool negate) const override;
+
+    std::vector<std::unique_ptr<ast2_sum>> option_nodes;
+};
+
+class ast2_braced_option_list: public i_ast2_game_list
+{
+public:
+    ast2_braced_option_list(std::unique_ptr<ast2_option_list> option_list);
+
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    std::vector<game*> make_game_list(bool negate) const override;
+
+    std::unique_ptr<ast2_option_list> option_list;
+};
+
+class ast2_unbraced_cgt_game: public i_ast2_game
+{
+public:
+    using variant_t = std::variant<              //
+        std::unique_ptr<ast2_unbraced_cgt_game>, //
+        std::unique_ptr<ast2_option_list>>;      //
+
+    ast2_unbraced_cgt_game(variant_t left_node_ptr_variant,
+                           variant_t right_node_ptr_variant);
+
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+private:
+    void _print_graph_helper(generic_graph_printer& graph,
+                             const variant_t& node_ptr_variant,
+                             const std::string& edge_label) const;
+
+public:
+    game* make_game(bool negate) const override;
+
+    variant_t left_node_ptr_variant;
+    variant_t right_node_ptr_variant;
+};
+
+class ast2_braced_cgt_game: public i_ast2_game
+{
+public:
+    ast2_braced_cgt_game(std::unique_ptr<ast2_unbraced_cgt_game> unbraced_game);
+                          
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
+
+    std::unique_ptr<ast2_unbraced_cgt_game> unbraced_game;
+};

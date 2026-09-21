@@ -831,10 +831,10 @@ bool file_parser::_parse_chunk_impl()
             // `+4` is length of "cgt:"
             const size_t env_col = _column_number + 4;
 
+            //test_cgt_environment(_token, _line_number, env_col);
+
             cgt_environment env = parse_cgt_environment(_token, _line_number, env_col);
             _chunk->add_content_expr(new fp_expr_cgt_environment(_line_number, env));
-
-            test_cgt_environment(_token, _line_number, env_col);
 
             continue;
         }
