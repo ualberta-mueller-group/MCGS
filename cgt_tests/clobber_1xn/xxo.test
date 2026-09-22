@@ -1,0 +1,107 @@
+{version 1.7}
+
+/*_ 
+    Results from: CGSuite 2.1.1
+*/
+
+[clobber_1xn]
+
+/* 1 group(s) */
+XXO
+
+cgt:
+v
+:cgt
+
+{B loss, W loss}
+
+/* 2 group(s) */
+XXOXXO
+
+cgt:
+v
+:cgt
+
+{B loss, W loss}
+
+/* 3 group(s) */
+XXOXXOXXO
+
+cgt:
+vv
+:cgt
+
+{B loss, W loss}
+
+/* 4 group(s) */
+XXOXXOXXOXXO
+
+cgt:
+vv
+:cgt
+
+{B loss, W loss}
+
+/* 5 group(s) */
+XXOXXOXXOXXOXXO
+
+cgt:
+v3
+:cgt
+
+{B loss, W loss}
+
+/* 6 group(s) */
+XXOXXOXXOXXOXXOXXO
+
+cgt:
+v3
+:cgt
+
+{B loss, W loss}
+
+/* 7 group(s) */
+XXOXXOXXOXXOXXOXXOXXO
+
+cgt:
+v4
+:cgt
+
+{B loss, W loss}
+
+/* 8 group(s) */
+XXOXXOXXOXXOXXOXXOXXOXXO
+
+cgt:
+v4
+:cgt
+
+{B loss, W loss}
+
+/* 9 group(s) */
+XXOXXOXXOXXOXXOXXOXXOXXOXXO
+
+cgt:
+v5
+:cgt
+
+{B loss, W loss}
+
+/* 10 group(s) */
+XXOXXOXXOXXOXXOXXOXXOXXOXXOXXO
+
+cgt:
+v5
+:cgt
+
+{B loss, W loss}
+
+/* 11 group(s) */
+XXOXXOXXOXXOXXOXXOXXOXXOXXOXXOXXO
+
+cgt:
+v6
+:cgt
+
+{B loss, W loss}
+

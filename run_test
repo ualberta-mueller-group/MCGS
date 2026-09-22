@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -e
+#set -x
+sudo renice -n -19 -p $$
+
+################################################################################
+build_mcgs() {
+    cmake --build build -j11
+}
+
+make_db() {
+    DB_NAME="$1"".bin"
+    DB_ARGS="$2"
+    ./MCGS --db-file-create "$DB_NAME" "$DB_ARGS"
+}
+
+run_test() {
+    CSV_NAME="$1"".csv"
+    shift
+    ./MCGS --run-tests --test-timeout 0 --test-dir cgt_tests/basic --out-file "$CSV_NAME" $@
+}
+
+compare2() {
+    FILE1="$1"".csv"
+    FILE2="$2"".csv"
+    FILE_OUT="$1""-""$2"".html"
+    python3 create-table.py "$FILE1" --compare-to "$FILE2" -o "$FILE_OUT"
+}
+
+compare1() {
+    FILE1="$1"".csv"
+    FILE_OUT="$1"".html"
+    python3 create-table.py "$FILE1" -o "$FILE_OUT"
+}
+
+################################################################################
+rm -f *.csv *.html *.bin
+#make_db db_mixed '[clobber_1xn] max_dims=10; [clobber] max_dims=1,10; [cannibal_clobber] max_dims=1,10;'
+
+#make_db amazons '[amazons] max_dims=3,3;'
+
+#run_test out --db-file-load amazons.bin
+run_test out --no-use-db
+compare1 out

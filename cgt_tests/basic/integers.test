@@ -1,0 +1,107 @@
+{version 1.7}
+[integer_game]
+
+0
+
+cgt:
+-({|})
+:cgt
+
+{B loss, W loss}
+
+1
+
+cgt:
+-({{|}|})
+:cgt
+
+{B loss, W loss}
+
+2
+
+cgt:
+-({{{|}|}|})
+:cgt
+
+{B loss, W loss}
+
+3
+
+cgt:
+-({{{{|}|}|}|})
+:cgt
+
+{B loss, W loss}
+
+4
+
+cgt:
+-({{{{{|}|}|}|}|})
+:cgt
+
+{B loss, W loss}
+
+5
+
+cgt:
+-({{{{{{|}|}|}|}|}|})
+:cgt
+
+{B loss, W loss}
+
+6
+
+cgt:
+-({{{{{{{|}|}|}|}|}|}|})
+:cgt
+
+{B loss, W loss}
+
+-1
+
+cgt:
+-({|{|}})
+:cgt
+
+{B loss, W loss}
+
+-2
+
+cgt:
+-({|{|{|}}})
+:cgt
+
+{B loss, W loss}
+
+-3
+
+cgt:
+-({|{|{|{|}}}})
+:cgt
+
+{B loss, W loss}
+
+-4
+
+cgt:
+-({|{|{|{|{|}}}}})
+:cgt
+
+{B loss, W loss}
+
+-5
+
+cgt:
+-({|{|{|{|{|{|}}}}}})
+:cgt
+
+{B loss, W loss}
+
+-6
+
+cgt:
+-({|{|{|{|{|{|{|}}}}}}})
+:cgt
+
+{B loss, W loss}
+
