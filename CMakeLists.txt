@@ -3,11 +3,25 @@
 cmake_minimum_required(VERSION 4.2)
 project(mcgs-cmake)
 
+# Use ccache if installed
 find_program(CCACHE_PROGRAM ccache)
 
 if (CCACHE_PROGRAM)
+    message(STATUS "USING ccache!")
     set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+else()
+    message(STATUS "NOT USING ccache!")
+endif()
+
+# Use Mold if installed
+find_program(MOLD_PROGRAM mold)
+
+if (MOLD_PROGRAM)
+    message(STATUS "USING mold linker!")
+    set(CMAKE_LINKER_TYPE MOLD)
+else()
+    message(STATUS "NOT USING mold linker!")
 endif()
 
 # Generate a compile_commands.json in the "build" directory
