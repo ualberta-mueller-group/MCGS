@@ -18,7 +18,7 @@ make_db() {
 run_test() {
     CSV_NAME="$1"".csv"
     shift
-    ./MCGS --run-tests --test-timeout 0 --test-dir cgt_tests/basic --out-file "$CSV_NAME" $@
+    ./MCGS --run-tests --test-timeout 0 --test-dir cgt_tests/limits --out-file "$CSV_NAME" $@
 }
 
 compare2() {

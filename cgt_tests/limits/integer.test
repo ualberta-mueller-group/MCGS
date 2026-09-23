@@ -1,0 +1,138 @@
+{version 1.7}
+/*_
+    i32 max: 2147483647
+
+    i32 min: -2147483648
+    MCGS i32 min: -2147483647 (negate_is_safe enforced by constructors etc)
+*/
+
+[integer_game]
+
+
+/* i32 max == 0 layer game */
+2147483647
+
+cgt:
+    -2147483647
+:cgt
+
+{B loss, W loss}
+
+
+/* i32 max == 1 layer game */
+2147483647
+
+cgt:
+    -{2147483646|}
+:cgt
+
+{B loss, W loss}
+
+
+/* i32 max == 1 layer game (with applied unary minus) */
+2147483647
+
+cgt:
+    {|-2147483646}
+:cgt
+
+{B loss, W loss}
+
+
+/* i32 min == 0 layer game */
+-2147483647
+
+cgt:
+    -(-2147483647)
+:cgt
+
+{B loss, W loss}
+
+
+/* i32 min == 1 layer game */
+-2147483647
+
+cgt:
+    -{|-2147483646}
+:cgt
+
+{B loss, W loss}
+
+
+/* i32 min == 1 layer game (with applied unary minus) */
+-2147483647
+
+cgt:
+    {2147483646|}
+:cgt
+
+{B loss, W loss}
+
+
+/* Overflow test: i32 max + 7 */
+2147483647
+7
+
+cgt:
+    -({2147483646|} + {{{{{{{{|}|}|}|}|}|}|}|})
+:cgt
+
+{B loss, W loss}
+
+
+/* Overflow test: i32 max (x2) + 5 */
+2147483647
+2147483647
+5
+
+cgt:
+    -({2147483646|} + {2147483646|} + {{{{{{|}|}|}|}|}|})
+:cgt
+
+/* Underflow test: i32 min - 7 */
+-2147483647
+-7
+
+cgt:
+    -({|-2147483646} + {|{|{|{|{|{|{|{|}}}}}}}})
+:cgt
+
+{B loss, W loss}
+
+
+/*_ Underflow test: i32 min (x2) - 5, segfault because:
+    TODO FIX ME!!!
+
+    `sumgame::_need_cgt_simplify` being set to `false` after a simplify_basic()
+    call returns and does nothing (to avoid integer underflow), causing moves
+    to be played on something like (INT_MIN + INT_MAX) until the call stack
+    overflows...
+
+    Possible solution:
+
+        enum need_simplify_state
+        {
+            // Set initially, and after adding a "basic" game
+            NEED_SIMPLIFY_YES,
+
+            // Set after successful `simplify_basic` call
+            NEED_SIMPLIFY_NO,
+
+            // Set after partial `simplify_basic` call (one or more functions
+            // were constrained by overflow)
+            NEED_SIMPLIFY_IF_PLAYED,
+        };
+
+    This state should be part of both a play/change record?
+    TODO: when to restore it?
+
+
+-2147483647
+-2147483647
+-5
+
+cgt:
+    -({|-2147483646} + {|-2147483646} + {|{|{|{|{|{|}}}}}})
+:cgt
+{B loss, W loss}
+*/

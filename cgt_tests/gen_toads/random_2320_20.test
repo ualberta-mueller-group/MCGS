@@ -1,0 +1,243 @@
+{version 1.7}
+[gen_toads]
+
+2,3,2,0:....X..OX...O.O..O..
+
+cgt:
+-({-2|-7})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:..X...X.O..X.O.O...X
+
+cgt:
+-(1)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:X........OO..X.O.OX.
+
+cgt:
+-({-1|-2})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:O.....X.....OX.O.X.X
+
+cgt:
+-(-2)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:XX........OO.X..O...
+
+cgt:
+-({1|-2})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:OOXX....X...........
+
+cgt:
+-(19)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.......XX.O....X.O..
+
+cgt:
+-(0)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:O.............X..O.X
+
+cgt:
+-(-6)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:X..X.....XX...OO....
+
+cgt:
+-({8|4,{7|||11/2|4||2|1}})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:XX...X.O.O..O....OX.
+
+cgt:
+-(-2)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.O.O.O....O...X...XX
+
+cgt:
+-(-1)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:...O.X.X.XX...O.....
+
+cgt:
+-({10|-1})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.X.....X....X...OOOX
+
+cgt:
+-({8|1})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:..X..X......OXO..O.X
+
+cgt:
+-(*)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.OO.....OX...X..O...
+
+cgt:
+-(1/2)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:OO.....XX.....X...X.
+
+cgt:
+-(9)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:O.XX.........O......
+
+cgt:
+-({7|1})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:....O..X.OO...XO....
+
+cgt:
+-(-2)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:O.X.O.X............O
+
+cgt:
+-(-1/2)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.X.OX...X.....O...X.
+
+cgt:
+-(4)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.O.O....X..XXO...O.X
+
+cgt:
+-(2+{0||0|-(2)})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.X..XX....OXO......O
+
+cgt:
+-({3*|-3/2})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.X..X....X..OX....O.
+
+cgt:
+-({7|3v})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.X.....O.........OX.
+
+cgt:
+-(-4)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:..O..O......X.XO.XO.
+
+cgt:
+-({-7|-8})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:X.....O......XO...OO
+
+cgt:
+-(-9*)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.X...OOX...O..X..OX.
+
+cgt:
+-(-2)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:.......X..XO.O.....X
+
+cgt:
+-(0)
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:..XOX..X.....O...O..
+
+cgt:
+-(3/2+{0||0|-({5/2v*||3/2|1})})
+:cgt
+
+{B loss, W loss}
+
+2,3,2,0:......X.....OOO.X..X
+
+cgt:
+-({-4|-8})
+:cgt
+
+{B loss, W loss}
+
