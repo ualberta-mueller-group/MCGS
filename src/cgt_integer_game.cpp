@@ -77,6 +77,11 @@ void integer_game::print(std::ostream& str) const
     str << "integer:" << _value;
 }
 
+void integer_game::print_simple(std::ostream& str) const
+{
+    str << _value;
+}
+
 void integer_game::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
     assert(is_black_white(to_play));

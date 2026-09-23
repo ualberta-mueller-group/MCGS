@@ -35,6 +35,7 @@ public:
     game* clone() const override;
 
     void print(std::ostream& str) const override;
+    void print_simple(std::ostream& str) const override;
     static int nim_sum(const std::vector<int>& values);     // uses Nim formula
     static int nim_sum(const std::vector<nimber*>& values); // uses Nim formula
     static void add_nimber(int& sum, int nimber);

@@ -107,6 +107,25 @@ void up_star::print(std::ostream& str) const
         str << '*';
 }
 
+void up_star::print_simple(std::ostream& str) const
+{
+    const int ups = num_ups();
+    assert(negate_is_safe(ups));
+
+    const int abs_ups = abs(ups);
+
+    if (ups >= 0)
+        str << '^';
+    if (ups < 0)
+        str << 'v';
+
+    if (abs_ups != 1)
+        str << abs_ups;
+
+    if (has_star())
+        str << '*';
+}
+
 void up_star::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
     assert(is_black_white(to_play));

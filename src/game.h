@@ -158,8 +158,13 @@ public:
     /*
         Print a string representation for a game. This should include a name
             to differentiate the game from other types of games.
+
+        `print_simple()` is implemented by some "basic" games (i.e.
+        integers/rationals) for which a game name can be omitted. The cgt_game
+        class uses this simpler format to simplify its `print` output.
     */
     virtual void print(std::ostream& str) const = 0;
+    virtual void print_simple(std::ostream& str) const { print(str); }
 
     /*
         Print a move in game-specific formatting.

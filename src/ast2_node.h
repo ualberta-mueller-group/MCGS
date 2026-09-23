@@ -83,6 +83,8 @@ public:
     void print_graph(generic_graph_printer& graph) const override;
 
     game* make_game(bool negate) const override;
+    game* make_game_with_star(bool negate, bool with_star) const;
+
 
     int64_t up_value;
 };

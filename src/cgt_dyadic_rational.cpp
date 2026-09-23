@@ -150,6 +150,11 @@ void dyadic_rational::print(std::ostream& str) const
     str << "dyadic_rational:" << _p << '/' << _q;
 }
 
+void dyadic_rational::print_simple(std::ostream& str) const
+{
+    str << _p << '/' << _q;
+}
+
 void dyadic_rational::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
     assert(is_black_white(to_play));

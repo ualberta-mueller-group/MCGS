@@ -32,6 +32,7 @@ public:
     game* clone() const override;
 
     void print(std::ostream& str) const override;
+    void print_simple(std::ostream& str) const override;
     void print_move(std::ostream& str, const move& m, ebw to_play) const override;
 
 protected:

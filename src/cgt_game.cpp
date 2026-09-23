@@ -104,10 +104,10 @@ void game_sum::print(ostream& str) const
         assert(g && g->is_active());
 
         if (!first)
-            str << " + ";
+            str << "+";
         first = false;
 
-        g->print(str);
+        g->print_simple(str);
     }
 
     str << ")";
@@ -241,11 +241,11 @@ void cgt_game::print(std::ostream& str) const
     str << "{";
 
     if (_selected)
-        _selected->print(str);
+        _selected->print_simple(str);
     else
     {
         _print_option_set(str, _left_options);
-        str << " | ";
+        str << "|";
         _print_option_set(str, _right_options);
     }
 
@@ -340,10 +340,10 @@ void cgt_game::_print_option_set(ostream& str,
         assert(g && g->is_active());
 
         if (!first)
-            str << ", ";
+            str << ",";
         first = false;
 
-        g->print(str);
+        g->print_simple(str);
     }
 }
 

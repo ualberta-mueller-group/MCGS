@@ -88,6 +88,8 @@ game* ast2_rational::make_game(bool negate) const
     if (negate)
         top_as_int = -top_as_int;
 
+    if (bottom_as_int == 1)
+        return new integer_game(top_as_int);
     return new dyadic_rational(top_as_int, bottom_as_int);
 }
 
@@ -129,13 +131,19 @@ void ast2_up::print_graph(generic_graph_printer& graph) const
 
 game* ast2_up::make_game(bool negate) const
 {
+    return make_game_with_star(negate, false);
+}
+
+game* ast2_up::make_game_with_star(bool negate, bool with_star) const
+{
+
     int up_value_as_int = integral_cast_checked<int>(up_value);
     THROW_ASSERT(negate_is_safe(up_value_as_int));
 
     if (negate)
         up_value_as_int = -up_value_as_int;
 
-    return new up_star(up_value_as_int, false);
+    return new up_star(up_value_as_int, with_star);
 }
 
 ////////////////////////////////////////////////// ast2_nimber methods
@@ -236,11 +244,16 @@ game* ast2_rational_up_nimber::make_game(bool negate) const
     if (rational)
         games.push_back(rational->make_game(negate));
 
-    if (up)
-        games.push_back(up->make_game(negate));
+    if (up && nimber && nimber->nim_value == 1)
+        games.push_back(up->make_game_with_star(negate, true));
+    else
+    {
+        if (up)
+            games.push_back(up->make_game(negate));
 
-    if (nimber)
-        games.push_back(nimber->make_game(negate));
+        if (nimber)
+            games.push_back(nimber->make_game(negate));
+    }
 
     THROW_ASSERT(games.size() > 0);
 

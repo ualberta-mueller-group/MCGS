@@ -54,6 +54,11 @@ void nimber::print(std::ostream& str) const
     str << "nimber:*" << _value;
 }
 
+void nimber::print_simple(std::ostream& str) const
+{
+    str << "*" << _value;
+}
+
 void nimber::print_move(std::ostream& str, const move& m, ebw to_play) const
 {
     assert(is_empty_black_white(to_play));
