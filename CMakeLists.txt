@@ -1,28 +1,5 @@
-# TODO use clang instead of ld for linking (???)
-
 cmake_minimum_required(VERSION 4.2)
 project(mcgs-cmake)
-
-# Use ccache if installed
-find_program(CCACHE_PROGRAM ccache)
-
-if (CCACHE_PROGRAM)
-    message(STATUS "USING ccache!")
-    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-else()
-    message(STATUS "NOT USING ccache!")
-endif()
-
-# Use Mold if installed
-find_program(MOLD_PROGRAM mold)
-
-if (MOLD_PROGRAM)
-    message(STATUS "USING mold linker!")
-    set(CMAKE_LINKER_TYPE MOLD)
-else()
-    message(STATUS "NOT USING mold linker!")
-endif()
 
 # Generate a compile_commands.json in the "build" directory
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
@@ -38,6 +15,14 @@ else()
 endif()
 
 ############################## Configurable options
+set(USE_MOLD "1" CACHE STRING
+"Use mold linker if installed. (0/[1])."
+)
+
+set(USE_CCACHE "1" CACHE STRING
+"Use ccache if installed (0/[1])."
+)
+
 set(DEBUG "1" CACHE STRING
 "Debug level (0/[1]/2). 0 disables asserts and removes debug info from \
 executables. 1 includes debug info, and (reasonably fast) asserts. 2 \
@@ -94,6 +79,24 @@ endif()
 ############################## Validate options
 if (NOT
     (
+        (USE_MOLD GREATER_EQUAL 0) AND
+        (USE_MOLD LESS_EQUAL 1)
+    )
+)
+    message(FATAL_ERROR "Bad value for USE_MOLD: \"${USE_MOLD}\"")
+endif()
+
+if (NOT
+    (
+        (USE_CCACHE GREATER_EQUAL 0) AND
+        (USE_CCACHE LESS_EQUAL 1)
+    )
+)
+    message(FATAL_ERROR "Bad value for USE_CCACHE: \"${USE_CCACHE}\"")
+endif()
+
+if (NOT
+    (
         (DEBUG GREATER_EQUAL 0) AND
         (DEBUG LESS_EQUAL 2)
     )
@@ -141,6 +144,33 @@ endif()
 # Unset ONLY_EMIT if it's empty
 if ("${ONLY_EMIT}" STREQUAL "")
     unset(CACHE{ONLY_EMIT})
+endif()
+
+
+############################## Use ccache if installed
+if (USE_CCACHE EQUAL 1)
+    find_program(CCACHE_PROGRAM ccache)
+endif()
+
+if ((USE_CCACHE EQUAL 1) AND CCACHE_PROGRAM)
+    message(STATUS "USING ccache!")
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+else()
+    message(STATUS "NOT USING ccache!")
+endif()
+
+############################## Use Mold if installed
+if (USE_MOLD EQUAL 1)
+    find_program(MOLD_PROGRAM mold)
+endif()
+
+if ((USE_MOLD EQUAL 1) AND MOLD_PROGRAM)
+    message(STATUS "USING mold linker!")
+    set(CMAKE_LINKER_TYPE MOLD)
+else()
+    message(STATUS "NOT USING mold linker!")
+    set(CMAKE_LINKER_TYPE DEFAULT)
 endif()
 
 ############################## Threading library
