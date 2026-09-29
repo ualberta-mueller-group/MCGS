@@ -419,6 +419,188 @@ vs.
 https://github.com/beling
 /impartial-games/blob/main/igs/src/solver/lv.rs
 
+# CGT Game
+This section gives technical details on the CGT Game feature, including parsing
+and the actual `game` class implementations. A "CGT environment" in `.test`
+input is a string enclosed by `cgt:` and `:cgt` i.e. `cgt:1 + {2 | -2}:cgt`.
+
+Relevant files:
+- `file_parser.h`: Finds CGT environments in input, and passes them to `cgt_environment.h`.
+- `ast2_token.h`: Token struct produced by CGT environment lexer.
+- `ast2_node.h`: AST nodes produced by CGT environment parser.
+- `cgt_environment.h`: Lexer/parser logic for CGT environment.
+- `cgt_game.h`: `game` subclasses relating to CGT environment.
+
+## Parsing (`ast2_token.h`, `ast2_node.h`, `cgt_environment.h`)
+The lexer/parser rules in following subsections use regex-like notation. Lexer
+rule names are uppercase, and parser rule names are lowercase. Each rule is
+implemented by a plain C++ function (using no regex library) in
+`cgt_environment.cpp`, and rule names prefixed by "__" have no dedicated
+function and are instead implemented inline (these are
+included in the documentation to improve grammar readability).
+
+Special "regex-like" characters:
+- `'` denotes start/end of a string (characters inside are literal characters with no special meaning).
+- `*` 0 or more.
+- `+` 1 or more.
+- `?` 1 or 0.
+- `_` discarded.
+- `[]` denotes range.
+- `()` denotes group.
+- `|` alternation/or.
+- `.` wildcard.
+- `<>` denotes additional logic.
+
+Contents of a rule's alternative are matched left to right (except when special
+logic like bracket matching is present). For example:
+- `rule1`:
+    - `LBRACE .* RBRACE<match opening brace>`
+
+finds the opening LBRACE and matching RBRACE first (by counting opening and closing braces), meaning this rule matches
+all of the following input: `{1{2}3}`.
+
+### Lexer Rules
+The input string enclosed by `cgt:` and `:cgt` is first tokenized according to
+lexer rules. Whitespace not matched by any rule is discarded.
+
+- `PLUSMINUS`: `'+-'`
+- `PLUS`: `'+'`
+- `MINUS`: `'-'`
+- `STAR`: `'*'`
+- `SLASH`: `'/'`
+- `COMMA`: `','`
+- `BAR`: `'|'+`
+- `LBRACK`: `'('`
+- `RBRACK`: `')'`
+- `LBRACE`: `'{'`
+- `RBRACE`: `'}'`
+- `INT`: `[0-9]+`
+- `UP_DOWN`: `('^'+)|('v'+)`
+- `COLON`: `':'`
+- `IDENTIFIER`: `[a-zA-Z_][a-zA-Z_0-9]*` (literal '_')
+- `GAME_CONTENTS` (only if last 2 tokens are `IDENTIFIER` and `COLON`): `'('_ .* ')'<match opening bracket>_`
+
+### Parser Rules
+Parser rules operate within scopes defined over the token list produced by the lexer rules.
+Alternatives for a given rule are tried in the order listed. A rule can only
+match the empty string if both `<EMPTY>` is listed as an alternative, AND
+there are no more tokens within the current scope. The `<consume new scope>`
+logic means the alternative fails if the operand only partially matches the
+scope.
+
+Simple games:
+- `integer`:
+    - `MINUS? INT`
+- `rational`:
+    - `integer (SLASH integer)?`
+- `up`:
+    - `UP_DOWN<1 arrow> integer<no minus>?`
+    - `UP_DOWN`
+- `nimber`:
+    - `STAR integer<no minus>?`
+- `rational_up_nimber`:
+    - `rational? up? nimber?`
+- `explicit_game`:
+    - `IDENTIFIER COLON GAME_CONTENTS`
+
+Composite games:
+- `atomic_game`:
+    - `rational_up_nimber`
+    - `bracket_sum`
+    - `braced_cgt_game`
+    - `explicit_game`
+- `plus_minus_game`:
+    - `PLUSMINUS atomic_game`
+    - `PLUSMINUS braced_option_list`
+- `qualified_game`:
+    - `plus_minus_game`
+    - `atomic_game` (Try this before next rule, so rational_up_nimber's rational component may absorb "-")
+    - `(PLUS|MINUS) atomic_game` (Here "+" and "-" are unary operators)
+
+CGT games:
+- `__cgt_environment` (INITIAL RULE, creates an initial scope which spans all tokens):
+    - `sum<consume new scope>`
+- `bracket_sum`:
+    - `LBRACK sum RBRACK`
+- `sum`:
+    - `qualified_game __sum_tail*`
+    - `<EMPTY>` (Only if end of scope)
+- `__sum_tail`:
+    - `(PLUS|MINUS) qualified_game` (Here "+" and "-" are binary operators)
+    - `plus_minus_game` (Here "+-" acts as a binary operator)
+- `braced_option_list` (Creates a new scope enclosed by and excluding the braces):
+    - `LBRACE option_list<consume new scope> RBRACE<match opening brace>`
+- `option_list`:
+    - `sum (COMMA sum)*`
+    - `<EMPTY>` (Only if end of scope)
+- `braced_cgt_game` (creates a new scope enclosed by and excluding the braces):
+    - `LBRACE unbraced_cgt_game<consume new scope> RBRACE<match opening brace>`
+- `unbraced_cgt_game` (Scope splits into 2 at BAR, and neither contains the BAR. The BAR is found first):
+    - `__option_set<consume new scope #1> BAR<uniquely maximal bar in immediate scope> __option_set<consume new scope #2>` (Note: BAR is found in the IMMEDIATE current scope i.e. is not enclosed by braces)
+- `__option_set`:
+    - `unbraced_cgt_game`
+    - `option_list`
+
+## Quirks
+The `virtual game* i_ast2_node::make_game()` function constructs the final `game` object from a CGT
+environment. The constructed `game` may not be "verbatim equal to" the parsed game:
+- Negatives (unary/binary minus) are "fully" evaluated in the yielded game:
+    - `-{2 | 3}` yields `{-3 | -2}`.
+- Sums of 1 game yield the game directly:
+    - `(5)` yields `5`.
+- Types of yielded games may vary where appropriate:
+    - The rational_up_nimber `1` yields an `integer_game` instead of a `dyadic_rational`.
+    - The rational_up_nimber `3/4^` yields the sum `3/4 + ^` (as MCGS has no rational_up_nimber `game` subclass).
+    - The rational_up_nimber `*1` yields an `up_star`, but `*2` yields a `nimber`.
+
+NOTE: The `rational_up_nimber` rule tries to absorb a **UNARY** `MINUS` (to match CGSuite's output behavior):
+- Intuitive: `-(4^^*)` yields `-4 + vv*` (unary "-" applies to the brackets)
+- Intuitive: `-^^*` yields `vv*`
+- Unintuitive: `-4^^*` yields `-4 + ^^*` (the unary "-" only applies to the rational component!)
+- Unintuitive: `3 - 4^^*` yields `3 + -4 + vv*` (the "-" is a binary operator, not a unary operator, so it applies to the entire rational_up_nimber!)
+
+## Error Handling
+An exception is thrown when either the lexer can't tokenize the input, or the initial parser rule
+can't match the entire input. In both cases the resulting exception includes a line and column number
+of the last consumed character (even if a rule only partially matched). For example, the input `-abc`
+throws a parser error where the "-" is consumed by the `integer` rule. The syntax error is likely
+near this last consumed character.
+
+TODO: In the case of parseable but illegal data (i.e. integers too big, illegal NoGo positions),
+exceptions may not include this info.
+
+## Game Classes (`cgt_game.h`)
+
+2 `game` subclasses (`cgt_game` and `game_sum`) exist to implement the search
+component of CGT environments. Any game operands owned by them are stored as
+`shared_ptr<const game>`s, so that `game::clone()` and `game::_split_impl()`
+only need to copy the top layer of the tree. NOTE: `game::inverse()`
+immediately performs a deep copy. Illegal operations mentioned below result in
+exceptions.
+
+Several "basic" games (i.e. `integer_game`, `nimber`, etc) implement a new
+`print_simple()` function, used by `game_sum` and `cgt_game`. The output
+unamibguously identifies the type of the game, i.e. the value `1` is printed by
+`integer_game` as `"1"`, and by `dyadic_rational` as `"1/1"`.
+
+- `class game_sum` (not to be confused with `class sumgame`) is a lightweight sum derived from `game`.
+    - Sums may be nested. In which case:
+        - `_split_impl()` returns a "flattened" list (such that `split()` doesn't need to be called on the resulting games).
+        - `clone()` and `inverse()` don't do any such flattening.
+    - Moves cannot be played directly on it. Must call `split()` first. Because:
+        - The `move` type is too small to support directly playing moves.
+        - Algorithms (i.e. `sumgame::solve`) which reason about subgames would need additional logic to see inside of a `game_sum`.
+    - Its move generator can be created, and always reports that a move is available (though it is illegal to actually generate a move).
+        - This avoids filtering by the non-virtual `game::split()` function (which filters `game`s having no moves out of a `split_result`).
+        - In practice a `game_sum` shouldn't appear in a `split_result`.
+    - Illegal functions include `play()`, `undo_move()`, `encode_grid_move_to_db()`, `decode_grid_move_from_db()`, `print_move()`.
+
+- `class cgt_game` implements CGT games which have (possibly empty) left and right option sets.
+    - Uses `move1` format from `cgt_move.h`, to encode the index of a player's selected option.
+    - Each option is a `game` (stored in a `vector<shared_ptr<const game>>`).
+    - After a move is played, must call `split()` (similar to kayles).
+        - `_split_impl()` calls `clone()` on the selected option. If the selected option is a `game_sum`, then `split()` is called on it instead.
+
 # Global Options (`global_options.h`)
 This file defines the `global_option` class, representing a global variable
 which is part of MCGS's configuration.
