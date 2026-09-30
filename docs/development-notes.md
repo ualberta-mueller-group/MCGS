@@ -10,6 +10,7 @@ This document includes more detailed information than `README.md`, including des
 - [More On Data Types](#more-on-data-types)
 - [More On Extending the `game` Class](#more-on-extending-the-game-class)
 - [Impartial Games](#impartial-games)
+- [CGT Game](#cgt-game)
 - [Global Options (`global_options.h`)](#global-options-global_optionsh)
 - [Initialization (`mcgs_init.h`)](#initialization-mcgs_inith)
 - [Random (`random.h`)](#random-randomh)
