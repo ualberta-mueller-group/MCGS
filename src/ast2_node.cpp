@@ -505,6 +505,40 @@ game* ast2_qualified_game::make_game(bool negate) const
     }, node_ptr_variant);
 }
 
+
+////////////////////////////////////////////////// ast2_bracket_sum methods
+ast2_bracket_sum::ast2_bracket_sum(std::unique_ptr<ast2_sum> sum)
+    : sum(std::move(sum))
+{
+    THROW_ASSERT(this->sum);
+}
+
+void ast2_bracket_sum::print(std::ostream& os, uint64_t depth) const
+{
+    print_indent(os, depth);
+    os << "Bracket_sum:" << endl;
+
+    THROW_ASSERT(sum);
+    sum->print(os, depth + 1);
+}
+
+void ast2_bracket_sum::print_graph(generic_graph_printer& graph) const
+{
+    stringstream str;
+    str << "Bracket_sum";
+    graph.add_vertex(this, str.str());
+
+    THROW_ASSERT(sum);
+    sum->print_graph(graph);
+    graph.add_edge(this, sum.get(), "");
+}
+
+game* ast2_bracket_sum::make_game(bool negate) const
+{
+    THROW_ASSERT(sum);
+    return sum->make_game(negate);
+}
+
 ////////////////////////////////////////////////// ast2_sum methods
 ast2_sum::ast2_sum(std::vector<std::pair<sign_enum, variant_t>> summands)
     : summands(std::move(summands))
@@ -595,37 +629,40 @@ game* ast2_sum::make_game(bool negate) const
     return new game_sum(games_shared);
 }
 
-////////////////////////////////////////////////// ast2_bracket_sum methods
-ast2_bracket_sum::ast2_bracket_sum(std::unique_ptr<ast2_sum> sum)
-    : sum(std::move(sum))
+
+//////////////////////////////////////////////////
+// ast2_braced_option_list methods
+
+ast2_braced_option_list::ast2_braced_option_list(
+    std::unique_ptr<ast2_option_list> option_list)
+    : option_list(std::move(option_list))
 {
-    THROW_ASSERT(this->sum);
+    THROW_ASSERT(this->option_list);
 }
 
-void ast2_bracket_sum::print(std::ostream& os, uint64_t depth) const
+void ast2_braced_option_list::print(std::ostream& os, uint64_t depth) const
 {
     print_indent(os, depth);
-    os << "Bracket_sum:" << endl;
-
-    THROW_ASSERT(sum);
-    sum->print(os, depth + 1);
+    os << "Braced_option_list:" << endl;
+    THROW_ASSERT(option_list);
+    option_list->print(os, depth + 1);
 }
 
-void ast2_bracket_sum::print_graph(generic_graph_printer& graph) const
+void ast2_braced_option_list::print_graph(generic_graph_printer& graph) const
 {
     stringstream str;
-    str << "Bracket_sum";
+    str << "Braced_option_list";
     graph.add_vertex(this, str.str());
 
-    THROW_ASSERT(sum);
-    sum->print_graph(graph);
-    graph.add_edge(this, sum.get(), "");
+    THROW_ASSERT(option_list);
+    option_list->print_graph(graph);
+    graph.add_edge(this, option_list.get(), "");
 }
 
-game* ast2_bracket_sum::make_game(bool negate) const
+std::vector<game*> ast2_braced_option_list::make_game_list(bool negate) const
 {
-    THROW_ASSERT(sum);
-    return sum->make_game(negate);
+    THROW_ASSERT(option_list);
+    return option_list->make_game_list(negate);
 }
 
 ////////////////////////////////////////////////// ast2_option_list methods
@@ -678,39 +715,39 @@ std::vector<game*> ast2_option_list::make_game_list(bool negate) const
 
     return games;
 }
-//////////////////////////////////////////////////
-// ast2_braced_option_list methods
 
-ast2_braced_option_list::ast2_braced_option_list(
-    std::unique_ptr<ast2_option_list> option_list)
-    : option_list(std::move(option_list))
+////////////////////////////////////////////////// ast2_braced_cgt_game methods
+ast2_braced_cgt_game::ast2_braced_cgt_game(
+    std::unique_ptr<ast2_unbraced_cgt_game> unbraced_game)
+    : unbraced_game(std::move(unbraced_game))
 {
-    THROW_ASSERT(this->option_list);
+    THROW_ASSERT(this->unbraced_game);
 }
 
-void ast2_braced_option_list::print(std::ostream& os, uint64_t depth) const
+void ast2_braced_cgt_game::print(std::ostream& os, uint64_t depth) const
 {
     print_indent(os, depth);
-    os << "Braced_option_list:" << endl;
-    THROW_ASSERT(option_list);
-    option_list->print(os, depth + 1);
+    os << "Braced_cgt_game:" << endl;
+
+    THROW_ASSERT(unbraced_game);
+    unbraced_game->print(os, depth + 1);
 }
 
-void ast2_braced_option_list::print_graph(generic_graph_printer& graph) const
+void ast2_braced_cgt_game::print_graph(generic_graph_printer& graph) const
 {
     stringstream str;
-    str << "Braced_option_list";
+    str << "Braced_cgt_game";
     graph.add_vertex(this, str.str());
 
-    THROW_ASSERT(option_list);
-    option_list->print_graph(graph);
-    graph.add_edge(this, option_list.get(), "");
+    THROW_ASSERT(unbraced_game);
+    unbraced_game->print_graph(graph);
+    graph.add_edge(this, unbraced_game.get(), "");
 }
 
-std::vector<game*> ast2_braced_option_list::make_game_list(bool negate) const
+game* ast2_braced_cgt_game::make_game(bool negate) const
 {
-    THROW_ASSERT(option_list);
-    return option_list->make_game_list(negate);
+    THROW_ASSERT(unbraced_game);
+    return unbraced_game->make_game(negate);
 }
 
 //////////////////////////////////////////////////
@@ -819,36 +856,3 @@ game* ast2_unbraced_cgt_game::make_game(bool negate) const
     return new cgt_game(left_options, right_options);
 }
 
-////////////////////////////////////////////////// ast2_braced_cgt_game methods
-ast2_braced_cgt_game::ast2_braced_cgt_game(
-    std::unique_ptr<ast2_unbraced_cgt_game> unbraced_game)
-    : unbraced_game(std::move(unbraced_game))
-{
-    THROW_ASSERT(this->unbraced_game);
-}
-
-void ast2_braced_cgt_game::print(std::ostream& os, uint64_t depth) const
-{
-    print_indent(os, depth);
-    os << "Braced_cgt_game:" << endl;
-
-    THROW_ASSERT(unbraced_game);
-    unbraced_game->print(os, depth + 1);
-}
-
-void ast2_braced_cgt_game::print_graph(generic_graph_printer& graph) const
-{
-    stringstream str;
-    str << "Braced_cgt_game";
-    graph.add_vertex(this, str.str());
-
-    THROW_ASSERT(unbraced_game);
-    unbraced_game->print_graph(graph);
-    graph.add_edge(this, unbraced_game.get(), "");
-}
-
-game* ast2_braced_cgt_game::make_game(bool negate) const
-{
-    THROW_ASSERT(unbraced_game);
-    return unbraced_game->make_game(negate);
-}

@@ -7,6 +7,7 @@
 */
 #pragma once
 #include <type_traits>
+#include <memory>
 
 // NOLINTBEGIN(readability-identifier-naming)
 // clang-format off
@@ -60,6 +61,38 @@ struct deferred_false: public std::false_type
 
 template <class T>
 static constexpr bool deferred_false_v = deferred_false<T>::value;
+
+////////////////////////////////////////////////// is_smart_pointer<T>
+template <class T, class Enable = void>
+struct is_smart_pointer
+{
+    static constexpr bool value = false;
+};
+
+template <class T>
+struct is_smart_pointer<std::unique_ptr<T>, void>
+{
+    static constexpr bool value = true;
+};
+
+template <class T>
+struct is_smart_pointer<std::shared_ptr<T>, void>
+{
+    static constexpr bool value = true;
+};
+
+template <class T>
+inline static constexpr bool is_smart_pointer_v = is_smart_pointer<T>::value;
+
+////////////////////////////////////////////////// is_smart_or_raw_pointer<T>
+template <class T>
+struct is_smart_or_raw_pointer
+{
+    static constexpr bool value = std::is_pointer_v<T> || is_smart_pointer_v<T>;
+};
+
+template <class T>
+inline static constexpr bool is_smart_or_raw_pointer_v = is_smart_or_raw_pointer<T>::value;
 
 // clang-format on
 // NOLINTEND(readability-identifier-naming)

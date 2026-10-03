@@ -470,14 +470,14 @@ lexer rules. Whitespace not matched by any rule is discarded.
 - `STAR`: `'*'`
 - `SLASH`: `'/'`
 - `COMMA`: `','`
-- `BAR`: `'|'+`
 - `LBRACK`: `'('`
 - `RBRACK`: `')'`
 - `LBRACE`: `'{'`
 - `RBRACE`: `'}'`
+- `COLON`: `':'`
 - `INT`: `[0-9]+`
 - `UP_DOWN`: `('^'+)|('v'+)`
-- `COLON`: `':'`
+- `BAR`: `'|'+`
 - `IDENTIFIER`: `[a-zA-Z_][a-zA-Z_0-9]*` (literal '_')
 - `GAME_CONTENTS` (only if last 2 tokens are `IDENTIFIER` and `COLON`): `'('_ .* ')'<match opening bracket>_`
 

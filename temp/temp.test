@@ -1,0 +1,19 @@
+{version 1.7}
+
+/* <EOF> */
+cgt::cgt
+{B loss, W loss}
+
+/* {|} + {|} */
+cgt: {|} + {|} :cgt
+{B loss, W loss}
+
+/* +-{} */
+cgt: +-{} :cgt
+{B loss, W loss}
+
+/* {| || |} */
+[up_star]
+*
+cgt: {| || |} :cgt
+{B win, W win}

@@ -3,6 +3,8 @@
 #include <cassert>
 #include <iostream>
 
+#include "throw_assert.h"
+
 using namespace std;
 
 ////////////////////////////////////////////////// enum token_type_enum
@@ -47,7 +49,7 @@ string token_type_to_string(token_type_enum type)
     assert(false);
 }
 
-////////////////////////////////////////////////// struct ast2_token
+////////////////////////////////////////////////// ast2_token methods
 ostream& operator<<(ostream& os, const ast2_token& tok)
 {
     os << "\"" << tok.str << "\"";
@@ -67,16 +69,15 @@ ostream& operator<<(ostream& os, const ast2_token& tok)
     return os;
 }
 
-////////////////////////////////////////////////// struct ast2_token_scope
+////////////////////////////////////////////////// ast2_token_scope methods
 ast2_token_scope::ast2_token_scope(size_t start, size_t end)
     : start(start), end(end)
 {
-    assert(start <= end);
+    THROW_ASSERT(start <= end);
 }
 
 ast2_token_scope ast2_token_scope::cut(size_t new_start, size_t new_end) const
 {
-    assert(new_start >= start);
-    assert(new_end <= end);
+    THROW_ASSERT(start <= new_start && new_end <= end);
     return ast2_token_scope(new_start, new_end);
 }

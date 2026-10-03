@@ -1,6 +1,8 @@
+/*
+    Tokens used by CGT environment lexer
+*/
 #pragma once
 #include <string>
-#include <vector>
 
 ////////////////////////////////////////////////// enum token_type_enum
 enum token_type_enum
@@ -33,22 +35,21 @@ std::string token_type_to_string(token_type_enum type);
 ////////////////////////////////////////////////// struct ast2_token
 struct ast2_token
 {
-    ast2_token(token_type_enum type, std::string str, int64_t num,
-               size_t line_no, size_t column_no)
-        : type(type), str(str), num(num), line_no(line_no), column_no(column_no)
-    {
-    }
+    ast2_token(token_type_enum type, std::string str, int64_t num, size_t
+            line_no, size_t column_no) : type(type), str(str), num(num),
+    line_no(line_no), column_no(column_no) { }
 
     token_type_enum type;
     std::string str;
-    int64_t num;
-    size_t line_no;
-    size_t column_no;
+    int64_t num;      // Token type specific meaning
+    size_t line_no;   // Line number of 1st char of token
+    size_t column_no; // Column number of 1st char of token
 };
 
 std::ostream& operator<<(std::ostream& os, const ast2_token& tok);
 
 ////////////////////////////////////////////////// struct ast2_token_scope
+// Represents interval [start, end)
 struct ast2_token_scope
 {
     ast2_token_scope(size_t start, size_t end);

@@ -1,8 +1,17 @@
+/*
+    AST nodes for CGT environment, used by parser.
+
+    Each non-abstract AST node class corresponds to a rule in the grammar (see
+    development-notes.md). When a rule has alternatives containing different
+    AST node types, these are combined using std::variant instead of
+    polymorphism.
+*/
 #pragma once
 
 #include <ostream>
 #include <memory>
 #include <vector>
+#include <variant>
 
 #include "cgt_game.h"
 #include "generic_graph_printer.h"
@@ -10,12 +19,16 @@
 
 class game;
 
-////////////////////////////////////////////////// Node interfaces
+////////////////////////////////////////////////// AST node interface classes
 class i_ast2_node
 {
 public:
     virtual ~i_ast2_node() {}
+
+    // Print tree in plain text representation
     virtual void print(std::ostream& os, uint64_t depth) const = 0;
+
+    // Print tree in graphviz/".dot" file representation
     virtual void print_graph(generic_graph_printer& graph) const = 0;
 };
 
@@ -31,24 +44,32 @@ public:
     virtual std::vector<game*> make_game_list(bool negate) const = 0;
 };
 
-////////////////////////////////////////////////// Node type declarations
+////////////////////////////////////////////////// Forward declarations
+//////////////////////////////////////// Simple game declarations
 class ast2_integer;
 class ast2_rational;
 class ast2_up;
 class ast2_nimber;
 class ast2_rational_up_nimber;
 class ast2_explicit_game;
+
+//////////////////////////////////////// Composite game declarations
 class ast2_atomic_game;
 class ast2_plusminus_game;
 class ast2_qualified_game;
-class ast2_sum;
-class ast2_bracket_sum;
-class ast2_option_list;
-class ast2_braced_option_list;
-class ast2_unbraced_cgt_game;
-class ast2_braced_cgt_game;
 
-////////////////////////////////////////////////// Basic games
+//////////////////////////////////////// CGT game declarations
+class ast2_bracket_sum;
+class ast2_sum;
+class ast2_braced_option_list;
+class ast2_option_list;
+class ast2_braced_cgt_game;
+class ast2_unbraced_cgt_game;
+
+////////////////////////////////////////////////// AST node class definitions
+
+//////////////////////////////////////// Simple game classes
+////////////////////////////// class ast2_integer
 class ast2_integer : public i_ast2_node
 {
 public:
@@ -60,6 +81,7 @@ public:
     int64_t value;
 };
 
+////////////////////////////// class ast2_rational
 class ast2_rational: public i_ast2_game
 {
 public:
@@ -74,6 +96,7 @@ public:
     int64_t bottom;
 };
 
+////////////////////////////// class ast2_up
 class ast2_up: public i_ast2_game
 {
 public:
@@ -89,6 +112,7 @@ public:
     int64_t up_value;
 };
 
+////////////////////////////// class ast2_nimber
 class ast2_nimber: public i_ast2_game
 {
 public:
@@ -102,6 +126,7 @@ public:
     int64_t nim_value;
 };
 
+////////////////////////////// class ast2_rational_up_nimber
 class ast2_rational_up_nimber: public i_ast2_game
 {
 public:
@@ -119,6 +144,7 @@ public:
     std::unique_ptr<ast2_nimber> nimber;
 };
 
+////////////////////////////// class ast2_explicit_game
 class ast2_explicit_game: public i_ast2_game
 {
 public:
@@ -133,7 +159,9 @@ public:
     std::string game_contents;
 };
 
-////////////////////////////////////////////////// Composite games
+
+//////////////////////////////////////// Composite game classes
+////////////////////////////// class ast2_atomic_game
 class ast2_atomic_game: public i_ast2_game
 {
 public:
@@ -154,6 +182,7 @@ public:
     variant_t node_ptr_variant;
 };
 
+////////////////////////////// class ast2_plusminus_game
 class ast2_plusminus_game: public i_ast2_game
 {
 public:
@@ -172,6 +201,7 @@ public:
     variant_t node_ptr_variant;
 };
 
+////////////////////////////// class ast2_qualified_game
 class ast2_qualified_game: public i_ast2_game
 {
 public:
@@ -193,7 +223,22 @@ public:
     sign_enum unary_sign;
 };
 
-////////////////////////////////////////////////// CGT games
+//////////////////////////////////////// CGT game classes
+////////////////////////////// class ast2_bracket_sum
+class ast2_bracket_sum: public i_ast2_game
+{
+public:
+    ast2_bracket_sum(std::unique_ptr<ast2_sum> sum);
+
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
+
+    std::unique_ptr<ast2_sum> sum;
+};
+
+////////////////////////////// class ast2_sum
 class ast2_sum: public i_ast2_game
 {
 public:
@@ -212,32 +257,7 @@ public:
     std::vector<std::pair<sign_enum, variant_t>> summands;
 };
 
-class ast2_bracket_sum: public i_ast2_game
-{
-public:
-    ast2_bracket_sum(std::unique_ptr<ast2_sum> sum);
-
-    void print(std::ostream& os, uint64_t depth) const override;
-    void print_graph(generic_graph_printer& graph) const override;
-
-    game* make_game(bool negate) const override;
-
-    std::unique_ptr<ast2_sum> sum;
-};
-
-class ast2_option_list: public i_ast2_game_list
-{
-public:
-    ast2_option_list(std::vector<std::unique_ptr<ast2_sum>> option_nodes);
-
-    void print(std::ostream& os, uint64_t depth) const override;
-    void print_graph(generic_graph_printer& graph) const override;
-
-    std::vector<game*> make_game_list(bool negate) const override;
-
-    std::vector<std::unique_ptr<ast2_sum>> option_nodes;
-};
-
+////////////////////////////// class ast2_braced_option_list
 class ast2_braced_option_list: public i_ast2_game_list
 {
 public:
@@ -251,6 +271,36 @@ public:
     std::unique_ptr<ast2_option_list> option_list;
 };
 
+
+////////////////////////////// class ast2_option_list
+class ast2_option_list: public i_ast2_game_list
+{
+public:
+    ast2_option_list(std::vector<std::unique_ptr<ast2_sum>> option_nodes);
+
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    std::vector<game*> make_game_list(bool negate) const override;
+
+    std::vector<std::unique_ptr<ast2_sum>> option_nodes;
+};
+
+////////////////////////////// class ast2_braced_cgt_game
+class ast2_braced_cgt_game: public i_ast2_game
+{
+public:
+    ast2_braced_cgt_game(std::unique_ptr<ast2_unbraced_cgt_game> unbraced_game);
+                          
+    void print(std::ostream& os, uint64_t depth) const override;
+    void print_graph(generic_graph_printer& graph) const override;
+
+    game* make_game(bool negate) const override;
+
+    std::unique_ptr<ast2_unbraced_cgt_game> unbraced_game;
+};
+
+////////////////////////////// class ast2_unbraced_cgt_game 
 class ast2_unbraced_cgt_game: public i_ast2_game
 {
 public:
@@ -276,15 +326,3 @@ public:
     variant_t right_node_ptr_variant;
 };
 
-class ast2_braced_cgt_game: public i_ast2_game
-{
-public:
-    ast2_braced_cgt_game(std::unique_ptr<ast2_unbraced_cgt_game> unbraced_game);
-                          
-    void print(std::ostream& os, uint64_t depth) const override;
-    void print_graph(generic_graph_printer& graph) const override;
-
-    game* make_game(bool negate) const override;
-
-    std::unique_ptr<ast2_unbraced_cgt_game> unbraced_game;
-};
