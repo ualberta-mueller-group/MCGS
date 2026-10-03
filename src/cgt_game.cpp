@@ -3,12 +3,54 @@
 #include "cgt_basics.h"
 #include "cgt_move.h"
 #include "game.h"
+#include "hashing.h"
 #include "integral_conversion.h"
+#include "parsing_utilities.h"
 #include "throw_assert.h"
+#include "utilities.h"
+#include "utils_for_main.h"
+#include <algorithm>
+#include <cstdlib>
+#include <sstream>
 
 
-std::vector<hash_t> i_cgt_game_base::_hash_elements;
-global_hash i_cgt_game_base::_gh;
+borrowable<std::vector<hash_t>> i_cgt_game_base::_hash_elements_helper;
+borrowable<global_hash> i_cgt_game_base::_global_hash_helper;
+
+////////////////////////////////////////////////// Testing stuff
+//namespace {
+//std::unordered_map<hash_t, hash_t> cgt_hash_map;
+//
+//hash_t get_game_string_hash(const game* g)
+//{
+//    assert(g);
+//    local_hash lh;
+//
+//    std::stringstream strstr;
+//    strstr << *g;
+//    const std::string& str = strstr.str();
+//
+//    const size_t str_size = str.size();
+//    for (size_t i = 0; i < str_size; i++)
+//        lh.toggle_value(i, str[i]);
+//
+//    return lh.get_value();
+//}
+//
+//void test_hash_collision(const game* g, hash_t game_hash)
+//{
+//    assert(g);
+//
+//    const hash_t string_hash = get_game_string_hash(g);
+//
+//    const auto& inserted = cgt_hash_map.try_emplace(game_hash, string_hash);
+//    const bool game_hash_collision = !inserted.second;
+//    const bool string_hash_collision = (string_hash == inserted.first->second);
+//
+//    assert(LOGICAL_IMPLIES(game_hash_collision, string_hash_collision));
+//}
+//} // namespace
+
 
 ////////////////////////////////////////////////// class game_sum_move_generator
 class game_sum_move_generator: public move_generator
@@ -55,18 +97,30 @@ void i_cgt_game_base::get_flat_hash_elements_single(vector<hash_t>& elements,
 
 hash_t i_cgt_game_base::get_flat_hash_value() const
 {
-    _hash_elements.clear();
-    _gh.reset();
+    vector<hash_t>* hash_elements = _hash_elements_helper.borrow();
+    assert(hash_elements);
 
-    get_flat_hash_elements(_hash_elements);
+    hash_elements->clear();
+    get_flat_hash_elements(*hash_elements);
 
-    _gh.set_to_play(EMPTY);
+    global_hash* gh = _global_hash_helper.borrow();
+    assert(gh);
 
-    const size_t elements_size = _hash_elements.size();
+    gh->set_to_play(EMPTY);
+
+    const size_t elements_size = hash_elements->size();
     for (size_t i = 0; i < elements_size; i++)
-        _gh.add_hash(i, _hash_elements[i]);
+        gh->add_hash(i, (*hash_elements)[i]);
 
-    return _gh.get_value();
+    const hash_t val = gh->get_value();
+
+    hash_elements->clear();
+    gh->reset();
+
+    _hash_elements_helper.unborrow(hash_elements);
+    _global_hash_helper.unborrow(gh);
+
+    return val;
 }
 
 ////////////////////////////////////////////////// game_sum methods
@@ -187,11 +241,44 @@ split_result game_sum::_split_impl() const
     return sr;
 }
 
+//void game_sum::_init_hash(local_hash& hash) const
+//{
+//    const hash_t lh_val = hash.get_value();
+//    const hash_t flat_hash_val = get_flat_hash_value();
+//    hash.__set_value(lh_val ^ flat_hash_val);
+//}
+
 void game_sum::_init_hash(local_hash& hash) const
 {
-    const hash_t lh_val = hash.get_value();
-    const hash_t flat_hash_val = get_flat_hash_value();
-    hash.__set_value(lh_val ^ flat_hash_val);
+    // 1st pass: compute each operand's local hash and discard it (to avoid
+    // unnecessary memory allocation i.e. using std::vector)
+    for (const shared_ptr<const game>& g : _games)
+    {
+        assert(g && g->is_active());
+        g->get_local_hash();
+    }
+
+    // 2nd pass: combine previously computed local hashes (these aren't
+    // recomputed here because the `game` base class has them cached from the
+    // 1st pass)
+    const size_t n_operands = _games.size();
+
+    // IMPORTANT: Only write to _gh after all operand hashes are computed (each
+    // operand hash computation might also write to _gh)!
+    global_hash* gh = _global_hash_helper.borrow();
+    assert(gh);
+
+    gh->reset();
+    gh->set_to_play(EMPTY);
+    for (size_t i = 0; i < n_operands; i++)
+        gh->add_hash(i, _games[i]->get_local_hash());
+
+    const hash_t gh_val = gh->get_value();
+    _global_hash_helper.unborrow(gh);
+
+    hash.toggle_value(0, gh_val);
+
+    //test_hash_collision(this, hash.get_value());
 }
 
 ////////////////////////////////////////////////// cgt_game methods
@@ -375,12 +462,85 @@ split_result cgt_game::_split_impl() const
     return sr;
 }
 
+//void cgt_game::_init_hash(local_hash& hash) const
+//{
+//    const hash_t lh_val = hash.get_value();
+//    const hash_t flat_hash_val = get_flat_hash_value();
+//    hash.__set_value(lh_val ^ flat_hash_val);
+//}
+
 void cgt_game::_init_hash(local_hash& hash) const
 {
-    const hash_t lh_val = hash.get_value();
-    const hash_t flat_hash_val = get_flat_hash_value();
-    hash.__set_value(lh_val ^ flat_hash_val);
+    global_hash* gh = nullptr;
+    hash_t gh_val;
+
+    if (_selected)
+    {
+        assert(_selected->is_active());
+        const hash_t selected_hash = _selected->get_local_hash();
+
+        gh = _global_hash_helper.borrow();
+        assert(gh);
+
+        // IMPORTANT: Must compute `_selected`'s local hash before writing to
+        // _gh!
+        gh->reset();
+        gh->set_to_play(EMPTY);
+        gh->add_hash(0, 0); // location 0 is 0 IFF an option is selected
+        gh->add_hash(1, selected_hash);
+
+        gh_val = gh->get_value();
+    }
+    else
+    {
+        // 1st pass: compute each operand's local hash and discard it (to avoid
+        // unnecessary memory allocation i.e. using std::vector)
+        for (const shared_ptr<const game>& g : _left_options)
+        {
+            assert(g && g->is_active());
+            g->get_local_hash();
+        }
+
+        for (const shared_ptr<const game>& g : _right_options)
+        {
+            assert(g && g->is_active());
+            g->get_local_hash();
+        }
+
+        // 2nd pass: combine previously computed local hashes (these aren't
+        // recomputed here because the `game` base class has them cached from
+        // the 1st pass)
+        const size_t n_left = _left_options.size();
+        const size_t n_right = _right_options.size();
+
+        // IMPORTANT: Only write to _gh after all operand hashes are computed
+        // (each operand hash computation might also write to _gh)!
+        gh = _global_hash_helper.borrow();
+        assert(gh);
+
+        gh->reset();
+        gh->set_to_play(EMPTY);
+        gh->add_hash(0, 1); // location 0 is 1 IFF no option is selected
+        gh->add_hash(1, n_left);
+        gh->add_hash(2, n_right);
+
+        size_t idx = 3;
+        for (const shared_ptr<const game>& g : _left_options)
+            gh->add_hash(idx++, g->get_local_hash());
+
+        for (const shared_ptr<const game>& g : _right_options)
+            gh->add_hash(idx++, g->get_local_hash());
+
+        gh_val = gh->get_value();
+    }
+
+    _global_hash_helper.unborrow(gh);
+
+    hash.toggle_value(0, gh_val);
+
+    //test_hash_collision(this, hash.get_value());
 }
+
 
 cgt_game::cgt_game(std::shared_ptr<const game> selected)
     : _selected(selected)

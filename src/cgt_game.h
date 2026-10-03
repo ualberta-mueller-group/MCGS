@@ -1,5 +1,6 @@
 #pragma once
 
+#include "borrowable.h"
 #include "game.h"
 
 #include <vector>
@@ -16,10 +17,8 @@ public:
     hash_t get_flat_hash_value() const;
 
 protected:
-    static std::vector<hash_t> _hash_elements;
-    static global_hash _gh;
-
-private:
+    static borrowable<std::vector<hash_t>> _hash_elements_helper;
+    static borrowable<global_hash> _global_hash_helper;
 };
 
 ////////////////////////////////////////////////// class game_sum
