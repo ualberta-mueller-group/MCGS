@@ -18,7 +18,7 @@ make_db() {
 run_test() {
     CSV_NAME="$1"".csv"
     shift
-    ./MCGS --run-tests --test-timeout 0 --test-dir cgt_tests/limits --out-file "$CSV_NAME" $@
+    ./MCGS --run-tests --test-timeout 0 --test-dir cgt_tests/clobber_1xn --out-file "$CSV_NAME" $@
 }
 
 compare2() {
@@ -36,10 +36,7 @@ compare1() {
 
 ################################################################################
 rm -f *.csv *.html *.bin
-#make_db db_mixed '[clobber_1xn] max_dims=10; [clobber] max_dims=1,10; [cannibal_clobber] max_dims=1,10;'
+build_mcgs
+make_db clobber_1xn_11 '[clobber_1xn] max_dims=11;'
+run_test flat_hash --db-file-load clobber_1xn_11.bin
 
-#make_db amazons '[amazons] max_dims=3,3;'
-
-#run_test out --db-file-load amazons.bin
-run_test out --no-use-db
-compare1 out

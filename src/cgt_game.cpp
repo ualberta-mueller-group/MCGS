@@ -7,6 +7,9 @@
 #include "throw_assert.h"
 
 
+std::vector<hash_t> i_cgt_game_base::_hash_elements;
+global_hash i_cgt_game_base::_gh;
+
 ////////////////////////////////////////////////// class game_sum_move_generator
 class game_sum_move_generator: public move_generator
 {
@@ -52,18 +55,18 @@ void i_cgt_game_base::get_flat_hash_elements_single(vector<hash_t>& elements,
 
 hash_t i_cgt_game_base::get_flat_hash_value() const
 {
-    vector<hash_t> elements;
+    _hash_elements.clear();
+    _gh.reset();
 
-    get_flat_hash_elements(elements);
+    get_flat_hash_elements(_hash_elements);
 
-    global_hash gh;
-    gh.set_to_play(EMPTY);
+    _gh.set_to_play(EMPTY);
 
-    const size_t elements_size = elements.size();
+    const size_t elements_size = _hash_elements.size();
     for (size_t i = 0; i < elements_size; i++)
-        gh.add_hash(i, elements[i]);
+        _gh.add_hash(i, _hash_elements[i]);
 
-    return gh.get_value();
+    return _gh.get_value();
 }
 
 ////////////////////////////////////////////////// game_sum methods

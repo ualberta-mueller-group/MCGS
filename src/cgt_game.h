@@ -16,6 +16,9 @@ public:
     hash_t get_flat_hash_value() const;
 
 protected:
+    static std::vector<hash_t> _hash_elements;
+    static global_hash _gh;
+
 private:
 };
 
